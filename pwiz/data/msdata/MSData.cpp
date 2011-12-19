@@ -24,6 +24,7 @@
 
 #include "MSData.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include <boost/lexical_cast.hpp>
 #include "Diff.hpp"
 
 
@@ -318,7 +319,7 @@ PWIZ_API_DECL
 SelectedIon::SelectedIon(double mz, int chargeState)
 {
     set(MS_selected_ion_m_z, mz, MS_m_z);
-    set(MS_charge_state, chargeState);
+    set(MS_charge_state, boost::lexical_cast<string>(chargeState));
 }
 
 
@@ -327,7 +328,7 @@ SelectedIon::SelectedIon(double mz, double intensity, int chargeState, CVID inte
 {
     set(MS_selected_ion_m_z, mz, MS_m_z);
     set(MS_peak_intensity, intensity, intensityUnit);
-    set(MS_charge_state, chargeState);
+    set(MS_charge_state, boost::lexical_cast<string>(chargeState));
 }
 
 
