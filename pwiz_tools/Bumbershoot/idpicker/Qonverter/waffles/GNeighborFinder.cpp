@@ -36,7 +36,7 @@
 
 namespace GClasses {
 
-using std::cout;
+//using std::cerr;
 using std::vector;
 using std::priority_queue;
 using std::set;
@@ -364,8 +364,8 @@ bool GNeighborFinderCacheWrapper::isConnected()
 
 // --------------------------------------------------------------------
 
-// This helper class keeps neighbors sorted as a binary heap, such that the most dissimilar
-// of the k-current-neighbors is always at the front of the heap.
+/// This helper class keeps neighbors sorted as a binary heap, such that the most dissimilar
+/// of the k-current-neighbors is always at the front of the heap.
 class GClosestNeighborFindingHelper
 {
 protected:
@@ -378,9 +378,10 @@ public:
 	GClosestNeighborFindingHelper(size_t neighbors, size_t* pNeighbors, double* pDistances)
 	: m_found(0), m_neighbors(neighbors), m_pNeighbors(pNeighbors), m_pDistances(pDistances)
 	{
+		GAssert(m_neighbors >= 1);
 		for(size_t i = 0; i < m_neighbors; i++)
 		{
-			m_pNeighbors[i] = -1;
+			m_pNeighbors[i] = size_t(-1);
 			m_pDistances[i] = 1e308;
 		}
 	}
@@ -864,14 +865,19 @@ void GKdTree::computePivotAndGoodness(size_t count, size_t* pIndexes, size_t att
 	else
 	{
 		// Compute the mean
+		size_t missing = 0;
 		double mean = 0;
 		double* pPat;
 		for(size_t i = 0; i < count; i++)
 		{
+			GAssert(pIndexes[i] < m_pData->rows());
 			pPat = m_pData->row(pIndexes[i]);
-			mean += pPat[attr];
+			if(pPat[attr] != UNKNOWN_REAL_VALUE)
+				mean += pPat[attr];
+			else
+				missing++;
 		}
-		mean /= count;
+		mean /= (count - missing);
 
 		// Compute the scaled variance
 		double var = 0;
@@ -882,8 +888,11 @@ void GKdTree::computePivotAndGoodness(size_t count, size_t* pIndexes, size_t att
 			for(size_t i = 0; i < count; i++)
 			{
 				pPat = m_pData->row(pIndexes[i]);
-				d = (pPat[attr] - mean) * pScaleFactors[attr];
-				var += (d * d);
+				if(pPat[attr] != UNKNOWN_REAL_VALUE)
+				{
+					d = (pPat[attr] - mean) * pScaleFactors[attr];
+					var += (d * d);
+				}
 			}
 		}
 		else
@@ -891,11 +900,14 @@ void GKdTree::computePivotAndGoodness(size_t count, size_t* pIndexes, size_t att
 			for(size_t i = 0; i < count; i++)
 			{
 				pPat = m_pData->row(pIndexes[i]);
-				d = (pPat[attr] - mean);
-				var += (d * d);
+				if(pPat[attr] != UNKNOWN_REAL_VALUE)
+				{
+					d = (pPat[attr] - mean);
+					var += (d * d);
+				}
 			}
 		}
-		var /= count; // (the biassed estimator of variance is better for this purpose)
+		var /= (count - missing); // (the biased estimator of variance is better for this purpose)
 
 		*pOutPivot = mean;
 		*pOutGoodness = var;
@@ -1255,7 +1267,7 @@ public:
 		m_pRelation = pRelation;
 	}
 
-	virtual double squaredDistance(const double* pA, const double* pB)
+	virtual double squaredDistance(const double* pA, const double* pB) const
 	{
 		double squaredDist = GVec::squaredDistance(pA, pB, m_pRelation->size());
 		if(squaredDist > m_squaredMaxDist)
@@ -1511,7 +1523,7 @@ void GShortcutPruner::onDetectBigAtomicCycle(vector<size_t>& cycle)
 		size_t to = cycle[(i + 1) % cycle.size()];
 		size_t forwIndex = g.neighborIndex(mapIn[from], mapIn[to]);
 		size_t revIndex = g.neighborIndex(mapIn[to], mapIn[from]);
-		double d = g.edgeBetweenness(mapIn[from], forwIndex) + g.edgeBetweenness(mapIn[to], revIndex);
+		double d = g.edgeBetweennessByNeighbor(mapIn[from], forwIndex) + g.edgeBetweennessByNeighbor(mapIn[to], revIndex);
 		if(i == 0 || d > shortcutBetweenness)
 		{
 			shortcutBetweenness = d;
@@ -1753,7 +1765,7 @@ size_t GCycleCut::cut()
 		else
 			m_pNeighborhoods[point * m_k + neigh] = INVALID_INDEX;
 	}
-
+//cerr << "cuts: " << m_cutCount << "\n";
 	return m_cutCount;
 }
 
@@ -2123,11 +2135,14 @@ double GSaffron::meanNeighborCount(double* pDeviation)
 
 
 
-
-GTemporalNeighborFinder::GTemporalNeighborFinder(GMatrix* pObservations, GMatrix* pActions, bool ownActionsData, size_t neighborCount, GRand* pRand)
-: GNeighborFinder(pObservations, neighborCount), m_ownActionsData(ownActionsData), m_pActions(pActions), m_pRand(pRand)
+GTemporalNeighborFinder::GTemporalNeighborFinder(GMatrix* pObservations, GMatrix* pActions, bool ownActionsData, size_t neighborCount, GRand* pRand, size_t maxDims)
+: GNeighborFinder(preprocessObservations(pObservations, maxDims, pRand), neighborCount),
+m_pPreprocessed(m_pPreprocessed), // don't panic, this is intentional. m_pPreprocessed is initialized in the previous line, and we do this so that its value will not be stomped over.
+m_pActions(pActions),
+m_ownActionsData(ownActionsData),
+m_pRand(pRand)
 {
-	if(pObservations->rows() != pActions->rows())
+	if(m_pData->rows() != pActions->rows())
 		ThrowError("Expected the same number of observations as control vectors");
 	if(pActions->cols() != 1)
 		ThrowError("Sorry, only one action dim is currently supported");
@@ -2136,59 +2151,27 @@ GTemporalNeighborFinder::GTemporalNeighborFinder(GMatrix* pObservations, GMatrix
 		ThrowError("Sorry, only nominal actions are currently supported");
 
 	// Train the consequence maps
-	size_t obsDims = pObservations->cols();
-	sp_relation spRel = new GUniformRelation(obsDims * 2, 0);
+	size_t obsDims = m_pData->cols();
 	for(int j = 0; j < actionValues; j++)
 	{
-		GMatrix consequenceData(spRel);
-		for(size_t i = 0; i < pObservations->rows() - 1; i++)
+		GMatrix before(0, obsDims);
+		GMatrix delta(0, obsDims);
+		for(size_t i = 0; i < m_pData->rows() - 1; i++)
 		{
 			if((int)pActions->row(i)[0] == (int)j)
 			{
-				double* pObs = consequenceData.newRow();
-				GVec::copy(pObs, pObservations->row(i), obsDims);
-				double* pDelta = pObs + obsDims;
-				GVec::copy(pDelta, pObservations->row(i + 1), obsDims);
-				GVec::subtract(pDelta, pObs, obsDims);
+				GVec::copy(before.newRow(), m_pData->row(i), obsDims);
+				double* pDelta = delta.newRow();
+				GVec::copy(pDelta, m_pData->row(i + 1), obsDims);
+				GVec::subtract(pDelta, m_pData->row(i), obsDims);
 			}
 		}
-		GAssert(consequenceData.rows() > 20); // not much data
-/*
-		GNeuralNet* pNN = new GNeuralNet(pRand);
-		pNN->addLayer(40);
-		GFilter* pMap = new GFilter(pNN, true);
-		pMap->setFeatureTransform(new GNormalize(-2.0, 2.0), true);
-		pMap->setLabelTransform(new GNormalize(0.0, 1.0), true);
-*/
+		GAssert(before.rows() > 20); // not much data
 		GKNN* pMap = new GKNN(*pRand);
-		//pMap->setInterpolationMethod(GKNN::Mean);
-//		GDecisionTree* pMap = new GDecisionTree(pRand);
+		pMap->setAutoFilter(false);
+		pMap->setFeatureFilter(new GPCA(12, pRand));
 		m_consequenceMaps.push_back(pMap);
-		//pMap->train(&consequenceData, obsDims);
-#ifdef _DEBUG
-/*
-		string s = "h";
-		s += gformat(j);
-		s += ".arff";
-		consequenceData.saveArff(s.c_str());
-*/
-/*
-		// Check accuracy
-		double* pBuf = new double[pObservations->cols()];
-		ArrayHolder<double> hBuf(pBuf);
-		for(size_t i = 0; i < pObservations->rows() - 1; i++)
-		{
-			if((int)pActions->row(i)[0] == j)
-			{
-				m_consequenceMaps[j]->predict(pObservations->row(i), pBuf);
-				GVec::add(pBuf, pObservations->row(i), pObservations->cols());
-				GVec::subtract(pBuf, pObservations->row(i + 1), pObservations->cols());
-				double meanErr = sqrt(GVec::squaredMagnitude(pBuf, pObservations->cols()) / pObservations->cols());
-				GAssert(meanErr < 2.0); // bad estimate
-			}
-		}
-*/
-#endif
+		pMap->train(before, delta);
 	}
 }
 
@@ -2199,6 +2182,23 @@ GTemporalNeighborFinder::~GTemporalNeighborFinder()
 		delete(m_pActions);
 	for(vector<GSupervisedLearner*>::iterator it = m_consequenceMaps.begin(); it != m_consequenceMaps.end(); it++)
 		delete(*it);
+	delete(m_pPreprocessed);
+}
+
+GMatrix* GTemporalNeighborFinder::preprocessObservations(GMatrix* pObs, size_t maxDims, GRand* pRand)
+{
+	if(pObs->cols() > maxDims)
+	{
+		GPCA pca(maxDims, pRand);
+		pca.train(*pObs);
+		m_pPreprocessed = pca.transformBatch(*pObs);
+		return m_pPreprocessed;
+	}
+	else
+	{
+		m_pPreprocessed = NULL;
+		return pObs;
+	}
 }
 
 bool GTemporalNeighborFinder::findPath(size_t from, size_t to, double* path, double maxDist)

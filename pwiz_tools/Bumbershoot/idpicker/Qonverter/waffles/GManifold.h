@@ -376,7 +376,7 @@ public:
 /// small random amount. (The purpose of this class is to make it
 /// possible to train GUnsupervisedBackProp to understand these common
 /// image-based transformations.)
-class GImageTweaker
+class GImageJitterer
 {
 	size_t m_wid;
 	size_t m_hgt;
@@ -392,7 +392,13 @@ public:
 	/// if translateWidths is 1.0, then it will translate between -0.5*wid and 0.5*wid. It will
 	/// also translate vertically by a value in the same range (dependant on wid, not hgt).
 	/// if zoomFactor is 2.0, then it will scale between a factor of 0.5 and 2.0.
-	GImageTweaker(size_t wid, size_t hgt, size_t channels, double rotateDegrees, double translateWidths, double zoomFactor);
+	GImageJitterer(size_t wid, size_t hgt, size_t channels, double rotateDegrees, double translateWidths, double zoomFactor);
+
+	/// Deserializing constructor
+	GImageJitterer(GDomNode* pNode);
+
+	/// Marshall this object into a DOM that can be serialized
+	GDomNode* serialize(GDom* pDoc);
 
 	/// Sets the 4 params to random uniform values between 0 and 1, and returns the params
 	double* pickParams(GRand& rand);
@@ -429,23 +435,26 @@ class GUnsupervisedBackProp : public GManifoldLearner
 protected:
 	size_t m_paramDims;
 	size_t* m_pParamRanges;
-	size_t m_tweakDims;
+	size_t m_jitterDims;
 	size_t m_intrinsicDims;
 	GNeuralNet* m_pNN;
+	GNeuralNet* m_pRevNN;
 	GRand* m_pRand;
 	GCoordVectorIterator m_cvi;
-	bool m_updateWeights;
-	bool m_updateIntrinsic;
 	bool m_useInputBias;
-	GImageTweaker* m_pTweaker;
+	GImageJitterer* m_pJitterer;
 	GMatrix* m_pIntrinsic;
 	double* m_pMins;
 	double* m_pRanges;
+	GMatrix* m_pProgress;
 
 public:
 	GUnsupervisedBackProp(size_t intrinsicDims, GRand* pRand);
 	GUnsupervisedBackProp(GDomNode* pNode, GLearnerLoader& ll);
 	virtual ~GUnsupervisedBackProp();
+
+	/// Marshall this object to a DOM that can be serialized.
+	GDomNode* serialize(GDom* pDoc);
 
 	/// Returns a pointer to the neural network used to model the manifold. Typically, this
 	/// is used to add layers to the neural network, or set the learning rate (etc.) before
@@ -473,24 +482,32 @@ public:
 	/// the intrinsic values (which you are responsible to delete).
 	virtual GMatrix* doit(GMatrix& in);
 
-	/// Specify whether or not to update the weights. The default is to update the weights.
-	void setUpdateWeights(bool b) { m_updateWeights = b; }
-
-	/// Specify whether or not to update the intrinsic values. The default is to update them.
-	void setUpdateIntrinsic(bool b) { m_updateIntrinsic = b; }
-
 	/// Specify whether to use one of the input values as a bias
 	void setUseInputBias(bool b) { m_useInputBias = b; }
 
-	/// Takes ownership of pTweaker.
-	/// Specify an image tweaker to use during training to make it robust to rotation,
-	/// translation, and scale. If an image tweaker is used, then there must be exactly two
-	/// dimensional parameters, and the parameters used to construct the image tweaker
+	/// Takes ownership of pJitterer.
+	/// Specify an image jitterer to use during training to make it robust to rotation,
+	/// translation, and scale. If an image jitterer is used, then there must be exactly two
+	/// dimensional parameters, and the parameters used to construct the image jitterer
 	/// must be consistent with those used to construct this object.
-	void setTweaker(GImageTweaker* pTweaker);
+	void setJitterer(GImageJitterer* pJitterer);
 
-	/// Returns the current image tweaker
-	GImageTweaker* tweaker() { return m_pTweaker; }
+	/// Returns the current image jitterer
+	GImageJitterer* jitterer() { return m_pJitterer; }
+
+	/// Given a high-dimensional vector, computes and returns a corresponding low-dimensional vector.
+	void hiToLow(const double* pIn, double* pOut);
+
+	/// Given a low-dimensional vector, computes and returns the corresponding high-dimensional vector.
+	void lowToHi(const double* pIn, double* pOut);
+
+	double* mins();
+	double* ranges();
+	void useJitterer() { m_jitterDims = 4; }
+	GMatrix& progress() { return *m_pProgress; }
+	void trackProgress();
+	size_t featureDims() { return m_jitterDims + m_intrinsicDims; }
+	size_t labelDims();
 };
 
 

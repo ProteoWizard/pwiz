@@ -18,7 +18,11 @@
 #	include <malloc.h>
 #	pragma warning(disable: 4996)
 #else
-#	include <alloca.h>
+# ifdef __FreeBSD__
+#  include <stdlib.h>
+# else
+#  include <alloca.h>
+# endif
 #endif
 #include <vector>
 
@@ -98,25 +102,30 @@ public:
 		m_p = p;
 	}
 
+private:
+        ///Private copy constructor so that the attempts to copy a
+        ///holder are caught at compile time rather than at run time
 	Holder(const Holder& other)
 	{
 		//reset(((Holder<T>)other).release());
 		ThrowError("tried to copy a holder");
 	}
-
+public:
 	/// Deletes the object that is being held
 	~Holder()
 	{
 		delete(m_p);
 	}
-
+private:
+        ///Private operator= so that the attempts to copy a
+        ///holder are caught at compile time rather than at run time
 	const Holder& operator=(const Holder& other)
 	{
 		//reset(((Holder)other).release());
 		ThrowError("tried to copy a holder");
 		return *this;
 	}
-
+public:
 	/// Deletes the object that is being held, and sets the holder
 	/// to hold p.  Will not delete the held pointer if the new
 	/// pointer is the same.

@@ -36,10 +36,14 @@ public:
 	GDomObjField* m_pPrev;
 };
 
+/// An element in a GDom list
 class GDomListItem
 {
 public:
+	/// Pointer to the value contained in this list item
 	GDomNode* m_pValue;
+
+	/// Pointer to the previous node in the list
 	GDomListItem* m_pPrev;
 };
 
@@ -175,6 +179,48 @@ void writeJSONString(std::ostream& stream, const char* szString)
 	stream << '"';
 }
 
+size_t writeJSONStringCpp(std::ostream& stream, const char* szString)
+{
+	stream << "\\\"";
+	size_t chars = 2;
+	while(*szString != '\0')
+	{
+		if(*szString < ' ')
+		{
+			switch(*szString)
+			{
+				case '\b': stream << "\\\\b"; break;
+				case '\f': stream << "\\\\f"; break;
+				case '\n': stream << "\\\\n"; break;
+				case '\r': stream << "\\\\r"; break;
+				case '\t': stream << "\\\\t"; break;
+				default:
+					stream << (*szString);
+			}
+			chars += 3;
+		}
+		else if(*szString == '\\')
+		{
+			stream << "\\\\\\\\";
+			chars += 4;
+		}
+		else if(*szString == '"')
+		{
+			stream << "\\\\\\\"";
+			chars += 4;
+		}
+		else
+		{
+			stream << (*szString);
+			chars++;
+		}
+		szString++;
+	}
+	stream << "\\\"";
+	chars += 2;
+	return chars;
+}
+
 void GDomNode::writeJson(std::ostream& stream)
 {
 	switch(m_type)
@@ -192,7 +238,7 @@ void GDomNode::writeJson(std::ostream& stream)
 			}
 			reverseFieldOrder();
 			stream << "}";
-			return;
+			break;
 		case type_list:
 			stream << "[";
 			reverseItemOrder();
@@ -204,7 +250,7 @@ void GDomNode::writeJson(std::ostream& stream)
 			}
 			reverseItemOrder();
 			stream << "]";
-			return;
+			break;
 		case type_bool:
 			stream << (m_value.m_bool ? "true" : "false");
 			break;
@@ -223,6 +269,87 @@ void GDomNode::writeJson(std::ostream& stream)
 		default:
 			ThrowError("Unrecognized node type");
 	}
+}
+
+size_t GDomNode::writeJsonCpp(std::ostream& stream, size_t col)
+{
+	switch(m_type)
+	{
+		case type_obj:
+			stream << "{";
+			col++;
+			reverseFieldOrder();
+			for(GDomObjField* pField = m_value.m_pLastField; pField; pField = pField->m_pPrev)
+			{
+				if(pField != m_value.m_pLastField)
+				{
+					stream << ",";
+					col++;
+				}
+				if(col >= 200)
+				{
+					stream << "\"\n\"";
+					col = 0;
+				}
+				col += writeJSONStringCpp(stream, pField->m_pName);
+				stream << ":";
+				col++;
+				col = pField->m_pValue->writeJsonCpp(stream, col);
+			}
+			reverseFieldOrder();
+			stream << "}";
+			col++;
+			break;
+		case type_list:
+			stream << "[";
+			col++;
+			reverseItemOrder();
+			for(GDomListItem* pItem = m_value.m_pLastItem; pItem; pItem = pItem->m_pPrev)
+			{
+				if(pItem != m_value.m_pLastItem)
+				{
+					stream << ",";
+					col++;
+				}
+				if(col >= 200)
+				{
+					stream << "\"\n\"";
+					col = 0;
+				}
+				col = pItem->m_pValue->writeJsonCpp(stream, col);
+			}
+			reverseItemOrder();
+			stream << "]";
+			col++;
+			break;
+		case type_bool:
+			stream << (m_value.m_bool ? "true" : "false");
+			col += 4;
+			break;
+		case type_int:
+			stream << m_value.m_int;
+			col += 4; // just a guess
+			break;
+		case type_double:
+			stream << m_value.m_double;
+			col += 8; // just a guess
+			break;
+		case type_string:
+			col += writeJSONStringCpp(stream, m_value.m_string);
+			break;
+		case type_null:
+			stream << "null";
+			col += 4;
+			break;
+		default:
+			ThrowError("Unrecognized node type");
+	}
+	if(col >= 200)
+	{
+		stream << "\"\n\"";
+		col = 0;
+	}
+	return col;
 }
 
 bool isXmlInlineType(int type)
@@ -417,7 +544,7 @@ GDomListItem* GDom::newItem()
 char* JSON_readString(GTokenizer& tok)
 {
 	tok.expect("\"");
-	char* szTok = tok.nextUntilNotEscaped('\\', "\"");
+	char* szTok = tok.nextUntilNotEscaped('\\', tok.charSet("\""));
 	tok.advance(1);
 	size_t eat = 0;
 	char* szString = szTok;
@@ -458,9 +585,10 @@ GDomNode* GDom::loadJsonObject(GTokenizer& tok)
 	tok.expect("{");
 	GDomNode* pNewObj = newObj();
 	bool readyForField = true;
+	GCharSet& whitespace = tok.charSet("\t\n\r ");
 	while(tok.remaining() > 0)
 	{
-		tok.skip();
+		tok.skip(whitespace);
 		char c = tok.peek();
 		if(c == '}')
 		{
@@ -482,9 +610,9 @@ GDomNode* GDom::loadJsonObject(GTokenizer& tok)
 			pNewField->m_pPrev = pNewObj->m_value.m_pLastField;
 			pNewObj->m_value.m_pLastField = pNewField;
 			pNewField->m_pName = m_heap.add(JSON_readString(tok));
-			tok.skip();
+			tok.skip(whitespace);
 			tok.expect(":");
-			tok.skip();
+			tok.skip(whitespace);
 			pNewField->m_pValue = loadJsonValue(tok);
 			readyForField = false;
 		}
@@ -501,9 +629,10 @@ GDomNode* GDom::loadJsonArray(GTokenizer& tok)
 	tok.expect("[");
 	GDomNode* pNewList = newList();
 	bool readyForValue = true;
+	GCharSet& whitespace = tok.charSet("\t\n\r ");
 	while(tok.remaining() > 0)
 	{
-		tok.skip();
+		tok.skip(whitespace);
 		char c = tok.peek();
 		if(c == ']')
 		{
@@ -535,7 +664,7 @@ GDomNode* GDom::loadJsonArray(GTokenizer& tok)
 
 GDomNode* GDom::loadJsonNumber(GTokenizer& tok)
 {
-	char* szString = tok.nextWhile("-.+0-9eE");
+	char* szString = tok.nextWhile(tok.charSet("-.+0-9eE"));
 	bool hasPeriod = false;
 	for(char* szChar = szString; *szChar != '\0'; szChar++)
 	{
@@ -594,7 +723,7 @@ GDomNode* GDom::loadJsonValue(GTokenizer& tok)
 
 void GDom::parseJson(GTokenizer& tok)
 {
-	tok.skip();
+	tok.skip(tok.charSet("\t\n\r "));
 	setRoot(loadJsonValue(tok));
 }
 
@@ -610,6 +739,16 @@ void GDom::writeJson(std::ostream& stream)
 		ThrowError("No root node has been set");
 	stream.precision(14);
 	m_pRoot->writeJson(stream);
+}
+
+void GDom::writeJsonCpp(std::ostream& stream)
+{
+	if(!m_pRoot)
+		ThrowError("No root node has been set");
+	stream.precision(14);
+	stream << "const char* g_rename_me = \"";
+	m_pRoot->writeJsonCpp(stream, 0);
+	stream << "\";\n\n";
 }
 
 void GDom::saveJson(const char* szFilename)

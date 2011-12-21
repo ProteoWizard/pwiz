@@ -57,26 +57,44 @@ public:
 	/// Marshal this object into a DOM, which can then be converted to a variety of serial formats.
 	virtual GDomNode* serialize(GDom* pDoc) = 0;
 
-	/// sets m_pRelationBefore and m_pRelationAfter, and trains the transform.
+	/// Trains the transform on the data in pData.
+	///
+	/// For those implementing subclasses, must set
+	/// m_pRelationBefore and m_pRelationAfter
 	virtual void train(GMatrix& data) = 0;
 
+	/// Returns a relation object describing the data before it is
+	/// transformed
+	///
 	/// train must be called before this method is used
 	sp_relation& before() { return m_pRelationBefore; }
 
+	/// Returns a relation object describing the data after it is
+	/// transformed
+	///
 	/// train must be called before this method is used
 	sp_relation& after() { return m_pRelationAfter; }
 
-	/// pIn is the source row. pOut is a buffer that will hold the transformed row.
-	/// train must be called before this method is used
+	/// pIn is the source row. pOut is a buffer that will hold the
+	/// transformed row.  train must be called before this method
+	/// is used
 	virtual void transform(const double* pIn, double* pOut) = 0;
 
-	/// This calls Train with pIn, then transforms pIn and returns the results.
+	/// This calls Train with in, then transforms in and returns
+	/// the results.  The caller is responsible for deleting the
+	/// new matrix.
 	virtual GMatrix* doit(GMatrix& in);
 
-	/// This assumes that train has already been called, and transforms all the rows in pIn.
+	/// This assumes that train has already been called, and
+	/// transforms all the rows in in returning the resulting
+	/// matrix.  The caller is responsible for deleting the new
+	/// matrix.
 	virtual GMatrix* transformBatch(GMatrix& in);
 
-	/// Returns a buffer of sufficient size to store an inner (transformed) vector
+	/// Returns a buffer of sufficient size to store an inner
+	/// (transformed) vector.  The caller does not have to delete
+	/// the buffer, but the same buffer will be returned each
+	/// time.
 	double* innerBuf();
 };
 

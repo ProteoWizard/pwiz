@@ -244,10 +244,22 @@ public:
 	/// this value by 2.
 	double vertexBetweenness(size_t vertex);
 
-	/// Returns the betweenness of the specified edge. (You must call compute
-	/// before calling this.) Note that for undirected graphs, you should divide
-	/// this value by 2.
-	double edgeBetweenness(size_t vertex, size_t neighborIndex);
+	/// Returns the betweenness of the edge specified by two vertices.
+	/// "compute" must be called before this method is called.
+	/// Note that for undirected graphs, you should divide the value this returns
+	/// by 2, since every edge will be counted in both directions.
+	/// Throws an exception if there is no edge between vertex1 and vertex2.
+	/// Note that this method is not as efficient as "edgeBetweennessByNeighbor".
+	double edgeBetweennessByVertex(size_t vertex1, size_t vertex2);
+
+	/// Returns the betweenness of the edge specified by vertex and neighborIndex.
+	/// Note that neighborIndex is not the same as the other vertex. It is the
+	/// enumeration value of each neighbor of the first vertex. To obtain the value
+	/// for neighborIndex, you should call "neighborIndex" by passing in both vertices.
+	/// "compute" must be called before this method is called.
+	/// Note that for undirected graphs, you should divide the value this returns
+	/// by 2, since every edge will be counted in both directions.
+	double edgeBetweennessByNeighbor(size_t vertex, size_t neighborIndex);
 
 	/// Returns the index of the specified neighbor "to" (by iterating over all the
 	/// neighbors of "from" until it finds "to"). Returns INVALID_INDEX if not found.

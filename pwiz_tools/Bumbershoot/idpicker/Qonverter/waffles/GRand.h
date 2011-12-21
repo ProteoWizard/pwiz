@@ -12,8 +12,8 @@
 #ifndef __GRAND_H__
 #define __GRAND_H__
 
+#include <sys/types.h>
 #include <vector>
-
 
 namespace GClasses {
 
@@ -53,7 +53,16 @@ public:
 	double beta(double alpha, double beta);
 
 	/// Returns a random value from a binomial distribution
-	int binomial(int n, double p);
+	/// This method draws n samples from a uniform distribution,
+	/// so it is very slow for large values of n. binomial_approx
+	/// is generally much faster.
+	size_t binomial(size_t n, double p);
+
+	/// Returns a random value approximately from a binomial distribution.
+	/// This method uses a normal distribution to approximate the binomial
+	/// distribution. It is O(1), and is generally quite accurate when
+	/// n is large and p is not too close to 0 or 1.
+	size_t binomial_approx(size_t n, double p);
 
 	/// Returns a random value from a categorical distribution
 	/// with the specified vector of category probabilities.
@@ -108,6 +117,10 @@ public:
 	/// Returns a random value from a Poisson distribution
 	int poisson(double mu);
 
+	/// Draws uniformly from a unit simplex. (This is a special case of
+	/// drawing from a dirichlet distribution with uniform parameters.)
+	void simplex(double* pOutVec, size_t dims);
+
 	/// Returns a random value from a soft-impulse distribution with support
 	/// from 0 to 1. (The cdf of the soft-impulse distribution is the soft-step
 	/// function: (1/(pow(1/x-1,s)+1)). The mean is always at 0.5, where
@@ -133,6 +146,12 @@ public:
 
 	/// Returns a random value from a Weibull distribution with lambda=1.
 	double weibull(double gamma);
+
+	/// Returns the global random number generator.  Useful to
+        /// avoid passing GRand* all over the place.  Initializes the
+        /// seed based on the time and some other system parameters
+        /// the first time it is called.
+	static GRand& global();
 
 #ifndef NO_TEST_CODE
 	/// Performs unit tests for this class. Throws an exception if there is a failure.

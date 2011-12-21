@@ -23,10 +23,13 @@
 #include "GLearner.h"
 #include "GRand.h"
 #include "GTokenizer.h"
+#include "GNeighborFinder.h"
+#include "GDistance.h"
 #include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <cmath>
+#include <set>
 
 using namespace GClasses;
 using std::vector;
@@ -257,6 +260,44 @@ void GRelation::save(GMatrix* pData, const char* szFilename, size_t precision)
 	}
 	print(stream, pData, precision);
 }
+
+#ifndef NO_TEST_CODE
+//static
+void GRelation::test()
+{
+	typedef std::string s;
+	TestEqual
+		("the",quote("the"),
+		 "GRelation::quote gets (the) wrong");								
+
+	TestEqual("'the rain'", quote("the rain"),
+							"GRelation::quote gets (the rain) wrong");
+
+	TestEqual("the\\ rain\\'s\\ \\\\mom",
+							quote("the rain's \\mom"),
+							"GRelation::quote gets 'the rain's \\mom' wrong");
+
+	TestEqual("'%'", quote("%"), "GRelation::quote gets (%) wrong");
+
+	TestEqual("','", quote(","), "GRelation::quote gets (,) wrong");
+
+	TestEqual("' '", quote(" "), "GRelation::quote gets ( ) wrong");
+
+	TestEqual("\\'", quote("'"), "GRelation::quote gets (') wrong");
+
+	TestEqual("'\\'", quote("\\"), "GRelation::quote gets (\\) wrong");
+
+	TestEqual("'\"'", quote("\""), "GRelation::quote gets (\") wrong");
+
+	TestEqual("Dow\\'s\\ rise\\ (\\%)",
+							quote("Dow's rise (%)"),
+							"GRelation::quote gets 'Dow's rise (%)' wrong");
+
+	TestEqual("\\\"Rise\\'\\\"\\,\\\"Run\\'\\\"",
+							quote("\"Rise'\",\"Run'\""),
+							"GRelation::quote gets '\"Rise'\",\"Run'\"' wrong");
+}
+#endif // !NO_TEST_CODE
 
 
 
@@ -558,9 +599,14 @@ void GArffRelation::setName(const char* szName)
 
 void GArffRelation::parseAttribute(GTokenizer& tok)
 {
-	tok.skip(" \t");
-	string name = tok.nextArg();
-	tok.skip(" \t");
+	GCharSet& spaces = tok.charSet(" \t");
+	GCharSet& valEnd = tok.charSet(",}\n");
+	GCharSet& whitespace = tok.charSet("\t\n\r ");
+	GCharSet& argEnd = tok.charSet(" \t\n{\r");
+	tok.skip(spaces);
+	string name = tok.nextArg(argEnd);
+	//std::cerr << "Attr:" << name << "\n"; //DEBUG
+	tok.skip(spaces);
 	char c = tok.peek();
 	if(c == '{')
 	{
@@ -570,10 +616,28 @@ void GArffRelation::parseAttribute(GTokenizer& tok)
 		m_attrs.resize(index + 1);
 		while(true)
 		{
-			tok.nextUntil(",}\n");
-			const char* szVal = tok.trim();
+			tok.nextArg(valEnd);
+			char* szVal = tok.trim(whitespace);
 			if(*szVal == '\0')
 				ThrowError("Empty value specified on line ", to_str(tok.line()));
+			if(*szVal == '\'')
+			{
+				size_t len = strlen(szVal);
+				if(len > 1 && szVal[len - 1] == '\'')
+				{
+					szVal[len - 1] = '\0';
+					szVal++;
+				}
+			}
+			else if(*szVal == '"')
+			{
+				size_t len = strlen(szVal);
+				if(len > 1 && szVal[len - 1] == '"')
+				{
+					szVal[len - 1] = '\0';
+					szVal++;
+				}
+			}
 			m_attrs[index].m_values.push_back(szVal);
 			char c = tok.peek();
 			if(c == ',')
@@ -581,7 +645,7 @@ void GArffRelation::parseAttribute(GTokenizer& tok)
 			else if(c == '}')
 				break;
 			else if(c == '\n')
-				ThrowError("Expected a '}' on line ", to_str(tok.line()));
+				ThrowError("Expected a '}' but got new-line on line ", to_str(tok.line()));
 			else
 				ThrowError("inconsistency");
 		}
@@ -598,7 +662,7 @@ void GArffRelation::parseAttribute(GTokenizer& tok)
 	}
 	else
 	{
-		const char* szType = tok.nextUntil();
+		const char* szType = tok.nextUntil(whitespace);
 		if(	_stricmp(szType, "CONTINUOUS") == 0 ||
 			_stricmp(szType, "REAL") == 0 ||
 			_stricmp(szType, "NUMERIC") == 0 ||
@@ -607,17 +671,57 @@ void GArffRelation::parseAttribute(GTokenizer& tok)
 			addAttribute(name.c_str(), 0, NULL);
 		}
 		else
-			ThrowError("Unsupported attribute type: ", szType, ", at line ", to_str(tok.line()));
+			ThrowError("Unsupported attribute type: (", szType, "), at line ", to_str(tok.line()));
 	}
-	tok.skipTo("\n");
+	tok.skipTo(tok.charSet("\n"));
 	tok.advance(1);
 }
 
 // virtual
 void GArffRelation::printAttrName(std::ostream& stream, size_t column)
 {
-	stream << attrName(column);
+	stream << GRelation::quote(attrName(column));
 }
+
+// static
+std::string GRelation::quote(const std::string aString){
+	typedef std::string::const_iterator iter;
+
+	//If the string has no bad characters, just return a copy
+	std::size_t firstBad = aString.find_first_of(",' %\\\"");
+	std::string ret(aString);
+	if(firstBad == string::npos){
+		return ret;
+	}
+
+	//The string has bad characters, start over
+	ret.clear();
+
+	//If the string has no apostrophes, just quote it with single quotes
+	std::size_t firstApostrophe = aString.find_first_of('\'');
+	if(firstApostrophe == string::npos){
+		ret.push_back('\'');
+		ret.append(aString);
+		ret.push_back('\'');
+		return ret;
+	}
+
+
+	//Otherwise, use backslash to quote every character
+	ret.reserve(2*aString.size());
+	for(iter c=aString.begin();c != aString.end(); ++c)
+	{
+		if(*c == ','  || *c == '\'' ||
+			 *c == ' '  || *c == '%' ||
+			 *c == '\\' || *c == '"')
+		{
+			ret.push_back('\\');
+		}
+		ret.push_back(*c);
+	}
+	return ret;
+}
+
 
 // virtual
 void GArffRelation::printAttrValue(ostream& stream, size_t column, double value)
@@ -638,7 +742,7 @@ void GArffRelation::printAttrValue(ostream& stream, size_t column, double value)
 		else if(val >= (int)valCount)
 			ThrowError("value out of range");
 		else if(m_attrs[column].m_values.size() > 0)
-			stream << m_attrs[column].m_values[val];
+			stream << GRelation::quote(m_attrs[column].m_values[val]);
 		else if(val < 26)
 		{
 			char tmp[2];
@@ -743,7 +847,14 @@ double GArffRelation::parseValue(size_t attr, const char* val)
 		if(strcmp(val, "?") == 0)
 			return UNKNOWN_REAL_VALUE;
 		else
+		{
+			if((*val >= '0' && *val <= '9') || *val == '-' || *val == '.')
+			{
+			}
+			else
+				ThrowError("Invalid real value, ", val, ". Expected it to start with one of {0-9,.,-}.");
 			return atof(val);
+		}
 	}
 	else
 	{
@@ -761,8 +872,22 @@ double GArffRelation::parseValue(size_t attr, const char* val)
 				}
 			}
 			if(v == (size_t)-1)
-				v = atoi(val);
-			return (double)v;
+			{
+				if(*val >= '0' && *val <= '9')
+					v = atoi(val);
+				else
+				{
+					string sChoices;
+					for(size_t j = 0; j < values; j++)
+					{
+						if(j != 0)
+							sChoices += ',';
+						sChoices += m_attrs[attr].m_values[j].c_str();
+					}
+					ThrowError("Invalid categorical value, ", val, ". Expected one of {", sChoices, "}");
+				}
+			}
+			return double(v);
 		}
 	}
 }
@@ -862,7 +987,7 @@ double GMatrix_parseValue(GArffRelation* pRelation, size_t col, const char* szVa
 		{
 			int nVal = pRelation->findEnumeratedValue(col, szVal);
 			if(nVal == UNKNOWN_DISCRETE_VALUE)
-				ThrowError("Unrecognized enumeration value for attribute ", to_str(col), " at line ", to_str(tok.line()), ", col ", to_str(tok.col()));
+				ThrowError("Unrecognized enumeration value '", szVal, "' for attribute ", to_str(col), " at line ", to_str(tok.line()), ", col ", to_str(tok.col()));
 			return (double)nVal;
 		}
 	}
@@ -871,34 +996,41 @@ double GMatrix_parseValue(GArffRelation* pRelation, size_t col, const char* szVa
 GMatrix* GMatrix_parseArff(GTokenizer& tok)
 {
 	// Parse the meta data
+	GCharSet& whitespace = tok.charSet("\t\n\r ");
+	GCharSet& spaces = tok.charSet(" \t");
+	GCharSet& space = tok.charSet(" ");
+	GCharSet& newline = tok.charSet("\n");
+	GCharSet& valEnder = tok.charSet(" ,\t}\n");
+	GCharSet& valHardEnder = tok.charSet(",}\t\n");
+	GCharSet& commaNewlineTab = tok.charSet(",\n\t");
 	GArffRelation* pRelation = new GArffRelation();
 	sp_relation sp_rel = pRelation;
 	while(true)
 	{
-		tok.skip(); // Skip Whitespace
+		tok.skip(whitespace);
 		char c = tok.peek();
 		if(c == '\0')
 			ThrowError("Invalid ARFF file--contains no data");
 		else if(c == '%')
 		{
 			tok.advance(1);
-			tok.skipTo("\n");
+			tok.skipTo(newline);
 		}
 		else if(c == '@')
 		{
 			tok.advance(1);
-			const char* szTok = tok.nextUntil();
+			const char* szTok = tok.nextUntil(whitespace);
 			if(_stricmp(szTok, "ATTRIBUTE") == 0)
 				pRelation->parseAttribute(tok);
 			else if(_stricmp(szTok, "RELATION") == 0)
 			{
-				tok.skip(" \t");
-				pRelation->setName(tok.nextUntil("\n", 0));
+				tok.skip(spaces);
+				pRelation->setName(tok.nextArg(tok.charSet("\t\n\r ")));
 				tok.advance(1);
 			}
 			else if(_stricmp(szTok, "DATA") == 0)
 			{
-				tok.skipTo("\n");
+				tok.skipTo(newline);
 				tok.advance(1);
 				break;
 			}
@@ -913,14 +1045,14 @@ GMatrix* GMatrix_parseArff(GTokenizer& tok)
 	size_t cols = pRelation->size();
 	while(true)
 	{
-		tok.skip();
+		tok.skip(whitespace);
 		char c = tok.peek();
 		if(c == '\0')
 			break;
 		else if(c == '%')
 		{
 			tok.advance(1);
-			tok.skipTo("\n");
+			tok.skipTo(newline);
 		}
 		else if(c == '{')
 		{
@@ -929,11 +1061,11 @@ GMatrix* GMatrix_parseArff(GTokenizer& tok)
 			GVec::setAll(pRow, 0.0, cols);
 			while(true)
 			{
-				tok.skip(" ");
+				tok.skip(space);
 				char c = tok.peek();
 				if(c >= '0' && c <= '9')
 				{
-					const char* szTok = tok.nextUntil(" ,\t}\n");
+					const char* szTok = tok.nextUntil(valEnder);
 #ifdef WIN32
 					size_t col = (size_t)_strtoui64(szTok, (char**)NULL, 10);
 #else
@@ -941,10 +1073,10 @@ GMatrix* GMatrix_parseArff(GTokenizer& tok)
 #endif
 					if(col >= cols)
 						ThrowError("Column index out of range at line ", to_str(tok.line()), ", col ", to_str(tok.col()));
-					tok.skip(" \t");
-					const char* szVal = tok.nextUntil(", \t}\n");
+					tok.skip(spaces);
+					const char* szVal = tok.nextArg(valEnder);
 					pRow[col] = GMatrix_parseValue(pRelation, col, szVal, tok);
-					tok.skipTo(",}\t\n");
+					tok.skipTo(valHardEnder);
 					c = tok.peek();
 					if(c == ',' || c == '\t')
 						tok.advance(1);
@@ -968,8 +1100,8 @@ GMatrix* GMatrix_parseArff(GTokenizer& tok)
 			{
 				if(col >= cols)
 					ThrowError("Too many values on line ", to_str(tok.line()), ", col ", to_str(tok.col()));
-				tok.nextUntil(",\n\t", 0);
-				const char* szVal = tok.trim();
+				tok.nextArg(commaNewlineTab);
+				const char* szVal = tok.trim(whitespace);
 				*pRow = GMatrix_parseValue(pRelation, col, szVal, tok);
 				pRow++;
 				col++;
@@ -1497,13 +1629,12 @@ bool GMatrix::gaussianElimination(double* pVector)
 {
 	if(rows() != (size_t)cols())
 		ThrowError("Expected a square matrix");
-	double d, dBest;
+	double d;
 	double* pRow;
 	size_t rowCount = rows();
 	size_t colCount = cols();
 	for(size_t nRow = 0; nRow < rowCount; nRow++)
 	{
-		dBest = 0;
 		size_t i;
 		for(i = nRow; i < rowCount && std::abs(row(i)[nRow]) < 1e-4; i++)
 		{
@@ -2816,9 +2947,9 @@ void GMatrix::mergeVert(GMatrix* pData)
 		}
 
 		// Merge the data and map the values in pData to match those in this Matrix with the same name
-		while(pData->rows() > 0)
+		for(size_t j = 0; j < pData->rows(); j++)
 		{
-			double* pRow = pData->releaseRow(0);
+			double* pRow = pData->row(j);
 			takeRow(pRow);
 			for(size_t i = 0; i < pThis->size(); i++)
 			{
@@ -2832,13 +2963,15 @@ void GMatrix::mergeVert(GMatrix* pData)
 				pRow++;
 			}
 		}
+		pData->releaseAllRows();
 	}
 	else
 	{
 		if(!relation()->isCompatible(*pData->relation().get()))
 			ThrowError("The two matrices have incompatible relations");
-		while(pData->rows() > 0)
-			takeRow(pData->releaseRow(0));
+		for(size_t i = 0; i < pData->rows(); i++)
+			takeRow(pData->row(i));
+		pData->releaseAllRows();
 	}
 }
 
@@ -3820,7 +3953,348 @@ void GMatrix::project(double* pDest, const double* pPoint, const double* pOrigin
 	}
 }
 
+/// This is a helper class used only by GMatrix::bipartiteMatching
+class GBMNode
+{
+public:
+	double m_dist;
+	size_t m_a;
+	size_t m_b;
+	GBMNode* m_pPrevDist;
+	GBMNode* m_pNextDist;
+	GBMNode* m_pPrevA;
+	GBMNode* m_pNextA;
+	GBMNode* m_pPrevB;
+	GBMNode* m_pNextB;
+
+	GBMNode(double dist, size_t a, size_t b, GBMNode** ppHead, GBMNode** ppAB, GBMNode** ppBA)
+	: m_dist(dist), m_a(a), m_b(b), m_pPrevDist(NULL)
+	{
+		// Link by distance
+		m_pNextDist = *ppHead;
+		*ppHead = this;
+		if(m_pNextDist)
+			m_pNextDist->m_pPrevDist = this;
+
+		// Link by a-b
+		if(*ppAB)
+		{
+			m_pNextA = *ppAB;
+			m_pPrevA = m_pNextA->m_pPrevA;
+			m_pNextA->m_pPrevA = this;
+			m_pPrevA->m_pNextA = this;
+		}
+		else
+		{
+			m_pNextA = this;
+			m_pPrevA = this;
+			*ppAB = this;
+		}
+
+		// Link by b-a
+		if(*ppBA)
+		{
+			m_pNextB = *ppBA;
+			m_pPrevB = m_pNextB->m_pPrevB;
+			m_pNextB->m_pPrevB = this;
+			m_pPrevB->m_pNextB = this;
+		}
+		else
+		{
+			m_pNextB = this;
+			m_pPrevB = this;
+			*ppBA = this;
+		}
+	}
+
+	void nix(GBMNode** ppNextDist, size_t* pResults, size_t* pCount)
+	{
+		if(*ppNextDist == this)
+			*ppNextDist = m_pNextDist;
+		GBMNode* pNextA = m_pNextA;
+		GBMNode* pNextB = m_pNextB;
+		if(m_pPrevDist)
+			m_pPrevDist->m_pNextDist = m_pNextDist;
+		if(m_pNextDist)
+			m_pNextDist->m_pPrevDist = m_pPrevDist;
+		m_pNextA->m_pPrevA = m_pPrevA;
+		m_pPrevA->m_pNextA = m_pNextA;
+		m_pNextA = this;
+		m_pPrevA = this;
+		if(pNextA != this && pNextA->m_pNextA == pNextA)
+		{
+			if(pResults[pNextA->m_a] == size_t(-1))
+			{
+				pResults[pNextA->m_a] = pNextA->m_b;
+				(*pCount)++;
+				while(pNextA->m_pNextB != pNextA)
+					pNextA->m_pNextB->nix(ppNextDist, pResults, pCount);
+			}
+		}
+		m_pNextB->m_pPrevB = m_pPrevB;
+		m_pPrevB->m_pNextB = m_pNextB;
+		m_pNextB = this;
+		m_pPrevB = this;
+		if(pNextB != this && pNextB->m_pNextB == pNextB)
+		{
+			if(pResults[pNextB->m_a] == size_t(-1))
+			{
+				pResults[pNextB->m_a] = pNextB->m_b;
+				(*pCount)++;
+				while(pNextB->m_pNextA != pNextB)
+					pNextB->m_pNextA->nix(ppNextDist, pResults, pCount);
+			}
+		}
+	}
+
+	static GBMNode* mergeSort(GBMNode* pFirst, size_t len)
+	{
+		// Split
+		size_t firstLen = len / 2;
+		size_t secondLen = len - firstLen;
+		GBMNode* pSecond = pFirst;
+		for(size_t i = 0; i < firstLen; i++)
+			pSecond = pSecond->m_pNextDist;
+
+		// Recurse
+		if(firstLen >= 2)
+			pFirst = mergeSort(pFirst, firstLen);
+		else if(firstLen == 0)
+			return pSecond;
+		if(secondLen >= 2)
+			pSecond = mergeSort(pSecond, secondLen);
+
+		// Merge
+		GBMNode* pHead = pFirst;
+		while(true)
+		{
+			if(pFirst->m_dist < pSecond->m_dist)
+			{
+				// Unlink the second
+				GBMNode* pNextSecond = pSecond->m_pNextDist;
+				if(pSecond->m_pNextDist)
+					pSecond->m_pNextDist->m_pPrevDist = pSecond->m_pPrevDist;
+				if(pSecond->m_pPrevDist)
+					pSecond->m_pPrevDist->m_pNextDist = pSecond->m_pNextDist;
+
+				// Link in the new spot
+				pSecond->m_pPrevDist = pFirst->m_pPrevDist;
+				pSecond->m_pNextDist = pFirst;
+				if(pFirst->m_pPrevDist)
+					pFirst->m_pPrevDist->m_pNextDist = pSecond;
+				pFirst->m_pPrevDist = pSecond;
+				if(pHead == pFirst)
+					pHead = pSecond;
+				pSecond = pNextSecond;
+				if(--secondLen == 0)
+					break;
+			}
+			else
+			{
+				pFirst = pFirst->m_pNextDist;
+				if(--firstLen == 0)
+					break;
+			}
+		}
+		return pHead;
+	}
+};
+
+// static
+size_t* GMatrix::bipartiteMatching(GMatrix& a, GMatrix& b, GDistanceMetric& metric, size_t k)
+{
+	if(a.rows() == 0)
+		return NULL;
+	if(a.cols() != b.cols())
+		ThrowError("Expected two matrices with the same number of columns");
+	if(b.rows() < a.rows())
+		ThrowError("Matrix b must have at least as many rows as matrix a");
+	metric.init(a.relation());
+	size_t ka = std::min(a.rows(), k);
+	if(ka == 0)
+		ka = a.rows();
+	size_t kb = std::min(b.rows(), k);
+	if(kb == 0)
+		kb = b.rows();
+	vector<GBMNode*> a_b; // Loop of every edge from a to b
+	a_b.resize(a.rows(), NULL);
+	vector<GBMNode*> b_a; // Loop of every edge from b to a
+	b_a.resize(b.rows(), NULL);
+	GHeap heap(4096);
+	GBMNode* pHead = NULL;
+	size_t candCount = 0;
+	if(ka >= a.rows())
+	{
+		// Fully-connect every row in 'a' with every row in 'b'
+		for(size_t aa = 0; aa < a.rows(); aa++)
+		{
+			double* pRowA = a[aa];
+			for(size_t bb = 0; bb < b.rows(); bb++)
+			{
+				new (heap.allocAligned(sizeof(GBMNode))) GBMNode(metric.squaredDistance(pRowA, b[bb]), aa, bb, &pHead, &a_b[aa], &b_a[bb]); // allocate with placement new
+				candCount++;
+			}
+		}
+	}
+	else
+	{
+		size_t* pNeighbors = new size_t[kb];
+		ArrayHolder<size_t> hNeighbors(pNeighbors);
+		double* pDistances = new double[kb];
+		ArrayHolder<double> hDistances(pDistances);
+		vector< std::set<size_t> > used;
+		used.resize(a.rows());
+		{
+			// Add the k-nearest neighbors in b of each row in a
+			GKdTree nf(&b, kb, &metric, false);
+			for(size_t aa = 0; aa < a.rows(); aa++)
+			{
+				nf.neighbors(pNeighbors, pDistances, a[aa]);
+				size_t* pB = pNeighbors;
+				double* pDist = pDistances;
+				std::set<size_t>& usedSet = used[aa];
+				for(size_t j = 0; j < kb; j++)
+				{
+					if(*pB < b.rows())
+					{
+						new (heap.allocAligned(sizeof(GBMNode))) GBMNode(*pDist, aa, *pB, &pHead, &a_b[aa], &b_a[*pB]); // allocate with placement new
+						usedSet.insert(*pB);
+						candCount++;
+					}
+					pB++;
+					pDist++;
+				}
+			}
+		}
+		{
+			// Add the k-nearest neighbors in a of each row in b
+			GKdTree nf(&a, ka, &metric, false);
+			for(size_t bb = 0; bb < b.rows(); bb++)
+			{
+				nf.neighbors(pNeighbors, pDistances, b[bb]);
+				size_t* pA = pNeighbors;
+				double* pDist = pDistances;
+				for(size_t j = 0; j < ka; j++)
+				{
+					if(*pA < a.rows())
+					{
+						std::set<size_t>& usedSet = used[*pA];
+						if(usedSet.find(bb) == usedSet.end())
+						{
+							new (heap.allocAligned(sizeof(GBMNode))) GBMNode(*pDist, *pA, bb, &pHead, &a_b[*pA], &b_a[bb]); // allocate with placement new
+							candCount++;
+						}
+					}
+					pA++;
+					pDist++;
+				}
+			}
+		}
+	}
+
+	// Sort the distance list by distance (greatest first)
+	pHead = GBMNode::mergeSort(pHead, candCount);
+
+	// Discard the worst matchings until all rows are matched exactly once
+	size_t* pResults = new size_t[a.rows()];
+	ArrayHolder<size_t> hResults(pResults);
+	if(a.rows() == 1)
+	{
+		pResults[0] = 0;
+		return hResults.release();
+	}
+	size_t* pRes = pResults;
+	for(size_t i = 0; i < a.rows(); i++)
+		*(pRes++) = size_t(-1);
+	size_t resultCount = 0;
+	size_t iter = 0;
+	while(pHead)
+	{
+		GBMNode* pNext = pHead;
+		pHead->nix(&pNext, pResults, &resultCount);
+		if(resultCount >= a.rows())
+			break;
+		pHead = pNext;
+		iter++;
+	}
+	if(resultCount < a.rows())
+		ThrowError("not enough neighbors for a complete solution");
+	else if(resultCount > a.rows())
+		ThrowError("internal error");
+	return hResults.release();
+}
+
 #ifndef NO_TEST_CODE
+void GMatrix_stressBipartiteMatching()
+{
+	// This test does bipartite matching with a bunch of
+	// random matrices, to make sure there are no crashes
+	// or endless loops. The results are not checked since
+	// correct results are not known.
+	GRand rand(0);
+	GRowDistance metric;
+	for(size_t i = 0; i < 200; i++)
+	{
+		size_t rowsa = (size_t)rand.next(20);
+		size_t rowsb = std::max(rowsa, (size_t)rand.next(20));
+		size_t cols = (size_t)rand.next(8);
+		GMatrix a(rowsa, cols);
+		GMatrix b(rowsb, cols);
+		for(size_t j = 0; j < rowsa; j++)
+		{
+			double* pA = a[j];
+			for(size_t k = 0; k < cols; k++)
+				*(pA++) = rand.normal();
+		}
+		for(size_t j = 0; j < rowsb; j++)
+		{
+			double* pB = b[j];
+			for(size_t k = 0; k < cols; k++)
+				*(pB++) = rand.normal();
+		}
+		size_t* pResults = GMatrix::bipartiteMatching(a, b, metric);
+		ArrayHolder<size_t> hResults(pResults);
+	}
+}
+
+void GMatrix_testBipartiteMatching()
+{
+	GMatrix a(7, 2);
+	a[0][0] = 0; a[0][1] = 0;
+	a[1][0] = 2; a[1][1] = 1;
+	a[2][0] = 5; a[2][1] = 2;
+	a[3][0] = 3; a[3][1] = 5;
+	a[4][0] = 4; a[4][1] = 7;
+	a[5][0] = 1; a[5][1] = 4;
+	a[6][0] = 4; a[6][1] = 2;
+	GMatrix b(7, 2);
+	b[0][0] = 4; b[0][1] = 2;
+	b[1][0] = 2; b[1][1] = 1;
+	b[2][0] = 5.01; b[2][1] = 2;
+	b[3][0] = 6; b[3][1] = 2;
+	b[4][0] = 3.9; b[4][1] = 6.9;
+	b[5][0] = 3.1; b[5][1] = 5.1;
+	b[6][0] = 2.9; b[6][1] = 4.9;
+
+	GRowDistance metric;
+	size_t* pResults = GMatrix::bipartiteMatching(a, b, metric, 5);
+	ArrayHolder<size_t> hResults(pResults);
+	if(pResults[0] != 1)
+		ThrowError("failed");
+	if(pResults[1] != 0)
+		ThrowError("failed");
+	if(pResults[2] != 3)
+		ThrowError("failed");
+	if(pResults[3] != 5)
+		ThrowError("failed");
+	if(pResults[4] != 4)
+		ThrowError("failed");
+	if(pResults[5] != 6)
+		ThrowError("failed");
+	if(pResults[6] != 2)
+		ThrowError("failed");
+}
+
 void GMatrix_testMultiply()
 {
 	GMatrix a(2, 2);
@@ -4289,6 +4763,8 @@ void GMatrix::test()
 	GMatrix_testPseudoInverse();
 	GMatrix_testKabsch(prng);
 	GMatrix_testLUDecomposition(prng);
+	GMatrix_testBipartiteMatching();
+	GMatrix_stressBipartiteMatching();
 }
 #endif // !NO_TEST_CODE
 

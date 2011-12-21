@@ -187,7 +187,7 @@ GPolynomialSingleLabel::GPolynomialSingleLabel(GDomNode* pNode, GRand& rand)
 	}
 	m_pCoefficients = new double[m_nCoefficients];
 	GDomListIterator it(pNode->field("coefficients"));
-	GVec::deserialize(m_pCoefficients, m_nCoefficients, it);
+	GVec::deserialize(m_pCoefficients, it);
 }
 
 GPolynomialSingleLabel::~GPolynomialSingleLabel()

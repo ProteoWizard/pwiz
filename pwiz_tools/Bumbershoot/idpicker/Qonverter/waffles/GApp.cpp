@@ -26,7 +26,9 @@
 //#	include <termios.h>
 //#	include <fcntl.h>
 #	ifndef __linux__
+#  ifndef __FreeBSD__
 #		include <mach-o/dyld.h>
+#  endif
 #	endif
 #endif
 #include "GHolders.h"
@@ -224,7 +226,7 @@ void GPipe::toFile(const char* szFilename)
 		return bytes;
 	}
 #else
-#	ifdef __linux__
+#	if defined(__linux__) || defined(__FreeBSD__)
 	std::ostringstream os;
 	os << "/proc/" << getpid() << "/exe";
 	string tmp = os.str();
@@ -846,4 +848,21 @@ bool GArgReader::next_is_flag()
 	if(size() == 0)
 		return false;	
 	return (peek()[0] == '-');
+}
+
+bool GArgReader::next_is_uint()
+{
+  if(size() == 0){
+    return false;
+  }
+  const char* s = peek();
+  if (s == NULL || *s == '\0'){
+      return 0;
+  }
+  char * p;
+  if(strtoul (s, &p, 10) == 0)
+  {
+	  // no-op to circumvent a g++ warning
+  }
+  return *p == '\0';
 }

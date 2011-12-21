@@ -30,7 +30,7 @@ GLinearRegressor::GLinearRegressor(GDomNode* pNode, GLearnerLoader& ll)
 	m_pBeta = new GMatrix(pNode->field("beta"));
 	m_pEpsilon = new double[m_pBeta->rows()];
 	GDomListIterator it(pNode->field("epsilon"));
-	GVec::deserialize(m_pEpsilon, m_pBeta->rows(), it);
+	GVec::deserialize(m_pEpsilon, it);
 }
 
 // virtual

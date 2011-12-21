@@ -12,6 +12,7 @@
 #ifndef __GREGION_H__
 #define __GREGION_H__
 
+#include <sys/types.h>
 #include <vector>
 
 namespace GClasses {

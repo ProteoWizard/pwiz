@@ -55,7 +55,14 @@ namespace GClasses {
 	return szBuf;
 }
 
-/*static*/ void GTime::appendTimeStampValue(std::string* pS, bool bGreenwichMeanTime)
+void GTime_printTwoDigits(std::ostream& os, unsigned int n)
+{
+	if(n < 10)
+		os << "0";
+	os << n;
+}
+
+/*static*/ void GTime::appendTimeStampValue(std::string* pS, const char* sep1, const char* sep2, const char* sep3, bool bGreenwichMeanTime)
 {
 	time_t t = time((time_t*)0);
 #ifdef WINDOWS
@@ -69,14 +76,18 @@ namespace GClasses {
 	struct tm* pTime = bGreenwichMeanTime ? gmtime(&t) : localtime(&t);
 #endif
 	std::ostringstream os;
-	os << pTime->tm_year + 1900;
-	os.width(2);
-	os.fill('0');
-	os << pTime->tm_mon + 1;
-	os << pTime->tm_mday;
-	os << pTime->tm_hour;
-	os << pTime->tm_min;
-	os << pTime->tm_sec;
+	unsigned int n = 1900 + pTime->tm_year;
+	os << n;
+	os << sep1;
+	GTime_printTwoDigits(os, pTime->tm_mon + 1);
+	os << sep1;
+	GTime_printTwoDigits(os, pTime->tm_mday);
+	os << sep2;
+	GTime_printTwoDigits(os, pTime->tm_hour);
+	os << sep3;
+	GTime_printTwoDigits(os, pTime->tm_min);
+	os << sep3;
+	GTime_printTwoDigits(os, pTime->tm_sec);
 	(*pS).append(os.str());
 }
 

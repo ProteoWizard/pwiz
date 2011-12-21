@@ -14,6 +14,7 @@
 
 #include <stddef.h>
 #include <math.h>
+#include <map>
 #include "GError.h"
 
 namespace GClasses {
@@ -194,6 +195,55 @@ public:
 
 	/// Returns the entropy of the values
 	double entropy();
+};
+
+
+/// This class is for efficiently drawing random values from
+/// a categorical distribution with a large number of categories.
+class GCategoricalSampler
+{
+protected:
+	std::map<double,size_t> m_map;
+
+public:
+	/// categories specifies the number of categories.
+	/// pDistribution should specify a probability value for each
+	/// category. They should sum to 1.
+	GCategoricalSampler(size_t categories, const double* pDistribution);
+	~GCategoricalSampler() {}
+
+	/// d should be a random uniform value from 0 to 1. The corresponding zero-based
+	/// category index is returned. This method will take log(categories) time.
+	size_t draw(double d);
+};
+
+
+class GCategoricalSamplerBatch
+{
+protected:
+	size_t m_categories;
+	const double* m_pDistribution;
+	size_t* m_pIndexes;
+	GRand& m_rand;
+
+public:
+	/// categories specifies the number of categories.
+	/// pDistribution should specify a probability value for each
+	/// category. They should sum to 1.
+	/// pDistribution is expected to remain valid for the duration of this object.
+	GCategoricalSamplerBatch(size_t categories, const double* pDistribution, GRand& rand);
+	~GCategoricalSamplerBatch();
+
+	/// This will draw a batch of samples from the categorical distribution.
+	/// This method is implemented efficiently, such that it will draw them in O(samples + categories) time.
+	/// (This is significantly faster than O(samples * log(categories)) time, which is what you get if
+	/// you use GCategoricalSampler.)
+	void draw(size_t samples, size_t* pOutBatch);
+
+#ifndef NO_TEST_CODE
+	static void test();
+#endif // NO_TEST_CODE
+
 };
 
 

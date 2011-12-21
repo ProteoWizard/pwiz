@@ -780,7 +780,7 @@ void GDecisionTree::test()
 	{
 		GRand rand(0);
 		GDecisionTree tree(rand);
-		tree.basicTest(0.69, 0.75);
+		tree.basicTest(0.71, 0.77);
 	}
 	{
 		GRand rand(0);
@@ -845,10 +845,11 @@ public:
 		GDomListIterator it(pCenter);
 		size_t dims = it.remaining();
 		m_pCenter = new double[dims];
-		GVec::deserialize(m_pCenter, dims, it);
-		m_pNormal = new double[dims];
+		GVec::deserialize(m_pCenter, it);
 		GDomListIterator it2(pNode->field("normal"));
-		GVec::deserialize(m_pNormal, dims, it2);
+		m_pNormal = new double[it2.remaining()];
+		GAssert(it2.remaining() == dims);
+		GVec::deserialize(m_pNormal, it2);
 		m_pLeft = GMeanMarginsTreeNode::deserialize(pNode->field("left"));
 		m_pRight = GMeanMarginsTreeNode::deserialize(pNode->field("right"));
 	}
@@ -921,7 +922,7 @@ public:
 		GDomListIterator it(pNode);
 		size_t dims = it.remaining();
 		m_pOutputs = new double[dims];
-		GVec::deserialize(m_pOutputs, dims, it);
+		GVec::deserialize(m_pOutputs, it);
 	}
 
 	virtual ~GMeanMarginsTreeLeafNode()
@@ -1230,6 +1231,6 @@ void GRandomForest::test()
 {
 	GRand rand(0);
 	GRandomForest rf(rand, 30);
-	rf.basicTest(0.77, 0.78, 0.01);
+	rf.basicTest(0.765, 0.78, 0.01);
 }
 #endif

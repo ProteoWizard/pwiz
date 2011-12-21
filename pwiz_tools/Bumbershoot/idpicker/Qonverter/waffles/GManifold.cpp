@@ -2075,19 +2075,45 @@ void GDynamicSystemStateAligner::test()
 
 
 
-GImageTweaker::GImageTweaker(size_t wid, size_t hgt, size_t channels, double rotateDegrees, double translateWidths, double zoomFactor)
+GImageJitterer::GImageJitterer(size_t wid, size_t hgt, size_t channels, double rotateDegrees, double translateWidths, double zoomFactor)
 : m_wid(wid), m_hgt(hgt), m_channels(channels), m_rotateRads(rotateDegrees * M_PI / 180.0), m_translatePixels(translateWidths * wid), m_zoomFactor(zoomFactor), m_cx(0.5 * double(wid - 1)), m_cy(0.5 * double(hgt - 1))
 {
 }
 
-double* GImageTweaker::pickParams(GRand& rand)
+GImageJitterer::GImageJitterer(GDomNode* pNode)
+{
+	m_wid = size_t(pNode->field("wid")->asInt());
+	m_hgt = size_t(pNode->field("hgt")->asInt());
+	m_channels = size_t(pNode->field("chan")->asInt());
+	m_rotateRads = pNode->field("rot")->asDouble();
+	m_translatePixels = pNode->field("tp")->asDouble();
+	m_zoomFactor = pNode->field("zoom")->asDouble();
+	m_cx = pNode->field("cx")->asDouble();
+	m_cy = pNode->field("cy")->asDouble();
+}
+
+GDomNode* GImageJitterer::serialize(GDom* pDoc)
+{
+	GDomNode* pNode = pDoc->newObj();
+	pNode->addField(pDoc, "wid", pDoc->newInt(m_wid));
+	pNode->addField(pDoc, "hgt", pDoc->newInt(m_hgt));
+	pNode->addField(pDoc, "chan", pDoc->newInt(m_channels));
+	pNode->addField(pDoc, "rot", pDoc->newDouble(m_rotateRads));
+	pNode->addField(pDoc, "tp", pDoc->newDouble(m_translatePixels));
+	pNode->addField(pDoc, "zoom", pDoc->newDouble(m_zoomFactor));
+	pNode->addField(pDoc, "cx", pDoc->newDouble(m_cx));
+	pNode->addField(pDoc, "cy", pDoc->newDouble(m_cy));
+	return pNode;
+}
+
+double* GImageJitterer::pickParams(GRand& rand)
 {
 	for(size_t i = 0; i < 4; i++)
 		m_params[i] = rand.uniform();
 	return m_params;
 }
 
-void GImageTweaker::transformedPix(const double* pRow, size_t x, size_t y, double* pOut)
+void GImageJitterer::transformedPix(const double* pRow, size_t x, size_t y, double* pOut)
 {
 	double xx = double(x) - m_cx;
 	double yy = double(y) - m_cy;
@@ -2102,7 +2128,7 @@ void GImageTweaker::transformedPix(const double* pRow, size_t x, size_t y, doubl
 	interpolate(pRow, xx, yy, pOut);
 }
 
-void GImageTweaker::interpolate(const double* pRow, double x, double y, double* pOut)
+void GImageJitterer::interpolate(const double* pRow, double x, double y, double* pOut)
 {
 	// Compute coordinates
 	size_t xx, yy;
@@ -2148,7 +2174,7 @@ void GImageTweaker::interpolate(const double* pRow, double x, double y, double* 
 }
 
 #ifndef NO_TEST_CODE
-void GImageTweaker_makeImage(GImage& image, GImageTweaker& tweaker, double* pVec, double* pParams, double zoom, double rot, double htrans, double vtrans, const char* filename)
+void GImageJitterer_makeImage(GImage& image, GImageJitterer& jitterer, double* pVec, double* pParams, double zoom, double rot, double htrans, double vtrans, const char* filename)
 {
 	pParams[0] = zoom;
 	pParams[1] = rot;
@@ -2161,7 +2187,7 @@ void GImageTweaker_makeImage(GImage& image, GImageTweaker& tweaker, double* pVec
 	{
 		for(int x = 0; x < (int)image.width(); x++)
 		{
-			tweaker.transformedPix(pVec, x, y, pix);
+			jitterer.transformedPix(pVec, x, y, pix);
 			imageOut.setPixel(x, y, gARGB(0xff, (int)pix[0], (int)pix[1], (int)pix[2]));
 		}
 	}
@@ -2169,7 +2195,7 @@ void GImageTweaker_makeImage(GImage& image, GImageTweaker& tweaker, double* pVec
 }
 
 // static
-void GImageTweaker::test(const char* filename)
+void GImageJitterer::test(const char* filename)
 {
 	GRand rand(0);
 	GImage image;
@@ -2177,25 +2203,25 @@ void GImageTweaker::test(const char* filename)
 	double* pVec = new double[image.width() * image.height() * 3];
 	ArrayHolder<double> hVec(pVec);
 	GVec::fromImage(&image, pVec, image.width(), image.height(), 3, 255.0);
-	GImageTweaker tweaker(image.width(), image.height(), 3, 90.0, 0.5, 2.0);
-	double* pParams = tweaker.pickParams(rand);
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.0, 0.5, 0.5, 0.5, "zoom1.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.25, 0.5, 0.5, 0.5, "zoom2.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.75, 0.5, 0.5, 0.5, "zoom3.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 1.0, 0.5, 0.5, 0.5, "zoom4.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.0, 0.5, 0.5, "rot1.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.25, 0.5, 0.5, "rot2.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.75, 0.5, 0.5, "rot3.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 1.0, 0.5, 0.5, "rot4.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.5, 0.0, 0.5, "h1.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.5, 0.25, 0.5, "h2.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.5, 0.75, 0.5, "h3.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.5, 1.0, 0.5, "h4.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.5, 0.5, 0.0, "v1.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.5, 0.5, 0.25, "v2.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.5, 0.5, 0.75, "v3.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.5, 0.5, 0.5, 1.0, "v4.png");
-	GImageTweaker_makeImage(image, tweaker, pVec, pParams, 0.25, 0.25, 0.25, 0.25, "all.png");
+	GImageJitterer jitterer(image.width(), image.height(), 3, 90.0, 0.5, 2.0);
+	double* pParams = jitterer.pickParams(rand);
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.0, 0.5, 0.5, 0.5, "zoom1.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.25, 0.5, 0.5, 0.5, "zoom2.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.75, 0.5, 0.5, 0.5, "zoom3.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 1.0, 0.5, 0.5, 0.5, "zoom4.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.0, 0.5, 0.5, "rot1.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.25, 0.5, 0.5, "rot2.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.75, 0.5, 0.5, "rot3.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 1.0, 0.5, 0.5, "rot4.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.5, 0.0, 0.5, "h1.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.5, 0.25, 0.5, "h2.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.5, 0.75, 0.5, "h3.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.5, 1.0, 0.5, "h4.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.5, 0.5, 0.0, "v1.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.5, 0.5, 0.25, "v2.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.5, 0.5, 0.75, "v3.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.5, 0.5, 0.5, 1.0, "v4.png");
+	GImageJitterer_makeImage(image, jitterer, pVec, pParams, 0.25, 0.25, 0.25, 0.25, "all.png");
 
 	// todo: find an automated way to examine the results
 }
@@ -2208,26 +2234,75 @@ void GImageTweaker::test(const char* filename)
 
 
 GUnsupervisedBackProp::GUnsupervisedBackProp(size_t intrinsicDims, GRand* pRand)
-: GManifoldLearner(), m_paramDims(0), m_pParamRanges(NULL), m_tweakDims(0), m_intrinsicDims(intrinsicDims), m_pRand(pRand), m_cvi(0, NULL), m_updateWeights(true), m_updateIntrinsic(true), m_useInputBias(true), m_pTweaker(NULL), m_pIntrinsic(NULL), m_pMins(NULL), m_pRanges(NULL)
+: GManifoldLearner(), m_paramDims(0), m_pParamRanges(NULL), m_jitterDims(0), m_intrinsicDims(intrinsicDims), m_pRevNN(NULL), m_pRand(pRand), m_cvi(0, NULL), m_useInputBias(true), m_pJitterer(NULL), m_pIntrinsic(NULL), m_pMins(NULL), m_pRanges(NULL), m_pProgress(NULL)
 {
 	m_pNN = new GNeuralNet(*m_pRand);
 }
 
 GUnsupervisedBackProp::GUnsupervisedBackProp(GDomNode* pNode, GLearnerLoader& ll)
-: GManifoldLearner(pNode, ll), m_pRand(&ll.rand()), m_cvi(0, NULL)
+: GManifoldLearner(pNode, ll), m_pRand(&ll.rand()), m_cvi(0, NULL), m_pIntrinsic(NULL), m_pProgress(NULL)
 {
-	ThrowError("not implemented yet");
+	GDomListIterator it(pNode->field("params"));
+	m_paramDims = it.remaining();
+	m_pParamRanges = new size_t[m_paramDims];
+	GIndexVec::deserialize(m_pParamRanges, it);
+	m_cvi.reset(m_paramDims, m_pParamRanges);
+	m_pNN = new GNeuralNet(pNode->field("nn"), ll);
+	m_pRevNN = new GNeuralNet(pNode->field("rev"), ll);
+	m_useInputBias = pNode->field("bias")->asBool();
+	GDomNode* pJitterer = pNode->fieldIfExists("jitterer");
+	if(pJitterer)
+	{
+		m_pJitterer = new GImageJitterer(pJitterer);
+		m_jitterDims = 4;
+	}
+	else
+	{
+		m_pJitterer = NULL;
+		m_jitterDims = 0;
+	}
+	m_intrinsicDims = m_pNN->featureDims() - (m_paramDims + m_jitterDims);
+	GDomListIterator itMins(pNode->field("mins"));
+	m_pMins = new double[itMins.remaining()];
+	GVec::deserialize(m_pMins, itMins);
+	GDomListIterator itRanges(pNode->field("ranges"));
+	m_pRanges = new double[itRanges.remaining()];
+	GVec::deserialize(m_pRanges, itRanges);
 }
 
 // virtual
 GUnsupervisedBackProp::~GUnsupervisedBackProp()
 {
-	delete(m_pTweaker);
+	delete(m_pJitterer);
 	delete(m_pNN);
+	delete(m_pRevNN);
 	delete[] m_pParamRanges;
-	delete[] m_pIntrinsic;
+	delete(m_pIntrinsic);
 	delete[] m_pMins;
 	delete[] m_pRanges;
+	delete(m_pProgress);
+}
+
+GDomNode* GUnsupervisedBackProp::serialize(GDom* pDoc)
+{
+	size_t channels = m_pNN->labelDims();
+	GDomNode* pNode = pDoc->newObj();
+	pNode->addField(pDoc, "params", GIndexVec::serialize(pDoc, m_pParamRanges, m_paramDims));
+	pNode->addField(pDoc, "nn", m_pNN->serialize(pDoc));
+	pNode->addField(pDoc, "rev", m_pRevNN->serialize(pDoc));
+	GAssert(m_paramDims + m_jitterDims + m_intrinsicDims == m_pNN->featureDims());
+	pNode->addField(pDoc, "bias", pDoc->newBool(m_useInputBias));
+	if(m_pJitterer)
+		pNode->addField(pDoc, "jitterer", m_pJitterer->serialize(pDoc));
+	pNode->addField(pDoc, "mins", GVec::serialize(pDoc, m_pMins, channels));
+	pNode->addField(pDoc, "ranges", GVec::serialize(pDoc, m_pRanges, channels));
+	return pNode;
+}
+
+void GUnsupervisedBackProp::trackProgress()
+{
+	delete(m_pProgress);
+	m_pProgress = new GMatrix(0, 2);
 }
 
 void GUnsupervisedBackProp::setNeuralNet(GNeuralNet* pNN)
@@ -2254,60 +2329,22 @@ void GUnsupervisedBackProp::setIntrinsic(GMatrix* pIntrinsic)
 	m_pIntrinsic = pIntrinsic;
 }
 
-void GUnsupervisedBackProp::setTweaker(GImageTweaker* pTweaker)
+void GUnsupervisedBackProp::setJitterer(GImageJitterer* pJitterer)
 {
-	delete(m_pTweaker);
-	m_pTweaker = pTweaker;
+	delete(m_pJitterer);
+	m_pJitterer = pJitterer;
 }
 
 // virtual
 GMatrix* GUnsupervisedBackProp::doit(GMatrix& in)
 {
-	// Compute values
+	// Compute pixels and channels
 	size_t pixels = 1;
 	for(size_t i = 0; i < m_paramDims; i++)
 		pixels *= m_pParamRanges[i];
 	size_t channels = in.cols() / pixels;
 	if((pixels * channels) != (size_t)in.cols())
 		ThrowError("params don't line up");
-
-	// Init
-	m_tweakDims = 0;
-	GTEMPBUF(double, pixBuf, channels);
-	if(m_pTweaker)
-	{
-		if(m_paramDims != 2)
-			ThrowError("An image tweaker can only be used in conjunction with 2 param dims");
-		if(channels != m_pTweaker->channels() || m_pParamRanges[0] != m_pTweaker->wid() || m_pParamRanges[1] != m_pTweaker->hgt())
-			ThrowError("The image tweaker was constructed with mismatching parameters");
-		m_tweakDims = 4;
-	}
-	if(!m_pNN->hasTrainingBegun())
-	{
-		m_pNN->setUseInputBias(m_useInputBias);
-		sp_relation pFeatureRel = new GUniformRelation(m_paramDims + m_tweakDims + m_intrinsicDims);
-		sp_relation pLabelRel = new GUniformRelation(channels);
-		m_pNN->beginIncrementalLearning(pFeatureRel, pLabelRel);
-	}
-	else
-	{
-		if(m_pNN->featureDims() != m_paramDims + m_tweakDims + m_intrinsicDims)
-			ThrowError("Incorrect number of inputs Expected ", to_str(m_paramDims + m_tweakDims + m_intrinsicDims), ", got ", to_str(m_pNN->featureDims()));
-		if(m_pNN->labelDims() != channels)
-			ThrowError("Incorrect number of outputs. Expected ", to_str(channels), ", got ", to_str(m_pNN->labelDims()));
-	}
-	if(!m_pIntrinsic)
-	{
-		m_pIntrinsic = new GMatrix(in.rows(), m_intrinsicDims);
-		for(size_t i = 0; i < in.rows(); i++)
-		{
-			double* pVec = m_pIntrinsic->row(i);
-			for(size_t j = 0; j < m_intrinsicDims; j++)
-				*(pVec++) = 0.05 * m_pRand->normal();
-		}
-	}
-	else if(m_pIntrinsic->rows() != in.rows())
-		ThrowError("Expected the initial intrinsic data to have the same number of rows as the observed data");
 
 	// Compute the mins and ranges
 	delete[] m_pMins;
@@ -2338,61 +2375,334 @@ GMatrix* GUnsupervisedBackProp::doit(GMatrix& in)
 		m_pRanges[i] -= m_pMins[i];
 	}
 
+	// Init
+	m_jitterDims = 0;
+	GTEMPBUF(double, pixBuf, channels);
+	if(m_pJitterer)
+	{
+		if(m_paramDims != 2)
+			ThrowError("An image jitterer can only be used in conjunction with 2 param dims");
+		if(channels != m_pJitterer->channels() || m_pParamRanges[0] != m_pJitterer->wid() || m_pParamRanges[1] != m_pJitterer->hgt())
+			ThrowError("The image jitterer was constructed with mismatching parameters");
+		m_jitterDims = 4;
+	}
+	sp_relation pFeatureRel = new GUniformRelation(m_paramDims + m_jitterDims + m_intrinsicDims);
+	sp_relation pLabelRel = new GUniformRelation(channels);
+	m_pNN->setUseInputBias(m_useInputBias);
+	m_pNN->beginIncrementalLearning(pFeatureRel, pLabelRel);
+	GNeuralNet nn(*m_pRand);
+	nn.setUseInputBias(m_useInputBias);
+	nn.beginIncrementalLearning(pFeatureRel, pLabelRel);
+
 	// Train
-	double* pParams = new double[m_paramDims + m_tweakDims + m_intrinsicDims];
+	double* pParams = new double[m_paramDims + m_jitterDims + m_intrinsicDims];
 	ArrayHolder<double> hParams(pParams);
-	double* pLabels = pParams + m_paramDims;
-	double* pIntrinsic = pLabels + m_tweakDims;
-	double regularizer = 1e-7; //1e-6;
-	for(double learningRate = 0.005; learningRate > 0.0005; learningRate *= 0.5)
+	double* pJitters = pParams + m_paramDims;
+	double* pIntrinsic = pJitters + m_jitterDims;
+	double* pInputMomentum = new double[m_pNN->featureDims()];
+	GVec::setAll(pInputMomentum, 0.0, m_pNN->featureDims());
+	ArrayHolder<double> hInputMomentum(pInputMomentum);
+	for(size_t pass = 0; pass < 3; pass++)
+	{
+		GNeuralNet* pNN = m_pNN;
+		if(pass == 0)
+		{
+			if(m_pNN->layerCount() != 1)
+				pNN = &nn;
+
+			// Initialize the user matrix
+			delete(m_pIntrinsic);
+			m_pIntrinsic = new GMatrix(in.rows(), m_intrinsicDims);
+			for(size_t i = 0; i < in.rows(); i++)
+			{
+				double* pVec = m_pIntrinsic->row(i);
+				for(size_t j = 0; j < m_intrinsicDims; j++)
+					*(pVec++) = 0.01 * m_pRand->normal();
+			}
+		}
+
+		double learningRate = 0.0005;
+		double momentum = 0.9;
+		if(pass == 0)
+			momentum = 0.0;
+		double regularizer = 1e-5;
+		if(pass == 1)
+			regularizer *= 0.1;
+		else if(pass == 2)
+			regularizer = 0.0;
+		pNN->setLearningRate(learningRate);
+		pNN->setMomentum(momentum);
+		size_t batches = 50;
+		if(pass == 2)
+			batches = 300;
+		size_t batchSize = 10000000;
+
+		for(size_t i = 0; i < batches; i++)
+		{
+			double sse = 0;
+			for(size_t j = 0; j < batchSize; j++)
+			{
+				// Pick a row, pixel, and channel
+				size_t r = (size_t)m_pRand->next(in.rows());
+				m_cvi.setRandom(m_pRand);
+				size_t c = (size_t)m_pRand->next(channels);
+				m_cvi.currentNormalized(pParams);
+
+				// Get the pixel
+				double* pPix;
+				if(m_pJitterer)
+				{
+					GVec::copy(pJitters, m_pJitterer->pickParams(*m_pRand), m_jitterDims);
+					m_pJitterer->transformedPix(in[r], m_cvi.current()[0], m_cvi.current()[1], pixBuf);
+					pPix = pixBuf;
+				}
+				else
+					pPix = in[r] + m_cvi.currentIndex() * channels;
+
+				// Do backprop
+				GVec::copy(pIntrinsic, m_pIntrinsic->row(r), m_intrinsicDims);
+				double prediction = pNN->forwardPropSingleOutput(pParams, c);
+				double target = (pPix[c] - m_pMins[c]) / m_pRanges[c];
+//				double err = target - prediction;
+double err = (target - prediction) * pow(2.58, target + target - 1.0);
+				sse += (err * err);
+//				pNN->setErrorSingleOutput(target, c);
+pNN->setErrorSingleOutput(prediction + err, c);
+				pNN->backProp()->backpropagateSingleOutput(c);
+
+				// Update weights
+				pNN->decayWeightsSingleOutput(c, regularizer);
+				pNN->backProp()->descendGradientSingleOutput(c, pParams, pNN->learningRate(), pNN->momentum(), pNN->useInputBias());
+
+				// Update inputes
+				if(pass != 1)
+				{
+					GVec::multiply(pIntrinsic, 1.0 - learningRate * regularizer, m_intrinsicDims);
+					GVec::multiply(pInputMomentum + m_paramDims + m_jitterDims, momentum, m_intrinsicDims);
+					pNN->backProp()->adjustFeaturesSingleOutput(c, pInputMomentum, pNN->learningRate(), pNN->useInputBias());
+					GVec::add(pIntrinsic, pInputMomentum + m_paramDims + m_jitterDims, m_intrinsicDims);
+					GVec::floorValues(pIntrinsic, 0.0, m_intrinsicDims);
+					GVec::capValues(pIntrinsic, 1.0, m_intrinsicDims);
+					GVec::copy(m_pIntrinsic->row(r), pIntrinsic, m_intrinsicDims);
+				}
+			}
+			double rmse = sqrt(sse / batchSize);
+			if(m_pProgress)
+			{
+				double* pProg = m_pProgress->newRow();
+				pProg[0] = 50 * pass + i;
+				pProg[1] = rmse;
+			}
+		}
+		if(pass == 0 && pNN == m_pNN)
+			break;
+	}
+
+	// Train the reverse map
+	delete(m_pRevNN);
+	m_pRevNN = new GNeuralNet(*m_pRand);
+	if(m_pNN->layerCount() > 1)
+	{
+		size_t hiddenNodes = (size_t)ceil(sqrt(double(in.cols() / (m_jitterDims + m_intrinsicDims))));
+		m_pRevNN->addLayer(hiddenNodes);
+	}
+	sp_relation pRelFeatures = new GUniformRelation(in.cols());
+	sp_relation pRelLabels = new GUniformRelation(m_jitterDims + m_intrinsicDims);
+	m_pRevNN->beginIncrementalLearning(pRelFeatures, pRelLabels);
+	double* pJitteredPattern = m_pJitterer ? new double[in.cols()] : NULL;
+	ArrayHolder<double> hJitteredPattern(pJitteredPattern);
+	double dStartTime = GTime::seconds();
+	size_t presentations = 0;
+	while(GTime::seconds() - dStartTime < 10800) // 3 hours
+	{
+		// Pick a row (and jitter if necessary)
+		size_t r = (size_t)m_pRand->next(in.rows());
+		double* pRow;
+		if(m_pJitterer)
+		{
+			GVec::copy(pJitters, m_pJitterer->pickParams(*m_pRand), m_jitterDims);
+			double* pSrc = in.row(r);
+			double* pDest = pJitteredPattern;
+			for(size_t y = 0; y < m_pParamRanges[1]; y++)
+			{
+				for(size_t x = 0; x < m_pParamRanges[0]; x++)
+				{
+					m_pJitterer->transformedPix(pSrc, x, y, pDest);
+					pDest += channels;
+				}
+			}
+			pRow = pJitteredPattern;
+		}
+		else
+			pRow = in.row(r);
+
+		// Train with it
+		GVec::copy(pIntrinsic, m_pIntrinsic->row(r), m_intrinsicDims);
+		m_pRevNN->trainIncremental(pRow, pJitters);
+		presentations++;
+	}
+cout << "presentations=" << presentations << "\n";
+
+	GMatrix* pOut = m_pIntrinsic;
+	m_pIntrinsic = NULL;
+	return pOut;
+}
+
+class GUBPTargetFunc : public GTargetFunction
+{
+protected:
+	GUnsupervisedBackProp* m_pUBP;
+	double* m_pInit;
+	double* m_pPrediction;
+	size_t m_labelDims;
+	const double* m_pTarget;
+
+public:
+	GUBPTargetFunc(GUnsupervisedBackProp* pUBP, double* pInit, const double* pTarget)
+	: GTargetFunction(pUBP->featureDims()), m_pUBP(pUBP), m_pInit(pInit), m_pTarget(pTarget)
+	{
+		m_labelDims = m_pUBP->labelDims();
+		m_pPrediction = new double[m_labelDims];
+	}
+
+	virtual ~GUBPTargetFunc()
+	{
+		delete[] m_pPrediction;
+	}
+
+	virtual bool isStable() { return true; }
+
+	virtual bool isConstrained() { return false; }
+
+	virtual void initVector(double* pVector)
+	{
+		GVec::copy(pVector, m_pInit, m_pUBP->featureDims());
+	}
+
+	virtual double computeError(const double* pVector)
+	{
+		m_pUBP->lowToHi(pVector, m_pPrediction);
+		double err = 0.0;
+		for(size_t k = 0; k < m_labelDims; k++)
+		{
+			double d = (m_pTarget[k] - m_pPrediction[k]) * pow(2.58, m_pTarget[k] / 128 - 1.0);
+			err += (d * d);
+		}
+		return err;
+	}
+};
+
+void GUnsupervisedBackProp::hiToLow(const double* pIn, double* pOut)
+{
+	// Compute values
+//	size_t channels = m_pNN->labelDims();
+
+	// Init
+	if(!m_pNN->hasTrainingBegun())
+		ThrowError("Not trained");
+	if(m_pNN->featureDims() != m_paramDims + m_jitterDims + m_intrinsicDims)
+		ThrowError("Incorrect number of inputs Expected ", to_str(m_paramDims + m_jitterDims + m_intrinsicDims), ", got ", to_str(m_pNN->featureDims()));
+
+	// Use the reverse map
+	double* pParams = new double[m_paramDims + m_jitterDims + m_intrinsicDims];
+	ArrayHolder<double> hParams(pParams);
+	double* pJitters = pParams + m_paramDims;
+	//GVec::setAll(pJitters, 0.5, m_jitterDims + m_intrinsicDims);
+	m_pRevNN->predict(pIn, pJitters);
+/*
+	// Refine
+	double prevErr = 1e308;
+	for(double learningRate = 0.0001; learningRate > 0.00005; )
 	{
 		m_pNN->setLearningRate(learningRate);
 		double sse = 0;
-		for(size_t i = 0; i < 100000000; i++)
+		for(size_t i = 0; i < 1e7; i++)
 		{
-			// Pick a row, pixel, and channel
-			size_t r = (size_t)m_pRand->next(in.rows());
+			// Pick a pixel, and channel
 			m_cvi.setRandom(m_pRand);
 			size_t c = (size_t)m_pRand->next(channels);
 			m_cvi.currentNormalized(pParams);
 
 			// Get the pixel
-			double* pPix;
-			if(m_pTweaker)
-			{
-				GVec::copy(pLabels, m_pTweaker->pickParams(*m_pRand), m_tweakDims);
-				m_pTweaker->transformedPix(in[r], m_cvi.current()[0], m_cvi.current()[1], pixBuf);
-				pPix = pixBuf;
-			}
-			else
-				pPix = in[r] + m_cvi.currentIndex() * channels;
+			const double* pPix = pIn + m_cvi.currentIndex() * channels;
 
 			// Do backprop
-			GVec::copy(pIntrinsic, m_pIntrinsic->row(r), m_intrinsicDims);
 			double prediction = m_pNN->forwardPropSingleOutput(pParams, c);
 			double target = (pPix[c] - m_pMins[c]) / m_pRanges[c];
-			double err = target - prediction;
+//			double err = target - prediction;
+double err = (target - prediction) * pow(2.58, target + target - 1.0);
 			sse += (err * err);
-			m_pNN->setErrorSingleOutput(target, c);
+//			m_pNN->setErrorSingleOutput(target, c);
+m_pNN->setErrorSingleOutput(prediction + err, c);
 			m_pNN->backProp()->backpropagateSingleOutput(c);
 
 			// Update weights and inputs
-			if(m_updateWeights)
-			{
-				m_pNN->decayWeightsSingleOutput(c, regularizer);
-				m_pNN->backProp()->descendGradientSingleOutput(c, pParams, m_pNN->learningRate(), m_pNN->momentum(), m_pNN->useInputBias());
-			}
-			if(m_updateIntrinsic)
-			{
-				m_pNN->backProp()->adjustFeaturesSingleOutput(c, pParams, m_pNN->learningRate(), true);
-				GVec::multiply(pIntrinsic, 1.0 - learningRate * regularizer, m_intrinsicDims);
-				GVec::copy(m_pIntrinsic->row(r), pIntrinsic, m_intrinsicDims);
-			}
+			m_pNN->backProp()->adjustFeaturesSingleOutput(c, pParams, m_pNN->learningRate(), true);
+			GVec::floorValues(pJitters, 0.2, m_jitterDims + m_intrinsicDims);
+			GVec::capValues(pJitters, 0.8, m_jitterDims + m_intrinsicDims);
 		}
+		double rsse = sqrt(sse);
+//		if(1.0 - rsse / prevErr < 0.0001)
+			learningRate *= 0.5;
+		prevErr = rsse;
 	}
-	GMatrix* pOut = m_pIntrinsic;
-	m_pIntrinsic = NULL;
-	return pOut;
+*/
+	GUBPTargetFunc targetFunc(this, pJitters, pIn);
+	GHillClimber optimizer(&targetFunc);
+	optimizer.searchUntil(500, 50, 0.0001);
+	GVec::copy(pJitters, optimizer.currentVector(), m_jitterDims + m_intrinsicDims);
+
+
+	GVec::copy(pOut, pJitters, m_jitterDims + m_intrinsicDims);
+}
+
+void GUnsupervisedBackProp::lowToHi(const double* pIn, double* pOut)
+{
+	size_t channels = m_pNN->labelDims();
+	double* pParams = new double[m_paramDims + m_jitterDims + m_intrinsicDims];
+	ArrayHolder<double> hParams(pParams);
+	GVec::copy(pParams + m_paramDims, pIn, m_jitterDims + m_intrinsicDims);
+	m_cvi.reset();
+	while(true)
+	{
+		m_cvi.currentNormalized(pParams);
+		m_pNN->predict(pParams, pOut);
+		for(size_t i = 0; i < channels; i++)
+		{
+			*pOut *= m_pRanges[i];
+			*pOut += m_pMins[i];
+			pOut++;
+		}
+		if(!m_cvi.advance())
+			break;
+	}
+}
+
+double* GUnsupervisedBackProp::mins()
+{
+	if(!m_pMins)
+	{
+		if(!m_pNN)
+			ThrowError("No neural net has been set");
+		m_pMins = new double[m_pNN->labelDims()];
+	}
+	return m_pMins;
+}
+
+double* GUnsupervisedBackProp::ranges()
+{
+	if(!m_pRanges)
+	{
+		if(!m_pNN)
+			ThrowError("No neural net has been set");
+		m_pRanges = new double[m_pNN->labelDims()];
+	}
+	return m_pRanges;
+}
+
+size_t GUnsupervisedBackProp::labelDims()
+{
+	return m_cvi.coordCount() * m_pNN->labelDims();
 }
 
 } // namespace GClasses

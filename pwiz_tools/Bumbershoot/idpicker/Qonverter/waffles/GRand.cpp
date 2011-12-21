@@ -18,7 +18,14 @@
 #include "GTime.h"
 #include "GMath.h"
 #include "GVec.h"
+#include "GReverseBits.h"
 #include <cmath>
+#include <ctime>
+#ifdef WINDOWS
+#include <process.h>
+#else 
+#include <unistd.h>
+#endif
 
 namespace GClasses {
 
@@ -208,15 +215,29 @@ double GRand::chiSquare(double t)
 	return gamma(t / 2.0) * 2.0;
 }
 
-int GRand::binomial(int n, double p)
+size_t GRand::binomial(size_t n, double p)
 {
-	int c = 0;
-	for(int i = 0; i < n; i++)
+	size_t c = 0;
+	for(size_t i = 0; i < n; i++)
 	{
 		if(uniform() < p)
 			c++;
 	}
 	return c;
+}
+
+size_t GRand::binomial_approx(size_t n, double p)
+{
+	double mean = p * n;
+	double dev = sqrt(std::max(0.0, mean * (1.0 - p)));
+	return std::min(n, size_t(floor(std::max(0.0, normal() * dev + mean + 0.5))));
+}
+
+void GRand::simplex(double* pOutVec, size_t dims)
+{
+	for(size_t i = 0; i < dims; i++)
+		*(pOutVec++) = exponential();
+	GVec::sumToOne(pOutVec, dims);
 }
 
 double GRand::softImpulse(double s)
@@ -302,6 +323,23 @@ void GRand::cubical(double* pOutVec, size_t dims)
 		*(pEl++) = uniform();
 }
 
+GRand& GRand::global(){
+  static GRand rng(0);
+  static bool initialized = false;
+  if(!initialized){
+    std::time_t t = std::time(NULL);
+#ifdef WINDOWS
+    int pid = _getpid();
+#else
+    pid_t pid = getpid();
+#endif
+    uint64 seed = (~ reverseBits((unsigned)t))+pid;
+    rng.setSeed(seed);
+  }
+  return rng;
+}
+
+
 #ifndef NO_TEST_CODE
 #define TEST_BIT_HIST_ITERS 100000
 void GRand_testBitHistogram()
@@ -334,21 +372,21 @@ void GRand_testSpeed()
 {
 	// Compare speed with rand(). (Be sure to build optimized, or else the results aren't very meaningful.)
 	int i;
-	uint64 z;
 	double t1,t2,t3;
 	t1 = GTime::seconds();
 	for(i = 0; i < 100000000; i++)
-		z = rand();
+		rand();
 	t2 = GTime::seconds();
 	GRand gr(0);
 	for(i = 0; i < 100000000; i++)
-		z = gr.next();
+		gr.next();
 	t3 = GTime::seconds();
 	double randtime = t2 - t1;
 	double grandtime = t3 - t2;
 	if(randtime < grandtime)
 		ThrowError("rand is faster than GRand");
 }
+
 
 void GRand_testRange()
 {
@@ -388,8 +426,6 @@ void GRand::test()
 
 	// Test cycle length
 	int n;
-	uint64 rnd;
-	uint64 prev;
 	for(n = 0; n < 100; n++)
 	{
 		GRand r(n);
@@ -397,12 +433,12 @@ void GRand::test()
 			r.next();
 		uint64 startA = r.m_a;
 		uint64 startB = r.m_b;
-		prev = r.next();
+		r.next();
 		for(uint64 j = 0; j < GRANDUINT_TEST_PERIOD_SIZE; j++)
 		{
 			if(r.m_a == startA || r.m_b == startB)
 				ThrowError("Loop too small");
-			rnd = r.next();
+			r.next();
 		}
 	}
 
@@ -412,6 +448,7 @@ void GRand::test()
 	// todo: add a test for correlations
 }
 #endif // !NO_TEST_CODE
+
 
 } // namespace GClasses
 

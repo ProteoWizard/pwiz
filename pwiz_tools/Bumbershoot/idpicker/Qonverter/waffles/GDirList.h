@@ -12,113 +12,26 @@
 #ifndef __GDIRLIST_H__
 #define __GDIRLIST_H__
 
-#ifdef WINDOWS
-
-
-/// ----------------------
-///  WINDOWS VERSION
-/// ----------------------
-#include <sstream>
-#include <string>
+#include <fstream>
 #include <stack>
-
-namespace GClasses {
-
-class GFileFinder;
-class GBlobQueue;
-
-/// Iterates through the files and/or folders in the current directory.
-class GDirList
-{
-protected:
-	GFileFinder* m_pFinder[256]; // it won't search more than 256 dir nests deep
-	int m_nNests;
-	std::ostringstream m_buffer;
-	std::string m_tempBuf;
-	char m_szOldDir[256];
-	bool m_bReportFiles;
-	bool m_bReportDirs;
-	bool m_bRecurseSubDirs;
-	bool m_bReportPaths;
-
-public:
-	GDirList(bool bRecurseSubDirs = true, bool bReportFiles = true, bool bReportDirs = false, bool bReportPaths = true);
-	virtual ~GDirList();
-
-	/// Returns true iff this object will recurse sub dirs
-	bool recurseSubDirs() { return m_bRecurseSubDirs; }
-
-	/// Returns true iff this object will report files
-	bool reportFiles() { return m_bReportFiles; }
-
-	/// Returns true iff this object will report dirs
-	bool reportDirs() { return m_bReportDirs; }
-
-	/// Returns true iff this object will report full paths
-	bool reportPaths() { return m_bReportPaths; }
-
-	/// Returns the next filename or dirname, or NULL if there are no more
-	const char* GetNext();
-};
-
-} // namespace GClasses
-
-#else // WINDOWS
-
-// ----------------------
-//  LINUX VERSION
-// ----------------------
-#include <sys/types.h>
-#include <sys/dir.h>
-#include <dirent.h>
-#include <sstream>
-#include <string>
-#include <stack>
+#include <vector>
 
 namespace GClasses {
 
 class GBlobQueue;
 
+/// This class contains a list of files and a list of folders.
+/// The constructor populates these lists with the names of files and folders in
+/// the current working directory
 class GDirList
 {
-protected:
-	DIR* m_pDirs[256]; // it won't search more than 256 dir nests deep
-	DIR* m_pCurDir;
-	int m_nNests;
-	std::ostringstream m_buffer;
-	std::string m_tempBuf;
-	char m_szOldDir[256];
-	bool m_bReportFiles;
-	bool m_bReportDirs;
-	bool m_bRecurseSubDirs;
-	bool m_bReportPaths;
-
 public:
-	GDirList(bool bRecurseSubDirs = true, bool bReportFiles = true, bool bReportDirs = false, bool bReportPaths = true);
-	virtual ~GDirList();
+	GDirList();
+	~GDirList() {}
 
-	/// Returns true iff this object will recurse sub dirs
-	bool recurseSubDirs() { return m_bRecurseSubDirs; }
-
-	/// Returns true iff this object will report files
-	bool reportFiles() { return m_bReportFiles; }
-
-	/// Returns true iff this object will report dirs
-	bool reportDirs() { return m_bReportDirs; }
-
-	/// Returns true iff this object will report full paths
-	bool reportPaths() { return m_bReportPaths; }
-
-	/// Returns the next filename or dirname, or NULL if there are no more
-	const char* GetNext();
+	std::vector<std::string> m_folders;
+	std::vector<std::string> m_files;
 };
-
-} // namespace GClasses
-
-#endif // !WIN32
-
-
-namespace GClasses {
 
 /// This turns a file or a folder (and its contents recursively) into a stream of bytes
 class GFolderSerializer

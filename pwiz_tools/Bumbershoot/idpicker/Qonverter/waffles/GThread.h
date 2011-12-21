@@ -28,8 +28,13 @@ namespace GClasses {
 #		define BAD_HANDLE (_opaque_pthread_t*)1
 		typedef _opaque_pthread_t* THREAD_HANDLE;
 #	else
-		typedef unsigned long int THREAD_HANDLE;
-#		define BAD_HANDLE (unsigned long int)-2
+#   ifdef __FreeBSD__
+#		  define BAD_HANDLE (pthread_t)-1
+		  typedef pthread_t THREAD_HANDLE;
+#   else
+		  typedef unsigned long int THREAD_HANDLE;
+#		  define BAD_HANDLE (unsigned long int)-2
+#   endif
 #	endif
 #endif
 

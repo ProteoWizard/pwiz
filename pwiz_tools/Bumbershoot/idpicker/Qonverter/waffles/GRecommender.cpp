@@ -301,39 +301,42 @@ void GCF_basicTest_makeData(GMatrix& m, GRand& rand)
 	{
 		double a = rand.uniform();
 		double b = rand.normal();
+		double c = rand.uniform();
 		double userBias = rand.normal();
 		double* pVec;
 		pVec = m.newRow();
-		pVec[0] = i;
-		pVec[1] = 0;
-		pVec[2] = a + 0.0 + userBias;
+		pVec[0] = i; // user
+		pVec[1] = 0; // item
+		pVec[2] = a + 0.0 + 0.2 * c + userBias; // rating
 		pVec = m.newRow();
-		pVec[0] = i;
-		pVec[1] = 1;
-		pVec[2] = 0.2 * a + 0.2 * b + 0.2 + userBias;
+		pVec[0] = i; // user
+		pVec[1] = 1; // item
+		pVec[2] = 0.2 * a + 0.2 * b + c * c + 0.2 + userBias; // rating
 		pVec = m.newRow();
-		pVec[0] = i;
-		pVec[1] = 2;
-		pVec[2] = 0.6 * a + 0.1 * b - 0.3 + userBias;
+		pVec[0] = i; // user
+		pVec[1] = 2; // item
+		pVec[2] = 0.6 * a + 0.1 * b + 0.2 * c * c * c - 0.3 + userBias; // rating
 		pVec = m.newRow();
-		pVec[0] = i;
-		pVec[1] = 3;
-		pVec[2] = 0.5 * a + 0.5 * b + 0.0 + userBias;
+		pVec[0] = i; // user
+		pVec[1] = 3; // item
+		pVec[2] = 0.5 * a + 0.5 * b - 0.5 * c + 0.0 + userBias; // rating
 		pVec = m.newRow();
-		pVec[0] = i;
-		pVec[1] = 4;
-		pVec[2] = -0.2 * a + 0.4 * b + 0.1 + userBias;
+		pVec[0] = i; // user
+		pVec[1] = 4; // item
+		pVec[2] = -0.2 * a + 0.4 * b - 0.3 * sin(c) + 0.1 + userBias; // rating
 	}
 }
 
 void GCollaborativeFilter::basicTest(double maxMSE)
 {
-	GRand rand(387572);
+	GRand rand(0);
 	GMatrix m(0, 3);
 	GCF_basicTest_makeData(m, rand);
 	double mse = crossValidate(m, 2);
 	if(mse > maxMSE)
 		ThrowError("failed");
+	else if(mse + 0.085 < maxMSE)
+		std::cerr << "\nTest needs to be tightened. MSE: " << mse << ", maxMSE: " << maxMSE << "\n";
 }
 #endif
 
@@ -352,7 +355,7 @@ GBaselineRecommender::GBaselineRecommender(GDomNode* pNode, GLearnerLoader& ll)
 	GDomListIterator it(pNode->field("ratings"));
 	m_items = it.remaining();
 	m_pRatings = new double[m_items];
-	GVec::deserialize(m_pRatings, m_items, it);
+	GVec::deserialize(m_pRatings, it);
 }
 
 // virtual
@@ -440,7 +443,7 @@ void GBaselineRecommender::test()
 {
 	GRand rand(0);
 	GBaselineRecommender rec(rand);
-	rec.basicTest(1.10);
+	rec.basicTest(1.16);
 }
 #endif
 
@@ -613,7 +616,7 @@ void GInstanceRecommender::test()
 {
 	GRand rand(0);
 	GInstanceRecommender rec(8, rand);
-	rec.basicTest(0.512);
+	rec.basicTest(0.63);
 }
 #endif
 
@@ -719,7 +722,7 @@ void GSparseClusterRecommender::test()
 {
 	GRand rand(0);
 	GSparseClusterRecommender rec(6, rand);
-	rec.basicTest(1.68);
+	rec.basicTest(1.31);
 }
 #endif
 
@@ -934,19 +937,19 @@ void GMatrixFactorization::train(GMatrix& data)
 
 	// Train
 	double prevErr = 1e308;
-	double learningRate = 0.02;
+	double learningRate = 0.01;
 	GTEMPBUF(double, temp_weights, m_intrinsicDims);
 	size_t epochs = 0;
-	while(learningRate >= 0.001)
+	while(learningRate >= 0.0001)
 	{
 		// Shuffle the ratings
 		dataCopy.shuffle(m_rand);
 
 		// Do an epoch of training
-		for(size_t i = 0; i < dataCopy.rows(); i++)
+		for(size_t j = 0; j < dataCopy.rows(); j++)
 		{
 			// Compute the error for this rating
-			double* pVec = dataCopy[i];
+			double* pVec = dataCopy[j];
 			double* pPref = m_pP->row(size_t(pVec[0]));
 			double* pWeights = m_pQ->row(size_t(pVec[1]));
 			double pred = *(pWeights++);
@@ -972,7 +975,8 @@ void GMatrixFactorization::train(GMatrix& data)
 
 			// Update P
 			pWeights = temp_weights;
-			pPref = m_pP->row(size_t(pVec[0]));
+			double* pPrefRow = m_pP->row(size_t(pVec[0]));
+			pPref = pPrefRow;
 			if(m_useInputBias)
 			{
 				*pPref += learningRate * (err - m_regularizer * (*pPref));
@@ -984,13 +988,15 @@ void GMatrixFactorization::train(GMatrix& data)
 				pWeights++;
 				pPref++;
 			}
+			GVec::floorValues(pPrefRow + (m_useInputBias ? 1 : 0), -1.8, m_intrinsicDims);
+			GVec::capValues(pPrefRow + (m_useInputBias ? 1 : 0), 1.8, m_intrinsicDims);
 		}
 		epochs++;
 
 		// Stopping criteria
 		double rsse = sqrt(validate(data));
-		if(rsse < 1e-12 || 1.0 - (rsse / prevErr) < 0.001) // If the amount of improvement is less than 0.1%
-			learningRate *= 0.7; // decay the learning rate
+		if(rsse < 1e-12 || 1.0 - (rsse / prevErr) < 0.00001) // If the amount of improvement is less than 0.001%
+			learningRate *= 0.5; // decay the learning rate
 		prevErr = rsse;
 	}
 }
@@ -1080,6 +1086,8 @@ void GMatrixFactorization::impute(double* pVec, size_t dims)
 				pWeights++;
 				pPref++;
 			}
+			GVec::floorValues(pPrefVec + (m_useInputBias ? 1 : 0), -1.8, m_intrinsicDims);
+			GVec::capValues(pPrefVec + (m_useInputBias ? 1 : 0), 1.8, m_intrinsicDims);
 		}
 
 		// Stopping criteria
@@ -1120,9 +1128,9 @@ void GMatrixFactorization::impute(double* pVec, size_t dims)
 void GMatrixFactorization::test()
 {
 	GRand rand(0);
-	GMatrixFactorization rec(2, rand);
+	GMatrixFactorization rec(3, rand);
 	rec.setRegularizer(0.002);
-	rec.basicTest(0.154);
+	rec.basicTest(0.17);
 }
 #endif
 
@@ -1134,7 +1142,7 @@ void GMatrixFactorization::test()
 
 
 GNonlinearPCA::GNonlinearPCA(size_t intrinsicDims, GRand& rand)
-: GCollaborativeFilter(rand), m_intrinsicDims(intrinsicDims), m_items(0), m_pMins(NULL), m_pMaxs(NULL), m_useInputBias(true)
+: GCollaborativeFilter(rand), m_intrinsicDims(intrinsicDims), m_items(0), m_pMins(NULL), m_pMaxs(NULL), m_useInputBias(true), m_useThreePass(true)
 {
 	m_pModel = new GNeuralNet(rand);
 	m_pUsers = NULL;
@@ -1149,10 +1157,14 @@ GNonlinearPCA::GNonlinearPCA(GDomNode* pNode, GLearnerLoader& ll)
 	m_items = m_pModel->layer(m_pModel->layerCount() - 1).m_neurons.size();
 	m_pMins = new double[m_items];
 	GDomListIterator it1(pNode->field("mins"));
-	GVec::deserialize(m_pMins, m_items, it1);
+	if(it1.remaining() != m_items)
+		ThrowError("invalid number of elements");
+	GVec::deserialize(m_pMins, it1);
 	m_pMaxs = new double[m_items];
 	GDomListIterator it2(pNode->field("maxs"));
-	GVec::deserialize(m_pMaxs, m_items, it2);
+	if(it2.remaining() != m_items)
+		ThrowError("invalid number of elements");
+	GVec::deserialize(m_pMaxs, it2);
 	m_intrinsicDims = m_pModel->layer(0).m_neurons.size();
 }
 
@@ -1237,14 +1249,19 @@ void GNonlinearPCA::train(GMatrix& data)
 	nn.beginIncrementalLearning(pFeatureRel, pLabelRel);
 
 	// Train
-	for(size_t pass = 0; pass < 3; pass++)
+	size_t startPass = 0;
+	if(!m_useThreePass)
+		startPass = 2;
+	else if(m_pModel->layerCount() == 1)
+		startPass = 2;
+	for(size_t pass = startPass; pass < 3; pass++)
 	{
-		GNeuralNet* pNN = m_pModel;
-		if(pass == 0)
+		GNeuralNet* pNN = (pass == 0 ? &nn : m_pModel);
+		if(pass == startPass)
 		{
 /*
 			// Use matrix factorization to compute pref vectors
-			GMatrixFactorization mf(m_intrinsicDims - (m_useInputBias ? 1 : 0), *m_pRand);
+			GMatrixFactorization mf(m_intrinsicDims - (m_useInputBias ? 1 : 0), m_rand);
 			if(!m_useInputBias)
 				mf.noInputBias();
 			mf.train(*pClone);
@@ -1252,8 +1269,6 @@ void GNonlinearPCA::train(GMatrix& data)
 			m_pUsers = mf.getP()->clone();
 			continue;
 */
-			if(m_pModel->layerCount() != 1)
-				pNN = &nn;
 
 			// Initialize the user matrix
 			delete(m_pUsers);
@@ -1264,17 +1279,13 @@ void GNonlinearPCA::train(GMatrix& data)
 				for(size_t j = 0; j < m_intrinsicDims; j++)
 					*(pVec++) = 0.01 * m_rand.normal();
 			}
+
 		}
-		double regularizer = 0.0015;
-		double rateBegin = 0.03;
-		double rateEnd = 0.0003;
-		if(pass == 2)
-		{
-			rateBegin = 0.01;
-			rateEnd = 0.0003;
-		}
+		double regularizer = 0.001;
+		double rateBegin = 0.01;
+		double rateEnd = 0.0001;
 		double prevErr = 1e308;
-		for(double learningRate = rateBegin; learningRate > rateEnd; learningRate *= 0.7)
+		for(double learningRate = rateBegin; learningRate > rateEnd; )
 		{
 			// Shuffle the ratings
 			pClone->shuffle(m_rand);
@@ -1293,25 +1304,26 @@ void GNonlinearPCA::train(GMatrix& data)
 				// Update weights
 				pNN->setErrorSingleOutput(pVec[2], item, pNN->backPropTargetFunction());
 				pNN->backProp()->backpropagateSingleOutput(item);
-				pNN->decayWeightsSingleOutput(item, regularizer);
+				if(pass < 2)
+					pNN->decayWeightsSingleOutput(item, regularizer);
 				pNN->backProp()->descendGradientSingleOutput(item, pPrefs, learningRate, pNN->momentum(), pNN->useInputBias());
 				if(pass != 1)
 				{
 					// Update inputs
-					GVec::multiply(pPrefs, 1.0 - learningRate * regularizer, m_intrinsicDims);
+					if(pass == 0)
+						GVec::multiply(pPrefs, 1.0 - learningRate * regularizer, m_intrinsicDims);
 					pNN->backProp()->adjustFeaturesSingleOutput(item, pPrefs, learningRate, m_pModel->useInputBias());
+					GVec::floorValues(pPrefs, -1.0, m_intrinsicDims);
+					GVec::capValues(pPrefs, 1.0, m_intrinsicDims);
 				}
 			}
 
 			// Stopping criteria
 			double rmse = sqrt(validate(pNN, *pClone));
-			if(rmse < 1e-12 || 1.0 - (rmse / prevErr) < 0.000001) // If the amount of improvement is small
-				learningRate *= 0.7; // decay the learning rate
+			if(rmse < 1e-12 || 1.0 - (rmse / prevErr) < 0.00001) // If the amount of improvement is small
+				learningRate *= 0.5; // decay the learning rate
 			prevErr = rmse;
-//cout << rmse << "\n";
 		}
-		if(pass == 0 && pNN == m_pModel)
-			break;
 	}
 }
 
@@ -1388,9 +1400,9 @@ void GNonlinearPCA::impute(double* pVec, size_t dims)
 void GNonlinearPCA::test()
 {
 	GRand rand(0);
-	GNonlinearPCA rec(8, rand);
-	rec.model()->addLayer(6);
-	rec.basicTest(1.12);
+	GNonlinearPCA rec(3, rand);
+	rec.model()->addLayer(3);
+	rec.basicTest(0.18);
 }
 #endif
 
@@ -1510,9 +1522,9 @@ void GBagOfRecommenders::test()
 	GRand rand(0);
 	GBagOfRecommenders rec(rand);
 	rec.addRecommender(new GBaselineRecommender(rand));
-	rec.addRecommender(new GMatrixFactorization(8, rand));
-	rec.addRecommender(new GNonlinearPCA(8, rand));
-	rec.basicTest(0.807);
+	rec.addRecommender(new GMatrixFactorization(3, rand));
+	rec.addRecommender(new GNonlinearPCA(3, rand));
+	rec.basicTest(0.58);
 }
 #endif
 

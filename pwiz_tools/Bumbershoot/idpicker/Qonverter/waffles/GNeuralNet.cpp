@@ -20,7 +20,7 @@
 #include "GHillClimber.h"
 #include "GTransform.h"
 #include "GSparseMatrix.h"
-#include "GImage.h"
+#include "GDistance.h"
 
 namespace GClasses {
 
@@ -413,7 +413,7 @@ void GBackProp::adjustFeaturesSingleOutput(size_t outputNeuron, double* pFeature
 // ----------------------------------------------------------------------
 
 GNeuralNet::GNeuralNet(GRand& rand)
-: GIncrementalLearner(rand), m_pBackProp(NULL), m_internalFeatureDims(0), m_internalLabelDims(0), m_pActivationFunction(NULL), m_learningRate(0.1), m_momentum(0.0), m_validationPortion(0), m_minImprovement(0.002), m_epochsPerValidationCheck(200), m_backPropTargetFunction(squared_error), m_useInputBias(false)
+: GIncrementalLearner(rand), m_pBackProp(NULL), m_internalFeatureDims(0), m_internalLabelDims(0), m_pActivationFunction(NULL), m_learningRate(0.1), m_momentum(0.0), m_validationPortion(0.35), m_minImprovement(0.002), m_epochsPerValidationCheck(200), m_backPropTargetFunction(squared_error), m_useInputBias(false)
 {
 	m_layers.resize(1);
 }
@@ -764,6 +764,76 @@ void GNeuralNet::clipWeights(double max)
 	}
 }
 
+void GNeuralNet::swapNodes(size_t layer, size_t a, size_t b)
+{
+	GNeuralNetLayer& layerCur = m_layers[layer];
+	std::swap(layerCur.m_neurons[a], layerCur.m_neurons[b]);
+	if(layer < m_layers.size())
+	{
+		GNeuralNetLayer& layerNext = m_layers[layer + 1];
+		for(vector<GNeuron>::iterator it = layerNext.m_neurons.begin(); it != layerNext.m_neurons.end(); it++)
+			std::swap(it->m_weights[a + 1], it->m_weights[b + 1]);
+	}
+}
+
+void GNeuralNet::align(GNeuralNet& that)
+{
+	if(!hasTrainingBegun())
+		ThrowError("train or beginIncrementalLearning must be called before this method");
+	if(layerCount() != that.layerCount())
+		ThrowError("mismatching number of layers");
+	for(size_t i = 0; i + 1 < m_layers.size(); i++)
+	{
+		// Copy weights into matrices
+		GNeuralNetLayer& layerThisCur = m_layers[i];
+		GNeuralNetLayer& layerThatCur = that.m_layers[i];
+		if(layerThisCur.m_neurons.size() != layerThatCur.m_neurons.size())
+			ThrowError("mismatching layer size");
+		GMatrix thisWeights(layerThisCur.m_neurons.size(), layerThisCur.m_neurons[0].m_weights.size());
+		GMatrix thatWeights(layerThisCur.m_neurons.size(), layerThisCur.m_neurons[0].m_weights.size());
+		for(size_t j = 0; j < layerThisCur.m_neurons.size(); j++)
+		{
+			GNeuron& nThis = layerThisCur.m_neurons[j];
+			GNeuron& nThat = layerThatCur.m_neurons[j];
+			double* pThisRow = thisWeights.row(j);
+			double* pThatRow = thatWeights.row(j);
+			vector<double>::iterator wThis = nThis.m_weights.begin();
+			vector<double>::iterator wThat = nThat.m_weights.begin();
+			while(wThis != nThis.m_weights.end())
+			{
+				*(pThisRow++) = *(wThis++);
+				*(pThatRow++) = *(wThat++);
+			}
+		}
+
+		// Do bipartite matching
+		GRowDistance metric;
+		size_t* pIndexes = GMatrix::bipartiteMatching(thatWeights, thisWeights, metric);
+		ArrayHolder<size_t> hIndexes(pIndexes);
+
+		// Align this layer with that layer
+		for(size_t j = 0; j < thisWeights.rows(); j++)
+		{
+			size_t k = pIndexes[j];
+			if(k != j)
+			{
+				// Fix up the indexes
+				size_t m = j + 1;
+				for( ; m < thisWeights.rows(); m++)
+				{
+					if(pIndexes[m] == j)
+						break;
+				}
+				GAssert(m < thisWeights.rows());
+				pIndexes[m] = k;
+
+				// Swap nodes j and k
+				swapNodes(i, j, k);
+			}
+		}
+	}
+}
+
 void GNeuralNet::decayWeights(double lambda, double gamma)
 {
 	if(!hasTrainingBegun())
@@ -847,6 +917,7 @@ void GNeuralNet::forwardProp(const double* pRow)
 double GNeuralNet::forwardPropSingleOutput(const double* pRow, size_t output)
 {
 	vector<GNeuralNetLayer>::iterator pLayer = m_layers.begin();
+	GAssert(pLayer->m_pActivationFunction);
 	if(pLayer + 1 == m_layers.end())
 	{
 		// Propagate from the feature vector to the specified output node
@@ -877,7 +948,7 @@ double GNeuralNet::forwardPropSingleOutput(const double* pRow, size_t output)
 			i->m_net = net;
 			i->m_activation = pLayer->m_pActivationFunction->squash(net);
 		}
-	
+
 		// Do the rest of the hidden layers
 		vector<GNeuralNetLayer>::iterator pPrevLayer = pLayer;
 		for(pLayer++; true; pLayer++)
@@ -1607,14 +1678,14 @@ void GNeuralNet::test()
 	// Test with no hidden layers (logistic regression)
 	{
 		GNeuralNet nn(prng);
-		nn.basicTest(0.75, 0.77);
+		nn.basicTest(0.745, 0.77);
 	}
 
 	// Test NN with one hidden layer
 	{
 		GNeuralNet nn(prng);
 		nn.addLayer(3);
-		nn.basicTest(0.78, 0.76);
+		nn.basicTest(0.76, 0.75);
 	}
 
 	GNeuralNet_testInputGradient(&prng);

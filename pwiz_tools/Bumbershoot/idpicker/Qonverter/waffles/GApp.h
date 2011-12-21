@@ -229,6 +229,10 @@ public:
 
 	/// Returns true if there is another arg, and it begins with '-'
 	bool next_is_flag();
+
+	/// Returns true if there is another arg, and it would parse
+	/// accurately as an unsigned integer
+	bool next_is_uint();
 };
 
 } // namespace GClasses

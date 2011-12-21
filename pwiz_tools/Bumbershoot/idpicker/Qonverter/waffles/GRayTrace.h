@@ -761,9 +761,12 @@ public:
 	void writeString(GRayTraceScene* pScene, const char* szString);
 	void setLineWidth(G3DReal lw) { m_lineWidth = lw; }
 	void move(G3DReal dx, G3DReal dy = 0.0, G3DReal dz = 0.0);
+	void move(G3DVector& vec);
 	void scale(G3DReal width, G3DReal height, G3DReal depth);
 	void rotate(G3DReal yaw, G3DReal pitch, G3DReal roll);
 	double letterWidth(char c);
+	double measureWidth(const char* szPhrase);
+	G3DVector& pos() { return m_pos; }
 
 protected:
 	void addQuad(G3DReal x1, G3DReal y1, G3DReal x2, G3DReal y2, G3DReal x3, G3DReal y3, G3DReal x4, G3DReal y4);

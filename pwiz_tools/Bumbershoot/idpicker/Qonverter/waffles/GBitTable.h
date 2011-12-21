@@ -26,6 +26,13 @@ protected:
 public:
 	/// All bits are initialized to false
 	GBitTable(size_t bitCount);
+	
+	///Copy Constructor
+	GBitTable(const GBitTable& o);
+
+	///Operator=
+	GBitTable& operator=(const GBitTable& o);
+
 	virtual ~GBitTable();
 
 #ifndef NO_TEST_CODE

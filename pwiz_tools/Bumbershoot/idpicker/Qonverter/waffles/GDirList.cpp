@@ -9,403 +9,32 @@
 	see http://www.gnu.org/copyleft/lesser.html
 */
 
-#ifdef WINDOWS
-
-
-
-
-
-
-// ----------------------
-//  WINDOWS VERSION
-// ----------------------
-
 #include "GDirList.h"
 #include "GError.h"
 #include "GFile.h"
-#include "GHolders.h"
-#include <winsock2.h>
-#include <fstream>
-#include <direct.h>
-#include <io.h> // for "access"
 #include "GBlob.h"
-
-using std::ostringstream;
-using std::string;
-
-
-namespace GClasses {
-
-
-class GFileFinder : public WIN32_FIND_DATA
-{
-protected:
-	HANDLE m_hFind;
-
-public:
-	GFileFinder()                        { m_hFind = INVALID_HANDLE_VALUE; }
-	GFileFinder(LPCTSTR pFile)           { m_hFind = INVALID_HANDLE_VALUE; GetFileInfo(pFile); }
-	virtual ~GFileFinder()               { Close(); }
-	
-	void Close()                        { if(m_hFind != INVALID_HANDLE_VALUE){FindClose(m_hFind); m_hFind = INVALID_HANDLE_VALUE;} }
-	
-	BOOL FindFirst(LPCTSTR pFile)       { Close(); m_hFind = FindFirstFile(pFile, this); return m_hFind != INVALID_HANDLE_VALUE; }
-	BOOL FindNext()                     { return m_hFind == INVALID_HANDLE_VALUE ? FALSE : FindNextFile(m_hFind, this); }
-	BOOL Find(LPCTSTR pFile);
-	BOOL Find()                         { return m_hFind == INVALID_HANDLE_VALUE ? FALSE : Find(NULL); }
-	
-	BOOL IsValid()                      { return m_hFind != INVALID_HANDLE_VALUE; }
-	BOOL IsDots();
-	BOOL IsNotDots()                    { return IsDots() ? FALSE : TRUE; }
-	BOOL IsFile()                       { return IsNotDots(); }
-	BOOL IsFile(BOOL excludeDirs)       { return (excludeDirs && IsDir()) ? FALSE : IsNotDots(); }
-	BOOL IsDir()                        { return dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY ? TRUE : FALSE; }
-	
-	BOOL GetFileInfo(LPCTSTR pFile)     { BOOL rval = FindFirst(pFile); Close(); return rval; }
-	
-	DWORD    GetAttributes()            { return dwFileAttributes; }
-	FILETIME GetCreationTime()          { return ftCreationTime; }
-	FILETIME GetLastAccessTime()        { return ftLastAccessTime; }
-	FILETIME GetLastWriteTime()         { return ftLastWriteTime; }
-	DWORD    GetFileSizeHigh()          { return nFileSizeHigh; }
-	DWORD    GetFileSizeLow()           { return nFileSizeLow; }
-	LPSTR    GetFileName()              { return cFileName; }
-	LPSTR    GetDOSName()               { return cAlternateFileName; }
-};
-
-
-
-
-
-BOOL GFileFinder::Find(LPCTSTR pFile)
-{
-   if(m_hFind == INVALID_HANDLE_VALUE)
-   {
-      m_hFind = FindFirstFile(pFile, this);
-   }
-   else
-   {
-      if(!FindNextFile(m_hFind, this))
-         Close();
-   }
-   return m_hFind != INVALID_HANDLE_VALUE;
-}
-
-BOOL GFileFinder::IsDots()
-{
-   int i = 0;
-   while(cFileName[i])
-   {
-      if(cFileName[i++] != '.')
-         return FALSE;
-   }
-   return TRUE;
-}
-
-GDirList::GDirList(bool bRecurseSubDirs, bool bReportFiles, bool bReportDirs, bool bReportPaths)
-{
-   m_bReportFiles = bReportFiles;
-   m_bReportDirs = bReportDirs;
-   m_bRecurseSubDirs = bRecurseSubDirs;
-   m_bReportPaths = bReportPaths;
-   GetCurrentDirectory(255, m_szOldDir);
-   m_pFinder[0] = new GFileFinder();
-   m_nNests = 1;
-}
-
-GDirList::~GDirList()
-{
-   for( ; m_nNests > 0; m_nNests--)
-      delete(m_pFinder[m_nNests - 1]);
-   SetCurrentDirectory(m_szOldDir);
-}
-
-const char* GDirList::GetNext()
-{
-	GFileFinder* pFinder;
-	if(m_nNests > 0)
-		pFinder = m_pFinder[m_nNests - 1];
-	else
-		return NULL;
-	if(pFinder->Find("*"))
-	{
-		if(pFinder->IsDir())
-		{
-			if(pFinder->IsDots())
-				return(GetNext());
-			if(m_bReportDirs)
-			{
-				if(m_bReportPaths)
-				{
-					char szBuff[256];
-					GetCurrentDirectory(255, szBuff);
-					m_buffer.str("");
-					m_buffer.clear();
-					m_buffer << szBuff;
-					m_buffer << "\\";
-				}
-				else
-				{
-					m_buffer.str("");
-					m_buffer.clear();
-				}
-			}
-			if(m_bRecurseSubDirs)
-			{
-				SetCurrentDirectory(pFinder->GetFileName());
-				m_pFinder[m_nNests] = new GFileFinder();
-				m_nNests++;
-			}
-			if(m_bReportDirs)
-			{
-				m_buffer << pFinder->GetFileName();
-				m_tempBuf = m_buffer.str();
-				m_buffer.str("");
-				m_buffer.clear();
-				return m_tempBuf.c_str();
-			}
-			else
-				return GetNext();
-		}
-		else
-		{
-			if(m_bReportFiles)
-			{
-				if(m_bReportPaths)
-				{
-					char szBuff[256];
-					GetCurrentDirectory(255, szBuff);
-					m_buffer.str("");
-					m_buffer.clear();
-					m_buffer << szBuff;
-					m_buffer << "\\";
-				}
-				else
-				{
-					m_buffer.str("");
-					m_buffer.clear();
-				}
-				m_buffer << pFinder->GetFileName();
-				m_tempBuf = m_buffer.str();
-				m_buffer.str("");
-				m_buffer.clear();
-				return m_tempBuf.c_str();
-			}
-			else
-			{
-				return GetNext();
-			}
-		}
-	}
-	else
-	{
-		if(m_nNests > 0)
-		{
-			SetCurrentDirectory("..");
-			m_nNests--;
-			delete(m_pFinder[m_nNests]);
-			return(GetNext());
-		}
-		else
-			return NULL;
-	}
-}
-
-
-} // namespace GClasses
-
-
-
-
-
-
-
-
-
-
-
-
-#else
-
-
-
-
-
-
-
-
-// ----------------------
-//  LINUX VERSION
-// ----------------------
-
-
-#include <unistd.h>
-#include "GDirList.h"
-#include "GError.h"
-#include "GFile.h"
 #include "GHolders.h"
 #include <string.h>
-#include <fstream>
-#include "GBlob.h"
+#ifdef WINDOWS
+#	include <direct.h> // for "getcwd", "chdir", etc.
+#	include <io.h> // for "access"
+#endif
 
-using namespace GClasses;
-using std::ostringstream;
 using std::string;
 
-////////////////////////////////////////////////////////
-
-GDirList::GDirList(bool bRecurseSubDirs, bool bReportFiles, bool bReportDirs, bool bReportPaths)
-{
-	m_bReportFiles = bReportFiles;
-	m_bReportDirs = bReportDirs;
-	m_bRecurseSubDirs = bRecurseSubDirs;
-	m_bReportPaths = bReportPaths;
-	if(!getcwd(m_szOldDir, 255))
-		ThrowError("failed to read cur dir");
-	m_nNests = 0;
-	m_pCurDir = opendir( "." );
-}
-
-GDirList::~GDirList()
-{
-	if(m_pCurDir)
-		closedir(m_pCurDir);
-	for( ; m_nNests > 0; m_nNests--)
-	{
-		closedir(m_pDirs[m_nNests - 1]);
-		if(chdir("..") != 0)
-			ThrowError("Failed to move up one dir");
-	}
-}
-
-const char* GDirList::GetNext()
-{
-	//The current directory isn't opening
-	if(m_pCurDir == NULL)
-		return NULL;
-
-	struct dirent *pDirent;
-	pDirent = readdir(m_pCurDir);
-	if(pDirent != NULL)
-	{
-		if(pDirent->d_type == DT_UNKNOWN)
-		{
-			// With some filesystems, the d_type field is not reliable. In these cases,
-			// we need to use lstat to determine reliably if it is a dir or a regular file
-			struct stat st;
-			if(lstat(pDirent->d_name, &st) != 0)
-				ThrowError("Failed to lstat file: ", pDirent->d_name);
-			if(st.st_mode & S_IFDIR)
-				pDirent->d_type = DT_DIR;
-			else
-				pDirent->d_type = DT_REG;
-		}
-		if(pDirent->d_type == DT_DIR)
-		{
-			//skip the . and .. directories
-			if(!strcmp(pDirent->d_name, ".") || !strcmp(pDirent->d_name, ".."))
-				return(GetNext());
-
-			//We need the full path if we want to open the next directory
-			if(m_bReportPaths)
-			{
-				char szBuff[256];
-				if(!getcwd(szBuff, 255))
-					ThrowError("Failed to read cur dir");
-				m_buffer.str("");
-				m_buffer.clear();
-				m_buffer << szBuff;
-				m_buffer << "/";
-			}
-			else
-			{
-				m_buffer.str("");
-				m_buffer.clear();
-			}
-
-			if(m_bRecurseSubDirs)
-			{ 
-				//Put the current Dir object on the recursion stack, 
-				//change the current dir to the new one in preparation for next query
-				m_pDirs[m_nNests] = m_pCurDir;
-				m_nNests++;
-				if(chdir(pDirent->d_name) != 0)
-					ThrowError("Failed to change dir");
-				m_pCurDir = opendir(".");
-			}
-			if(m_bReportDirs)
-			{
-				m_buffer << pDirent->d_name;
-				if(m_bReportPaths)
-					m_buffer << "/";
-				m_tempBuf = m_buffer.str();
-				m_buffer.str("");
-				m_buffer.clear();
-				return m_tempBuf.c_str();
-			}
-			else
-				return GetNext();
-		}
-		else
-		{
-			if(m_bReportFiles)
-			{
-				if(m_bReportPaths)
-				{
-					char szBuff[256];
-					if(!getcwd(szBuff, 255))
-						ThrowError("Failed to read cur dir");
-					m_buffer.str("");
-					m_buffer.clear();
-					m_buffer << szBuff;
-					m_buffer << "/";
-				}
-				else
-				{
-					m_buffer.str("");
-					m_buffer.clear();
-				}
-
-				m_buffer << pDirent->d_name;
-				m_tempBuf = m_buffer.str();
-				m_buffer.str("");
-				m_buffer.clear();
-				return m_tempBuf.c_str();
-			}
-			else
-			{
-				return GetNext();
-			}
-		}
-	}
-	else
-	{
-		//In here, there are no more files in the current directory
-		//Step out of the current nest, recurse up
-		if(m_nNests > 0)
-		{
-			if(chdir("..") != 0)
-				ThrowError("Failed to move up one dir");
-			closedir(m_pCurDir);
-			m_pCurDir = m_pDirs[m_nNests - 1];
-			m_nNests--;
-			return(GetNext());
-		}
-		else //all done! No more files.
-		{
-			closedir(m_pCurDir);
-			m_pCurDir = NULL;
-			return NULL;
-		}
-	}
-}
-
-
-
-
-#endif // !WIN32
-
 namespace GClasses {
+
+GDirList::GDirList()
+{
+	char buf[300];
+	if(!getcwd(buf, 300))
+		ThrowError("getcwd failed");
+	GFile::folderList(m_folders, buf, true);
+	GFile::fileList(m_files, buf);
+}
+
+
+
 
 #define BUF_SIZE 2048
 #define COMPRESS_BUF_SIZE 65536
@@ -482,7 +111,7 @@ char* GFolderSerializer::nextPiece(size_t* pOutSize)
 			}
 
 			// Add the file or folder
-			if(access(m_szPath, 0 ) != 0)
+			if(access(m_szPath, 0) != 0)
 				ThrowError("The file or folder ", m_szPath, " does not seem to exist");
 			struct stat status;
 			stat(m_szPath, &status);
@@ -647,45 +276,36 @@ void GFolderSerializer::startDir(const char* szDirName)
 	// Create the GDirList
 	if(chdir(szDirName) != 0)
 		ThrowError("Failed to change dir to ", szDirName);
-	m_dirStack.push(new GDirList(false, false, true, false));
+	m_dirStack.push(new GDirList());
 	m_state = 3; // continue reading dir
 }
 
 void GFolderSerializer::continueDir()
 {
 	GDirList* pDL = m_dirStack.top();
-	if(pDL->reportDirs())
+	if(pDL->m_folders.size() > 0)
 	{
-		const char* szDirName = pDL->GetNext();
-		if(szDirName)
-			startDir(szDirName);
-		else
-		{
-			delete(pDL);
-			m_dirStack.pop();
-			m_dirStack.push(new GDirList(false, true, false, false));
-			continueDir();
-		}
+		startDir(pDL->m_folders.back().c_str());
+		pDL->m_folders.pop_back();
+	}
+	else if(pDL->m_files.size() > 0)
+	{
+		startFile(pDL->m_files.back().c_str());
+		pDL->m_files.pop_back();
 	}
 	else
 	{
-		const char* szFilename = pDL->GetNext();
-		if(szFilename)
-			startFile(szFilename);
-		else
-		{
-			// End of dir indicator
-			*m_pPos = 'e';
-			m_pPos++;
-			m_size--;
+		// End of dir indicator
+		*m_pPos = 'e';
+		m_pPos++;
+		m_size--;
 
-			// Move out of the dir
-			delete(pDL);
-			m_dirStack.pop();
-			if(chdir("..") != 0)
-				ThrowError("Failed to chdir to ..");
-			m_state = 1;
-		}
+		// Move out of the dir
+		delete(pDL);
+		m_dirStack.pop();
+		if(chdir("..") != 0)
+			ThrowError("Failed to chdir to ..");
+		m_state = 1;
 	}
 }
 

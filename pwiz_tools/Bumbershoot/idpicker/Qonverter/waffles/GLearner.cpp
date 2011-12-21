@@ -698,12 +698,6 @@ void GSupervisedLearner::setupFilters(GMatrix& features, GMatrix& labels)
 			setLabelFilter(new GDiscretize());
 		}
 	}
-
-	// Train the filters
-	if(m_pFeatureFilter)
-		m_pFeatureFilter->train(features);
-	if(m_pLabelFilter)
-		m_pLabelFilter->train(labels);
 }
 
 void GSupervisedLearner::train(GMatrix& features, GMatrix& labels)
@@ -721,10 +715,12 @@ void GSupervisedLearner::train(GMatrix& features, GMatrix& labels)
 		setupFilters(features, labels);
 	if(m_pFeatureFilter)
 	{
+		m_pFeatureFilter->train(features);
 		GMatrix* pFilteredFeatures = m_pFeatureFilter->transformBatch(features);
 		Holder<GMatrix> hFilteredFeatures(pFilteredFeatures);
 		if(m_pLabelFilter)
 		{
+			m_pLabelFilter->train(labels);
 			GMatrix* pFilteredLabels = m_pLabelFilter->transformBatch(labels);
 			Holder<GMatrix> hFilteredLabels(pFilteredLabels);
 			trainInner(*pFilteredFeatures, *pFilteredLabels);
@@ -736,6 +732,7 @@ void GSupervisedLearner::train(GMatrix& features, GMatrix& labels)
 	{
 		if(m_pLabelFilter)
 		{
+			m_pLabelFilter->train(labels);
 			GMatrix* pFilteredLabels = m_pLabelFilter->transformBatch(labels);
 			Holder<GMatrix> hFilteredLabels(pFilteredLabels);
 			trainInner(features, *pFilteredLabels);
@@ -1201,7 +1198,7 @@ void GSupervisedLearner_basicTestEngine(GSupervisedLearner* pLearner, GMatrix& f
 	}
 	if(resultsBefore < minAccuracy)
 		ThrowError("accuracy has regressed");
-	if(resultsBefore >= minAccuracy + 0.02)
+	if(resultsBefore >= minAccuracy + 0.035)
 		std::cout << "\nThe measured accuracy (" << resultsBefore << ") is much better than expected (" << minAccuracy << "). Please increase the expected accuracy value so that any future regressions will be caught.\n";
 
 	// Roundtrip the model through serialization
@@ -1362,8 +1359,12 @@ GTwoWayIncrementalTransform* GLearnerLoader::loadTwoWayIncrementalTransform(GDom
 			return new GNominalToCat(pNode, *this);
 		else if(strcmp(szClass, "GDiscretize") == 0)
 			return new GDiscretize(pNode, *this);
+		else if(strcmp(szClass, "GImputeMissingVals") == 0)
+			return new GImputeMissingVals(pNode, *this);
 		else if(strcmp(szClass, "GNormalize") == 0)
 			return new GNormalize(pNode, *this);
+		else if(strcmp(szClass, "GTwoWayTransformChainer") == 0)
+			return new GTwoWayTransformChainer(pNode, *this);
 	}
 	if(m_throwIfClassNotFound)
 		ThrowError("Unrecognized class: ", szClass);
@@ -1380,10 +1381,16 @@ GSupervisedLearner* GLearnerLoader::loadSupervisedLearner(GDomNode* pNode)
 		{
 			if(szClass[1] < 'C')
 			{
-				if(strcmp(szClass, "GBag") == 0)
+				if(strcmp(szClass, "GAdaBoost") == 0)
+					return new GAdaBoost(pNode, *this);
+				else if(strcmp(szClass, "GBag") == 0)
 					return new GBag(pNode, *this);
 				else if(strcmp(szClass, "GBaselineLearner") == 0)
 					return new GBaselineLearner(pNode, *this);
+				else if(strcmp(szClass, "GBayesianModelAveraging") == 0)
+					return new GBayesianModelAveraging(pNode, *this);
+				else if(strcmp(szClass, "GBayesianModelCombination") == 0)
+					return new GBayesianModelCombination(pNode, *this);
 				else if(strcmp(szClass, "GBucket") == 0)
 					return new GBucket(pNode, *this);
 			}

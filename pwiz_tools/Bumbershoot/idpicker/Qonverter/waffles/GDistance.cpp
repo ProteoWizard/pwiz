@@ -24,7 +24,7 @@ GDistanceMetric::GDistanceMetric(GDomNode* pNode)
 	m_pRelation = GRelation::deserialize(pNode->field("relation"));
 }
 
-double GDistanceMetric::squaredDistance(const std::vector<double> & x, const std::vector<double> & y){
+double GDistanceMetric::squaredDistance(const std::vector<double> & x, const std::vector<double> & y) const{
 	assert(x.size() == y.size());
 	const std::size_t numDim = x.size();
 	const double* firstX = numDim==0?0:&(x.front());
@@ -83,7 +83,7 @@ void GRowDistance::init(sp_relation& pRelation)
 }
 
 // virtual
-double GRowDistance::squaredDistance(const double* pA, const double* pB)
+double GRowDistance::squaredDistance(const double* pA, const double* pB) const
 {
 	GRelation* pRel = m_pRelation.get();
 	double sum = 0;
@@ -151,7 +151,7 @@ void GRowDistanceScaled::init(sp_relation& pRelation)
 }
 
 // virtual
-double GRowDistanceScaled::squaredDistance(const double* pA, const double* pB)
+double GRowDistanceScaled::squaredDistance(const double* pA, const double* pB) const
 {
 	double sum = 0;
 	size_t count = m_pRelation->size();
@@ -199,7 +199,7 @@ void GLNormDistance::init(sp_relation& pRelation)
 }
 
 // virtual
-double GLNormDistance::squaredDistance(const double* pA, const double* pB)
+double GLNormDistance::squaredDistance(const double* pA, const double* pB) const
 {
 	GRelation* pRel = m_pRelation.get();
 	double sum = 0;

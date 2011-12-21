@@ -1,6 +1,8 @@
 #ifndef __GTEXT_H__
 #define __GTEXT_H__
 
+#include <sys/types.h>
+#include <cstddef>
 #include <vector>
 
 namespace GClasses {

@@ -16,6 +16,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <istream>
+#include <vector>
 
 namespace GClasses {
 
@@ -71,6 +72,14 @@ public:
 
 	/// Saves a buffer as a file.  Returns true on success
 	static void saveFile(const char* pBuf, size_t nSize, const char* szFilename);
+
+	/// Fills "list" with the names of all the files (excluding folders)
+	/// in the specified directory.
+	static void fileList(std::vector<std::string>& list, const char* dir = ".");
+
+	/// Fills "list" with the names of all the folders in the specified directory.
+	/// If excludeDots is true, then folders named "." or ".." will be excluded.
+	static void folderList(std::vector<std::string>& list, const char* dir = ".", bool excludeDots = true);
 
 	/// This is a brute force way to make a directory.  It
 	/// iterates through each subdir in szDir and calls mkdir

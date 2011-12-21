@@ -12,6 +12,7 @@
 #ifndef __GPRIORITYQUEUE_H__
 #define __GPRIORITYQUEUE_H__
 
+#include <cstddef>
 #include <vector>
 
 namespace GClasses {

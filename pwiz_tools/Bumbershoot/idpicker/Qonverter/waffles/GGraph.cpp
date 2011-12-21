@@ -934,9 +934,21 @@ size_t GBrandesBetweennessCentrality::neighborIndex(size_t from, size_t to)
 	return INVALID_INDEX;
 }
 
-double GBrandesBetweennessCentrality::edgeBetweenness(size_t vertex, size_t neighborIndex)
+double GBrandesBetweennessCentrality::edgeBetweennessByNeighbor(size_t vertex, size_t neighborIndex)
 {
 	return m_pEdgeBetweenness[vertex][neighborIndex];
+}
+
+double GBrandesBetweennessCentrality::edgeBetweennessByVertex(size_t vertex1, size_t vertex2)
+{
+	size_t index = neighborIndex(vertex1, vertex2);
+	if(index == INVALID_INDEX)
+	{
+		ThrowError("There is no edge between vertices ", to_str(vertex1), " and ", to_str(vertex2)); // todo: should we just return 0 here?
+		return 0.0;
+	}
+	else
+		return edgeBetweennessByNeighbor(vertex1, index);
 }
 
 #ifndef NO_TEST_CODE
@@ -956,19 +968,19 @@ void GBrandesBetweennessCentrality::test()
 	graph.addDirectedEdge(4, 5); graph.addDirectedEdge(5, 4);
 	graph.addDirectedEdge(3, 5); graph.addDirectedEdge(5, 3);
 	graph.compute();
-	if(std::abs(graph.edgeBetweenness(0, 0) - 1) > 1e-5)
+	if(std::abs(graph.edgeBetweennessByNeighbor(0, 0) - 1) > 1e-5)
 		ThrowError("failed");
-	if(std::abs(graph.edgeBetweenness(0, 1) - 4) > 1e-5)
+	if(std::abs(graph.edgeBetweennessByNeighbor(0, 1) - 4) > 1e-5)
 		ThrowError("failed");
-	if(std::abs(graph.edgeBetweenness(2, 0) - 4) > 1e-5)
+	if(std::abs(graph.edgeBetweennessByNeighbor(2, 0) - 4) > 1e-5)
 		ThrowError("failed");
-	if(std::abs(graph.edgeBetweenness(2, 1) - 4) > 1e-5)
+	if(std::abs(graph.edgeBetweennessByNeighbor(2, 1) - 4) > 1e-5)
 		ThrowError("failed");
-	if(std::abs(graph.edgeBetweenness(2, 2) - 9) > 1e-5)
+	if(std::abs(graph.edgeBetweennessByNeighbor(2, 2) - 9) > 1e-5)
 		ThrowError("failed");
-	if(std::abs(graph.edgeBetweenness(5, 0) - 1) > 1e-5)
+	if(std::abs(graph.edgeBetweennessByNeighbor(5, 0) - 1) > 1e-5)
 		ThrowError("failed");
-	if(std::abs(graph.edgeBetweenness(5, 1) - 4) > 1e-5)
+	if(std::abs(graph.edgeBetweennessByNeighbor(5, 1) - 4) > 1e-5)
 		ThrowError("failed");
 }
 #endif

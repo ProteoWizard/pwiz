@@ -21,11 +21,12 @@
 #	include <shlobj.h> // to get users' application data dir
 #	include <sys/utime.h> // utime
 #	include <direct.h>
-#	include <io.h> // for "filelength"
+#	include <io.h> // for "filelength" and "access"
 #	include <process.h>
 #else
 #	include <unistd.h>
 #	include <utime.h> // utime, which sets file times
+#	include <dirent.h>
 #endif
 #include <stdio.h>
 #include <sys/types.h>
@@ -130,6 +131,125 @@ char* GFile::clipFilename(char* szBuff)
    if(n > -1)
       szBuff[n + 1] = '\0';
 	return szBuff;
+}
+
+void GFile::fileList(std::vector<std::string>& list, const char* dir)
+{
+#ifdef WINDOWS
+	string s = dir;
+	if(s[s.length() - 1] != '/' && s[s.length() - 1] != '\\')
+		s += "/";
+	s += "*";
+	WIN32_FIND_DATA ent;
+	HANDLE h = FindFirstFile(s.c_str(), &ent);
+	if(h == INVALID_HANDLE_VALUE)
+	{
+		if(GetLastError() == ERROR_FILE_NOT_FOUND)
+			return;
+		ThrowError("Failed to open dir: ", dir);
+	}
+	do
+	{
+		if(ent.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		{
+		}
+		else
+		{
+			list.push_back(ent.cFileName);
+		}
+	}
+	while(FindNextFile(h, &ent) != 0);
+	FindClose(h);
+#else
+	DIR* pDir = opendir(dir);
+	if(!pDir)
+		ThrowError("Failed to open dir: ", dir);
+	while(true)
+	{
+		struct dirent *pDirent = readdir(pDir);
+		if(!pDirent)
+			break;
+		if(pDirent->d_type == DT_UNKNOWN)
+		{
+			// With some filesystems, the d_type field is not reliable. In these cases,
+			// we need to use lstat to determine reliably if it is a dir or a regular file
+			struct stat st;
+			if(lstat(pDirent->d_name, &st) != 0)
+			{
+				closedir(pDir);
+				ThrowError("Failed to lstat file: ", pDirent->d_name);
+			}
+			if(st.st_mode & S_IFDIR)
+				pDirent->d_type = DT_DIR;
+			else
+				pDirent->d_type = DT_REG;
+		}
+		if(pDirent->d_type != DT_DIR)
+		{
+			list.push_back(pDirent->d_name);
+		}
+	}
+	closedir(pDir);
+#endif
+}
+
+void GFile::folderList(std::vector<std::string>& list, const char* dir, bool excludeDots)
+{
+#ifdef WINDOWS
+	string s = dir;
+	if(s[s.length() - 1] != '/' && s[s.length() - 1] != '\\')
+		s += "/";
+	s += "*";
+	WIN32_FIND_DATA ent;
+	HANDLE h = FindFirstFile(s.c_str(), &ent);
+	if(h == INVALID_HANDLE_VALUE)
+	{
+		if(GetLastError() == ERROR_FILE_NOT_FOUND)
+			return;
+		ThrowError("Failed to open dir: ", dir);
+	}
+	do
+	{
+		if(ent.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		{
+			if(!excludeDots || (strcmp(ent.cFileName, ".") != 0 && strcmp(ent.cFileName, "..") != 0))
+				list.push_back(ent.cFileName);
+		}
+	}
+	while(FindNextFile(h, &ent) != 0);
+	FindClose(h);
+#else
+	DIR* pDir = opendir(dir);
+	if(!pDir)
+		ThrowError("Failed to open dir: ", dir);
+	while(true)
+	{
+		struct dirent *pDirent = readdir(pDir);
+		if(!pDirent)
+			break;
+		if(pDirent->d_type == DT_UNKNOWN)
+		{
+			// With some filesystems, the d_type field is not reliable. In these cases,
+			// we need to use lstat to determine reliably if it is a dir or a regular file
+			struct stat st;
+			if(lstat(pDirent->d_name, &st) != 0)
+			{
+				closedir(pDir);
+				ThrowError("Failed to lstat file: ", pDirent->d_name);
+			}
+			if(st.st_mode & S_IFDIR)
+				pDirent->d_type = DT_DIR;
+			else
+				pDirent->d_type = DT_REG;
+		}
+		if(pDirent->d_type == DT_DIR)
+		{
+			if(!excludeDots || (strcmp(pDirent->d_name, ".") != 0 && strcmp(pDirent->d_name, "..") != 0))
+				list.push_back(pDirent->d_name);
+		}
+	}
+	closedir(pDir);
+#endif
 }
 
 bool GFile::copyFile(const char* szSrcPath, const char* szDestPath)

@@ -182,7 +182,6 @@ class GNeighborTransducer : public GTransducer
 {
 protected:
 	size_t m_friendCount;
-	bool m_prune;
 
 public:
 	/// General-purpose constructor

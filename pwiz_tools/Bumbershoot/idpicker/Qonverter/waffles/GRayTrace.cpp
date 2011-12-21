@@ -2496,6 +2496,14 @@ void G3dLetterMaker::move(G3DReal dx, G3DReal dy, G3DReal dz)
 	m_pos.add(&ofs);
 }
 
+void G3dLetterMaker::move(G3DVector& vec)
+{
+	G3DVector ofs;
+	m_basis.multiply(&vec, &ofs);
+	m_pos.add(&ofs);
+	m_pos.add(&vec);
+}
+
 void G3dLetterMaker::scale(G3DReal width, G3DReal height, G3DReal depth)
 {
 	m_basis.m_rows[0].multiply(width);
@@ -3043,6 +3051,17 @@ void G3dLetterMaker::writeString(GRayTraceScene* pScene, const char* szString)
 		move(letterWidth(*szString) + m_lineWidth);
 		szString++;
 	}
+}
+
+double G3dLetterMaker::measureWidth(const char* szString)
+{
+	double width = 0.0;
+	while(*szString != '\0')
+	{
+		width += letterWidth(*szString) + m_lineWidth;
+		szString++;
+	}
+	return width;
 }
 
 void G3dLetterMaker::set(G3DVector* pBack, G3DVector* pFront, G3DReal x, G3DReal y)

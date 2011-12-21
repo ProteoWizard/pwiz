@@ -48,7 +48,9 @@ public:
 	/// Advances to the next item in the list
 	void advance();
 
-	/// Returns the number of items remaining to be visited
+	/// Returns the number of items remaining to be visited.  When
+	/// the current item in the list is the first item, the number
+	/// remaining is the number of items in the list.
 	size_t remaining();
 };
 
@@ -152,8 +154,16 @@ public:
 
 protected:
 	size_t reverseFieldOrder();
+
+	/// Reverses the order of the items in the list and returns
+	/// the number of items in the list.  Assumes this GDomNode is
+	/// a list node.  Behavior is undefined if it is not a list
+	/// node.
+	///
+	/// \return The number of items in the list
 	size_t reverseItemOrder();
 	void writeJson(std::ostream& stream);
+	size_t writeJsonCpp(std::ostream& stream, size_t col);
 	void writeXmlInlineValue(std::ostream& stream);
 	void writeXml(std::ostream& stream, const char* szLabel);
 };
@@ -205,6 +215,10 @@ public:
 	/// Writes this doc to the specified stream in JSON format. (See http://json.org.)
 	/// (If you want to write to a memory buffer, you can use open_memstream.)
 	void writeJson(std::ostream& stream);
+
+	/// Writes this doc to the specified stream as an inlined C++ string in JSON format.
+	/// (This method would be useful for hard-coding a serialized object in a C++ program.)
+	void writeJsonCpp(std::ostream& stream);
 
 	/// Write as XML to the specified stream.
 	void writeXml(std::ostream& stream);

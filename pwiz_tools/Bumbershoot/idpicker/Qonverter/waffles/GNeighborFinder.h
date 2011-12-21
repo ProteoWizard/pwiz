@@ -27,7 +27,7 @@ class GDistanceMetric;
 class GSupervisedLearner;
 
 
-/// Finds the k-nearest neighbors of any vector in a dataset
+/// Finds the k-nearest neighbors of any vector in a dataset.
 class GNeighborFinder
 {
 protected:
@@ -143,6 +143,11 @@ protected:
 	bool m_ownMetric;
 
 public:
+	/// Create a neighborfinder for finding the neighborCount
+	/// nearest neighbors under the given metric.  If ownMetric is
+	/// true, then the neighborFinder takes responsibility for
+	/// deleting the metric, otherwise it is the caller's
+	/// responsibility.
 	GNeighborFinderGeneralizing(GMatrix* pData, size_t neighborCount, GDistanceMetric* pMetric, bool ownMetric);
 
 	virtual ~GNeighborFinderGeneralizing();
@@ -411,18 +416,26 @@ protected:
 /// neighbors by searching for the shortest path of actions between observations,
 /// and computes the distance as the number of time-steps in that path.
 /// This algorithm was published in Gashler, Michael S. and Martinez, Tony. Temporal
-/// nonlinear dimensionality reduction. In Proceedings of the IEEE International
+/// nonlinear dimensionality reduction. In Proceedings of the International
 /// Joint Conference on Neural Networks IJCNN’11, pages 1959–1966, IEEE Press, 2011.
 class GTemporalNeighborFinder : public GNeighborFinder
 {
 protected:
-	bool m_ownActionsData;
+	GMatrix* m_pPreprocessed;
 	GMatrix* m_pActions;
+	bool m_ownActionsData;
 	std::vector<GSupervisedLearner*> m_consequenceMaps;
+	size_t m_maxDims;
 	GRand* m_pRand;
 
 public:
-	GTemporalNeighborFinder(GMatrix* pObservations, GMatrix* pActions, bool ownActionsData, size_t neighborCount, GRand* pRand);
+	/// pObservations is typically a matrix of high-dimensional observations.
+	/// pActions is a matrix of corresponding actions (peformed after the corresponding observation was observed).
+	/// If ownActionsData is true, then this object will delete pActions when it is deleted.
+	/// This neighbor-finder is somewhat slow in high-dimensional space. Consequently, if
+	/// the data has more than maxDims dimensions, it will internally use PCA to reduce it to
+	/// maxDims dimensions before computing neighbors. The default is 12.
+	GTemporalNeighborFinder(GMatrix* pObservations, GMatrix* pActions, bool ownActionsData, size_t neighborCount, GRand* pRand, size_t maxDims = 12);
 	virtual ~GTemporalNeighborFinder();
 
 	/// Computes the neighbors of the specified vector
@@ -437,6 +450,10 @@ protected:
 	/// to contain the number of times that each action must be performed to travel
 	/// from point "from" to point "to".
 	bool findPath(size_t from, size_t to, double* path, double distCap);
+
+	/// This method uses PCA to reduce pObs to maxDims dimensions.
+	/// (If pObs is already small enough, it just returns pObs.)
+	GMatrix* preprocessObservations(GMatrix* pObs, size_t maxDims, GRand* pRand);
 };
 
 

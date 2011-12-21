@@ -28,8 +28,10 @@ public:
 	/// Returns a string representation of the current time
 	static const char* asciiTime(char* szBuf, int nSize, bool bGreenwichMeanTime = false);
 
-	/// Returns a string suitable for use in a filename like "2009-12-31-23-59-59"
-	static void appendTimeStampValue(std::string* pS, bool bGreenwichMeanTime);
+	/// Adds a string representation of the current time to pS in big Endian format. For example, if sep1="-",
+	/// sep2=" ", and sep3=":", and the time is one second before 2010, then it would append a string like
+	/// this to pS: "2009-12-31 23:59:59". If the separators are all "", then it would append "20091231235959".
+	static void appendTimeStampValue(std::string* pS, const char* sep1 = "-", const char* sep2 = " ", const char* sep3 = ":", bool bGreenwichMeanTime = false);
 };
 
 } // namespace GClasses

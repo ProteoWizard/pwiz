@@ -41,20 +41,21 @@ public:
         virtual void init(sp_relation& pRelation) = 0;
 
         /// Return the squared distance (or squared dissimilarity) between the two specified vectors.
+ 	///
         /// It is assumed that a and b are vectors of the same
         /// dimension - and that that dimension is compatible with the
         /// relation given in init.  By default uses
-        /// squaredDistance(const double*, const double*) so subclassers
-        /// only need to change that method.
-        virtual double squaredDistance(const std::vector<double> & a, const std::vector<double> & b);
+        /// squaredDistance(const double*, const double*) const so
+        /// subclassers only need to change that method.
+        virtual double squaredDistance(const std::vector<double> & a, const std::vector<double> & b) const;
 
         /// Computes the squared distance (or squared dissimilarity) between the two specified vectors
-        virtual double squaredDistance(const double* pA, const double* pB) = 0;
+        virtual double squaredDistance(const double* pA, const double* pB) const = 0;
 
         /// Return squaredDistance(a,b).  Allows dissimilarity metrics
         /// to be used as function objects.  Do not override.
         /// Override squaredDistance(a,b) instead.  See GDistanceMetric::squaredDistance(const std::vector<double>&, const std::vector<double>&)
-        inline double operator()(const std::vector<double> & a, const std::vector<double> & b)
+        inline double operator()(const std::vector<double> & a, const std::vector<double> & b) const
 	{
 		return squaredDistance(a,b);
 	}
@@ -62,7 +63,7 @@ public:
         /// Return squaredDistance(pA, pB).  Allows dissimilarity metrics to
         /// be used as function objects.  Do not override.  Override
         /// squaredDistance(pA,pB) instead.  See GDistanceMetric::squaredDistance(const double*, const double*)
-        inline double operator()(const double* pA, const double* pB)
+        inline double operator()(const double* pA, const double* pB) const
 	{
 		return squaredDistance(pA,pB);
 	}
@@ -106,7 +107,7 @@ public:
 	virtual void init(sp_relation& pRelation);
 
 	/// Returns the distance between pA and pB
-	virtual double squaredDistance(const double* pA, const double* pB);
+	virtual double squaredDistance(const double* pA, const double* pB) const;
 
 	/// Specify the difference to use when one or more of the values is unknown.
 	/// (If your data contains unknown values, you may want to normalize the
@@ -143,7 +144,7 @@ public:
         virtual void init(sp_relation& pRelation);
 
         /// Returns the scaled distance between pA and pB
-        virtual double squaredDistance(const double* pA, const double* pB);
+        virtual double squaredDistance(const double* pA, const double* pB) const;
 
         /// Returns the vector of scalar values associated with each dimension
         virtual double* scaleFactors() { return m_pScaleFactors; }
@@ -172,7 +173,7 @@ public:
         virtual void init(sp_relation& pRelation);
 
         /// Returns the distance (using the norm passed to the constructor) between pA and pB
-        virtual double squaredDistance(const double* pA, const double* pB);
+        virtual double squaredDistance(const double* pA, const double* pB) const;
 
 	/// Specify the difference to use when one or more of the values is unknown.
 	/// (If your data contains unknown values, you may want to normalize the

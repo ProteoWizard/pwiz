@@ -362,6 +362,7 @@ protected:
 	GNeuralNet* m_pModel;
 	GMatrix* m_pUsers;
 	bool m_useInputBias;
+	bool m_useThreePass;
 
 public:
 	/// General-purpose constructor
@@ -395,6 +396,9 @@ public:
 
 	/// Specify to use no bias value with the inputs
 	void noInputBias() { m_useInputBias = false; }
+
+	/// Specify not to use three-pass training. (It will just use one pass instead.)
+	void noThreePass() { m_useThreePass = false; }
 
 #ifndef NO_TEST_CODE
 	/// Performs unit tests. Throws if a failure occurs. Returns if successful.

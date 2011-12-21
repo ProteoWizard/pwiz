@@ -199,7 +199,7 @@ void GKNN::autoTune(GMatrix& features, GMatrix& labels)
 	double bestErr = 1e308;
 	for(size_t i = 1; i < cap; i *= 3)
 	{
-		m_nNeighbors = i;
+		setNeighborCount(i);
 		double d = heuristicValidate(features, labels);
 		if(d < bestErr)
 		{
@@ -213,7 +213,7 @@ void GKNN::autoTune(GMatrix& features, GMatrix& labels)
 	// Set the best values
 	m_nNeighbors = bestK;
 }
-	
+
 void GKNN::setNeighborCount(size_t k)
 {
 	delete[] m_pEvalNeighbors;
@@ -424,6 +424,7 @@ void GKNN::findNeighbors(const double* pVector)
 			//m_pNeighborFinder = new GBruteForceNeighborFinder(m_pFeatures, m_nNeighbors, m_pDistanceMetric, false);
 			m_pNeighborFinder = new GKdTree(m_pFeatures, m_nNeighbors, m_pDistanceMetric, false);
 		}
+		GAssert(m_pNeighborFinder->neighborCount() == m_nNeighbors);
 		m_pNeighborFinder->neighbors(m_pEvalNeighbors, m_pEvalDistances, pVector);
 	}
 	else
@@ -681,7 +682,6 @@ void GKNN::test()
 GNeighborTransducer::GNeighborTransducer(GRand& rand)
 : GTransducer(rand), m_friendCount(12)
 {
-	m_prune = false;
 }
 
 void GNeighborTransducer::autoTune(GMatrix& features, GMatrix& labels)

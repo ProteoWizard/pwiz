@@ -20,11 +20,27 @@ using namespace GClasses;
 
 
 GBitTable::GBitTable(size_t bitCount)
+  :m_size((bitCount + BLOCK_BITS - 1) / BLOCK_BITS),
+   m_pBits(new size_t[m_size])
 {
-	m_size = (bitCount + BLOCK_BITS - 1) / BLOCK_BITS;
-	m_pBits = new size_t[m_size];
 	memset(m_pBits, '\0', sizeof(size_t) * m_size);
 }
+
+GBitTable::GBitTable(const GBitTable&o)
+  :m_size(o.m_size), m_pBits(new size_t[m_size])
+{
+	memcpy(m_pBits, o.m_pBits, sizeof(size_t) * m_size);
+}
+
+GBitTable& GBitTable::operator=(const GBitTable& o)
+{
+	delete[] m_pBits;
+	m_size = o.m_size;
+	m_pBits = new size_t[m_size];
+	memcpy(m_pBits, o.m_pBits, sizeof(size_t) * m_size);
+	return *this;
+}
+
 
 GBitTable::~GBitTable()
 {
