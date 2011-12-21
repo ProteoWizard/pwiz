@@ -210,27 +210,32 @@ namespace IDPicker.Properties {
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
             "org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <s" +
-            "tring>MyriMatch optimized;SVM;False;Linear;Ignore;Ignore;Partition;Partition;1 A" +
-            "scending Off myrimatch:mvh;1 Ascending Off xcorr</string>\r\n  <string>MyriMatch M" +
-            "VH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off" +
-            " myrimatch:mvh</string>\r\n  <string>MyriMatch XCorr;StaticWeighted;False;Linear;I" +
-            "gnore;Ignore;Partition;Partition;1 Ascending Off xcorr</string>\r\n  <string>Seque" +
-            "st optimized;SVM;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off " +
-            "sequest:xcorr;1 Ascending Off sequest:deltacn</string>\r\n  <string>Sequest XCorr;" +
-            "StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off se" +
-            "quest:xcorr</string>\r\n  <string>Mascot ionscore;StaticWeighted;False;Linear;Igno" +
-            "re;Ignore;Partition;Partition;1 Ascending Off mascot:score</string>\r\n  <string>M" +
-            "ascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition" +
-            ";Partition;1 Ascending Off mascot:score;1 Descending Off mascot:identity thresho" +
-            "ld</string>\r\n  <string>X!Tandem optimized;SVM;False;Linear;Ignore;Ignore;Partiti" +
-            "on;Partition;1 Descending Off x!tandem:expect;1 Ascending Off x!tandem:hyperscor" +
-            "e</string>\r\n  <string>X!Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;" +
-            "Partition;Partition;1 Descending Off x!tandem:expect</string>\r\n  <string>X!Tande" +
-            "m hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Asc" +
-            "ending Off x!tandem:hyperscore</string>\r\n  <string>OMSSA expect;StaticWeighted;F" +
-            "alse;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off expect</string>\r\n" +
-            "  <string>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Part" +
-            "ition;1 Ascending Off zscore</string>\r\n</ArrayOfString>")]
+            "tring>Mascot ionscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partit" +
+            "ion;0.02;1 Ascending Off mascot:score</string>\r\n  <string>Mascot ionscore-identi" +
+            "tyscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Asc" +
+            "ending Off mascot:score;1 Descending Off mascot:identity threshold</string>\r\n  <" +
+            "string>MyriMatch optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Parti" +
+            "tion;0.02;1 Ascending Off myrimatch:mvh;1 Ascending Off xcorr</string>\r\n  <strin" +
+            "g>MyriMatch MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0." +
+            "02;1 Ascending Off myrimatch:mvh</string>\r\n  <string>MyriMatch XCorr;StaticWeigh" +
+            "ted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off xcorr</s" +
+            "tring>\r\n  <string>OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partiti" +
+            "on;Partition;0.02;1 Descending Off expect</string>\r\n  <string>Pepitome optimized" +
+            ";MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off " +
+            "hgt;1 Ascending Off kendallPVal</string>\r\n  <string>Phenyx zscore;StaticWeighted" +
+            ";False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off zscore</str" +
+            "ing>\r\n  <string>Sequest optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partitio" +
+            "n;Partition;0.02;1 Ascending Off sequest:xcorr;1 Ascending Off sequest:deltacn</" +
+            "string>\r\n  <string>Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Parti" +
+            "tion;Partition;0.02;1 Ascending Off sequest:xcorr</string>\r\n  <string>TagRecon o" +
+            "ptimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascend" +
+            "ing Off myrimatch:mvh;1 Ascending Off xcorr</string>\r\n  <string>X!Tandem optimiz" +
+            "ed;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending O" +
+            "ff x!tandem:expect;1 Ascending Off x!tandem:hyperscore</string>\r\n  <string>X!Tan" +
+            "dem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 " +
+            "Descending Off x!tandem:expect</string>\r\n  <string>X!Tandem hyperscore;StaticWei" +
+            "ghted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off x!tand" +
+            "em:hyperscore</string>\r\n</ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));

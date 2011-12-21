@@ -128,7 +128,7 @@ void calculateBestSingleScoreDiscrimination(const Qonverter::Settings& settings,
         // iterate backward to find the last Q value within the threshold
         currentDiscrimination = 0;
         for (int j=psmRows.size()-1; j >= 0; --j)
-            if ((psmRows.begin()+j)->qValue <= settings.truePositiveThreshold)
+            if ((psmRows.begin()+j)->fdrScore <= settings.truePositiveThreshold)
             {
                 currentDiscrimination = j+1;
                 break;
@@ -577,8 +577,8 @@ void qonvertRange(const Qonverter::Settings& settings,
              itr != end;
              ++itr)
         {
-            BOOST_ASSERT(itr->newRank == 1 || itr->qValue == 2);
-            if (itr->qValue <= settings.truePositiveThreshold)
+            BOOST_ASSERT(itr->newRank == 1 || itr->fdrScore == 2);
+            if (itr->fdrScore <= settings.truePositiveThreshold)
             {
                 truePositiveRange = PSMIteratorRange(fullRange.begin(), itr.base());
                 break;

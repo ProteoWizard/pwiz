@@ -98,6 +98,7 @@ void Qonverter::Qonvert(String^ idpDbFilepath)
         qonverterSettings.missedCleavagesHandling = NativeQonverter::MissedCleavagesHandling::get_by_index((size_t) itr.Value->MissedCleavagesHandling).get();
         qonverterSettings.terminalSpecificityHandling = NativeQonverter::TerminalSpecificityHandling::get_by_value((size_t) itr.Value->TerminalSpecificityHandling).get();
         qonverterSettings.chargeStateHandling = NativeQonverter::ChargeStateHandling::get_by_value((size_t) itr.Value->ChargeStateHandling).get();
+        qonverterSettings.maxFDR = itr.Value->MaxFDR;
 
         for each (KeyValuePair<String^, Settings::ScoreInfo^> itr2 in itr.Value->ScoreInfoByName)
         {
@@ -139,7 +140,7 @@ void Qonverter::Qonvert(System::IntPtr idpDb)
         qonverterSettings.missedCleavagesHandling = NativeQonverter::MissedCleavagesHandling::get_by_index((size_t) itr.Value->MissedCleavagesHandling).get();
         qonverterSettings.terminalSpecificityHandling = NativeQonverter::TerminalSpecificityHandling::get_by_value((size_t) itr.Value->TerminalSpecificityHandling).get();
         qonverterSettings.chargeStateHandling = NativeQonverter::ChargeStateHandling::get_by_value((size_t) itr.Value->ChargeStateHandling).get();
-
+        qonverterSettings.maxFDR = itr.Value->MaxFDR;
 
         for each (KeyValuePair<String^,Settings::ScoreInfo^> itr2 in itr.Value->ScoreInfoByName)
         {

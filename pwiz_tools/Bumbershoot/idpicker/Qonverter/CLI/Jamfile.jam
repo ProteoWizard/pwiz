@@ -39,12 +39,14 @@ lib NativeQonverter
    <library>../..//svm
    <library>/ext/boost//thread
    <library>/ext/boost//filesystem
+   <library>../waffles//waffles
    <toolset>msvc:<using-clr>false
  :
  : <library>../../Lib/SQLite//sqlite3pp
    <library>../..//svm
    <library>/ext/boost//thread
    <library>/ext/boost//filesystem
+   <library>../waffles//waffles
  ;
  
 lib NativeParser

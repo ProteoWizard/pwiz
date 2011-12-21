@@ -30,12 +30,14 @@ lib Qonverter
         <library>..//svm
         <library>/ext/boost//thread
         <library>/ext/boost//filesystem
+        <library>waffles//waffles
     : # default-build
     : # usage-requirements
         <library>../Lib/SQLite//sqlite3pp
         <library>..//svm
         <library>/ext/boost//thread
         <library>/ext/boost//filesystem
+        <library>waffles//waffles
     ;
 
 lib Parser

@@ -106,6 +106,7 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
             nativeQonverterSettings.missedCleavagesHandling = NativeQonverter::MissedCleavagesHandling::get_by_index((size_t) qonverterSettings->MissedCleavagesHandling).get();
             nativeQonverterSettings.terminalSpecificityHandling = NativeQonverter::TerminalSpecificityHandling::get_by_value((size_t) qonverterSettings->TerminalSpecificityHandling).get();
             nativeQonverterSettings.chargeStateHandling = NativeQonverter::ChargeStateHandling::get_by_value((size_t) qonverterSettings->ChargeStateHandling).get();
+            nativeQonverterSettings.maxFDR = qonverterSettings->MaxFDR;
 
             for each (KeyValuePair<String^, Qonverter::Settings::ScoreInfo^> itr in qonverterSettings->ScoreInfoByName)
             {

@@ -111,6 +111,7 @@ public:
         settings.gamma = Gamma;
         settings.nu = Nu;
         settings.degree = PolynomialDegree;
+        settings.maxFDR = MaxFDR;
         return settings;
     }
 

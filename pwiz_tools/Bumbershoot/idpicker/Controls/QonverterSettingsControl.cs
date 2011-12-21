@@ -65,6 +65,7 @@ namespace IDPicker.Controls
                 missedCleavagesComboBox.SelectedIndex = (int) value.MissedCleavagesHandling;
                 kernelComboBox.SelectedIndex = (int) value.Kernel;
                 rerankingCheckbox.Checked = value.RerankMatches;
+                optimizeAtFdrTextBox.Text = (value.MaxFDR * 100).ToString("f4");
 
                 scoreGridView.Rows.Clear();
                 foreach (var kvp in value.ScoreInfoByName)
@@ -90,6 +91,7 @@ namespace IDPicker.Controls
                     MissedCleavagesHandling = (Qonverter.MissedCleavagesHandling) missedCleavagesComboBox.SelectedIndex,
                     Kernel = (Qonverter.Kernel) kernelComboBox.SelectedIndex,
                     RerankMatches = rerankingCheckbox.Checked,
+                    MaxFDR = Convert.ToDouble(optimizeAtFdrTextBox.Text) / 100,
                     ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
                 };
 
@@ -130,6 +132,7 @@ namespace IDPicker.Controls
                                qonverterSettings.MissedCleavagesHandling != editedQonverterSettings.MissedCleavagesHandling ||
                                qonverterSettings.Kernel != editedQonverterSettings.Kernel ||
                                qonverterSettings.RerankMatches != editedQonverterSettings.RerankMatches ||
+                               qonverterSettings.MaxFDR != editedQonverterSettings.MaxFDR ||
                                qonverterSettings.ScoreInfoByName.Count != editedQonverterSettings.ScoreInfoByName.Count;
 
                 if (isDirty)
@@ -153,25 +156,43 @@ namespace IDPicker.Controls
             }
         }
 
+        private void doubleTextBox_KeyDown (object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Decimal || e.KeyCode == Keys.OemPeriod)
+            {
+                if ((sender as Control).Text.Length == 0 || (sender as Control).Text.Contains('.'))
+                    e.SuppressKeyPress = true;
+            }
+            else if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
+                    e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
+                    e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
+                    e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
+                e.SuppressKeyPress = true;
+        }
+
         private void flowLayoutPanel_Resize (object sender, EventArgs e)
         {
-            //scoreGridView.Width = flowLayoutPanel.Width;
+            scoreGridViewPanel.Width = flowLayoutPanel.Width;
         }
 
         private void qonvertMethodComboBox_SelectedIndexChanged (object sender, EventArgs e)
         {
-            // hide kernel and non-score-feature options for StaticWeighted method
-            bool showNonScoreOptions = qonvertMethodComboBox.SelectedIndex == (int) Qonverter.QonverterMethod.SVM;
+            // hide step optimization FDR options for non-step methods
+            bool showStepOptimizerOptions = qonvertMethodComboBox.SelectedIndex == (int) Qonverter.QonverterMethod.MonteCarlo;
+            stepOptimizerPanel.Visible = showStepOptimizerOptions;
+
+            // hide kernel and non-score-feature options for non-SVM methods
+            bool showNonScoreOptions = qonvertMethodComboBox.SelectedIndex == (int) Qonverter.QonverterMethod.PartitionedSVM ||
+                                       qonvertMethodComboBox.SelectedIndex == (int) Qonverter.QonverterMethod.SingleSVM;
             svmPanel.Visible = showNonScoreOptions;
+
             if (showNonScoreOptions)
             {
-                RankPanel.Location = new Point(3,145);
                 massErrorHandlingComboBox.SelectedIndex = (int) Qonverter.MassErrorHandling.Ignore;
                 missedCleavagesComboBox.SelectedIndex = (int) Qonverter.MissedCleavagesHandling.Feature;
             }
             else
             {
-                RankPanel.Location = new Point(3, 73);
                 massErrorHandlingComboBox.SelectedIndex = (int) Qonverter.MassErrorHandling.Ignore;
                 missedCleavagesComboBox.SelectedIndex = (int) Qonverter.MissedCleavagesHandling.Ignore;
             }

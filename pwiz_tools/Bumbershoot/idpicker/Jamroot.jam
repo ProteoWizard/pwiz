@@ -49,14 +49,9 @@ local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
 local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
 zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
 
-local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
-expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
-expat_src = $(expat_src[0]) ;
-
-if ! $(expat_src)
-{
-     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
-}
+local default_png_src = "$(libraries_path)/libpng-1.5.6" ;
+local png_src = [ MATCH --png-src=(.*) : [ modules.peek : ARGV ] ] ;
+png_src ?= $(default_png_src) ; # set default path in absence of command-line path
 
 
 path-constant ROOT_PATH : . ;
@@ -265,7 +260,7 @@ local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
                          *.cs
                          #*.html
                          #*.vdproj
-      : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs ]
+      : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
     : warn-on-missing : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
@@ -294,9 +289,9 @@ make VERSION : : @make_VERSION : <location>$(BUILD_PATH) ;
 actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
 
 
-path-constant EXPAT_SOURCE : $(expat_src) ;
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
+path-constant PNG_SOURCE : $(png_src) ;
 
 local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
 if ! $(.has-boost)
@@ -305,8 +300,7 @@ if ! $(.has-boost)
     using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 }
 
-using expat : 2.0 : $(EXPAT_SOURCE) ;
-
+using png : 1.5.6 : $(PNG_SOURCE) : $(options) ;
 
 rule install-location ( properties * )
 {

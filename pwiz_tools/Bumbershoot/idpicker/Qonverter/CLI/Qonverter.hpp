@@ -57,7 +57,8 @@ public ref struct Qonverter
         StaticWeighted,
         SVM,
         PartitionedSVM = SVM,
-        SingleSVM
+        SingleSVM,
+        MonteCarlo,
     };
 
     enum class Kernel
@@ -138,6 +139,9 @@ public ref struct Qonverter
 
         /// for SVM qonversion, what kind of kernel should be used?
         property Kernel Kernel;
+
+        /// for HillClimber and MonteCarlo qonversion, what FDR are we trying to maximize results for?
+        property double MaxFDR;
 
         /// what score names are expected and how should they be weighted and normalized?
         property IDictionary<String^, ScoreInfo^>^ ScoreInfoByName;

@@ -28,6 +28,7 @@
 #include "Qonverter.hpp"
 #include "StaticWeightQonverter.hpp"
 #include "SVMQonverter.hpp"
+#include "MonteCarloQonverter.hpp"
 #include "boost/foreach_field.hpp"
 
 
@@ -428,6 +429,9 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
             default:
             case Qonverter::QonverterMethod::StaticWeighted:
                 StaticWeightQonverter::Qonvert(psmRowReader.psmRows, qonverterSettings, scoreWeightsVector);
+                break;
+            case Qonverter::QonverterMethod::MonteCarlo:
+                MonteCarloQonverter::Qonvert(psmRowReader.psmRows, qonverterSettings, scoreWeightsVector);
                 break;
             case Qonverter::QonverterMethod::PartitionedSVM:
             case Qonverter::QonverterMethod::SingleSVM:

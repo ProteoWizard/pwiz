@@ -99,6 +99,7 @@ struct Qonverter
         //(SVM)("SVM-optimized")
         (PartitionedSVM)("SVM-optimized per partition")
         (SingleSVM)("SVM-optimized across partitions")
+        (MonteCarlo)("Monte Carlo")
     );
 
     BOOST_ENUM(SVMType,
@@ -188,6 +189,7 @@ struct Qonverter
         double gamma;
         double nu;
         int degree;
+        double maxFDR;
 
         /// what score names are expected and how should they be weighted and normalized?
         map<string, ScoreInfo> scoreInfoByName;
@@ -208,6 +210,7 @@ struct Qonverter
             gamma = 5;
             nu = 0.5;
             degree = 3;
+            maxFDR = 0.02;
         }
     };
 
@@ -321,10 +324,10 @@ std::vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, PSM
 template <typename T>
 struct MinMaxPair
 {
-    MinMaxPair() : min(std::numeric_limits<T>::max()), max(-std::numeric_limits<T>::max()) {}
-    MinMaxPair(const T& initialMin, const T& initialMax) : min(initialMin), max(initialMax) {}
+    MinMaxPair() : min BOOST_PREVENT_MACRO_SUBSTITUTION ((std::numeric_limits<T>::max)()), max BOOST_PREVENT_MACRO_SUBSTITUTION (-(std::numeric_limits<T>::max)()) {}
+    MinMaxPair(const T& initialMin, const T& initialMax) : min BOOST_PREVENT_MACRO_SUBSTITUTION (initialMin), max BOOST_PREVENT_MACRO_SUBSTITUTION (initialMax) {}
 
-    void compare(const T& value) {min = std::min(min, value); max = std::max(max, value);}
+    void compare(const T& value) {min = (std::min)(min, value); max = (std::max)(max, value);}
 
     T& scale(T& value) const {return (min == max ? value : (value = 2 * (value - min) / (max - min) - 1));}
     T& unscale(T& value) const {return (min == max ? value : (value = (value + 1) / 2 * (max - min) + min));}
