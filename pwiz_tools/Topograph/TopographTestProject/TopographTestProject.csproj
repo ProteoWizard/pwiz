@@ -65,11 +65,13 @@
       <HintPath>..\..\Shared\Lib\System.Data.SQLite.DLL</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
+    <Compile Include="DataBinding\BoundListTest.cs" />
     <Compile Include="DataBinding\CollectionInfoTest.cs" />
     <Compile Include="DataBinding\Controls\AvailableFieldsTreeTest.cs" />
     <Compile Include="DataBinding\Controls\BoundDataGridViewTest.cs" />

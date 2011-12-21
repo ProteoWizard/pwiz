@@ -29,22 +29,23 @@ namespace pwiz.Common.DataBinding
         private static List<IAggregateFunction> _aggregateFunctionList = new List<IAggregateFunction>();
         private static IDictionary<string, int> _aggregateFunctionIndexesByName = new Dictionary<string, int>();
 
-        public static readonly IAggregateFunction GroupBy = new GroupByImpl();
-
-        public static readonly IAggregateFunction Sum = new AggregateFunctionImpl("sum", "Sum",
+        public static readonly IAggregateFunction GroupBy = new AggregateFunctionImpl("groupby", "Group By", "",
+                                                                                      Properties.Resources.agg_groupby,
+                                                                                      null, cd => cd.PropertyType);
+        public static readonly IAggregateFunction Sum = new AggregateFunctionImpl("sum", "Sum", "Sum of ",
             Properties.Resources.agg_sum, AggSum, cd => IsNumberType(cd) ? typeof (double) : null);
-        public static readonly IAggregateFunction Mean = new AggregateFunctionImpl("mean", "Mean",
+        public static readonly IAggregateFunction Mean = new AggregateFunctionImpl("mean", "Mean", "Average of ",
             Properties.Resources.agg_mean, AggMean, cd => IsNumberType(cd) ? typeof(double) : null);
-        public static readonly IAggregateFunction Count = new AggregateFunctionImpl("count", "Count",
+        public static readonly IAggregateFunction Count = new AggregateFunctionImpl("count", "Count", "Count of ",
             Properties.Resources.agg_count, AggCount, cd => typeof (int));
 
-        public static readonly IAggregateFunction Minimum = new AggregateFunctionImpl("min", "Minimum",
+        public static readonly IAggregateFunction Minimum = new AggregateFunctionImpl("min", "Minimum", "Min of ",
             Properties.Resources.agg_min, AggMin, cd => cd.PropertyType);
 
-        public static readonly IAggregateFunction Maximum = new AggregateFunctionImpl("max", "Maximum",
+        public static readonly IAggregateFunction Maximum = new AggregateFunctionImpl("max", "Maximum", "Max of ",
             Properties.Resources.agg_max, AggMax, cd => cd.PropertyType);
 
-        public static readonly IAggregateFunction StdDev = new AggregateFunctionImpl("stddev", "Standard Deviation",
+        public static readonly IAggregateFunction StdDev = new AggregateFunctionImpl("stddev", "Standard Deviation", "StdDev of ",
             Properties.Resources.agg_stddev, AggStdDev, cd => IsNumberType(cd) ? typeof (double) : null);
 
         static AggregateFunctions()
@@ -64,8 +65,26 @@ namespace pwiz.Common.DataBinding
             _aggregateFunctionList.Add(aggregateFunction);
         }
 
+        public static int GetImageIndex(IAggregateFunction aggregateFunction)
+        {
+            if (aggregateFunction == null)
+            {
+                return -1;
+            }
+            int result;
+            if (!_aggregateFunctionIndexesByName.TryGetValue(aggregateFunction.Name, out result))
+            {
+                return -1;
+            }
+            return result;
+        }
+
         public static IAggregateFunction GetAggregateFunction(string name)
         {
+            if (name == null)
+            {
+                return null;
+            }
             int index;
             if (!_aggregateFunctionIndexesByName.TryGetValue(name, out index))
             {
@@ -76,7 +95,7 @@ namespace pwiz.Common.DataBinding
 
         public static ImageList GetSmallIcons()
         {
-            var result = new ImageList();
+            var result = new ImageList(){TransparentColor = Color.Magenta};
             result.Images.AddRange(_aggregateFunctionList.Select(fn=>fn.SmallIcon).ToArray());
             return result;
         }
@@ -86,11 +105,11 @@ namespace pwiz.Common.DataBinding
             return _aggregateFunctionList.AsReadOnly();
         }
 
-        static object AggCount(ColumnDescriptor columnDescriptor, IEnumerable<RowItem> items)
+        static object AggCount(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> items)
         {
-            return items.Count(item => item != null && columnDescriptor.GetPropertyValue(item, null) != null);
+            return items.Count(item => item != null && columnDescriptor.GetPropertyValue(item) != null);
         }
-        static object AggMin(ColumnDescriptor columnDescriptor, IEnumerable<RowItem> items)
+        static object AggMin(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> items)
         {
             object result = null;
             foreach (var item in items)
@@ -99,7 +118,7 @@ namespace pwiz.Common.DataBinding
                 {
                     continue;
                 }
-                var value = columnDescriptor.GetPropertyValue(item, null);
+                var value = columnDescriptor.GetPropertyValue(item);
                 if (value == null)
                 {
                     continue;
@@ -111,7 +130,7 @@ namespace pwiz.Common.DataBinding
             }
             return result;
         }
-        static object AggMax(ColumnDescriptor columnDescriptor, IEnumerable<RowItem> items)
+        static object AggMax(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> items)
         {
             object result = null;
             foreach (var item in items)
@@ -120,7 +139,7 @@ namespace pwiz.Common.DataBinding
                 {
                     continue;
                 }
-                var value = columnDescriptor.GetPropertyValue(item, null);
+                var value = columnDescriptor.GetPropertyValue(item);
                 if (value == null)
                 {
                     continue;
@@ -139,7 +158,7 @@ namespace pwiz.Common.DataBinding
             return wrappedType.IsPrimitive;
         }
 
-        static IList<double> GetDoubles(ColumnDescriptor columnDescriptor, IEnumerable<RowItem> items)
+        static IList<double> GetDoubles(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> items)
         {
             var doubles = new List<double>();
             foreach (var item in items)
@@ -148,7 +167,7 @@ namespace pwiz.Common.DataBinding
                 {
                     continue;
                 }
-                var unwrappedValue = columnDescriptor.DataSchema.UnwrapValue(columnDescriptor.GetPropertyValue(item, null));
+                var unwrappedValue = columnDescriptor.DataSchema.UnwrapValue(columnDescriptor.GetPropertyValue(item));
                 if (ReferenceEquals(null, unwrappedValue))
                 {
                     continue;
@@ -165,12 +184,12 @@ namespace pwiz.Common.DataBinding
             return doubles;
         }
 
-        static object AggSum(ColumnDescriptor columnDescriptor, IEnumerable<RowItem> values)
+        static object AggSum(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> values)
         {
             return GetDoubles(columnDescriptor, values).Sum();
         }
 
-        static object AggStdDev(ColumnDescriptor columnDescriptor, IEnumerable<RowItem> values)
+        static object AggStdDev(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> values)
         {
             var doubles = GetDoubles(columnDescriptor, values);
             if (doubles.Count <= 1)
@@ -183,36 +202,35 @@ namespace pwiz.Common.DataBinding
             return Math.Sqrt(totalVariance/(doubles.Count - 1));
         }
 
-        static object AggMean(ColumnDescriptor columnDescriptor, IEnumerable<RowItem> values)
+        static object AggMean(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> values)
         {
             return GetDoubles(columnDescriptor, values).Average();
         }
 
         class AggregateFunctionImpl : IAggregateFunction
         {
-            private readonly Func<ColumnDescriptor, IEnumerable<RowItem>, object> _fnAggregate;
+            private readonly Func<ColumnDescriptor, IEnumerable<RowNode>, object> _fnAggregate;
             private readonly Func<ColumnDescriptor,Type> _fnResultType;
 
-            public AggregateFunctionImpl(string name, string displayName, Image smallIcon, Func<ColumnDescriptor, IEnumerable<RowItem>, object> fnAggregate, Func<ColumnDescriptor,Type> fnResultType)
+            public AggregateFunctionImpl(string name, string displayName, string captionPrefix, Image smallIcon, Func<ColumnDescriptor, IEnumerable<RowNode>, object> fnAggregate, Func<ColumnDescriptor,Type> fnResultType)
             {
                 Name = name;
                 DisplayName = displayName;
+                CaptionPrefix = captionPrefix;
                 _fnAggregate = fnAggregate;
                 _fnResultType = fnResultType;
                 SmallIcon = smallIcon;
+
             }
             public Type GetResultType(ColumnDescriptor columnDescriptor)
             {
                 return _fnResultType(columnDescriptor);
             }
-            public object Aggregate(ColumnDescriptor columnDescriptor, KeyValuePair<RowKey, IEnumerable<RowItem>> valueGroup)
+            public object Aggregate(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> valueGroup)
             {
-                return _fnAggregate(columnDescriptor, valueGroup.Value);
+                return _fnAggregate(columnDescriptor, valueGroup);
             }
-            public IDictionary<RowKey, IEnumerable<RowItem>> Group(ColumnDescriptor columnDescriptor, IDictionary<RowKey, IEnumerable<RowItem>> valueGroups)
-            {
-                return valueGroups;
-            }
+            public string CaptionPrefix { get; private set; }
             public string Name { get; private set; }
             public string DisplayName { get; private set; }
             public override string ToString()
@@ -220,55 +238,6 @@ namespace pwiz.Common.DataBinding
                 return DisplayName;
             }
             public Image SmallIcon { get; private set; }
-        }
-        class GroupByImpl : IAggregateFunction
-        {
-            public string Name
-            {
-                get { return "groupby"; }
-            }
-
-            public string DisplayName
-            {
-                get { return "Group By"; }
-            }
-
-            public Type GetResultType(ColumnDescriptor columnDescriptor)
-            {
-                return columnDescriptor.PropertyType;
-            }
-
-            public IDictionary<RowKey, IEnumerable<RowItem>> Group(ColumnDescriptor columnDescriptor, IDictionary<RowKey, IEnumerable<RowItem>> groups)
-            {
-//                var dictionary = new Dictionary<KeyValuePair<RowKey, object>, List<object>>();
-//                foreach (var group in groups)
-//                {
-//                    foreach (var item in group.Value)
-//                    {
-//                        var value = item == null ? null : columnDescriptor.GetPropertyValue(item, null);
-//                        var key = new KeyValuePair<RowKey, object>(group.Key, value);
-//                        List<object> list;
-//                        if (!dictionary.TryGetValue(key, out list))
-//                        {
-//                            list = new List<object>();
-//                            dictionary.Add(key, list);
-//                        }
-//                        list.Add(item);
-//                    }
-//                }
-//                return dictionary.ToDictionary(kvp => kvp.Key.Key.AddValue(columnDescriptor.IdPath, kvp.Key.Value), kvp =>kvp.Value);
-                return null;
-            }
-
-            public object Aggregate(ColumnDescriptor columnDescriptor, KeyValuePair<RowKey, IEnumerable<RowItem>> items)
-            {
-                return items.Key.FindValue(columnDescriptor.IdPath);
-            }
-
-            public Image SmallIcon
-            {
-                get { return Properties.Resources.agg_groupby; }
-            }
         }
     }
 }

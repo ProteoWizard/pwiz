@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.Data
 {
@@ -42,5 +43,24 @@ namespace pwiz.Topograph.Data
         {
             return Peptide.ToString();
         }
+    }
+
+    public class PeptideAnalysisData
+    {
+        public PeptideAnalysisData()
+        {
+        }
+        public PeptideAnalysisData(PeptideAnalysisData copy)
+        {
+            MinCharge = copy.MinCharge;
+            MaxCharge = copy.MaxCharge;
+            ExcludedMasses = copy.ExcludedMasses;
+            MassAccuracy = copy.MassAccuracy;
+        }
+        public int MinCharge { get; private set; }
+        public int MaxCharge { get; private set; }
+
+        public IList<byte> ExcludedMasses { get; set; }
+        public double? MassAccuracy { get; set; }
     }
 }

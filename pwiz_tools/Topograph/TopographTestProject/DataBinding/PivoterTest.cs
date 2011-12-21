@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Common.DataBinding;
@@ -44,12 +45,11 @@ namespace pwiz.Topograph.Test.DataBinding
             var pivoter = new Pivoter(viewInfo);
             var alaAcid = new AminoAcid("Ala");
             Assert.AreEqual("C3H5NO", alaAcid.Molecule.ToString());
-            var node = pivoter.Expand(new RowItem(null, alaAcid));
-            var atomicNodes = node.GetChildren(IdentifierPath.Parse("Molecule.[]"));
+            var nodes = pivoter.Expand(new RowItem(null, alaAcid)).ToArray();
+            Assert.AreEqual(1, nodes.Length);
+            var atomicNodes = nodes[0].GetChildren(IdentifierPath.Parse("Molecule.[]"));
             CollectionAssert.AreEquivalent(alaAcid.Molecule.Keys.ToArray(), atomicNodes.Select(atomicNode=>atomicNode.RowItem.Key).ToArray());
-            bool pivotValuesChanged = false;
-            var rowItems = pivoter.Pivot(node, ref pivotValuesChanged).ToArray();
-            Assert.IsFalse(pivotValuesChanged);
+            var rowItems = pivoter.Pivot(nodes).ToArray();
             CollectionAssert.AreEqual(Enumerable.Repeat(viewSpec.SublistId,rowItems.Length).ToArray(), rowItems.Select(rowItem=>rowItem.SublistId).ToArray());
             CollectionAssert.AreEquivalent(alaAcid.Molecule.Keys.ToArray(), rowItems.Select(rowItem=>rowItem.Key).ToArray());
             CollectionAssert.AreEqual(Enumerable.Repeat(alaAcid, rowItems.Length).ToArray(), rowItems.Select(rowItem=>rowItem.Parent.Value).ToArray());
@@ -69,7 +69,9 @@ namespace pwiz.Topograph.Test.DataBinding
             var alaAcid = new AminoAcid("Ala");
             var rowItems = pivoter.ExpandAndPivot(new[] {new RowItem(null, alaAcid)});
             CollectionAssert.AreEqual(new object[]{alaAcid}, rowItems.Select(rowItem=>rowItem.Value).ToArray());
-            CollectionAssert.AreEquivalent(alaAcid.Molecule.Keys.ToArray(), pivoter.GetPivotValues(IdentifierPath.Parse("Molecule.[]")).Select(rk=>rk.Value).ToArray());
+            var elementNames = pivoter.GetPivotKeys(IdentifierPath.Parse("Molecule.[]"), rowItems)
+                .Select(groupKey => groupKey.ValuePairs[0].Value).ToArray();
+            CollectionAssert.AreEquivalent(alaAcid.Molecule.Keys.ToArray(), elementNames);
         }
         [TestMethod]
         public void TestDoublePivot()
@@ -79,17 +81,19 @@ namespace pwiz.Topograph.Test.DataBinding
             var viewSpec = new ViewSpec()
                 .SetColumns(new[]
                                 {
-                                    new ColumnSpec().SetIdentifierPath(molecules),
-                                    new ColumnSpec().SetIdentifierPath(massEntries),
+                                    new ColumnSpec(molecules),
+                                    new ColumnSpec(massEntries),
                                 });
             var viewInfo = new ViewInfo(new DataSchema(), typeof(AminoAcid), viewSpec);
             var pivoter = new Pivoter(viewInfo);
             var alaAcid = new AminoAcid("Ala");
             var rowItems = pivoter.ExpandAndPivot(new[] {new RowItem(null, alaAcid)});
             CollectionAssert.AreEqual(new object[]{alaAcid}, rowItems.Select(rowItem=>rowItem.Value).ToArray());
-            CollectionAssert.AreEquivalent(alaAcid.Molecule.Keys.ToArray(), pivoter.GetPivotValues(molecules).Select(rk=>rk.Value).ToArray());
+
+            CollectionAssert.AreEquivalent(alaAcid.Molecule.Keys.ToArray(), pivoter.GetPivotKeys(molecules, rowItems).Select(rk=>rk.ValuePairs[0].Value).ToArray());
+
             CollectionAssert.AreEquivalent(Enumerable.Range(0, alaAcid.MassDistribution.Count).ToArray(), 
-                pivoter.GetPivotValues(massEntries).Select(rk=>rk.Value).ToArray());
+                pivoter.GetPivotKeys(massEntries, rowItems).Select(rk=>rk.ValuePairs[0].Value).ToArray());
         }
         [TestMethod]
         public void TestPivotWithSublist()
@@ -99,8 +103,8 @@ namespace pwiz.Topograph.Test.DataBinding
             var viewSpec = new ViewSpec()
                 .SetColumns(new[]
                                 {
-                                    new ColumnSpec().SetIdentifierPath(molecules),
-                                    new ColumnSpec().SetIdentifierPath(massEntries),
+                                    new ColumnSpec(molecules),
+                                    new ColumnSpec(massEntries),
                                 })
                 .SetSublistId(massEntries);
             var viewInfo = new ViewInfo(new DataSchema(), typeof(AminoAcid), viewSpec);
@@ -108,7 +112,25 @@ namespace pwiz.Topograph.Test.DataBinding
             var alaAcid = new AminoAcid("Ala");
             var rowItems = pivoter.ExpandAndPivot(new[] {new RowItem(null, alaAcid)});
             CollectionAssert.AreEquivalent(Enumerable.Range(0, alaAcid.MassDistribution.Count).ToArray(), rowItems.Select(rowItem=>rowItem.Key).ToArray());
-            CollectionAssert.AreEquivalent(alaAcid.Molecule.Keys.ToArray(), pivoter.GetPivotValues(molecules).Select(rk => rk.Value).ToArray());
+            CollectionAssert.AreEquivalent(alaAcid.Molecule.Keys.ToArray(), pivoter.GetPivotKeys(molecules, rowItems).Select(rk => rk.ValuePairs[0].Value).ToArray());
+        }
+        [TestMethod]
+        public void TestFilter()
+        {
+            var viewSpec = new ViewSpec().SetColumns(new[] {new ColumnSpec(IdentifierPath.Parse("Code"))})
+                .SetFilters(new[] {new FilterSpec(IdentifierPath.Parse("CharCode"), FilterOperations.OpEquals, "A"),});
+            var viewInfo = new ViewInfo(new DataSchema(), typeof (AminoAcid), viewSpec);
+            var pivoter = new Pivoter(viewInfo);
+            var alaAcid = new AminoAcid("Ala");
+            Assert.AreEqual('A', alaAcid.CharCode);
+            var argAcid = new AminoAcid("Arg");
+            Assert.AreEqual('R', argAcid.CharCode);
+            viewSpec = viewSpec.SetFilters(
+                new[] { new FilterSpec(IdentifierPath.Parse("Code"), FilterOperations.OpStartsWith, "Ar") });
+            pivoter = new Pivoter(new ViewInfo(new DataSchema(), typeof(AminoAcid), viewSpec));
+            var rowItems = pivoter.ExpandAndPivot(new[] { new RowItem(null, alaAcid), new RowItem(null, argAcid) }).ToArray();
+            Assert.AreEqual(1, rowItems.Length);
+            Assert.AreEqual("Arg", viewInfo.DisplayColumns[0].GetValue(rowItems[0], null));
         }
     }
 }

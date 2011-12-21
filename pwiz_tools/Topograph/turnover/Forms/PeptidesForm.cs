@@ -49,6 +49,7 @@ namespace pwiz.Topograph.ui.Forms
                 .SetName("default")
                 .SetColumns(defaultColumns);
             navBar1.ViewContext = _viewContext = new TopographViewContext(workspace, typeof(LinkValue<Peptide>), new[] { defaultViewSpec });
+            dataGridView.BindingListView.ViewInfo = new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First());
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -60,7 +61,7 @@ namespace pwiz.Topograph.ui.Forms
         private void Requery()
         {
             _peptides = new BindingList<LinkValue<Peptide>>(Workspace.Peptides.ListChildren().Select(p=>MakeLinkValue(p)).ToList());
-            peptidesBindingSource.DataSource = new BindingListView(new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First()), _peptides);
+            dataGridView.BindingListView.RowSource = _peptides;
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)

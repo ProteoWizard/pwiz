@@ -40,8 +40,9 @@ namespace pwiz.Topograph.Test.DataBinding.Controls
             Assert.IsNull(tree.FindTreeNode(idAminoAcidMoleculeElement, false));
             var aminoAcidMoleculeElementNode = tree.FindTreeNode(idAminoAcidMoleculeElement, true);
             Assert.AreEqual("Element", aminoAcidMoleculeElementNode.Text);
-            Assert.AreEqual(IdentifierPath.Parse("AminoAcidsList.[].Molecule.[]"), tree.GetColumnDescriptor(aminoAcidMoleculeElementNode.Parent).IdPath);
-            Assert.AreEqual(IdentifierPath.Parse("AminoAcidsList.[]"), tree.GetColumnDescriptor(aminoAcidMoleculeElementNode.Parent.Parent).IdPath);
+            Assert.AreEqual(IdentifierPath.Parse("AminoAcidsList.[].Molecule.[]"), tree.GetTreeColumn(aminoAcidMoleculeElementNode.Parent).IdPath);
+            Assert.AreEqual(IdentifierPath.Parse("AminoAcidsList.[].Molecule.[].Value"), tree.GetValueColumn(aminoAcidMoleculeElementNode.Parent).IdPath);
+            Assert.AreEqual(IdentifierPath.Parse("AminoAcidsList.[]"), tree.GetValueColumn(aminoAcidMoleculeElementNode.Parent.Parent).IdPath);
             var aminoAcidDictKeyNode = tree.FindTreeNode(IdentifierPath.Parse("AminoAcidsDict.[].Key"), true);
             var aminoAcidDictCodeNode = tree.FindTreeNode(IdentifierPath.Parse("AminoAcidsDict.[].Value.Code"), true);
             Assert.AreEqual("Code", aminoAcidDictCodeNode.Text);

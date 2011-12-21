@@ -18,10 +18,10 @@ namespace pwiz.Topograph.Test
         public void TestMoveItems()
         {
             Assert.IsTrue(new[] {1,3,2}
-                .SequenceEqual(ListViewHelper<int,int>.MoveItems(
+                .SequenceEqual(ListViewHelper.MoveItems(
                     Enumerable.Range(1,3), new[]{2}, true)));
             Assert.IsTrue(new[] {2,1,3}
-                .SequenceEqual(ListViewHelper<int,int>
+                .SequenceEqual(ListViewHelper
                 .MoveItems(Enumerable.Range(1,3), new[]{0}, false)));
         }
     }

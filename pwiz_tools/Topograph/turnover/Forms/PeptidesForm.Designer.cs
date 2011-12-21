@@ -103,7 +103,7 @@ namespace pwiz.Topograph.ui.Forms
             this.navBar1.Name = "navBar1";
             this.navBar1.Size = new System.Drawing.Size(659, 24);
             this.navBar1.TabIndex = 7;
-            this.navBar1.ViewContext = null;
+            this.navBar1.BindingSource = peptidesBindingSource;
             // 
             // PeptidesForm
             // 

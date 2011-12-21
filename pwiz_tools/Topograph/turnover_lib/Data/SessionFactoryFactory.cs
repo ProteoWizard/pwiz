@@ -69,7 +69,9 @@ namespace pwiz.Topograph.Data
                 .SetProperty("connection.provider",
                              typeof (NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName)
                 .SetProperty("command_timeout", "1800")
+                //.SetProperty("cache.provider_class", "NHibernate.Caches.Prevalence.PrevalenceCacheProvider, NHibernate.Caches.Prevalence")
                 .AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
+
             return configuration;
         }
 

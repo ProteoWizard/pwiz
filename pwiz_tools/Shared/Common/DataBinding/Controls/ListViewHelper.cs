@@ -18,11 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding.Controls
 {
@@ -31,85 +28,23 @@ namespace pwiz.Common.DataBinding.Controls
     /// Model objects can be mapped to a Key.
     /// The ListViewHelper tries to maintain the selection when new items are added to the ListView.
     /// </summary>
-    /// <typeparam name="TKey">Type of the </typeparam>
-    /// <typeparam name="TValue"></typeparam>
-    public class ListViewHelper<TKey, TValue>
+    public static class ListViewHelper
     {
-        private ListView _listView;
-        private IList<TValue> _items = new TValue[0];
-        private Func<TValue, TKey> _getKeyFunc;
-        private Func<TValue, ListViewItem> _makeListItemFunc;
-        public ListViewHelper(ListView listView, IList<TValue> items, Func<TValue, TKey> getKeyFunc, Func<TValue, ListViewItem> makeListItemFunc)
+        public static bool IsMoveUpEnabled(ListView listView)
         {
-            ListView = listView;
-            _items = items;
-            _getKeyFunc = getKeyFunc;
-            _makeListItemFunc = makeListItemFunc;
+            return IsMoveEnabled(listView.Items.Count, listView.SelectedIndices.Cast<int>(), true);
         }
-        public TKey GetKey(TValue item)
+        public static bool IsMoveDownEnabled(ListView listView)
         {
-            return _getKeyFunc.Invoke(item);
+            return IsMoveEnabled(listView.Items.Count, listView.SelectedIndices.Cast<int>(), false);
         }
-        public ListViewItem MakeListViewItem(TValue item)
+        public static bool IsMoveEnabled(int itemCount, IEnumerable<int> selectedIndexes, bool upwards)
         {
-            return _makeListItemFunc.Invoke(item);
-        }
-
-        public ListView ListView
-        {
-            get
-            {
-                return _listView;
-            }
-            set
-            {
-                _listView = value;
-            }
-        }
-        public IList<TValue> Items 
-        { 
-            get
-            {
-                return _items;
-            } 
-            set
-            {
-                if (_items.SequenceEqual(value))
-                {
-                    return;
-                }
-                var selection = GetSelection();
-                _items = value;
-                ListView.Items.Clear();
-                ListView.Items.AddRange(Items.Select(item => MakeListViewItem(item)).ToArray());
-                RestoreSelection(selection);
-            }
-        }
-        public TValue[] GetSelectedItems()
-        {
-            return ListView.SelectedIndices.Cast<int>().Select(index => Items[index]).ToArray();
-        }
-        public bool IsMoveUpEnabled()
-        {
-            var items = Enumerable.Range(0, Items.Count);
-            var newItems = MoveItems(items, ListView.SelectedIndices.Cast<int>(), true);
+            var items = Enumerable.Range(0, itemCount).ToArray();
+            var newItems = MoveItems(items, selectedIndexes, upwards);
             return !newItems.SequenceEqual(items);
         }
-        public IList<TValue> MoveItemsUp()
-        {
-            return MoveItems(Items, ListView.SelectedIndices.Cast<int>(), true);
-        }
-        public bool IsMoveDownEnabled()
-        {
-            var items = Enumerable.Range(0, Items.Count);
-            var newItems = MoveItems(items, ListView.SelectedIndices.Cast<int>(), false);
-            return newItems.SequenceEqual(items);
-        }
-        public IList<TValue> MoveItemsDown()
-        {
-            return MoveItems(Items, ListView.SelectedIndices.Cast<int>(), false);
-        }
-
+        
         public static T[] MoveItems<T>(IEnumerable<T> items, IEnumerable<int> selectedIndexCollection, bool upwards)
         {
             var newItems = items.ToArray();
@@ -142,94 +77,79 @@ namespace pwiz.Common.DataBinding.Controls
             return newItems;
         }
 
-        protected IDictionary<TKey, ListViewItem> GetListViewItemDict()
+        public static void SelectIndexes(ListView listView, IEnumerable<int> selectedIndexes)
         {
-            return ListView.Items.Cast<ListViewItem>().ToDictionary(
-                listViewItem => GetKey(Items[listViewItem.Index]));
+            var unselect = listView.SelectedIndices.Cast<int>().Except(selectedIndexes).ToArray();
+            var select = selectedIndexes.Except(listView.SelectedIndices.Cast<int>()).ToArray();
+            if (unselect.Length == 0 && select.Length == 0)
+            {
+                return;
+            }
             
-        }
-        public void RestoreSelection(Selection selection)
-        {
-            ListView.SelectedIndices.Clear();
-            if (ListView.Items.Count == 0)
+            listView.BeginUpdate();
+            try
             {
-                return;
-            }
-            var listViewItemDict = GetListViewItemDict();
-            ListViewItem lastSelectedItem = null;
-            foreach (var key in selection.SelectedKeys)
-            {
-                ListViewItem listViewItem;
-                if (listViewItemDict.TryGetValue(key, out listViewItem))
+                foreach (var i in unselect)
                 {
-                    ListView.SelectedIndices.Add(listViewItem.Index);
-                    lastSelectedItem = listViewItem;
+                    listView.Items[i].Selected = false;
+                }
+                foreach (var i in select)
+                {
+                    listView.Items[i].Selected = true;
                 }
             }
-            ListViewItem focusedItem;
-            if (Equals(null, selection.FocusedKey))
+            finally
             {
-                focusedItem = null;
+                listView.EndUpdate();
             }
-            else
-            {
-                if (listViewItemDict.TryGetValue(selection.FocusedKey, out focusedItem))
-                {
-                    if (focusedItem.Selected)
-                    {
-                        return;
-                    }
-                }
-            }
-            if (lastSelectedItem != null)
-            {
-                lastSelectedItem.Focused = true;
-                return;
-            }
-            if (focusedItem != null)
-            {
-                focusedItem.Selected = true;
-                return;
-            }
-            var focusedIndex = Math.Max(0, Math.Min(ListView.Items.Count - 1, selection.FocusedIndex));
-            focusedItem = ListView.Items[focusedIndex];
-            focusedItem.Selected = focusedItem.Focused = true;
         }
-        public void SelectKeys(IEnumerable<TKey> keys)
+        public static void SelectIndex(ListView listView, int i)
         {
-            RestoreSelection(new Selection
-                                 {
-                                     SelectedKeys = keys.ToArray(),
-                                 });
-        }
-        public void SelectKey(TKey key)
-        {
-            SelectKeys(new[]{key});
-        }
-        public Selection GetSelection()
-        {
-            var selection = new Selection
-                                {
-                                    FocusedIndex = ListView.FocusedItem == null ? -1 : ListView.FocusedItem.Index,
-                                    SelectedKeys = ListView.SelectedIndices.Cast<int>()
-                                        .Select(index=>GetKey(Items[index])).ToArray(),
-                                };
-            if (selection.FocusedIndex >= 0)
-            {
-                selection.FocusedKey = GetKey(Items[selection.FocusedIndex]);
-            }
-            return selection;
+            SelectIndexes(listView, new[]{i});
         }
 
-        public class Selection
+        public static void ReplaceItems(ListView listView, IList<ListViewItem> newItems)
         {
-            public Selection()
+            listView.BeginUpdate();
+            try
             {
-                FocusedIndex = -1;
+                for (int i = 0; i < newItems.Count; i++)
+                {
+                    var item = newItems[i];
+                    if (i >= listView.Items.Count)
+                    {
+                        listView.Items.Add(item);
+                    }
+                    else
+                    {
+                        bool selected = listView.Items[i].Selected;
+                        bool focused = listView.Items[i].Focused;
+                        listView.Items[i] = item;
+                        item.Selected = selected;
+                        item.Focused = focused;
+                    }
+                }
+                while (listView.Items.Count > newItems.Count)
+                {
+                    listView.Items.RemoveAt(listView.Items.Count - 1);
+                }
             }
-            public TKey FocusedKey { get; set; }
-            public int FocusedIndex { get; set; }
-            public IList<TKey> SelectedKeys { get; set; }
+            finally
+            {
+                listView.EndUpdate();
+            }
+        }
+
+        public static IEnumerable<int> MoveSelectedIndexes(int itemCount, IEnumerable<int> selectedIndexes, bool upwards)
+        {
+            var items = Enumerable.Range(0, itemCount).ToArray();
+            var newItems = MoveItems(items, selectedIndexes, upwards);
+            var reverseMap = new int[items.Length];
+            for (int i = 0; i < items.Length; i++ )
+            {
+                reverseMap[newItems[i]] = i;
+            }
+            return selectedIndexes.Select((item, index) => reverseMap[item]);
         }
     }
 }

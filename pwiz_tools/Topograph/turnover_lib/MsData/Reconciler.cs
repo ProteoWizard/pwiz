@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Common.SystemUtil;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Data.Snapshot;
 using pwiz.Topograph.Model;
@@ -13,11 +14,13 @@ using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.MsData
 {
-    public class Reconciler
+    public class Reconciler : MustDispose
     {
         private const int DelayMillis = 60000;
         private readonly Workspace _workspace;
         private readonly EventWaitHandle _eventWaitHandle = new EventWaitHandle(true, EventResetMode.AutoReset);
+        private WorkspaceData _dataSet;
+
         private Thread _reconcilerThread;
         private bool _isRunning;
         private long _lastChangeId;
@@ -69,6 +72,7 @@ namespace pwiz.Topograph.MsData
                 _eventWaitHandle.WaitOne(DelayMillis);
                 lock (this)
                 {
+                    CheckDisposed();
                     if (!_isRunning)
                     {
                         return;
@@ -190,11 +194,7 @@ namespace pwiz.Topograph.MsData
                 peptides = EntitiesWithIdGreaterThan<DbPeptide>(session, _lastPeptideId);
                 msDataFiles = EntitiesWithIdGreaterThan<DbMsDataFile>(session, _lastMsDataFileId);
                 peptideAnalyses = EntitiesWithIdGreaterThan<DbPeptideAnalysis>(session, _lastPeptideAnalysisId);
-
-                foreach (long id in session.CreateQuery("SELECT T.Id FROM " + typeof(DbPeptideAnalysis) + " T WHERE T.Id > " + _lastPeptideAnalysisId).List())
-                {
-                    peptideAnalysisIds.Add(id);
-                }
+                peptideAnalysisIds.UnionWith(peptideAnalyses.Keys);
 
                 long maxChangeId = _lastChangeId;
                 if (_workspace.IsLoaded)
@@ -448,6 +448,29 @@ namespace pwiz.Topograph.MsData
         public void Wake()
         {
             _eventWaitHandle.Set();
+        }
+    }
+
+    public class WorkspaceData
+    {
+        private readonly IDictionary<Type, IDictionary<long, object>> _data = new Dictionary<Type, IDictionary<long, object>>();
+
+        public IEnumerable<long> GetIdsOfType(Type type)
+        {
+            IDictionary<long, object> dict;
+            if (_data.TryGetValue(type, out dict))
+            {
+                return dict.Keys.ToArray();
+            }
+            return null;
+        }
+        public IEnumerable<Type> GetTypes()
+        {
+            return _data.Keys;
+        }
+        public object GetData(Type type, long id)
+        {
+            return _data[type][id];
         }
     }
 }

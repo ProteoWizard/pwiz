@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using System.Text;
 
 namespace pwiz.Common.DataBinding
 {
@@ -27,37 +27,38 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class ColumnPropertyDescriptor : PropertyDescriptor
     {
-        private const string ColumnPropertyDescriptorBaseName = "Column_";
-        public ColumnPropertyDescriptor(ColumnDescriptor columnDescriptor, RowKey rowKey) : this(columnDescriptor, RowKey.QualifyIdentifierPath(rowKey, columnDescriptor.IdPath))
+        public ColumnPropertyDescriptor(DisplayColumn displayColumn, string name) : this(displayColumn, name, displayColumn.IdentifierPath, null)
         {
-            RowKey = rowKey;
         }
-        private ColumnPropertyDescriptor(ColumnDescriptor columnDescriptor, IdentifierPath identifierPath) : base(ColumnPropertyDescriptorBaseName + identifierPath, new Attribute[0])
+        public ColumnPropertyDescriptor(DisplayColumn displayColumn, string name, IdentifierPath identifierPath, PivotKey pivotKey)
+            : base(name, new Attribute[0])
         {
-            if (columnDescriptor.CollectionInfo != null && columnDescriptor.CollectionInfo.IsDictionary)
-            {
+//            if (columnDescriptor.CollectionInfo != null && columnDescriptor.CollectionInfo.IsDictionary)
+//            {
                 // Special case dictionary items.
                 // No one wants to see a KeyValuePair displayed in a GridColumn,
                 // so we display the Value instead.
-                ColumnDescriptor = columnDescriptor.ResolveChild("Value");
-            }
-            if (ColumnDescriptor == null)
-            {
-                ColumnDescriptor = columnDescriptor;
-            }
-            else
-            {
-                ColumnDescriptor = ColumnDescriptor.SetCaption(columnDescriptor.Caption);
-            }
+//                ColumnDescriptor = columnDescriptor.ResolveChild("Value");
+//            }
+//            if (ColumnDescriptor == null)
+//            {
+//                ColumnDescriptor = columnDescriptor;
+//            }
+//            else
+//            {
+//                ColumnDescriptor = ColumnDescriptor.SetCaption(columnDescriptor.Caption);
+//            }
+            DisplayColumn = displayColumn;
             IdentifierPath = identifierPath;
+            PivotKey = pivotKey;
         }
         public IdentifierPath IdentifierPath
         {
             get; private set;
         }
-        public RowKey RowKey { get; private set; }
+        public PivotKey PivotKey { get; private set; }
 
-        public ColumnDescriptor ColumnDescriptor { get; private set; }
+        public DisplayColumn DisplayColumn { get; private set; }
         public override bool CanResetValue(object component)
         {
             return false;
@@ -65,7 +66,7 @@ namespace pwiz.Common.DataBinding
 
         public override object GetValue(object component)
         {
-            return ColumnDescriptor.GetPropertyValue(component as RowItem, RowKey);
+            return DisplayColumn.GetValue(component as RowItem, PivotKey);
         }
 
         public override void ResetValue(object component)
@@ -75,7 +76,7 @@ namespace pwiz.Common.DataBinding
 
         public override void SetValue(object component, object value)
         {
-            ColumnDescriptor.SetValue(component as RowItem, RowKey, value);
+            DisplayColumn.SetValue(component as RowItem, PivotKey, value);
         }
 
         public override bool ShouldSerializeValue(object component)
@@ -90,35 +91,26 @@ namespace pwiz.Common.DataBinding
 
         public override bool IsReadOnly
         {
-            get { return ColumnDescriptor.IsReadOnly; }
+            get { return DisplayColumn.IsReadOnly; }
+        }
+
+        public bool IsReadOnlyForRow(object rowValue)
+        {
+            return DisplayColumn.IsReadOnlyForRow(rowValue as RowItem, PivotKey);
         }
 
         public override Type PropertyType
         {
-            get { return ColumnDescriptor.PropertyType ?? typeof(object); }
+            get { return DisplayColumn.PropertyType; }
         }
 
         public override string DisplayName
         {
             get
             {
-                StringBuilder prefix = new StringBuilder();
-                var rowKey = RowKey;
-                while (rowKey != null)
-                {
-                    if (prefix.Length > 0)
-                    {
-                        prefix.Insert(0, " ");
-                    }
-                    prefix.Insert(0, (rowKey.Value ?? "").ToString());
-                    rowKey = rowKey.Parent;
-                }
-                if (prefix.Length == 0)
-                {
-                    return ColumnDescriptor.DisplayName;
-                }
-                return prefix + " " + ColumnDescriptor.DisplayName;
+                return DisplayColumn.GetColumnCaption(PivotKey);
             }
         }
+        public delegate void HookPropertyChange(object component, PropertyDescriptor propertyDescriptor);
     }
 }

@@ -16,7 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -30,12 +32,14 @@ namespace pwiz.Common.DataBinding
         ColumnDescriptor ParentColumn { get; }
         IEnumerable<ViewSpec> BuiltInViewSpecs { get; }
         IEnumerable<ViewSpec> CustomViewSpecs { get; }
-        void Export(Control owner, BindingListView bindingListView);
+        void Export(Control owner, ViewSpec viewSpec, IEnumerable<RowItem> values);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec);
         void ManageViews(Control owner);
         ViewSpec SaveView(ViewSpec viewSpec);
         void DeleteViews(IEnumerable<ViewSpec> viewSpecs);
         DialogResult ShowMessageBox(Control owner, string messsage, MessageBoxButtons messageBoxButtons);
         Icon ApplicationIcon { get; }
+        IViewContext GetViewContext(ColumnDescriptor column);
+        DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor);
     }
 }

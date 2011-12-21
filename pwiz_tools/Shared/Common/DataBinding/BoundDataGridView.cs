@@ -16,21 +16,63 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.ComponentModel;
+using System.Collections;
 using System.Linq;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding
 {
     /// <summary>
-    /// Enhancement ot a DataGridView which works well with a <see cref="BindingListView" />.
-    /// Automatically handles columns of type <see cref="LinkValue{T}" />.
+    /// Enhancement ot a DataGridView which automatically creates a <see cref="BindingListView" />
+    /// to use as its DataSource.
+    /// Setting the DataSource of a BoundDataGridView to a BindingSource automatically causes
+    /// the BindingSource's DataSource to be set to the BindingListView.
     /// 
     /// </summary>
     public class BoundDataGridView : DataGridView
     {
         private DataGridViewColumn[] _oldColumns = new DataGridViewColumn[0];
+        private BindingSource _bindingSource;
+        public BoundDataGridView()
+        {
+            BindingListView = new BindingListView()
+                                  {
+                                      Owner = this
+                                  };
+        }
+
+        public new BindingSource DataSource
+        {
+            get { return _bindingSource; }
+            set
+            {
+                if (ReferenceEquals(_bindingSource, value))
+                {
+                    return;
+                }    
+                base.DataSource = value;
+                _bindingSource = value;
+                if (DataSource != null)
+                {
+                    DataSource.DataSource = BindingListView;
+                }
+            }
+        }
+
+        public IEnumerable RowSource
+        {
+            get
+            {
+                return BindingListView.RowSource;
+            }
+            set
+            {
+                BindingListView.RowSource = value;
+            }
+        }
+
+        public BindingListView BindingListView { get; private set; }
+
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
             AutoGenerateColumns = true;
@@ -43,33 +85,16 @@ namespace pwiz.Common.DataBinding
             {
                 return;
             }
-            var bindingListView = GetBindingListView();
-            if (bindingListView == null)
-            {
-                return;
-            }
             if (!AutoGenerateColumns)
             {
                 return;
             }
             var columnArray = new DataGridViewColumn[Columns.Count];
             Columns.CopyTo(columnArray, 0);
-            if (bindingListView.DataSchema.UpdateGridColumns(bindingListView, columnArray))
-            {
-                Columns.Clear();
-                Columns.AddRange(columnArray);
-            }
+            BindingListView.ViewInfo.DataSchema.UpdateGridColumns(BindingListView, columnArray);
+            Columns.Clear();
+            Columns.AddRange(columnArray);
             _oldColumns = Columns.Cast<DataGridViewColumn>().ToArray();
-        }
-
-        public BindingListView GetBindingListView()
-        {
-            var bindingSource = DataSource as BindingSource;
-            if (bindingSource == null)
-            {
-                return null;
-            }
-            return bindingSource.DataSource as BindingListView;
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)
@@ -81,22 +106,9 @@ namespace pwiz.Common.DataBinding
                 var linkValue = value as ILinkValue;
                 if (linkValue != null)
                 {
-                    linkValue.ClickEventHandler.Invoke(this, e);
+                    linkValue.ClickEventHandler(this, e);
                 }
             }
-        }
-
-        protected override void OnColumnDisplayIndexChanged(DataGridViewColumnEventArgs e)
-        {
-            base.OnColumnDisplayIndexChanged(e);
-            var bindingListView = GetBindingListView();
-            if (bindingListView == null)
-            {
-                return;
-            }
-            var columns = Columns.Cast<DataGridViewColumn>().ToArray();
-            Array.Sort(columns, (c1,c2)=>c1.DisplayIndex.CompareTo(c2.DisplayIndex));
-            bindingListView.SetColumnDisplayOrder(columns.Select(column => column.DataPropertyName));
         }
 
         protected override void OnDataError(bool displayErrorDialogIfNoHandler, DataGridViewDataErrorEventArgs e)

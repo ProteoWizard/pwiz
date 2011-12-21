@@ -36,33 +36,29 @@ namespace pwiz.Topograph.Test.DataBinding.Controls
         {
             var boundDataGridView = new BoundDataGridView()
                                         {
-                                            BindingContext = new BindingContext()
+                                            BindingContext = new BindingContext(),
+                                            DataSource = new BindingSource(),
                                         };
-            BindingListView bindingListView;
             using (boundDataGridView)
             {
-                using (var bindingSource = new BindingSource())
-                {
-                    boundDataGridView.DataSource = bindingSource;
-                    var columnIds = new[]
-                                        {
-                                            IdentifierPath.Root,
-                                            IdentifierPath.Parse("Sequence"),
-                                            IdentifierPath.Parse("AminoAcidsList.[].Code"),
-                                            IdentifierPath.Parse("Molecule.[]"),
-                                        };
-                    var viewSpec = new ViewSpec()
-                        .SetColumns(columnIds.Select(id => new ColumnSpec().SetIdentifierPath(id)))
-                        .SetSublistId(IdentifierPath.Parse("AminoAcidsList.[]"));
-                    var viewInfo = new ViewInfo(new DataSchema(), typeof (LinkValue<Peptide>), viewSpec);
-                    var innerList = new BindingList<LinkValue<Peptide>>();
-                    innerList.Add(new LinkValue<Peptide>(new Peptide("AD"), null));
-                    bindingListView = new BindingListView(viewInfo, innerList);
-                    bindingSource.DataSource = bindingListView;
-                    Assert.AreEqual(2, boundDataGridView.Rows.Count);
-                    innerList.Add(new LinkValue<Peptide>(new Peptide("TISE"), null));
-                    Assert.AreEqual(6, boundDataGridView.Rows.Count);
-                }
+                var columnIds = new[]
+                                    {
+                                        IdentifierPath.Root,
+                                        IdentifierPath.Parse("Sequence"),
+                                        IdentifierPath.Parse("AminoAcidsList.[].Code"),
+                                        IdentifierPath.Parse("Molecule.[]"),
+                                    };
+                var viewSpec = new ViewSpec()
+                    .SetColumns(columnIds.Select(id => new ColumnSpec().SetIdentifierPath(id)))
+                    .SetSublistId(IdentifierPath.Parse("AminoAcidsList.[]"));
+                var viewInfo = new ViewInfo(new DataSchema(), typeof (LinkValue<Peptide>), viewSpec);
+                boundDataGridView.BindingListView.ViewInfo = viewInfo;
+                var innerList = new BindingList<LinkValue<Peptide>>();
+                innerList.Add(new LinkValue<Peptide>(new Peptide("AD"), null));
+                boundDataGridView.BindingListView.RowSource = innerList;
+                Assert.AreEqual(2, boundDataGridView.Rows.Count);
+                innerList.Add(new LinkValue<Peptide>(new Peptide("TISE"), null));
+                Assert.AreEqual(6, boundDataGridView.Rows.Count);
             }
         }
     }

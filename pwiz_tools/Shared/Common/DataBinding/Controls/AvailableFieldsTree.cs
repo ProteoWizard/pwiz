@@ -16,13 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding.Controls
@@ -33,11 +30,11 @@ namespace pwiz.Common.DataBinding.Controls
     public class AvailableFieldsTree : TreeView
     {
         private ColumnDescriptor _rootColumn;
-        private readonly object _needsChildrenTag = new object();
+        private bool _showAdvancedFields;
         private ICollection<IdentifierPath> _checkedColumns = new IdentifierPath[0];
+
         public AvailableFieldsTree()
         {
-            CheckBoxes = true;
         }
         [Browsable(false)]
         public ColumnDescriptor RootColumn
@@ -73,18 +70,52 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        public ColumnDescriptor GetColumnDescriptor(TreeNode treeNode)
+        public bool ShowAdvancedFields
         {
-            return treeNode.Tag as ColumnDescriptor;
+            get
+            {
+                return _showAdvancedFields;
+            }
+            set
+            {
+                if (ShowAdvancedFields == value)
+                {
+                    return;
+                }
+                _showAdvancedFields = value;
+                Nodes.Clear();
+                var rootColumnOld = _rootColumn;
+                _rootColumn = null;
+                RootColumn = rootColumnOld;
+            }
+        }
+        /// <summary>
+        /// Returns the column associated with the node in the tree.
+        /// This is the column which is the parent of the child nodes in
+        /// the tree, and which gives the caption to the TreeNode.
+        /// </summary>
+        public ColumnDescriptor GetTreeColumn(TreeNode treeNode)
+        {
+            return ((NodeData)treeNode.Tag).TreeColumn;
         }
 
+        /// <summary>
+        /// Returns the column which should be added to the View corresponding.
+        /// This is the same as the column returned by GetTreeColumn
+        /// except in the case of Dictionaries.
+        /// </summary>
+        public ColumnDescriptor GetValueColumn(TreeNode treeNode)
+        {
+            return ((NodeData) treeNode.Tag).ValueColumn;
+        }
         private void SetColumnDescriptor(TreeNode node, ColumnDescriptor columnDescriptor)
         {
-            node.Tag = columnDescriptor;
+            var nodeData = new NodeData(columnDescriptor);
+            node.Tag = nodeData;
             node.Text = columnDescriptor.DisplayName;
-            node.Checked = _checkedColumns.Contains(columnDescriptor.IdPath);
+            node.Checked = _checkedColumns.Contains(nodeData.ValueColumn.IdPath);
             node.Nodes.Clear();
-            node.Nodes.Add(new TreeNode {Tag = _needsChildrenTag});
+            node.Nodes.Add(new TreeNode {Tag = NodeData.UninitializedTag});
         }
 
         protected override void OnBeforeExpand(TreeViewCancelEventArgs e)
@@ -103,12 +134,12 @@ namespace pwiz.Common.DataBinding.Controls
 
         protected void EnsureChildren(TreeNode treeNode)
         {
-            if (treeNode.Nodes.Count != 1 || treeNode.Nodes[0].Tag != _needsChildrenTag)
+            if (treeNode.Nodes.Count != 1 || treeNode.Nodes[0].Tag != NodeData.UninitializedTag)
             {
                 return;
             }
             treeNode.Nodes.Clear();
-            treeNode.Nodes.AddRange(MakeChildNodes(GetColumnDescriptor(treeNode)).ToArray());
+            treeNode.Nodes.AddRange(MakeChildNodes(GetTreeColumn(treeNode)).ToArray());
         }
 
         protected IEnumerable<TreeNode> MakeChildNodes(ColumnDescriptor parentColumnDescriptor)
@@ -116,7 +147,16 @@ namespace pwiz.Common.DataBinding.Controls
             var result = new List<TreeNode>();
             foreach (var columnDescriptor in ListChildren(parentColumnDescriptor))
             {
+                var isAdvanced = columnDescriptor.IsAdvanced;
+                if (!ShowAdvancedFields && isAdvanced)
+                {
+                    continue;
+                }
                 var child = new TreeNode();
+                if (isAdvanced)
+                {
+                    child.ForeColor = Color.Gray;
+                }
                 SetColumnDescriptor(child, columnDescriptor);
                 result.Add(child);
             }
@@ -202,7 +242,7 @@ namespace pwiz.Common.DataBinding.Controls
         {
             foreach (TreeNode node in nodes)
             {
-                var columnDescriptor = node.Tag as ColumnDescriptor;
+                var columnDescriptor = GetTreeColumn(node);
                 if (columnDescriptor != null)
                 {
                     if (idPath.StartsWith(columnDescriptor.IdPath))
@@ -227,7 +267,7 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     return null;
                 }
-                if (GetColumnDescriptor(node).IdPath.Equals(idPath))
+                if (GetTreeColumn(node).IdPath.Equals(idPath) || GetValueColumn(node).IdPath.Equals(idPath))
                 {
                     return node;
                 }
@@ -237,6 +277,25 @@ namespace pwiz.Common.DataBinding.Controls
                 }
                 nodes = node.Nodes;
             }
+        }
+
+        class NodeData
+        {
+            public static NodeData UninitializedTag = new NodeData();
+            private NodeData()
+            {
+            }
+            public NodeData(ColumnDescriptor treeColumn)
+            {
+                TreeColumn = treeColumn;
+                if (treeColumn.CollectionInfo != null && treeColumn.CollectionInfo.IsDictionary)
+                {
+                    ValueColumn = treeColumn.ResolveChild("Value");
+                }
+                ValueColumn = ValueColumn ?? TreeColumn;
+            }
+            public ColumnDescriptor TreeColumn { get; private set;}
+            public ColumnDescriptor ValueColumn { get; private set; }
         }
     }
 }

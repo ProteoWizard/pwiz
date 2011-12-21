@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -42,9 +44,9 @@ namespace pwiz.Common.DataBinding
         public abstract string GetExportDirectory();
         public abstract void SetExportDirectory(string value);
         public abstract DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons);
-        public virtual string GetDefaultExportFilename(BindingListView bindingListView)
+        public virtual string GetDefaultExportFilename(ViewSpec viewSpec)
         {
-            string currentViewName = bindingListView.ViewInfo.Name;
+            string currentViewName = viewSpec.Name;
             return ParentColumn.PropertyType.Name + currentViewName == GetDefaultViewName() ? "" : currentViewName;
         }
         public abstract void RunLongJob(Control owner, Action<IProgressMonitor> job);
@@ -79,36 +81,23 @@ namespace pwiz.Common.DataBinding
 
         protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListView bindingListView, IDataFormat dataFormat)
         {
-            var tempBindingListView = new BindingListView(new ViewInfo(ParentColumn, bindingListView.GetViewSpec()), bindingListView.InnerList.Cast<object>().ToArray());
-            var tempDataGridView = new BoundDataGridView
-                                       {
-                                           DataSource = new BindingSource(tempBindingListView, ""),
-                                           SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                                           ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableWithAutoHeaderText,
-                                           RowHeadersVisible = false,
-                                           Visible = false,
-                                           BindingContext = new BindingContext(),
-                                           AllowUserToAddRows = false,
-                                       };
-            using (tempDataGridView)
+            IList<RowItem> rows = Array.AsReadOnly(bindingListView.ToArray());
+            IList<PropertyDescriptor> properties = Array.AsReadOnly(bindingListView.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray());
+            var status = new ProgressStatus("Writing " + rows.Count + " rows");
+            dataFormat.WriteRow(writer, properties.Select(pd=>pd.DisplayName));
+            var rowCount = rows.Count;
+            for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
             {
-                var status = new ProgressStatus("Writing " + tempDataGridView.Rows.Count + " rows");
-                dataFormat.WriteRow(writer, tempDataGridView.Columns.Cast<DataGridViewColumn>().Select(column=>column.HeaderCell.EditedFormattedValue));
-                var rowCount = tempDataGridView.Rows.Count;
-                for (int rowIndex = 0; rowIndex < rowCount; rowIndex++)
+                if (progressMonitor.IsCanceled)
                 {
-                    if (progressMonitor.IsCanceled)
-                    {
-                        return;
-                    }
-                    status = status.ChangeMessage("Writing row " + (rowIndex + 1) + "/" + rowCount)
-                        .ChangePercentComplete(rowIndex*100/rowCount);
-                    progressMonitor.UpdateProgress(status);
-                    var row = tempDataGridView.Rows.SharedRow(rowIndex);
-                    dataFormat.WriteRow(writer, 
-                                        row.Cells.Cast<DataGridViewCell>()
-                                            .Select(cell => cell.GetEditedFormattedValue(rowIndex, DataGridViewDataErrorContexts.Formatting | DataGridViewDataErrorContexts.ClipboardContent)));
+                    return;
                 }
+                status = status.ChangeMessage("Writing row " + (rowIndex + 1) + "/" + rowCount)
+                    .ChangePercentComplete(rowIndex*100/rowCount);
+                progressMonitor.UpdateProgress(status);
+                var row = rows[rowIndex];
+                // TODO(nicksh): Format the column values.
+                dataFormat.WriteRow(writer, properties.Select(pd => pd.GetValue(row)));
             }
         }
 
@@ -132,7 +121,7 @@ namespace pwiz.Common.DataBinding
             return result.ToString();
         }
 
-        public void Export(Control owner, BindingListView bindingListView)
+        public void Export(Control owner, ViewSpec viewSpec, IEnumerable<RowItem> values)
         {
             var dataFormats = new[] { DataFormats.Csv, DataFormats.Tsv };
             string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray());
@@ -140,7 +129,7 @@ namespace pwiz.Common.DataBinding
             {
                 Filter = fileFilter,
                 InitialDirectory = GetExportDirectory(),
-                FileName = GetDefaultExportFilename(bindingListView),
+                FileName = GetDefaultExportFilename(viewSpec),
             })
             {
                 if (saveFileDialog.ShowDialog(owner.TopLevelControl) == DialogResult.Cancel)
@@ -152,7 +141,7 @@ namespace pwiz.Common.DataBinding
                 {
                     using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName), new UTF8Encoding(false)))
                     {
-                        WriteData(progressMonitor, writer, bindingListView, dataFormat);
+                        WriteData(progressMonitor, writer, null, dataFormat);
                     }
                 });
                 SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));
@@ -229,6 +218,62 @@ namespace pwiz.Common.DataBinding
         {
             var deletedViews = new HashSet<ViewSpec>(viewSpecs);
             SetCustomViewSpecs(CustomViewSpecs.Where(viewSpec=>!deletedViews.Contains(viewSpec)));
+        }
+
+        public abstract IViewContext GetViewContext(ColumnDescriptor column);
+
+        public virtual DataGridViewColumn CreateGridViewColumn(PropertyDescriptor propertyDescriptor)
+        {
+            if (!propertyDescriptor.IsReadOnly)
+            {
+                var valueList = GetValueList(propertyDescriptor);
+                if (valueList != null)
+                {
+                    var result = new DataGridViewComboBoxColumn()
+                    {
+                        Name = propertyDescriptor.Name,
+                        DataPropertyName = propertyDescriptor.Name,
+                        HeaderText = propertyDescriptor.DisplayName,
+                    };
+                    foreach (var value in valueList)
+                    {
+                        result.Items.Add(value);
+                    }
+                    return result;
+                }
+            }
+            if (propertyDescriptor.PropertyType == typeof(bool))
+            {
+                return new DataGridViewCheckBoxColumn()
+                           {
+                               Name = propertyDescriptor.Name,
+                               DataPropertyName = propertyDescriptor.Name,
+                               HeaderText = propertyDescriptor.DisplayName,
+                           };
+            }
+            var columnPropertyDescriptor = propertyDescriptor as ColumnPropertyDescriptor;
+            if (columnPropertyDescriptor == null)
+            {
+                return new DataGridViewTextBoxColumn()
+                           {
+                               Name = propertyDescriptor.Name,
+                               DataPropertyName = propertyDescriptor.Name,
+                               HeaderText = propertyDescriptor.DisplayName
+                           };
+            }
+            return new ViewColumn(this, columnPropertyDescriptor);
+        }
+        public virtual IEnumerable GetValueList(PropertyDescriptor propertyDescriptor)
+        {
+            if (propertyDescriptor.PropertyType.IsEnum)
+            {
+                return Enum.GetValues(propertyDescriptor.PropertyType);
+            }
+            if (propertyDescriptor.PropertyType.IsGenericType && propertyDescriptor.PropertyType.GetGenericTypeDefinition() == typeof(Nullable))
+            {
+                return new object[] {null}.Concat(Enum.GetValues(propertyDescriptor.PropertyType).Cast<object>());
+            }
+            return null;
         }
     }
 }

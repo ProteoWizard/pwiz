@@ -17,9 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 
 namespace pwiz.Topograph.Data
 {
@@ -57,5 +54,13 @@ namespace pwiz.Topograph.Data
             return typeof (T);
         }
         public virtual int Version { get; set; }
+        public virtual T Detach()
+        {
+            return (T) MemberwiseClone();
+        }
+        public virtual T Merge(T original, T theirs)
+        {
+            return (T) this;
+        }
     }
 }

@@ -48,12 +48,7 @@ namespace pwiz.Topograph.Test
             Assert.AreEqual(viewSpec, viewSpecEmpty);
             viewSpec = viewSpec
                 .SetName("ViewName")
-                .SetColumns(new[] {new ColumnSpec().SetName("foo"), new ColumnSpec().SetName("bar"),})
-                .SetSorts(new[]
-                                    {
-                                        new SortSpec().SetColumn("baz"),
-                                        new SortSpec().SetColumn("qux").SetDirection(ListSortDirection.Descending)
-                                    });
+                .SetColumns(new[] {new ColumnSpec().SetName("foo"), new ColumnSpec().SetName("bar"),});
             Assert.AreNotEqual(viewSpecCompare, viewSpec);
             stringBuilder.Length = 0;
             xmlSerializer.Serialize(XmlWriter.Create(stringBuilder), new ViewSpecList {ViewSpecs = new[] {viewSpec}});

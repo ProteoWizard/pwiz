@@ -32,7 +32,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace pwiz.Common.Collections
 {
@@ -58,7 +57,7 @@ namespace pwiz.Common.Collections
         {
             if (other.root != null)
             {
-                root = new Node(other.root) {Tree = this};
+                root = new Node(this, other.root);
             }
         }
 
@@ -147,21 +146,36 @@ namespace pwiz.Common.Collections
 		///</summary>
 		public Node Add(TKey key, TValue data)
 		{
+            bool isNewNode;
+            var node = FindOrInsert(key, out isNewNode);
+            if (!isNewNode)
+            {
+                throw (new InvalidOperationException("A Node with the same key already exists"));
+            }
+            node.Value = data;
+            return node;
+		}
+
+        public Node FindOrInsert(TKey key, out bool isNewNode)
+        {
 			if(key == null)
 				throw(new ArgumentException("RedBlackNode key must not be null"));
 			
 			// traverse tree - find where node belongs
 			int result			=	0;
 			// create new node
-			Node node	=	new Node(this);
+            Node parent = null;
 			Node temp	=	root;				// grab the rbTree node of the tree
 
 			while(temp != null)
 			{	// find Parent
-				node.Parent	= temp;
+				parent	= temp;
 				result		=  key.CompareTo(temp.Key);
                 if (result == 0)
-                    throw (new InvalidOperationException("A Node with the same key already exists"));
+                {
+                    isNewNode = false;
+                    return temp;
+                }
 				if(result > 0)
 					temp = temp.Right;
 				else
@@ -169,10 +183,13 @@ namespace pwiz.Common.Collections
 			}
 			
             // setup node
-			node.Key			=	key;
-			node.Value			=	data;
+            var node = new Node(this, key)
+                           {
+                               Parent = parent
+                           };
             node.Left = null;
 			node.Right          =   null;
+            node.Parent = parent;
 
 			// insert node into tree starting at parent's location
 			if(node.Parent != null)	
@@ -187,8 +204,9 @@ namespace pwiz.Common.Collections
 				root = node;					// first node added
 
             RestoreAfterInsert(node);           // restore red-black properities
+            isNewNode = true;
             return node;
-		}
+        }
         ///<summary>
         /// RestoreAfterInsert
         /// Additions to red-black trees usually destroy the red-black 
@@ -259,7 +277,7 @@ namespace pwiz.Common.Collections
 			}
 			root.IsBlack = true;		// rbTree should always be black
 		}
-		
+
 		///<summary>
 		/// RotateLeft
 		/// Rebalance the tree by rotating the nodes to the left
@@ -419,6 +437,7 @@ namespace pwiz.Common.Collections
             var parentOfDeletedNode = nodeToBeDeleted.Parent;
             // x (y's only child) is the node that will be linked to y's old parent. 
             Node newChild = nodeToBeDeleted.Left ?? nodeToBeDeleted.Right;
+		    nodeToBeDeleted.Left = nodeToBeDeleted.Right = null;
             if (parentOfDeletedNode == null)
             {
                 root = newChild; // make x the root node
@@ -455,7 +474,6 @@ namespace pwiz.Common.Collections
                     newChild.Parent.Right = newChild;
                 }
 			}
-		    nodeToBeDeleted.Tree = null;
             if (nodeToBeDeleted.IsRed)
             {
                 return;
@@ -655,126 +673,10 @@ namespace pwiz.Common.Collections
             node2.IsRed = tmpIsRed;
         }
 
-
-        ///<summary>
-        /// RestoreAfterDelete
-        /// Deletions from red-black trees may destroy the red-black 
-        /// properties. Examine the tree and restore. Rotations are normally 
-        /// required to restore it
-        ///</summary>
-		private void RestoreAfterDelete(Node parent, bool wasLeftChild)
-		{
-			// maintain Red-Black tree balance after deleting node 			
-
-			Node y;
-
-			while(parent != null) 
-			{
-			    var child = wasLeftChild ? parent.Left : parent.Right;
-                if (child != null && child.IsRed)
-                {
-                    child.IsBlack = true;
-                    return;
-                }
-				if(wasLeftChild)			// determine sub tree from parent
-				{
-					y = parent.Right;			// y is x's sibling 
-					if(IsRed(y)) 
-					{	// x is black, y is red - make both black and rotate
-						y.IsBlack = true;
-						parent.IsRed = true;
-						RotateLeft(parent);
-						y = parent.Right;
-					}
-					if(IsBlack(y.Left) && IsBlack(y.Right)) 
-					{	// children are both black
-						y.IsRed = true;		// change parent to red
-						if (parent.Parent != null)
-						{
-						    wasLeftChild = parent == parent.Parent.Left;
-						    parent = parent.Parent;
-						}
-                        else
-						{
-						    return;
-						}
-					} 
-					else 
-					{
-						if(IsBlack(y.Right)) 
-						{
-                            y.Left.IsBlack = true;
-							y.IsRed = true;
-							RotateRight(y);
-							y = parent.Right;
-						}
-						y.IsBlack = parent.IsBlack;
-						parent.IsBlack = true;
-                        if (y.Right != null)
-                        {
-                            y.Right.IsBlack = true;
-                        }
-						RotateLeft(parent);
-						root.IsBlack = true;
-					    return;
-					}
-				} 
-				else 
-				{	// right subtree - same as code above with right and left swapped
-					y = parent.Left;
-					if(y.IsRed) 
-					{
-						y.IsBlack = true;
-						parent.IsRed = true;
-						RotateRight (parent);
-						y = parent.Left;
-					}
-					if(IsBlack(y.Right) && 
-						IsBlack(y.Left)) 
-					{
-						y.IsRed = true;
-					    if (parent.Parent != null)
-					    {
-					        wasLeftChild = parent == parent.Parent.Left;
-					        parent = parent.Parent;
-					    }
-                        else
-					    {
-					        return;
-					    }
-					} 
-					else 
-					{
-						if(y.Left.IsBlack) 
-						{
-							y.Right.IsBlack = true;
-							y.IsRed = true;
-							RotateLeft(y);
-							y = parent.Left;
-						}
-						y.IsRed = parent.IsRed;
-						parent.IsBlack = true;
-						y.Left.IsBlack = true;
-						RotateRight(parent);
-						root.IsBlack = true;
-					    return;
-					}
-				}
-			}
-		}
-        private static bool IsBlack(Node node)
-        {
-            return node == null || node.IsBlack;
-        }
-        private static bool IsRed(Node node)
-        {
-            return node != null && node.IsRed;
-        }
-		
 		///<summary>
 		/// Clear
 		/// Empties or clears the tree
-		///<summary>
+		///</summary>
 		public void Clear ()
 		{
 			root      = null;
@@ -921,7 +823,11 @@ namespace pwiz.Common.Collections
                 return null;
             }
             int mid = (start + end)/2;
-            Node root = new Node(this) { Key = entries[mid].Key, Value = entries[mid].Value, Weight = 1, IsBlack = true};
+            Node root = new Node(this, entries[mid].Key)
+                            {
+                                Value = entries[mid].Value,
+                                IsBlack = true,
+                            };
             if ((1 << depth) <= entries.Count && (1 << (depth + 1)) > entries.Count)
             {
                 root.IsRed = true;
@@ -944,15 +850,14 @@ namespace pwiz.Common.Collections
         /// Initializes a RedBlackTree from a list that is already sorted.
         /// The tree is balanced as best as possible, and only nodes in the lowest row are red.
         /// </summary>
-        public static RedBlackTree<TKey,TValue> FromSorted(IList<KeyValuePair<TKey, TValue>> entries)
+        public void FillFromSorted(IList<KeyValuePair<TKey, TValue>> entries)
         {
-            var tree = new RedBlackTree<TKey,TValue>();
-            tree.root = tree.MakeSubTree(0, entries, 0, entries.Count);
-            if (tree.root != null)
+            Clear();
+            root = MakeSubTree(0, entries, 0, entries.Count);
+            if (root != null)
             {
-                tree.root.IsBlack = true;
+                root.IsBlack = true;
             }
-            return tree;
         }
         public class RedBlackEnumerator : IEnumerator<Node>
         {
@@ -1015,37 +920,48 @@ namespace pwiz.Common.Collections
         }
         public class Node
         {
-            internal Node(Node other)
+            // left node 
+            private Node _left;
+            // right node 
+            private Node _right;
+            private TKey _key;
+            private RedBlackTree<TKey, TValue> _tree;
+            public Node(RedBlackTree<TKey, TValue> tree, TKey key)
             {
-                Key = other.Key;
+                IsRed = true;
+                Weight = 1;
+                _tree = tree;
+                _key = key;
+            }
+            public Node(RedBlackTree<TKey, TValue> tree, Node other) : this(tree, other.Key)
+            {
+                _key = other.Key;
                 IsRed = other.IsRed;
                 Value = other.Value;
                 Weight = 1;
                 if (other.Left != null)
                 {
-                    Left = new Node(other.Left);
-                    Left.Parent = this;
+                    Left = new Node(_tree, other.Left) {Parent = this};
                 }
                 if (other.Right != null)
                 {
-                    Right = new Node(other.Right);
-                    Right.Parent = this;
+                    Right = new Node(_tree, other.Right) {Parent = this};
                 }
             }
-            // left node 
-            private Node rbnLeft;
-            // right node 
-            private Node rbnRight;
-
-            public RedBlackTree<TKey, TValue> Tree { get; internal set; }
+            public bool ComesFromTree(RedBlackTree<TKey, TValue> tree)
+            {
+                return ReferenceEquals(_tree, tree);
+            }
 
             ///<summary>
             ///Key
             ///</summary>
             public TKey Key
             {
-                get;
-                internal set;
+                get
+                {
+                    return _key;
+                }
             }
             ///<summary>
             ///Data
@@ -1116,12 +1032,12 @@ namespace pwiz.Common.Collections
             {
                 get
                 {
-                    return rbnLeft;
+                    return _left;
                 }
 
                 internal set
                 {
-                    rbnLeft = value;
+                    _left = value;
                     UpdateWeight();
                 }
             }
@@ -1132,22 +1048,17 @@ namespace pwiz.Common.Collections
             {
                 get
                 {
-                    return rbnRight;
+                    return _right;
                 }
 
                 internal set
                 {
-                    rbnRight = value;
+                    _right = value;
                     UpdateWeight();
                 }
             }
             public Node Parent { get; set; }
 
-            internal Node(RedBlackTree<TKey,TValue> tree)
-            {
-                Tree = tree;
-                IsRed = true;
-            }
             public Node Next
             {
                 get
@@ -1199,7 +1110,7 @@ namespace pwiz.Common.Collections
             ///4. All paths from a node to its leaves contain the same number of black nodes.
             public int CheckValidAndCountBlackNodesToLeaves()
             {
-                if (Tree == null)
+                if (_tree == null)
                 {
                     throw new InvalidDataException("Tree cannot be null");
                 }
@@ -1222,7 +1133,7 @@ namespace pwiz.Common.Collections
                     {
                         throw new InvalidDataException("Child has incorrect parent");
                     }
-                    if (!ReferenceEquals(Tree, Left.Tree))
+                    if (!ReferenceEquals(_tree, Left._tree))
                     {
                         throw new InvalidDataException("Child is in wrong tree");
                     }
@@ -1241,7 +1152,7 @@ namespace pwiz.Common.Collections
                     {
                         throw new InvalidDataException("Child has incorrect parent");
                     }
-                    if (!ReferenceEquals(Tree, Right.Tree))
+                    if (!ReferenceEquals(_tree, Right._tree))
                     {
                         throw new InvalidDataException("Child is in wrong tree");
                     }

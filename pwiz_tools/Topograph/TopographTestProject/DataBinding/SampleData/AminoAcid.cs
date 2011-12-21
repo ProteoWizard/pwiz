@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using pwiz.Common.Chemistry;
 using pwiz.Common.DataBinding;
@@ -30,11 +31,12 @@ namespace pwiz.Topograph.Test.DataBinding.SampleData
             Code = code;
         }
         public char CharCode { get { return AminoAcidFormulas.LongNames[Code]; } }
-        public string Code 
-        { 
-            get; private set;
+        public string Code
+        {
+            get;
+            private set;
         }
-        [Map(KeyName = "Element", ValueName = "Count")]
+        [OneToMany(IndexDisplayName = "Element", ItemDisplayName = "Count")]
         public Molecule Molecule
         {
             get
@@ -46,7 +48,7 @@ namespace pwiz.Topograph.Test.DataBinding.SampleData
         {
             get
             {
-                return AminoAcidFormulas.Default.GetMassDistribution(Molecule, 0).ToArray();
+                return AminoAcidFormulas.Default.GetMassDistribution(Molecule, 0).ToList();
             }
         }
     }

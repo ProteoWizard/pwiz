@@ -73,9 +73,9 @@ namespace pwiz.Topograph.ui
             Settings.Default.Save();
         }
 
-        public override string GetDefaultExportFilename(BindingListView bindingListView)
+        public override string GetDefaultExportFilename(ViewSpec viewSpec)
         {
-            string currentViewName = bindingListView.ViewInfo.Name;
+            string currentViewName = viewSpec.Name;
             return Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + RowType.Name + (string.IsNullOrEmpty(currentViewName) ? "" : currentViewName);
         }
 
@@ -164,6 +164,18 @@ namespace pwiz.Topograph.ui
         public override DialogResult ShowMessageBox(Control owner, string message, MessageBoxButtons messageBoxButtons)
         {
             return MessageBox.Show(owner.TopLevelControl, message, Program.AppName, messageBoxButtons);
+        }
+
+        public override IViewContext GetViewContext(ColumnDescriptor column)
+        {
+            var childColumns =
+                column.GetChildColumns().Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name)));
+            return new TopographViewContext(Workspace, column.PropertyType, new[]
+                                                                                {
+                                                                                    new ViewSpec()
+                                                                                        .SetName("default").SetColumns(
+                                                                                            childColumns)
+                                                                                });
         }
     }
 }

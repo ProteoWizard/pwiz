@@ -41,8 +41,57 @@ namespace pwiz.Common.SystemUtil
         {
             if (IsDisposed())
             {
-                throw new ObjectDisposedException(GetType().FullName);
+                ThrowObjectDisposed();
             }
+        }
+
+        protected void ThrowObjectDisposed()
+        {
+            throw new ObjectDisposedException(GetType().FullName);
+        }
+
+        protected void DisposeMember<T>(ref T member) where T : IDisposable
+        {
+            T localValue;
+            lock(this)
+            {
+                localValue = member;
+                member = default(T);
+            }
+            if (!ReferenceEquals(null, localValue))
+            {
+                localValue.Dispose();
+            }
+        }
+
+        protected T DetachMember<T>(ref T member) where T : IDisposable
+        {
+            T localValue;
+            lock(this)
+            {
+                localValue = member;
+                member = default(T);
+            }
+            return localValue;
+        }
+        protected void AttachMember<T>(ref T member, T newValue) where T : IDisposable
+        {
+            lock(this)
+            {
+                if (!Equals(member, default(T)))
+                {
+                    throw new InvalidOperationException("Already attached");
+                }
+                member = newValue;
+            }
+        }
+        protected TResult DetachAndReturn<TMember, TResult>(ref TMember member, TMember expectedValue, TResult result) where TMember : IDisposable
+        {
+            if (!ReferenceEquals(expectedValue, DetachMember(ref member)))
+            {
+                ThrowObjectDisposed();
+            }
+            return result;
         }
     }
 }

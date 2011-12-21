@@ -60,8 +60,8 @@ RedBlackTreeTest
                         tree.Add(i,i);
                         tree.Validate();
                     }
-                    var treeFromSorted =
-                        RedBlackTree<IComparable, object>.FromSorted(
+                    var treeFromSorted = new RedBlackTree<IComparable, object>();
+                        treeFromSorted.FillFromSorted(
                             sortedList.Select(i => new KeyValuePair<IComparable, object>(i, i)).ToArray());
                     treeFromSorted.Validate();
                     Assert.IsTrue(sortedList.SequenceEqual(treeFromSorted.Keys.Cast<int>()));

@@ -113,7 +113,7 @@ namespace pwiz.Topograph.ui.Forms
             public string ProteinDescription { get { return _resultRow.ProteinDescription; } }
             public string ProteinKey { get { return Workspace.GetProteinKey(ProteinName, ProteinDescription); } }
             Workspace Workspace { get { return _halfLifeCalculator.Workspace; } }
-            [Map(KeyName = "Group", ValueName = "Result")]
+            [OneToMany(IndexDisplayName = "Group", ItemDisplayName= "Result")]
             public IDictionary<GroupKey, GroupResult> Results { get; private set; }
             public HalfLifeCalculator GetHalfLifeCalculator()
             {
@@ -296,11 +296,15 @@ namespace pwiz.Topograph.ui.Forms
             var bindingListView = bindingSource1.DataSource as BindingListView;
             if (bindingListView == null || "default" == bindingListView.ViewInfo.Name)
             {
-                bindingListView = new BindingListView(new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(halfLifeCalculator.ByProtein)), displayRows);
+                bindingListView = new BindingListView()
+                                      {
+                                          ViewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(halfLifeCalculator.ByProtein)), 
+                                          RowSource = displayRows
+                                      };
             }
             else
             {
-                bindingListView = new BindingListView(bindingListView.ViewInfo, displayRows);
+                bindingListView = new BindingListView{ViewInfo = bindingListView.ViewInfo, RowSource = displayRows};
             }
             bindingSource1.DataSource = bindingListView;
             dataGridViewSummary.Rows.Clear();

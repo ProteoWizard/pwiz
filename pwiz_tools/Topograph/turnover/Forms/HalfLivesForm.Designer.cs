@@ -1,4 +1,5 @@
-﻿using pwiz.Common.DataBinding;
+﻿using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -49,7 +50,7 @@ namespace pwiz.Topograph.ui.Forms
             this.checkedListBoxTimePoints = new System.Windows.Forms.CheckedListBox();
             this.label7 = new System.Windows.Forms.Label();
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
-            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
+            this.bindingSource1 = new BindingSource(this.components);
             this.comboEvviesFilter = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
             this.cbxBySample = new System.Windows.Forms.CheckBox();
@@ -247,7 +248,6 @@ namespace pwiz.Topograph.ui.Forms
             this.navBar1.Name = "navBar1";
             this.navBar1.Size = new System.Drawing.Size(754, 26);
             this.navBar1.TabIndex = 31;
-            this.navBar1.ViewContext = null;
             // 
             // comboEvviesFilter
             // 
@@ -371,7 +371,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label7;
         private pwiz.Common.DataBinding.Controls.NavBar navBar1;
         private BoundDataGridView dataGridView1;
-        private System.Windows.Forms.BindingSource bindingSource1;
+        private BindingSource bindingSource1;
         private System.Windows.Forms.CheckBox cbxBySample;
         private System.Windows.Forms.ComboBox comboEvviesFilter;
         private System.Windows.Forms.Label label4;

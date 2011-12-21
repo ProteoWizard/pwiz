@@ -146,7 +146,7 @@ namespace pwiz.Topograph.ui.Forms
             this.navBar21.Name = "navBar21";
             this.navBar21.Size = new System.Drawing.Size(730, 19);
             this.navBar21.TabIndex = 10;
-            this.navBar21.ViewContext = null;
+            this.navBar21.BindingSource = this.bindingSourceResults;
             // 
             // dataGridViewResults
             // 

@@ -35,13 +35,18 @@ namespace pwiz.Common.DataBinding
         public ColumnSpec()
         {
         }
+        public ColumnSpec(IdentifierPath identifierPath)
+        {
+            Name = identifierPath.ToString();
+        }
         public ColumnSpec(ColumnSpec that)
         {
             Name = that.Name;
             Caption = that.Caption;
             Format = that.Format;
-            Aggregate = that.Aggregate;
             Hidden = that.Hidden;
+            SortIndex = that.SortIndex;
+            SortDirection = that.SortDirection;
         }
         public string Name { get; private set; }
         public ColumnSpec SetName(string value)
@@ -58,16 +63,22 @@ namespace pwiz.Common.DataBinding
         {
             return new ColumnSpec(this){Format = value};
         }
-        public string Aggregate { get; private set; }
-        public ColumnSpec SetAggregate(string value)
-        {
-            return new ColumnSpec(this) {Aggregate = value};
-        }
         public bool Hidden { get; private set; }
         public ColumnSpec SetHidden(bool value)
         {
             return new ColumnSpec(this) {Hidden = value};
         }
+        public int? SortIndex { get; private set; }
+        public ColumnSpec SetSortIndex(int? value)
+        {
+            return new ColumnSpec(this){SortIndex = value};
+        }
+        public ListSortDirection? SortDirection { get; private set; }
+        public ColumnSpec SetSortDirection(ListSortDirection? value)
+        {
+            return new ColumnSpec(this){SortDirection = value};
+        }
+
         [XmlIgnore]
         public IdentifierPath IdentifierPath
         {
@@ -84,6 +95,17 @@ namespace pwiz.Common.DataBinding
             columnSpec.Caption = reader.GetAttribute("caption");
             columnSpec.Format = reader.GetAttribute("format");
             columnSpec.Hidden = "true" == reader.GetAttribute("hidden");
+            string sortIndex = reader.GetAttribute("sortindex");
+            if (sortIndex != null)
+            {
+                columnSpec.SortIndex = Convert.ToInt32(sortIndex);
+            }
+            string sortDirection = reader.GetAttribute("sortdirection");
+            if (sortDirection != null)
+            {
+                columnSpec.SortDirection = (ListSortDirection) Enum.Parse(typeof(ListSortDirection), sortDirection);
+            }
+            
             
             bool empty = reader.IsEmptyElement;
             reader.ReadElementString("column");
@@ -112,9 +134,13 @@ namespace pwiz.Common.DataBinding
             {
                 writer.WriteAttributeString("hidden", "true");
             }
-            if (Aggregate != null)
+            if (SortIndex != null)
             {
-                writer.WriteAttributeString("aggregate", Aggregate);
+                writer.WriteAttributeString("sortindex", SortIndex.ToString());
+            }
+            if (SortDirection != null)
+            {
+                writer.WriteAttributeString("sortdirection", SortDirection.ToString());
             }
         }
 
@@ -126,7 +152,8 @@ namespace pwiz.Common.DataBinding
                 && Equals(other.Caption, Caption) 
                 && Equals(other.Format, Format)
                 && Equals(other.Hidden, Hidden)
-                && Equals(other.Aggregate, Aggregate);
+                && Equals(other.SortIndex, SortIndex)
+                && Equals(other.SortDirection, SortDirection);
         }
 
         public override bool Equals(object obj)
@@ -144,83 +171,106 @@ namespace pwiz.Common.DataBinding
                 int result = Name.GetHashCode();
                 result = (result*397) ^ (Caption != null ? Caption.GetHashCode() : 0);
                 result = (result*397) ^ (Format != null ? Format.GetHashCode() : 0);
-                result = (result*397) ^ (Aggregate != null ? Aggregate.GetHashCode() : 0);
                 result = (result*397) ^ Hidden.GetHashCode();
+                result = (result*397) ^ (SortIndex != null ? SortIndex.GetHashCode() : 0);
+                result = (result*397) ^ (SortDirection != null ? SortDirection.GetHashCode() : 0);
                 return result;
             }
         }
     }
-    public class SortSpec
+    public class FilterSpec
     {
-        public SortSpec()
+        public FilterSpec()
         {
-            Direction = ListSortDirection.Ascending;
         }
-        public SortSpec(SortSpec that)
+        public FilterSpec(IdentifierPath identifierPath, IFilterOperation filterOperation, string operand)
+        {
+            Column = identifierPath.ToString();
+            OpName = filterOperation == null ? null : filterOperation.OpName;
+            Operand = operand;
+        }
+        public FilterSpec(FilterSpec that)
         {
             Column = that.Column;
-            Direction = that.Direction;
+            OpName = that.OpName;
+            Operand = that.Operand;
         }
         public string Column { get; private set; }
-        public SortSpec SetColumn(string value)
+        public FilterSpec SetColumn(string column)
         {
-            return new SortSpec(this){Column = value};
+            return new FilterSpec(this){Column = column};
         }
-        public ListSortDirection Direction { get; private set; }
-        public SortSpec SetDirection(ListSortDirection value)
+        public IdentifierPath ColumnId { get { return IdentifierPath.Parse(Column); } }
+        public FilterSpec SetColumnId(IdentifierPath columnId)
         {
-            return new SortSpec(this){Direction = value};
+            return SetColumn(columnId.ToString());
         }
-        public static SortSpec ReadXml(XmlReader reader)
+        public string OpName { get; private set; }
+        public FilterSpec SetOp(string op)
         {
-            var sortSpec = new SortSpec();
-            sortSpec.Column = reader.GetAttribute("column");
-            var strDirection = reader.GetAttribute("direction");
-            if (strDirection != null)
-            {
-                sortSpec.Direction = (ListSortDirection) Enum.Parse(typeof (ListSortDirection), strDirection);
-            }
-            else
-            {
-                sortSpec.Direction = ListSortDirection.Ascending;
-            }
+            return new FilterSpec(this){OpName = op};
+        }
+        public IFilterOperation Operation {get { return FilterOperations.GetOperation(OpName);}}
+        public FilterSpec SetOperation(IFilterOperation operation)
+        {
+            return SetOp(operation == null ? "" : operation.OpName);
+        }
+        public string Operand { get; private set; }
+        public FilterSpec SetOperand(string operand)
+        {
+            return new FilterSpec(this){Operand = operand};
+        }
+        public static FilterSpec ReadXml(XmlReader reader)
+        {
+            var filterSpec = new FilterSpec();
+            filterSpec.Column = reader.GetAttribute("column");
+            filterSpec.OpName = reader.GetAttribute("opname");
+            filterSpec.Operand = reader.GetAttribute("operand");
             bool empty = reader.IsEmptyElement;
-            reader.ReadElementString("sort");
+            reader.ReadElementString("filter");
             if (!empty)
             {
                 reader.ReadEndElement();
             }
-            return sortSpec;
+            return filterSpec;
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttributeString("column", Column);
-            writer.WriteAttributeString("direction", Direction.ToString());
+            writer.WriteAttributeString("opname", OpName);
+            if (Operand != null)
+            {
+                writer.WriteAttributeString("operand", Operand);
+            }
         }
 
-        public bool Equals(SortSpec other)
+        public bool Equals(FilterSpec other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Column, Column) && Equals(other.Direction, Direction);
+            return Equals(other.Column, Column) && Equals(other.OpName, OpName) && Equals(other.Operand, Operand);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (SortSpec)) return false;
-            return Equals((SortSpec) obj);
+            if (obj.GetType() != typeof(FilterSpec)) return false;
+            return Equals((FilterSpec)obj);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return (Column.GetHashCode()*397) ^ Direction.GetHashCode();
+                int result = Column == null ? 0 : Column.GetHashCode();
+                result = (result*397) ^ (OpName == null ? 0 : OpName.GetHashCode());
+                result = (result*397) ^ (Operand == null ? 0 : Operand.GetHashCode());
+                return result;
             }
         }
+
     }
 
     /// <summary>
@@ -232,13 +282,13 @@ namespace pwiz.Common.DataBinding
         public ViewSpec()
         {
             Columns = new ColumnSpec[0];
-            Sorts = new SortSpec[0];
+            Filters = new FilterSpec[0];
         }
         public ViewSpec(ViewSpec that)
         {
             Name = that.Name;
             Columns = that.Columns;
-            Sorts = that.Sorts;
+            Filters = that.Filters;
             SublistName = that.SublistName;
         }
         public string Name { get; private set; }
@@ -254,13 +304,10 @@ namespace pwiz.Common.DataBinding
                            Columns = Array.AsReadOnly(value.ToArray())
                        };
         }
-        public IList<SortSpec> Sorts { get; private set; }
-        public ViewSpec SetSorts(IEnumerable<SortSpec> value)
+        public IList<FilterSpec> Filters { get; private set; }
+        public ViewSpec SetFilters(IEnumerable<FilterSpec> value)
         {
-            return new ViewSpec(this)
-                       {
-                           Sorts = Array.AsReadOnly(value.ToArray())
-                       };
+            return new ViewSpec(this){Filters = Array.AsReadOnly(value.ToArray())};
         }
         public string SublistName { get; private set; }
         public IdentifierPath SublistId
@@ -278,7 +325,7 @@ namespace pwiz.Common.DataBinding
             viewSpec.Name = reader.GetAttribute("name");
             viewSpec.SublistName = reader.GetAttribute("sublist");
             var columns = new List<ColumnSpec>();
-            var sorts = new List<SortSpec>();
+            var filters = new List<FilterSpec>();
             if (reader.IsEmptyElement)
             {
                 reader.ReadElementString("view");
@@ -291,9 +338,9 @@ namespace pwiz.Common.DataBinding
                 {
                     columns.Add(ColumnSpec.ReadXml(reader));
                 }
-                else if (reader.IsStartElement("sort"))
+                else if (reader.IsStartElement("filter"))
                 {
-                    sorts.Add(SortSpec.ReadXml(reader));
+                    filters.Add(FilterSpec.ReadXml(reader));
                 }
                 else if (reader.NodeType == XmlNodeType.EndElement)
                 {
@@ -305,8 +352,8 @@ namespace pwiz.Common.DataBinding
                     reader.Read();
                 }
             }
-            viewSpec.Sorts = new ReadOnlyCollection<SortSpec>(sorts.ToArray());
-            viewSpec.Columns = new ReadOnlyCollection<ColumnSpec>(columns.ToArray());
+            viewSpec.Columns = Array.AsReadOnly(columns.ToArray());
+            viewSpec.Filters = Array.AsReadOnly(filters.ToArray());
             return viewSpec;
         }
 
@@ -326,10 +373,10 @@ namespace pwiz.Common.DataBinding
                 column.WriteXml(writer);
                 writer.WriteEndElement();
             }
-            foreach (var sort in Sorts)
+            foreach (var filter in Filters)
             {
-                writer.WriteStartElement("sort");
-                sort.WriteXml(writer);
+                writer.WriteStartElement("filter");
+                filter.WriteXml(writer);
                 writer.WriteEndElement();
             }
         }
@@ -340,7 +387,7 @@ namespace pwiz.Common.DataBinding
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.Name, Name)
                    && Columns.SequenceEqual(other.Columns)
-                   && Sorts.SequenceEqual(other.Sorts)
+                   && Filters.SequenceEqual(other.Filters)
                    && SublistId.Equals(other.SublistId);
         }
 
@@ -358,7 +405,7 @@ namespace pwiz.Common.DataBinding
             {
                 int result = (Name != null ? Name.GetHashCode() : 0);
                 result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Columns);
-                result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Sorts);
+                result = (result * 397) ^ CollectionUtil.GetHashCodeDeep(Filters);
                 result = (result*397) ^ SublistId.GetHashCode();
                 return result;
             }

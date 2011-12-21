@@ -17,12 +17,7 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding.Controls
@@ -45,14 +40,13 @@ namespace pwiz.Common.DataBinding.Controls
 
         public void RefreshUi(bool reloadSettings)
         {
-            var helper = GetListHelper();
             if (reloadSettings)
             {
-                helper.Items = _viewSpecs = ViewContext.CustomViewSpecs.ToArray();
+                _viewSpecs = ViewContext.CustomViewSpecs.ToArray();
+                ListViewHelper.ReplaceItems(listView1, _viewSpecs.Select(vs=>new ListViewItem(vs.Name)).ToArray());
             }
-            var selectedItems = helper.GetSelectedItems();
-            btnEdit.Enabled = selectedItems.Length == 1;
-            btnRemove.Enabled = selectedItems.Length > 0;
+            btnEdit.Enabled = listView1.SelectedIndices.Count == 1;
+            btnRemove.Enabled = listView1.SelectedIndices.Count > 0;
         }
 
         private void btnAdd_Click(object sender, EventArgs e)
@@ -65,15 +59,8 @@ namespace pwiz.Common.DataBinding.Controls
             RefreshUi(true);
             if (newView != null)
             {
-                GetListHelper().SelectKey(newView.Name);
+                ListViewHelper.SelectIndex(listView1, Array.IndexOf(_viewSpecs, newView));
             }
-        }
-
-        private ListViewHelper<string, ViewSpec> GetListHelper()
-        {
-            return new ListViewHelper<string, ViewSpec>(listView1, _viewSpecs, 
-                viewSpec=>viewSpec.Name,
-                viewSpec=>new ListViewItem(viewSpec.Name));
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)
@@ -83,8 +70,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            var helper = GetListHelper();
-            ViewContext.CustomizeView(this, helper.GetSelectedItems()[0]);
+            ViewContext.CustomizeView(this, _viewSpecs[listView1.SelectedIndices[0]]);
             RefreshUi(true);
         }
 
@@ -95,8 +81,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void btnRemove_Click(object sender, EventArgs e)
         {
-            var helper = GetListHelper();
-            var selectedItems = helper.GetSelectedItems();
+            var selectedItems = listView1.SelectedIndices.Cast<int>().Select(i => _viewSpecs[i]).ToArray();
             if (selectedItems.Length == 0)
             {
                 return;

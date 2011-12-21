@@ -30,16 +30,11 @@ namespace pwiz.Common.DataBinding.Controls
     /// </summary>
     public partial class NavBar : UserControl
     {
-        private BindingSource _bindingSource;
         private IViewContext _viewContext;
-        private ApplyRowFilterTask _applyRowFilterTask;
-        private string _filterText;
-        private bool _matchCase;
+        private BindingSource _bindingSource;
         public NavBar()
         {
             InitializeComponent();
-            _filterText = tbxFind.Text;
-            _matchCase = navBarButtonMatchCase.Checked;
         }
         [TypeConverter(typeof(ReferenceConverter))]
         public BindingSource BindingSource
@@ -67,16 +62,15 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        [TypeConverter(typeof(ReferenceConverter))]
         public IViewContext ViewContext
         {
             get
             {
                 return _viewContext;
-            }
+            } 
             set
             {
-                if (ViewContext == value)
+                if (ReferenceEquals(_viewContext, value))
                 {
                     return;
                 }
@@ -85,19 +79,18 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-
-        public BindingListView GetBindingListView()
-        {
-            if (BindingSource == null)
+        private BindingListView BindingListView 
+        { 
+            get
             {
-                return null;
-            }
-            return BindingSource.DataSource as BindingListView;
+                return BindingSource == null ? null : BindingSource.DataSource as BindingListView;
+            } 
         }
 
         public string GetCurrentViewName()
         {
-            return GetBindingListView().ViewName;
+            var viewInfo = BindingListView == null ? null : BindingListView.ViewInfo;
+            return viewInfo == null ? null : viewInfo.Name;
         }
 
         void BindingSource_ListChanged(object sender, EventArgs e)
@@ -107,25 +100,35 @@ namespace pwiz.Common.DataBinding.Controls
 
         void RefreshUi()
         {
-            InvalidateRowFilter();
-            var bindingListView = GetBindingListView();
-            navBarButtonViews.Enabled = navBarButtonExport.Enabled = (bindingListView != null && ViewContext != null);
-            if (bindingListView != null)
+            navBarButtonViews.Enabled = navBarButtonExport.Enabled = ViewContext != null && BindingListView != null && BindingListView.ViewInfo != null;
+            if (BindingListView != null)
             {
+                var queryResults = BindingListView.QueryResults;
                 tbxFind.Enabled = true;
-                if (bindingListView.Count < bindingListView.InnerList.Count)
+                if (queryResults.ResultRows != null)
                 {
-                    lblFilterApplied.Text = string.Format("(Filtered from {0})", bindingListView.InnerList.Count);
-                    lblFilterApplied.Visible = true;
-                }
-                else if (_applyRowFilterTask != null)
-                {
-                    lblFilterApplied.Text = "(Filtering...)";
-                    lblFilterApplied.Visible = true;
+                    if (queryResults.Parameters.Rows == null)
+                    {
+                        lblFilterApplied.Text = "(Waiting for data...)";
+                        lblFilterApplied.Visible = true;
+                    }
+                    else
+                    {
+                        if (queryResults.ResultRows.Count != queryResults.PivotedRows.Count)
+                        {
+                            lblFilterApplied.Text = string.Format("(Filtered from {0})", queryResults.PivotedRows.Count);
+                            lblFilterApplied.Visible = true;
+                        }
+                        else
+                        {
+                            lblFilterApplied.Visible = false;
+                        }
+                    }
                 }
                 else
                 {
-                    lblFilterApplied.Visible = false;
+                    lblFilterApplied.Text = "(Transforming data...)";
+                    lblFilterApplied.Visible = true;
                 }
             }
             else
@@ -134,80 +137,11 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
-        private void InvalidateRowFilter()
-        {
-            if (_applyRowFilterTask != null)
-            {
-                _applyRowFilterTask.Dispose();
-                _applyRowFilterTask = null;
-            }
-            var bindingListView = GetBindingListView();
-            if (bindingListView == null)
-            {
-                return;
-            }
-            if (_filterText != tbxFind.Text || _matchCase != navBarButtonMatchCase.Checked)
-            {
-                var unfilteredRows = bindingListView.UnfilteredItems.ToArray();
-                if (string.IsNullOrEmpty(tbxFind.Text))
-                {
-                    bindingListView.SetFilteredItems(unfilteredRows);
-                    _filterText = "";
-                    _matchCase = navBarButtonMatchCase.Checked;
-                }
-                else
-                {
-                    _applyRowFilterTask = new ApplyRowFilterTask(unfilteredRows, 
-                        bindingListView.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray(), 
-                        tbxFind.Text, navBarButtonMatchCase.Checked);
-                    new Action(_applyRowFilterTask.FilterBackground).BeginInvoke(ApplyRowFilterTaskCallback, _applyRowFilterTask);
-                }
-            }
-        }
-
-        private void ApplyRowFilterTaskCallback(IAsyncResult result)
-        {
-            if (!result.IsCompleted)
-            {
-                return;
-            }
-            if (!ReferenceEquals(_applyRowFilterTask, result.AsyncState))
-            {
-                return;
-            }
-            if (InvokeRequired)
-            {
-                BeginInvoke(new Action<IAsyncResult>(ApplyRowFilterTaskCallback), result);
-                return;
-            }
-            if (!ReferenceEquals(_applyRowFilterTask, result.AsyncState))
-            {
-                return;
-            }
-            try
-            {
-                var bindingListView = GetBindingListView();
-                if (bindingListView == null)
-                {
-                    return;
-                }
-                bindingListView.SetFilteredItems(_applyRowFilterTask.FilteredRows.ToArray());
-                _filterText = _applyRowFilterTask.FilterText;
-                _matchCase = _applyRowFilterTask.MatchCase;
-            }
-            finally
-            {
-                _applyRowFilterTask.Dispose();
-                _applyRowFilterTask = null;
-            }
-            RefreshUi();
-        }
-
         private void navBarButtonViews_DropDownOpening(object sender, EventArgs e)
         {
             var contextMenu = new ContextMenuStrip();
-            var bindingListView = GetBindingListView();
-            if (bindingListView != null)
+            var bindingSource = BindingSource;
+            if (bindingSource != null)
             {
                 var builtInViewItems = ViewContext.BuiltInViewSpecs.Select(viewSpec => NewChooseViewItem(viewSpec, FontStyle.Regular)).ToArray();
                 if (builtInViewItems.Length > 0)
@@ -245,13 +179,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         public void ApplyView(ViewSpec viewSpec)
         {
-            var bindingListView = BindingSource.DataSource as BindingListView;
-            if (bindingListView == null)
-            {
-                return;
-            }
-            var newBindingListView = new BindingListView(new ViewInfo(ViewContext.ParentColumn, viewSpec), bindingListView.InnerList);
-            BindingSource.DataSource = newBindingListView;
+            BindingListView.ViewSpec = viewSpec;
         }
 
 
@@ -262,21 +190,12 @@ namespace pwiz.Common.DataBinding.Controls
 
         void OnCustomizeView(object sender, EventArgs eventArgs)
         {
-            var bindingListView = GetBindingListView();
-            if (bindingListView == null)
-            {
-                return;
-            }
-            var newView = ViewContext.CustomizeView(this, bindingListView.GetViewSpec());
+            var newView = ViewContext.CustomizeView(this, BindingListView.ViewSpec);
             if (newView == null)
             {
                 return;
             }
-            // First clear out the DataSource so that the DataGridView removes all of its
-            // columns.  Otherwise the DataGridView won't add the columns in the correct order.
-            BindingSource.DataSource = new object[0];
-            BindingSource.DataSource = new BindingListView(new ViewInfo(ViewContext.ParentColumn, newView),
-                                                           bindingListView.InnerList);
+            BindingListView.ViewSpec = newView;
         }
 
         void OnManageViews(object sender, EventArgs eventArgs)
@@ -286,17 +205,21 @@ namespace pwiz.Common.DataBinding.Controls
 
         void OnExport(object sender, EventArgs eventArgs)
         {
-            ViewContext.Export(this, GetBindingListView());
+            // ViewContext.Export(this, GetBindingListView());
         }
 
         private void findBox_TextChanged(object sender, EventArgs e)
         {
-            RefreshUi();
+            UpdateFilter();
         }
-
         private void navBarButtonMatchCase_CheckedChanged(object sender, EventArgs e)
         {
-            RefreshUi();
+            UpdateFilter();
+        }
+
+        private void UpdateFilter()
+        {
+            BindingListView.RowFilter = new RowFilter(tbxFind.Text, navBarButtonMatchCase.Checked);
         }
     }
 }

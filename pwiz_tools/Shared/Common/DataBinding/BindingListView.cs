@@ -22,6 +22,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
+using System.Windows.Forms;
+using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
 {
@@ -35,184 +37,117 @@ namespace pwiz.Common.DataBinding
     /// columns in a DataGridView.
     /// The BindingListView works best if the data is being displayed in a 
     /// <see cref="BoundDataGridView"/>.
+    /// When a BindingListView has its Owner set to a non-null control,
+    /// the BindingListView populates itself asynchronously.
     /// </summary>
     [DebuggerTypeProxy(typeof(object))]
-    public class BindingListView : BindingList<RowItem>, IBindingListView, ITypedList
+    public class BindingListView : BindingList<RowItem>, ITypedList, IBindingListView, IRaiseItemChangedEvents
     {
-        private Func<RowItem, bool> _filterPredicate = (rowItem)=>true;
-        private ViewInfo _viewInfo;
-        private string[] _columnDisplayOrder;
-        private BindingListEventHandler _bindingListEventHandler;
-        private Pivoter _pivoter;
-        private IList<RowItem> _unfilteredItems;
-        private const int MAX_COLUMN_COUNT = 600;
+        private readonly BindingListEventHandler _bindingListEventHandler;
+        private readonly HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
+        private PropertyDescriptorCollection _itemProperties;
+        private Control _owner;
 
-        
-        public BindingListView(ViewInfo viewInfo, IList innerList)
+        public BindingListView() : base(new RowItemList())
         {
-            ViewInfo = viewInfo;
-            InnerList = innerList;
-            var pivoter = new Pivoter(viewInfo);
-            SetUnfilteredItems(pivoter,
-                               pivoter.ExpandAndPivot(innerList.Cast<object>().Select(o => new RowItem(null, o))).
-                                   ToArray());
+            _bindingListEventHandler = new BindingListEventHandler(this);
+            _itemProperties = new PropertyDescriptorCollection(new PropertyDescriptor[0], true);
+            
+            AllowNew = AllowRemove = AllowEdit = false;
         }
 
-        public DataSchema DataSchema { get { return ViewInfo.DataSchema; } }
-
-        public ViewInfo ViewInfo 
-        { 
-            get
-            {
-                return _viewInfo;
-            }
-            private set
-            {
-                _viewInfo = value;
-            }
+        protected override object AddNewCore()
+        {
+            return _bindingListEventHandler.AddNew();
         }
 
-        public string ViewName
+        protected override void RemoveItem(int index)
+        {
+            _bindingListEventHandler.RemoveItem(this[index]);
+        }
+
+        public ViewInfo ViewInfo
+        {
+            get { return _bindingListEventHandler.ViewInfo; }
+            set
+            {
+                _bindingListEventHandler.ViewInfo = value;
+            }
+        }
+        public ViewSpec ViewSpec
         {
             get
             {
-                return _viewInfo.Name;
+                // TODO(nicksh):Apply current sort if any.
+                return _bindingListEventHandler.ViewInfo.GetViewSpec();
+            }
+            set
+            {
+                _bindingListEventHandler.ViewInfo = new ViewInfo(_bindingListEventHandler.ViewInfo.ParentColumn, value);
             }
         }
 
-        public ViewSpec GetViewSpec()
+        public Control Owner
         {
-            var columnSpecs = ViewInfo.ColumnDescriptors.Select(cd => cd.GetColumnSpec()).ToArray();
-            if (_columnDisplayOrder != null)
+            get
             {
-                int lastDisplayIndex = -1;
-                var nameToDisplayIndex = new Dictionary<string, int>();
-                _columnDisplayOrder.Select((name, index) => nameToDisplayIndex[name]=index);
-                var nameToIndex = new Dictionary<string, int>();
-                var displayIndexes = new int[columnSpecs.Length];
-
-                for (int i = 0; i < columnSpecs.Count(); i++)
+                return _owner;
+            }
+            set
+            {
+                if (ReferenceEquals(_owner, value))
                 {
-                    var columnSpec = columnSpecs[i];
-                    nameToIndex.Add(columnSpec.Name, i);
-                    int displayIndex;
-                    if (nameToDisplayIndex.TryGetValue(columnSpec.Name, out displayIndex))
-                    {
-                        lastDisplayIndex = displayIndex;
-                    }
-                    displayIndexes[i] = lastDisplayIndex;
+                    return;
                 }
-                Array.Sort(columnSpecs, (c1, c2) =>
+                if (Owner != null)
                 {
-                    int index1 = nameToIndex[c1.Name];
-                    int index2 = nameToIndex[c2.Name];
-                    int result = displayIndexes[index1].CompareTo(displayIndexes[index2]);
-                    if (result == 0)
-                    {
-                        result = index1.CompareTo(index2);
-                    }
-                    return result;
-                });
+                    Owner.HandleCreated -= OwnerHandleCreated;
+                    Owner.HandleDestroyed -= OwnerHandleDestroyed;
+                }
+                _owner = value;
+                if (Owner != null)
+                {
+                    Owner.HandleCreated += OwnerHandleCreated;
+                    Owner.HandleDestroyed += OwnerHandleDestroyed;
+                    _bindingListEventHandler.IsSingleThreaded = !Owner.IsHandleCreated;
+                }
+                else
+                {
+                    _bindingListEventHandler.IsSingleThreaded = true;
+                }
             }
-            return new ViewSpec()
-                .SetName(ViewInfo.Name)
-                .SetColumns(columnSpecs)
-                .SetSublistId(ViewInfo.SublistId);
+        }
+
+        public IEnumerable RowSource
+        {
+            get
+            {
+                return _bindingListEventHandler.RowSource;
+            }
+            set
+            {
+                _bindingListEventHandler.RowSource = value;
+            }
+        }
+
+        private void OwnerHandleCreated(object sender, EventArgs args)
+        {
+            _bindingListEventHandler.IsSingleThreaded = false;
+        }
+
+        private void OwnerHandleDestroyed(object sender, EventArgs args)
+        {
+            _bindingListEventHandler.IsSingleThreaded = true;
         }
 
         public void ApplySort(ListSortDescriptionCollection sorts)
         {
-            DoSort(sorts);
-        }
-
-        protected void DoSort(ListSortDescriptionCollection sorts)
-        {
-            if (sorts.Count == 0)
-            {
-                return;
-            }
-            var sortRows = Items.Select((item, index) => new SortRow(DataSchema, sorts, item, index)).ToArray();
-            Array.Sort(sortRows);
-            Items.Clear();
-            foreach (var row in sortRows)
-            {
-                Items.Add(row.RowItem);
-            }
-            SortDescriptions = sorts;
-            ResetBindings();
+            _bindingListEventHandler.SortDescriptions = sorts;
         }
 
         public void RemoveFilter()
         {
-//            if (_unfilteredItems == null)
-//            {
-//                return;
-//            }
-//            Items.Clear();
-//            foreach (var item in _unfilteredItems)
-//            {
-//                Items.Add(item);
-//            }
-//            _unfilteredItems = null;
-        }
-
-        public IList<RowItem> UnfilteredItems
-        {
-            get
-            {
-                return _unfilteredItems;
-            }
-        }
-
-        public void SetUnfilteredItems(Pivoter pivoter, IList<RowItem> rowItems)
-        {
-            _pivoter = pivoter;
-            _unfilteredItems = rowItems;
-            Items.Clear();
-            foreach (var rowItem in UnfilteredItems)
-            {
-                Items.Add(rowItem);
-            }
-            ResetBindings();
-        }
-
-        public string Filter
-        {
-            get
-            {
-                throw new NotImplementedException();
-            }
-            set
-            {
-                throw new NotImplementedException();
-            }
-        }
-
-        public void SetFilterPredicate(Func<object, bool> filterPredicate, IEnumerable<object> items)
-        {
-            
-        }
-
-        
-        public Func<RowItem, bool> FilterPredicate { 
-            get
-            {
-                return _filterPredicate;
-            } 
-            set
-            {
-                if (Equals(_filterPredicate, value))
-                {
-                    return;
-                }
-                _filterPredicate = value;
-                ResetBindings();
-            }
-        }
-
-        public ListSortDescriptionCollection SortDescriptions
-        {
-            get; protected set;
+            Filter = null;
         }
 
         public virtual bool SupportsAdvancedSorting
@@ -232,12 +167,16 @@ namespace pwiz.Common.DataBinding
 
         protected override int FindCore(PropertyDescriptor prop, object key)
         {
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
 
         protected override bool IsSortedCore
         {
-            get { return SortDescriptions != null && SortDescriptions.Count > 0; }
+            get
+            {
+                var sortDescriptions = _bindingListEventHandler.SortDescriptions;
+                return sortDescriptions != null && sortDescriptions.Count > 0;
+            }
         }
 
         protected override void RemoveSortCore()
@@ -277,136 +216,163 @@ namespace pwiz.Common.DataBinding
         {
             get { return true; }
         }
-
-        private class SortRow : IComparable<SortRow>
+        public ListSortDescriptionCollection SortDescriptions
         {
-            private object[] _keys;
-            public SortRow(DataSchema dataSchema, ListSortDescriptionCollection sorts, RowItem rowItem, int rowIndex)
+            get
             {
-                DataSchema = dataSchema;
-                Sorts = sorts;
-                RowItem = rowItem;
-                OriginalRowIndex = rowIndex;
-                _keys = new object[sorts.Count];
-                for (int i = 0; i < sorts.Count; i++)
-                {
-                    _keys[i] = sorts[i].PropertyDescriptor.GetValue(RowItem);
-                }
-            }
-            public DataSchema DataSchema { get; private set; }
-            public RowItem RowItem { get; private set; }
-            public int OriginalRowIndex { get; private set; }
-            public ListSortDescriptionCollection Sorts { get; private set; }
-            public int CompareTo(SortRow other)
-            {
-                for (int i = 0; i < Sorts.Count; i++)
-                {
-                    var sort = Sorts[i];
-                    int result = DataSchema.Compare(_keys[i], other._keys[i]);
-                    if (sort.SortDirection == ListSortDirection.Descending)
-                    {
-                        result = -result;
-                    }
-                    if (result != 0)
-                    {
-                        return result;
-                    }
-                }
-                return OriginalRowIndex.CompareTo(other.OriginalRowIndex);
+                return _bindingListEventHandler.SortDescriptions;
             }
         }
 
         public string GetListName(PropertyDescriptor[] listAccessors)
         {
-            return ViewInfo.ParentColumn.Name;
+            if (listAccessors == null || listAccessors.Length == 0)
+            {
+                return ViewInfo.ParentColumn.PropertyType.FullName;
+            }
+            return listAccessors[listAccessors.Length - 1].Name;
         }
 
         public PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[] listAccessors)
         {
-            var propertyDescriptors = new List<PropertyDescriptor>();
-            var pivotColumns = new Dictionary<RowKey, List<ColumnDescriptor>>();
-            foreach (var columnDescriptor in ViewInfo.ColumnDescriptors)
+            if (listAccessors == null || listAccessors.Length == 0)
             {
-                ICollection<RowKey> pivotValues = _pivoter.GetPivotValues(columnDescriptor.IdPath);
-                if (pivotValues == null)
-                {
-                    propertyDescriptors.Add(new ColumnPropertyDescriptor(columnDescriptor, null));
-                    continue;
-                }
-                List<ColumnDescriptor> columns;
-                foreach (var value in pivotValues)
-                {
-                    if (!pivotColumns.TryGetValue(value, out columns))
-                    {
-                        columns = new List<ColumnDescriptor>();
-                        pivotColumns.Add(value, columns);
-                    }
-                    columns.Add(columnDescriptor);
-                }
+                return _itemProperties;
             }
-            var pivotKeys = pivotColumns.Keys.ToArray();
-            Array.Sort(pivotKeys, RowKey.GetComparison(DataSchema, pivotColumns.Keys.Select(rk=>rk.IdentifierPath)));
-            foreach (var pivotKey in pivotKeys)
+            var propertyDescriptor = listAccessors[listAccessors.Length - 1];
+            var collectionInfo = ViewInfo.DataSchema.GetCollectionInfo(propertyDescriptor.PropertyType);
+            if (collectionInfo != null)
             {
-                propertyDescriptors.AddRange(pivotColumns[pivotKey].Select(cd=>new ColumnPropertyDescriptor(cd, pivotKey)).ToArray());
+                return new PropertyDescriptorCollection(ViewInfo.DataSchema.GetPropertyDescriptors(collectionInfo.ElementType).ToArray());
             }
-            if (propertyDescriptors.Count > MAX_COLUMN_COUNT)
-            {
-                propertyDescriptors.RemoveRange(MAX_COLUMN_COUNT, propertyDescriptors.Count - MAX_COLUMN_COUNT);
-            }
-            return new PropertyDescriptorCollection(propertyDescriptors.ToArray());
+            return new PropertyDescriptorCollection(ViewInfo.DataSchema.GetPropertyDescriptors(propertyDescriptor.PropertyType).ToArray());
         }
 
-        public void SetColumnDisplayOrder(IEnumerable<string> columnDisplayOrder)
+        public RowItemList RowItemList
         {
-            _columnDisplayOrder = columnDisplayOrder == null ? null : columnDisplayOrder.ToArray();
+            get
+            {
+                return ((RowItemList) Items);
+            }
         }
 
-        public IList InnerList
+        public void ResetList(PropertyDescriptorCollection newItemProperties, IEnumerable<RowItem> newItems)
         {
-            get; private set;
+            RowItemList.Reset(newItems);
+            bool propsChanged = true;
+            if (_itemProperties != null)
+            {
+                var oldNameSet = new HashSet<string>(_itemProperties.Cast<PropertyDescriptor>().Select(pd => pd.Name));
+                var newNameSet = new HashSet<string>(newItemProperties.Cast<PropertyDescriptor>().Select(pd => pd.Name));
+                if (oldNameSet.SetEquals(newNameSet))
+                {
+                    propsChanged = false;
+                }
+            }
+            _itemProperties = newItemProperties;
+            AllowNew = _bindingListEventHandler.AllowNew;
+            AllowEdit = _bindingListEventHandler.AllowEdit;
+            AllowRemove = _bindingListEventHandler.AllowRemove;
+            if (propsChanged)
+            {
+                OnListChanged(new ListChangedEventArgs(ListChangedType.PropertyDescriptorChanged, 0));
+            }
+            ResetBindings();
+        }
+        public string Filter
+        {
+            get
+            {
+                return RowFilter.Text;
+            }
+            set
+            {
+                RowFilter = new RowFilter(value, RowFilter.CaseSensitive);
+            }
         }
 
-        private HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
+        public RowFilter RowFilter
+        {
+            get { return _bindingListEventHandler.RowFilter; }
+            set { _bindingListEventHandler.RowFilter = value; }
+        }
+
+        public QueryResults QueryResults
+        {
+            get
+            {
+                return _bindingListEventHandler.QueryResults;
+            }
+        }
+        /// <summary>
+        /// Indicates that this IBindingList will send ListItemChange events 
+        /// when properties on items in this list change.
+        /// 
+        /// If a BindingSource does not think 
+        /// </summary>
+        bool IRaiseItemChangedEvents.RaisesItemChangedEvents
+        {
+            get
+            {
+                return true;
+            }
+        }
         event ListChangedEventHandler IBindingList.ListChanged
         {
             add
             {
-                _listChangedEventHandlers.Add(value);
-                if (_listChangedEventHandlers.Count > 0 && _bindingListEventHandler == null)
+                lock (_listChangedEventHandlers)
                 {
-                    _bindingListEventHandler = new BindingListEventHandler(this);
+                    _listChangedEventHandlers.Add(value);
+                    if (_listChangedEventHandlers.Count > 0)
+                    {
+                        RowItemList.ListChanged = RowItemListChanged;
+                    }
                 }
             }
             remove
             {
-                _listChangedEventHandlers.Remove(value);
-                if (_listChangedEventHandlers.Count == 0 && _bindingListEventHandler != null)
+                lock(_listChangedEventHandlers)
                 {
-                    _bindingListEventHandler.Dispose();
-                    _bindingListEventHandler = null;
+                    _listChangedEventHandlers.Remove(value);
+                    if (_listChangedEventHandlers.Count == 0)
+                    {
+                        RowItemList.ListChanged = null;
+                    }
                 }
             }
+
         }
 
         protected override void OnListChanged(ListChangedEventArgs e)
         {
-            foreach (var eventHandler in _listChangedEventHandlers.ToArray())
+            IList<ListChangedEventHandler> handlers;
+            lock (_listChangedEventHandlers)
             {
-                eventHandler.Invoke(this, e);
+                handlers = _listChangedEventHandlers.ToArray();
+            }
+            foreach (var handler in handlers)
+            {
+                handler(this, e);
             }
         }
 
-        public void SetFilteredItems(IList<RowItem> items)
+        private void RowItemListChanged(object sender, ListChangedEventArgs listChangedEventArgs)
         {
-            Items.Clear();
-            foreach (var item in items)
-            {
-                Items.Add(item);
-            }
-            ResetBindings();
+            OnListChanged(listChangedEventArgs);
         }
 
-        public Pivoter Pivoter { get { return _pivoter; } }
+        public int IndexOf(object value)
+        {
+            return RowItemList.IndexOf(value as RowItem);
+        }
+        public override void EndNew(int itemIndex)
+        {
+            base.EndNew(itemIndex);
+        }
+        public override void CancelNew(int itemIndex)
+        {
+            base.CancelNew(itemIndex);
+        }
     }
 }

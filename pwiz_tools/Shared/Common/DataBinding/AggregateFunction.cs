@@ -26,9 +26,9 @@ namespace pwiz.Common.DataBinding
     {
         string Name { get; }
         string DisplayName { get; }
+        string CaptionPrefix { get;}
         Type GetResultType(ColumnDescriptor columnDescriptor);
-        IDictionary<RowKey, IEnumerable<RowItem>> Group(ColumnDescriptor columnDescriptor, IDictionary<RowKey, IEnumerable<RowItem>> items);
-        object Aggregate(ColumnDescriptor columnDescriptor, KeyValuePair<RowKey, IEnumerable<RowItem>> items);
+        object Aggregate(ColumnDescriptor columnDescriptor, IEnumerable<RowNode> rowNodes);
         Image SmallIcon { get; }
         string ToString();
     }

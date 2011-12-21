@@ -112,16 +112,14 @@ namespace pwiz.Topograph.ui.Forms
         private void UpdateRows(HalfLifeCalculator halfLifeCalculator)
         {
             var resultRows = halfLifeCalculator.RowDatas.Select(rd => new ResultRow(rd)).ToArray();
-            var bindingListView = bindingSourceResults.DataSource as BindingListView;
-            if (bindingListView == null)
+            var bindingListView = dataGridViewResults.BindingListView;
+            var viewInfo = bindingListView.ViewInfo;
+            if (viewInfo == null)
             {
-                bindingListView = new BindingListView(new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First()), resultRows);
+                viewInfo = new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First());
             }
-            else
-            {
-                bindingListView = new BindingListView(bindingListView.ViewInfo, resultRows);
-            }
-            bindingSourceResults.DataSource = bindingListView;
+            bindingListView.ViewInfo = viewInfo;
+            bindingListView.RowSource = resultRows;
         }
 
         private void btnSave_Click(object sender, EventArgs e)

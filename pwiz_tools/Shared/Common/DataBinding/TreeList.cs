@@ -28,95 +28,28 @@ namespace pwiz.Common.DataBinding
     /// A wrapper around a RedBlackTree that implements IList.
     /// Nodes in the RedBlackTree are keyed with <see cref="LongDecimal"/>
     /// </summary>
-    public class TreeList<T> : IList<T>
-    {   
-        public TreeList(RedBlackTree<LongDecimal,T> tree)
+    public class TreeList<TItem> : IList<TItem>
+    {
+        public TreeList(RedBlackTree<LongDecimal,TItem> tree)
         {
             Tree = tree;
         }
-        public TreeList(IEnumerable<T> items)
+        public TreeList() : this(new RedBlackTree<LongDecimal, TItem>())
         {
-            Tree = RedBlackTree<LongDecimal,T>.FromSorted(
-                items.Select((item, index) => new KeyValuePair<LongDecimal, T>(new LongDecimal(index), item))
-                .ToArray());
+        }
+        public TreeList(IEnumerable<TItem> items) : this()
+        {
+            Reset(items);
         }
 
-        public IEnumerator GetEnumerator()
-        {
-            return Tree.Select(node => node.Value).GetEnumerator();
-        }
-
-        IEnumerator<T> IEnumerable<T>.GetEnumerator()
-        {
-            return Tree.Select(node => node.Value).Cast<T>().GetEnumerator();
-        }
-
-        public void CopyTo(T[] array, int arrayIndex)
-        {
-            foreach (T item in this)
-            {
-                array[arrayIndex++] = item;
-            }
-        }
-
-        public bool Remove(T item)
-        {
-            int index = IndexOf(item);
-            if (index < 0)
-            {
-                return false;
-            }
-            RemoveAt(index);
-            return true;
-        }
-
-        public void Add(T item)
+        public void Add(TItem item)
         {
             Insert(Count, item);
         }
 
-        public void Clear()
-        {
-            Tree.Clear();
-        }
+        public int Count { get { return Tree.Count; } }
 
-        public bool Contains(T item)
-        {
-            return IndexOf(item) >= 0;
-        }
-
-        public void CopyTo(Array array, int arrayIndex)
-        {
-            foreach (var item in this)
-            {
-                array.SetValue(item, arrayIndex);
-                arrayIndex++;
-            }
-        }
-
-        public int Count
-        {
-            get { return Tree.Count; }
-        }
-
-        public bool IsReadOnly
-        {
-            get { return false; }
-        }
-
-        public int IndexOf(T item)
-        {
-            foreach (var node in Tree)
-            {
-                if (Equals(item, node.Value))
-                {
-                    return node.Index;
-                }
-            }
-            return -1;
-        }
-
-        public virtual void Insert(int index, T item)
+        public virtual void Insert(int index, TItem item)
         {
             LongDecimal newRowId;
             if (index == 0)
@@ -127,32 +60,102 @@ namespace pwiz.Common.DataBinding
                 }
                 else
                 {
-                    newRowId = ((LongDecimal)Tree[0].Key).GetPredecessor();
+                    newRowId = Tree[0].Key.GetPredecessor();
                 }
             }
             else if (index == Tree.Count)
             {
-                newRowId = ((LongDecimal)Tree[Tree.Count - 1].Key).GetSuccessor();
+                newRowId = Tree[Tree.Count - 1].Key.GetSuccessor();
             }
             else
             {
                 newRowId =
-                    ((LongDecimal)Tree[index - 1].Key).MidPoint(
-                        (LongDecimal)Tree[index].Key);
+                    Tree[index - 1].Key.MidPoint(Tree[index].Key);
             }
             Tree.Add(newRowId, item);
         }
 
-        public void RemoveAt(int index)
+        public RedBlackTree<LongDecimal, TItem> Tree { get; protected set; }
+
+        public virtual void Reset(IEnumerable<TItem> values)
+        {
+            Tree.FillFromSorted(values.Select((item,index)
+                =>new KeyValuePair<LongDecimal,TItem>(new LongDecimal(index), item)).ToArray());
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public IEnumerator<TItem> GetEnumerator()
+        {
+            return Tree.Values.GetEnumerator();
+        }
+
+        public virtual void Clear()
+        {
+            Tree.Clear();
+        }
+
+        public bool Contains(TItem item)
+        {
+            return IndexOf(item) >= 0;
+        }
+
+        public void CopyTo(TItem[] array, int arrayIndex)
+        {
+            foreach (var item in this)
+            {
+                array.SetValue(item, arrayIndex++);
+            }
+        }
+
+        public bool Remove(TItem item)
+        {
+            int index = IndexOf(item);
+            if (index < 0)
+            {
+                return false;
+            }
+            RemoveAt(index);
+            return true;
+        }
+
+        public bool IsReadOnly
+        {
+            get { return false; }
+        }
+
+        public virtual int IndexOf(TItem value)
+        {
+            int index = 0;
+            foreach (var item in this)
+            {
+                if (Equals(item, value))
+                {
+                    return index;
+                }
+                index++;
+            }
+            return -1;
+        }
+
+        public virtual void RemoveAt(int index)
         {
             Tree.RemoveAt(index);
         }
 
-        public T this[int index]
+        public virtual TItem this[int index]
         {
-            get { return Tree[index].Value; }
-            set { Tree[index].Value = value; }
+            get
+            {
+                return Tree[index].Value;
+            }
+            set
+            {
+                Tree[index].Value = value;
+            }
         }
-        public RedBlackTree<LongDecimal,T> Tree { get; set; }
     }
 }

@@ -73,6 +73,10 @@ namespace pwiz.Common.DataBinding
                 || type.IsEnum
                 || type == typeof (string);
         }
+        public virtual bool IsReadOnly(PropertyDescriptor propertyDescriptor)
+        {
+            return true;
+        }
         protected PropertyDescriptor GetChainedPropertyDescriptorParent(Type type)
         {
             if (type.IsGenericType)
@@ -150,27 +154,116 @@ namespace pwiz.Common.DataBinding
             var pdChain = GetChainedPropertyDescriptorParent(type);
             if (pdChain == null)
             {
+                var displayNameAttribute =
+                    type.GetCustomAttributes(typeof (DisplayNameAttribute), true)
+                        .Cast<DisplayNameAttribute>().FirstOrDefault();
+                if (displayNameAttribute != null && !displayNameAttribute.IsDefaultAttribute())
+                {
+                    return displayNameAttribute.DisplayName;
+                }
                 return CaptionFromName(type.Name);
             }
-            return CaptionFromName(pdChain.PropertyType.Name);
+            return CaptionFromType(pdChain.PropertyType);
         }
         public virtual bool IsRootTypeSelectable(Type type)
         {
             return typeof (ILinkValue).IsAssignableFrom(type);
         }
-
-        public virtual event DataRowsChangedEventHandler DataRowsChanged;
-        protected virtual void OnDataRowsChanged(DataRowsChangedEventArgs args)
+        public virtual string GetDisplayName(ColumnDescriptor columnDescriptor)
         {
-            var dataRowsChanged = DataRowsChanged;
-            if (dataRowsChanged != null)
+            var oneToManyColumn = columnDescriptor.GetOneToManyColumn();
+            if (oneToManyColumn != null && oneToManyColumn.ReflectedPropertyDescriptor != null)
             {
-                dataRowsChanged.Invoke(this, args);
+                var oneToManyAttribute = oneToManyColumn.ReflectedPropertyDescriptor.Attributes[typeof(OneToManyAttribute)] as OneToManyAttribute;
+                if (oneToManyAttribute != null)
+                {
+                    if ("Key" == columnDescriptor.Name && oneToManyAttribute.IndexDisplayName != null)
+                    {
+                        return oneToManyAttribute.IndexDisplayName;
+                    }
+                    if ("Value" == columnDescriptor.Name && oneToManyAttribute.ItemDisplayName != null)
+                    {
+                        return oneToManyAttribute.ItemDisplayName;
+                    }
+                }
             }
+            if (columnDescriptor.ReflectedPropertyDescriptor != null)
+            {
+                var displayNameAttr = columnDescriptor.ReflectedPropertyDescriptor.Attributes[typeof(DisplayNameAttribute)] as DisplayNameAttribute;
+                if (displayNameAttr != null && !displayNameAttr.IsDefaultAttribute())
+                {
+                    return displayNameAttr.DisplayName;
+                }
+            }
+            if (columnDescriptor.Name == null && columnDescriptor.Parent != null)
+            {
+                return columnDescriptor.Parent.DefaultCaption;
+            }
+            if (columnDescriptor.Name == null && columnDescriptor.PropertyType != null)
+            {
+                return CaptionFromType(columnDescriptor.PropertyType);
+            }
+            return CaptionFromName(columnDescriptor.Name);
         }
-        public virtual bool UpdateGridColumns(BindingListView bindingListView, DataGridViewColumn[] columnArray)
+
+        public virtual string GetBaseDisplayName(DisplayColumn displayColumn)
         {
-            bool changed = false;
+            var columnDescriptor = displayColumn.ColumnDescriptor;
+            var oneToManyColumn = columnDescriptor.GetOneToManyColumn();
+            if (oneToManyColumn != null && oneToManyColumn.ReflectedPropertyDescriptor != null)
+            {
+                var oneToManyAttribute = oneToManyColumn.ReflectedPropertyDescriptor.Attributes[typeof(OneToManyAttribute)] as OneToManyAttribute;
+                if (oneToManyAttribute != null)
+                {
+                    if ("Key" == columnDescriptor.Name && oneToManyAttribute.IndexDisplayName != null)
+                    {
+                        return oneToManyAttribute.IndexDisplayName;
+                    }
+                    if ("Value" == columnDescriptor.Name && oneToManyAttribute.ItemDisplayName != null)
+                    {
+                        return oneToManyAttribute.ItemDisplayName;
+                    }
+                }
+            }
+            if (columnDescriptor.Name == null && columnDescriptor.PropertyType != null)
+            {
+                return CaptionFromType(columnDescriptor.PropertyType);
+            }
+            return GetDisplayName(columnDescriptor);
+        }
+        public virtual string GetDefaultDisplayName(DisplayColumn displayColumn)
+        {
+            return GetBaseDisplayName(displayColumn);
+        }
+        public virtual bool IsAdvanced(ColumnDescriptor columnDescriptor)
+        {
+            ColumnDescriptor oneToManyColumn = columnDescriptor.GetOneToManyColumn();
+            if (oneToManyColumn != null)
+            {
+                if (oneToManyColumn.ReflectedPropertyDescriptor != null)
+                {
+                    var oneToManyAttribute = oneToManyColumn.ReflectedPropertyDescriptor
+                        .Attributes[typeof(OneToManyAttribute)] as OneToManyAttribute;
+                    if (oneToManyAttribute != null && oneToManyAttribute.ForeignKey == columnDescriptor.Name)
+                    {
+                        return true;
+                    }
+                }
+            }
+            if (columnDescriptor.ReflectedPropertyDescriptor != null)
+            {
+                var dataColumnAttribute = columnDescriptor.ReflectedPropertyDescriptor
+                    .Attributes[typeof (DataColumnAttribute)] as DataColumnAttribute;
+                if (dataColumnAttribute != null)
+                {
+                    return dataColumnAttribute.Advanced;
+                }
+            }
+            return false;
+        }
+
+        public virtual void UpdateGridColumns(BindingListView bindingListView, DataGridViewColumn[] columnArray)
+        {
             var properties = bindingListView.GetItemProperties(new PropertyDescriptor[0])
                 .Cast<PropertyDescriptor>()
                 .ToDictionary(pd => pd.Name, pd => pd);
@@ -182,10 +275,30 @@ namespace pwiz.Common.DataBinding
                 {
                     continue;
                 }
+                if (pd is ColumnPropertyDescriptor)
+                {
+                    var columnDescriptor = ((ColumnPropertyDescriptor) pd).DisplayColumn.ColumnDescriptor;
+                    if (columnDescriptor == null)
+                    {
+                        continue;
+                    }
+                    if (columnDescriptor.ReflectedPropertyDescriptor != null)
+                    {
+                        var dataColumnAttribute =
+                            columnDescriptor.ReflectedPropertyDescriptor.Attributes[typeof (DataColumnAttribute)] as
+                            DataColumnAttribute;
+                        if (dataColumnAttribute != null)
+                        {
+                            if (dataColumnAttribute.Format != null)
+                            {
+                                dataGridViewColumn.DefaultCellStyle.Format = dataColumnAttribute.Format;
+                            }
+                        }
+                    }
+                }
                 if (dataGridViewColumn.SortMode == DataGridViewColumnSortMode.NotSortable)
                 {
                     dataGridViewColumn.SortMode = DataGridViewColumnSortMode.Automatic;
-                    changed = true;
                 }
                 if (!typeof(ILinkValue).IsAssignableFrom(pd.PropertyType))
                 {
@@ -205,9 +318,7 @@ namespace pwiz.Common.DataBinding
                     SortMode = textBoxColumn.SortMode,
                 };
                 columnArray[iCol] = linkColumn;
-                changed = true;
             }
-            return changed;
         }
     }
 }

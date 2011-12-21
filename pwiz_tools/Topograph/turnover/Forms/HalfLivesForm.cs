@@ -41,8 +41,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxMinAuc.Text = workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
             comboCalculationType.SelectedIndex = (int) HalfLifeCalculationType.GroupPrecursorPool;
             UpdateTimePoints();
-            _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
-            navBar1.ViewContext = _viewContext;
+            navBar1.ViewContext = _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
             foreach (var evviesFilter in Enum.GetValues(typeof(EvviesFilterEnum)))
             {
                 comboEvviesFilter.Items.Add(evviesFilter);
@@ -59,7 +58,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             columnSpecs.Add(new ColumnSpec().SetName("ProteinName"));
             columnSpecs.Add(new ColumnSpec().SetName("ProteinDescription"));
-            columnSpecs.Add(new ColumnSpec().SetName("HalfLives.[]"));
+            columnSpecs.Add(new ColumnSpec().SetName("HalfLives.[].Value"));
             return new ViewSpec().SetName("default").SetColumns(columnSpecs);
         }
 
@@ -123,17 +122,14 @@ namespace pwiz.Topograph.ui.Forms
                     return;
                 }
             }
-            var bindingListView = bindingSource1.DataSource as BindingListView;
+            var viewInfo = dataGridView1.BindingListView.ViewInfo;
             var rows = calculator.ResultRows.Select(row => new ResultRow(this, row)).ToArray();
-            if (bindingListView == null || "default" == bindingListView.ViewInfo.Name)
+            if (viewInfo == null || "default" == viewInfo.Name)
             {
-                bindingListView = new BindingListView(new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(calculator.ByProtein)), rows);
+                viewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(calculator.ByProtein));
             }
-            else
-            {
-                bindingListView = new BindingListView(bindingListView.ViewInfo, rows);
-            }
-            bindingSource1.DataSource = bindingListView;
+            dataGridView1.BindingListView.ViewInfo = viewInfo;
+            dataGridView1.BindingListView.RowSource = rows;
         }
 
         private void comboCalculationType_SelectedIndexChanged(object sender, EventArgs e)
@@ -248,7 +244,7 @@ namespace pwiz.Topograph.ui.Forms
                     return _halfLifeResultRow.ProteinDescription;
                 }
             }
-            [Map(KeyName = "Cohort", ValueName = "Half Life")]
+            [OneToMany(IndexDisplayName = "Cohort", ItemDisplayName = "Half Life")]
             public IDictionary<string, LinkValue<HalfLifeCalculator.ResultData>> HalfLives
             {
                 get; private set;

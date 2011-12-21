@@ -91,6 +91,10 @@ namespace pwiz.Topograph.Model
         {
             return SessionFactory.OpenSession();
         }
+        public IStatelessSession OpenStatelessSession()
+        {
+            return SessionFactory.OpenStatelessSession();
+        }
         /// <summary>
         /// Returns an ISession which has some binary columns removed so that some queries
         /// run faster.
