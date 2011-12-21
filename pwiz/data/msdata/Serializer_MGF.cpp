@@ -4,7 +4,7 @@
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 //
-// Copyright 2008 Vanderbilt University - Nashville, TN 37232
+// Copyright 2011 Vanderbilt University - Nashville, TN 37232
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -92,6 +92,8 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
             os << "PEPMASS=" << si.cvParam(MS_selected_ion_m_z).value;
             
+            bool negativePolarity = s->hasCVParam(MS_negative_scan) ? true : false;
+
             CVParam intensityParam = si.cvParam(MS_peak_intensity);
             if (!intensityParam.empty())
                 os << " " << intensityParam.value;
@@ -103,12 +105,13 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
                 BOOST_FOREACH(const CVParam& param, si.cvParams)
                 {
                     if (param.cvid == MS_possible_charge_state)
-                        charges.push_back(param.value);
+                        charges.push_back(param.value + (negativePolarity ? '-' : '+'));
                 }
                 if (!charges.empty())
                     os << "CHARGE=" << bal::join(charges, " and ") << '\n';
-            } else
-                os << "CHARGE=" << chargeParam.value << '\n';
+            }
+            else
+                os << "CHARGE=" << chargeParam.value << (negativePolarity ? '-' : '+') << '\n';
 
             const BinaryDataArray& mzArray = *s->getMZArray();
             const BinaryDataArray& intensityArray = *s->getIntensityArray();

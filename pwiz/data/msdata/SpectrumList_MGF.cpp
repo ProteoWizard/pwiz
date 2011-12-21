@@ -6,7 +6,7 @@
 //
 // Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
-// Copyright 2008 Vanderbilt University - Nashville, TN 37232
+// Copyright 2011 Vanderbilt University - Nashville, TN 37232
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -145,6 +145,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         string lineStr;
 	    bool inBeginIons = false;
         bool inPeakList = false;
+        bool negativePolarity = false;
         double lowMZ = std::numeric_limits<double>::max();
         double highMZ = 0;
         double tic = 0;
@@ -177,7 +178,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
             else
             {
                 try
-                   {
+                {
                     if (!inPeakList)
                     {
                         size_t delim = lineStr.find('=');
@@ -208,9 +209,18 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
 				            }
                             else if (name == "CHARGE")
 				            {
-                                bal::trim_if(value, bal::is_any_of("+- \t\r"));
-					            int charge = lexical_cast<int>(value);
-                                selectedIon.set(MS_charge_state, charge);
+                                bal::trim_if(value, bal::is_any_of(" \t\r"));
+                                negativePolarity = bal::ends_with(value, "-");
+                                vector<string> charges;
+                                bal::split(charges, value, bal::is_any_of(" "));
+                                if (charges.size() > 1)
+                                {
+                                    BOOST_FOREACH(const string& charge, charges)
+                                        if (charge != "and")
+                                            selectedIon.cvParams.push_back(CVParam(MS_possible_charge_state, lexical_cast<int>(charge)));
+                                }
+                                else
+                                    selectedIon.set(MS_charge_state, lexical_cast<int>(value));
 				            }
                             else if (name == "RTINSECONDS")
 				            {
@@ -270,6 +280,7 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         if (!getBinaryData)
             spectrum.binaryDataArrayPtrs.clear();
 
+        spectrum.set(negativePolarity ? MS_negative_scan : MS_positive_scan);
         spectrum.set(MS_lowest_observed_m_z, lowMZ);
         spectrum.set(MS_highest_observed_m_z, highMZ);
         spectrum.set(MS_total_ion_current, tic);
