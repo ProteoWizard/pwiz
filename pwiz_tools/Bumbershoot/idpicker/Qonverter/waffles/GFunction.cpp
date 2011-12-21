@@ -787,6 +787,7 @@ void GFunctionParser::parseFunctionList(vector<string>& tokens)
 	flushStubs();
 }
 
+#ifndef NO_TEST_CODE
 // static
 void GFunctionParser::test()
 {
@@ -816,3 +817,4 @@ void GFunctionParser::test()
 			ThrowError("Wrong answer");
 	}
 }
+#endif
