@@ -162,7 +162,7 @@ namespace pwiz.Common.Collections
 				throw(new ArgumentException("RedBlackNode key must not be null"));
 			
 			// traverse tree - find where node belongs
-			int result			=	0;
+			int result;
 			// create new node
             Node parent = null;
 			Node temp	=	root;				// grab the rbTree node of the tree
