@@ -57,6 +57,12 @@ namespace IDPicker.Controls
         {
             InitializeComponent();
 
+            databaseColumn.OpenFileDialog = new OpenFileDialog
+            {
+                CheckFileExists = true,
+                Filter = "FASTA files|*.fasta|All files|*.*"
+            };
+
             if (qonverterSettingsManagerNeeded == null)
                 throw new NullReferenceException();
 
@@ -136,7 +142,7 @@ namespace IDPicker.Controls
         string uneditedValue = null;
         void dataGridView_CellBeginEdit (object sender, DataGridViewCellCancelEventArgs e)
         {
-            uneditedValue = dataGridView[e.ColumnIndex, e.RowIndex].Value.ToString();
+            uneditedValue = (dataGridView[e.ColumnIndex, e.RowIndex].Value ?? String.Empty).ToString();
         }
 
         void dataGridView_CellEndEdit (object sender, DataGridViewCellEventArgs e)
@@ -168,7 +174,10 @@ namespace IDPicker.Controls
                      analysis.importSettings.maxQValue < 0 || analysis.importSettings.maxQValue > 1)
                 row.Cells[maxFDRColumn.Index].Value = analysis.importSettings.maxQValue = Convert.ToDouble(uneditedValue);
             else if (e.ColumnIndex == qonverterSettingsColumn.Index)
+            {
                 analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[qonverterSettingsColumn.Index].Value].ToQonverterSettings();
+                analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
+            }
         }
 
         void dataGridView_CurrentCellDirtyStateChanged (object sender, EventArgs e)

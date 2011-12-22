@@ -200,147 +200,96 @@ namespace CustomFileCell
 {
     public class DataGridViewFileBrowseColumn : DataGridViewColumn
     {
-        public DataGridViewFileBrowseColumn()
-            : base(new FileBrowseCell())
-        {
-        }
+        public DataGridViewFileBrowseColumn() : base(new FileBrowseCell()) { }
 
+        /// <summary>Gets or sets the FileBrowseCell template used by the column.</summary>
         public override DataGridViewCell CellTemplate
         {
-            get
-            {
-                return base.CellTemplate;
-            }
+            get { return base.CellTemplate; }
             set
             {
                 // Ensure that the cell used for the template is a FileBrowseCell.
-                if (value != null &&
-                    !value.GetType().IsAssignableFrom(typeof(FileBrowseCell)))
-                {
+                if (value != null && !value.GetType().IsAssignableFrom(typeof (FileBrowseCell)))
                     throw new InvalidCastException("Must be a FileBrowseCell");
-                }
                 base.CellTemplate = value;
             }
+        }
+
+        /// <summary>Gets or sets the OpenFileDialog used by the column.</summary>
+        public OpenFileDialog OpenFileDialog
+        {
+            get { return (CellTemplate as FileBrowseCell).OpenFileDialog; }
+            set { (CellTemplate as FileBrowseCell).OpenFileDialog = value; }
         }
     }
 
     public class FileBrowseCell : DataGridViewTextBoxCell
     {
-
-        public FileBrowseCell()
-            : base()
-        {
-            // Use the short date format.
-            this.Style.Format = "d";
-        }
-
-        public override void InitializeEditingControl(int rowIndex, object
-            initialFormattedValue, DataGridViewCellStyle dataGridViewCellStyle)
+        public override void InitializeEditingControl(int rowIndex, object initialFormattedValue,
+                                                      DataGridViewCellStyle dataGridViewCellStyle)
         {
             // Set the value of the editing control to the current cell value.
-            base.InitializeEditingControl(rowIndex, initialFormattedValue,
-                dataGridViewCellStyle);
-            FileBrowseEditingControl ctl =
-                DataGridView.EditingControl as FileBrowseEditingControl;
+            base.InitializeEditingControl(rowIndex, initialFormattedValue, dataGridViewCellStyle);
+            var ctl = DataGridView.EditingControl as FileBrowseEditingControl;
             // Use the default row value when Value property is null.
-            if (this.Value == null)
-            {
-                ctl.Value = (string)this.DefaultNewRowValue;
-            }
-            else
-            {
-                ctl.Value = (string)this.Value;
-            }
+            ctl.Value = (string) (this.Value ?? this.DefaultNewRowValue);
+            ctl.OpenFileDialog = (OwningColumn.CellTemplate as FileBrowseCell).OpenFileDialog;
         }
 
-        public override Type EditType
-        {
-            get
-            {
-                // Return the type of the editing control that FileBrowseCell uses.
-                return typeof(FileBrowseEditingControl);
-            }
-        }
+        /// <summary>Gets the type of the editing control that FileBrowseCell uses.</summary>
+        public override Type EditType { get { return typeof(FileBrowseEditingControl); } }
 
-        public override Type ValueType
-        {
-            get
-            {
-                // Return the type of the value that FileBrowseCell contains.
+        /// <summary>Gets the type of the value that FileBrowseCell uses.</summary>
+        public override Type ValueType { get { return typeof(string); } }
 
-                return typeof(string);
-            }
-        }
+        /// <summary>Gets the default new row value that FileBrowseCell uses.</summary>
+        public override object DefaultNewRowValue { get { return String.Empty; } }
 
-        public override object DefaultNewRowValue
-        {
-            get
-            {
-                // Use the current date and time as the default value.
-                return string.Empty;
-            }
-        }
+        public OpenFileDialog OpenFileDialog { get; set; }
     }
 
     class FileBrowseEditingControl : FileBrowseControl, IDataGridViewEditingControl
     {
         private bool valueChanged = false;
 
-        // Implements the IDataGridViewEditingControl.EditingControlFormattedValue 
-        // property.
+        // Implements the IDataGridViewEditingControl.EditingControlFormattedValue property.
         public object EditingControlFormattedValue
         {
-            get
-            {
-                return this.Value;
-            }
+            get { return this.Value; }
             set
             {
-                if (value is String)
+                if (value is string)
                 {
                     try
                     {
-                        // This will throw an exception of the string is 
-                        // null, empty, or not in the format of a date.
-                        this.Value = (String)value;
+                        // This will throw an exception of the string is null or empty.
+                        this.Value = (string) value;
                     }
                     catch
                     {
-                        // In the case of an exception, just use the 
-                        // default value so we're not left with a null
-                        // value.
-                        this.Value = string.Empty;
+                        // In the case of an exception, use the default value.
+                        this.Value = String.Empty;
                     }
                 }
             }
         }
 
-        // Implements the 
-        // IDataGridViewEditingControl.GetEditingControlFormattedValue method.
-        public object GetEditingControlFormattedValue(
-            DataGridViewDataErrorContexts context)
-        {
-            return EditingControlFormattedValue;
-        }
+        // Implements the IDataGridViewEditingControl.GetEditingControlFormattedValue method.
+        public object GetEditingControlFormattedValue (DataGridViewDataErrorContexts context) { return EditingControlFormattedValue; }
 
-        // Implements the 
-        // IDataGridViewEditingControl.ApplyCellStyleToEditingControl method.
-        public void ApplyCellStyleToEditingControl(
-            DataGridViewCellStyle dataGridViewCellStyle)
+        // Implements the IDataGridViewEditingControl.ApplyCellStyleToEditingControl method.
+        public void ApplyCellStyleToEditingControl(DataGridViewCellStyle dataGridViewCellStyle)
         {
             this.Font = dataGridViewCellStyle.Font;
             this.ForeColor = dataGridViewCellStyle.ForeColor;
             this.BackColor = dataGridViewCellStyle.BackColor;
         }
 
-        // Implements the IDataGridViewEditingControl.EditingControlRowIndex 
-        // property.
+        // Implements the IDataGridViewEditingControl.EditingControlRowIndex property.
         public int EditingControlRowIndex { get; set; }
 
-        // Implements the IDataGridViewEditingControl.EditingControlWantsInputKey 
-        // method.
-        public bool EditingControlWantsInputKey(
-            Keys key, bool dataGridViewWantsInputKey)
+        // Implements the IDataGridViewEditingControl.EditingControlWantsInputKey method.
+        public bool EditingControlWantsInputKey(Keys key, bool dataGridViewWantsInputKey)
         {
             // Let the FileBrowseControl handle the keys listed.
             switch (key & Keys.KeyCode)
@@ -359,52 +308,31 @@ namespace CustomFileCell
             }
         }
 
-        // Implements the IDataGridViewEditingControl.PrepareEditingControlForEdit 
-        // method.
+        // Implements the IDataGridViewEditingControl.PrepareEditingControlForEdit method.
         public void PrepareEditingControlForEdit(bool selectAll)
         {
             // No preparation needs to be done.
         }
 
-        // Implements the IDataGridViewEditingControl
-        // .RepositionEditingControlOnValueChange property.
-        public bool RepositionEditingControlOnValueChange
-        {
-            get { return false; }
-        }
+        // Implements the IDataGridViewEditingControl.RepositionEditingControlOnValueChange property.
+        public bool RepositionEditingControlOnValueChange { get { return false; } }
 
-        // Implements the IDataGridViewEditingControl
-        // .EditingControlDataGridView property.
+        // Implements the IDataGridViewEditingControl.EditingControlDataGridView property.
         public DataGridView EditingControlDataGridView { get; set; }
 
-        // Implements the IDataGridViewEditingControl
-        // .EditingControlValueChanged property.
+        // Implements the IDataGridViewEditingControl.EditingControlValueChanged property.
         public bool EditingControlValueChanged
         {
-            get
-            {
-                return valueChanged;
-            }
-            set
-            {
-                valueChanged = value;
-            }
+            get { return valueChanged; }
+            set { valueChanged = value; }
         }
 
-        // Implements the IDataGridViewEditingControl
-        // .EditingPanelCursor property.
-        public Cursor EditingPanelCursor
-        {
-            get
-            {
-                return base.Cursor;
-            }
-        }
+        // Implements the IDataGridViewEditingControl.EditingPanelCursor property.
+        public Cursor EditingPanelCursor { get { return base.Cursor; } }
 
         protected override void OnValueChanged(EventArgs eventargs)
         {
-            // Notify the DataGridView that the contents of the cell
-            // have changed.
+            // Notify the DataGridView that the contents of the cell have changed.
             valueChanged = true;
             this.EditingControlDataGridView.NotifyCurrentCellDirty(true);
         }
@@ -414,6 +342,7 @@ namespace CustomFileCell
     {
         private TextBox _locationBox;
         private Button _browseButton;
+        public OpenFileDialog OpenFileDialog { get; set; }
 
         public FileBrowseControl()
         {
@@ -432,7 +361,7 @@ namespace CustomFileCell
             {
                 Dock = DockStyle.Fill,
                 TabStop = false,
-                Image = FolderIconAccession.GetOpenFolderIcon().ToBitmap()
+                Text = "..."
             };
             _browseButton.Click += _browseButton_Click;
 
@@ -462,9 +391,9 @@ namespace CustomFileCell
 
         void _browseButton_Click(object sender, EventArgs e)
         {
-            var ofd = new OpenFileDialog();
+            var ofd = this.OpenFileDialog ?? new OpenFileDialog();
             var initialDirectory = System.IO.Path.GetDirectoryName(_locationBox.Text);
-            if (!string.IsNullOrEmpty(initialDirectory))
+            if (!String.IsNullOrEmpty(initialDirectory))
                 ofd.InitialDirectory = initialDirectory;
             if (ofd.ShowDialog() == DialogResult.OK)
                 _locationBox.Text = ofd.FileName;
@@ -491,64 +420,6 @@ namespace CustomFileCell
         {
             get { return _locationBox.Text; }
             set { _locationBox.Text = value; }
-        }
-    }
-
-    public static class FolderIconAccession
-    {
-        [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        private struct SHFILEINFO
-        {
-            public IntPtr hIcon;
-            public int iIcon;
-            public uint dwAttributes;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-            public string szDisplayName;
-            [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 80)]
-            public string szTypeName;
-        };
-
-        [DllImport("shell32.dll", CharSet = CharSet.Auto)]
-        private static extern IntPtr SHGetFileInfo(string pszPath, uint dwFileAttributes, out SHFILEINFO psfi, uint cbFileInfo, uint uFlags);
-
-        [DllImport("user32.dll", SetLastError = true)]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool DestroyIcon(IntPtr hIcon);
-
-        private const uint SHGFI_ICON = 0x000000100;
-        private const uint SHGFI_USEFILEATTRIBUTES = 0x000000010;
-        private const uint SHGFI_OPENICON = 0x000000002;
-        private const uint SHGFI_SMALLICON = 0x000000001;
-        private const uint FILE_ATTRIBUTE_DIRECTORY = 0x00000010;
-
-        public static Icon GetOpenFolderIcon()
-        {
-            // Need to add size check, although errors generated at present!    
-            uint flags = SHGFI_ICON | SHGFI_USEFILEATTRIBUTES;
-
-            flags += SHGFI_OPENICON;
-            flags += SHGFI_SMALLICON;
-            // Get the folder icon    
-            var shfi = new SHFILEINFO();
-
-            var res = SHGetFileInfo(@"C:\Windows",
-                FILE_ATTRIBUTE_DIRECTORY,
-                out shfi,
-                (uint)Marshal.SizeOf(shfi),
-                flags);
-
-            if (res == IntPtr.Zero)
-                throw Marshal.GetExceptionForHR(Marshal.GetHRForLastWin32Error());
-
-            // Load the icon from an HICON handle  
-            Icon.FromHandle(shfi.hIcon);
-
-            // Now clone the icon, so that it can be successfully stored in an ImageList
-            var icon = (Icon)Icon.FromHandle(shfi.hIcon).Clone();
-
-            DestroyIcon(shfi.hIcon);        // Cleanup    
-
-            return icon;
         }
     }
 }
