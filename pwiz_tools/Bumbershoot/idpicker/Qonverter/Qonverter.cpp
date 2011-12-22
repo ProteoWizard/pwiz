@@ -775,4 +775,16 @@ void discriminate(PSMList& psmRows)
 }
 
 
+void calculateWeightedTotalScore(const PSMIteratorRange& psmRows, const vector<double>& scoreWeights)
+{
+    size_t i, end;
+    BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
+    {
+        psm.totalScore = 0;
+        for (i=0, end=psm.scores.size(); i < end; ++i)
+            psm.totalScore += psm.scores[i] * scoreWeights[i];
+    }
+}
+
+
 END_IDPICKER_NAMESPACE

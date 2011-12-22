@@ -1092,8 +1092,8 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
     try
     {
         sqlite::command insertProtein(idpDb, "INSERT INTO Protein (Id, Accession, IsDecoy, Cluster, ProteinGroup, Length) VALUES (?,?,0,0,0,?)");
-        //sqlite::command insertProteinData(idpDb, "INSERT INTO ProteinData (Id, Sequence) VALUES (?,?)");
-        //sqlite::command insertProteinMetadata(idpDb, "INSERT INTO ProteinMetadata (Id, Description) VALUES (?,?)");
+        sqlite::command insertProteinData(idpDb, "INSERT INTO ProteinData (Id, Sequence) VALUES (?,?)");
+        sqlite::command insertProteinMetadata(idpDb, "INSERT INTO ProteinMetadata (Id, Description) VALUES (?,?)");
         sqlite::command insertPeptideInstance(idpDb, "INSERT INTO PeptideInstance (Id, Protein, Peptide, Offset, Length, NTerminusIsSpecific, CTerminusIsSpecific, MissedCleavages) VALUES (?,?,?,?,?,?,?,?)");
 
         sqlite3_int64 nextProteinId = sqlite::query(idpDb, "SELECT MAX(Id) FROM Protein").begin()->get<int>(0);
@@ -1230,13 +1230,13 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                         insertProtein.execute();
                         insertProtein.reset();
 
-                        /*insertProteinData.binder() << nextProteinId << protein->sequence();
+                        insertProteinData.binder() << nextProteinId << protein->sequence();
                         insertProteinData.execute();
                         insertProteinData.reset();
 
                         insertProteinMetadata.binder() << nextProteinId << protein->description;
                         insertProteinMetadata.execute();
-                        insertProteinMetadata.reset();*/
+                        insertProteinMetadata.reset();
                     }
 
                     sqlite3_int64 curProteinId = itr->second;
@@ -1307,56 +1307,12 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
             cerr << "\n[executePeptideFinderTask] thread " << boost::this_thread::get_id() << " failed to apply Q value filter: " << e.what() << endl;
         }
 
+        ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*waiting");
+        boost::mutex::scoped_lock ioLock(ioMutex);
+
+        ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*saving database");
         string idpDbFilepath = Parser::outputFilepath(parserTask.inputFilepath).string();
-        {
-            sqlite::query filteredProteinIdQuery(idpDb, "SELECT Id FROM Protein");
-
-            set<sqlite3_int64> filteredProteinIds;
-            BOOST_FOREACH(sqlite::query::rows row, filteredProteinIdQuery)
-                filteredProteinIds.insert(row.get<sqlite3_int64>(0));
-
-            vector<size_t> filteredProteinIndexes;
-            BOOST_FOREACH_FIELD((size_t index)(sqlite3_int64 id), proteinIdByIndex)
-                if (filteredProteinIds.count(id) > 0)
-                    filteredProteinIndexes.push_back(index);
-
-            {
-                ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*waiting");
-                boost::mutex::scoped_lock ioLock(ioMutex);
-
-                ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*saving database");
-                idpDb.save_to_file(idpDbFilepath.c_str());
-            }
-
-            sqlite::database idpDbFile(idpDbFilepath, sqlite::no_mutex);
-            
-            // optimize for bulk insertion
-            idpDbFile.execute("PRAGMA journal_mode=OFF;"
-                              "PRAGMA synchronous=OFF;"
-                              "PRAGMA automatic_indexing=OFF;"
-                              "PRAGMA cache_size=50000;"
-                              "PRAGMA temp_store=MEMORY"
-                             );
-
-            sqlite::command insertProteinData(idpDbFile, "INSERT INTO ProteinData (Id, Sequence) VALUES (?,?)");
-            sqlite::command insertProteinMetadata(idpDbFile, "INSERT INTO ProteinMetadata (Id, Description) VALUES (?,?)");
-
-            int proteinsWritten = 0;
-            BOOST_FOREACH(size_t index, filteredProteinIndexes)
-            {
-                ITERATION_UPDATE(ilr, proteinsWritten++, filteredProteinIndexes.size(), parserTask.inputFilepath + "*writing protein data");
-                proteome::ProteinPtr protein = proteinReaderTask.proteomeDataPtr->proteinListPtr->protein(index);
-                const sqlite3_int64& id = proteinIdByIndex[index];
-
-                insertProteinData.binder() << id << protein->sequence();
-                insertProteinData.execute();
-                insertProteinData.reset();
-
-                insertProteinMetadata.binder() << id << protein->description;
-                insertProteinMetadata.execute();
-                insertProteinMetadata.reset();
-            }
-        }
+        idpDb.save_to_file(idpDbFilepath.c_str());
 
         ITERATION_UPDATE(ilr, 0, 1, parserTask.inputFilepath + "*done");
         status = IterationListener::Status_Ok;

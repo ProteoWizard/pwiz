@@ -41,32 +41,6 @@ using namespace IDPICKER_NAMESPACE;
 // sorting functors
 namespace {
 
-struct TotalScoreBetterThanIgnoringRank
-{
-    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
-    {
-        if (lhs.totalScore != rhs.totalScore)
-            return lhs.totalScore > rhs.totalScore;
-
-        // arbitrary tie-breaker when scores are equal
-        return lhs.spectrum < rhs.spectrum;
-    }
-};
-
-struct TotalScoreBetterThanWithRank
-{
-    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
-    {
-        if (lhs.originalRank != rhs.originalRank)
-            return lhs.originalRank < rhs.originalRank;
-        else if (lhs.totalScore != rhs.totalScore)
-            return lhs.totalScore > rhs.totalScore;
-
-        // arbitrary tie-breaker when scores are equal
-        return lhs.spectrum < rhs.spectrum;
-    }
-};
-
 struct FDRScoreLessThan
 {
     bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
@@ -109,9 +83,9 @@ void calculateBestSingleScoreDiscrimination(const Qonverter::Settings& settings,
                 psm.totalScore = -psm.scores[i];
 
         if (settings.rerankMatches)
-            sort(psmRows.begin(), psmRows.end(), TotalScoreBetterThanIgnoringRank());
+            boost::sort(psmRows, TotalScoreBetterThanIgnoringRank());
         else
-            sort(psmRows.begin(), psmRows.end(), TotalScoreBetterThanWithRank());
+            boost::sort(psmRows, TotalScoreBetterThanWithRank());
 
         // calculate Q values with the current sort
         discriminate(psmRows);
@@ -167,9 +141,9 @@ void calculateBestSingleScoreDiscrimination(const Qonverter::Settings& settings,
             psm.totalScore = -psm.scores[bestIndex];
 
     if (settings.rerankMatches)
-        sort(psmRows.begin(), psmRows.end(), TotalScoreBetterThanIgnoringRank());
+        boost::sort(psmRows, TotalScoreBetterThanIgnoringRank());
     else
-        sort(psmRows.begin(), psmRows.end(), TotalScoreBetterThanWithRank());
+        boost::sort(psmRows, TotalScoreBetterThanWithRank());
 
     discriminate(psmRows);
 }
@@ -178,9 +152,9 @@ void calculateProbabilityDiscrimination(const Qonverter::Settings& settings, con
 {
     // sort PSMs by the SVM probability
     if (settings.rerankMatches)
-        sort(psmRows.begin(), psmRows.end(), TotalScoreBetterThanIgnoringRank());
+        boost::sort(psmRows, TotalScoreBetterThanIgnoringRank());
     else
-        sort(psmRows.begin(), psmRows.end(), TotalScoreBetterThanWithRank());
+        boost::sort(psmRows, TotalScoreBetterThanWithRank());
 
     discriminate(psmRows);
 }
@@ -691,7 +665,7 @@ void SVMQonverter::Qonvert(const string& sourceName,
         }
 
         // remove sparsely populated partitions marked above
-        sort(fullRange.begin(), fullRange.end(), TotalScoreBetterThanIgnoringRank());
+        boost::sort(fullRange, TotalScoreBetterThanIgnoringRank());
         for (PSMIterator itr = fullRange.begin(); itr != fullRange.end(); ++itr)
             if (itr->totalScore == 0)
             {
@@ -762,7 +736,7 @@ void SVMQonverter::Qonvert(const string& sourceName,
 
         BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
         {
-            sort(range.begin(), range.end(), FDRScoreLessThan());
+            boost::sort(range, FDRScoreLessThan());
 
             for (int i=0; i < 1; ++i)
             {

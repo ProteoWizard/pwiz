@@ -24,46 +24,9 @@
 
 #include "pwiz/utility/misc/Std.hpp"
 #include "StaticWeightQonverter.hpp"
-#include "Qonverter.hpp"
 
 
 using namespace IDPICKER_NAMESPACE;
-
-
-namespace {
-
-struct StaticWeightedTotalScoreBetterThan
-{
-    StaticWeightedTotalScoreBetterThan(const vector<double>& scoreWeights) : scoreWeights(scoreWeights) {}
-
-    double getTotalScore(const PeptideSpectrumMatch& psm) const
-    {
-        BOOST_ASSERT(psm.scores.size() == scoreWeights.size());
-
-        if (psm.totalScore == 0)
-            for (size_t i=0, end=psm.scores.size(); i < end; ++i)
-                const_cast<PeptideSpectrumMatch&>(psm).totalScore += psm.scores[i] * scoreWeights[i];
-        return psm.totalScore;
-    }
-
-    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
-    {
-        double lhsTotalScore = getTotalScore(lhs);
-        double rhsTotalScore = getTotalScore(rhs);
-
-        if (lhsTotalScore != rhsTotalScore)
-            return lhsTotalScore > rhsTotalScore;
-
-        // arbitrary tie-breaker when scores are equal
-        //return lhs.massError < rhs.massError;
-        return lhs.spectrum < rhs.spectrum;
-    }
-
-    private:
-    vector<double> scoreWeights;
-};
-
-} // namespace
 
 
 BEGIN_IDPICKER_NAMESPACE
@@ -88,13 +51,8 @@ void StaticWeightQonverter::Qonvert(PSMList& psmRows,
                 itr->newRank = itr->originalRank;
                 itr->fdrScore = itr->qValue = 2;
             }
-            else
-                itr->totalScore = 0;
         }
     }
-    else
-        for (PSMIterator itr = psmRows.begin(); itr != psmRows.end(); ++itr)
-            itr->totalScore = 0;
 
     if (fullRange.empty())
         fullRange = PSMIteratorRange(psmRows.begin(), psmRows.end());
@@ -104,10 +62,12 @@ void StaticWeightQonverter::Qonvert(PSMList& psmRows,
 
     BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
     {
-        StaticWeightedTotalScoreBetterThan totalScoreBetterThan(scoreWeights);
+        calculateWeightedTotalScore(range, scoreWeights);
 
-        // calculate and sort the PSMs by total score
-        sort(range.begin(), range.end(), totalScoreBetterThan);
+        if (settings.rerankMatches)
+            boost::sort(range, TotalScoreBetterThanIgnoringRank());
+        else
+            boost::sort(range, TotalScoreBetterThanWithRank());
 
         discriminate(range);
     }

@@ -34,6 +34,7 @@
 #include <boost/enum.hpp>
 #include <boost/range.hpp>
 #include <boost/ref.hpp>
+#include <boost/range/algorithm/sort.hpp>
 #include <boost/ptr_container/ptr_vector.hpp>
 #include "../Lib/SQLite/sqlite3.h"
 
@@ -308,6 +309,36 @@ struct ChargeAndSpecificityLessThan
 };
 
 
+/// functor to sort PSMs descending by total score
+struct TotalScoreBetterThanIgnoringRank
+{
+    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
+    {
+        if (lhs.totalScore != rhs.totalScore)
+            return lhs.totalScore > rhs.totalScore;
+
+        // arbitrary tie-breaker when scores are equal
+        return lhs.spectrum < rhs.spectrum;
+    }
+};
+
+
+/// functor to sort PSMs first by ascending rank then descending by total score
+struct TotalScoreBetterThanWithRank
+{
+    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
+    {
+        if (lhs.originalRank != rhs.originalRank)
+            return lhs.originalRank < rhs.originalRank;
+        else if (lhs.totalScore != rhs.totalScore)
+            return lhs.totalScore > rhs.totalScore;
+
+        // arbitrary tie-breaker when scores are equal
+        return lhs.spectrum < rhs.spectrum;
+    }
+};
+
+
 typedef boost::ptr_vector<PeptideSpectrumMatch> PSMList;
 typedef PSMList::iterator PSMIterator;
 typedef boost::iterator_range<PSMIterator> PSMIteratorRange;
@@ -349,6 +380,9 @@ void discriminate(const PSMIteratorRange& psmRows);
 /// calculate new ranks, Q-values and FDRScores based on the presorted PSMList (by descending discriminant score)
 void discriminate(PSMList& psmRows);
 
+
+/// calculate PSM totalScore as the sum of (scores[i] * scoreWeights[i])
+void calculateWeightedTotalScore(const PSMIteratorRange& psmRows, const vector<double>& scoreWeights);
 
 END_IDPICKER_NAMESPACE
 

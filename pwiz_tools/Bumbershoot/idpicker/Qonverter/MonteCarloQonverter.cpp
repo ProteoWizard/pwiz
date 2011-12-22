@@ -25,47 +25,14 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "MonteCarloQonverter.hpp"
 #include "waffles/GVec.h"
-#include "Qonverter.hpp"
+
 
 using namespace GClasses;
 using namespace IDPICKER_NAMESPACE;
 
+
 BEGIN_IDPICKER_NAMESPACE
 
-namespace {
-
-struct StaticWeightedTotalScoreBetterThan
-{
-    StaticWeightedTotalScoreBetterThan(const vector<double>& scoreWeights) : scoreWeights(scoreWeights) {}
-
-    double getTotalScore(const PeptideSpectrumMatch& psm) const
-    {
-        BOOST_ASSERT(psm.scores.size() == scoreWeights.size());
-
-        if (psm.totalScore == 0)
-            for (size_t i=0, end=psm.scores.size(); i < end; ++i)
-                const_cast<PeptideSpectrumMatch&>(psm).totalScore += psm.scores[i] * scoreWeights[i];
-        return psm.totalScore;
-    }
-
-    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
-    {
-        double lhsTotalScore = getTotalScore(lhs);
-        double rhsTotalScore = getTotalScore(rhs);
-
-        if (lhsTotalScore != rhsTotalScore)
-            return lhsTotalScore > rhsTotalScore;
-
-        // arbitrary tie-breaker when scores are equal
-        //return lhs.massError < rhs.massError;
-        return lhs.spectrum < rhs.spectrum;
-    }
-
-    private:
-    vector<double> scoreWeights;
-};
-
-} // namespace
 
 void MonteCarloQonverter::Qonvert(PSMList& psmRows,
                                   const Qonverter::Settings& settings,
@@ -92,7 +59,7 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
                 currentPermut[scoreIndex] *= scoreWeights[scoreIndex];
             }
 
-            // only take permuations that add to utmost 1.0
+            // only take permuations that add up to 1.0
             if(totalWeight == 1.0)
                 validScorePermutations.push_back(currentPermut);
         }
@@ -132,14 +99,16 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
         const vector<double>* bestSolution;
         BOOST_FOREACH(const vector<double>& scorePermutation, validScorePermutations)
         {
-            // reset the scores and q-values with the best solution.
-            BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-                psm.totalScore = 0;
+            // reset the scores and q-values with the current permutation
+            calculateWeightedTotalScore(range, scorePermutation);
 
-            // recompute the scores and determine the number of ids passing the FDR threshold
-            StaticWeightedTotalScoreBetterThan scoreComparator(scorePermutation);
-            sort(range.begin(), range.end(), scoreComparator);
+            if (settings.rerankMatches)
+                boost::sort(range, TotalScoreBetterThanIgnoringRank());
+            else
+                boost::sort(range, TotalScoreBetterThanWithRank());
+
             discriminate(range);
+
             int passedPSMs = 0;
             BOOST_FOREACH(const PeptideSpectrumMatch& psm, range)
                 if(psm.fdrScore <= settings.maxFDR)
@@ -155,26 +124,18 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
             }
         }
 
-        /*size_t specificity = range.front().bestSpecificity;
-        size_t charge = range.front().chargeState;
-        stringstream ss;
-        ss << "Z:" << charge << " NET:" << specificity;
-        ss << " Num Ids passed: " << passingPSMs << " ScoreWeights: (";
-        for(size_t i = 0; i < bestSolution.size(); ++i)
-            ss << (*bestSolution)[i] << ",";
-        ss << ")" << endl;
-        cout << ss.str();*/
-
         // early exit if the last solution was the best solution
         if (bestSolution == &validScorePermutations.back())
             continue;
 
-        // reset the scores and q-values with the best solution.
-        BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            psm.totalScore = 0;
-        StaticWeightedTotalScoreBetterThan scoreComparator(*bestSolution);
-        // calculate and sort the PSMs by total score
-        sort(range.begin(), range.end(), scoreComparator);
+        // calculate the scores and q-values with the best permutation
+        calculateWeightedTotalScore(range, *bestSolution);
+
+        if (settings.rerankMatches)
+            boost::sort(range, TotalScoreBetterThanIgnoringRank());
+        else
+            boost::sort(range, TotalScoreBetterThanWithRank());
+
         discriminate(range);
     }
 }
