@@ -221,6 +221,16 @@ namespace IDPicker
         {
             return list == null ? null : new ReadOnlyCollection<TSource>(list);
         }
+
+        public static void CastAct<TCast>(this System.Collections.IEnumerable source, Action<TCast> actor) where TCast : class
+        {
+            foreach (object item in source)
+            {
+                TCast castItem = item as TCast;
+                if (castItem != null)
+                    actor.Invoke(castItem);
+            }
+        }
     }
 
     public static class RandomShuffleExtensionMethods

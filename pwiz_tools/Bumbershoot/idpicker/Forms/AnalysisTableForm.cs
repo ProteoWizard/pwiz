@@ -34,101 +34,102 @@ using System.Threading;
 using DigitalRune.Windows.Docking;
 using NHibernate.Linq;
 using IDPicker.DataModel;
-using BrightIdeasSoftware;
+using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
     public partial class AnalysisTableForm : DockableForm
     {
-        public TreeListView TreeListView { get { return treeListView; } }
+        #region Wrapper classes for encapsulating query results
 
-        public class AnalysisRow
+        public class Row
+        {
+            public DataFilter DataFilter { get; protected set; }
+            public IList<Row> ChildRows { get; set; }
+        }
+
+        public class AnalysisRow : Row
         {
             public DataModel.Analysis Analysis { get; private set; }
 
-            #region Constructor
-            public AnalysisRow (object queryRow)
+            public static IList<Row> GetRows (NHibernate.ISession session, DataFilter dataFilter)
             {
+                lock (session)
+                return session.CreateQuery("SELECT psm.Analysis " +
+                                           dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                           "GROUP BY psm.Analysis.id")
+                              .List<Analysis>()
+                              .Select(o => new AnalysisRow(o, dataFilter) as Row)
+                              .ToList();
+            }
+
+            #region Constructor
+            public AnalysisRow (object queryRow, DataFilter dataFilter)
+            {
+                DataFilter = dataFilter;
                 Analysis = (DataModel.Analysis) queryRow;
             }
             #endregion
         }
 
-        public class AnalysisParameterRow
+        public class AnalysisParameterRow : Row
         {
             public DataModel.AnalysisParameter AnalysisParameter { get; private set; }
 
-            #region Constructor
-            public AnalysisParameterRow (object queryRow)
+            public static IList<Row> GetRows (NHibernate.ISession session, DataFilter dataFilter)
             {
+                lock (session)
+                return dataFilter.Analysis.First().Parameters
+                                 .Select(o => new AnalysisParameterRow(o, dataFilter) as Row)
+                                 .ToList();
+            }
+
+            #region Constructor
+            public AnalysisParameterRow (object queryRow, DataFilter dataFilter)
+            {
+                DataFilter = dataFilter;
                 AnalysisParameter = (DataModel.AnalysisParameter) queryRow;
             }
             #endregion
         }
 
+        #endregion
+
         public AnalysisTableForm ()
         {
             InitializeComponent();
 
-            FormClosing += delegate(object sender, FormClosingEventArgs e)
-            {
-                e.Cancel = true;
-                DockState = DockState.DockBottomAutoHide;
-            };
-
             Text = TabText = "Analysis View";
 
-            #region Column aspect getters
-            nameColumn.AspectGetter += delegate(object x)
-            {
-                if (x is AnalysisRow)
-                    return (x as AnalysisRow).Analysis.Id;
-                else if (x is AnalysisParameterRow)
-                    return (x as AnalysisParameterRow).AnalysisParameter.Name;
-                return null;
-            };
+            SetDefaults();
 
-            softwareColumn.AspectGetter += delegate(object x)
-            {
-                if (x is AnalysisRow)
-                    return (x as AnalysisRow).Analysis.Software.Name + " " + (x as AnalysisRow).Analysis.Software.Version;
-                return null;
-            };
+            sortColumns = new List<SortColumn>();
 
-            parameterCountColumn.AspectGetter += delegate(object x)
-            {
-                if (x is AnalysisRow)
-                    return (x as AnalysisRow).Analysis.Parameters.Count;
-                return null;
-            };
-
-            parameterValue.AspectGetter += delegate(object x)
-            {
-                if (x is AnalysisParameterRow)
-                    return (x as AnalysisParameterRow).AnalysisParameter.Value;
-                return null;
-            };
-            #endregion
-
-            treeListView.CanExpandGetter += delegate(object x) { return x is AnalysisRow; };
-            treeListView.ChildrenGetter += delegate(object x)
-            {
-                return (x as AnalysisRow).Analysis.Parameters.Select(o => new AnalysisParameterRow(o));
-            };
-
-            treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
+            treeDataGridView.CellMouseClick += treeDataGridView_CellMouseClick;
+            treeDataGridView.DefaultCellStyleChanged += treeDataGridView_DefaultCellStyleChanged;
+            treeDataGridView.DataError += treeDataGridView_DataError;
+            treeDataGridView.CellValueNeeded += treeDataGridView_CellValueNeeded;
         }
 
-        void treeListView_CellClick (object sender, CellClickEventArgs e)
+        public TreeDataGridView TreeDataGridView
         {
-            if (e.ClickCount < 2 || e.Item == null || e.Item.RowObject == null)
+            get { return treeDataGridView; }
+        }
+
+        public IEnumerable<DataGridViewColumn> Columns
+        {
+            get { return treeDataGridView.Columns.Cast<DataGridViewColumn>(); }
+        }
+
+        void treeDataGridView_CellMouseClick (object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.Clicks < 2)
                 return;
 
             var newDataFilter = new DataFilter
             {
-                MaximumQValue = dataFilter.MaximumQValue,
                 FilterSource = this,
-                Analysis = new List<Analysis>() {(e.Item.RowObject as AnalysisRow).Analysis}
+                Analysis = new List<Analysis> {}
             };
 
             //if (PeptideViewFilter != null)
@@ -138,17 +139,74 @@ namespace IDPicker.Forms
         //public event PeptideViewFilterEventHandler PeptideViewFilter;
 
         private NHibernate.ISession session;
-        private DataFilter dataFilter, basicDataFilter;
 
-        private IEnumerable<AnalysisRow> rowsByAnalysis, basicRowsByAnalysis;
+        private DataFilter viewFilter; // what the user has filtered on
+        private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
+        private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
+
+        private Color filteredOutColor, filteredPartialColor;
+
+        private class SortColumn
+        {
+            public int Index { get; set; }
+            public SortOrder Order { get; set; }
+
+            public void ToggleOrder ()
+            {
+                if (Order == SortOrder.Ascending)
+                    Order = SortOrder.Descending;
+                else
+                    Order = SortOrder.Ascending;
+            }
+        }
+
+        private Dictionary<DataGridViewColumn, ColumnProperty> _columnSettings;
+        private List<SortColumn> sortColumns;
+        private Map<int, SortOrder> initialColumnSortOrders;
+
+        [Flags]
+        private enum RowFilterState
+        {
+            Unknown = 0,
+            Out = 1,
+            In = 2,
+            Partial = 3
+        };
+
+        private IList<Row> rows, basicRows;
 
         // TODO: support multiple selected objects
         string[] oldSelectionPath = new string[] { };
 
-        public void SetData (NHibernate.ISessionFactory sessionFactory, DataFilter dataFilter)
+        private void SetDefaults ()
         {
-            this.session = sessionFactory.OpenSession();
-            this.dataFilter = new DataFilter(dataFilter);
+            _columnSettings = new Dictionary<DataGridViewColumn, ColumnProperty>()
+            {
+                { nameColumn, new ColumnProperty() {Type = typeof(string)}},
+                { softwareColumn, new ColumnProperty() {Type = typeof(string)}},
+                { parameterValue, new ColumnProperty() {Type = typeof(string)}},
+            };
+
+            foreach (var kvp in _columnSettings)
+            {
+                kvp.Value.Name = kvp.Key.Name;
+                kvp.Value.Index = kvp.Key.Index;
+                kvp.Value.DisplayIndex = kvp.Key.DisplayIndex;
+            }
+
+            initialColumnSortOrders = new Map<int, SortOrder>()
+            {
+                {nameColumn.Index, SortOrder.Ascending},
+                {softwareColumn.Index, SortOrder.Ascending},
+                {parameterValue.Index, SortOrder.Ascending},
+            };
+        }
+
+        public void SetData (NHibernate.ISession session, DataFilter dataFilter)
+        {
+            this.session = session;
+            viewFilter = dataFilter;
+            this.dataFilter = new DataFilter(dataFilter) { Analysis = null };
 
             /*if (treeListView.SelectedObject is PeptideRow)
                 oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
@@ -174,9 +232,7 @@ namespace IDPicker.Forms
         {
             Text = TabText = "Analysis View";
 
-            treeListView.DiscardAllState();
-            treeListView.Roots = null;
-            treeListView.Refresh();
+            treeDataGridView.RootRowCount = 0;
             Refresh();
         }
 
@@ -189,27 +245,22 @@ namespace IDPicker.Forms
 
         void setData (object sender, DoWorkEventArgs e)
         {
-            lock (session)
             try
             {
-                var analysisQuery = session.CreateQuery("SELECT psm.Analysis " +
-                                                        dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                        "GROUP BY psm.Analysis.id");
-
-                analysisQuery.SetReadOnly(true);
-
-                if (dataFilter.IsBasicFilter || dataFilter.Analysis != null)
+                if (dataFilter.IsBasicFilter)
                 {
                     if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
                     {
                         basicDataFilter = new DataFilter(this.dataFilter);
-                        basicRowsByAnalysis = analysisQuery.List<object>().Select(o => new AnalysisRow(o));
+                        basicRows = AnalysisRow.GetRows(session, dataFilter);
                     }
 
-                    rowsByAnalysis = basicRowsByAnalysis;
+                    rows = basicRows;
                 }
                 else
-                    rowsByAnalysis = analysisQuery.List<object>().Select(o => new AnalysisRow(o)).ToList();
+                    rows = AnalysisRow.GetRows(session, dataFilter);
+
+                applySort();
             }
             catch (Exception ex)
             {
@@ -222,117 +273,370 @@ namespace IDPicker.Forms
             if (e.Result is Exception)
                 Program.HandleException(e.Result as Exception);
 
-            // show total counts in the form title
-            Text = TabText = String.Format("Analysis View: {0} distinct analyses", rowsByAnalysis.Count());
+            treeDataGridView.RootRowCount = rows.Count();
 
-            treeListView.Roots = rowsByAnalysis;
+            Text = TabText = "Analysis View";
 
             // try to (re)set selected item
-            expandSelectionPath(oldSelectionPath);
+            //expandSelectionPath(oldSelectionPath);
 
-            treeListView.Refresh();
+            treeDataGridView.Refresh();
         }
 
-        private void expandSelectionPath (IEnumerable<string> selectionPath)
+        private RowFilterState getRowFilterState (Row parentRow) { return RowFilterState.In; }
+        private IList<Row> getChildren (Row parentRow)
         {
-            OLVListItem selectedItem = null;
-            foreach (string branch in selectionPath)
+            if (parentRow.ChildRows != null)
             {
-                int index = 0;
-                if (selectedItem != null)
+            }
+            else if (parentRow is AnalysisRow)
+            {
+                var row = parentRow as AnalysisRow;
+                var childFilter = new DataFilter(parentRow.DataFilter) {Analysis = new List<Analysis> {row.Analysis}};
+                parentRow.ChildRows = AnalysisParameterRow.GetRows(session, childFilter);
+            }
+
+            if (!sortColumns.IsNullOrEmpty())
+            {
+                var sortColumn = sortColumns.Last();
+                parentRow.ChildRows = parentRow.ChildRows.OrderBy(o => getCellValue(sortColumn.Index, o), sortColumn.Order).ToList();
+            }
+
+            return parentRow.ChildRows;
+        }
+
+        public Row GetRowFromRowHierarchy (IList<int> rowIndexHierarchy)
+        {
+            Row row = rows[rowIndexHierarchy.First()];
+            for (int i = 1; i < rowIndexHierarchy.Count; ++i)
+            {
+                getChildren(row); // get child rows if necessary
+                row = row.ChildRows[rowIndexHierarchy[i]];
+            }
+            return row;
+        }
+
+        protected override void OnLoad (EventArgs e)
+        {
+            treeDataGridView_DefaultCellStyleChanged(this, EventArgs.Empty);
+
+            base.OnLoad(e);
+
+            treeDataGridView.ClearSelection();
+        }
+
+        private void treeDataGridView_DefaultCellStyleChanged (object sender, EventArgs e)
+        {
+            var style = treeDataGridView.DefaultCellStyle;
+            filteredOutColor = style.ForeColor.Interpolate(style.BackColor, 0.66f);
+            filteredPartialColor = style.ForeColor.Interpolate(style.BackColor, 0.33f);
+        }
+
+        protected override void OnFormClosing (FormClosingEventArgs e)
+        {
+            DockState = DockState.DockBottomAutoHide;
+            e.Cancel = true;
+            base.OnFormClosing(e);
+        }
+
+        private void resetData ()
+        {
+            if (dataFilter != null && dataFilter.IsBasicFilter)
+                basicDataFilter = null; // force refresh of basic rows
+
+            if (session != null && session.IsOpen)
+                SetData(session, viewFilter);
+        }
+
+        private void treeDataGridView_CellValueNeeded (object sender, TreeDataGridViewCellValueEventArgs e)
+        {
+            if (e.RowIndexHierarchy.First() >= rows.Count)
+            {
+                e.Value = null;
+                return;
+            }
+
+            Row baseRow = rows[e.RowIndexHierarchy.First()];
+            for (int i = 1; i < e.RowIndexHierarchy.Count; ++i)
+            {
+                getChildren(baseRow); // populate ChildRows if necessary
+                baseRow = baseRow.ChildRows[e.RowIndexHierarchy[i]];
+            }
+
+            if (baseRow is AnalysisRow)
+            {
+                var row = baseRow as AnalysisRow;
+                e.ChildRowCount = row.Analysis.Parameters.Count;
+            }
+
+            e.Value = getCellValue(e.ColumnIndex, baseRow);
+        }
+
+        protected virtual object getCellValue (int columnIndex, Row baseRow)
+        {
+            if (baseRow is AnalysisRow)
+            {
+                var row = baseRow as AnalysisRow;
+                if (columnIndex == nameColumn.Index) return row.Analysis.Name;
+                else if (columnIndex == softwareColumn.Index) return row.Analysis.Software.Name + " " + row.Analysis.Software.Version;
+            }
+            else if (baseRow is AnalysisParameterRow)
+            {
+                var row = baseRow as AnalysisParameterRow;
+                if (columnIndex == nameColumn.Index) return row.AnalysisParameter.Name;
+                else if (columnIndex == parameterValue.Index) return row.AnalysisParameter.Value;
+            }
+            return null;
+        }
+
+        public void Sort (int columnIndex)
+        {
+            SortColumn sortColumn;
+
+            // if already sorting by the clicked column, reverse sort order
+            if (sortColumns.Any(o => o.Index == columnIndex))
+            {
+                int index = sortColumns.FindIndex(o => o.Index == columnIndex);
+                sortColumn = sortColumns[index];
+                sortColumn.ToggleOrder();
+            }
+            else
+            {
+                //if (e.Button == MouseButtons.Left)
                 {
-                    treeListView.Expand(selectedItem.RowObject);
-                    index = selectedItem.Index;
+                    foreach (var c in sortColumns)
+                        treeDataGridView.Columns[c.Index].HeaderCell.SortGlyphDirection = SortOrder.None;
+                    sortColumns.Clear();
+                }
+                //else if (e.Button != MouseButtons.Middle)
+                //    return;
+                if (initialColumnSortOrders.Contains(columnIndex))
+                    sortColumn = new SortColumn() { Index = columnIndex, Order = initialColumnSortOrders[columnIndex] };
+                else
+                    sortColumn = new SortColumn() { Index = columnIndex, Order = SortOrder.Descending };
+            }
+
+            var column = treeDataGridView.Columns[columnIndex];
+            column.HeaderCell.SortGlyphDirection = sortColumn.Order;
+            sortColumns.Add(sortColumn);
+            applySort();
+            treeDataGridView.CollapseAll();
+            treeDataGridView.Refresh();
+        }
+
+        protected void applySort ()
+        {
+            if (rows == null || !sortColumns.Any())
+                return;
+
+            var sortColumn = sortColumns.Last();
+            rows = rows.OrderBy(o => getCellValue(sortColumn.Index, o), sortColumn.Order).ToList();
+        }
+
+        protected virtual void setColumnVisibility ()
+        {
+            // restore display index
+            foreach (var kvp in _columnSettings)
+            {
+                kvp.Key.DisplayIndex = kvp.Value.DisplayIndex;
+
+                // restore column size
+
+                // update number formats
+                if (kvp.Value.Type == typeof(float) && kvp.Value.Precision.HasValue)
+                    kvp.Key.DefaultCellStyle.Format = "f" + kvp.Value.Precision.Value.ToString();
+
+                // update link columns
+                var linkColumn = kvp.Key as DataGridViewLinkColumn;
+                if (linkColumn != null)
+                    linkColumn.ActiveLinkColor = linkColumn.LinkColor = treeDataGridView.ForeColor;
+            }
+        }
+
+        public void LoadLayout (FormProperty formProperty)
+        {
+            if (formProperty == null)
+                return;
+
+            var columnlist = _columnSettings.Keys.ToList();
+
+            foreach (var column in columnlist)
+            {
+                var columnProperty = formProperty.ColumnProperties.SingleOrDefault(x => x.Name == column.Name);
+
+                //if rowSettings is null it is likely an unsaved pivotColumn, keep defualt
+                if (columnProperty == null)
+                    continue;
+
+                _columnSettings[column] = columnProperty;
+            }
+
+            treeDataGridView.ForeColor = treeDataGridView.DefaultCellStyle.ForeColor = formProperty.ForeColor ?? SystemColors.WindowText;
+            treeDataGridView.BackgroundColor = treeDataGridView.GridColor = treeDataGridView.DefaultCellStyle.BackColor = formProperty.BackColor ?? SystemColors.Window;
+
+            var sortColumnSettings = formProperty.SortColumns;
+            if (formProperty.SortColumns != null && formProperty.SortColumns.Count > 0)
+            {
+                var newSortColumns = new List<SortColumn>();
+                foreach (var sortColumn in formProperty.SortColumns)
+                    newSortColumns.Add(new SortColumn()
+                    {
+                        Index = sortColumn.Index,
+                        Order = sortColumn.Order
+                    });
+                Sort(newSortColumns.First().Index);
+                sortColumns = newSortColumns;
+            }
+
+            setColumnVisibility();
+            applySort();
+
+            treeDataGridView.Refresh();
+        }
+
+        public FormProperty GetCurrentProperties (bool pivotToo)
+        {
+            var result = new FormProperty()
+            {
+                Name = this.Name,
+                BackColor = treeDataGridView.DefaultCellStyle.BackColor,
+                ForeColor = treeDataGridView.DefaultCellStyle.ForeColor,
+                SortColumns = sortColumns.Select(o => new DataModel.SortColumn() { Index = o.Index, Order = o.Order }).ToList(),
+                ColumnProperties = _columnSettings.Values.ToList()
+            };
+
+            foreach (var kvp in _columnSettings)
+            {
+                kvp.Value.Index = kvp.Key.Index;
+                kvp.Value.DisplayIndex = kvp.Key.Index;
+            }
+
+            return result;
+        }
+
+        public virtual List<List<string>> GetFormTable (bool selected)
+        {
+            var exportTable = new List<List<string>>();
+            IList<int> exportedRows, exportedColumns;
+
+            if (selected && treeDataGridView.SelectedCells.Count > 0 && !treeDataGridView.AreAllCellsSelected(false))
+            {
+                var selectedRows = new Set<int>();
+                var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
+
+                foreach (DataGridViewCell cell in treeDataGridView.SelectedCells)
+                {
+                    selectedRows.Add(cell.RowIndex);
+                    selectedColumns[cell.OwningColumn.DisplayIndex] = cell.ColumnIndex;
                 }
 
-                index = treeListView.FindMatchingRow(branch, index, SearchDirectionHint.Down);
-                if (index < 0)
-                    break;
-                selectedItem = treeListView.Items[index] as OLVListItem;
+                exportedRows = selectedRows.ToList();
+                exportedColumns = selectedColumns.Values;
+            }
+            else
+            {
+                exportedRows = treeDataGridView.Rows.Cast<DataGridViewRow>().Select(o => o.Index).ToList();
+                exportedColumns = treeDataGridView.GetVisibleColumnsInDisplayOrder().Select(o => o.Index).ToList();
             }
 
-            if (selectedItem != null)
+            // add column headers
+            exportTable.Add(new List<string>());
+            foreach (var columnIndex in exportedColumns)
+                exportTable.Last().Add(treeDataGridView.Columns[columnIndex].HeaderText);
+
+            foreach (int rowIndex in exportedRows)
             {
-                treeListView.SelectedItem = selectedItem;
-                selectedItem.EnsureVisible();
+                /* TODO: how to handle non-root rows?
+                var row = rows[rowIndex];
+
+                // skip non-root rows or filtered rows
+                if (rowIndexHierarchy.Count > 1 || getRowFilterState(row) == RowFilterState.Out)
+                    continue;*/
+
+                var rowIndexHierarchy = treeDataGridView.GetRowHierarchyForRowIndex(rowIndex);
+
+                var rowText = new List<string>();
+                foreach (var columnIndex in exportedColumns)
+                {
+                    object value = treeDataGridView[columnIndex, rowIndex].Value ?? String.Empty;
+                    rowText.Add(value.ToString());
+
+                    if (columnIndex == 0 && rowIndexHierarchy.Count > 1)
+                    {
+                        int indent = (rowIndexHierarchy.Count - 1) * 2;
+                        rowText[rowText.Count - 1] = new string(' ', indent) + rowText[rowText.Count - 1];
+                    }
+                }
+
+                exportTable.Add(rowText);
             }
+
+            return exportTable;
         }
 
-        private void clipboardToolStripMenuItem_Click (object sender, EventArgs e)
+        protected void clipboardToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = getFormTable();
+            var table = GetFormTable(sender == copyToClipboardSelectedToolStripMenuItem);
 
             TableExporter.CopyToClipboard(table);
         }
 
-        private void fileToolStripMenuItem_Click (object sender, EventArgs e)
+        protected void fileToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = getFormTable();
+            var table = GetFormTable(sender == exportSelectedCellsToFileToolStripMenuItem);
 
             TableExporter.ExportToFile(table);
         }
 
-        /*private void exportButton_Click (object sender, EventArgs e)
+        protected void exportButton_Click (object sender, EventArgs e)
         {
-            if (treeListView.SelectedIndices.Count > 1)
-            {
-                exportMenu.Items[0].Text = "Copy Selected to Clipboard";
-                exportMenu.Items[1].Text = "Export Selected to File";
-                exportMenu.Items[2].Text = "Show Selected in Excel";
-            }
-            else
-            {
-                exportMenu.Items[0].Text = "Copy to Clipboard";
-                exportMenu.Items[1].Text = "Export to File";
-                exportMenu.Items[2].Text = "Show in Excel";
-            }
-
             exportMenu.Show(Cursor.Position);
-        }*/
-
-        internal List<List<string>> getFormTable ()
-        {
-
-            var table = new List<List<string>>
-                            {
-                                new List<string>
-                                    {
-                                        "Analysis Name/Property",
-                                        "Software",
-                                        "Parameters",
-                                        "Value"
-                                    }
-                            };
-            IList<Analysis> analysisQuery;
-            lock (session)
-                analysisQuery = session.CreateQuery("SELECT psm.Analysis " +
-                                                    dataFilter.GetFilteredQueryString(
-                                                        DataFilter.FromPeptideSpectrumMatch) +
-                                                    "GROUP BY psm.Analysis.id").List<Analysis>();
-            foreach (var analysis in analysisQuery)
-            {
-                table.Add(new List<string>
-                              {
-                                  analysis.Id.ToString(),
-                                  analysis.Name,
-                                  analysis.Parameters.Count.ToString(),
-                                  string.Empty
-                              });
-                foreach (var parameter in analysis.Parameters)
-                {
-                    table.Add(new List<string>
-                                  {
-                                      "     " + parameter.Name,
-                                      string.Empty, string.Empty,
-                                      parameter.Value
-                                  });
-                }
-            }
-            return table;
-
         }
 
-        public void ClearSession()
+        protected void showInExcelToolStripMenuItem_Click (object sender, EventArgs e)
+        {
+            var table = GetFormTable(sender == showInExcelSelectToolStripMenuItem);
+
+            var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
+
+            TableExporter.ShowInExcel(exportWrapper, false);
+        }
+
+        protected void displayOptionsButton_Click (object sender, EventArgs e)
+        {
+            using (var ccf = new ColumnControlForm())
+            {
+                ccf.ColumnProperties = _columnSettings.ToDictionary(o => o.Key.HeaderText, o => o.Value);
+
+                if (treeDataGridView.DefaultCellStyle.ForeColor.ToArgb() != SystemColors.WindowText.ToArgb())
+                    ccf.DefaultForeColor = treeDataGridView.DefaultCellStyle.ForeColor;
+                if (treeDataGridView.DefaultCellStyle.BackColor.ToArgb() != SystemColors.Window.ToArgb())
+                    ccf.DefaultBackColor = treeDataGridView.DefaultCellStyle.BackColor;
+
+                if (ccf.ShowDialog() != DialogResult.OK)
+                    return;
+
+                // update column properties
+                foreach (var kvp in ccf.ColumnProperties)
+                    _columnSettings[Columns.Single(o => o.HeaderText == kvp.Key)] = kvp.Value;
+
+                setColumnVisibility();
+
+                // update default cell style
+                treeDataGridView.ForeColor = treeDataGridView.DefaultCellStyle.ForeColor = ccf.DefaultForeColor ?? SystemColors.WindowText;
+                treeDataGridView.BackgroundColor = treeDataGridView.DefaultCellStyle.BackColor = ccf.DefaultBackColor ?? SystemColors.Window;
+
+                treeDataGridView.Refresh();
+            }
+        }
+
+        protected void treeDataGridView_DataError (object sender, DataGridViewDataErrorEventArgs e)
+        {
+            Program.HandleException(e.Exception);
+            e.ThrowException = false;
+        }
+
+        public void ClearSession ()
         {
             ClearData();
             if (session != null && session.IsOpen)

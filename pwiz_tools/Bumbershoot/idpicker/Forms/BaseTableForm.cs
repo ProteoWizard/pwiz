@@ -372,7 +372,7 @@ namespace IDPicker.Forms
             }
 
             treeDataGridView.ForeColor = treeDataGridView.DefaultCellStyle.ForeColor = formProperty.ForeColor ?? SystemColors.WindowText;
-            treeDataGridView.BackgroundColor = treeDataGridView.DefaultCellStyle.BackColor = formProperty.BackColor ?? SystemColors.Window;
+            treeDataGridView.BackgroundColor = treeDataGridView.GridColor = treeDataGridView.DefaultCellStyle.BackColor = formProperty.BackColor ?? SystemColors.Window;
 
             var sortColumnSettings = formProperty.SortColumns;
             if (formProperty.SortColumns != null && formProperty.SortColumns.Count > 0)

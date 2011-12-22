@@ -43,19 +43,19 @@ namespace IDPicker
 
         public event SequenceCoverageFilterEventHandler SequenceCoverageFilter;
 
-        public SequenceCoverageForm (NHibernate.ISession session, DataModel.Protein pro)
+        public SequenceCoverageForm (NHibernate.ISession session, DataModel.Protein protein, DataFilter viewFilter)
         {
             StartPosition = FormStartPosition.CenterParent;
             ShowIcon = false;
             WindowState = FormWindowState.Maximized;
-            Text = pro.Accession;
+            Text = protein.Accession;
 
             ResizeRedraw = true;
             DoubleBuffered = true;
 
             BackColor = SystemColors.Window;
 
-            control = new SequenceCoverageControl(session, pro)
+            control = new SequenceCoverageControl(session, protein, viewFilter)
             {
                 Dock = DockStyle.Fill,
                 BackColor = this.BackColor
@@ -64,6 +64,27 @@ namespace IDPicker
             control.SequenceCoverageFilter += (s, e) => OnSequenceCoverageFilter(e);
 
             Controls.Add(control);
+        }
+
+        public void SetData (NHibernate.ISession session, DataFilter viewFilter)
+        {
+            control.SetData(session, control.Protein, viewFilter);
+        }
+
+        public void SetData (NHibernate.ISession session, DataModel.Protein protein, DataFilter viewFilter)
+        {
+            Text = protein.Accession;
+            control.SetData(session, protein, viewFilter);
+        }
+
+        public void ClearData ()
+        {
+            control.ClearData();
+        }
+
+        public void ClearSession ()
+        {
+            control.ClearSession();
         }
 
         private void InitializeComponent()
@@ -178,58 +199,15 @@ namespace IDPicker
 
         int lineSpacing;
 
-        DataModel.Protein protein;
-        public Map<int, PeptideModification> Modifications { get; set; }
-        public DataModel.Protein Protein
-        {
-            get { return protein; }
-            set
-            {
-                protein = value;
-
-                var query = session.CreateQuery("SELECT pi.Offset+pm.Offset, pm " +
-                                                "FROM PeptideInstance pi " +
-                                                "JOIN pi.Peptide pep " +
-                                                "JOIN pep.Matches psm " +
-                                                "JOIN psm.Modifications pm " +
-                                                "JOIN FETCH pm.Modification mod " +
-                                                "WHERE pi.Protein=" + protein.Id.ToString());
-
-                IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
-
-                Modifications = new Map<int, PeptideModification>();
-                foreach (var queryRow in queryRows)
-                    Modifications[Convert.ToInt32(queryRow[0])] = queryRow[1] as PeptideModification;
-
-                Controls.Clear();
-
-                var rect = ClientRectangle;
-                rect.Offset(1, 1);
-                rect.Height -= 2;
-                rect.Width -= 2;
-                surface = new SequenceCoverageSurface(this)
-                {
-                    Bounds = rect,
-
-                    // the SequenceCoverageSurface is anchored everywhere but the bottom: when its height becomes
-                    // larger than the form's height, the form automatically adds a scroll bar to allow the user
-                    // to pan the surface
-                    Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
-
-                    // the surface's height must be at least the form's height
-                    MinimumSize = new Size(0, ClientSize.Height)
-                };
-
-                Controls.Add(surface);
-                Refresh();
-            }
-        }
+        public DataModel.Protein Protein { get; private set; }
+        public ImmutableMap<int, PeptideModification> Modifications { get; private set; }
 
         int scrollY;
         SequenceCoverageSurface surface;
         NHibernate.ISession session;
+        DataFilter viewFilter;
 
-        public SequenceCoverageControl (NHibernate.ISession session, DataModel.Protein protein)
+        public SequenceCoverageControl (NHibernate.ISession session, DataModel.Protein protein, DataFilter viewFilter)
         {
             ResizeRedraw = true;
             DoubleBuffered = true;
@@ -250,10 +228,79 @@ namespace IDPicker
             SequenceFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
             HoverFont = new Font(SequenceFont, FontStyle.Bold | FontStyle.Underline);
 
-            this.session = session;
-            Protein = protein;
+            SetData(session, protein, viewFilter);
 
             surface.SequenceCoverageFilter += (s, e) => OnSequenceCoverageFilter(e);
+        }
+
+        public void SetData(NHibernate.ISession session, DataModel.Protein protein, DataFilter viewFilter)
+        {
+            this.session = session;
+            this.viewFilter = viewFilter;
+
+            if (protein == Protein)
+            {
+                surface.viewFilter = viewFilter;
+                Refresh();
+                return;
+            }
+
+            var query = session.CreateQuery("SELECT pi.Offset+pm.Offset, pm " +
+                                            "FROM PeptideInstance pi " +
+                                            "JOIN pi.Peptide pep " +
+                                            "JOIN pep.Matches psm " +
+                                            "JOIN psm.Modifications pm " +
+                                            "JOIN FETCH pm.Modification mod " +
+                                            "WHERE pi.Protein=" + protein.Id.ToString());
+
+            IList<object[]> queryRows;
+            lock (session) queryRows = query.List<object[]>();
+
+            var modifications = new Map<int, PeptideModification>();
+            foreach (var queryRow in queryRows)
+                modifications[Convert.ToInt32(queryRow[0])] = queryRow[1] as PeptideModification;
+
+            Protein = protein;
+            Modifications = new ImmutableMap<int, PeptideModification>(modifications);
+
+            Controls.Clear();
+
+            var rect = ClientRectangle;
+            rect.Offset(1, 1);
+            rect.Height -= 2;
+            rect.Width -= 2;
+            surface = new SequenceCoverageSurface(this)
+                          {
+                              viewFilter = viewFilter,
+
+                              Bounds = rect,
+
+                              // the SequenceCoverageSurface is anchored everywhere but the bottom: when its height becomes
+                              // larger than the form's height, the form automatically adds a scroll bar to allow the user
+                              // to pan the surface
+                              Anchor = AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Top,
+
+                              // the surface's height must be at least the form's height
+                              MinimumSize = new Size(0, ClientSize.Height)
+                          };
+
+            Controls.Add(surface);
+            Refresh();
+        }
+
+        public void ClearData ()
+        {
+            Controls.Clear();
+        }
+
+        public void ClearSession ()
+        {
+            ClearData();
+            if (session != null && session.IsOpen)
+            {
+                session.Dispose();
+                session = null;
+            }
         }
 
         protected override void OnMouseWheel (MouseEventArgs e)
@@ -300,6 +347,7 @@ namespace IDPicker
     class SequenceCoverageSurface : UserControl
     {
         SequenceCoverageControl owner;
+        public DataFilter viewFilter { get; set; }
         string header;
         //List<int> totalCoverageMask = null;
         //List<List<int>> groupCoverageMasks = null;
@@ -312,6 +360,7 @@ namespace IDPicker
         public SequenceCoverageSurface (SequenceCoverageControl owner)
         {
             this.owner = owner;
+
             header = String.Format("{0}\r\n{1} residues, {2} kDa (MW), {3}% coverage",
                                    owner.Protein.Description,
                                    owner.Protein.Length,
@@ -417,6 +466,7 @@ namespace IDPicker
             int lineNumberUnderMouse = getLineNumberAtPoint(mouseLocation);
             bool onSequenceLine = lineNumberUnderMouse % owner.LineSpacing == 0;
             int residueUnderMouse = onSequenceLine ? getResidueOffsetAtPoint(mouseLocation) : 0;
+            bool isProteinInFilter = viewFilter.Protein != null && viewFilter.Protein.Contains(owner.Protein);
 
             Brush coveredBrush = new SolidBrush(owner.CoveredSequenceColor);
             Brush uncoveredBrush = new SolidBrush(owner.UncoveredSequenceColor);
@@ -425,7 +475,8 @@ namespace IDPicker
             foreach (var pair in residueIndexToLocation)
                 if (owner.Protein.CoverageMask[pair.Key] > 0)
                 {
-                    if (onSequenceLine && pair.Key == residueUnderMouse)
+                    if (onSequenceLine && pair.Key == residueUnderMouse ||
+                        isProteinInFilter && viewFilter.AminoAcidOffset.Contains(pair.Key))
                         e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.HoverFont, hoverBrush, pair.Value);
                     else if (owner.Modifications.Contains(pair.Key))
                         e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, modifiedBrush, pair.Value);
@@ -483,8 +534,10 @@ namespace IDPicker
 
         int getResidueOffsetAtPoint (Point pt)
         {
-            int lineNumber = (int) Math.Floor((float) getLineNumberAtPoint(pt) / owner.LineSpacing);
+            if (pt.X < sequenceLocation.X) return -1;
             float charOnLine = (pt.X - sequenceLocation.X) / residueBounds.Width;
+            // FIXME: if (charOnLine > residuesPerLine) return -1;
+            int lineNumber = (int) Math.Floor((float) getLineNumberAtPoint(pt) / owner.LineSpacing);
             return residuesPerLine * lineNumber + (int) Math.Floor(charOnLine - Math.Floor(charOnLine / owner.ResidueGroupSize));
         }
 

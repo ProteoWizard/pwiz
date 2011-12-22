@@ -433,7 +433,7 @@ namespace IDPicker
         void proteinTableForm_ProteinViewVisualize (object sender, ProteinViewVisualizeEventArgs e)
         {
             var formSession = session.SessionFactory.OpenSession();
-            var form = new SequenceCoverageForm(formSession, e.Protein);
+            var form = new SequenceCoverageForm(formSession, e.Protein, viewFilter);
             form.Show(modificationTableForm.Pane, null);
             form.SequenceCoverageFilter += sequenceCoverageForm_SequenceCoverageFilter;
             form.FormClosed += (s, e2) => formSession.Dispose();
@@ -581,6 +581,7 @@ namespace IDPicker
             if (analysisTableForm != null) analysisTableForm.ClearData(true);
             fragmentationStatisticsForm.ClearData(true);
             peakStatisticsForm.ClearData(true);
+            dockPanel.Contents.CastAct<SequenceCoverageForm>(o => o.ClearData());
         }
 
         void setData ()
@@ -589,9 +590,10 @@ namespace IDPicker
             peptideTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             spectrumTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             modificationTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
-            analysisTableForm.SetData(session.SessionFactory, viewFilter);
+            analysisTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             fragmentationStatisticsForm.SetData(session, viewFilter);
             peakStatisticsForm.SetData(session, viewFilter);
+            dockPanel.Contents.CastAct<SequenceCoverageForm>(o => o.SetData(session, viewFilter));
         }
 
         void clearSession()
@@ -603,20 +605,16 @@ namespace IDPicker
             analysisTableForm.ClearSession();
             fragmentationStatisticsForm.ClearSession();
             peakStatisticsForm.ClearSession();
+            dockPanel.Contents.CastAct<SequenceCoverageForm>(o => o.ClearSession());
+
             if (session != null)
             {
                 var factory = session.SessionFactory;
                 if (session.IsOpen)
-                {
-                    session.Close();
                     session.Dispose();
-                }
                 session = null;
                 if (!factory.IsClosed)
-                {
-                    factory.Close();
                     factory.Dispose();
-                }
             }
         }
 
@@ -1331,37 +1329,29 @@ namespace IDPicker
             {
                 var table = modificationTableForm.GetFormTable(selected);
                 if (table.Count > 1)
-                {
                     reportDictionary.Add("Modification Table", table);
-                }
             }
             if (proteinTableForm != null)
             {
                 var table = proteinTableForm.GetFormTable(selected);
                 if (table.Count > 1)
-                {
                     reportDictionary.Add("Protein Table", table);
-                }
             }
             if (peptideTableForm != null)
             {
                 var table = peptideTableForm.GetFormTable(selected);
                 if (table.Count > 1)
-                {
                     reportDictionary.Add("Peptide Table", table);
-                }
             }
             if (spectrumTableForm != null)
             {
                 var table = spectrumTableForm.GetFormTable(selected);
                 if (table.Count > 1)
-                {
                     reportDictionary.Add("Spectrum Table", table);
-                }
             }
             if (analysisTableForm != null)
             {
-                var table = analysisTableForm.getFormTable();
+                var table = analysisTableForm.GetFormTable(selected);
                 if (table.Count > 1)
                     reportDictionary.Add("Analysis Settings", table);
             }
@@ -1724,7 +1714,7 @@ namespace IDPicker
             }
             if (analysisTableForm != null)
             {
-                var alltables = new List<List<List<string>>> { analysisTableForm.getFormTable() };
+                var alltables = new List<List<List<string>>> { analysisTableForm.GetFormTable(false) };
                 if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
                     TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-analyses.html"),
                                                       reportName + "- Analyses",
