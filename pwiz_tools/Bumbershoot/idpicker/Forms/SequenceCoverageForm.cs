@@ -475,8 +475,10 @@ namespace IDPicker
             foreach (var pair in residueIndexToLocation)
                 if (owner.Protein.CoverageMask[pair.Key] > 0)
                 {
-                    if (onSequenceLine && pair.Key == residueUnderMouse ||
-                        isProteinInFilter && viewFilter.AminoAcidOffset.Contains(pair.Key))
+                    bool currentResidueIsUnderMouse = onSequenceLine && pair.Key == residueUnderMouse;
+                    bool currentResidueIsInFilter = isProteinInFilter && viewFilter.AminoAcidOffset != null &&
+                                                    viewFilter.AminoAcidOffset.Contains(pair.Key);
+                    if (currentResidueIsUnderMouse || currentResidueIsInFilter)
                         e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.HoverFont, hoverBrush, pair.Value);
                     else if (owner.Modifications.Contains(pair.Key))
                         e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, modifiedBrush, pair.Value);
