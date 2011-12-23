@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
-    namespace="pwiz.Topograph.Data" assembly="pwiz.Topograph.Lib">
+    namespace="pwiz.Topograph.Data" assembly="TopographLib">
   <class name="DbChromatogram">
     <id name="Id">
       <column name="Id" not-null="true"/>

@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "topograph", "turnover\topograph.csproj", "{6FC4F916-0246-4A89-A8D5-D359D624933B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TopographApp", "TopographApp\TopographApp.csproj", "{6FC4F916-0246-4A89-A8D5-D359D624933B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "turnover_lib", "turnover_lib\turnover_lib.csproj", "{6ED3F65E-B0A0-48F0-8966-F3E4D146F07F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TopographLib", "TopographLib\TopographLib.csproj", "{6ED3F65E-B0A0-48F0-8966-F3E4D146F07F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7EA73219-CF0D-4CE6-9816-A8194D9F19BF}"
 	ProjectSection(SolutionItems) = preProject
 		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
-		turnover.vsmdi = turnover.vsmdi
+		Topograph.vsmdi = Topograph.vsmdi
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TopographTestProject", "TopographTestProject\TopographTestProject.csproj", "{C52F51E6-F680-49D7-A0AF-F53E16B1B908}"
@@ -26,6 +26,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec", "..\Shared\BiblioSpec\BiblioSpec.csproj", "{32CC9B1A-9442-4B56-AF34-FB47595278A1}"
 EndProject
 Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = Topograph.vsmdi
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
 		Release|Mixed Platforms = Release|Mixed Platforms
