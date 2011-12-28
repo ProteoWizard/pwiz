@@ -160,7 +160,6 @@ using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
 namespace sqlite = sqlite3pp;
-using boost::int64_t;
 
 
 BEGIN_IDPICKER_NAMESPACE
@@ -178,7 +177,7 @@ namespace {
 
 struct SpectrumSource
 {
-    int64_t id;
+    sqlite3_int64 id;
     string name;
     vector<string> spectrumNativeIds;
 
@@ -253,7 +252,7 @@ void embed(const string& idpDbFilepath,
     BOOST_FOREACH(sqlite::query::rows row, sourceQuery)
     {
         sources.push_back(SpectrumSource());
-        sources.back().id = row.get<int64_t>(0);
+        sources.back().id = row.get<sqlite3_int64>(0);
         sources.back().name = row.get<string>(1);
     }
 
@@ -265,7 +264,7 @@ void embed(const string& idpDbFilepath,
     sqlite::query spectrumQuery(idpDb, "SELECT Source, NativeID FROM Spectrum ORDER BY Source");
     BOOST_FOREACH(sqlite::query::rows row, spectrumQuery)
     {
-        int64_t sourceId = row.get<int64_t>(0);
+        sqlite3_int64 sourceId = row.get<sqlite3_int64>(0);
         if (itr->id != sourceId)
         {
             if (itr->spectrumNativeIds.empty())
