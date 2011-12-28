@@ -941,7 +941,7 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
 
         parserTask->parser->insertAnalysisMetadata();
 
-        IterationListener::Status tmpStatus;
+        IterationListener::Status tmpStatus = IterationListener::Status_Ok;
         parserTask->parser->insertSpectrumResults(tmpStatus);
         if (tmpStatus == IterationListener::Status_Cancel)
         {
