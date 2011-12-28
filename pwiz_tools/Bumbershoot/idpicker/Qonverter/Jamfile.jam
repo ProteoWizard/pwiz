@@ -42,7 +42,7 @@ lib Qonverter
 
 lib Parser
     : # sources
-        Parser.cpp
+        Parser.cpp Embedder.cpp
     : # requirements
         <library>Qonverter
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
@@ -62,3 +62,5 @@ exe idpQonvert : idpQonvert.cpp Parser ../freicore ;
 
 import testing ;
 unit-test QonverterTest : QonverterTest.cpp Qonverter ;
+unit-test EmbedderTest : EmbedderTest.cpp Parser $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata ;
+

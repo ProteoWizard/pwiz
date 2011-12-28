@@ -32,6 +32,7 @@
 #include "boost/range/algorithm/remove_if.hpp"
 
 #include "Parser.hpp"
+#include "Embedder.hpp"
 #include "idpQonvert.hpp"
 #include "../Lib/SQLite/sqlite3pp.h"
 #include <iomanip>
@@ -283,13 +284,28 @@ struct UserFeedbackIterationListener : public IterationListener
 
     virtual Status update(const UpdateMessage& updateMessage)
     {
-        if (updateMessage.message == "finding distinct analyses")
+        if (!bal::contains(updateMessage.message, "*"))
         {
-            
-            cout << "\r" << (boost::format("%1% (%2%/%3%)")
-                             % updateMessage.message
-                             % (updateMessage.iterationIndex+1)
-                             % updateMessage.iterationCount).str() << flush;
+            // when the message changes, make a new line
+            if (currentMessage.empty() || currentMessage != updateMessage.message)
+            {
+                if (!currentMessage.empty())
+                    cout << endl;
+                currentMessage = updateMessage.message;
+            }
+
+            int index = updateMessage.iterationIndex;
+            int count = updateMessage.iterationCount;
+
+            cout << "\r";
+            if (index == 0 && count == 0)
+                cout << updateMessage.message;
+            else if (count > 0)
+                cout << updateMessage.message << ": " << (index+1) << "/" << count;
+            else
+                cout << updateMessage.message << ": " << (index+1);
+            cout << flush;
+
             return Status_Ok;
         }
 
@@ -476,7 +492,19 @@ int main( int argc, char* argv[] )
             cout << "-------------------------\n"
                  << left << setw(8) << totalSpectra
                  << left << setw(9) << totalPeptides
-                 << "Total" << endl;
+                 << "Total\n" << endl;
+
+        if (g_rtConfig->EmbedSpectrumSources)
+        {
+            BOOST_FOREACH(const string& filepath, parserFilepaths)
+                idpDbFilepaths.push_back(Parser::outputFilepath(filepath).string());
+
+            for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
+            {
+                cout << "\rEmbedding subset spectra: " << (i+1) << "/" << idpDbFilepaths.size() << flush;
+                Embedder::embed(idpDbFilepaths[i], g_rtConfig->SourceSearchPath);
+            }
+        }
     }
     catch (exception& e)
     {

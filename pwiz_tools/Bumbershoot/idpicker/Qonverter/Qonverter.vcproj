@@ -191,6 +191,18 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Embedder.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Embedder.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\EmbedderTest.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\idpQonvert.cpp"
 			>
 		</File>
@@ -199,15 +211,19 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Jamfile.jam"
-			>
-		</File>
-		<File
 			RelativePath=".\CLI\Jamfile.jam"
 			>
 		</File>
 		<File
-			RelativePath=".\CLI\Parser.cpp"
+			RelativePath=".\Jamfile.jam"
+			>
+		</File>
+		<File
+			RelativePath=".\MonteCarloQonverter.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\MonteCarloQonverter.hpp"
 			>
 		</File>
 		<File
@@ -215,11 +231,15 @@
 			>
 		</File>
 		<File
-			RelativePath=".\CLI\Parser.hpp"
+			RelativePath=".\CLI\Parser.cpp"
 			>
 		</File>
 		<File
 			RelativePath=".\Parser.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CLI\Parser.hpp"
 			>
 		</File>
 		<File

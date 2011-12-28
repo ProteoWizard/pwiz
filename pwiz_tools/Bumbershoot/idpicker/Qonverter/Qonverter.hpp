@@ -26,7 +26,6 @@
 #ifndef _QONVERTER_HPP_
 #define _QONVERTER_HPP_
 
-#define NOMINMAX // wtf is this needed?
 #include <vector>
 #include <map>
 #include <utility>

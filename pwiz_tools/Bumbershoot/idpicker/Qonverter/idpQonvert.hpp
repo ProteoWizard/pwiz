@@ -37,6 +37,8 @@
     RTCONFIG_VARIABLE( bool,			OverwriteExistingFiles,		false			) \
 	RTCONFIG_VARIABLE( string,			ProteinDatabase,			""				) \
 	RTCONFIG_VARIABLE( string,			DecoyPrefix,				"rev_"			) \
+    RTCONFIG_VARIABLE( string,			SourceSearchPath,			".;.."		    ) \
+    RTCONFIG_VARIABLE( bool,			EmbedSpectrumSources,		false		    ) \
 	RTCONFIG_VARIABLE( double,			MaxFDR,						0.05			) \
 	RTCONFIG_VARIABLE( double,			MaxImportFDR,				0.25			) \
 	RTCONFIG_VARIABLE( int,				MaxResultRank,				3				) \
