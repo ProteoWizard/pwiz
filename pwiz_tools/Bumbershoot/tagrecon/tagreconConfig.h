@@ -141,7 +141,8 @@ namespace tagrecon
         vector<double>  PrecursorMassTolerance;
         vector<double>  NTerminalMassTolerance;
         vector<double>  CTerminalMassTolerance;
-
+        
+        int             maxFragmentChargeState;
         int             maxChargeStateFromSpectra;
         vector<double>  NETRewardVector;
 
@@ -332,6 +333,8 @@ namespace tagrecon
             }
 
             maxChargeStateFromSpectra = 1;
+            maxFragmentChargeState = ( MaxFragmentChargeState > 0 ? MaxFragmentChargeState+1 : NumChargeStates );
+
             PrecursorMassTolerance.push_back(PrecursorMzTolerance);
 
             if( ClassSizeMultiplier > 1 )

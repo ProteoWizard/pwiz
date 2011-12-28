@@ -243,7 +243,7 @@ namespace tagrecon
     // Assign an intensity of 50 to fragment ions. 
     // Assign an intensity of 25 to bins neighboring the fragment ions.
     // Assign an intensity of 10 to neutral losses.
-    void addXCorrFragmentIon(vector<float>& theoreticalSpectrum, double fragmentMass, int fragmentCharge)
+    void addXCorrFragmentIon(vector<float>& theoreticalSpectrum, double fragmentMass, int fragmentCharge, FragmentTypes fragmentType)
     {
         int peakDataLength = theoreticalSpectrum.size();
         int mzBin = round(fragmentMass / binWidth);
@@ -256,15 +256,21 @@ namespace tagrecon
                 theoreticalSpectrum[mzBin-1] = 25;
             if( IS_VALID_INDEX( (mzBin+1), peakDataLength ) )
                 theoreticalSpectrum[mzBin+1] = 25;
-
+            
             // Neutral loss peaks
-            int NH3LossIndex = round( (fragmentMass - (AMMONIA_MONO / fragmentCharge)) / binWidth );
-            if( IS_VALID_INDEX( NH3LossIndex, peakDataLength ) )
-                theoreticalSpectrum[NH3LossIndex] = 10;
+            if(fragmentType == FragmentType_B || fragmentType == FragmentType_Y)
+            {
+                int NH3LossIndex = round( (fragmentMass - (AMMONIA_MONO / fragmentCharge)) / binWidth );
+                if( IS_VALID_INDEX( NH3LossIndex, peakDataLength ) )
+                    theoreticalSpectrum[NH3LossIndex] = 10;
+            }
 
-            int H20LossIndex = round( (fragmentMass - (WATER_MONO / fragmentCharge)) / binWidth );
-            if ( IS_VALID_INDEX( H20LossIndex, peakDataLength ) )
-                theoreticalSpectrum[H20LossIndex] = 10;
+            if(fragmentType == FragmentType_B)
+            {
+                int H20LossIndex = round( (fragmentMass - (WATER_MONO / fragmentCharge)) / binWidth );
+                if ( IS_VALID_INDEX( H20LossIndex, peakDataLength ) )
+                    theoreticalSpectrum[H20LossIndex] = 10;
+            }
         }
     }
 
@@ -330,23 +336,23 @@ namespace tagrecon
                     if(nLength > 0)
                     {
                         if ( fragmentTypes[FragmentType_A] )
-                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.a(nLength, charge), charge);
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.a(nLength, charge), charge, FragmentType_A);
                         if ( fragmentTypes[FragmentType_B] )
-                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.b(nLength, charge), charge);
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.b(nLength, charge), charge, FragmentType_B);
                         if ( fragmentTypes[FragmentType_C] && nLength < seqLength )
-                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.c(nLength, charge), charge);
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.c(nLength, charge), charge, FragmentType_C);
                     }
 
                     if(cLength > 0)
                     {
                         if ( fragmentTypes[FragmentType_X] && cLength < seqLength )
-                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.x(cLength, charge), charge);
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.x(cLength, charge), charge, FragmentType_X);
                         if ( fragmentTypes[FragmentType_Y] )
-                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.y(cLength, charge), charge);
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.y(cLength, charge), charge, FragmentType_Y);
                         if ( fragmentTypes[FragmentType_Z] )
-                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.z(cLength, charge), charge);
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.z(cLength, charge), charge, FragmentType_Z);
                         if ( fragmentTypes[FragmentType_Z_Radical] )
-                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.zRadical(cLength, charge), charge);
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.zRadical(cLength, charge), charge, FragmentType_Z_Radical);
                     }
                 }
             }

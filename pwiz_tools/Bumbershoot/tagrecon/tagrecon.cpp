@@ -330,7 +330,8 @@ namespace tagrecon
         g_rtConfig->maxChargeStateFromSpectra = 1;
 		BOOST_FOREACH(Spectrum* s, spectra)
 		    g_rtConfig->maxChargeStateFromSpectra = max(s->id.charge, g_rtConfig->maxChargeStateFromSpectra);
-
+        
+        g_rtConfig->maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->maxChargeStateFromSpectra );
         //Set the mass tolerances according to the charge state.
         g_rtConfig->PrecursorMassTolerance.clear();
         g_rtConfig->NTerminalMassTolerance.clear();
@@ -784,10 +785,6 @@ namespace tagrecon
         double topMVHScore = 0.0;
         size_t numDynamicMods = candidate.modifications().size();
         
-        //bool debug = false;
-        //if(candidate.sequence() == "AMGIMNSFVNDIFER")
-        //    debug = true;
-		//cout << candidate.sequence() << "," << modMass << "," << locStart << "," << locEnd << endl;
         // For each amino acid between the location bounds
         for(size_t aaIndex = locStart; aaIndex <= locEnd; aaIndex++) {
             // Add the modification to the amino acid
@@ -899,15 +896,10 @@ namespace tagrecon
     {
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
-        bool debug = false;
-        //if(candidate.sequence() == "SSQELEGSCR")
-        //    debug = true;
 		// Search stats
 		boost::int64_t numComparisonsDone = 0;
 		// Candidate peptide sequence and its mass
         const string& aSequence  = candidate.sequence();
-        if(debug)
-		    cout << aSequence << "," << aSequence.length() << "," << candidate.sequence() << "," << candidate.sequence().length() << endl;
         double neutralMass = g_rtConfig->UseAvgMassOfSequences ? candidate.molecularWeight()
                                                                : candidate.monoisotopicMass();
 
@@ -1072,7 +1064,6 @@ namespace tagrecon
     {
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
-        //bool debug = false;
 		// Search stats
 		boost::int64_t numComparisonsDone = 0;
 		// Candidate peptide sequence and its mass
@@ -1281,7 +1272,6 @@ namespace tagrecon
                 } 
             }
         }
-
         // Search the untagged spectra with precursor mass filter. 
         // This is the modus operandi of all database search engines.
         if(g_rtConfig->SearchUntaggedSpectra)
@@ -1301,7 +1291,6 @@ namespace tagrecon
                 {
                     Spectrum* spectrum = spectrumHypothesisPair->second.first;
                     PrecursorMassHypothesis& p = spectrumHypothesisPair->second.second;
-
                     ++numComparisonsDone;
                     if( estimateComparisonsOnly )
                         continue;
@@ -1312,7 +1301,7 @@ namespace tagrecon
                     result.numberOfOtherMods = candidate.modifications().size();
                     result.precursorMassHypothesis = p;
                     if(fragmentIonsByChargeState[z].empty())
-                        CalculateSequenceIons( candidate, z, &fragmentIonsByChargeState[z], spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
+                        CalculateSequenceIons( candidate, z+1, &fragmentIonsByChargeState[z], spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
                     spectrum->ScoreSequenceVsSpectrum( result, fragmentIonsByChargeState[z], NTT );
                     result.massError = spectrum->mOfPrecursor - neutralMass;
                     result.proteins.insert(proteinId);

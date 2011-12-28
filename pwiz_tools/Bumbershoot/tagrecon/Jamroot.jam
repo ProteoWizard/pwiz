@@ -293,10 +293,12 @@ rule gcc-install-dll-path ( properties * )
 
 exe $(application-name:L)
   : # sources
-    [ glob *.cpp ]
+    [ glob *.cpp freicore/UniModXMLParser*.cpp ]
   : # requirements
       <conditional>@with-mpi
       <library>freicore
+	  <library>/ext/expat//expat/
+	  <define>XML_LARGE_SIZE
   ;
 
 install install
