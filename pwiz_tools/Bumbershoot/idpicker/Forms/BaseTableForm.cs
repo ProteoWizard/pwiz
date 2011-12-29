@@ -465,6 +465,13 @@ namespace IDPicker.Forms
                 if (rowIndexHierarchy.Count > 1 || getRowFilterState(row) == RowFilterState.Out)
                     continue;*/
 
+                if (rows.Count > rowIndex)
+                {
+                    Row row = rows[rowIndex];
+                    if (getRowFilterState(row) == RowFilterState.Out)
+                        continue;
+                }
+
                 var rowIndexHierarchy = treeDataGridView.GetRowHierarchyForRowIndex(rowIndex);
 
                 var rowText = new List<string>();
@@ -486,18 +493,63 @@ namespace IDPicker.Forms
             return exportTable;
         }
 
+        private List<List<string>> tempTable;
+        protected void ExportTable(object sender, EventArgs e)
+        {
+            var selected = sender == copyToClipboardSelectedToolStripMenuItem ||
+                           sender == exportSelectedCellsToFileToolStripMenuItem ||
+                           sender == showInExcelSelectToolStripMenuItem;
+
+            var progressWindow = new Form
+            {
+                Size = new Size(300, 60),
+                Text = "Exporting...",
+                StartPosition = FormStartPosition.CenterScreen,
+                ControlBox = false
+            };
+            var progressBar = new ProgressBar
+            {
+                Dock = DockStyle.Fill,
+                Style = ProgressBarStyle.Marquee
+            };
+            progressWindow.Controls.Add(progressBar);
+            progressWindow.Show();
+
+            tempTable = new List<List<string>>();
+            var bg = new BackgroundWorker();
+            bg.RunWorkerCompleted += (x, y) =>
+                                         {
+                                             if (y.Error != null) Program.HandleException(y.Error);
+                                             progressWindow.Close();
+                                             if (sender == clipboardToolStripMenuItem ||
+                                                 sender == copyToClipboardSelectedToolStripMenuItem)
+                                                 TableExporter.CopyToClipboard(tempTable);
+                                             else if (sender == fileToolStripMenuItem ||
+                                                      sender == exportSelectedCellsToFileToolStripMenuItem)
+                                                 TableExporter.ExportToFile(tempTable);
+                                             else if (sender == showInExcelToolStripMenuItem ||
+                                                      sender == showInExcelSelectToolStripMenuItem)
+                                             {
+                                                 var exportWrapper = new Dictionary<string, List<List<string>>>
+                                                                         {{Name, tempTable}};
+                                                 TableExporter.ShowInExcel(exportWrapper, false);
+                                             }
+                                         };
+            bg.DoWork += (x, y) =>
+                             {
+                                 tempTable = GetFormTable(selected);
+                             };
+            bg.RunWorkerAsync();
+        }
+
         protected void clipboardToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable(sender == copyToClipboardSelectedToolStripMenuItem);
 
-            TableExporter.CopyToClipboard(table);
         }
 
         protected void fileToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable(sender == exportSelectedCellsToFileToolStripMenuItem);
 
-            TableExporter.ExportToFile(table);
         }
 
         protected void exportButton_Click (object sender, EventArgs e)
@@ -507,11 +559,7 @@ namespace IDPicker.Forms
 
         protected void showInExcelToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable(sender == showInExcelSelectToolStripMenuItem);
 
-            var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
-
-            TableExporter.ShowInExcel(exportWrapper, false);
         }
 
         protected void displayOptionsButton_Click (object sender, EventArgs e)

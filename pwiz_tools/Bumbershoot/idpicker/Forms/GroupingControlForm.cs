@@ -32,6 +32,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using BrightIdeasSoftware;
+using NHibernate;
 using NHibernate.Linq;
 using IDPicker.DataModel;
 
@@ -670,5 +671,51 @@ namespace IDPicker.Forms
             return groups.Count();
         }
 
+        public static List<SpectrumSourceGroup> SetStructure(TreeNode node, List<SpectrumSourceGroup> groupList, ISession session)
+        {
+            if (node == null)
+                return groupList ?? new List<SpectrumSourceGroup>();
+
+            var ssg = session.QueryOver<SpectrumSourceGroup>().Where(x => x.Name == node.Text).SingleOrDefault();
+            if (ssg == null)
+            {
+                ssg = new SpectrumSourceGroup {Name = node.Text};
+                session.SaveOrUpdate(ssg);
+                session.Flush();
+            }
+            groupList.Add(ssg);
+            var allGroups = groupList;
+
+            foreach (TreeNode childNode in node.Nodes)
+            {
+                if (childNode.Tag.ToString() == "Source")
+                {
+                    var node1 = childNode;
+                    var sources = session.QueryOver<SpectrumSource>().Where(x => x.Name == node1.Text).List();
+                    foreach (var item in sources)
+                    {
+                        foreach (var link in item.Groups)
+                            session.Delete(link);
+                        session.Flush();
+                        item.Group = ssg;
+                        session.SaveOrUpdate(item);
+                        foreach (var groupItem in groupList)
+                        {
+                            var ssgl = new SpectrumSourceGroupLink {Group = groupItem, Source = item};
+                            session.SaveOrUpdate(ssgl);
+                        }
+                        session.Flush();
+                    }
+                }
+                else
+                {
+                    var newGroups = SetStructure(childNode, groupList, session);
+                    foreach (var item in newGroups)
+                        if (!allGroups.Contains(item))
+                            allGroups.Add(item);
+                }
+            }
+            return allGroups;
+        }
     }
 }

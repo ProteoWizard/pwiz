@@ -992,7 +992,7 @@ namespace IDPicker
                     _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
 
                     toolStripStatusLabel.Text = "Refreshing group structure...";
-                    var usedGroups = SetStructure(rootNode, new List<SpectrumSourceGroup>());
+                    var usedGroups = GroupingControlForm.SetStructure(rootNode, new List<SpectrumSourceGroup>(), session);
                     if (usedGroups != null && usedGroups.Any())
                     {
                         var unusedGroups = session.QueryOver<SpectrumSourceGroup>().List();
@@ -1002,9 +1002,6 @@ namespace IDPicker
                             session.Delete(item);
                     }
                     session.Flush();
-
-                    // set source grouping
-                    //SetStructure(rootNode);
 
                     //breadCrumbControl.BreadCrumbs.Clear();
 
@@ -1044,54 +1041,6 @@ namespace IDPicker
             {
                 Program.HandleException(ex);
             }
-        }
-
-        private List<SpectrumSourceGroup> SetStructure(TreeNode node, List<SpectrumSourceGroup> groupList)
-        {
-            if (node == null)
-                return groupList ?? new List<SpectrumSourceGroup>();
-
-            var ssg = session.QueryOver<SpectrumSourceGroup>().Where(x => x.Name == node.Text).SingleOrDefault();
-            if (ssg == null)
-            {
-                ssg = new SpectrumSourceGroup {Name = node.Text};
-                session.SaveOrUpdate(ssg);
-                session.Flush();
-            }
-            groupList.Add(ssg);
-            var allGroups = groupList;
-
-            foreach (TreeNode childNode in node.Nodes)
-            {
-                if (childNode.Tag.ToString() == "Source")
-                {
-                    var node1 = childNode;
-                    var sources = session.QueryOver<SpectrumSource>().Where(x => x.Name == node1.Text).List();
-                    foreach (var item in sources)
-                    {
-                        foreach (var link in item.Groups)
-                            session.Delete(link);
-                        session.Flush();
-                        item.Group = ssg;
-                        session.SaveOrUpdate(item);
-                        foreach (var groupItem in groupList)
-                        {
-                            var ssgl = new SpectrumSourceGroupLink {Group = groupItem, Source = item};
-                            session.SaveOrUpdate(ssgl);
-                        }
-                        session.Flush();
-                    }
-                }
-                else
-                {
-                    var newGroups = SetStructure(childNode, groupList);
-                    foreach (var item in newGroups)
-                        if (!allGroups.Contains(item))
-                            allGroups.Add(item);
-                }
-            }
-
-            return allGroups;
         }
 
         internal void LoadLayout(LayoutProperty userLayout)
@@ -1323,47 +1272,101 @@ namespace IDPicker
             }
             var selected = sender == toExcelSelectToolStripMenuItem;
 
-            var reportDictionary = new Dictionary<string, List<List<string>>>();
+			 var progressWindow = new Form
+                                     {
+                                         Size = new Size(300, 60),
+                                         Text = "Generating Excel Report pages (1 of 6)",
+                                         StartPosition = FormStartPosition.CenterScreen,
+                                         ControlBox = false
+                                     };
+            var progressBar = new ProgressBar
+                                  {
+                                      Dock = DockStyle.Fill,
+                                      Style = ProgressBarStyle.Marquee
+                                  };
+            progressWindow.Controls.Add(progressBar);
+            progressWindow.Show();
 
-            if (modificationTableForm != null)
-            {
-                var table = modificationTableForm.GetFormTable(selected);
-                if (table.Count > 1)
-                    reportDictionary.Add("Modification Table", table);
-            }
-            if (proteinTableForm != null)
-            {
-                var table = proteinTableForm.GetFormTable(selected);
-                if (table.Count > 1)
-                    reportDictionary.Add("Protein Table", table);
-            }
-            if (peptideTableForm != null)
-            {
-                var table = peptideTableForm.GetFormTable(selected);
-                if (table.Count > 1)
-                    reportDictionary.Add("Peptide Table", table);
-            }
-            if (spectrumTableForm != null)
-            {
-                var table = spectrumTableForm.GetFormTable(selected);
-                if (table.Count > 1)
-                    reportDictionary.Add("Spectrum Table", table);
-            }
-            if (analysisTableForm != null)
-            {
-                var table = analysisTableForm.GetFormTable(selected);
-                if (table.Count > 1)
-                    reportDictionary.Add("Analysis Settings", table);
-            }
-            var summaryList = getSummaryList();
-            if (summaryList.Count > 0)
-                reportDictionary.Add("Summary", summaryList);
+            var bg = new BackgroundWorker { WorkerReportsProgress = true };
+            bg.ProgressChanged += (x, y) =>
+                                      {
+                                          switch (y.ProgressPercentage)
+                                          {
+                                              case 1:
+                                                  progressWindow.Text = "Generating Excel Report pages (2 of 6)";
+                                                  break;
+                                              case 2:
+                                                  progressWindow.Text = "Generating Excel Report pages (3 of 6)";
+                                                  break;
+                                              case 3:
+                                                  progressWindow.Text = "Generating Excel Report pages (4 of 6)";
+                                                  break;
+                                              case 4:
+                                                  progressWindow.Text = "Generating Excel Report pages (5 of 6)";
+                                                  break;
+                                              case 5:
+                                                  progressWindow.Text = "Generating Excel Report pages (6 of 6)";
+                                                  break;
+                                              default:
+                                                  break;
+                                          }
+                                      };
+            bg.RunWorkerCompleted += (x, y) =>
+                                         {
+                                             if (y.Error != null) Program.HandleException(y.Error);
+                                             progressWindow.Close();
+                                         };
+            bg.DoWork += (x, y) =>
+                             {
+                                 var reportDictionary = new Dictionary<string, List<List<string>>>();
+
+                                 if (modificationTableForm != null)
+                                 {
+                                     var table = modificationTableForm.GetFormTable(selected);
+                                     if (table.Count > 1)
+                                         reportDictionary.Add("Modification Table", table);
+                                 }
+                                 bg.ReportProgress(1);
+                                 if (proteinTableForm != null)
+                                 {
+                                     var table = proteinTableForm.GetFormTable(selected);
+                                     if (table.Count > 1)
+                                         reportDictionary.Add("Protein Table", table);
+                                 }
+                                 bg.ReportProgress(2);
+                                 if (peptideTableForm != null)
+                                 {
+                                     var table = peptideTableForm.GetFormTable(selected);
+                                     if (table.Count > 1)
+                                         reportDictionary.Add("Peptide Table", table);
+                                 }
+                                 bg.ReportProgress(3);
+                                 if (spectrumTableForm != null)
+                                 {
+                                     var table = spectrumTableForm.GetFormTable(selected);
+                                     if (table.Count > 1)
+                                         reportDictionary.Add("Spectrum Table", table);
+                                 }
+                                 bg.ReportProgress(4);
+                                 if (analysisTableForm != null)
+                                 {
+                                     var table = analysisTableForm.GetFormTable(selected);
+                                     if (table.Count > 1)
+                                         reportDictionary.Add("Analysis Settings", table);
+                                 }
+                                 bg.ReportProgress(5);
+                                 var summaryList = getSummaryList();
+                                 if (summaryList.Count > 0)
+                                     reportDictionary.Add("Summary", summaryList);
 
 
-            if (reportDictionary.Count > 0)
-                TableExporter.ShowInExcel(reportDictionary,false);
-            else
-                MessageBox.Show("Could not gather report information");
+                                 if (reportDictionary.Count > 0)
+                                     TableExporter.ShowInExcel(reportDictionary, false);
+                                 else
+                                     MessageBox.Show("Could not gather report information");
+                             };
+
+            bg.RunWorkerAsync();
         }
 
         private List<List<string>> getSummaryList()
@@ -1505,6 +1508,20 @@ namespace IDPicker
                             filterInfo.Add(new List<string> { string.Empty, item.ToString() });
                     }
                 }
+                if (viewFilter.PeptideGroup != null)
+                {
+                    bool first = true;
+                    foreach (var item in viewFilter.PeptideGroup)
+                    {
+                        if (first)
+                        {
+                            filterInfo.Add(new List<string> { "Peptide Group", item.ToString() });
+                            first = false;
+                        }
+                        else
+                            filterInfo.Add(new List<string> { string.Empty, item.ToString() });
+                    }
+                }
                 if (viewFilter.Peptide != null)
                 {
                     bool first = true;
@@ -1517,6 +1534,20 @@ namespace IDPicker
                         }
                         else
                             filterInfo.Add(new List<string> { string.Empty, item.Sequence });
+                    }
+                }
+                if (viewFilter.DistinctMatchKey != null)
+                {
+                    bool first = true;
+                    foreach (var item in viewFilter.DistinctMatchKey)
+                    {
+                        if (first)
+                        {
+                            filterInfo.Add(new List<string> { "Distinct Match", item.ToString() });
+                            first = false;
+                        }
+                        else
+                            filterInfo.Add(new List<string> { string.Empty, item.ToString() });
                     }
                 }
                 if (viewFilter.ModifiedSite != null)
@@ -1545,6 +1576,20 @@ namespace IDPicker
                         }
                         else
                             filterInfo.Add(new List<string> { string.Empty, item.Name });
+                    }
+                }
+                if (viewFilter.ProteinGroup != null)
+                {
+                    bool first = true;
+                    foreach (var item in viewFilter.ProteinGroup)
+                    {
+                        if (first)
+                        {
+                            filterInfo.Add(new List<string> { "Protein Group", item.ToString() });
+                            first = false;
+                        }
+                        else
+                            filterInfo.Add(new List<string> { string.Empty, item.ToString() });
                     }
                 }
                 if (viewFilter.Protein != null)

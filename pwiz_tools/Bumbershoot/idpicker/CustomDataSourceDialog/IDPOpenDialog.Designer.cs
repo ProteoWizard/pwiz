@@ -331,7 +331,6 @@ namespace CustomDataSourceDialog
             // 
             // IDPOpenDialog
             // 
-            this.AcceptButton = this.openButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
@@ -348,6 +347,7 @@ namespace CustomDataSourceDialog
             this.Controls.Add(this.VertSplit);
             this.MinimumSize = new System.Drawing.Size(500, 300);
             this.Name = "IDPOpenDialog";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Open Data Source";
             this.Load += new System.EventHandler(this.IDPOpenDialog_Load);
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OpenDataSourceDialogue_FormClosing);

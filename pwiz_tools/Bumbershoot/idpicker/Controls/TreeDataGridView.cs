@@ -479,7 +479,7 @@ namespace IDPicker.Controls
             Point symbolPoint = GetSymbolPoint(cellBounds, rowInfo.RowIndexHierarchy.Count - 1);
 
             //Dont do anything special if symbol isn't clicked
-            if (e.X < symbolPoint.X || e.X > symbolPoint.X + SymbolWidth)
+            if (e.X < symbolPoint.X-10 || e.X > symbolPoint.X + SymbolWidth+5)
             {
                 base.OnMouseClick(e);
                 return;

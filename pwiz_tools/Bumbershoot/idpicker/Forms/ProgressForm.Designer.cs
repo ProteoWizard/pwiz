@@ -49,15 +49,15 @@ namespace IDPicker
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.ProgressSplit = new System.Windows.Forms.SplitContainer();
             this.JobDataView = new System.Windows.Forms.DataGridView();
-            this.dataGridViewProgressColumn1 = new CustomProgressCell.DataGridViewProgressColumn();
             this.NameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ProgressColumn = new CustomProgressCell.DataGridViewProgressColumn();
+            this.dataGridViewProgressColumn1 = new CustomProgressCell.DataGridViewProgressColumn();
             this.ProgressSplit.Panel1.SuspendLayout();
             this.ProgressSplit.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.JobDataView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.JobDataView)).BeginInit();
             this.SuspendLayout();
             // 
             // ProgressSplit
@@ -95,14 +95,6 @@ namespace IDPicker
             this.JobDataView.TabIndex = 0;
             this.JobDataView.SelectionChanged += new System.EventHandler(this.JobDataView_SelectionChanged);
             // 
-            // dataGridViewProgressColumn1
-            // 
-            this.dataGridViewProgressColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.dataGridViewProgressColumn1.FillWeight = 30F;
-            this.dataGridViewProgressColumn1.HeaderText = "Progress";
-            this.dataGridViewProgressColumn1.MinimumWidth = 100;
-            this.dataGridViewProgressColumn1.Name = "dataGridViewProgressColumn1";
-            // 
             // NameColumn
             // 
             this.NameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -112,14 +104,22 @@ namespace IDPicker
             // ProgressColumn
             // 
             this.ProgressColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Black;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.Black;
-            this.ProgressColumn.DefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle3.ForeColor = System.Drawing.Color.Black;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.Color.Black;
+            this.ProgressColumn.DefaultCellStyle = dataGridViewCellStyle3;
             this.ProgressColumn.FillWeight = 40F;
             this.ProgressColumn.HeaderText = "Progress";
             this.ProgressColumn.MinimumWidth = 100;
             this.ProgressColumn.Name = "ProgressColumn";
+            // 
+            // dataGridViewProgressColumn1
+            // 
+            this.dataGridViewProgressColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewProgressColumn1.FillWeight = 30F;
+            this.dataGridViewProgressColumn1.HeaderText = "Progress";
+            this.dataGridViewProgressColumn1.MinimumWidth = 100;
+            this.dataGridViewProgressColumn1.Name = "dataGridViewProgressColumn1";
             // 
             // ProgressForm
             // 
@@ -128,11 +128,12 @@ namespace IDPicker
             this.ClientSize = new System.Drawing.Size(713, 454);
             this.Controls.Add(this.ProgressSplit);
             this.Name = "ProgressForm";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "ProgressForm";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ProgressForm_FormClosing);
             this.ProgressSplit.Panel1.ResumeLayout(false);
             this.ProgressSplit.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize) (this.JobDataView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.JobDataView)).EndInit();
             this.ResumeLayout(false);
 
         }

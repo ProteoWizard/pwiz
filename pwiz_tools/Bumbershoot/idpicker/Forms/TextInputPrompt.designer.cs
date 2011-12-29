@@ -108,7 +108,7 @@ namespace IDPicker.Forms
             this.inputCheckBox.Text = "Save Column Options";
             this.inputCheckBox.UseVisualStyleBackColor = true;
             // 
-            // TextInputBox
+            // TextInputPrompt
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -118,7 +118,8 @@ namespace IDPicker.Forms
             this.Controls.Add(this.inputTextBox);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.cancelButton);
-            this.Name = "TextInputBox";
+            this.Name = "TextInputPrompt";
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "<<Category>>";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TextInputBox_FormClosing);
             this.ResumeLayout(false);

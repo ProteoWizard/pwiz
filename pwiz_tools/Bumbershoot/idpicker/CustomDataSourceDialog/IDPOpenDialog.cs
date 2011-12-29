@@ -339,6 +339,8 @@ namespace CustomDataSourceDialog
         private void NavigateToFolder(object folder, EventArgs e)
         {
             var folderInfo = (string) folder;
+            if (!Directory.Exists(folderInfo))
+                return;
 
             //check if refresh requested
             if (folderInfo.EndsWith(@":"))

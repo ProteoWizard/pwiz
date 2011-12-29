@@ -349,6 +349,7 @@ namespace IDPicker
         SequenceCoverageControl owner;
         public DataFilter viewFilter { get; set; }
         string header;
+        private List<string> headerComponents;
         //List<int> totalCoverageMask = null;
         //List<List<int>> groupCoverageMasks = null;
         SizeF residueBounds;
@@ -360,13 +361,19 @@ namespace IDPicker
         public SequenceCoverageSurface (SequenceCoverageControl owner)
         {
             this.owner = owner;
-
-            header = String.Format("{0}\r\n{1} residues, {2} kDa (MW), {3}% coverage",
-                                   owner.Protein.Description,
-                                   owner.Protein.Length,
-                                   (new proteome.Peptide(owner.Protein.Sequence).molecularWeight() / 1000).ToString("f3"),
-                                   owner.Protein.Coverage.ToString("f1"));
-
+            headerComponents = new List<string>
+                                   {
+                                       owner.Protein.Description,
+                                       owner.Protein.Length + " residues,",
+                                       (new proteome.Peptide(owner.Protein.Sequence).molecularWeight()/1000).ToString(
+                                           "f3") + " kDa (MW),",
+                                       owner.Protein.Coverage.ToString("f1") + "% coverage"
+                                   };
+            header = String.Format("{0}\r\n{1} {2} {3}",
+                                   headerComponents[0],
+                                   headerComponents[1],
+                                   headerComponents[2],
+                                   headerComponents[3]);
             DoubleBuffered = true;
             ResizeRedraw = true;
             AutoSize = true;
@@ -382,12 +389,14 @@ namespace IDPicker
         {
             calculateBoundingInfo();
             base.OnResize(e);
+            ReformatHeader();
         }
 
         protected override void OnSizeChanged (EventArgs e)
         {
             calculateBoundingInfo();
             base.OnSizeChanged(e);
+            ReformatHeader();
         }
 
         Map<int, PointF> residueIndexToLocation;
@@ -400,7 +409,8 @@ namespace IDPicker
             SizeF averageBounds = CreateGraphics().MeasureString("ABCDEFGHIJKLMNOPQRSTUVWXYZ", owner.SequenceFont, 0);
             residueBounds = new SizeF(averageBounds.Width / 26, averageBounds.Height);
 
-            sequenceLocation = new PointF(residueBounds.Width * 10, owner.SequenceFont.Height * 4);
+            var offset = CreateGraphics().MeasureString(header, owner.HeaderFont).Height;
+            sequenceLocation = new PointF(residueBounds.Width * 10, owner.SequenceFont.Height * 2 + offset);
             residueIndexToLocation = new Map<int, PointF>();
 
             int charsOnLine = 0;
@@ -408,6 +418,7 @@ namespace IDPicker
             residuesPerLine = 0;
             int maxCharsPerLine = (int) Math.Floor(((float) ClientSize.Width) / residueBounds.Width);
 
+            //Calculate protein
             for (int i = 0; i < owner.Protein.Length; ++i, ++charsOnLine, ++residuesPerLine)
             {
                 if (owner.ResidueGroupSize == 0 && charsOnLine + 15 >= maxCharsPerLine)
@@ -455,8 +466,87 @@ namespace IDPicker
 
             Height = Math.Max(MinimumSize.Height, (int) (sequenceLocation.Y + (lineCount + 1) * owner.LineSpacing * residueBounds.Height));
         }
+
+        private void ReformatHeader()
+        {
+            int maxDescriptionChars = (int)Math.Floor(Width / residueBounds.Width) - 2;
+            if (maxDescriptionChars <= 0)
+                return; //control isnt ready yet
+            string newHeader;
+            var splitDescription = headerComponents[0].Split();
+            var aestheticSplit = new List<string>();
+
+            //format description
+            if (splitDescription.Length > 1)
+            {
+                newHeader = splitDescription[splitDescription.Length - 1];
+                for (int x = splitDescription.Length - 2; x >= 0; x--)
+                {
+                    newHeader = newHeader.Insert(0, splitDescription[x] + " ");
+                    if (newHeader.Length >= maxDescriptionChars / 5)
+                    {
+                        for (int y = 0; y < x; y++)
+                            aestheticSplit.Add(splitDescription[y]);
+                        aestheticSplit.Add(newHeader);
+                        newHeader = string.Empty;
+
+                        var newLine = string.Empty;
+                        foreach (var word in aestheticSplit)
+                        {
+                            var previewLine = newLine + " " + word;
+                            if (previewLine.Length < maxDescriptionChars)
+                                newLine = previewLine;
+                            else if(newLine.IsNullOrEmpty())
+                            {
+                                if (newHeader.IsNullOrEmpty())
+                                    newHeader = previewLine.Remove(maxDescriptionChars-1);
+                                else
+                                    newHeader += "\r\n  " + previewLine.Remove(maxDescriptionChars - 1);
+                                newLine = previewLine.Remove(0,maxDescriptionChars-1);
+                                while (newLine.Length >= maxDescriptionChars)
+                                {
+                                    newHeader += "\r\n  " + newLine.Remove(maxDescriptionChars - 1);
+                                    newLine = newLine.Remove(0, maxDescriptionChars - 1);
+                                }
+                            }
+                            else
+                            {
+                                if (newHeader.IsNullOrEmpty())
+                                    newHeader = newLine;
+                                else
+                                    newHeader += "\r\n  " + newLine;
+                                newLine = word;
+                            }
+                        }
+                        if (!newLine.IsNullOrEmpty())
+                        {
+                            if (newHeader.IsNullOrEmpty())
+                                newHeader = newLine;
+                            else
+                                newHeader += "\r\n  " + newLine;
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+            else newHeader = headerComponents[0];
+            newHeader = newHeader.Trim();
+            var newDetails = headerComponents[1] + " " + headerComponents [2] + " " + headerComponents[3];
+            if (newDetails.Length > maxDescriptionChars)
+                newHeader += "\r\n" + headerComponents[1] +
+                             ((headerComponents[1] + " " + headerComponents[2]).Length > maxDescriptionChars
+                                  ? "\r\n"
+                                  : "") +
+                             headerComponents[2] +
+                             "\r\n" + headerComponents[3];
+            else newHeader += "\r\n" + newDetails;
+            header = newHeader;
+        }
+
         #endregion
 
+        private string testHeader;
         protected override void OnPaint (PaintEventArgs e)
         {
             e.Graphics.FillRectangle(new SolidBrush(owner.BackColor), e.ClipRectangle);

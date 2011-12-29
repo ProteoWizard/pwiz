@@ -587,20 +587,6 @@ namespace IDPicker.Forms
             e.ToolTipText = annotation.ToString();
         }
 
-        private void clipboardToolStripMenuItem_Click (object sender, EventArgs e)
-        {
-            var table = GetFormTable(sender == copySelectedCellsToClipboardToolStripMenuItem);
-
-            TableExporter.CopyToClipboard(table);
-        }
-
-        private void fileToolStripMenuItem_Click (object sender, EventArgs e)
-        {
-            var table = GetFormTable(sender == exportSelectedCellsToFileToolStripMenuItem);
-
-            TableExporter.ExportToFile(table);
-        }
-
         private void exportButton_Click (object sender, EventArgs e)
         {
             exportMenu.Show(Cursor.Position);
@@ -721,13 +707,53 @@ namespace IDPicker.Forms
             return groupNodes;
         }
 
-        private void showInExcelToolStripMenuItem_Click (object sender, EventArgs e)
+
+        private List<List<string>> tempTable;
+        protected void ExportTable(object sender, EventArgs e)
         {
-            var table = GetFormTable(sender == showSelectedCellsInExcelToolStripMenuItem);
+            var selected = sender == copySelectedCellsToClipboardToolStripMenuItem ||
+                           sender == exportSelectedCellsToFileToolStripMenuItem ||
+                           sender == showSelectedCellsInExcelToolStripMenuItem;
 
-            var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
+            var progressWindow = new Form
+            {
+                Size = new Size(300, 60),
+                Text = "Exporting...",
+                StartPosition = FormStartPosition.CenterScreen,
+                ControlBox = false
+            };
+            var progressBar = new ProgressBar
+            {
+                Dock = DockStyle.Fill,
+                Style = ProgressBarStyle.Marquee
+            };
+            progressWindow.Controls.Add(progressBar);
+            progressWindow.Show();
 
-            TableExporter.ShowInExcel(exportWrapper, false);
+            tempTable = new List<List<string>>();
+            var bg = new BackgroundWorker();
+            bg.RunWorkerCompleted += (x, y) =>
+            {
+                if (y.Error != null) Program.HandleException(y.Error);
+                progressWindow.Close();
+                if (sender == clipboardToolStripMenuItem ||
+                    sender == copySelectedCellsToClipboardToolStripMenuItem)
+                    TableExporter.CopyToClipboard(tempTable);
+                else if (sender == fileToolStripMenuItem ||
+                         sender == exportSelectedCellsToFileToolStripMenuItem)
+                    TableExporter.ExportToFile(tempTable);
+                else if (sender == showInExcelToolStripMenuItem ||
+                         sender == showSelectedCellsInExcelToolStripMenuItem)
+                {
+                    var exportWrapper = new Dictionary<string, List<List<string>>> { { Name, tempTable } };
+                    TableExporter.ShowInExcel(exportWrapper, false);
+                }
+            };
+            bg.DoWork += (x, y) =>
+            {
+                tempTable = GetFormTable(selected);
+            };
+            bg.RunWorkerAsync();
         }
 
         public void ClearSession()

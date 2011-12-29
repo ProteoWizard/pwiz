@@ -213,7 +213,7 @@ namespace IDPicker.DataModel
             var newFilter = new DataFilter(lhs);
             newFilter.Cluster = NullSafeSequenceUnion(newFilter.Cluster, rhs.Cluster);
             newFilter.ProteinGroup = NullSafeSequenceUnion(newFilter.ProteinGroup, rhs.ProteinGroup);
-            newFilter.PeptideGroup = NullSafeSequenceUnion(newFilter.ProteinGroup, rhs.PeptideGroup);
+            newFilter.PeptideGroup = NullSafeSequenceUnion(newFilter.PeptideGroup, rhs.PeptideGroup);
             newFilter.Protein = NullSafeSequenceUnion(newFilter.Protein, rhs.Protein);
             newFilter.Peptide = NullSafeSequenceUnion(newFilter.Peptide, rhs.Peptide);
             newFilter.DistinctMatchKey = NullSafeSequenceUnion(newFilter.DistinctMatchKey, rhs.DistinctMatchKey);
