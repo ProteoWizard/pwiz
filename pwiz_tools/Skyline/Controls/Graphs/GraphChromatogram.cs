@@ -1210,19 +1210,24 @@ namespace pwiz.Skyline.Controls.Graphs
             // Set any MS/MS IDs on the first graph item also
             if (settings.TransitionSettings.FullScan.IsEnabled && settings.PeptideSettings.Libraries.IsLoaded)
             {
-                var group = nodeGroups[0].TransitionGroup;
-                IsotopeLabelType labelType;
-                double[] retentionTimes;
-                if (settings.TryGetRetentionTimes(group.Peptide.Sequence, group.PrecursorCharge,
-                                                  mods, FilePath, out labelType, out retentionTimes))
+                var listTimes = new List<double>();
+                foreach (var group in nodeGroups.Select(nodeGroup => nodeGroup.TransitionGroup))
                 {
-                    chromGraphPrimary.RetentionMsMs = retentionTimes;
-                    var selectedSpectrum = _stateProvider.SelectedSpectrum;
-                    if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
+                    IsotopeLabelType labelType;
+                    double[] retentionTimes;
+                    if (settings.TryGetRetentionTimes(group.Peptide.Sequence, group.PrecursorCharge,
+                                                      mods, FilePath, out labelType, out retentionTimes))
                     {
-                        chromGraphPrimary.SelectedRetentionMsMs = selectedSpectrum.RetentionTime;
+                        listTimes.AddRange(retentionTimes);
+                        var selectedSpectrum = _stateProvider.SelectedSpectrum;
+                        if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
+                        {
+                            chromGraphPrimary.SelectedRetentionMsMs = selectedSpectrum.RetentionTime;
+                        }
                     }
                 }
+                if (listTimes.Count > 0)
+                    chromGraphPrimary.RetentionMsMs = listTimes.ToArray();
             }
         }
 
