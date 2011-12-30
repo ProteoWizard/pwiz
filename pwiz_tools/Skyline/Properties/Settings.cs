@@ -1133,21 +1133,26 @@ namespace pwiz.Skyline.Properties
         public void Initialize(IProgressMonitor loadMonitor)
         {
             foreach (var calc in this.ToArray())
+                Initialize(calc, loadMonitor);
+        }
+
+        public RetentionScoreCalculatorSpec Initialize(RetentionScoreCalculatorSpec calc, IProgressMonitor loadMonitor)
+        {
+            if (calc == null)
+                return null;
+
+            try
             {
-                if (calc != null)
-                {
-                    try
-                    {
-                        var calcInit = calc.Initialize(loadMonitor);
-                        if (!ReferenceEquals(calcInit, calc))
-                            SetValue(calcInit);
-                    }
-                    catch(CalculatorException)
-                    {
-                        //Consider: Should we really fail silently?
-                    }
-                }
+                var calcInit = calc.Initialize(loadMonitor);
+                if (!ReferenceEquals(calcInit, calc))
+                    SetValue(calcInit);
+                calc = calcInit;
             }
+            catch (CalculatorException)
+            {
+                //Consider: Should we really fail silently?
+            }
+            return calc;
         }
 
         public override string Title { get { return "Edit Retention Time Calculators"; } }

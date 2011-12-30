@@ -438,7 +438,7 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializePeptides()
         {
             var lookupPool = new List<byte>();
-            _peptides = new ViewLibraryPepInfo[_selectedLibrary != null ? _selectedLibrary.Count : 0];
+            _peptides = new ViewLibraryPepInfo[_selectedLibrary != null ? _selectedLibrary.SpectrumCount : 0];
             if (_selectedLibrary != null)
             {
                 int index = 0;
@@ -565,23 +565,6 @@ namespace pwiz.Skyline.SettingsUI
                             mods = nodPep.ExplicitMods;
                             // Should always be just one child.  The child that matched this spectrum.
                             transitionGroup = ((TransitionGroupDocNode)nodPep.Children[0]).TransitionGroup;
-
-                            var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
-                                IsotopeLabelType.light, true).FirstOrDefault();
-                            if (bestSpectrum != null)
-                            {
-                                double? rt = bestSpectrum.RetentionTime;
-                                string filename = bestSpectrum.FileName;
-                                
-                                if(!string.IsNullOrEmpty(filename))
-                                {
-                                    labelFilename.Text = string.Format("File: {0}", filename);
-                                }
-                                if(rt.HasValue)
-                                {
-                                    labelRT.Text = string.Format("RT: {0}", rt);
-                                }
-                            }
                         }
                         else
                         {
@@ -650,6 +633,24 @@ namespace pwiz.Skyline.SettingsUI
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
                         AddGraphItem(graphPane, GraphItem);
+
+                        // Update file and retention time indicators
+                        var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
+                            IsotopeLabelType.light, true).FirstOrDefault();
+                        if (bestSpectrum != null)
+                        {
+                            double? rt = bestSpectrum.RetentionTime;
+                            string filename = bestSpectrum.FileName;
+
+                            if (!string.IsNullOrEmpty(filename))
+                            {
+                                labelFilename.Text = string.Format("File: {0}", filename);
+                            }
+                            if (rt.HasValue)
+                            {
+                                labelRT.Text = string.Format("RT: {0}", rt);
+                            }
+                        }
 
                         available = true;
                     }
@@ -1810,7 +1811,7 @@ namespace pwiz.Skyline.SettingsUI
         /// ILoadMonitor implementation needed for loading the library in the 
         /// case where the library isn't already loaded in the main window.
         /// </summary>
-        private sealed class ViewLibLoadMonitor : ILoadMonitor
+        public sealed class ViewLibLoadMonitor : ILoadMonitor
         {
             private readonly IProgressMonitor _monitor;
 

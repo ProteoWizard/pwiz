@@ -338,13 +338,20 @@ namespace pwiz.Skyline.Model.DocSettings
             // An array, indexed by calculator, of actual retention times for the peptides in peptideScoresByCalc 
             List<double>[] listRTs = new List<double>[calcs];
 
+            var dictMeasuredPeptides = new Dictionary<string, double>();
+            foreach (var measured in measuredPeptides)
+            {
+                if (!dictMeasuredPeptides.ContainsKey(measured.PeptideSequence))
+                    dictMeasuredPeptides.Add(measured.PeptideSequence, measured.RetentionTime);
+            }
             var setExcludeCalcs = new HashSet<int>();
             for (int i = 0; i < calcs; i++)
             {
                 if (setExcludeCalcs.Contains(i))
                     continue;
 
-                if(!calculatorCandidates[i].IsUsable)
+                var calc = calculatorCandidates[i];
+                if(!calc.IsUsable)
                 {
                     setExcludeCalcs.Add(i);
                     continue;
@@ -353,8 +360,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 try
                 {
                     listRTs[i] = new List<double>();
-                    calcPeptides[i] = allPeptides ? listPeptides : calculatorCandidates[i].ChooseRegressionPeptides(listPeptides).ToList();
-                    peptideScoresByCalc[i] = RetentionTimeScoreCache.CalcScores(calculatorCandidates[i], calcPeptides[i], scoreCache);
+                    calcPeptides[i] = allPeptides ? listPeptides : calc.ChooseRegressionPeptides(listPeptides).ToList();
+                    peptideScoresByCalc[i] = RetentionTimeScoreCache.CalcScores(calc, calcPeptides[i], scoreCache);
                 }
                 catch (Exception)
                 {
@@ -367,9 +374,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 foreach(var calcPeptide in calcPeptides[i])
                 {
-                    string peptide = calcPeptide;
-                    var docPeptide = measuredPeptides.First(pep => Equals(pep.PeptideSequence, peptide));
-                    listRTs[i].Add(docPeptide.RetentionTime);
+                    listRTs[i].Add(dictMeasuredPeptides[calcPeptide]);
                 }
             }
             Statistics[] aStatValues = new Statistics[calcs];
@@ -428,19 +433,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 window = 0.5;
 
             // Save statistics
-            List<double> listPredicted = new List<double>();
             RegressionLine rlBest = new RegressionLine(slope, intercept);
-            foreach (double score in listBest)
-                listPredicted.Add(rlBest.GetY(score));
+            var listPredicted = listBest.Select(score => rlBest.GetY(score)).ToList();
             statistics = new RetentionTimeStatistics(r, calcPeptides[bestCalcIndex], listBest, listPredicted, listRTs[bestCalcIndex]);
 
-            //Now get MeasuredRetentionTimes for only those peptides chosen by the calculator
-            var calcMeasuredRts = new List<MeasuredRetentionTime>();
-            foreach(var pep in measuredPeptides)
-                if(calcPeptides[bestCalcIndex].Contains(pep.PeptideSequence))
-                    calcMeasuredRts.Add(pep);
-            return new RetentionTimeRegression(name, calcBest, slope, intercept, window,
-                calcMeasuredRts);
+            // Get MeasuredRetentionTimes for only those peptides chosen by the calculator
+            var setBestPeptides = new HashSet<string>();
+            foreach (string pep in calcPeptides[bestCalcIndex])
+                setBestPeptides.Add(pep);
+            var calcMeasuredRts = measuredPeptides.Where(pep => setBestPeptides.Contains(pep.PeptideSequence)).ToArray();
+            return new RetentionTimeRegression(name, calcBest, slope, intercept, window, calcMeasuredRts);
         }
 
         private static double ScoreSequence(IRetentionScoreCalculator calculator,
@@ -454,6 +456,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public RetentionTimeRegression FindThreshold(
                             double threshold,
+                            int? precision,
                             int left,
                             int right,
                             List<MeasuredRetentionTime> requiredPeptides,
@@ -469,7 +472,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int worstIn = right;
                 int bestOut = left;
-                if (IsAboveThreshold(statisticsResult.R, threshold))
+                if (IsAboveThreshold(statisticsResult.R, threshold, precision))
                 {
                     // Add back outliers until below the threshold
                     for (;;)
@@ -478,7 +481,7 @@ namespace pwiz.Skyline.Model.DocSettings
                             throw new OperationCanceledException();
                         RecalcRegression(bestOut, requiredPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
                             ref statisticsResult, ref outIndexes);
-                        if (bestOut >= variablePeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold))
+                        if (bestOut >= variablePeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
                         bestOut++;
                     }
@@ -494,7 +497,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         ref statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
-                    if (worstIn <= 2 || IsAboveThreshold(statisticsResult.R, threshold))
+                    if (worstIn <= 2 || IsAboveThreshold(statisticsResult.R, threshold, precision))
                         return regression;
                     worstIn--;
                 }
@@ -514,15 +517,15 @@ namespace pwiz.Skyline.Model.DocSettings
             if (regressionNew == null)
                 return this;
 
-            if (IsAboveThreshold(statisticsResult.R, threshold))
+            if (IsAboveThreshold(statisticsResult.R, threshold, precision))
             {
-                return regressionNew.FindThreshold(threshold, mid + 1, right,
+                return regressionNew.FindThreshold(threshold, precision, mid + 1, right,
                     requiredPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
                     ref statisticsResult, ref outIndexes);
             }
             else
             {
-                return regressionNew.FindThreshold(threshold, left, mid - 1,
+                return regressionNew.FindThreshold(threshold, precision, left, mid - 1,
                     requiredPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
                     ref statisticsResult, ref outIndexes);
             }
@@ -530,7 +533,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private RetentionTimeRegression RecalcRegression(int mid,
                     IEnumerable<MeasuredRetentionTime> requiredPeptides,
-                    List<MeasuredRetentionTime> variablePeptides,
+                    IList<MeasuredRetentionTime> variablePeptides,
                     RetentionTimeStatistics statistics,
                     RetentionScoreCalculatorSpec calculator,
                     RetentionTimeScoreCache scoreCache,
@@ -540,8 +543,10 @@ namespace pwiz.Skyline.Model.DocSettings
             // Create list of deltas between predicted and measured times
             var listTimes = statistics.ListRetentionTimes;
             var listPredictions = statistics.ListPredictions;
+            var listHydroScores = statistics.ListHydroScores;
             var listDeltas = new List<KeyValuePair<int, double>>();
             int iNextStat = 0;
+            double unknownScore = Calculator.UnknownScore;
             for (int i = 0; i < variablePeptides.Count; i++)
             {
                 double delta;
@@ -549,7 +554,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     delta = double.MaxValue;    // Make sure zero times are always outliers
                 else if (!outIndexes.Contains(i) && iNextStat < listPredictions.Count)
                 {
-                    delta = Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat]);
+                    delta = listHydroScores[iNextStat] != unknownScore
+                                ? Math.Abs(listPredictions[iNextStat] - listTimes[iNextStat])
+                                : double.MaxValue;
                     iNextStat++;
                 }
                 else
@@ -558,8 +565,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     // the current regression.
                     var peptideTime = variablePeptides[i];
                     double score = scoreCache.CalcScore(Calculator, peptideTime.PeptideSequence);
-                    double timePrediction = GetRetentionTime(score);
-                    delta = Math.Abs(timePrediction - peptideTime.RetentionTime);
+                    delta = score != unknownScore
+                                ? Math.Abs(GetRetentionTime(score) - peptideTime.RetentionTime)
+                                : double.MaxValue;
                 }
                 listDeltas.Add(new KeyValuePair<int, double>(i, delta));
             }
@@ -567,7 +575,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Sort descending
             listDeltas.Sort((v1, v2) => Comparer<double>.Default.Compare(v2.Value, v1.Value));
 
-            // Remove "mid" of the points with the highest deltas
+            // Remove points with the highest deltas above mid
             outIndexes = new HashSet<int>();
             int countOut = variablePeptides.Count - mid - 1;
             for (int i = 0; i < countOut; i++)
@@ -589,11 +597,16 @@ namespace pwiz.Skyline.Model.DocSettings
                                       out statisticsResult, out s);
         }
 
-        public static int ThresholdPrecision { get { return 2; } }
+        public static int ThresholdPrecision { get { return 4; } }
 
         public static bool IsAboveThreshold(double value, double threshold)
         {
-            return Math.Round(value, ThresholdPrecision) >= threshold;
+            return IsAboveThreshold(value, threshold, null);
+        }
+
+        public static bool IsAboveThreshold(double value, double threshold, int? precision)
+        {
+            return Math.Round(value, precision ?? ThresholdPrecision) >= threshold;
         }
 
         public const string SSRCALC_300_A = "SSRCalc 3.0 (300A)";
@@ -912,6 +925,13 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         #endregion
+    }
+
+    public interface IRetentionTimeProvider
+    {
+        double? GetRetentionTime(string sequence);
+
+        IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes { get; }
     }
 
     /// <summary>

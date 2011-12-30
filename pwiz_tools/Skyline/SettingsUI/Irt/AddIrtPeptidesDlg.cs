@@ -37,6 +37,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             foreach (string overwritePeptide in overwritePeptides)
                 listOverwrite.Items.Add(overwritePeptide);
 
+            labelExisting.Text = string.Format(labelExisting.Text, listExisting.Items.Count);
+
             if (listOverwrite.Items.Count == 0)
             {
                 labelOverwrite.Visible = false;

@@ -413,19 +413,44 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if retention time information was retrieved successfully</returns>
         public abstract bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes);
 
+        /// <summary>
+        /// Attempts to get retention time information for all of the
+        /// (sequence, charge) pairs identified from a specific file by index.
+        /// </summary>
+        /// <param name="fileIndex">Index of a file for which the retention time information is requested</param>
+        /// <param name="retentionTimes"></param>
+        /// <returns>True if retention time information was retrieved successfully</returns>
+        public abstract bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes);
 
+        /// <summary>
+        /// Gets all of the spectrum information for a particular (sequence, charge) pair.  This
+        /// may include redundant spectra.  The spectrum points themselves are only loaded as it they
+        /// requested to give this function acceptable performance.
+        /// </summary>
+        /// <param name="key">The sequence, charge pair requested</param>
+        /// <param name="labelType">An <see cref="IsotopeLabelType"/> for which to get spectra</param>
+        /// <param name="bestMatch">True if only the non-redundant best-match spectrum is requested</param>
+        /// <returns>An enumeration of <see cref="SpectrumInfo"/></returns>
         public abstract IEnumerable<SpectrumInfo> GetSpectra(LibKey key,
             IsotopeLabelType labelType, bool bestMatch);
 
         /// <summary>
+        /// Returns the number of files or mass spec runs for which this library
+        /// contains spectra, or null if this is unknown.
+        /// </summary>
+        public abstract int? FileCount { get; }
+
+        /// <summary>
         /// Returns the total number of spectra loaded from the library.
         /// </summary>
-        public abstract int Count { get; }
+        public abstract int SpectrumCount { get; }
 
         /// <summary>
         /// Returns an enumerator for the keys of the spectra loaded from the library.
         /// </summary>
         public abstract IEnumerable<LibKey> Keys { get; }
+
+        #region File reading utility functions
 
         protected static int GetInt32(byte[] bytes, int index)
         {
@@ -457,6 +482,8 @@ namespace pwiz.Skyline.Model.Lib
             if (stream.Read(buffer, 0, size) != size)
                 throw new InvalidDataException("Data truncation in library header. File may be corrupted.");
         }
+
+        #endregion
 
         #region Implementation of IXmlSerializable
 
@@ -606,6 +633,14 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
         {
+            // By default, no retention time information is available
+            retentionTimes = null;
+            return false;
+        }
+
+        public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
+        {
+            // By default, no retention time information is available
             retentionTimes = null;
             return false;
         }
@@ -626,7 +661,12 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public override int Count
+        public override int? FileCount
+        {
+            get { return null; }
+        }
+
+        public override int SpectrumCount
         {
             get { return _libraryEntries == null ? 0 : _libraryEntries.Length; }
         }
@@ -642,21 +682,88 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public sealed class LibraryRetentionTimes
+    public sealed class LibraryRetentionTimes : IRetentionTimeProvider
     {
         private readonly IDictionary<string, double[]> _dictPeptideRetentionTimes;
 
         public LibraryRetentionTimes(IDictionary<string, double[]> dictPeptideRetentionTimes)
         {
             _dictPeptideRetentionTimes = dictPeptideRetentionTimes;
+            MinRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Min();
+            MaxRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Max();
+            var listStdev = new List<double>();
+            foreach (double[] times in _dictPeptideRetentionTimes.Values)
+            {
+                if (times.Length < 2)
+                    continue;
+                var statTimes = new Statistics(times);
+                listStdev.Add(statTimes.StdDev());
+            }
+            var statStdev = new Statistics(listStdev);
+            MeanStdev = statStdev.Mean();
         }
 
+        public double MinRt { get; private set; }
+        public double MaxRt { get; private set; }
+        public double MeanStdev { get; private set; }
+
+        /// <summary>
+        /// Returns all retention times for spectra that were identified to a
+        /// specific modified peptide sequence.
+        /// </summary>
         public double[] GetRetentionTimes(string sequence)
         {
             double[] retentionTimes;
             if (_dictPeptideRetentionTimes.TryGetValue(sequence, out retentionTimes))
                 return retentionTimes;
             return new double[0];
+        }
+
+        /// <summary>
+        /// Return the average retention time for spectra that were identified to a
+        /// specific modified peptide sequence, with filtering applied in an attempt
+        /// to avoid peptides eluting a second time near the end of the gradient.
+        /// </summary>
+        public double? GetRetentionTime(string sequence)
+        {
+            double[] retentionTimes = GetRetentionTimes(sequence);
+            if (retentionTimes.Length == 0)
+                return null;
+            else if (retentionTimes.Length == 1)
+                return retentionTimes[0];
+
+            double meanTimes = retentionTimes[0];
+            // Anything 3 times the mean standard deviation away from the mean is suspicious
+            double maxDelta = MeanStdev*3;
+            for (int i = 1; i < retentionTimes.Length; i++)
+            {
+                double time = retentionTimes[i];
+                double delta = time - meanTimes;
+                // If the time is more than the max delta from the other times, and closer
+                // to the end than to the other times, then do not include it or anything
+                // after it.
+                if (delta > maxDelta && delta > MaxRt - time)
+                {
+                    double[] subsetTimes = new double[i];
+                    Array.Copy(retentionTimes, subsetTimes, i);
+                    retentionTimes = subsetTimes;
+                    break;
+                }
+                // Adjust the running mean.
+                meanTimes += (time - meanTimes)/(i+1);
+            }
+            return retentionTimes.Average();
+        }
+
+        public IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes
+        {
+            get
+            {
+                return from sequence in _dictPeptideRetentionTimes.Keys
+                       let time = GetRetentionTime(sequence)
+                       where time.HasValue
+                       select new MeasuredRetentionTime(sequence, time.Value);
+            }
         }
     }
 

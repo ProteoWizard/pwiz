@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "X!Hunter", PeptideCount = Count };
+                LibraryDetails details = new LibraryDetails { Format = "X!Hunter", PeptideCount = SpectrumCount };
 
                 if (!string.IsNullOrEmpty(Id))
                 {
@@ -743,7 +743,7 @@ namespace pwiz.Skyline.Model.Lib
             using (Stream outStream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true))
             {
                 outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(library.Count), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(library.SpectrumCount), 0, sizeof(int));
                 
                 byte[] header = new byte[256 - 8];
                 const string headerText = @"HLF v=2 s=test.hlf d=2009.02.04";

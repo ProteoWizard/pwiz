@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "SpectraST", PeptideCount = Count };
+                LibraryDetails details = new LibraryDetails { Format = "SpectraST", PeptideCount = SpectrumCount };
 
                 if (!string.IsNullOrEmpty(Id))
                 {

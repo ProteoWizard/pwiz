@@ -524,7 +524,7 @@ namespace pwiz.Skyline.SettingsUI
 
             var pepCount = calculatorSpec.ChooseRegressionPeptides(peptidesTimes.Select(mrt => mrt.PeptideSequence)).Count();
 
-            labelRValue.Text = string.Format("({0} peptides, R = {1:F02})", pepCount, r);
+            labelRValue.Text = string.Format("({0} peptides, R = {1})", pepCount, Math.Round(r, RetentionTimeRegression.ThresholdPrecision));
             // Right align with the peptide grid.
             labelRValue.Left = gridPeptides.Right - labelRValue.Width;
 

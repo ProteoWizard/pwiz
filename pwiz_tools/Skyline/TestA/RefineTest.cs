@@ -165,6 +165,7 @@ namespace pwiz.SkylineTestA
 
             // Further refine with retention time refinement
             refineSettings.RTRegressionThreshold = 0.95;
+            refineSettings.RTRegressionPrecision = 2;   // Backward compatibility
             var docRefinedRT = refineSettings.Refine(document);
             Assert.AreNotEqual(docRefined.PeptideCount, docRefinedRT.PeptideCount);
             // And peak count ratio

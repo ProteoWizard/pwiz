@@ -252,8 +252,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 // TODO change back to 70 and 210
-                Assert.AreEqual(66, SkylineWindow.Document.PeptideCount);
-                Assert.AreEqual(198, SkylineWindow.Document.TransitionCount);
+                Assert.AreEqual(65, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(195, SkylineWindow.Document.TransitionCount);
                 SkylineWindow.CollapsePeptides();
                 SkylineWindow.Undo();
             });
@@ -270,7 +270,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 //Todo: Was previously 110
-                Assert.AreEqual(106, SkylineWindow.Document.PeptideCount);
+                Assert.AreEqual(105, SkylineWindow.Document.PeptideCount);
 
                 // Scheduling for Efficient Acquisition, p. 17 
                 SkylineWindow.Undo();

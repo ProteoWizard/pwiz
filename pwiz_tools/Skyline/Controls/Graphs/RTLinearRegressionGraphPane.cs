@@ -164,9 +164,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, bool bestResult)
+        public static PeptideDocNode[] CalcOutliers(SrmDocument document, double threshold, int? precision, bool bestResult)
         {
-            var data = new GraphData(document, null, -1, threshold, true, bestResult);
+            var data = new GraphData(document, null, -1, threshold, precision, true, bestResult);
             return data.Refine(() => false).Outliers;
         }
 
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public void Update(SrmDocument document, int resultIndex, double threshold, bool refine)
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
-            Data = new GraphData(document, Data, resultIndex, threshold, refine, bestResults);
+            Data = new GraphData(document, Data, resultIndex, threshold, null, refine, bestResults);
 
             XAxis.Title.Text = Data.Calculator.Name;
         }
@@ -356,6 +356,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly int _resultIndex;
             private readonly bool _bestResult;
             private readonly double _threshold;
+            private readonly int? _thresholdPrecision;
             private readonly bool _refine;
             private readonly List<PeptideDocumentIndex> _peptidesIndexes;
             private readonly List<MeasuredRetentionTime> _peptidesTimes;
@@ -374,7 +375,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private double[] _scoresRefined;
             private double[] _timesOutliers;
             private double[] _scoresOutliers;
-            private string _calculatorName;
+            private readonly string _calculatorName;
 
             private readonly RetentionScoreCalculatorSpec _calculator;
 
@@ -383,12 +384,13 @@ namespace pwiz.Skyline.Controls.Graphs
             private HashSet<int> _outlierIndexes;
 
             public GraphData(SrmDocument document, GraphData dataPrevious,
-                int resultIndex, double threshold, bool refine, bool bestResult)
+                int resultIndex, double threshold, int? thresholdPrecision, bool refine, bool bestResult)
             {
                 _document = document;
                 _resultIndex = resultIndex;
                 _bestResult = bestResult;
                 _threshold = threshold;
+                _thresholdPrecision = thresholdPrecision;
                 _peptidesIndexes = new List<PeptideDocumentIndex>();
                 _peptidesTimes = new List<MeasuredRetentionTime>();
                 int index = -1;
@@ -412,15 +414,15 @@ namespace pwiz.Skyline.Controls.Graphs
                     _peptidesTimes.Add(new MeasuredRetentionTime(modSeq, rt.Value));
                 }
 
-                //Before anything else involving calculators, try connecting all the RCalcIrts
-                Settings.Default.RTScoreCalculatorList.Initialize(null);
-
                 _calculatorName = Settings.Default.RTCalculatorName;
                 RetentionScoreCalculatorSpec calc = !string.IsNullOrEmpty(_calculatorName)
                                                         ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
                                                         : null;
                 if (calc == null)
                 {
+                    // Initialize all calculators
+                    Settings.Default.RTScoreCalculatorList.Initialize(null);
+
                     //This call will pick the best calculator, disqualifying any iRT Calcs that do not have
                     //connected databases
                     _regressionAll = RetentionTimeRegression.CalcRegression("graph",
@@ -430,6 +432,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else
                 {
+                    // Initialize the one calculator
+                    calc = Settings.Default.RTScoreCalculatorList.Initialize(calc, null);
+
                     _regressionAll = RetentionTimeRegression.CalcRegression("graph",
                                                                             new[] {calc},
                                                                             _peptidesTimes, _scoreCache, true,
@@ -517,13 +522,13 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 if (IsRefined())
                     return this;
-                var result = ImClone(this).RefineCloned(_threshold, isCanceled);
+                var result = ImClone(this).RefineCloned(_threshold, _thresholdPrecision, isCanceled);
                 if (result == null)
                     return this;
                 return result;
             }
 
-            private GraphData RefineCloned(double threshold, Func<bool> isCanceled)
+            private GraphData RefineCloned(double threshold, int? precision, Func<bool> isCanceled)
             {
                 // Create list of deltas between predicted and measured times
                 _outlierIndexes = new HashSet<int>();
@@ -549,7 +554,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     catch (CalculatorException)
                     {
-                        return null;
+                        requiredPeptidesNames = new string[0];
                     }
                 }
 
@@ -571,6 +576,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 _regressionRefined = (_regressionAll == null
                                           ? null
                                           : _regressionAll.FindThreshold(threshold,
+                                                                         precision,
                                                                          0,
                                                                          variablePeptides.Count,
                                                                          requiredPeptides,
@@ -820,11 +826,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     label = String.Format("slope = {0:F02}, intercept = {1:F02}\n" +
                                           "window = {2:F01}\n" +
-                                          "r = {3:F02}",
+                                          "r = {3}",
                                           regression.Conversion.Slope,
                                           regression.Conversion.Intercept,
                                           regression.TimeWindow,
-                                          statistics.R);
+                                          Math.Round(statistics.R, RetentionTimeRegression.ThresholdPrecision));
                 }
 
                 TextObj text = new TextObj(label, score, time,

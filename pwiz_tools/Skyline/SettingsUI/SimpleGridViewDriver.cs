@@ -37,7 +37,7 @@ namespace pwiz.Skyline.SettingsUI
 
         protected DataGridView GridView { get { return _gridView; } }
 
-        protected IWin32Window MessageParent { get { return GridView.Parent; } }
+        protected Control MessageParent { get { return GridView.Parent; } }
 
         public SortableBindingList<TItem> Items { get; private set; }
 

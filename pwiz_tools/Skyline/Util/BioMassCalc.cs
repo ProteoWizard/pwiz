@@ -40,7 +40,15 @@ namespace pwiz.Skyline.Util
     /// Atomic masses come from http://www.unimod.org/unimod_help.html.
     /// Only supports the atoms H, O, N, C, S and P, and at most
     /// 2-digit atomic counts.
-    /// </summary>
+    /// The average mass of Carbon comes from Michael MacCoss, which he claims
+    /// was derived by Dwight Matthews and John Hayes in the 70s.  It takes into
+    /// account carbon 12 enrichment in living organisms:
+    /// 
+    /// http://www.madsci.org/posts/archives/2003-06/1055532737.Bc.r.html
+    /// 
+    /// But at 12.01085 is slightly higher than the current Unimod standard
+    /// of 12.0107.
+    ///  </summary>
     public class BioMassCalc
     {
         public static readonly BioMassCalc MONOISOTOPIC = new BioMassCalc(MassType.Monoisotopic);

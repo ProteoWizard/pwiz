@@ -273,7 +273,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {  
-                LibraryDetails details = new LibraryDetails {Format = "NIST", PeptideCount = Count};
+                LibraryDetails details = new LibraryDetails {Format = "NIST", PeptideCount = SpectrumCount};
 
                 if (!string.IsNullOrEmpty(Id))
                 {
@@ -773,9 +773,12 @@ namespace pwiz.Skyline.Model.Lib
                 var libraryEntries = new List<NistSpectrumInfo>(10000);
                 var setSequences = new Dictionary<LibSeqKey, bool>(10000);
 
+                long lineCount = 0;
                 string line;
                 while ((line = reader.ReadLine()) != null)
                 {
+                    lineCount++;
+
                     // Update status trying to approximate position in the file
                     readChars += line.Length;
                     int percentComplete = (int) (readChars * percent / size);
@@ -808,6 +811,8 @@ namespace pwiz.Skyline.Model.Lib
                     // Process until the start of the peaks
                     while ((line = reader.ReadLine()) != null)
                     {
+                        lineCount++;
+
                         readChars += line.Length;
 
                         match = REGEX_NUM_PEAKS.Match(line);
@@ -834,15 +839,15 @@ namespace pwiz.Skyline.Model.Lib
                         }
 
                         if (line.StartsWith("_EOF_"))
-                            throw new IOException("Unexpected end of file.");
+                            ThrowIOException(lineCount, "Unexpected end of file.");
                         else if (line.StartsWith("Name:"))
                             break;
                     }
 
                     if (numPeaks == 0)
-                        throw new IOException(string.Format("No peaks found for peptide {0}.", sequence));
+                        ThrowIOException(lineCount, string.Format("No peaks found for peptide {0}.", sequence));
                     if (numPeaks > ushort.MaxValue)
-                        throw new IOException(string.Format("Peak count for MS/MS spectrum excedes maximum {0}.", ushort.MaxValue));
+                        ThrowIOException(lineCount, string.Format("Peak count for MS/MS spectrum excedes maximum {0}.", ushort.MaxValue));
 
                     double totalIntensity = 0;
 
@@ -852,7 +857,10 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         line = reader.ReadLine();
                         if (line == null)
-                            throw new IOException(string.Format("Unexpected end of file in peaks for {0}.", sequence));
+                        {
+                            ThrowIOException(lineCount, string.Format("Unexpected end of file in peaks for {0}.", sequence));
+                            break;  // ReSharper
+                        }
                         readChars += line.Length;
 
                         // Parse out mass and intensity as quickly as possible, since
@@ -860,7 +868,7 @@ namespace pwiz.Skyline.Model.Lib
                         int iTab1 = line.IndexOf('\t');
                         int iTab2 = (iTab1 == -1 ? -1 : line.IndexOf('\t', iTab1 + 1));
                         if (iTab1 == -1 || iTab2 == -1)
-                            throw new IOException(string.Format("Invalid format at peak {0} for {1}.", i + 1, sequence));
+                            ThrowIOException(lineCount, string.Format("Invalid format at peak {0} for {1}.", i + 1, sequence));
 
                         string mzField = line.Substring(0, iTab1++);
                         string intensityField = line.Substring(iTab1, iTab2 - iTab1);
@@ -933,6 +941,10 @@ namespace pwiz.Skyline.Model.Lib
             return true;
         }
     
+        private void ThrowIOException(long lineNum, string message)
+        {
+            throw new IOException(string.Format("{0} (line {1}): {2}", FilePath, lineNum, message));
+        }
 
         private static string Modify(string sequence, string mod)
         {

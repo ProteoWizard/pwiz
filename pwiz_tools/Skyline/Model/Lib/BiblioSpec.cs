@@ -205,7 +205,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     Format = "BiblioSpec",
                     Revision = Revision.ToString(),
-                    PeptideCount = Count
+                    PeptideCount = SpectrumCount
                 };
 
                 return details;
@@ -534,6 +534,12 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
+        {
+            retentionTimes = null;
+            return false;
+        }
+
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
             // This base class only handles best match spectra
@@ -541,8 +547,12 @@ namespace pwiz.Skyline.Model.Lib
                 yield return new SpectrumInfo(this, labelType, key);
         }
 
+        public override int? FileCount
+        {
+            get { return null; }
+        }
 
-        public override int Count
+        public override int SpectrumCount
         {
             get { return _dictLibrary == null ? 0 : _dictLibrary.Count; }
         }
@@ -596,7 +606,7 @@ namespace pwiz.Skyline.Model.Lib
             using (FileSaver fs = new FileSaver(path, streamManager))
             using (Stream outStream = streamManager.CreateStream(fs.SafeName, FileMode.Create, true))
             {
-                outStream.Write(BitConverter.GetBytes(library.Count), 0, sizeof(int)); // num_spectra
+                outStream.Write(BitConverter.GetBytes(library.SpectrumCount), 0, sizeof(int)); // num_spectra
                 outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));             // filtered
                 outStream.Write(BitConverter.GetBytes(1), 0, sizeof(int));             // version1
                 outStream.Write(BitConverter.GetBytes(1), 0, sizeof(int));             // version2

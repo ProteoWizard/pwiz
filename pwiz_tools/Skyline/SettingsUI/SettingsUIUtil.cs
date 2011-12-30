@@ -44,31 +44,46 @@ namespace pwiz.Skyline.SettingsUI
 
         public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate)
         {
-            return grid.DoPaste(parent, validate, values => grid.Rows.Add(values));
+            string textClip = GetClipBoardText(parent);
+            if (string.IsNullOrEmpty(textClip) || !grid.EndEdit())
+                return false;
+
+            grid.SuspendLayout();
+            // Remove everything, and paste new contents
+            grid.Rows.Clear();
+
+            DoPasteText(parent, textClip, grid.ColumnCount, validate, values => grid.Rows.Add(values));
+
+            grid.ResumeLayout();
+            return true;
         }
 
         public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate, Action<string[]> addRow)
         {
-            string textClip;
+            string textClip = GetClipBoardText(parent);
+            if (string.IsNullOrEmpty(textClip) || !grid.EndEdit())
+                return false;
+
+            DoPasteText(parent, textClip, grid.ColumnCount, validate, addRow);
+            return true;
+        }
+
+        private static string GetClipBoardText(IWin32Window parent)
+        {
             try
             {
-                textClip = Clipboard.GetText();
+                return Clipboard.GetText();
             }
             catch (ExternalException)
             {
                 MessageDlg.Show(parent, ClipboardHelper.GetOpenClipboardMessage("Failed getting data from the clipboard."));
-                return false;
+                return null;
             }
+        }
 
-            if (!grid.EndEdit())
-                return false;
-
-            grid.SuspendLayout();
-
+        private static void DoPasteText(IWin32Window parent, string textClip, int columnCount, ValidateCellValues validate, Action<string[]> addRow)
+        {
             TextReader reader = new StringReader(textClip);
-
-            // Remove everything, and paste new contents
-            grid.Rows.Clear();
 
             int lineNum = 0;
             String line;
@@ -76,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 lineNum++;
                 String[] columns = line.Split('\t');
-                if (columns.Length > grid.ColumnCount)
+                if (columns.Length > columnCount)
                 {
                     string message = string.Format("Incorrect number of columns ({0}) found at line {1}.",
                                                    columns.Length, lineNum);
@@ -92,9 +107,6 @@ namespace pwiz.Skyline.SettingsUI
 
                 addRow(columns);
             }
-
-            grid.ResumeLayout();
-            return true;
         }
 
         public static bool DoDelete(this DataGridView grid)

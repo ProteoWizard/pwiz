@@ -37,8 +37,8 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.bindingSourceStandard = new System.Windows.Forms.BindingSource(this.components);
             this.label3 = new System.Windows.Forms.Label();
-            this.textFixedPep1 = new System.Windows.Forms.TextBox();
-            this.textFixedPep2 = new System.Windows.Forms.TextBox();
+            this.comboFixedPoint1 = new System.Windows.Forms.ComboBox();
+            this.comboFixedPoint2 = new System.Windows.Forms.ComboBox();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.SuspendLayout();
             // 
@@ -107,23 +107,27 @@
             this.label3.TabIndex = 4;
             this.label3.Text = "&Fixed peptides:";
             // 
-            // textFixedPep1
+            // comboFixedPoint1
             // 
-            this.textFixedPep1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.textFixedPep1.Location = new System.Drawing.Point(16, 93);
-            this.textFixedPep1.Name = "textFixedPep1";
-            this.textFixedPep1.Size = new System.Drawing.Size(295, 20);
-            this.textFixedPep1.TabIndex = 5;
+            this.comboFixedPoint1.DisplayMember = "PeptideModSeq";
+            this.comboFixedPoint1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboFixedPoint1.FormattingEnabled = true;
+            this.comboFixedPoint1.Location = new System.Drawing.Point(16, 93);
+            this.comboFixedPoint1.Name = "comboFixedPoint1";
+            this.comboFixedPoint1.Size = new System.Drawing.Size(295, 21);
+            this.comboFixedPoint1.TabIndex = 5;
+            this.comboFixedPoint1.SelectedIndexChanged += new System.EventHandler(this.comboFixedPoint1_SelectedIndexChanged);
             // 
-            // textFixedPep2
+            // comboFixedPoint2
             // 
-            this.textFixedPep2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.textFixedPep2.Location = new System.Drawing.Point(16, 120);
-            this.textFixedPep2.Name = "textFixedPep2";
-            this.textFixedPep2.Size = new System.Drawing.Size(295, 20);
-            this.textFixedPep2.TabIndex = 6;
+            this.comboFixedPoint2.DisplayMember = "PeptideModSeq";
+            this.comboFixedPoint2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboFixedPoint2.FormattingEnabled = true;
+            this.comboFixedPoint2.Location = new System.Drawing.Point(16, 121);
+            this.comboFixedPoint2.Name = "comboFixedPoint2";
+            this.comboFixedPoint2.Size = new System.Drawing.Size(295, 21);
+            this.comboFixedPoint2.TabIndex = 6;
+            this.comboFixedPoint2.SelectedIndexChanged += new System.EventHandler(this.comboFixedPoint2_SelectedIndexChanged);
             // 
             // RecalibrateIrtDlg
             // 
@@ -132,8 +136,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(323, 159);
-            this.Controls.Add(this.textFixedPep2);
-            this.Controls.Add(this.textFixedPep1);
+            this.Controls.Add(this.comboFixedPoint2);
+            this.Controls.Add(this.comboFixedPoint1);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
@@ -164,7 +168,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.BindingSource bindingSourceStandard;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox textFixedPep1;
-        private System.Windows.Forms.TextBox textFixedPep2;
+        private System.Windows.Forms.ComboBox comboFixedPoint1;
+        private System.Windows.Forms.ComboBox comboFixedPoint2;
     }
 }

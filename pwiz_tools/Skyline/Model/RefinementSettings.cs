@@ -63,6 +63,7 @@ namespace pwiz.Skyline.Model
         public bool PreferLargeIons { get; set; }
         public bool RemoveMissingResults { get; set; }
         public double? RTRegressionThreshold { get; set; }
+        public int? RTRegressionPrecision { get; set; }
         public double? DotProductThreshold { get; set; }
         public bool UseBestResult { get; set; }
         public PickLevel AutoPickChildrenAll { get; set; }
@@ -75,8 +76,9 @@ namespace pwiz.Skyline.Model
             HashSet<int> outlierIds = new HashSet<int>();
             if (RTRegressionThreshold.HasValue)
             {
+                // TODO: Move necessary code into Model.
                 var outliers = RTLinearRegressionGraphPane.CalcOutliers(document,
-                    RTRegressionThreshold.Value, UseBestResult);
+                    RTRegressionThreshold.Value, RTRegressionPrecision, UseBestResult);
 
                 foreach (var nodePep in outliers)
                     outlierIds.Add(nodePep.Id.GlobalIndex);

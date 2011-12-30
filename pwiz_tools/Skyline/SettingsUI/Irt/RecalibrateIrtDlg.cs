@@ -20,10 +20,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Util;
@@ -33,19 +32,35 @@ namespace pwiz.Skyline.SettingsUI.Irt
     public partial class RecalibrateIrtDlg : Form
     {
         private readonly IEnumerable<DbIrtPeptide> _irtPeptides;
-        private readonly IDictionary<string, DbIrtPeptide> _dictSequenceToPeptide;
 
         public RecalibrateIrtDlg(IEnumerable<DbIrtPeptide> irtPeptides)
         {
             _irtPeptides = irtPeptides;
-            _dictSequenceToPeptide = new Dictionary<string, DbIrtPeptide>();
-            foreach (var peptide in irtPeptides)
-            {
-                if (!_dictSequenceToPeptide.ContainsKey(peptide.PeptideModSeq))
-                    _dictSequenceToPeptide.Add(peptide.PeptideModSeq, peptide);
-            }
-
+            
             InitializeComponent();
+
+            var standardPeptides = irtPeptides.Where(peptide => peptide.Standard)
+                                              .OrderBy(peptide => peptide.Irt)
+                                              .ToArray();
+            // Look for standard peptides with whole number values as the suggested fixed points
+            int iFixed1 = standardPeptides.IndexOf(peptide => Math.Round(peptide.Irt, 8) == Math.Round(peptide.Irt));
+            int iFixed2 = standardPeptides.LastIndexOf(peptide => Math.Round(peptide.Irt, 8) == Math.Round(peptide.Irt));
+            if (iFixed1 == -1 || iFixed2 == -1)
+            {
+                iFixed1 = 0;
+                iFixed2 = standardPeptides.Length - 1;
+            }
+            else if (iFixed1 == iFixed2)
+            {
+                if (iFixed1 < standardPeptides.Length / 2)
+                    iFixed2 = standardPeptides.Length - 1;
+                else
+                    iFixed1 = 0;
+            }
+            comboFixedPoint1.Items.AddRange(standardPeptides);
+            comboFixedPoint1.SelectedIndex = iFixed1;
+            comboFixedPoint2.Items.AddRange(standardPeptides);
+            comboFixedPoint2.SelectedIndex = iFixed2;
         }
 
         public RegressionLine LinearEquation { get; private set; }
@@ -62,21 +77,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (!helper.ValidateDecimalTextBox(e, textMaxIrt, minIrt, null, out maxIrt))
                 return;
 
-            string pepSeq1 = textFixedPep1.Text;
-            DbIrtPeptide peptide1;
-            if (!ValidatePeptideSequence(pepSeq1, out peptide1))
-            {
-                textFixedPep1.Focus();
-                return;
-            }
-
-            string pepSeq2 = textFixedPep2.Text;
-            DbIrtPeptide peptide2;
-            if (!ValidatePeptideSequence(pepSeq2, out peptide2))
-            {
-                textFixedPep2.Focus();
-                return;
-            }
+            var peptide1 = (DbIrtPeptide) comboFixedPoint1.SelectedItem;
+            var peptide2 = (DbIrtPeptide) comboFixedPoint2.SelectedItem;
 
             double minCurrent = Math.Min(peptide1.Irt, peptide2.Irt);
             double maxCurrent = Math.Max(peptide1.Irt, peptide2.Irt);
@@ -95,26 +97,31 @@ namespace pwiz.Skyline.SettingsUI.Irt
             DialogResult = DialogResult.OK;
         }
 
-        private bool ValidatePeptideSequence(string sequence, out DbIrtPeptide peptide)
-        {
-            peptide = null;
-            if (!FastaSequence.IsExSequence(sequence))
-            {
-                MessageDlg.Show(this, string.Format("The text '{0}' is not a valid modified peptide sequence.", sequence));
-                return false;
-            }
-
-            if (!_dictSequenceToPeptide.TryGetValue(sequence, out peptide))
-            {
-                MessageDlg.Show(this, string.Format("The sequence '{0}' is not in the iRT database.  Enter an existing sequence for recalibration.", sequence));
-                return false;
-            }
-            return true;
-        }
-
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void comboFixedPoint1_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateMinMax();
+        }
+
+        private void comboFixedPoint2_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateMinMax();
+        }
+
+        private void UpdateMinMax()
+        {
+            double irt1 = comboFixedPoint1.SelectedItem != null
+                              ? Math.Round(((DbIrtPeptide) comboFixedPoint1.SelectedItem).Irt, 2)
+                              : 0;
+            double irt2 = comboFixedPoint2.SelectedItem != null
+                              ? Math.Round(((DbIrtPeptide) comboFixedPoint2.SelectedItem).Irt, 2)
+                              : 100;
+            textMinIrt.Text = Math.Min(irt1, irt2).ToString();
+            textMaxIrt.Text = Math.Max(irt1, irt2).ToString();
         }
     }
 }

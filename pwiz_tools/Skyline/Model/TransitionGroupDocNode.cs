@@ -576,6 +576,8 @@ namespace pwiz.Skyline.Model
                 var transitionRanksLib = transitionRanks;
                 if (!diff.DiffTransitions && !diff.DiffTransitionProps)
                     transitionRanksLib = null;
+                // TODO: Use a TransitionCreationContext object instead, and defer ranking until it is needed
+                //       Otherwise, this can cause a lot of unnecessary work loading MS1 filtering documents.
                 // If transitions are not changing, then it is necessary to get all rankings,
                 // since any group may contain reranked transitions
                 TransitionGroup.GetLibraryInfo(settingsNew, mods, autoSelectTransitions, ref libInfo, transitionRanksLib);

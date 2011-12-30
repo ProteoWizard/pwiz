@@ -608,6 +608,12 @@
     <Compile Include="SettingsUI\Irt\AddIrtPeptidesDlg.Designer.cs">
       <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtSpectralLibrary.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\AddIrtSpectralLibrary.Designer.cs">
+      <DependentUpon>AddIrtSpectralLibrary.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\Irt\AddIrtStandardsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -679,6 +685,12 @@
     </Compile>
     <Compile Include="SettingsUI\BuildLibraryNotification.Designer.cs">
       <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.Designer.cs">
+      <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.cs">
       <SubType>Form</SubType>
@@ -1318,6 +1330,9 @@
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtPeptidesDlg.resx">
       <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtSpectralLibrary.resx">
+      <DependentUpon>AddIrtSpectralLibrary.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.resx">
       <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -1388,6 +1403,10 @@
     <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
     <EmbeddedResource Include="Resources\Fragment.bmp" />
     <EmbeddedResource Include="Resources\FragmentLib.bmp" />
+    <EmbeddedResource Include="SettingsUI\Irt\ChangeIrtPeptidesDlg.resx">
+      <DependentUpon>ChangeIrtPeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.resx">
       <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
       <SubType>Designer</SubType>

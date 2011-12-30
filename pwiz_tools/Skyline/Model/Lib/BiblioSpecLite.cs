@@ -160,6 +160,11 @@ namespace pwiz.Skyline.Model.Lib
             SchemaVersion = schemaVer;
         }
 
+        public override int? FileCount
+        {
+            get { return _librarySourceFiles.Length; }
+        }
+
         public override LibraryDetails LibraryDetails
         {
             get
@@ -175,7 +180,7 @@ namespace pwiz.Skyline.Model.Lib
                                                  Format = "BiblioSpec",
                                                  Revision = Revision.ToString(),
                                                  Version = SchemaVersion.ToString(),
-                                                 PeptideCount = Count,
+                                                 PeptideCount = SpectrumCount,
                                                  DataFiles = dataFiles
                                              };
 
@@ -827,6 +832,11 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        public override bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes)
+        {
+            return TryGetRetentionTimes(_librarySourceFiles[fileIndex].FilePath, out retentionTimes);
+        }
+
         public override bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
         {
             int j = FindSource(filePath);
@@ -847,10 +857,9 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         /// <summary>
-        /// Reads all retention times for a specified source file into 
+        /// Reads all retention times for a specified source file into a dictionary by
+        /// modified peptide sequence, with times stored in an array in ascending order.
         /// </summary>
-        /// <param name="sourceInfo"></param>
-        /// <returns></returns>
         private IDictionary<string, double[]> ReadRetentionTimes(BiblioLiteSourceInfo sourceInfo)
         {
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
@@ -858,7 +867,7 @@ namespace pwiz.Skyline.Model.Lib
                 select.CommandText = "SELECT peptideModSeq, t.retentionTime " +
                     "FROM [RefSpectra] INNER JOIN [RetentionTimes] as t ON [id] = [RefSpectraID] " +
                     "WHERE [SpectrumSourceId] = ? " +
-                    "ORDER BY peptideModSeq";
+                    "ORDER BY peptideModSeq, t.retentionTime";
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
 
                 using (SQLiteDataReader reader = select.ExecuteReader())

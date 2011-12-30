@@ -62,12 +62,12 @@ namespace pwiz.Skyline.SettingsUI
             this.btnSave = new System.Windows.Forms.ToolStripButton();
             this.btnPrint = new System.Windows.Forms.ToolStripButton();
             this.panel2 = new System.Windows.Forms.Panel();
-            this.labelRT = new System.Windows.Forms.Label();
             this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
             this.labelFilename = new System.Windows.Forms.Label();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
+            this.labelRT = new System.Windows.Forms.Label();
             this.ViewLibraryPanel = new System.Windows.Forms.Panel();
             this.LibraryLabel = new System.Windows.Forms.Label();
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
@@ -526,16 +526,6 @@ namespace pwiz.Skyline.SettingsUI
             this.panel2.Size = new System.Drawing.Size(477, 56);
             this.panel2.TabIndex = 1;
             // 
-            // labelRT
-            // 
-            this.labelRT.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelRT.Location = new System.Drawing.Point(72, 3);
-            this.labelRT.Name = "labelRT";
-            this.labelRT.Size = new System.Drawing.Size(403, 16);
-            this.labelRT.TabIndex = 4;
-            this.labelRT.Text = "RT";
-            this.labelRT.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            // 
             // cbAssociateProteins
             // 
             this.cbAssociateProteins.AutoSize = true;
@@ -588,6 +578,16 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel.Text = "Close";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            // 
+            // labelRT
+            // 
+            this.labelRT.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelRT.Location = new System.Drawing.Point(72, 3);
+            this.labelRT.Name = "labelRT";
+            this.labelRT.Size = new System.Drawing.Size(403, 16);
+            this.labelRT.TabIndex = 4;
+            this.labelRT.Text = "RT";
+            this.labelRT.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // ViewLibraryPanel
             // 

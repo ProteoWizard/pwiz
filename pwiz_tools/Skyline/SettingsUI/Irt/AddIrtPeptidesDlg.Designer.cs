@@ -43,21 +43,21 @@
             // listExisting
             // 
             this.listExisting.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                                                                             | System.Windows.Forms.AnchorStyles.Right)));
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.listExisting.FormattingEnabled = true;
             this.listExisting.Location = new System.Drawing.Point(12, 35);
             this.listExisting.Name = "listExisting";
-            this.listExisting.Size = new System.Drawing.Size(296, 82);
+            this.listExisting.Size = new System.Drawing.Size(312, 82);
             this.listExisting.TabIndex = 1;
             // 
             // listOverwrite
             // 
             this.listOverwrite.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                                                                              | System.Windows.Forms.AnchorStyles.Right)));
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.listOverwrite.FormattingEnabled = true;
             this.listOverwrite.Location = new System.Drawing.Point(12, 261);
             this.listOverwrite.Name = "listOverwrite";
-            this.listOverwrite.Size = new System.Drawing.Size(296, 82);
+            this.listOverwrite.Size = new System.Drawing.Size(312, 82);
             this.listOverwrite.TabIndex = 7;
             // 
             // labelExisting
@@ -65,9 +65,9 @@
             this.labelExisting.AutoSize = true;
             this.labelExisting.Location = new System.Drawing.Point(9, 19);
             this.labelExisting.Name = "labelExisting";
-            this.labelExisting.Size = new System.Drawing.Size(273, 13);
+            this.labelExisting.Size = new System.Drawing.Size(290, 13);
             this.labelExisting.TabIndex = 0;
-            this.labelExisting.Text = "The following peptides already have values in the library:";
+            this.labelExisting.Text = "The following {0} peptides already have values in the library:";
             // 
             // labelChoice
             // 
@@ -118,13 +118,13 @@
             this.labelOverwrite.Size = new System.Drawing.Size(295, 26);
             this.labelOverwrite.TabIndex = 6;
             this.labelOverwrite.Text = "The following peptides have values based on MS/MS scans,\r\nwhich will be replaced " +
-                                       "with new values:";
+                "with new values:";
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(329, 44);
+            this.btnCancel.Location = new System.Drawing.Point(345, 44);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 9;
@@ -135,7 +135,7 @@
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Location = new System.Drawing.Point(329, 14);
+            this.btnOk.Location = new System.Drawing.Point(345, 14);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 8;
@@ -148,7 +148,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(416, 356);
+            this.ClientSize = new System.Drawing.Size(432, 356);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.labelOverwrite);
