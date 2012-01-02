@@ -643,12 +643,13 @@ namespace IDPicker.Controls
                         overallData.Protein = overallData.Protein ?? item.Protein;
                     }
                 }
-                else if (item.Peptide != null || item.DistinctMatchKey != null)
+                else if (item.PeptideGroup != null || item.Peptide != null || item.DistinctMatchKey != null)
                 {
-                    if (overallData.Peptide != null || overallData.DistinctMatchKey != null)
+                    if (overallData.PeptideGroup != null || overallData.Peptide != null || overallData.DistinctMatchKey != null)
                         breadCrumbs.RemoveAt(x);
                     else
                     {
+                        overallData.PeptideGroup = overallData.PeptideGroup ?? item.PeptideGroup;
                         overallData.Peptide = overallData.Peptide ?? item.Peptide;
                         overallData.DistinctMatchKey = overallData.DistinctMatchKey ?? item.DistinctMatchKey;
                     }

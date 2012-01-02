@@ -89,6 +89,7 @@ namespace IDPicker.DataModel
             Cluster = other.Cluster == null ? null : new List<int>(other.Cluster);
             ProteinGroup = other.ProteinGroup == null ? null : new List<int>(other.ProteinGroup);
             Protein = other.Protein == null ? null : new List<Protein>(other.Protein);
+            PeptideGroup = other.PeptideGroup == null ? null : new List<int>(other.PeptideGroup);
             Peptide = other.Peptide == null ? null : new List<Peptide>(other.Peptide);
             DistinctMatchKey = other.DistinctMatchKey == null ? null : new List<DistinctMatchKey>(other.DistinctMatchKey);
             Modifications = other.Modifications == null ? null : new List<Modification>(other.Modifications);
@@ -145,7 +146,7 @@ namespace IDPicker.DataModel
             get
             {
                 return Cluster.IsNullOrEmpty() && ProteinGroup.IsNullOrEmpty() && Protein.IsNullOrEmpty() &&
-                       Peptide.IsNullOrEmpty() && DistinctMatchKey.IsNullOrEmpty() &&
+                       PeptideGroup.IsNullOrEmpty() && Peptide.IsNullOrEmpty() && DistinctMatchKey.IsNullOrEmpty() &&
                        Modifications.IsNullOrEmpty() && ModifiedSite.IsNullOrEmpty() &&
                        SpectrumSourceGroup.IsNullOrEmpty() && SpectrumSource.IsNullOrEmpty() &&
                        Spectrum.IsNullOrEmpty() && Charge.IsNullOrEmpty() && Analysis.IsNullOrEmpty() &&
