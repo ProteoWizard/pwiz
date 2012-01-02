@@ -336,11 +336,15 @@ namespace tagrecon
         g_rtConfig->PrecursorMassTolerance.clear();
         g_rtConfig->NTerminalMassTolerance.clear();
         g_rtConfig->CTerminalMassTolerance.clear();
+        // Set the precursor mass tolerance for untagged spectra.
+        g_rtConfig->untaggedSpectraPrecMassTolerance.clear();
         for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
         {
             g_rtConfig->PrecursorMassTolerance.push_back(g_rtConfig->PrecursorMzTolerance * z);
             g_rtConfig->NTerminalMassTolerance.push_back(g_rtConfig->NTerminusMzTolerance * z);
             g_rtConfig->CTerminalMassTolerance.push_back(g_rtConfig->CTerminusMzTolerance * z);
+            g_rtConfig->untaggedSpectraPrecMassTolerance.push_back(MZTolerance(g_rtConfig->UntaggedSpectraPrecMZTol.value * z,
+                                                                          g_rtConfig->UntaggedSpectraPrecMZTol.units) );
         }
 
    		// Locate all tags with same amino acid sequence to a single location.        
@@ -1283,8 +1287,8 @@ namespace tagrecon
                 vector<SpectraMassMap::iterator> candidateHypotheses;
                 SpectraMassMap::iterator cur, end;
 
-                end = untaggedSpectraByChargeState[z].upper_bound( neutralMass + g_rtConfig->PrecursorMassTolerance[z] );
-                for( cur = untaggedSpectraByChargeState[z].lower_bound( neutralMass - g_rtConfig->PrecursorMassTolerance[z] ); cur != end; ++cur )
+                end = untaggedSpectraByChargeState[z].upper_bound( neutralMass + g_rtConfig->untaggedSpectraPrecMassTolerance[z] );
+                for( cur = untaggedSpectraByChargeState[z].lower_bound( neutralMass - g_rtConfig->untaggedSpectraPrecMassTolerance[z] ); cur != end; ++cur )
                     candidateHypotheses.push_back(cur);
                 // For each candidate spectrum
                 BOOST_FOREACH(SpectraMassMap::iterator spectrumHypothesisPair, candidateHypotheses)
