@@ -225,17 +225,19 @@ namespace BuildQTRAPMethod
                                                     TemplateMethod));
             }
 
-            if (method.PeriodCount != 1)
+            if (method.PeriodCount == 0)
             {
-                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one period.",
+                throw new IOException(string.Format("Invalid template method {0}.  Expecting at least one period.",
                                                     TemplateMethod));
 
             }
 
-            var msPeriod = (Period)method.GetPeriod(0);
+            // Get the last period in the given template method. 
+            // We will add transitions to the last period only. 
+            var msPeriod = (Period)method.GetPeriod(method.PeriodCount - 1);
             if (msPeriod.ExperimCount != 1)
             {
-                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one experiment.",
+                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one experiment in the last period.",
                                                     TemplateMethod));
             }
 
@@ -271,7 +273,9 @@ namespace BuildQTRAPMethod
         {
          
             var method = ExtractMsMethod(acqMethod);
-            var period = (Period)method.GetPeriod(0);
+            // Get the last period in the given template method. 
+            // We will add transitions to the last period only. 
+            var period = (Period)method.GetPeriod(method.PeriodCount - 1);
             var msExperiment = (Experiment)period.GetExperiment(0);
 
             msExperiment.DeleteAllMasses();

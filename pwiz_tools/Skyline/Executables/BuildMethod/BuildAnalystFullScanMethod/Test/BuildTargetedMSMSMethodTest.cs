@@ -152,21 +152,57 @@ namespace BuildAnalystFullScanMethod.Test
             var srcParamsTbl_mine = (ParamDataColl)myExpt.SourceParamsTbl;
            
 
-            short s1;
-            short s2;
-            Assert.AreEqual(((ParameterData)srcParamsTbl_template.FindParameter("GS1", out s1)).startVal,
-                             ((ParameterData)srcParamsTbl_mine.FindParameter("GS1", out s2)).startVal);
-            Assert.AreEqual(((ParameterData)srcParamsTbl_template.FindParameter("GS2", out s1)).startVal,
-                             ((ParameterData)srcParamsTbl_mine.FindParameter("GS2", out s2)).startVal);
-            Assert.AreEqual(((ParameterData)srcParamsTbl_template.FindParameter("CUR", out s1)).startVal,
-                             ((ParameterData)srcParamsTbl_mine.FindParameter("CUR", out s2)).startVal);
-            Assert.AreEqual(((ParameterData)srcParamsTbl_template.FindParameter("TEM", out s1)).startVal,
-                             ((ParameterData)srcParamsTbl_mine.FindParameter("TEM", out s2)).startVal);
+            CompareParam("GS1", srcParamsTbl_template, srcParamsTbl_mine);
+            CompareParam("GS2", srcParamsTbl_template, srcParamsTbl_mine);
+            CompareParam("CUR", srcParamsTbl_template, srcParamsTbl_mine);
+            CompareParam("TEM", srcParamsTbl_template, srcParamsTbl_mine);
+
+            Assert.AreEqual(templateExpt.MassRangesCount, myExpt.MassRangesCount);
+
+            for (int i = 0; i < templateExpt.MassRangesCount; i++)
+            {
+                var compoundDepParams_template =
+                    (ParamDataColl) ((MassRange) (templateExpt.GetMassRange(i))).MassDepParamTbl;
+                var compoundDepParams_mine = (ParamDataColl) ((MassRange) (myExpt.GetMassRange(i))).MassDepParamTbl;
+
+                CompareParam("DP", compoundDepParams_template, compoundDepParams_mine);
+                CompareParam("CE", compoundDepParams_template, compoundDepParams_mine);
+                CompareParam("IRD", compoundDepParams_template, compoundDepParams_mine);
+                CompareParam("IRW", compoundDepParams_template, compoundDepParams_mine);
+
+                if (!isQstar)
+                {
+                    CompareParam("CES", compoundDepParams_template, compoundDepParams_mine);
+                }
+                else
+                {
+                    CompareParam("FP", compoundDepParams_template, compoundDepParams_mine);
+                    CompareParam("DP2", compoundDepParams_template, compoundDepParams_mine);
+                    CompareParam("CAD", compoundDepParams_template, compoundDepParams_mine);
+                }
+            }
 
             if (!isQstar)
             {
                 Assert.AreEqual(((ITOFProperties2)templateExpt).HighSensitivity, ((ITOFProperties2)myExpt).HighSensitivity);
             }
+        }
+
+        private static void CompareParam(string paramKey, ParamDataColl templateParamColl, ParamDataColl myParamColl)
+        {
+            short s1;
+            short s2;
+
+            var templateParam = (ParameterData)templateParamColl.FindParameter(paramKey, out s1);
+            var myParam = (ParameterData)myParamColl.FindParameter(paramKey, out s2);
+            if (templateParam == null)
+            {
+                Assert.IsNull(myParam);
+                return;
+            }
+            
+            Assert.IsNotNull(myParam);
+            Assert.AreEqual(templateParam.startVal, myParam.startVal);
         }
     }
 }

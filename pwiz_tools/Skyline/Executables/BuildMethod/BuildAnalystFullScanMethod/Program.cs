@@ -421,17 +421,22 @@ namespace BuildAnalystFullScanMethod
 
             string ionSprayVoltageParamName = "ISVF"; // ISVF on 5600, IS on QSTAR
             float ionSprayVoltage;
-            
-            try
+
+            var paramData = ((ParameterData)srcParamsTbl.FindParameter(ionSprayVoltageParamName, out s));
+            if (s != -1)
             {
-                ionSprayVoltage = ((ParameterData)srcParamsTbl.FindParameter(ionSprayVoltageParamName, out s)).startVal;
+                ionSprayVoltage = paramData.startVal;
             }
-            catch (Exception)
+            else
             {
                 ionSprayVoltageParamName = "IS";
                 ionSprayVoltage = ((ParameterData)srcParamsTbl.FindParameter(ionSprayVoltageParamName, out s)).startVal;
-            } 
-           
+            }
+
+            // We will use parameters from the first mass range in the template product ion experiment.
+            var massRange_template = (IMassRange)prodIonExperiment.GetMassRange(0);
+            var paramTbl_template = (ParamDataColl)massRange_template.MassDepParamTbl;
+
 
             double minPrecursorMass = double.MaxValue;
             double maxPrecursorMass = 0;
@@ -462,6 +467,13 @@ namespace BuildAnalystFullScanMethod
                 tofProperties.AccumTime = tofPropertiesTemplate.AccumTime;
                 tofProperties.TOFMassMin = tofPropertiesTemplate.TOFMassMin;
                 tofProperties.TOFMassMax = tofPropertiesTemplate.TOFMassMax;
+                
+
+                // The following should trigger the "Suggest" button functionality
+                // of updating the Q2 transmission window.
+                tofProperties.UseQ1TranDefault = 1;
+                //tofProperties.UseTOFExtrDefault = 1; // Works without this one.
+
 
                 // High Sensitivity vs. High Resolution
                 var tofProperties2 = experiment as ITOFProperties2;
@@ -477,7 +489,71 @@ namespace BuildAnalystFullScanMethod
                 srcParams.AddSetParameter("GS2", sourceGas2, sourceGas2, 0, out s);
                 srcParams.AddSetParameter("CUR", curtainGas, curtainGas, 0, out s);
                 srcParams.AddSetParameter("TEM", temperature, temperature, 0, out s);
-                srcParams.AddSetParameter(ionSprayVoltageParamName, ionSprayVoltage, ionSprayVoltage, 0, out s);             
+                srcParams.AddSetParameter(ionSprayVoltageParamName, ionSprayVoltage, ionSprayVoltage, 0, out s);
+
+                // Copy the compound dependent parameters from the template
+                for (int i = 0; i < experiment.MassRangesCount; i++)
+                {
+                    var mr_i = (IMassRange)experiment.GetMassRange(i);
+                    var paramTbl_i = (ParamDataColl)mr_i.MassDepParamTbl;
+
+                    // Declustering potential
+                    float dp = ((ParameterData)paramTbl_template.FindParameter("DP", out s)).startVal;
+                    if(s != -1)
+                    {
+                        paramTbl_i.AddSetParameter("DP", dp, dp, 0, out s); 
+                    }
+                    
+
+                    // Collision engergy
+                    float ce = ((ParameterData)paramTbl_template.FindParameter("CE", out s)).startVal;
+                    if (s != -1)
+                    {
+                        paramTbl_i.AddSetParameter("CE", ce, ce, 0, out s);
+                    }
+
+                    // Ion release delay
+                    float ird = ((ParameterData)paramTbl_template.FindParameter("IRD", out s)).startVal;
+                    if (s != -1)
+                    {
+                        paramTbl_i.AddSetParameter("IRD", ird, ird, 0, out s);
+                    }
+
+                    // Ion release width
+                    float irw = ((ParameterData)paramTbl_template.FindParameter("IRW", out s)).startVal;
+                    if (s != -1)
+                    {
+                        paramTbl_i.AddSetParameter("IRW", irw, irw, 0, out s);
+                    }
+
+                    // Collision energy spread; Only on the Analyst TF 1.5.1 and TF1.5.2
+                    paramData = ((ParameterData)paramTbl_template.FindParameter("CES", out s));
+                    if (s != -1)
+                    {
+                        paramTbl_i.AddSetParameter("CES", paramData.startVal, paramData.startVal, 0, out s);
+                    }
+
+                    // Focusing potential; Only on Analyst QS 2.0
+                    paramData = ((ParameterData)paramTbl_template.FindParameter("FP", out s));
+                    if (s != -1)
+                    {
+                        paramTbl_i.AddSetParameter("FP", paramData.startVal, paramData.startVal, 0, out s);
+                    }
+
+                    // Declustering potential 2; Only on Analyst QS 2.0
+                    paramData = ((ParameterData)paramTbl_template.FindParameter("DP2", out s));
+                    if (s != -1)
+                    {
+                        paramTbl_i.AddSetParameter("DP2", paramData.startVal, paramData.startVal, 0, out s);
+                    }
+
+                    // Collision gas; Only on Analyst QS 2.0
+                    paramData = ((ParameterData)paramTbl_template.FindParameter("CAD", out s));
+                    if (s != -1)
+                    {
+                        paramTbl_i.AddSetParameter("CAD", paramData.startVal, paramData.startVal, 0, out s);
+                    }
+                }
             }
 
             // Expand the mass range for the TOF MS scan if the precursor mass of any of the MS/MS experiments
