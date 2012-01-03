@@ -408,6 +408,18 @@ namespace IDPicker.DataModel
         }
     }
 
+    public class TemporaryMSDataFile : msdata.MSDataFile, IDisposable
+    {
+        public TemporaryMSDataFile(string tempFilepath) : base(tempFilepath)
+        {
+            this.tempFilepath = tempFilepath;
+        }
+
+        public new void Dispose() { base.Dispose(); File.Delete(tempFilepath); }
+
+        private string tempFilepath;
+    }
+
     public class SpectrumSourceMetadataUserType : NHibernate.UserTypes.IUserType
     {
         #region IUserType Members
@@ -422,11 +434,15 @@ namespace IDPicker.DataModel
 
             if (!(cached is byte[]))
                 throw new ArgumentException();
+            
+            string tempFilepath = Path.GetTempFileName();
+            File.Move(tempFilepath, tempFilepath + ".mz5");
+            tempFilepath = tempFilepath + ".mz5";
 
             var msdataBytes = cached as byte[];
-            string tempFilepath = Path.GetTempFileName() + ".mzML.gz";
             File.WriteAllBytes(tempFilepath, msdataBytes);
-            return new msdata.MSDataFile(tempFilepath);
+
+            return new TemporaryMSDataFile(tempFilepath);
         }
 
         public object DeepCopy (object value)
@@ -448,8 +464,11 @@ namespace IDPicker.DataModel
             if (!(value is msdata.MSData))
                 throw new ArgumentException();
 
+            string tempFilepath = Path.GetTempFileName();
+            File.Move(tempFilepath, tempFilepath + ".mz5");
+            tempFilepath = tempFilepath + ".mz5";
+
             var msd = value as msdata.MSData;
-            string tempFilepath = Path.GetTempFileName() + ".mzML.gz";
             msdata.MSDataFile.write(msd, tempFilepath,
                                     new msdata.MSDataFile.WriteConfig() { gzipped = true });
             byte[] msdataBytes = File.ReadAllBytes(tempFilepath);
