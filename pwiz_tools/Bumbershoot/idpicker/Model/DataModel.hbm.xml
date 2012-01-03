@@ -108,7 +108,7 @@
 		<property name="Length" access="nosetter.camelcase"/>
 
 		<!-- We store these long text fields in separate tables so that joins against the Protein table are faster -->
-		<join table="ProteinMetadata"><key column="Id"/><property name="Description"/></join>
+		<join optional="true" table="ProteinMetadata"><key column="Id"/><property name="Description"/></join>
 		<join optional="true" table="ProteinData"><key column="Id"/><property name="Sequence" lazy="true"/></join>
 
 		<join optional="true" table="ProteinCoverage">
