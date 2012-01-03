@@ -22,6 +22,9 @@
 
 import modules path svnrev ;
 
+if [ modules.peek : NT ]
+{
+
 path-constant THIS_PATH : . ;
 
 generate-AssemblyInfo.cpp $(THIS_PATH)\\AssemblyInfo.cpp :
@@ -50,7 +53,7 @@ lib NativeQonverter
  ;
  
 lib NativeParser
- : ../Parser.cpp
+ : ../Parser.cpp ../Embedder.cpp
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <link>static
    <library>NativeQonverter
@@ -71,9 +74,11 @@ lib NativeParser
 
 
 lib InteropQonverter
- : Qonverter.cpp Parser.cpp NativeParser
+ : Qonverter.cpp Parser.cpp Embedder.cpp NativeParser
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <toolset>msvc:<using-clr>true
    <toolset>msvc:<link>shared
    <toolset>msvc:<source>AssemblyInfo.cpp
  ;
+
+} # [ modules.peek : NT ]

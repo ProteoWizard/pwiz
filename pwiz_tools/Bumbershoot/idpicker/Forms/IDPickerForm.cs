@@ -303,9 +303,9 @@ namespace IDPicker
                 if (sender == importToolStripMenuItem)
                 {
                     //add current session to file list
-                    var filenameMatch = Regex.Match(session.Connection.ConnectionString, @"Data Source=(?:\w|:|\\| |/|\.)+").ToString().Remove(0, 12);
-                    if (!fileNames.Contains(filenameMatch))
-                        fileNames.Add(filenameMatch);
+                    var idpDbFilepath = session.Connection.GetDataSource();
+                    if (!fileNames.Contains(idpDbFilepath))
+                        fileNames.Add(idpDbFilepath);
                 }
                 clearSession();
             }
@@ -581,7 +581,7 @@ namespace IDPicker
             if (analysisTableForm != null) analysisTableForm.ClearData(true);
             fragmentationStatisticsForm.ClearData(true);
             peakStatisticsForm.ClearData(true);
-            dockPanel.Contents.CastAct<SequenceCoverageForm>(o => o.ClearData());
+            dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.ClearData());
         }
 
         void setData ()
@@ -593,7 +593,7 @@ namespace IDPicker
             analysisTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             fragmentationStatisticsForm.SetData(session, viewFilter);
             peakStatisticsForm.SetData(session, viewFilter);
-            dockPanel.Contents.CastAct<SequenceCoverageForm>(o => o.SetData(session, viewFilter));
+            dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
         }
 
         void clearSession()
@@ -605,7 +605,7 @@ namespace IDPicker
             analysisTableForm.ClearSession();
             fragmentationStatisticsForm.ClearSession();
             peakStatisticsForm.ClearSession();
-            dockPanel.Contents.CastAct<SequenceCoverageForm>(o => o.ClearSession());
+            dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.ClearSession());
 
             if (session != null)
             {
@@ -633,93 +633,6 @@ namespace IDPicker
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
             {
                 new Thread(() => { OpenFiles(args, null); }).Start();
-            }
-        }
-
-        /*void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
-        {
-            if (String.IsNullOrEmpty(e.DatabasePath))
-                return;
-
-            if (InvokeRequired)
-            {
-                Invoke((MethodInvoker) delegate() { databaseNotFoundHandler(sender, e); });
-                return;
-            }
-
-            var findDirectoryDialog = new FolderBrowserDialog()
-            {
-                SelectedPath = Properties.Settings.Default.LastProteinDatabaseDirectory,
-                ShowNewFolderButton = false,
-                Description = "Locate the directory containing the database \"" + e.DatabasePath + "\""
-            };
-
-            while (findDirectoryDialog.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    e.DatabasePath = Util.FindDatabaseInSearchPath(e.DatabasePath, findDirectoryDialog.SelectedPath);
-                    Properties.Settings.Default.LastProteinDatabaseDirectory = findDirectoryDialog.SelectedPath;
-                    Properties.Settings.Default.Save();
-                    break;
-                }
-                catch
-                {
-                    // couldn't find the database in that directory; prompt user again
-                }
-            }
-        }*/
-
-        bool promptForSourceNotFound = true;
-        bool promptToSkipSourceImport = false;
-        void sourceNotFoundOnImportHandler (object sender, SourceNotFoundEventArgs e)
-        {
-            if (String.IsNullOrEmpty(e.SourcePath) || !promptForSourceNotFound)
-                return;
-
-            if (InvokeRequired)
-            {
-                Invoke(new MethodInvoker(() => sourceNotFoundOnImportHandler(sender, e)));
-                return;
-            }
-
-            if (promptToSkipSourceImport)
-            {
-                // for the second source not found, give user option to suppress this event
-                if (MessageBox.Show("Source \"" + e.SourcePath + "\" not found.\r\n\r\n" +
-                                    "Do you want to skip importing of missing sources for this session?",
-                                    "Skip missing sources",
-                                    MessageBoxButtons.YesNo,
-                                    MessageBoxIcon.Question) == DialogResult.Yes)
-                {
-                    promptForSourceNotFound = false;
-                    return;
-                }
-            }
-
-            promptToSkipSourceImport = true;
-
-            var findDirectoryDialog = new FolderBrowserDialog()
-            {
-                SelectedPath = Properties.GUI.Settings.Default.LastSpectrumSourceDirectory,
-                ShowNewFolderButton = false,
-                Description = "Locate the directory containing the source \"" + e.SourcePath + "\""
-            };
-
-            while (findDirectoryDialog.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
-                    Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
-                    Properties.GUI.Settings.Default.Save();
-                    promptToSkipSourceImport = false;
-                    return;
-                }
-                catch
-                {
-                    // couldn't find the source in that directory; prompt user again
-                }
             }
         }
 
@@ -1768,7 +1681,7 @@ namespace IDPicker
             var clusterList = new List<string[]>();
             if (session != null)
             {
-                var clusterIDList = session.CreateSQLQuery("select distinct cluster from protein").List<object>().OfType<int>().ToList();
+                var clusterIDList = session.CreateSQLQuery("select distinct cluster from protein").List().Cast<int>().ToList();
                 foreach (var clusterID in clusterIDList)
                 {
                     var cluster = getClusterInfo(clusterID);
@@ -2049,12 +1962,17 @@ namespace IDPicker
 
         private void fileToolStripMenuRoot_DropDownOpening(object sender, EventArgs e)
         {
+            // the "Import" submenu is shown if a session is open
             newToolStripMenuItem.Visible = (session != null);
             importToolStripMenuItem.Visible = (session != null);
+
+            // the "Embed" option is enabled if a session is open
+            embedSpectraToolStripMenuItem.Enabled = (session != null);
         }
 
         private void importToToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            // if no session is open, treat clicks on the "Import" option as clicks on the "Import to New" option
             if (session == null)
                 openToolStripMenuItem_Click(newToolStripMenuItem, e);
         }
@@ -2081,6 +1999,15 @@ namespace IDPicker
                                           "Thanks to: David Tabb",
                                           Util.Version),
                             "About IDPicker");
+        }
+
+        private void embedSpectraToolStripMenuItem_Click (object sender, EventArgs e)
+        {
+            if (session == null)
+                return;
+
+            var form = new EmbedderForm(session) { StartPosition = FormStartPosition.CenterParent };
+            form.ShowDialog(this);
         }
     }
 

@@ -45,7 +45,7 @@ namespace IDPicker.Forms
 
             //Icon = Resources.Skyline;
 
-            tbErrorDescription.Text = e.Message;
+            tbErrorDescription.Text = replaceNewlines(e.Message);
 
             tbSourceCodeLocation.Text = StackTraceText;
 
@@ -69,7 +69,7 @@ namespace IDPicker.Forms
             }
         }
 
-        public static Exception _exception;
+        private Exception _exception;
 
         private string trimStackTrace (string stackTrace)
         {
@@ -79,6 +79,13 @@ namespace IDPicker.Forms
             // remove directory path and System scope
             return Regex.Replace(stackTrace, @".\:\\(?:[^\\]+\\)*?([^\\]+\.cs\:)", "$1 ")
                         .Replace("System.", "");
+        }
+
+        private string replaceNewlines (string message)
+        {
+            if (message.Contains("\n") && !message.Contains(Environment.NewLine))
+                return message.Replace("\n", Environment.NewLine);
+            return message;
         }
 
         public string StackTraceText
@@ -98,7 +105,7 @@ namespace IDPicker.Forms
                         stackTrace.AppendLine("---------------------------------------------------------------");
                     stackTrace.Append("Exception type: ").AppendLine(x.GetType().FullName);
                     stackTrace.Append("Error message: ").AppendLine(x.Message);
-                    stackTrace.AppendLine(x.Message).AppendLine(trimStackTrace(x.StackTrace));
+                    stackTrace.AppendLine(replaceNewlines(x.Message)).AppendLine(trimStackTrace(x.StackTrace));
                 }
                 return stackTrace.ToString();
             }
@@ -122,7 +129,7 @@ namespace IDPicker.Forms
 
                 sb.Append("IDPicker version: ").AppendLine(Util.Version);
                 sb.Append("Exception type: ").AppendLine(ExceptionType);
-                sb.Append("Error message: ").AppendLine(_exception.Message).AppendLine();
+                sb.Append("Error message: ").AppendLine(replaceNewlines(_exception.Message)).AppendLine();
 
                 // Stack trace with any inner exceptions
                 sb.AppendLine(tbSourceCodeLocation.Text);

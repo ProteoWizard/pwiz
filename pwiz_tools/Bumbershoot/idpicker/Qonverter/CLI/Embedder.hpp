@@ -17,68 +17,49 @@
 //
 // The Initial Developer of the Original Code is Matt Chambers.
 //
-// Copyright 2011 Vanderbilt University
+// Copyright 2012 Vanderbilt University
 //
 // Contributor(s):
 //
 
 
-#ifndef _EMBEDDER_HPP_
-#define _EMBEDDER_HPP_
+#pragma warning( push )
+#pragma warning( disable : 4634 4635 )
+#include "Qonverter.hpp"
+#using <system.dll>
+#pragma warning( pop )
 
 
-#include <string>
-#include <vector>
-#include <map>
-#include "pwiz/utility/misc/IterationListener.hpp"
-#include <boost/date_time.hpp>
-#include <boost/filesystem/path.hpp>
-#include <boost/shared_ptr.hpp>
-#include "../Lib/SQLite/sqlite3pp.h"
+namespace IDPicker {
 
 
-#ifndef IDPICKER_NAMESPACE
-#define IDPICKER_NAMESPACE IDPicker
-#endif
-
-#ifndef BEGIN_IDPICKER_NAMESPACE
-#define BEGIN_IDPICKER_NAMESPACE namespace IDPICKER_NAMESPACE {
-#define END_IDPICKER_NAMESPACE } // IDPicker
-#endif
+using namespace System;
+using namespace System::Collections::Generic;
 
 
-BEGIN_IDPICKER_NAMESPACE
-namespace Embedder {
-
-
-using std::string;
-using std::vector;
-using std::map;
-using std::pair;
-
+public ref struct Embedder abstract
+{
 
 /// the default source extensions to search for, ordered by descending priority
-extern const string defaultSourceExtensionPriorityList;
+static property String^ DefaultSourceExtensionPriorityList { String^ get(); }
 
 /// search for source files of the idpDB using the given search path, using the default source extensions,
 /// and embed a MZ5 representation of the source's spectra in the MSDataBytes column of the idpDB
-void embed(const string& idpDbFilepath,
-           const string& sourceSearchPath,
-           pwiz::util::IterationListenerRegistry* ilr = 0);
+static void Embed(String^ idpDbFilepath,
+                  String^ sourceSearchPath,
+                  pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
 /// and embed a MZ5 representation of the source's spectra in the MSDataBytes column of the idpDB
-void embed(const string& idpDbFilepath,
-           const string& sourceSearchPath,
-           const string& sourceExtensionPriorityList,
-           pwiz::util::IterationListenerRegistry* ilr = 0);
+static void Embed(String^ idpDbFilepath,
+                  String^ sourceSearchPath,
+                  String^ sourceExtensionPriorityList,
+                  pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
-void extract(const string& idpDbFilepath, const string& sourceName, const string& outputFilepath);
+static void Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath);
 
-} // namespace Embedder
-END_IDPICKER_NAMESPACE
+};
 
 
-#endif // _EMBEDDER_HPP_
-
+} // namespace IDPicker

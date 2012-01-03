@@ -292,18 +292,20 @@ void embed(const string& idpDbFilepath,
 
     ExtendedReaderList readerList;
 
-    BOOST_FOREACH(SpectrumSource& source, sources)
+    for(size_t i=0; i < sources.size(); ++i)
     {
+        SpectrumSource& source = sources[i];
+
         string sourceFilename = bfs::path(source.filepath).filename();
 
-        ITERATION_UPDATE(ilr, 0, 0, "opening source \"" + sourceFilename + "\"");
+        ITERATION_UPDATE(ilr, i, sources.size(), "opening source \"" + sourceFilename + "\"");
 
         MSDataFile msd(source.filepath, &readerList);
 
         if (!msd.run.spectrumListPtr.get())
             throw runtime_error("[embed] null spectrum list in \"" + sourceFilename + "\"");
 
-        ITERATION_UPDATE(ilr, 0, 0, "filtering spectra from \"" + sourceFilename + "\"");
+        ITERATION_UPDATE(ilr, i, sources.size(), "filtering spectra from \"" + sourceFilename + "\"");
 
         // create a filtered spectrum list
         IntegerSet filteredIndexes;
@@ -318,7 +320,7 @@ void embed(const string& idpDbFilepath,
         SpectrumList_FilterPredicate_IndexSet slfp(filteredIndexes);
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slfp));
 
-        ITERATION_UPDATE(ilr, 0, 0, "creating subset spectra of \"" + sourceFilename + "\"");
+        ITERATION_UPDATE(ilr, i, sources.size(), "creating subset spectra of \"" + sourceFilename + "\"");
 
         // write a subset mz5 file
         string tmpFilepath = bfs::unique_path("%%%%%%%%.mz5").string();
@@ -339,7 +341,7 @@ void embed(const string& idpDbFilepath,
         tmpFile.close();
         bfs::remove(tmpFilepath);
 
-        ITERATION_UPDATE(ilr, 0, 0, "embedding subset spectra for \"" + source.name + "\"");
+        ITERATION_UPDATE(ilr, i, sources.size(), "embedding subset spectra for \"" + source.name + "\"");
 
         // embed the file as a blob in the database
         sqlite::transaction transaction(idpDb);

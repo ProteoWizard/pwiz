@@ -83,7 +83,7 @@ namespace IDPicker
             int delimiterIndex = conn.ConnectionString.IndexOf(";", dataSourceIndex);
             if (delimiterIndex < 0)
                 return conn.ConnectionString.Substring(dataSourceIndex);
-            return conn.ConnectionString.Substring(dataSourceIndex, delimiterIndex - dataSourceIndex + 1);
+            return conn.ConnectionString.Substring(dataSourceIndex, delimiterIndex - dataSourceIndex);
         }
     }
 
@@ -220,16 +220,6 @@ namespace IDPicker
         public static ReadOnlyCollection<TSource> AsReadOnly<TSource> (this IList<TSource> list)
         {
             return list == null ? null : new ReadOnlyCollection<TSource>(list);
-        }
-
-        public static void CastAct<TCast>(this System.Collections.IEnumerable source, Action<TCast> actor) where TCast : class
-        {
-            foreach (object item in source)
-            {
-                TCast castItem = item as TCast;
-                if (castItem != null)
-                    actor.Invoke(castItem);
-            }
         }
     }
 
