@@ -890,7 +890,7 @@ namespace IDPicker
 
                 BeginInvoke(new MethodInvoker(() =>
                 {
-                    var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename);
+                    var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
 
                     // reload qonverter settings because the ids may change after merging
                     session = sessionFactory.OpenSession();
@@ -1143,7 +1143,7 @@ namespace IDPicker
                 MessageBox.Show("Error: " + ex.Message, "Qonversion failed");
             }
 
-            var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(Text);
+            var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(Text, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
             session = sessionFactory.OpenSession();
             //session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
             _layoutManager.SetSession(session);
