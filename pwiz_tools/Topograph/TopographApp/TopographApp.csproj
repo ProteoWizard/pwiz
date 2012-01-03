@@ -37,8 +37,6 @@
     <SignManifests>true</SignManifests>
     <ApplicationIcon>Topograph.ico</ApplicationIcon>
     <StartupObject>pwiz.Topograph.ui.Program</StartupObject>
-    <SignAssembly>false</SignAssembly>
-    <AssemblyOriginatorKeyFile>topograph_2_TemporaryKey.pfx</AssemblyOriginatorKeyFile>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
