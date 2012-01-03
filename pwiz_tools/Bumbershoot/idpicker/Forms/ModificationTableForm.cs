@@ -669,7 +669,7 @@ namespace IDPicker.Forms
                                     };
 
                 var peptideList = session.CreateQuery(PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
-                                                      modFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                      modFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
                                                       "GROUP BY psm.DistinctMatchKey")
                                     .List<object[]>().Select(o => new PeptideTableForm.DistinctMatchRow(o, dataFilter));
                 if (!peptideList.Any()) continue;
@@ -693,7 +693,7 @@ namespace IDPicker.Forms
                         Text = peptide.DistinctMatch.ToString(),
                         Tag = new[]
                                                         {
-                                                            "'" + Text + "'",
+                                                            "'" + peptide.Peptide.Sequence + "'",
                                                             string.Format("'<a href = \"{0}-cluster{1}.html\">{1}</a>'",
                                                                           reportName,cluster),
                                                             peptide.Spectra.ToString(),

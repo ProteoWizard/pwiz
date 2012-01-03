@@ -826,6 +826,7 @@ namespace IDPicker.DataModel
 
             // these different condition sets are AND'd together, but within each set (except for mods) they are OR'd
             var proteinConditions = new List<string>();
+            var clusterConditions = new List<string>();
             var peptideConditions = new List<string>();
             var spectrumConditions = new List<string>();
             var modConditions = new List<string>();
@@ -895,7 +896,7 @@ namespace IDPicker.DataModel
             }
 
             if (!Cluster.IsNullOrEmpty())
-                proteinConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()).ToArray())));
+                clusterConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()).ToArray())));
 
             if (!ProteinGroup.IsNullOrEmpty())
                 proteinConditions.Add(String.Format("pro.ProteinGroup IN ({0})", String.Join(",", ProteinGroup.Select(o => o.ToString()).ToArray())));
@@ -964,6 +965,7 @@ namespace IDPicker.DataModel
 
             var conditions = new List<string>();
             if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions.ToArray()) + ")");
+            if (clusterConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", clusterConditions.ToArray()) + ")");
             if (peptideConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", peptideConditions.ToArray()) + ")");
             if (spectrumConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", spectrumConditions.ToArray()) + ")");
             if (modConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", modConditions.ToArray()) + ")");

@@ -1768,7 +1768,7 @@ namespace IDPicker
             var clusterList = new List<string[]>();
             if (session != null)
             {
-                var clusterIDList = session.CreateSQLQuery("select distinct cluster from protein").List<int>();
+                var clusterIDList = session.CreateSQLQuery("select distinct cluster from protein").List<object>().OfType<int>().ToList();
                 foreach (var clusterID in clusterIDList)
                 {
                     var cluster = getClusterInfo(clusterID);
