@@ -143,6 +143,13 @@ namespace IDPicker.Controls
         void dataGridView_CellBeginEdit (object sender, DataGridViewCellCancelEventArgs e)
         {
             uneditedValue = (dataGridView[e.ColumnIndex, e.RowIndex].Value ?? String.Empty).ToString();
+
+            if (e.ColumnIndex == databaseColumn.Index)
+            {
+                string filename = Path.GetFileName(uneditedValue);
+                databaseColumn.OpenFileDialog.Title = "Find the FASTA database (" + filename + ")";
+                databaseColumn.OpenFileDialog.FileName = filename;
+            }
         }
 
         void dataGridView_CellEndEdit (object sender, DataGridViewCellEventArgs e)
@@ -156,12 +163,18 @@ namespace IDPicker.Controls
                 row.Cells[databaseColumn.Index].Style.BackColor = File.Exists((string) row.Cells[databaseColumn.Index].Value) ? SystemColors.Window : Color.LightSalmon;
 
                 // also set all databases equal to the uneditedValue
+                string originalFilename = Path.GetFileName(uneditedValue) ?? uneditedValue;
                 foreach (DataGridViewRow row2 in dataGridView.Rows)
-                    if (row2.Cells[databaseColumn.Index].Value.ToString() == uneditedValue)
+                {
+                    if (row == row2) continue;
+                    string rowFilename = row2.Cells[databaseColumn.Index].Value.ToString();
+                    rowFilename = Path.GetFileName(rowFilename) ?? rowFilename;
+                    if (rowFilename == originalFilename)
                     {
                         row2.Cells[databaseColumn.Index].Value = (row2.Tag as Parser.Analysis).importSettings.proteinDatabaseFilepath = analysis.importSettings.proteinDatabaseFilepath;
                         row2.Cells[databaseColumn.Index].Style.BackColor = row.Cells[databaseColumn.Index].Style.BackColor;
                     }
+                }
             }
             else if (e.ColumnIndex == decoyPrefixColumn.Index)
                 analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
