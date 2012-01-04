@@ -293,20 +293,12 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 displayRows.Add(displayRow);
             }
-            var bindingListView = bindingSource1.DataSource as BindingListView;
-            if (bindingListView == null || "default" == bindingListView.ViewInfo.Name)
+            var viewInfo = dataGridView1.BindingListView.ViewInfo;
+            if (viewInfo == null || "default" == viewInfo.Name)
             {
-                bindingListView = new BindingListView()
-                                      {
-                                          ViewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(halfLifeCalculator.ByProtein)), 
-                                          RowSource = displayRows
-                                      };
+                dataGridView1.BindingListView.ViewInfo = new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(halfLifeCalculator.ByProtein));
             }
-            else
-            {
-                bindingListView = new BindingListView{ViewInfo = bindingListView.ViewInfo, RowSource = displayRows};
-            }
-            bindingSource1.DataSource = bindingListView;
+            dataGridView1.BindingListView.RowSource = displayRows;
             dataGridViewSummary.Rows.Clear();
             SetSummary("Tracer %", displayRows.Select(dr=>dr.Results).SelectMany(r=>r.Values
                 .Select(cohortResult=>cohortResult.GetResultData().TracerPercentByArea)));
