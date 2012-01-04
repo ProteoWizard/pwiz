@@ -735,7 +735,7 @@ namespace pwiz.Topograph.MsData
             public IDictionary<String, ResultData> HalfLives { get; private set;}
         }
 
-        public class ResultData : IComparable
+        public class ResultData
         {
             public double YIntercept { get; set; }
             public double XIntercept {get
@@ -778,19 +778,6 @@ namespace pwiz.Topograph.MsData
             public override string ToString()
             {
                 return HalfLife + " [" + MinHalfLife + "," + MaxHalfLife + "]";
-            }
-
-            public int CompareTo(object obj)
-            {
-                if (obj == null)
-                {
-                    return 1;
-                }
-                var that = obj as ResultData;
-                if (that == null)
-                {
-                    throw new 
-                }
             }
         }
 
