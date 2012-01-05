@@ -1563,12 +1563,7 @@ namespace Test
 
             // test with default DistinctMatchFormat (charge state and modifications distinct)
             {
-                var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
-                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
-                                                       "GROUP BY psm.Peptide");
-
-                var queryRows = peptideQuery.List<object[]>();
-                var peptideRows = queryRows.Select(o => new IDPicker.Forms.PeptideTableForm.DistinctPeptideRow(o, dataFilter)).ToList();
+                var peptideRows = IDPicker.Forms.PeptideTableForm.DistinctPeptideRow.GetRows(session, dataFilter);
                 int row = 0;
 
                 Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "AAAAAAAAAA"), peptideRows[row].Peptide);
@@ -1626,12 +1621,7 @@ namespace Test
                 dataFilter.DistinctMatchFormat.IsAnalysisDistinct = false;
                 dataFilter.ApplyBasicFilters(session);
 
-                var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
-                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
-                                                       "GROUP BY psm.Peptide");
-
-                var queryRows = peptideQuery.List<object[]>();
-                var peptideRows = queryRows.Select(o => new IDPicker.Forms.PeptideTableForm.DistinctPeptideRow(o, dataFilter)).ToList();
+                var peptideRows = IDPicker.Forms.PeptideTableForm.DistinctPeptideRow.GetRows(session, dataFilter);
                 int row = 0;
 
                 Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "AAAAAAAAAA"), peptideRows[row].Peptide);
@@ -1690,12 +1680,7 @@ namespace Test
                 dataFilter.DistinctMatchFormat.AreModificationsDistinct = false;
                 dataFilter.ApplyBasicFilters(session);
 
-                var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
-                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
-                                                       "GROUP BY psm.Peptide");
-
-                var queryRows = peptideQuery.List<object[]>();
-                var peptideRows = queryRows.Select(o => new IDPicker.Forms.PeptideTableForm.DistinctPeptideRow(o, dataFilter)).ToList();
+                var peptideRows = IDPicker.Forms.PeptideTableForm.DistinctPeptideRow.GetRows(session, dataFilter);
                 int row = 0;
 
                 Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "AAAAAAAAAA"), peptideRows[row].Peptide);
