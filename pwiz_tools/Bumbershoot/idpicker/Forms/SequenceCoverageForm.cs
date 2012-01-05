@@ -546,7 +546,6 @@ namespace IDPicker
 
         #endregion
 
-        private string testHeader;
         protected override void OnPaint (PaintEventArgs e)
         {
             e.Graphics.FillRectangle(new SolidBrush(owner.BackColor), e.ClipRectangle);
