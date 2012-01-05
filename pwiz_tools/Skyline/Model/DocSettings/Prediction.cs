@@ -35,19 +35,6 @@ namespace pwiz.Skyline.Model.DocSettings
         double GetY(double x);
     }
 
-    public interface IRetentionScoreCalculator
-    {
-        string Name { get; }
-
-        double? ScoreSequence(string modifiedSequence);
-
-        double UnknownScore { get; }
-
-        IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
-
-        IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides);
-    }
-
     /// <summary>
     /// Describes a slope and intercept for converting from a
     /// hydrophobicity factor to a predicted retention time in minutes.
@@ -294,8 +281,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public static RetentionTimeRegression CalcRegression(string name, IEnumerable<RetentionScoreCalculatorSpec> calculators,
-            IList<MeasuredRetentionTime> measuredPeptides, out RetentionTimeStatistics statistics)
+        public static RetentionTimeRegression CalcRegression(string name,
+                                                             IEnumerable<RetentionScoreCalculatorSpec> calculators,
+                                                             IList<MeasuredRetentionTime> measuredPeptides,
+                                                             out RetentionTimeStatistics statistics)
         {
             RetentionScoreCalculatorSpec s;
             return CalcRegression(name, calculators, measuredPeptides, null, false, out statistics, out s);
@@ -312,9 +301,13 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="statistics">Statistics from the regression of the best calculator</param>
         /// <param name="calculatorSpec">The best calculator</param>
         /// <returns></returns>
-        public static RetentionTimeRegression CalcRegression(string name, IEnumerable<RetentionScoreCalculatorSpec> calculators,
-            IList<MeasuredRetentionTime> measuredPeptides, RetentionTimeScoreCache scoreCache, bool allPeptides,
-            out RetentionTimeStatistics statistics, out RetentionScoreCalculatorSpec calculatorSpec)
+        public static RetentionTimeRegression CalcRegression(string name,
+                                                             IEnumerable<RetentionScoreCalculatorSpec> calculators,
+                                                             IList<MeasuredRetentionTime> measuredPeptides,
+                                                             RetentionTimeScoreCache scoreCache,
+                                                             bool allPeptides,
+                                                             out RetentionTimeStatistics statistics,
+                                                             out RetentionScoreCalculatorSpec calculatorSpec)
         {
             // Get a list of peptide names for use by the calculators to choose their regression peptides
             List<string> listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
@@ -454,13 +447,50 @@ namespace pwiz.Skyline.Model.DocSettings
             return score;
         }
 
+        public static RetentionTimeRegression FindThreshold(
+                            double threshold,
+                            int? precision,
+                            IList<MeasuredRetentionTime> measuredPeptides,
+                            IList<MeasuredRetentionTime> standardPeptides,
+                            IList<MeasuredRetentionTime> variablePeptides,
+                            RetentionScoreCalculatorSpec calculator,
+                            Func<bool> isCanceled)
+        {
+            var calculators = new[] {calculator};
+            RetentionTimeScoreCache scoreCache = new RetentionTimeScoreCache(calculators, measuredPeptides, null);
+            RetentionTimeStatistics statisticsAll;
+            var regressionInitial = CalcRegression(NAME_INTERNAL,
+                                                  calculators,
+                                                  measuredPeptides,
+                                                  scoreCache,
+                                                  true,
+                                                  out statisticsAll,
+                                                  out calculator);
+
+            var outIndexes = new HashSet<int>();
+            RetentionTimeStatistics statisticsRefined = null;
+            return regressionInitial.FindThreshold(threshold,
+                                                   precision,
+                                                   0,
+                                                   measuredPeptides.Count,
+                                                   standardPeptides,
+                                                   variablePeptides,
+                                                   statisticsAll,
+                                                   calculator,
+                                                   scoreCache,
+                                                   isCanceled,
+                                                   ref statisticsRefined,
+                                                   ref outIndexes);
+
+        }
+
         public RetentionTimeRegression FindThreshold(
                             double threshold,
                             int? precision,
                             int left,
                             int right,
-                            List<MeasuredRetentionTime> requiredPeptides,
-                            List<MeasuredRetentionTime> variablePeptides,
+                            IList<MeasuredRetentionTime> standardPeptides,
+                            IList<MeasuredRetentionTime> variablePeptides,
                             RetentionTimeStatistics statistics,
                             RetentionScoreCalculatorSpec calculator,
                             RetentionTimeScoreCache scoreCache,
@@ -479,7 +509,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (isCanceled())
                             throw new OperationCanceledException();
-                        RecalcRegression(bestOut, requiredPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
+                        RecalcRegression(bestOut, standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
                             ref statisticsResult, ref outIndexes);
                         if (bestOut >= variablePeptides.Count || !IsAboveThreshold(statisticsResult.R, threshold, precision))
                             break;
@@ -493,7 +523,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (isCanceled())
                         throw new OperationCanceledException();
-                    var regression = RecalcRegression(worstIn, requiredPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
+                    var regression = RecalcRegression(worstIn, standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache,
                         ref statisticsResult, ref outIndexes);
                     // If there are only 2 left, then this is the best we can do and still have
                     // a linear equation.
@@ -510,7 +540,7 @@ namespace pwiz.Skyline.Model.DocSettings
             int mid = (left + right) / 2;
 
             // Rerun the regression
-            var regressionNew = RecalcRegression(mid, requiredPeptides, variablePeptides, statistics, calculator, scoreCache,
+            var regressionNew = RecalcRegression(mid, standardPeptides, variablePeptides, statistics, calculator, scoreCache,
                 ref statisticsResult, ref outIndexes);
 
             // If no regression could be calculated, give up to avoid infinite recursion.
@@ -520,13 +550,13 @@ namespace pwiz.Skyline.Model.DocSettings
             if (IsAboveThreshold(statisticsResult.R, threshold, precision))
             {
                 return regressionNew.FindThreshold(threshold, precision, mid + 1, right,
-                    requiredPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
+                    standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
                     ref statisticsResult, ref outIndexes);
             }
             else
             {
                 return regressionNew.FindThreshold(threshold, precision, left, mid - 1,
-                    requiredPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
+                    standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
                     ref statisticsResult, ref outIndexes);
             }
         }
@@ -701,6 +731,19 @@ namespace pwiz.Skyline.Model.DocSettings
         }
     }
 
+    public interface IRetentionScoreCalculator
+    {
+        string Name { get; }
+
+        double? ScoreSequence(string modifiedSequence);
+
+        double UnknownScore { get; }
+
+        IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
+
+        IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides);
+    }
+
     public abstract class RetentionScoreCalculatorSpec : XmlNamedElement, IRetentionScoreCalculator
     {
         protected RetentionScoreCalculatorSpec(string name)
@@ -714,11 +757,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public abstract IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
 
-        public abstract IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides);
+        public abstract IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides);
 
         public virtual bool IsUsable { get { return true; } }
 
-        public abstract RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor);
+        public virtual RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
+        {
+            return this;
+        }
 
         #region Implementation of IXmlSerializable
 
@@ -753,14 +799,9 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _impl.UnknownScore; }
         }
 
-        public override IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides)
+        public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
         {
-            return _impl.GetRequiredRegressionPeptides(peptides);
-        }
-
-        public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
-        {
-            return this;
+            return _impl.GetStandardPeptides(peptides);
         }
 
         private RetentionScoreCalculator()
@@ -929,6 +970,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public interface IRetentionTimeProvider
     {
+        string Name { get; }
+
         double? GetRetentionTime(string sequence);
 
         IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes { get; }

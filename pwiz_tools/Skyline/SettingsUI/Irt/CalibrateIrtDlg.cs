@@ -232,18 +232,24 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var peps = FindEvenlySpacedPeptides(document, peptideCount);
 
                 Items.RaiseListChangedEvents = false;
-                Items.Clear();
-                for (int i = 0; i < peps.Count; i++)
+                try
                 {
-                    var pep = peps[i];
-                    Items.Add(new StandardPeptide
+                    Items.Clear();
+                    for (int i = 0; i < peps.Count; i++)
                     {
-                        Sequence = pep.Sequence,
-                        RetentionTime = pep.RetentionTime,
-                        FixedPoint = (i == 0 || i == peps.Count - 1)
-                    });
+                        var pep = peps[i];
+                        Items.Add(new StandardPeptide
+                        {
+                            Sequence = pep.Sequence,
+                            RetentionTime = pep.RetentionTime,
+                            FixedPoint = (i == 0 || i == peps.Count - 1)
+                        });
+                    }
                 }
-                Items.RaiseListChangedEvents = true;
+                finally
+                {
+                    Items.RaiseListChangedEvents = true;
+                }
                 Items.ResetBindings();
 
                 return peps;

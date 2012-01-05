@@ -36,6 +36,11 @@ namespace pwiz.Skyline.Model.DocSettings
     public abstract class XmlNamedElement : Immutable, IKeyContainer<string>, IXmlSerializable
     {
         /// <summary>
+        /// A dummy name for instances which will only be used internally
+        /// </summary>
+        public const string NAME_INTERNAL = "__internal__";
+
+        /// <summary>
         /// Parameterless constructor for serialization use only.
         /// </summary>
         protected XmlNamedElement()
@@ -65,7 +70,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public XmlNamedElement ChangeName(string prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Name = v, prop);
+            return ChangeProp(ImClone(this), im => im.Name = prop);
         }
         
         #endregion

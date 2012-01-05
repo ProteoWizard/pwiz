@@ -26,12 +26,41 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
     public partial class AddIrtPeptidesDlg : Form
     {
-        public AddIrtPeptidesDlg(IEnumerable<string> existingPeptides, IEnumerable<string> overwritePeptides)
+        public AddIrtPeptidesDlg(int peptideCount,
+            int runsConvertedCount,
+            int runsFailedCount,
+            IEnumerable<string> existingPeptides,
+            IEnumerable<string> overwritePeptides)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
 
+            if (peptideCount == 0)
+                labelPeptidesAdded.Text = "No new peptides will be added to the iRT database.";
+            else if (peptideCount == 1)
+                labelPeptidesAdded.Text = "1 new peptide will be added to the iRT database.";
+            else
+                labelPeptidesAdded.Text = string.Format(labelPeptidesAdded.Text, peptideCount);
+
+            if (runsConvertedCount == 0)
+                labelRunsConverted.Visible = false;
+            else
+            {
+                labelRunsConverted.Text = runsConvertedCount > 1
+                                              ? string.Format(labelRunsConverted.Text, runsConvertedCount)
+                                              : "1 run was successfully converted.";
+            }
+
+            if (runsFailedCount == 0)
+                labelRunsFailed.Visible = false;
+            else
+            {
+                labelRunsFailed.Text = runsFailedCount > 1
+                                           ? string.Format(labelRunsFailed.Text, runsFailedCount)
+                                           : "1 run was not converted due to insufficient correlation.";
+            }
+                
             foreach (string existingPeptide in existingPeptides)
                 listExisting.Items.Add(existingPeptide);
             foreach (string overwritePeptide in overwritePeptides)
@@ -41,22 +70,19 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (listOverwrite.Items.Count == 0)
             {
-                labelOverwrite.Visible = false;
-                listOverwrite.Visible = false;
-                Height -= listOverwrite.Bottom - radioAverage.Bottom;
+                panelOverwrite.Visible = false;
+                panelExisting.Top -= panelOverwrite.Height;
+                panelExisting.Anchor &= ~AnchorStyles.Bottom;
+                Height -= panelOverwrite.Height;
+                panelExisting.Anchor |= AnchorStyles.Bottom;
             }
-            else if (listExisting.Items.Count == 0)
+            if (listExisting.Items.Count == 0)
             {
-                labelExisting.Visible = false;
-                listExisting.Visible = false;
-                labelChoice.Visible = false;
-                radioSkip.Visible = false;
-                radioReplace.Visible = false;
-                radioAverage.Visible = false;
-                Height -= listOverwrite.Bottom - listExisting.Bottom;
-                labelOverwrite.Top = labelExisting.Top;
-                listOverwrite.Top = listExisting.Top;
+                panelExisting.Visible = false;
+                Height -= panelExisting.Height;
             }
+            if (!panelOverwrite.Visible && !panelExisting.Visible)
+                FormBorderStyle = FormBorderStyle.FixedDialog;
         }
 
         public AddIrtPeptidesAction Action

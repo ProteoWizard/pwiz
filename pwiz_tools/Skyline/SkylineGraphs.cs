@@ -2302,17 +2302,6 @@ namespace pwiz.Skyline
 
             var listRegression = Settings.Default.RetentionTimeList;
             var regression = RTGraphController.RegressionRefined;
-            // Make sure the regression contains the required peptides
-            try
-            {
-                regression.Calculator.GetRequiredRegressionPeptides(
-                    regression.PeptideTimes.Select(p => p.PeptideSequence));
-            }
-            catch (CalculatorException x)
-            {
-                MessageDlg.Show(this, x.Message);
-                return;
-            }
             string name = Path.GetFileNameWithoutExtension(DocumentFilePath);
             if (listRegression.ContainsKey(name))
             {

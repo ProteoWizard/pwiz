@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Util
             return peptides;
         }
 
-        public IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides)
+        public IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
         {
             return new string[] {};
         }

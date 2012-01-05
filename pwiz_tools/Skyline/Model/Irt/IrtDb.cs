@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Irt
 
     public class IrtDb : Immutable, IValidating
     {
-        public const string EXT_IRTDB = ".irtdb";
+        public const string EXT = ".irtdb";
 
         public const int SCHEMA_VERSION_CURRENT = 1;
 
@@ -94,6 +94,11 @@ namespace pwiz.Skyline.Model.Irt
         }
 
         public double UnknownScore { get; private set; }
+
+        public IEnumerable<KeyValuePair<string, double>> PeptideScores
+        {
+            get { return new[] {DictStandards, DictLibrary}.SelectMany(dict => dict); }
+        }
 
         private IEnumerable<double> Scores
         {
@@ -259,8 +264,37 @@ namespace pwiz.Skyline.Model.Irt
             return irtDb;
         }
 
+        private static readonly Dictionary<string, string> DICT_PATHS_INTERN = new Dictionary<string, string>();
+
+        /// <summary>
+        /// Maintains a single string globally for each path, in order to keep from
+        /// having two threads accessing the same database at the same time.
+        /// </summary>
+        private static string InternPath(string path)
+        {
+            lock (DICT_PATHS_INTERN)
+            {
+                string pathIntern;
+                if (!DICT_PATHS_INTERN.TryGetValue(path, out pathIntern))
+                {
+                    DICT_PATHS_INTERN.Add(path, path);
+                    pathIntern = path;
+                }
+                return pathIntern;
+            }
+        }
+
         //Throws DatabaseOpeningException
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor)
+        {
+            // Allow only one thread at a time to read from the same path
+            lock(InternPath(path))
+            {
+                return GetIrtDbInternal(path, loadMonitor);
+            }
+        }
+
+        private static IrtDb GetIrtDbInternal(string path, IProgressMonitor loadMonitor)
         {
             var status = new ProgressStatus(string.Format("Loading iRT database {0}", path));
             if (loadMonitor != null)

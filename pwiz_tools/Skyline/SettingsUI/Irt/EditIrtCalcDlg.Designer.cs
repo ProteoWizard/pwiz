@@ -261,7 +261,7 @@
             this.splitContainer1.Panel2.Controls.Add(this.label4);
             this.splitContainer1.Panel2.Controls.Add(this.btnCalibrate);
             this.splitContainer1.Size = new System.Drawing.Size(360, 333);
-            this.splitContainer1.SplitterDistance = 146;
+            this.splitContainer1.SplitterDistance = 148;
             this.splitContainer1.TabIndex = 7;
             this.splitContainer1.TabStop = false;
             // 
@@ -303,7 +303,7 @@
             dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridViewStandard.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
-            this.gridViewStandard.Size = new System.Drawing.Size(360, 146);
+            this.gridViewStandard.Size = new System.Drawing.Size(360, 148);
             this.gridViewStandard.TabIndex = 0;
             // 
             // columnStandardSequence
@@ -338,7 +338,7 @@
             this.gridViewLibrary.DataSource = this.bindingSourceLibrary;
             this.gridViewLibrary.Location = new System.Drawing.Point(0, 31);
             this.gridViewLibrary.Name = "gridViewLibrary";
-            this.gridViewLibrary.Size = new System.Drawing.Size(360, 152);
+            this.gridViewLibrary.Size = new System.Drawing.Size(360, 150);
             this.gridViewLibrary.TabIndex = 3;
             this.gridViewLibrary.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.gridViewLibrary_RowsAdded);
             this.gridViewLibrary.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridViewLibrary_RowsRemoved);
@@ -386,7 +386,7 @@
             this.Name = "EditIrtCalcDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit iRT Standard";
+            this.Text = "Edit iRT Calculator";
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             this.contextMenuAdd.ResumeLayout(false);

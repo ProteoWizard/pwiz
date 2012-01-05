@@ -1,6 +1,6 @@
-﻿namespace pwiz.Skyline.SettingsUI.Irt
+namespace pwiz.Skyline.SettingsUI.Irt
 {
-    partial class AddIrtSpectralLibrary
+    partial class AddIrtCalculatorDlg
     {
         /// <summary>
         /// Required designer variable.
@@ -86,9 +86,9 @@
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(33, 62);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(70, 13);
+            this.label2.Size = new System.Drawing.Size(86, 13);
             this.label2.TabIndex = 2;
-            this.label2.Text = "&Library name:";
+            this.label2.Text = "&Calculator name:";
             // 
             // radioSettings
             // 
@@ -96,10 +96,10 @@
             this.radioSettings.Checked = true;
             this.radioSettings.Location = new System.Drawing.Point(16, 33);
             this.radioSettings.Name = "radioSettings";
-            this.radioSettings.Size = new System.Drawing.Size(140, 17);
+            this.radioSettings.Size = new System.Drawing.Size(139, 17);
             this.radioSettings.TabIndex = 1;
             this.radioSettings.TabStop = true;
-            this.radioSettings.Text = "A &named spectral library:";
+            this.radioSettings.Text = "A &named iRT calculator:";
             this.radioSettings.UseVisualStyleBackColor = true;
             this.radioSettings.CheckedChanged += new System.EventHandler(this.radioSettings_CheckedChanged);
             // 
@@ -108,10 +108,10 @@
             this.radioFile.AutoSize = true;
             this.radioFile.Location = new System.Drawing.Point(16, 128);
             this.radioFile.Name = "radioFile";
-            this.radioFile.Size = new System.Drawing.Size(121, 17);
+            this.radioFile.Size = new System.Drawing.Size(124, 17);
             this.radioFile.TabIndex = 4;
             this.radioFile.TabStop = true;
-            this.radioFile.Text = "A &spectral library file:";
+            this.radioFile.Text = "An iRT &database file:";
             this.radioFile.UseVisualStyleBackColor = true;
             this.radioFile.CheckedChanged += new System.EventHandler(this.radioFile_CheckedChanged);
             // 
@@ -144,7 +144,7 @@
             this.btnBrowseFile.UseVisualStyleBackColor = true;
             this.btnBrowseFile.Click += new System.EventHandler(this.btnBrowseFile_Click);
             // 
-            // AddIrtSpectralLibrary
+            // AddIrtCalculatorDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -164,10 +164,10 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "AddIrtSpectralLibrary";
+            this.Name = "AddIrtCalculatorDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Add Spectral Library";
+            this.Text = "Add iRT Database";
             this.ResumeLayout(false);
             this.PerformLayout();
 

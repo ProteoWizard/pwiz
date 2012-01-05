@@ -103,6 +103,16 @@ namespace pwiz.Skyline.SettingsUI
                 textPath.Focus();
                 return;
             }
+            
+            // Display an error message if the user is trying to add a BiblioSpec library,
+            // and the library has the text "redundant" in the file name.
+            if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
+            {
+                MessageDlg.Show(this, string.Format("The file {0} appears to be a redundant library.\nPlease choose a  non-redundant library.", path));
+                textPath.Focus();
+                return;
+            }
+
             string ext = Path.GetExtension(path);
             if (Equals(ext, BiblioSpecLiteSpec.EXT))
                 librarySpec = new BiblioSpecLiteSpec(name, path);
@@ -120,17 +130,6 @@ namespace pwiz.Skyline.SettingsUI
                 textPath.Focus();
                 return;
             }
-
-            // Display an error message if the user is trying to add a BiblioSpec library,
-            // and the library has the text "redundant" in the file name.
-            if (Equals(ext, BiblioSpecLiteSpec.EXT_REDUNDANT))
-            {  
-                MessageDlg.Show(this, string.Format("The file {0} appears to be a redundant library. Please choose a  non-redundant library.", path));
-                textPath.Focus();
-                return;
-                
-            }
-            
 
             _librarySpec = librarySpec;
             DialogResult = DialogResult.OK;
@@ -160,7 +159,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public static string GetLibraryPath(IWin32Window parent, string fileName)
         {
-            OpenFileDialog dlg = new OpenFileDialog
+            using (var dlg = new OpenFileDialog
             {
                 InitialDirectory = Settings.Default.LibraryDirectory,
                 CheckPathExists = true,
@@ -173,15 +172,17 @@ namespace pwiz.Skyline.SettingsUI
                         "Legacy Libraries (*" + BiblioSpecLibSpec.EXT + ")|*" + BiblioSpecLibSpec.EXT,
                         "All Files (*.*)|*.*"
                     })
-            };
-            if (fileName != null)
-                dlg.FileName = fileName;
+            })
+            {
+                if (fileName != null)
+                    dlg.FileName = fileName;
 
-            if (dlg.ShowDialog(parent) != DialogResult.OK)
-                return null;
+                if (dlg.ShowDialog(parent) != DialogResult.OK)
+                    return null;
 
-            Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
-            return dlg.FileName;
+                Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
+                return dlg.FileName;
+            }
         }
 
         private void linkPeptideAtlas_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

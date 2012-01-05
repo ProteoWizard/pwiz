@@ -307,7 +307,7 @@ namespace pwiz.Skyline
                          {
                              ItemName = irtCalc.Name,
                              ItemType = "iRT Calculator",
-                             Filter = string.Format("iRT Database|*{0}|All Files|*.*", IrtDb.EXT_IRTDB),
+                             Filter = string.Format("iRT Database Files|*{0}|All Files|*.*", IrtDb.EXT),
                              FileHint = Path.GetFileName(irtCalc.DatabasePath),
                              FileDlgInitialPath = Path.GetDirectoryName(documentPath),
                              Title = "Find iRT Calculator"

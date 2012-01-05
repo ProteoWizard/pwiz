@@ -686,8 +686,9 @@ namespace pwiz.Skyline.Model.Lib
     {
         private readonly IDictionary<string, double[]> _dictPeptideRetentionTimes;
 
-        public LibraryRetentionTimes(IDictionary<string, double[]> dictPeptideRetentionTimes)
+        public LibraryRetentionTimes(string path, IDictionary<string, double[]> dictPeptideRetentionTimes)
         {
+            Name = path;
             _dictPeptideRetentionTimes = dictPeptideRetentionTimes;
             MinRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Min();
             MaxRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Max();
@@ -703,6 +704,7 @@ namespace pwiz.Skyline.Model.Lib
             MeanStdev = statStdev.Mean();
         }
 
+        public string Name { get; private set; }
         public double MinRt { get; private set; }
         public double MaxRt { get; private set; }
         public double MeanStdev { get; private set; }

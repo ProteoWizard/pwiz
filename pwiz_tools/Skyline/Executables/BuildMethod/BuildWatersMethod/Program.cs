@@ -55,8 +55,8 @@ namespace BuildWatersMethod
                 Console.Error.WriteLine("ERROR: {0}", x.Message);
             }
 
-//            Console.WriteLine("Press any key to continue...");
-//            Console.In.ReadLine();
+            Console.WriteLine("Press any key to continue...");
+            Console.In.ReadLine();
         }
 
         static void Usage()
@@ -68,6 +68,11 @@ namespace BuildWatersMethod
                     "   Quattro Premier method file as output.\n" +
                     "   -x               Xevo method [default]\n" +
                     "   -q               Quattro Premier method\n" +
+                    "   -f               TOF method - collect full scan MS/MS, ignoring product m/z values\n" +
+                    "   -1               Collect full scan MS1 on each cycle - TOF only\n" +
+                    "                    (NB: it's a \"one\", not an \"L\")\n" +
+                    "   -i               Create an inclusion list method instead of a transition\n" +
+                    "                    list method - TOF only (NYI)\n" +
                     "   -d               Dwell time [default 0.05]\n" +
                     "   -w <RT window>   Retention time window\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
@@ -104,6 +109,7 @@ namespace BuildWatersMethod
         private const string WATERS_METHOD_EXT = ".exp";
         private const string INSTRUMENT_XEVO = "Xevo TQMS";
         private const string INSTRUMENT_QUATTRO_PREMIER = "Quattro Premier XE";
+        private const string INSTRUMENT_TOF = "TOF";
 
         private string InstrumentType { get; set; }
 
@@ -146,6 +152,9 @@ namespace BuildWatersMethod
                         break;
                     case 'x':
                         // Nothing to do, since Xevo is default
+                        break;
+                    case 'f':
+                        InstrumentType = INSTRUMENT_TOF;
                         break;
                     case 'd':
                         try

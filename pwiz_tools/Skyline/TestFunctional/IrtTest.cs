@@ -192,21 +192,25 @@ namespace pwiz.SkylineTestFunctional
 
             // Paste Biognosys-provided values
             RunUI(() =>
-            {
-                string standardText = BuildStandardText(standard, seq => seq);
-                SetClipboardText(standardText);
-                irtDlg1.ClearStandardPeptides();
-                irtDlg1.DoPasteStandard();
+                      {
+                          string standardText = BuildStandardText(standard, seq => seq);
+                          SetClipboardText(standardText);
+                          irtDlg1.ClearStandardPeptides();
+                          irtDlg1.DoPasteStandard();
 
-                //Check count
-                Assert.AreEqual(numStandardPeps, irtDlg1.StandardPeptideCount);
+                          //Check count
+                          Assert.AreEqual(numStandardPeps, irtDlg1.StandardPeptideCount);
+                      });
 
-                //Add results
-                irtDlg1.AddResults();
-                Assert.AreEqual(numLibraryPeps, irtDlg1.LibraryPeptideCount);
+            //Add results
+            RunDlg<AddIrtPeptidesDlg>(irtDlg1.AddResults, addPeptidesDlg => addPeptidesDlg.OkDialog());
 
-                irtDlg1.OkDialog();
-            });
+            RunUI(() =>
+                      {
+                          Assert.AreEqual(numLibraryPeps, irtDlg1.LibraryPeptideCount);
+
+                          irtDlg1.OkDialog();
+                      });
 
             WaitForClosedForm(irtDlg1);
 
@@ -395,9 +399,10 @@ namespace pwiz.SkylineTestFunctional
             var irtDlg3 = ShowDialog<EditIrtCalcDlg>(editCalculator.EditItem);
 
             //Add the 18 non-standard peptides to the calculator, then OkDialog back to Skyline
+            RunDlg<AddIrtPeptidesDlg>(irtDlg3.AddResults, addPeptidesDlg => addPeptidesDlg.OkDialog());
+
             RunUI(() =>
                       {
-                          irtDlg3.AddResults();
                           Assert.AreEqual(18, irtDlg3.LibraryPeptideCount);
                           irtDlg3.OkDialog();
                       });

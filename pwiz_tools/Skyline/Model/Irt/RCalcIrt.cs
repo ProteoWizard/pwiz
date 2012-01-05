@@ -42,6 +42,11 @@ namespace pwiz.Skyline.Model.Irt
 
         public string DatabasePath { get; private set; }
 
+        public IEnumerable<KeyValuePair<string, double>> PeptideScores
+        {
+            get { return _database != null ? _database.PeptideScores : new KeyValuePair<string, double>[0]; }
+        }
+
         public bool IsNone
         {
             get { return Name == NONE.Name; }
@@ -64,18 +69,16 @@ namespace pwiz.Skyline.Model.Irt
         {
             RequireUsable();
 
-            var dbStandard = _database.StandardPeptides;
-            var returnStandard = (from peptide in peptides
-                                  where dbStandard.Contains(dbPep => Equals(peptide, dbPep))
-                                  select peptide).ToList();
+            var dbStandard = new HashSet<string>(_database.StandardPeptides);
+            var returnStandard = peptides.Where(dbStandard.Contains).ToArray();
 
-            if(returnStandard.Count() != dbStandard.Count())
+            if(returnStandard.Length != dbStandard.Count)
                 throw new IncompleteStandardException(this);
 
             return returnStandard;
         }
 
-        public override IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides)
+        public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
         {
             RequireUsable();
 
@@ -182,14 +185,6 @@ namespace pwiz.Skyline.Model.Irt
             }
         }
 
-//        public override int GetHashCode()
-//        {
-//            unchecked
-//            {
-//                return (base.GetHashCode() * 397) ^ DatabasePath.GetHashCode();
-//            }
-//        }
-
         #endregion
     }
 
@@ -199,9 +194,9 @@ namespace pwiz.Skyline.Model.Irt
         private const string ERROR =
             "The calculator {0} requires all of its standard peptides in order to determine a regression.";
 
-        public RCalcIrt Calculator { get; private set; }
+        public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
-        public IncompleteStandardException(RCalcIrt calc)
+        public IncompleteStandardException(RetentionScoreCalculatorSpec calc)
             : base(String.Format(ERROR, calc.Name))
         {
             Calculator = calc;
@@ -213,8 +208,8 @@ namespace pwiz.Skyline.Model.Irt
         private const string DBERROR =
             "The database for the calculator {0} could not be opened. Check that the file {1} was not moved or deleted.";
 
-        private readonly RCalcIrt _calculator;
-        public RCalcIrt Calculator { get { return _calculator; } }
+        private readonly RetentionScoreCalculatorSpec _calculator;
+        public RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
 
         public DatabaseNotConnectedException(RCalcIrt calc)
             : base(string.Format(DBERROR, calc.Name, calc.DatabasePath))

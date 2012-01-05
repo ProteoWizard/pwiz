@@ -19,6 +19,7 @@
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -37,7 +38,7 @@ namespace pwiz.Skyline.SettingsUI
 
         protected DataGridView GridView { get { return _gridView; } }
 
-        protected Control MessageParent { get { return GridView.Parent; } }
+        protected Control MessageParent { get { return FormEx.GetParentForm(GridView); } }
 
         public SortableBindingList<TItem> Items { get; private set; }
 

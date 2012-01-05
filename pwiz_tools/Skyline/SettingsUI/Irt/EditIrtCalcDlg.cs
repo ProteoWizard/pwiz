@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
@@ -79,11 +80,34 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 OpenDatabase(_databaseStartPath);
             }
-
-            DatabaseChanged = false;
         }
 
-        private bool DatabaseChanged { get; set; }
+        private bool DatabaseChanged
+        {
+            get
+            {
+                if (_originalPeptides == null)
+                    return AllPeptides.Count() > 0;
+
+                var dictOriginalPeptides = _originalPeptides.ToDictionary(pep => pep.Id);
+                long countPeptides = 0;
+                foreach (var peptide in AllPeptides)
+                {
+                    countPeptides++;
+
+                    // Any new peptide implies a change
+                    if (!peptide.Id.HasValue)
+                        return true;
+                    // Any peptide that was not in the original set, or that has changed
+                    DbIrtPeptide originalPeptide;
+                    if (!dictOriginalPeptides.TryGetValue(peptide.Id, out originalPeptide) ||
+                            !Equals(peptide, originalPeptide))
+                        return true;
+                }
+                // Finally, check for peptides removed
+                return countPeptides != _originalPeptides.Length;
+            }
+        }
 
         private BindingList<DbIrtPeptide> StandardPeptideList { get { return _gridViewStandardDriver.Items; } }
 
@@ -119,15 +143,25 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void btnCreateDb_Click(object sender, EventArgs e)
         {
+            if (DatabaseChanged)
+            {
+                var result = MessageBox.Show(
+                    "Are you sure you want to create a new database file? Any changes to the current calculator will be lost.",
+                    Program.Name, MessageBoxButtons.YesNo);
+
+                if (result != DialogResult.Yes)
+                    return;
+            }
+
             using (SaveFileDialog dlg = new SaveFileDialog
             {
                 Title = "Create iRT Database",
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 OverwritePrompt = true,
-                DefaultExt = IrtDb.EXT_IRTDB,
+                DefaultExt = IrtDb.EXT,
                 Filter = string.Join("|", new[]
                                 {
-                                    "iRT Database Files (*" + IrtDb.EXT_IRTDB + ")|*" + IrtDb.EXT_IRTDB,
+                                    "iRT Database Files (*" + IrtDb.EXT + ")|*" + IrtDb.EXT,
                                     "All Files (*.*)|*.*"
                                 })
             })
@@ -182,10 +216,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 Title = "Open iRT Database",
                 InitialDirectory = Settings.Default.ActiveDirectory,
-                DefaultExt = IrtDb.EXT_IRTDB,
+                DefaultExt = IrtDb.EXT,
                 Filter = string.Join("|", new[]
                                 {
-                                    "iRT Database Files (*" + IrtDb.EXT_IRTDB + ")|*" + IrtDb.EXT_IRTDB,
+                                    "iRT Database Files (*" + IrtDb.EXT + ")|*" + IrtDb.EXT,
                                     "All Files (*.*)|*.*"
                                 })
             })
@@ -265,8 +299,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 textDatabase.Focus();
                 return;
             }
-            if (!string.Equals(Path.GetExtension(path), IrtDb.EXT_IRTDB))
-                path += IrtDb.EXT_IRTDB;
+            if (!string.Equals(Path.GetExtension(path), IrtDb.EXT))
+                path += IrtDb.EXT;
 
             //This function MessageBox.Show's error messages
             if(!ValidatePeptideList(StandardPeptideList, STANDARD_TABLE_NAME))
@@ -451,7 +485,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void AddIrtDatabase()
         {
-            throw new NotImplementedException();
+            _gridViewLibraryDriver.AddIrtDatabase();
         }
 
         private class StandardGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
@@ -565,7 +599,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                 }
 
-                AddToLibrary(libraryPeptidesNew, null, null);
+                AddToLibrary(libraryPeptidesNew, 0, 0);
             }
 
             public void AddResults()
@@ -578,7 +612,34 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return;
                 }
 
-                AddRetetionTimes(GetRetentionTimeProviders(document));
+                ProcessedIrtAverages irtAverages = null;
+                using (var longWait = new LongWaitDlg
+                {
+                    Text = "Adding Results",
+                    Message = "Adding retention times from imported results",
+                    FormBorderStyle = FormBorderStyle.Sizable
+                })
+                {
+                    try
+                    {
+                        var status = longWait.PerformWork(MessageParent, 800, monitor =>
+                            irtAverages = ProcessRetetionTimes(monitor,
+                                              GetRetentionTimeProviders(document),
+                                              document.Settings.MeasuredResults.MSDataFileInfos.Count()));
+                        if (status.IsError)
+                        {
+                            MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                            return;
+                        }
+                    }
+                    catch (Exception x)
+                    {
+                        MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to add results from current document.\n{1}", x.Message));
+                        return;
+                    }
+                }
+
+                AddProcessedIrts(irtAverages, true);
             }
 
             private static IEnumerable<IRetentionTimeProvider> GetRetentionTimeProviders(SrmDocument document)
@@ -593,6 +654,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
                 public DocumentRetentionTimeProvider(SrmDocument document, ChromFileInfo fileInfo)
                 {
+                    Name = fileInfo.FilePath;
+
                     _dictPeptideRetentionTime = new Dictionary<string, double>();
                     foreach (var nodePep in document.Peptides)
                     {
@@ -603,6 +666,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
 
                 }
+
+                public string Name { get; private set; }
 
                 public double? GetRetentionTime(string sequence)
                 {
@@ -637,43 +702,45 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
                 var library = libraryManager.TryGetLibrary(librarySpec);
-                if (library == null)
-                {
-                    using (var longWait = new LongWaitDlg
-                        {
-                            Text = "Loading Library",
-                            Message = string.Format("Loading library from {0}", librarySpec.FilePath)
-                        })
+                ProcessedIrtAverages irtAverages = null;
+                using (var longWait = new LongWaitDlg
                     {
-                        try
+                        Text = "Adding Spectral Library",
+                        Message = string.Format("Adding retention times from {0}", librarySpec.FilePath),
+                        FormBorderStyle = FormBorderStyle.Sizable
+                    })
+                {
+                    try
+                    {
+                        var status = longWait.PerformWork(MessageParent, 800, monitor =>
                         {
-                            var status = longWait.PerformWork(MessageParent, 800, monitor =>
+                            if (library == null)
+                                library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
+
+                            int fileCount = library.FileCount ?? 0;
+                            if (fileCount == 0)
                             {
-                                library = librarySpec.LoadLibrary(new ViewLibraryDlg.ViewLibLoadMonitor(monitor));
-                            });
-                            if (status.IsError)
-                            {
-                                MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                                string message = string.Format("The library {0} does not contain retention time information.", librarySpec.FilePath);
+                                monitor.UpdateProgress(new ProgressStatus("").ChangeErrorException(new IOException(message)));
                                 return;
                             }
-                        }
-                        catch (Exception x)
+
+                            irtAverages = ProcessRetetionTimes(monitor, GetRetentionTimeProviders(library), fileCount);
+                        });
+                        if (status.IsError)
                         {
-                            MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to load the {0} library.\n{1}", librarySpec.Name, x.Message));
+                            MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
                             return;
                         }
                     }
+                    catch (Exception x)
+                    {
+                        MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to load the library file {0}.\n{1}", librarySpec.FilePath, x.Message));
+                        return;
+                    }
                 }
 
-                var retentionTimeProviders = GetRetentionTimeProviders(library).ToArray();
-                if (retentionTimeProviders.Length == 0)
-                {
-                    MessageDlg.Show(MessageParent, string.Format("The library {0} does not contain retention time information.", librarySpec.Name));
-                    return;
-                }
-
-                // TODO: This also needs a LongWaitDlg.  Should share same dialog with above
-                AddRetetionTimes(retentionTimeProviders);
+                AddProcessedIrts(irtAverages, true);
             }
 
             private static IEnumerable<IRetentionTimeProvider> GetRetentionTimeProviders(Library library)
@@ -690,34 +757,153 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private void AddRetetionTimes(IEnumerable<IRetentionTimeProvider> providers)
+            public void AddIrtDatabase()
             {
+                var irtCalcs = Settings.Default.RTScoreCalculatorList.Where(calc => calc is RCalcIrt).Cast<RCalcIrt>();
+                using (var addIrtCalculatorDlg = new AddIrtCalculatorDlg(irtCalcs))
+                {
+                    if (addIrtCalculatorDlg.ShowDialog(MessageParent) == DialogResult.OK)
+                    {
+                        AddIrtDatabase(addIrtCalculatorDlg.Calculator);
+                    }
+                }                
+            }
+
+            private void AddIrtDatabase(RCalcIrt irtCalc)
+            {
+                ProcessedIrtAverages irtAverages = null;
+                using (var longWait = new LongWaitDlg
+                {
+                    Text = "Adding iRT Database",
+                    Message = string.Format("Adding retention times from {0}", irtCalc.DatabasePath),
+                    FormBorderStyle = FormBorderStyle.Sizable
+                })
+                {
+                    try
+                    {
+                        var status = longWait.PerformWork(MessageParent, 800, monitor =>
+                        {
+                            irtCalc = (RCalcIrt) Settings.Default.RTScoreCalculatorList.Initialize(monitor, irtCalc);
+
+                            irtAverages = ProcessRetetionTimes(monitor,
+                                new[] { new IrtRetentionTimeProvider(irtCalc) }, 1);
+                        });
+                        if (status.IsError)
+                        {
+                            MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                            return;
+                        }
+                    }
+                    catch (Exception x)
+                    {
+                        MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to load the iRT database file {0}.\n{1}", irtCalc.DatabasePath, x.Message));
+                        return;
+                    }
+                }
+
+                AddProcessedIrts(irtAverages, false);
+            }
+
+            private sealed class IrtRetentionTimeProvider : IRetentionTimeProvider
+            {
+                private readonly RCalcIrt _irtCalculator;
+
+                public IrtRetentionTimeProvider(RCalcIrt irtCalculator)
+                {
+                    _irtCalculator = irtCalculator;
+                }
+
+                public string Name
+                {
+                    get { return _irtCalculator.Name; }
+                }
+
+                public double? GetRetentionTime(string sequence)
+                {
+                    double? score = _irtCalculator.ScoreSequence(sequence);
+                    if (!score.HasValue || score.Value == _irtCalculator.UnknownScore)
+                        return null;
+                    return score;
+                }
+
+                public IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes
+                {
+                    get { return _irtCalculator.PeptideScores.Select(p => new MeasuredRetentionTime(p.Key, p.Value)); }
+                }
+            }
+
+            private ProcessedIrtAverages ProcessRetetionTimes(IProgressMonitor monitor,
+                                          IEnumerable<IRetentionTimeProvider> providers,
+                                          int countProviders)
+            {
+                var status = new ProgressStatus("Adding retention times");
                 var dictPeptideAverages = new Dictionary<string, IrtPeptideAverages>();
                 int runCount = 0;
                 int regressionLineCount = 0;
                 foreach (var retentionTimeProvider in providers)
                 {
+                    if (monitor.IsCanceled)
+                        return null;
+
+                    string message = string.Format("Converting retention times from {0}", retentionTimeProvider.Name);
+                    monitor.UpdateProgress(status = status.ChangeMessage(message));
+
                     runCount++;
                     var regressionLine = CalcRegressionLine(retentionTimeProvider);
-                    if (regressionLine == null)
-                        continue;
-                    regressionLineCount++;
-                    AddRetentionTimesToDict(retentionTimeProvider, regressionLine, dictPeptideAverages);
+                    if (regressionLine != null)
+                    {
+                        regressionLineCount++;
+                        AddRetentionTimesToDict(retentionTimeProvider, regressionLine, dictPeptideAverages);
+                    }
+
+                    monitor.UpdateProgress(status = status.ChangePercentComplete(runCount * 100 / countProviders));
                 }
 
+                monitor.UpdateProgress(status.Complete());
+
+                return new ProcessedIrtAverages(dictPeptideAverages, runCount, regressionLineCount);
+            }
+
+            private void AddProcessedIrts(ProcessedIrtAverages irtAverages, bool isCountable)
+            {
+                if (irtAverages == null)
+                    return;
+
+                int runCount = irtAverages.RunCount;
+                int regressionLineCount = irtAverages.RegressionLineCount;
                 if (regressionLineCount == 0)
                 {
-                    if (runCount == 1)
+                    if (!isCountable)
+                        MessageDlg.Show(MessageParent, "Correlation to the existing iRT values are not high enough to allow retention time conversion.");
+                    else if (runCount == 1)
                         MessageDlg.Show(MessageParent, "A single run does not have high enough correlation to the existing iRT values to allow retention time conversion.");
                     else
                         MessageDlg.Show(MessageParent, string.Format("None of {0} runs were found with high enough correlation to the existing iRT values to allow retention time conversion.", runCount));
                     return;
                 }
-                AddToLibrary(from pepAverage in dictPeptideAverages.Values
+                
+                if (!isCountable)
+                    runCount = regressionLineCount = 0;
+
+                AddToLibrary(from pepAverage in irtAverages.DictPeptideIrtAverages.Values
                              orderby pepAverage.IrtAverage
                              select new DbIrtPeptide(pepAverage.PeptideModSeq, pepAverage.IrtAverage, false, TimeSource.scan),
-                             runCount,
-                             regressionLineCount);
+                             regressionLineCount,
+                             runCount - regressionLineCount);
+            }
+
+            private sealed class ProcessedIrtAverages
+            {
+                public ProcessedIrtAverages(Dictionary<string, IrtPeptideAverages> dictPeptideIrtAverages, int runCount, int regressionLineCount)
+                {
+                    DictPeptideIrtAverages = dictPeptideIrtAverages;
+                    RunCount = runCount;
+                    RegressionLineCount = regressionLineCount;
+                }
+
+                public Dictionary<string, IrtPeptideAverages> DictPeptideIrtAverages { get; private set; }
+                public int RunCount { get; private set; }
+                public int RegressionLineCount { get; private set; }
             }
 
             private const double MIN_IRT_TO_TIME_CORRELATION = 0.99;
@@ -725,18 +911,19 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private IRegressionFunction CalcRegressionLine(IRetentionTimeProvider retentionTimes)
             {
-                var listPeptides = StandardPeptideList.OrderBy(peptide => peptide.Irt).ToArray();
+                // Attempt to get regression based on standards
+                var standardPeptides = StandardPeptideList.OrderBy(peptide => peptide.Irt).ToArray();
 
                 var listTimes = new List<double>();
-                foreach (var standardPeptide in listPeptides)
+                foreach (var standardPeptide in standardPeptides)
                 {
                     double? time = retentionTimes.GetRetentionTime(standardPeptide.PeptideModSeq);
                     if (!time.HasValue)
                         continue;
                     listTimes.Add(time.Value);
                 }
-                var listIrts = listPeptides.Select(peptide => peptide.Irt).ToList();
-                if (listTimes.Count == StandardPeptideList.Count)
+                var listIrts = standardPeptides.Select(peptide => peptide.Irt).ToList();
+                if (listTimes.Count == standardPeptides.Length)
                 {
                     var statTimes = new Statistics(listTimes);
                     var statIrts = new Statistics(listIrts);
@@ -759,7 +946,31 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         return new RegressionLine(statIrts.Slope(statTimes), statIrts.Intercept(statTimes));
                 }
 
-                // TODO: Attempt to find a usable regression among non-standard peptides
+                if (Items.Count > 0)
+                {
+                    // Attempt to get a regression based on shared peptides
+                    var calculator = new CurrentCalculator(StandardPeptideList, Items);
+                    var peptidesTimes = retentionTimes.PeptideRetentionTimes.ToArray();
+                    var regression = RetentionTimeRegression.FindThreshold(MIN_IRT_TO_TIME_CORRELATION,
+                                                                           RetentionTimeRegression.ThresholdPrecision,
+                                                                           peptidesTimes,
+                                                                           new MeasuredRetentionTime[0],
+                                                                           peptidesTimes,
+                                                                           calculator,
+                                                                           () => false);
+
+                    if (regression != null && regression.PeptideTimes.Count >= MIN_IRT_TO_TIME_POINT_COUNT)
+                    {
+                        // Finally must recalculate the regression, because it is transposed from what
+                        // we want.
+                        var statTimes = new Statistics(regression.PeptideTimes.Select(pt => pt.RetentionTime));
+                        var statIrts = new Statistics(regression.PeptideTimes.Select(pt =>
+                            calculator.ScoreSequence(pt.PeptideSequence) ?? calculator.UnknownScore));
+
+                        return new RegressionLine(statIrts.Slope(statTimes), statIrts.Intercept(statTimes));
+                    }
+                }
+
                 return null;
             }
 
@@ -809,7 +1020,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
             }
 
-            private void AddToLibrary(IEnumerable<DbIrtPeptide> libraryPeptidesNew, int? runCount, int? includedCouunt)
+            private void AddToLibrary(IEnumerable<DbIrtPeptide> libraryPeptidesNew, int runsConvertedCount, int runsFailedCount)
             {
                 var dictLibraryIndices = new Dictionary<string, int>();
                 for (int i = 0; i < Items.Count; i++)
@@ -819,11 +1030,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         dictLibraryIndices.Add(Items[i].PeptideModSeq, i);
                 }
 
+                var listPeptidesNew = libraryPeptidesNew.ToList();
                 var listChangedPeptides = new List<string>();
                 var listOverwritePeptides = new List<string>();
 
                 // Check for existing matching peptides
-                foreach (var peptide in libraryPeptidesNew)
+                foreach (var peptide in listPeptidesNew)
                 {
                     int peptideIndex;
                     if (!dictLibraryIndices.TryGetValue(peptide.PeptideModSeq, out peptideIndex))
@@ -841,44 +1053,54 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 }
 
                 // If there were any matches, get user feedback
-                AddIrtPeptidesAction action = AddIrtPeptidesAction.skip;
-                if (listChangedPeptides.Count > 0 || listOverwritePeptides.Count > 0)
+                AddIrtPeptidesAction action;
+                using (var dlg = new AddIrtPeptidesDlg(listPeptidesNew.Count - listChangedPeptides.Count,
+                                                       runsConvertedCount,
+                                                       runsFailedCount,
+                                                       listChangedPeptides,
+                                                       listOverwritePeptides))
                 {
-                    using (var dlg = new AddIrtPeptidesDlg(listChangedPeptides, listOverwritePeptides))
-                    {
-                        if (dlg.ShowDialog(MessageParent) != DialogResult.OK)
-                            return;
-                        action = dlg.Action;
-                    }
+                    if (dlg.ShowDialog(MessageParent) != DialogResult.OK)
+                        return;
+                    action = dlg.Action;
                 }
 
-                // Add the new peptides to the library list
-                foreach (var peptide in libraryPeptidesNew)
+                Items.RaiseListChangedEvents = false;
+                try
                 {
-                    int peptideIndex;
-                    if (!dictLibraryIndices.TryGetValue(peptide.PeptideModSeq, out peptideIndex))
+                    // Add the new peptides to the library list
+                    foreach (var peptide in libraryPeptidesNew)
                     {
-                        Items.Add(peptide);
-                        continue;
-                    }
-                    var peptideExist = Items[peptideIndex];
-                    if (action == AddIrtPeptidesAction.skip || Equals(peptide, peptideExist))
-                        continue;
+                        int peptideIndex;
+                        if (!dictLibraryIndices.TryGetValue(peptide.PeptideModSeq, out peptideIndex))
+                        {
+                            Items.Add(peptide);
+                            continue;
+                        }
+                        var peptideExist = Items[peptideIndex];
+                        if (action == AddIrtPeptidesAction.skip || Equals(peptide, peptideExist))
+                            continue;
 
-                    if (action == AddIrtPeptidesAction.replace ||
-                            (peptide.TimeSource != peptideExist.TimeSource &&
-                             peptideExist.TimeSource.HasValue &&
-                             peptideExist.TimeSource.Value == (int)TimeSource.scan))
-                    {
-                        peptideExist.Irt = peptide.Irt;
-                        peptideExist.TimeSource = peptide.TimeSource;
+                        if (action == AddIrtPeptidesAction.replace ||
+                                (peptide.TimeSource != peptideExist.TimeSource &&
+                                 peptideExist.TimeSource.HasValue &&
+                                 peptideExist.TimeSource.Value == (int)TimeSource.scan))
+                        {
+                            peptideExist.Irt = peptide.Irt;
+                            peptideExist.TimeSource = peptide.TimeSource;
+                        }
+                        else // if (action == AddIrtPeptidesAction.average)
+                        {
+                            peptideExist.Irt = (peptide.Irt + peptideExist.Irt) / 2;
+                        }
+                        Items.ResetItem(peptideIndex);
                     }
-                    else // if (action == AddIrtPeptidesAction.average)
-                    {
-                        peptideExist.Irt = (peptide.Irt + peptideExist.Irt) / 2;
-                    }
-                    Items.ResetItem(peptideIndex);
                 }
+                finally
+                {
+                    Items.RaiseListChangedEvents = true;
+                }
+                Items.ResetBindings();
             }
         }
 
@@ -914,5 +1136,51 @@ namespace pwiz.Skyline.SettingsUI.Irt
         }
 
         #endregion
+
+        private sealed class CurrentCalculator : RetentionScoreCalculatorSpec
+        {
+            private readonly Dictionary<string, double> _dictStandards;
+            private readonly Dictionary<string, double> _dictLibrary;
+
+            private readonly double _unknownScore;
+
+            public CurrentCalculator(IEnumerable<DbIrtPeptide> standardPeptides, IEnumerable<DbIrtPeptide> libraryPeptides)
+                : base(NAME_INTERNAL)
+            {
+                _dictStandards = standardPeptides.ToDictionary(p => p.PeptideModSeq, p => p.Irt);
+                _dictLibrary = libraryPeptides.ToDictionary(p => p.PeptideModSeq, p => p.Irt);
+                double minStandard = _dictStandards.Values.Min();
+                double minLibrary = _dictLibrary.Values.Min();
+
+                // Come up with a value lower than the lowest value, but still within the scale
+                // of the measurements.
+                _unknownScore = Math.Min(minStandard, minLibrary) - Math.Abs(minStandard - minLibrary);
+            }
+
+            public override double UnknownScore { get { return _unknownScore; } }
+
+            public override double? ScoreSequence(string sequence)
+            {
+                double irt;
+                if (_dictStandards.TryGetValue(sequence, out irt) || _dictLibrary.TryGetValue(sequence, out irt))
+                    return irt;
+                return null;
+            }
+
+            public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)
+            {
+                var returnStandard = peptides.Where(_dictStandards.ContainsKey).ToArray();
+
+                if (returnStandard.Length != _dictStandards.Count)
+                    throw new IncompleteStandardException(this);
+
+                return returnStandard;
+            }
+
+            public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
+            {
+                return _dictStandards.Keys;
+            }
+        }
     }
 }

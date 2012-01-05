@@ -226,7 +226,7 @@ namespace pwiz.Skyline.Model
     }
 
     /// <summary>
-    /// Interface for client notification during a library load operation.
+    /// Interface for client notification during a background load operation.
     /// </summary>
     public interface ILoadMonitor : IProgressMonitor
     {
@@ -235,5 +235,36 @@ namespace pwiz.Skyline.Model
         /// for performing operations against the file system.
         /// </summary>
         IStreamManager StreamManager { get; }
+    }
+
+    /// <summary>
+    /// Default load monitor implementation for loading from files.
+    /// </summary>
+    public sealed class DefaultFileLoadMonitor : ILoadMonitor
+    {
+        private readonly IProgressMonitor _monitor;
+
+        public DefaultFileLoadMonitor(IProgressMonitor monitor)
+        {
+            _monitor = monitor;
+        }
+
+        public bool IsCanceled
+        {
+            get { return _monitor.IsCanceled; }
+        }
+
+        public void UpdateProgress(ProgressStatus status)
+        {
+            _monitor.UpdateProgress(status);
+        }
+
+        public IStreamManager StreamManager
+        {
+            get
+            {
+                return FileStreamManager.Default;
+            }
+        }
     }
 }

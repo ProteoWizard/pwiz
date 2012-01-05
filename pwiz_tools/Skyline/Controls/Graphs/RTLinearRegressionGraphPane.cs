@@ -425,20 +425,27 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     //This call will pick the best calculator, disqualifying any iRT Calcs that do not have
                     //connected databases
-                    _regressionAll = RetentionTimeRegression.CalcRegression("graph",
+                    _regressionAll = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL,
                                                                             Settings.Default.RTScoreCalculatorList,
-                                                                            _peptidesTimes, _scoreCache, true,
-                                                                            out _statisticsAll, out _calculator);
+                                                                            _peptidesTimes,
+                                                                            _scoreCache,
+                                                                            true,
+                                                                            out _statisticsAll,
+                                                                            out _calculator);
                 }
                 else
                 {
                     // Initialize the one calculator
-                    calc = Settings.Default.RTScoreCalculatorList.Initialize(calc, null);
+                    calc = Settings.Default.RTScoreCalculatorList.Initialize(null, calc);
 
-                    _regressionAll = RetentionTimeRegression.CalcRegression("graph",
+                    _regressionAll = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL,
                                                                             new[] {calc},
-                                                                            _peptidesTimes, _scoreCache, true,
-                                                                            out _statisticsAll, out _calculator);
+                                                                            _peptidesTimes,
+                                                                            _scoreCache,
+                                                                            true,
+                                                                            out _statisticsAll,
+                                                                            out _calculator);
+
                     //If _regressionAll is null, it is safe to assume that the calculator is an iRT Calc with
                     //its database disconnected.
                     if(_regressionAll == null)
@@ -542,35 +549,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Now that we have added iRT calculators, RecalcRegression
                 // cannot go and mark as outliers peptides at will anymore. It must know which peptides, if any,
                 // are required by the calculator for a regression. With iRT calcs, the standard is required.
-                IEnumerable<string> requiredPeptidesNames;
                 if(!_calculator.IsUsable)
                     return null;
-                    //requiredPeptidesNames = new List<string>();
-                else
+
+                HashSet<string> standardNames;
+                try
                 {
-                    try
-                    {
-                        requiredPeptidesNames = _calculator.GetRequiredRegressionPeptides(_peptidesTimes.ConvertAll(pep => pep.PeptideSequence));
-                    }
-                    catch (CalculatorException)
-                    {
-                        requiredPeptidesNames = new string[0];
-                    }
+                    var names = _calculator.GetStandardPeptides(_peptidesTimes.Select(pep => pep.PeptideSequence));
+                    standardNames = new HashSet<string>(names);
+                }
+                catch (CalculatorException)
+                {
+                    standardNames = new HashSet<string>();
                 }
 
-                var requiredPeptides = new List<MeasuredRetentionTime>();
-                foreach (var pepName in requiredPeptidesNames)
-                {
-                    string name = pepName;
-                    requiredPeptides.Add(_peptidesTimes.Find(mrt => Equals(mrt.PeptideSequence, name)));
-                }
-
-                var variablePeptides = new List<MeasuredRetentionTime>();
-                foreach (var pep in _peptidesTimes)
-                {
-                    if (!requiredPeptidesNames.Contains(pep.PeptideSequence))
-                        variablePeptides.Add(pep);
-                }
+                var standardPeptides = _peptidesTimes.Where(pep => standardNames.Contains(pep.PeptideSequence)).ToArray();
+                var variablePeptides = _peptidesTimes.Where(pep => !standardNames.Contains(pep.PeptideSequence)).ToArray();
 
                 //Throws DatabaseNotConnectedException
                 _regressionRefined = (_regressionAll == null
@@ -578,8 +572,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                           : _regressionAll.FindThreshold(threshold,
                                                                          precision,
                                                                          0,
-                                                                         variablePeptides.Count,
-                                                                         requiredPeptides,
+                                                                         variablePeptides.Length,
+                                                                         standardPeptides,
                                                                          variablePeptides,
                                                                          _statisticsAll,
                                                                          _calculator,

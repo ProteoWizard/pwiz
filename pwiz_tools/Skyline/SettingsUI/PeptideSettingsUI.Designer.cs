@@ -465,7 +465,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnUpdateCalculator.TabIndex = 2;
             this.helpTip.SetToolTip(this.btnUpdateCalculator, "Retention time calculators");
             this.btnUpdateCalculator.UseVisualStyleBackColor = true;
-            this.btnUpdateCalculator.Visible = false;
             this.btnUpdateCalculator.Click += new System.EventHandler(this.btnUpdateCalculator_Click);
             // 
             // tabControl1

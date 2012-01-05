@@ -413,7 +413,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var status = longWait.PerformWork(this, 800, monitor =>
                     {
-                        _selectedLibrary = selectedLibrarySpec.LoadLibrary(new ViewLibLoadMonitor(monitor));
+                        _selectedLibrary = selectedLibrarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
                     });
                     if (status.IsError)
                     {
@@ -1807,38 +1807,6 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        /// <summary>
-        /// ILoadMonitor implementation needed for loading the library in the 
-        /// case where the library isn't already loaded in the main window.
-        /// </summary>
-        public sealed class ViewLibLoadMonitor : ILoadMonitor
-        {
-            private readonly IProgressMonitor _monitor;
-
-            public ViewLibLoadMonitor(IProgressMonitor monitor)
-            {
-                _monitor = monitor;
-            }
-
-            public bool IsCanceled
-            {
-                get { return _monitor.IsCanceled; }
-            }
-
-            public void UpdateProgress(ProgressStatus status)
-            {
-                _monitor.UpdateProgress(status);
-            }
-
-            public IStreamManager StreamManager
-            {
-                get
-                {
-                    return FileStreamManager.Default;
-                }
-            }
-        }
-        
         private class PeptideTipProvider : ITipProvider
         {
             private ViewLibraryPepInfo _pepInfo;

@@ -55,7 +55,7 @@ namespace pwiz.Skyline.SettingsUI
                                                             new SortableBindingList<MeasuredPeptide>());
 
             _driverCalculators = new SettingsListComboDriver<RetentionScoreCalculatorSpec>(
-                comboCalculator, Settings.Default.RTScoreCalculatorList, false);
+                comboCalculator, Settings.Default.RTScoreCalculatorList);
             _driverCalculators.LoadList(null);
 
             ShowPeptides(Settings.Default.EditRTVisible);
@@ -319,14 +319,29 @@ namespace pwiz.Skyline.SettingsUI
 
             if (!calc.IsUsable)
             {
-                try
+                using (var longWait = new LongWaitDlg
                 {
-                    calc = calc.Initialize(null);
-                }
-                catch (CalculatorException f)
+                    Text = "Initializing",
+                    Message = string.Format("Initializing {0} calculator", calc.Name)
+                })
                 {
-                    MessageDlg.Show(this, f.Message);
-                    return;
+                    try
+                    {
+                        var status = longWait.PerformWork(this, 800, monitor =>
+                        {
+                            calc = Settings.Default.RTScoreCalculatorList.Initialize(monitor, calc);
+                        });
+                        if (status.IsError)
+                        {
+                            MessageBox.Show(this, status.ErrorException.Message, Program.Name);
+                            return;
+                        }
+                    }
+                    catch (Exception x)
+                    {
+                        MessageDlg.Show(this, string.Format("An error occurred attempting to initialize the calculator {0}.\n{1}", calc.Name, x.Message));
+                        return;
+                    }
                 }
             }
 

@@ -748,8 +748,8 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     select.CommandText =
                         "SELECT * FROM " +
-                        "[RefSpectra] INNER JOIN [RefSpectraPeaks] ON [id] = [RefSpectraID] " +
-                        "WHERE [id] = ?";
+                        "[RefSpectra] as s INNER JOIN [RefSpectraPeaks] as p ON s.[id] = p.[RefSpectraID] " +
+                        "WHERE s.[id] = ?";
                     select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)spectrumId));
 
                     using (SQLiteDataReader reader = select.ExecuteReader())
@@ -844,7 +844,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 try
                 {
-                    retentionTimes = new LibraryRetentionTimes(ReadRetentionTimes(_librarySourceFiles[j]));
+                    retentionTimes = new LibraryRetentionTimes(filePath, ReadRetentionTimes(_librarySourceFiles[j]));
                     return true;
                 }
                 catch (SQLiteException)
@@ -865,8 +865,8 @@ namespace pwiz.Skyline.Model.Lib
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 select.CommandText = "SELECT peptideModSeq, t.retentionTime " +
-                    "FROM [RefSpectra] INNER JOIN [RetentionTimes] as t ON [id] = [RefSpectraID] " +
-                    "WHERE [SpectrumSourceId] = ? " +
+                    "FROM [RefSpectra] as s INNER JOIN [RetentionTimes] as t ON s.[id] = t.[RefSpectraID] " +
+                    "WHERE t.[SpectrumSourceId] = ? " +
                     "ORDER BY peptideModSeq, t.retentionTime";
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
 
@@ -944,10 +944,10 @@ namespace pwiz.Skyline.Model.Lib
             {
                 select.CommandText =
                     "SELECT * " +
-                    "FROM [RetentionTimes] INNER JOIN [SpectrumSourceFiles] ON [SpectrumSourceID] = [SpectrumSourceFiles].[id] " +
-                    "WHERE [RefSpectraID] = ?";
+                    "FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " +
+                    "WHERE t.[RefSpectraID] = ?";
                 if (!getAll)
-                    select.CommandText += " AND [bestSpectrum] = 1";
+                    select.CommandText += " AND t.[bestSpectrum] = 1";
 
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -23,62 +23,60 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
-using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public enum SpectralLibrarySource { settings, file }
+    public enum IrtCalculatorSource { settings, file }
 
-    public partial class AddIrtSpectralLibrary : Form
+    public partial class AddIrtCalculatorDlg : Form
     {
-        public AddIrtSpectralLibrary(IEnumerable<LibrarySpec> librarySpecs)
+        public AddIrtCalculatorDlg(IEnumerable<RCalcIrt> calculators)
         {
             InitializeComponent();
 
-            comboLibrary.Items.AddRange(librarySpecs.ToArray());
+            comboLibrary.Items.AddRange(calculators.ToArray());
             ComboHelper.AutoSizeDropDown(comboLibrary);
         }
 
-        public SpectralLibrarySource Source
+        public IrtCalculatorSource Source
         {
-            get { return radioSettings.Checked ? SpectralLibrarySource.settings : SpectralLibrarySource.file; }
+            get { return radioSettings.Checked ? IrtCalculatorSource.settings : IrtCalculatorSource.file; }
 
             set
             {
-                if (value == SpectralLibrarySource.settings)
+                if (value == IrtCalculatorSource.settings)
                     radioSettings.Checked = true;
                 else
                     radioFile.Checked = true;
             }
         }
 
-        public LibrarySpec Library
+        public RCalcIrt Calculator
         {
             get
             {
-                if (Source == SpectralLibrarySource.settings)
-                    return (LibrarySpec)comboLibrary.SelectedItem;
+                if (Source == IrtCalculatorSource.settings)
+                    return (RCalcIrt)comboLibrary.SelectedItem;
                 else
-                    return new BiblioSpecLiteSpec("__internal__", textFilePath.Text);
+                    return new RCalcIrt("", textFilePath.Text);
             }
         }
 
         private void OkDialog()
         {
-            if (Source == SpectralLibrarySource.file)
+            if (Source == IrtCalculatorSource.file)
             {
                 string path = textFilePath.Text;
                 string message = null;
                 if (string.IsNullOrEmpty(path))
-                    message = "Please specify a path to an existing spectral library.";
-                else if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
-                    message = string.Format("The file {0} appears to be a redundant library.\nPlease choose a  non-redundant library.", path);
-                else if (!path.EndsWith(BiblioSpecLiteSpec.EXT))
-                    message = string.Format("The file {0} is not a BiblioSpec library.\nOnly BiblioSpec libraries contain enough retention time information to support this operation.", path);
+                    message = "Please specify a path to an existing iRT database.";
+                else if (!path.EndsWith(IrtDb.EXT))
+                    message = string.Format("The file {0} is not an iRT database.", path);
                 else if (!File.Exists(path))
-                    message = string.Format("The file {0} does not exist.\nPlease specify a path to an existing spectral library.", path);
+                    message = string.Format("The file {0} does not exist.\nPlease specify a path to an existing iRT database.", path);
                 if (message != null)
                 {
                     MessageDlg.Show(this, message);
@@ -86,10 +84,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return;                    
                 }
             }
-            var librarySpec = Library;
-            if (librarySpec == null)
+            var calculator = Calculator;
+            if (calculator == null)
             {
-                MessageDlg.Show(this, "Please choose the library you would like to add.");
+                MessageDlg.Show(this, "Please choose the iRT calculator you would like to add.");
                 return;
             }
 
@@ -113,7 +111,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void SourceChanged()
         {
-            if (Source == SpectralLibrarySource.settings)
+            if (Source == IrtCalculatorSource.settings)
             {
                 comboLibrary.Enabled = true;
                 textFilePath.Enabled = false;
@@ -132,21 +130,19 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private void btnBrowseFile_Click(object sender, EventArgs e)
         {
             using (var dlg = new OpenFileDialog
-            {
-                InitialDirectory = Settings.Default.LibraryDirectory,
-                CheckPathExists = true,
-                DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = string.Join("|", new[]
-                    {
-                        "BiblioSpec Libraries (*" + BiblioSpecLiteSpec.EXT + ")|*" + BiblioSpecLiteSpec.EXT,
-                        "All Files (*.*)|*.*"
-                    })
-            })
+                                 {
+                                     CheckPathExists = true,
+                                     DefaultExt = BiblioSpecLibSpec.EXT,
+                                     Filter = string.Join("|", new[]
+                                                                   {
+                                                                       "iRT Database Files (*" + IrtDb.EXT + ")|*" + IrtDb.EXT,
+                                                                       "All Files (*.*)|*.*"
+                                                                   })
+                                 })
             {
                 if (dlg.ShowDialog(this) != DialogResult.OK)
                     return;
 
-                Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
                 textFilePath.Text = dlg.FileName;
             }
         }

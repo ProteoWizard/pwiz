@@ -1133,10 +1133,10 @@ namespace pwiz.Skyline.Properties
         public void Initialize(IProgressMonitor loadMonitor)
         {
             foreach (var calc in this.ToArray())
-                Initialize(calc, loadMonitor);
+                Initialize(loadMonitor, calc);
         }
 
-        public RetentionScoreCalculatorSpec Initialize(RetentionScoreCalculatorSpec calc, IProgressMonitor loadMonitor)
+        public RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor, RetentionScoreCalculatorSpec calc)
         {
             if (calc == null)
                 return null;
@@ -1144,7 +1144,7 @@ namespace pwiz.Skyline.Properties
             try
             {
                 var calcInit = calc.Initialize(loadMonitor);
-                if (!ReferenceEquals(calcInit, calc))
+                if (!Equals(calc.Name, XmlNamedElement.NAME_INTERNAL) && !ReferenceEquals(calcInit, calc))
                     SetValue(calcInit);
                 calc = calcInit;
             }
