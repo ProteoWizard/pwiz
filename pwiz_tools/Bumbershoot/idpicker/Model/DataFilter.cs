@@ -817,6 +817,23 @@ namespace IDPicker.DataModel
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroup = PeptideSpectrumMatchToSpectrumSourceGroupLink + ";JOIN ssgl.Group ssg";
         #endregion
 
+        public string GetBasicQueryString (string fromTable, params string[] joinTables)
+        {
+            var joins = new Map<int, object>();
+            foreach (var join in joinTables)
+                foreach (var branch in join.ToString().Split(';'))
+                    joins.Add(joins.Count, branch);
+
+            var query = new StringBuilder();
+
+            query.AppendFormat(" FROM {0} ", fromTable);
+            foreach (var join in joins.Values.Distinct())
+                query.AppendFormat("{0} ", join);
+            query.Append(" ");
+
+            return query.ToString();
+        }
+
         public string GetFilteredQueryString (string fromTable, params string[] joinTables)
         {
             var joins = new Map<int, object>();

@@ -668,10 +668,7 @@ namespace IDPicker.Forms
                                             .List<DataModel.Modification>()
                                     };
 
-                var peptideList = session.CreateQuery(PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
-                                                      modFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
-                                                      "GROUP BY psm.DistinctMatchKey")
-                                    .List<object[]>().Select(o => new PeptideTableForm.DistinctMatchRow(o, dataFilter));
+                var peptideList = PeptideTableForm.DistinctMatchRow.GetRows(session, modFilter);
                 if (!peptideList.Any()) continue;
 
 

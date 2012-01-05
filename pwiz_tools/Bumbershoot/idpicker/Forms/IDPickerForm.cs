@@ -1813,7 +1813,7 @@ namespace IDPicker
 
             //proteinGroupQuery.SetReadOnly(true);
             //var proteinGroupList = proteinGroupQuery.List<object[]>().Select(o => new ProteinTableForm.ProteinGroupRow(o, viewFilter)).ToList();
-            var proteinGroupList = proteinTableForm.getProteinGroupRows(clusterFilter).Cast<ProteinTableForm.ProteinGroupRow>().ToList();
+            var proteinGroupList = ProteinTableForm.ProteinGroupRow.GetRows(session, clusterFilter);
             //var proteinGroupList = genericProteinGroupList.Cast<ProteinTableForm.ProteinGroupRow>().ToList();
             ci.proteinGroupCount = proteinGroupList.Count;
 
@@ -1835,12 +1835,7 @@ namespace IDPicker
                 proteinGroup.Proteins.Replace(",", "','")))
                 .List<Protein>();
                 var proteinFilter = new DataFilter(clusterFilter) { Protein = allGroupedProteins };
-                var peptideQuery = session.CreateQuery(PeptideTableForm.AggregateRow.Selection + ", psm.Peptide " +
-                                                       proteinFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                       "GROUP BY psm.Peptide " +
-                                                       "ORDER BY COUNT(DISTINCT psm.DistinctMatchKey) DESC, COUNT(DISTINCT psm.Spectrum) DESC");
-                var peptides = peptideQuery.List<object[]>().Select(o => new PeptideTableForm.DistinctPeptideRow(o, proteinFilter)).ToList();
-                peptideQuery.SetReadOnly(true);
+                var peptides = PeptideTableForm.DistinctPeptideRow.GetRows(session, proteinFilter);
 
                 foreach (var peptide in peptides)
                 {

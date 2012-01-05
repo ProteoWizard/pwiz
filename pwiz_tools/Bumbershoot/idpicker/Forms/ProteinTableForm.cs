@@ -53,23 +53,34 @@ namespace IDPicker.Forms
             public string PeptideSequences { get; private set; }
             public string PeptideGroups { get; private set; }
 
-            public static int ColumnCount = 5;
+            public static int ColumnCount = 3;
             public static string Selection = "SELECT " +
                                              "COUNT(DISTINCT psm.Spectrum.id), " +
                                              "COUNT(DISTINCT psm.DistinctMatchKey), " +
-                                             "COUNT(DISTINCT psm.Peptide.id), " +
-                                             "DISTINCT_GROUP_CONCAT(pep.Sequence), " +
-                                             "DISTINCT_GROUP_CONCAT(pep.PeptideGroup)";
+                                             "COUNT(DISTINCT psm.Peptide.id)";
+
+            protected static IDictionary<TKey, object[]> GetDetailedColumnsByKey<TKey> (NHibernate.ISession session, DataFilter dataFilter, string keyColumn)
+            {
+                // these columns are not affected by the view filter
+                return session.CreateQuery("SELECT " + keyColumn +
+                                           ", DISTINCT_GROUP_CONCAT(pep.Sequence)" +
+                                           ", DISTINCT_GROUP_CONCAT(pep.PeptideGroup)" +
+                                           dataFilter.GetBasicQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
+                                           "GROUP BY " + keyColumn)
+                              .List<object[]>()
+                              .ToDictionary(o => (TKey) o[0]);
+            }
 
             #region Constructor
-            public AggregateRow (object[] queryRow, DataFilter dataFilter)
+            public AggregateRow (object[] basicColumns, object[] detailedColumns, DataFilter dataFilter)
             {
                 int column = -1;
-                Spectra = Convert.ToInt32(queryRow[++column]);
-                DistinctMatches = Convert.ToInt32(queryRow[++column]);
-                DistinctPeptides = Convert.ToInt32(queryRow[++column]);
-                PeptideSequences = Convert.ToString(queryRow[++column]);
-                PeptideGroups = Convert.ToString(queryRow[++column]);
+                Spectra = Convert.ToInt32(basicColumns[++column]);
+                DistinctMatches = Convert.ToInt32(basicColumns[++column]);
+                DistinctPeptides = Convert.ToInt32(basicColumns[++column]);
+                column = 0; // skip key column
+                PeptideSequences = Convert.ToString(detailedColumns[++column]);
+                PeptideGroups = Convert.ToString(detailedColumns[++column]);
                 DataFilter = dataFilter;
             }
             #endregion
@@ -81,14 +92,38 @@ namespace IDPicker.Forms
             public int ProteinGroupCount { get; private set; }
             public int ProteinCount { get; private set; }
 
+            public static IList<ClusterRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
+            {
+                IList<object[]> basicColumns;
+                IDictionary<int, object[]> detailedColumnsByKey;
+                lock (session)
+                {
+                    basicColumns = session.CreateQuery(AggregateRow.Selection +
+                                                       ", COUNT(DISTINCT pro.ProteinGroup)" +
+                                                       ", COUNT(DISTINCT pro.Id)" +
+                                                       ", pro.Cluster" +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
+                                                                                         DataFilter.ProteinToPeptideSpectrumMatch) +
+                                                       "GROUP BY pro.Cluster").List<object[]>();
+
+                    // these columns are not affected by the view filter
+                    detailedColumnsByKey = AggregateRow.GetDetailedColumnsByKey<int>(session, dataFilter, "pro.Cluster");
+                }
+
+                var rows = new List<ClusterRow>(basicColumns.Count);
+                for (int i = 0; i < basicColumns.Count; ++i)
+                    rows.Add(new ClusterRow(basicColumns[i], detailedColumnsByKey[(int) basicColumns[i].Last()], dataFilter));
+                return rows;
+            }
+
             #region Constructor
-            public ClusterRow (object[] queryRow, DataFilter dataFilter)
-                : base(queryRow, dataFilter)
+            public ClusterRow (object[] basicColumns, object[] detailedColumns, DataFilter dataFilter)
+                : base(basicColumns, detailedColumns, dataFilter)
             {
                 int column = AggregateRow.ColumnCount - 1;
-                ProteinGroupCount = Convert.ToInt32(queryRow[++column]);
-                ProteinCount = Convert.ToInt32(queryRow[++column]);
-                Cluster = Convert.ToInt32(queryRow[++column]);
+                ProteinGroupCount = Convert.ToInt32(basicColumns[++column]);
+                ProteinCount = Convert.ToInt32(basicColumns[++column]);
+                Cluster = Convert.ToInt32(basicColumns[++column]);
             }
             #endregion
         }
@@ -101,16 +136,42 @@ namespace IDPicker.Forms
             public int ProteinCount { get; private set; }
             public double? MeanProteinCoverage { get; private set; }
 
+            public static IList<ProteinGroupRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
+            {
+                IList<object[]> basicColumns;
+                IDictionary<int, object[]> detailedColumnsByKey;
+                lock (session)
+                {
+                    basicColumns = session.CreateQuery(AggregateRow.Selection +
+                                                       ", DISTINCT_GROUP_CONCAT(pro.Accession)" +
+                                                       ", pro" +
+                                                       ", COUNT(DISTINCT pro.id)" +
+                                                       ", AVG(pro.Coverage)" +
+                                                       ", pro.ProteinGroup" +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
+                                                                                         DataFilter.ProteinToPeptideSpectrumMatch) +
+                                                       "GROUP BY pro.ProteinGroup").List<object[]>();
+
+                    // these columns are not affected by the view filter
+                    detailedColumnsByKey = AggregateRow.GetDetailedColumnsByKey<int>(session, dataFilter, "pro.ProteinGroup");
+                }
+
+                var rows = new List<ProteinGroupRow>(basicColumns.Count);
+                for (int i = 0; i < basicColumns.Count; ++i)
+                    rows.Add(new ProteinGroupRow(basicColumns[i], detailedColumnsByKey[(int) basicColumns[i].Last()], dataFilter));
+                return rows;
+            }
+
             #region Constructor
-            public ProteinGroupRow (object[] queryRow, DataFilter dataFilter)
-                : base(queryRow, dataFilter)
+            public ProteinGroupRow (object[] basicColumns, object[] detailedColumns, DataFilter dataFilter)
+                : base(basicColumns, detailedColumns, dataFilter)
             {
                 int column = AggregateRow.ColumnCount - 1;
-                Proteins = (string) queryRow[++column];
-                ProteinGroup = Convert.ToInt32(queryRow[++column]);
-                FirstProtein = (DataModel.Protein) queryRow[++column];
-                ProteinCount = Convert.ToInt32(queryRow[++column]);
-                MeanProteinCoverage = (double?) queryRow[++column];
+                Proteins = (string) basicColumns[++column];
+                FirstProtein = (DataModel.Protein) basicColumns[++column];
+                ProteinCount = Convert.ToInt32(basicColumns[++column]);
+                MeanProteinCoverage = (double?) basicColumns[++column];
+                ProteinGroup = Convert.ToInt32(basicColumns[++column]);
             }
             #endregion
         }
@@ -119,12 +180,33 @@ namespace IDPicker.Forms
         {
             public DataModel.Protein Protein { get; private set; }
 
+            public static IList<ProteinRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
+            {
+                IList<object[]> basicColumns;
+                IDictionary<long, object[]> detailedColumnsByKey;
+                lock (session)
+                {
+                    basicColumns = session.CreateQuery(AggregateRow.Selection + ", pro" +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
+                                                                                         DataFilter.ProteinToPeptideSpectrumMatch) +
+                                                       "GROUP BY pro.Id").List<object[]>();
+
+                    // these columns are not affected by the view filter
+                    detailedColumnsByKey = AggregateRow.GetDetailedColumnsByKey<long>(session, dataFilter, "pro.Id");
+                }
+
+                var rows = new List<ProteinRow>(basicColumns.Count);
+                for (int i = 0; i < basicColumns.Count; ++i)
+                    rows.Add(new ProteinRow(basicColumns[i], detailedColumnsByKey[(basicColumns[i].Last() as Protein).Id.Value], dataFilter));
+                return rows;
+            }
+
             #region Constructor
-            public ProteinRow (object[] queryRow, DataFilter dataFilter)
-            : base(queryRow, dataFilter)
+            public ProteinRow (object[] basicColumns, object[] detailedColumns, DataFilter dataFilter)
+                : base(basicColumns, detailedColumns, dataFilter)
             {
                 int column = AggregateRow.ColumnCount - 1;
-                Protein = (DataModel.Protein) queryRow[++column];
+                Protein = (DataModel.Protein) basicColumns[++column];
             }
             #endregion
         }
@@ -180,62 +262,16 @@ namespace IDPicker.Forms
         #endregion
 
         #region Functions for getting rows
-        IList<Row> getClusterRows (DataFilter parentFilter)
-        {
-            lock (session)
-            return session.CreateQuery(AggregateRow.Selection + ", " +
-                                       "       COUNT(DISTINCT pro.ProteinGroup), " +
-                                       "       COUNT(DISTINCT pro.Id), " +
-                                       "       pro.Cluster " +
-                                       parentFilter.GetFilteredQueryString(DataFilter.FromProtein,
-                                                                           DataFilter.ProteinToPeptideSpectrumMatch) +
-                                       "GROUP BY pro.Cluster " +
-                                       "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC")//, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC")
-                          .List<object[]>()
-                          .Select(o => new ClusterRow(o, parentFilter) as Row)
-                          .ToList();
-        }
-
-        public IList<Row> getProteinGroupRows (DataFilter parentFilter)
-        {
-            lock (session)
-            return session.CreateQuery(AggregateRow.Selection + ", " +
-                                       "       DISTINCT_GROUP_CONCAT(pro.Accession), " +
-                                       "       pro.ProteinGroup, " +
-                                       "       pro, " +
-                                       "       COUNT(DISTINCT pro.id), " +
-                                       "       AVG(pro.Coverage) " +
-                                       parentFilter.GetFilteredQueryString(DataFilter.FromProtein,
-                                                                           DataFilter.ProteinToPeptideSpectrumMatch) +
-                                       "GROUP BY pro.ProteinGroup " +
-                                       "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC")//, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC")
-                          .List<object[]>()
-                          .Select(o => new ProteinGroupRow(o, parentFilter) as Row)
-                          .ToList();
-        }
-
-        IList<Row> getProteinRows (DataFilter parentFilter)
-        {
-            lock (session)
-            return session.CreateQuery(AggregateRow.Selection + ", pro " +
-                                       parentFilter.GetFilteredQueryString(DataFilter.FromProtein,
-                                                                           DataFilter.ProteinToPeptideSpectrumMatch) +
-                                       "GROUP BY pro.Id " +
-                                       "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC")//, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC")
-                          .List<object[]>()
-                          .Select(o => new ProteinRow(o, parentFilter) as Row)
-                          .ToList();
-        }
 
         IList<Row> getChildren (Grouping<GroupBy> grouping, DataFilter parentFilter)
         {
             if (grouping == null)
-                return getProteinRows(parentFilter);
+                return ProteinRow.GetRows(session, parentFilter).Cast<Row>().ToList();
 
             switch (grouping.Mode)
             {
-                case GroupBy.Cluster: return getClusterRows(parentFilter);
-                case GroupBy.ProteinGroup: return getProteinGroupRows(parentFilter);
+                case GroupBy.Cluster: return ClusterRow.GetRows(session, parentFilter).Cast<Row>().ToList();
+                case GroupBy.ProteinGroup: return ProteinGroupRow.GetRows(session, parentFilter).Cast<Row>().ToList();
                 default: throw new NotImplementedException();
             }
         }
@@ -266,7 +302,7 @@ namespace IDPicker.Forms
                 throw new NotImplementedException();
             else if (parentRow == null)
             {
-                return getProteinRows(dataFilter);
+                return ProteinRow.GetRows(session, dataFilter).Cast<Row>().ToList();
             }
 
             if (!sortColumns.IsNullOrEmpty())
