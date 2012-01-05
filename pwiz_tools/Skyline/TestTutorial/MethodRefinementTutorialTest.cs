@@ -28,6 +28,7 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 
@@ -106,7 +107,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
                 importResultsDlg.RadioAddNewChecked = true;
-                var namedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestFilesDirs[0].FullPath);
+                var namedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).ToArray();
                 importResultsDlg.NamedPathSets =
                     new[] {new KeyValuePair<string, string[]>(replicateName, namedPathSets[0].Value.Take(15).ToArray())};
                 importResultsDlg.OkDialog();
@@ -119,7 +120,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
                 importResultsDlg.RadioAddExistingChecked = true;
-                var namedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestFilesDirs[0].FullPath);
+                var namedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).ToArray();
                 importResultsDlg.NamedPathSets =
                     new[] { new KeyValuePair<string, string[]>(replicateName, namedPathSets[0].Value.Skip(15).ToArray()) };
                 importResultsDlg.OkDialog();
@@ -295,7 +296,10 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 importResultsDlg0.RadioCreateMultipleMultiChecked = true;
-                importResultsDlg0.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(Path.Combine(TestFilesDirs[1].FullPath, Path.GetFileName(TestFilesDirs[1].FullPath) ?? ""));
+                importResultsDlg0.NamedPathSets =
+                    DataSourceUtil.GetDataSourcesInSubdirs(Path.Combine(TestFilesDirs[1].FullPath,
+                                                                          Path.GetFileName(TestFilesDirs[1].FullPath) ??
+                                                                          "")).ToArray();
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg0.OkDialog);
             RunUI(importResultsNameDlg.NoDialog);

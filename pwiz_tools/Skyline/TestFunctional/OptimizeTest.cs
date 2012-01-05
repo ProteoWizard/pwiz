@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.FileUI;
@@ -28,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -112,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
                       {
-                          importResults.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestFilesDir.FullPath);
+                          importResults.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDir.FullPath).ToArray();
                           importResults.OptimizationName = ExportOptimize.CE;
                       });
 

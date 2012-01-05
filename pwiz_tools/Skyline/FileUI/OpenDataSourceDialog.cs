@@ -21,20 +21,12 @@ using System.Drawing;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
-using System.Xml;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
     public partial class OpenDataSourceDialog : Form
     {
-        public const string TYPE_WIFF = "ABSciex WIFF";
-        public const string TYPE_AGILENT = "Agilent Data";
-        public const string TYPE_THERMO_RAW = "Thermo RAW";
-        public const string TYPE_WATERS_RAW = "Waters RAW";
-        public const string TYPE_MZML = "mzML";
-        public const string TYPE_MZXML = "mzXML";
-
         private readonly ListViewColumnSorter _listViewColumnSorter = new ListViewColumnSorter();
         private readonly Stack<string> _previousDirectories = new Stack<string>();
 
@@ -49,12 +41,12 @@ namespace pwiz.Skyline.FileUI
             string[] sourceTypes = new[]
             {
                 "Any spectra format",
-				TYPE_WIFF,
-                TYPE_AGILENT,
-				TYPE_THERMO_RAW,
-                TYPE_WATERS_RAW,
-				TYPE_MZML,
-				TYPE_MZXML,
+				DataSourceUtil.TYPE_WIFF,
+                DataSourceUtil.TYPE_AGILENT,
+				DataSourceUtil.TYPE_THERMO_RAW,
+                DataSourceUtil.TYPE_WATERS_RAW,
+				DataSourceUtil.TYPE_MZML,
+				DataSourceUtil.TYPE_MZXML,
 				//"mzData",
 				//"Bruker YEP",
                 //"Bruker BAF",
@@ -162,19 +154,6 @@ namespace pwiz.Skyline.FileUI
 
         private class SourceInfo
         {
-            public const string FOLDER_TYPE = "File Folder";
-
-            public static bool isFolderType(string type)
-            {
-                return Equals(type, FOLDER_TYPE);
-            }
-
-            public const string UNKNOWN_TYPE = "unknown";
-
-            public static bool isUnknownType(string type)
-            {
-                return Equals(type, UNKNOWN_TYPE);
-            }
 
 // ReSharper disable InconsistentNaming
             public string name;
@@ -186,12 +165,12 @@ namespace pwiz.Skyline.FileUI
 
             public bool isFolder
             {
-                get { return isFolderType(type); }
+                get { return DataSourceUtil.IsFolderType(type); }
             }
 
             public bool isUnknown
             {
-                get { return isUnknownType(type); }
+                get { return DataSourceUtil.IsUnknownType(type); }
             }
 
             public string[] ToArray()
@@ -220,113 +199,20 @@ namespace pwiz.Skyline.FileUI
             {
                 get
                 {
-                    return type != FOLDER_TYPE
+                    return type != DataSourceUtil.FOLDER_TYPE
                         ? string.Format(new FileSizeFormatProvider(), "{0:fs}", size)
                         : "";
                 }
             }
         }
 
-        private static string getSourceTypeFromXML(string filepath)
-        {
-            XmlReaderSettings settings = new XmlReaderSettings
-            {
-                ValidationType = ValidationType.None,
-                ProhibitDtd = false,
-                XmlResolver = null
-            };
-            using(XmlReader reader = XmlReader.Create( new StreamReader( filepath, true ), settings ))
-            {
-                try
-                {
-                    while (reader.Read())
-                    {
-                        if (reader.NodeType == XmlNodeType.Element)
-                        {
-                            switch (reader.Name.ToLower())
-                            {
-                                case "mzml":
-                                case "indexmzml":
-                                    return "mzML";
-                                case "mzxml":
-                                case "msrun":
-                                    return "mzXML";
-                                    //case "mzdata":
-                                    //    return "mzData";
-                                case "root":
-                                    return "Bruker Data Exchange";
-                                default:
-                                    return SourceInfo.UNKNOWN_TYPE;
-                            }
-                        }
-                    }
-                }
-                catch(XmlException)
-                {
-                    return SourceInfo.UNKNOWN_TYPE;
-                }
-            }
-            return SourceInfo.UNKNOWN_TYPE;
-        }
-
-        private static string getSourceType(DirectoryInfo dirInfo)
-        {
-            try
-            {
-                if (dirInfo.Name.EndsWith(".raw") &&
-                        dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
-                    return TYPE_WATERS_RAW;
-                if (dirInfo.Name.EndsWith(".d") &&
-                        dirInfo.GetDirectories("AcqData").Length > 0)
-                    return TYPE_AGILENT;
-                return SourceInfo.FOLDER_TYPE;
-            }
-            catch (Exception)
-            {
-                // TODO: Folder without access type
-                return SourceInfo.FOLDER_TYPE;
-            }
-        }
-
-        public static bool IsDataSource(DirectoryInfo dirInfo)
-        {
-            return !SourceInfo.isFolderType(getSourceType(dirInfo));
-        }
-
-        private static string getSourceType(FileSystemInfo fileInfo)
-        {
-            //if( fileInfo.Name == "fid" )
-            //    return "Bruker FID";
-
-            switch( fileInfo.Extension.ToLower() )
-            {
-                case ".raw": return TYPE_THERMO_RAW;
-                case ".wiff": return TYPE_WIFF;
-                //case ".mgf": return "Mascot Generic";
-                //case ".dta": return "Sequest DTA";
-                //case ".yep": return "Bruker YEP";
-                //case ".baf": return "Bruker BAF";
-                //case ".ms2": return "MS2";
-                case ".mzxml": return TYPE_MZXML;
-                //case ".mzdata": return "mzData";
-                case ".mzml": return TYPE_MZML;
-                case ".xml": return getSourceTypeFromXML(fileInfo.FullName);
-                default: return SourceInfo.UNKNOWN_TYPE;
-            }
-        }
-
-        public static bool IsDataSource(FileInfo fileInfo)
-        {
-            return !SourceInfo.isUnknownType(getSourceType(fileInfo));
-        }
-
         private SourceInfo getSourceInfo( DirectoryInfo dirInfo )
         {
-            string type = getSourceType(dirInfo);
+            string type = DataSourceUtil.GetSourceType(dirInfo);
             SourceInfo sourceInfo = new SourceInfo
             {
                 type = type,
-                imageIndex = (SourceInfo.isFolderType(type) ? 0 : 2),
+                imageIndex = (DataSourceUtil.IsFolderType(type) ? 0 : 2),
                 name = dirInfo.Name,
                 dateModified = GetSafeDateModified(dirInfo)
             };
@@ -352,11 +238,11 @@ namespace pwiz.Skyline.FileUI
 
         private SourceInfo getSourceInfo(FileInfo fileInfo)
         {
-            string type = getSourceType(fileInfo);
+            string type = DataSourceUtil.GetSourceType(fileInfo);
             SourceInfo sourceInfo = new SourceInfo
                                         {
                                             type = type,
-                                            imageIndex = (SourceInfo.isUnknownType(type) ? 1 : 2),
+                                            imageIndex = (DataSourceUtil.IsUnknownType(type) ? 1 : 2),
                                             name = fileInfo.Name
                                         };
             if( !sourceInfo.isUnknown )
@@ -432,7 +318,7 @@ namespace pwiz.Skyline.FileUI
 
                     listSourceInfo.Add(new SourceInfo
                     {
-                        type = SourceInfo.FOLDER_TYPE,
+                        type = DataSourceUtil.FOLDER_TYPE,
                         imageIndex = imageIndex,
                         name = name,
                         dateModified = GetSafeDateModified(driveInfo.RootDirectory)

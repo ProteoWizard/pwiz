@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 importResultsDlg.RadioAddNewChecked = true;
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
-                importResultsDlg.NamedPathSets = ImportResultsDlg.GetDataSourcePathsDir(TestFilesDirs[0].FullPath).Take(5).ToArray();
+                importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).Take(5).ToArray();
                 importResultsDlg.NamedPathSets[0] =
                      new KeyValuePair<string, string[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value);
                 importResultsDlg.OkDialog();

@@ -26,6 +26,7 @@ using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
@@ -481,6 +482,204 @@ namespace pwiz.SkylineTestA
             }
 
             return count;
+        }
+
+        [TestMethod]
+        public void ConsoleMultiReplicateImportTest()
+        {
+            const string testZipPath = @"TestA\ImportAllCmdLineTest.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // Contents:
+            // ImportAllCmdLineTest
+            //   -- REP01
+            //       -- CE_Vantage_15mTorr_0001_REP1_01.raw
+            //       -- CE_Vantage_15mTorr_0001_REP1_02.raw
+            //   -- REP02
+            //       -- CE_Vantage_15mTorr_0001_REP2_01.raw
+            //       -- CE_Vantage_15mTorr_0001_REP2_02.raw
+            //   -- 160109_Mix1_calcurve_070.mzML
+            //   -- 160109_Mix1_calcurve_073.mzML
+            //   -- 160109_Mix1_calcurve_071.raw
+            //   -- 160109_Mix1_calcurve_074.raw
+
+
+            var docPath = testFilesDir.GetTestPath("test.sky");
+            var outPath1 = testFilesDir.GetTestPath("Imported_multiple1.sky");
+            var outPath2 = testFilesDir.GetTestPath("Imported_multiple2.sky");
+            var outPath3 = testFilesDir.GetTestPath("Imported_multiple3.sky");
+
+            var rawPath = testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01.raw");
+            
+            // Test: Cannot use --import-file and --import-all options simultaneously
+            var msg = RunCommand("--in=" + docPath,
+                                 "--import-file=" + rawPath,
+                                 "--import-replicate-name=Unscheduled01",
+                                 "--import-all=" + testFilesDir.FullPath,
+                                 "--out=" + outPath1);
+            Assert.IsTrue(msg.Contains("Error:"));
+            // output file should not exist
+            Assert.IsTrue(!File.Exists(outPath1));
+
+
+
+            // Test: Cannot use --import-replicate-name with --import-all
+            msg = RunCommand("--in=" + docPath,
+                             "--import-replicate-name=Unscheduled01",
+                             "--import-all=" + testFilesDir.FullPath,
+                             "--out=" + outPath1);
+            Assert.IsTrue(msg.Contains("Error:"));
+            // output file should not exist
+            Assert.IsTrue(!File.Exists(outPath1));
+
+
+
+            // Test: Cannot use --import-naming-pattern with --import-file
+            msg = RunCommand("--in=" + docPath,
+                                 "--import-file=" + rawPath,
+                                 "--import-naming-pattern=prefix_(.*)",
+                                 "--out=" + outPath1);
+            Assert.IsTrue(msg.Contains("Error:"));
+            // output file should not exist
+            Assert.IsTrue(!File.Exists(outPath1));
+
+
+
+
+            // Test: invalid regular expression (1)
+            msg = RunCommand("--in=" + docPath,
+                                 "--import-all=" + testFilesDir.FullPath,
+                                 "--import-naming-pattern=",
+                                 "--out=" + outPath1);
+            // output file should not exist
+            Assert.IsTrue(!File.Exists(outPath1));
+            Assert.IsTrue(msg.Contains("Error: Regular expression '' does not have any groups."));
+
+
+
+            // Test: invalid regular expression (2)
+            msg = RunCommand("--in=" + docPath,
+                      "--import-all=" + testFilesDir.FullPath,
+                      "--import-naming-pattern=invalid",
+                      "--out=" + outPath1);
+            // output file should not exist
+            Assert.IsTrue(!File.Exists(outPath1));
+            Assert.IsTrue(msg.Contains("Error: Regular expression 'invalid' does not have any groups."));
+
+
+
+
+            // Test: Import files in the "REP01" directory; 
+            // Use a naming pattern that will cause the replicate names of the two files to be the same
+            msg = RunCommand("--in=" + docPath,
+                             "--import-all=" + testFilesDir.GetTestPath("REP01"),
+                             "--import-naming-pattern=.*_(REP[0-9]+)_(.+)",
+                             "--out=" + outPath1);
+            Assert.IsFalse(File.Exists(outPath1));
+            Assert.IsTrue(msg.Contains("Error: Duplicate replicate name"));
+
+
+
+
+            // Test: Import files in the "REP01" directory; Use a naming pattern
+            RunCommand("--in=" + docPath,
+                             "--import-all=" + testFilesDir.GetTestPath("REP01"),
+                             "--import-naming-pattern=.*_([0-9]+)",
+                             "--out=" + outPath1);
+            Assert.IsTrue(File.Exists(outPath1));
+            SrmDocument doc = ResultsUtil.DeserializeDocument(outPath1);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("01"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("02"));
+
+
+
+            Assert.IsFalse(File.Exists(outPath2));
+
+            // Test: Import a single file
+            // Import REP01\CE_Vantage_15mTorr_0001_REP1_01.raw;
+            // Use replicate name "REP01"
+            RunCommand("--in=" + docPath,
+                       "--import-file=" + rawPath,
+                       "--import-replicate-name=REP01",
+                       "--out=" + outPath2);
+            Assert.IsTrue(File.Exists(outPath2));
+            doc = ResultsUtil.DeserializeDocument(outPath2);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            int initialFileCount = 0;
+            foreach (var chromatogram in doc.Settings.MeasuredResults.Chromatograms)
+            {
+                initialFileCount += chromatogram.MSDataFilePaths.Count();
+            }
+
+            // Import another single file. Importing all results in the directory
+            // should output a message about this file already existing in the replicate.
+            var rawPath2 = testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML");
+            RunCommand("--in=" + outPath2,
+                       "--import-file=" + rawPath2,
+                       "--import-replicate-name=160109_Mix1_calcurve_070",
+                       "--save");
+
+
+            // Test: Import all files and sub-folders in test directory
+            // The document should already contain a replicate named "REP01".
+            // Only one more file should be added to the "REP01" replicate.
+            // There should be a note about ignoring existing file
+            // that is already in the document.
+            msg = RunCommand("--in=" + outPath2,
+                             "--import-all=" + testFilesDir.FullPath,
+                             "--save");
+            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPath)));
+            Assert.IsTrue(msg.Contains("Note: The file has already been imported. Ignoring...."));
+            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)));
+            doc = ResultsUtil.DeserializeDocument(outPath2);
+            Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
+            // count the number of files imported into the document
+            int totalImportedFiles = 0;
+            foreach (var chromatogram in doc.Settings.MeasuredResults.Chromatograms)
+            {
+                totalImportedFiles += chromatogram.MSDataFilePaths.Count();
+            }
+            // We should have imported 7 more file
+            Assert.AreEqual(initialFileCount + 7, totalImportedFiles);
+            // In the "REP01" replicate we should have 2 files
+            ChromatogramSet chromatogramSet;
+            int index;
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out index);
+            Assert.IsNotNull(chromatogramSet);
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 2);
+            chromatogramSet.MSDataFilePaths.Contains(rawPath);
+            chromatogramSet.MSDataFilePaths.Contains(
+                testFilesDir.GetTestPath(@"\REP01\CE_Vantage_15mTorr_0001_REP1_01.raw"));
+            chromatogramSet.MSDataFilePaths.Contains(
+                testFilesDir.GetTestPath(@"\REP01\CE_Vantage_15mTorr_0001_REP1_02.raw"));
+
+           
+
+            Assert.IsFalse(File.Exists(outPath3));
+            // Test: Import a single file
+            // Import 160109_Mix1_calcurve_074.raw;
+            // Use replicate name "REP01"
+            var rawPath3 = testFilesDir.GetTestPath("160109_Mix1_calcurve_074.raw");
+            RunCommand("--in=" + docPath,
+                       "--import-file=" + rawPath3,
+                       "--import-replicate-name=REP01",
+                       "--out=" + outPath3);
+            Assert.IsTrue(File.Exists(outPath3));
+            doc = ResultsUtil.DeserializeDocument(outPath3);
+            Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
+            // Now import all files and sub-folders in test directory.
+            // This should return an error since the replicate "REP01" that already
+            // exists in the document has an unexpected file: '160109_Mix1_calcurve_074.raw'.
+            msg = RunCommand("--in=" + outPath3,
+                             "--import-all=" + testFilesDir.FullPath,
+                             "--save");
+            Assert.IsTrue(
+                msg.Contains(
+                    string.Format(
+                        "Error: Replicate REP01 in the document has an unexpected file {0}",
+                        rawPath3)));
+
         }
     }
 }

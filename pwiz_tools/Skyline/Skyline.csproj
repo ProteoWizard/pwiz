@@ -903,6 +903,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\DataSourceUtil.cs" />
     <Compile Include="Util\FileSize.cs" />
     <Compile Include="Util\JetBrainsAnnotations.cs" />
     <Compile Include="Util\Extensions\Text.cs" />

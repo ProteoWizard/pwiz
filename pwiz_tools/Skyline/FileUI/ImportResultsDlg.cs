@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Alerts;
@@ -27,6 +28,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -283,7 +285,7 @@ namespace pwiz.Skyline.FileUI
                 // Keep from doing the extra work on other types.
                 if (dataSource.ToLower().EndsWith(".wiff"))
                 {
-                    string[] paths = GetWiffSubPaths(dataSource, true);
+                    string[] paths = GetWiffSubPaths(dataSource);
                     if (paths == null)
                         return null;    // An error or user cancelation occurred
                     listPaths.AddRange(paths);
@@ -303,7 +305,7 @@ namespace pwiz.Skyline.FileUI
                 // Keep from doing the extra work on other types.
                 if (dataSource.ToLower().EndsWith(".wiff"))
                 {
-                    string[] paths = GetWiffSubPaths(dataSource, true);
+                    string[] paths = GetWiffSubPaths(dataSource);
                     if (paths == null)
                         return null;    // An error or user cancelation occurred
                     // Multiple paths then add as samples
@@ -326,7 +328,7 @@ namespace pwiz.Skyline.FileUI
             return listNamedPaths.ToArray();
         }
 
-        private string[] GetWiffSubPaths(string filePath, bool choose)
+        private string[] GetWiffSubPaths(string filePath)
         {
             var longWaitDlg = new LongWaitDlg
             {
@@ -343,42 +345,8 @@ namespace pwiz.Skyline.FileUI
             {
                 MessageDlg.Show(this, string.Format("An error occurred attempting to read sample information from the file {0}.\nThe file may be corrupted, missing, or the correct libraries may not be installed.\n{1}", filePath, x.Message));
             }
-            if (dataIds == null)
-                return null;
 
-            // WIFF without at least 2 samples just use its file name.
-            if (dataIds.Length < 2)
-                return new[] {filePath};
-
-            // Escape all the sample ID names, so that they may be used in file names.
-            for (int i = 0; i < dataIds.Length; i++)
-                dataIds[i] = SampleHelp.EscapeSampleId(dataIds[i]);
-
-            IEnumerable<int> sampleIndices;
-
-            if (choose)
-            {
-                // Allow the user to choose from the list
-                sampleIndices = ChooseSamples(filePath, dataIds);
-                if (sampleIndices == null)
-                    return null;                
-            }
-            else
-            {
-                int[] indexes = new int[dataIds.Length];
-                for (int i = 0; i < dataIds.Length; i++)
-                    indexes[i] = i;
-                sampleIndices = indexes;
-            }
-
-            // Encode sub-paths
-            var listPaths = new List<string>();
-            foreach (int sampleIndex in sampleIndices)
-                listPaths.Add(SampleHelp.EncodePath(filePath, dataIds[sampleIndex], sampleIndex));
-
-            if (listPaths.Count == 0)
-                return null;
-            return listPaths.ToArray();
+            return DataSourceUtil.GetWiffSubPaths(filePath, dataIds, ChooseSamples);
         }
 
         private IEnumerable<int> ChooseSamples(string dataSource, IEnumerable<string> sampleNames)
@@ -407,41 +375,13 @@ namespace pwiz.Skyline.FileUI
 
             Settings.Default.SrmResultsDirectory = dirRoot;
 
-            KeyValuePair<string, string[]>[] namedPaths = GetDataSourcePathsDir(dirRoot);
+            KeyValuePair<string, string[]>[] namedPaths = DataSourceUtil.GetDataSourcesInSubdirs(dirRoot).ToArray();
             if (namedPaths.Length == 0)
             {
                 MessageBox.Show(this, string.Format("No results found in the folder {0}.", dirRoot), Program.Name);
                 return null;
             }
             return namedPaths;
-        }
-
-        public static KeyValuePair<string, string[]>[] GetDataSourcePathsDir(string dirRoot)
-        {
-            var listNamedPaths = new List<KeyValuePair<string, string[]>>();
-            var dirRootInfo = new DirectoryInfo(dirRoot);
-            foreach (var subDirInfo in dirRootInfo.GetDirectories())
-            {
-                var listDataPaths = new List<string>();
-                foreach (var dataDirInfo in subDirInfo.GetDirectories())
-                {
-                    if (OpenDataSourceDialog.IsDataSource(dataDirInfo))
-                        listDataPaths.Add(dataDirInfo.FullName);
-                }
-                foreach (var dataFileInfo in subDirInfo.GetFiles())
-                {
-                    if (OpenDataSourceDialog.IsDataSource(dataFileInfo))
-                        listDataPaths.Add(dataFileInfo.FullName);
-                }
-                if (listDataPaths.Count == 0)
-                    continue;
-
-                listDataPaths.Sort();
-                listNamedPaths.Add(new KeyValuePair<string, string[]>(
-                                       subDirInfo.Name, listDataPaths.ToArray()));
-            }
-            listNamedPaths.Sort((p1, p2) => Comparer<string>.Default.Compare(p1.Key, p2.Key));
-            return listNamedPaths.ToArray();
         }
 
         private static string GetCommonPrefix(IEnumerable<string> values)

@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
@@ -42,9 +43,21 @@ namespace pwiz.Skyline
         public string ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
         public bool ImportAppend { get; private set; }
+        public string ImportSourceDirectory { get; private set; }
+        public Regex ImportNamingPattern { get; private set; }
+
+
         public bool ImportingResults
         {
+            get { return ImportingReplicateFile || ImportingSourceDirectory; }
+        }
+        public bool ImportingReplicateFile
+        {
             get { return !string.IsNullOrEmpty(ReplicateFile); }
+        }
+        public bool ImportingSourceDirectory
+        {
+            get { return !string.IsNullOrEmpty(ImportSourceDirectory); }
         }
 
         public string SaveFile { get; private set; }
@@ -284,6 +297,38 @@ namespace pwiz.Skyline
                     ImportAppend = true;
                 }
 
+                else if (pair.Name.Equals("import-all"))
+                {
+                    ImportSourceDirectory = pair.Value;
+                }
+
+                else if (pair.Name.Equals("import-naming-pattern"))
+                {
+                    var importNamingPatternVal = pair.Value;
+                    if (importNamingPatternVal != null)
+                    {
+                        try
+                        {
+                            ImportNamingPattern = new Regex(importNamingPatternVal);
+                        }
+                        catch (Exception e)
+                        {
+                            _out.WriteLine("Error: Regular expression {0} cannot be parsed.\n{1}", importNamingPatternVal, e.Message);
+                            return false;
+                        }
+
+                        Match match = Regex.Match(importNamingPatternVal, @".*\(.+\).*");
+                        if (!match.Success)
+                        {
+                            _out.WriteLine("Error: Regular expression '{0}' does not have any groups.", importNamingPatternVal);
+                            _out.WriteLine("       One group is required. The part of the file or sub-directory name");
+                            _out.WriteLine("       that matches the first group in the regular expression is used as");
+                            _out.WriteLine("       the replicate name.");
+                            return false;
+                        }
+                    }
+                }
+
                 else if (pair.Name.Equals("report-name"))
                 {
                     ReportName = pair.Value;
@@ -460,6 +505,23 @@ namespace pwiz.Skyline
                 return false;
             }
 
+            
+            if(ImportingReplicateFile && ImportingSourceDirectory)
+            {
+                _out.WriteLine("Error: --import-file and --import-all options cannot be used simultaneously.");
+                return false;
+            }
+            if(ImportingReplicateFile && ImportNamingPattern != null)
+            {       
+                _out.WriteLine("Error: --import-naming-pattern cannot be used with the --import-file option.");
+                return false;
+            }
+            if(ImportingSourceDirectory && !string.IsNullOrEmpty(ReplicateName))
+            {
+                _out.WriteLine("Error: --import-replicate-name cannot be used with the --import-all option.");
+                return false;
+            }
+            
             // Use the original file as the output file, if not told otherwise.
             if (Saving && String.IsNullOrEmpty(SaveFile))
             {
@@ -502,13 +564,23 @@ namespace pwiz.Skyline
             }
 
             if (commandArgs.ImportingResults)
-            {
-                // If expected results are not imported successfully, terminate
-                if (!ImportResultsFile(commandArgs.ReplicateFile,
-                                       commandArgs.ReplicateName,
-                                       commandArgs.SkylineFile,
-                                       commandArgs.ImportAppend))
-                    return;
+            {   
+                if (commandArgs.ImportingReplicateFile)
+                {
+                    // If expected results are not imported successfully, terminate
+                    if (!ImportResultsFile(commandArgs.ReplicateFile,
+                                           commandArgs.ReplicateName,
+                                           commandArgs.SkylineFile,
+                                           commandArgs.ImportAppend))
+                        return;
+                }
+                else if(commandArgs.ImportingSourceDirectory)
+                {
+                    // If expected results are not imported successfully, terminate
+                    if(!ImportResultsInDir(commandArgs.ImportSourceDirectory, commandArgs.ImportNamingPattern,
+                                       commandArgs.SkylineFile))
+                    	return;
+                }
             }
 
             if (commandArgs.Saving)
@@ -571,23 +643,250 @@ namespace pwiz.Skyline
             return true;
         }
 
+        public bool ImportResultsInDir(string sourceDir, Regex namingPattern, string skylineFile)
+        {
+            var listNamedPaths = GetDataSources(sourceDir, namingPattern);
+            if (listNamedPaths == null)
+            {
+                return false;
+            }
+
+            foreach (KeyValuePair<string, string[]> namedPaths in listNamedPaths)
+            {
+                string replicateName = namedPaths.Key;
+                string[] files = namedPaths.Value;
+                foreach (var file in files)
+                {
+                    if (!ImportResultsFile(file, replicateName, skylineFile))
+                        return false;
+                }
+            }
+            return true;
+        }
+
+        private IEnumerable<KeyValuePair<string, string[]>> GetDataSources(string sourceDir, Regex namingPattern)
+        {   
+            // get all the valid data sources (files and sub directories) in this directory.
+            IEnumerable<KeyValuePair<string, string[]>> listNamedPaths;
+            try
+            {
+                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir);
+            }
+            catch(IOException e)
+            {
+                _out.WriteLine("Error: Failure reading file information from directory {0}.\n{1}.", sourceDir, e.Message);
+                return null;
+            }
+            if (listNamedPaths.Count() == 0)
+            {
+                _out.WriteLine("Error: No data sources found in directory {0}.", sourceDir);
+                return null;
+            }
+
+            // If we were given a regular expression apply it to the replicate names
+            if(namingPattern != null)
+            {
+                List<KeyValuePair<string, string[]>> listRenamedPaths;
+                if(!ApplyNamingPattern(listNamedPaths, namingPattern, out listRenamedPaths))
+                {
+                    return null;
+                }
+                listNamedPaths = listRenamedPaths;
+            }
+
+            // Make sure the existing replicate does not have any "unexpected" files.
+            if(!CheckReplicateFiles(listNamedPaths))
+            {
+                return null;
+            }
+
+            // remove replicates and/or files that have already been imported into the document
+            List<KeyValuePair<string, string[]>> listNewPaths;
+            if(!RemoveImportedFiles(listNamedPaths, out listNewPaths))
+            {
+                return null;
+            }
+            return listNewPaths;
+        }
+
+        private bool ApplyNamingPattern(IEnumerable<KeyValuePair<string, string[]>> listNamedPaths, Regex namingPattern, 
+                                        out List<KeyValuePair<string, string[]>> listRenamedPaths)
+        {
+            listRenamedPaths = new List<KeyValuePair<string, string[]>>(listNamedPaths.Count());
+
+            var uniqNames = new HashSet<string>();
+
+            foreach (var namedPaths in listNamedPaths)
+            {
+                var replName = namedPaths.Key;
+                Match match = namingPattern.Match(replName);
+                if (match.Success)
+                {
+                    // Get the value of the first group
+                    var replNameNew = match.Groups[1].Value;
+                    if (string.IsNullOrEmpty(replNameNew))
+                    {
+                        _out.WriteLine("Error: Match to regular expression is empty for {0}.", replName);
+                        return false;
+                    }
+                    else
+                    {
+                        if (uniqNames.Contains(replNameNew))
+                        {
+                            _out.WriteLine("Error: Duplicate replicate name '{0}'");
+                            _out.WriteLine("       after applying regular expression.", replNameNew, replName);
+                            return false;
+                        }
+                        uniqNames.Add(replNameNew);
+                        listRenamedPaths.Add(new KeyValuePair<string, string[]>(replNameNew, namedPaths.Value));
+                    }
+                }
+                else
+                {
+                    _out.WriteLine("Error: {0} does not match the regular expression.", replName);
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private bool CheckReplicateFiles(IEnumerable<KeyValuePair<string, string[]>> listNamedPaths)
+        {
+            if (!_doc.Settings.HasResults)
+            {
+                return true;
+            }
+
+            // Make sure the existing replicate does not have any "unexpected" files.
+            // All existing files must be present in the current 
+            // list of files that we are trying to import to this replicate.
+            
+            foreach (var namedPaths in listNamedPaths)
+            {
+                var replicateName = namedPaths.Key;
+
+                // check if the document already has a replicate with this name
+                int indexChrom;
+                ChromatogramSet chromatogram;
+                if (_doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out indexChrom))
+                {
+                    var filePaths = new HashSet<string>(namedPaths.Value);
+                    foreach (var dataFilePath in chromatogram.MSDataFilePaths)
+                    {
+                        if (!filePaths.Contains(dataFilePath))
+                        {
+                            _out.WriteLine(
+                                "Error: Replicate {0} in the document has an unexpected file {1}.",
+                                replicateName,
+                                dataFilePath);
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+        
+        private bool RemoveImportedFiles(IEnumerable<KeyValuePair<string, string[]>> listNamedPaths,
+                                         out List<KeyValuePair<string, string[]>> listNewNamedPaths)
+        {
+            listNewNamedPaths = new List<KeyValuePair<string, string[]>>();
+
+            if(!_doc.Settings.HasResults)
+            {
+                listNewNamedPaths.AddRange(listNamedPaths);
+                return true;
+            }
+
+            foreach (var namedPaths in listNamedPaths)
+            {
+                var replicateName = namedPaths.Key;
+
+                // check if the document already has a replicate with this name
+                int indexChrom;
+                ChromatogramSet chromatogram;
+                if (!_doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName,
+                                                                         out chromatogram, out indexChrom))
+                {
+                    listNewNamedPaths.Add(namedPaths);
+                }
+                else
+                {   
+                    // We are appending to an existing replicate in the document.
+                    // Remove files that are already associated with the replicate
+                    var chromatFilePaths = new HashSet<string>(chromatogram.MSDataFilePaths);
+
+                    var filePaths = namedPaths.Value;
+                    var filePathsNotInRepl = new List<string>(filePaths.Length);
+                    foreach (var fpath in filePaths)
+                    {
+                        if (chromatFilePaths.Contains(fpath))
+                        {
+                            _out.WriteLine(
+                                "{0} -> {1}\nNote: The file has already been imported. Ignoring....",
+                                replicateName,
+                                fpath);
+                        }
+                        else
+                        {
+                            filePathsNotInRepl.Add(fpath);
+                        }
+                    }
+
+                    if (filePathsNotInRepl.Count > 0)
+                    {
+                        listNewNamedPaths.Add(new KeyValuePair<string, string[]>(replicateName,
+                                                                                 filePathsNotInRepl.ToArray()));
+                    }
+                }
+            }
+            return true;
+        }
+
         public bool ImportResultsFile(string replicateFile, string replicateName, string skylineFile, bool append)
         {
             if (string.IsNullOrEmpty(replicateName))
                 replicateName = Path.GetFileNameWithoutExtension(replicateFile);
 
-            _out.WriteLine("Adding results...");
-
-            if(_doc.Settings.HasResults && _doc.Settings.MeasuredResults.ContainsChromatogram(replicateName) && !append)
+            if(_doc.Settings.HasResults && _doc.Settings.MeasuredResults.ContainsChromatogram(replicateName))
             {
-                // CONSIDER: Error? Check if the replicate contains the file?
-                //           It does not seem right to just continue on to export a report
-                //           or new method without the results added.
-                _out.WriteLine("Warning: The replicate {0} already exists", replicateName);
-                _out.WriteLine("in the given document and the --import-append option is not specified.");
-                _out.WriteLine("The replicate will not be added to the document.");
-                return true;
+                if (!append)
+                {
+                    // CONSIDER: Error? Check if the replicate contains the file?
+                    //           It does not seem right to just continue on to export a report
+                    //           or new method without the results added.
+                    _out.WriteLine("Warning: The replicate {0} already exists", replicateName);
+                    _out.WriteLine("in the given document and the --import-append option is not specified.");
+                    _out.WriteLine("The replicate will not be added to the document.");
+                    return true;
+                }
+                else
+                {
+                    // If we are appending to an existing replicate in the document
+                    // make sure this file is not already in the replicate.
+                    ChromatogramSet chromatogram;
+                    int index;
+                    _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out index);
+
+                    if (chromatogram.MSDataFilePaths.Contains(replicateFile))
+                    {
+                        _out.WriteLine(
+                            "{0} -> {1}\nNote: The file has already been imported. Ignoring....",
+                            replicateName,
+                            replicateFile);
+
+                        return true;
+                    }
+                }
             }
+
+            return ImportResultsFile(replicateFile, replicateName, skylineFile);
+        }
+
+        public bool ImportResultsFile(string replicateFile, string replicateName, string skylineFile)
+        {
+            _out.WriteLine("Adding results...");
 
             //This function will also detect whether the replicate exists in the document
             ProgressStatus status;
@@ -607,8 +906,8 @@ namespace pwiz.Skyline
 
             _doc = newDoc;
 
-            _out.WriteLine("Results added from {0}.", Path.GetFileName(replicateFile));
-            //the replicate was added successfully
+            _out.WriteLine("Results added from {0} to replicate {1}.", Path.GetFileName(replicateFile), replicateName);
+            //the file was imported successfully
             return true;
         }
 
