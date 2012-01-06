@@ -79,7 +79,7 @@ namespace Test
                 {
                     idpXmlPaths = exporter.WriteIdpXml(true, true);
                     exporter.WriteSpectra();
-                    exporter.WriteProteins("testImportExport.fasta");
+                    exporter.WriteProteins("testImportExport.fasta", false);
                 }
                 session.Close();
 

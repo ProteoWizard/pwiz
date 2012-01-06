@@ -63,15 +63,18 @@ namespace IDPicker
             this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
+            this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportAllViewsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toHTMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toExcelSelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.subsetFASTAToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.embedSpectraToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.exportCurrentViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toHTMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toExcelSelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.layoutToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.dataFiltersToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -156,6 +159,8 @@ namespace IDPicker
             this.fileToolStripMenuRoot.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.importToToolStripMenuItem,
             this.openToolStripMenuItem,
+            this.toolStripSeparator4,
+            this.exportToolStripMenuItem,
             this.embedSpectraToolStripMenuItem,
             this.toolStripSeparator1,
             this.exitToolStripMenuItem});
@@ -170,7 +175,7 @@ namespace IDPicker
             this.newToolStripMenuItem,
             this.importToolStripMenuItem});
             this.importToToolStripMenuItem.Name = "importToToolStripMenuItem";
-            this.importToToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
+            this.importToToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.importToToolStripMenuItem.Text = "Import files";
             this.importToToolStripMenuItem.Click += new System.EventHandler(this.importToToolStripMenuItem_Click);
             // 
@@ -191,54 +196,33 @@ namespace IDPicker
             // openToolStripMenuItem
             // 
             this.openToolStripMenuItem.Name = "openToolStripMenuItem";
-            this.openToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
-            this.openToolStripMenuItem.Text = "Open idpDB";
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.openToolStripMenuItem.Text = "Open idpDB...";
             this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
             // 
-            // embedSpectraToolStripMenuItem
+            // toolStripSeparator4
             // 
-            this.embedSpectraToolStripMenuItem.Name = "embedSpectraToolStripMenuItem";
-            this.embedSpectraToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.embedSpectraToolStripMenuItem.Text = "Embed spectra";
-            this.embedSpectraToolStripMenuItem.Click += new System.EventHandler(this.embedSpectraToolStripMenuItem_Click);
+            this.toolStripSeparator4.Name = "toolStripSeparator4";
+            this.toolStripSeparator4.Size = new System.Drawing.Size(149, 6);
             // 
-            // toolStripSeparator1
+            // exportToolStripMenuItem
             // 
-            this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(150, 6);
+            this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exportAllViewsToolStripMenuItem,
+            this.subsetFASTAToolStripMenuItem});
+            this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
+            this.exportToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.exportToolStripMenuItem.Text = "Export";
             // 
-            // exitToolStripMenuItem
+            // exportAllViewsToolStripMenuItem
             // 
-            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(153, 22);
-            this.exitToolStripMenuItem.Text = "Exit";
-            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
-            // 
-            // toolsToolStripMenuItem
-            // 
-            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.optionsToolStripMenuItem,
-            this.exportCurrentViewToolStripMenuItem});
-            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
-            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
-            this.toolsToolStripMenuItem.Text = "Tools";
-            // 
-            // optionsToolStripMenuItem
-            // 
-            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
-            this.optionsToolStripMenuItem.Text = "Options";
-            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
-            // 
-            // exportCurrentViewToolStripMenuItem
-            // 
-            this.exportCurrentViewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exportAllViewsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.toHTMLToolStripMenuItem,
             this.toExcelToolStripMenuItem,
             this.toExcelSelectToolStripMenuItem});
-            this.exportCurrentViewToolStripMenuItem.Name = "exportCurrentViewToolStripMenuItem";
-            this.exportCurrentViewToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
-            this.exportCurrentViewToolStripMenuItem.Text = "Export Current View";
+            this.exportAllViewsToolStripMenuItem.Name = "exportAllViewsToolStripMenuItem";
+            this.exportAllViewsToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.exportAllViewsToolStripMenuItem.Text = "All Views";
             // 
             // toHTMLToolStripMenuItem
             // 
@@ -260,6 +244,47 @@ namespace IDPicker
             this.toExcelSelectToolStripMenuItem.Size = new System.Drawing.Size(194, 22);
             this.toExcelSelectToolStripMenuItem.Text = "to Excel (selected cells)";
             this.toExcelSelectToolStripMenuItem.Click += new System.EventHandler(this.toExcelToolStripMenuItem_Click);
+            // 
+            // subsetFASTAToolStripMenuItem
+            // 
+            this.subsetFASTAToolStripMenuItem.Name = "subsetFASTAToolStripMenuItem";
+            this.subsetFASTAToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.subsetFASTAToolStripMenuItem.Text = "Subset FASTA...";
+            this.subsetFASTAToolStripMenuItem.Click += new System.EventHandler(this.exportSubsetFASTAToolStripMenuItem_Click);
+            // 
+            // embedSpectraToolStripMenuItem
+            // 
+            this.embedSpectraToolStripMenuItem.Name = "embedSpectraToolStripMenuItem";
+            this.embedSpectraToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
+            this.embedSpectraToolStripMenuItem.Text = "Embed spectra...";
+            this.embedSpectraToolStripMenuItem.Click += new System.EventHandler(this.embedSpectraToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // toolsToolStripMenuItem
+            // 
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.optionsToolStripMenuItem});
+            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(48, 20);
+            this.toolsToolStripMenuItem.Text = "Tools";
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.optionsToolStripMenuItem.Text = "Options...";
+            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
             // 
             // layoutToolStripMenuRoot
             // 
@@ -367,9 +392,6 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem importToToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem exportCurrentViewToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem toHTMLToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem toExcelToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem checkForUpdatesAutomaticallyToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem checkForUpdatesToolStripMenuItem;
@@ -377,8 +399,14 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem helpContentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
-        private System.Windows.Forms.ToolStripMenuItem toExcelSelectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem embedSpectraToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
+        private System.Windows.Forms.ToolStripMenuItem exportAllViewsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toHTMLToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toExcelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toExcelSelectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem subsetFASTAToolStripMenuItem;
 
     }
 }

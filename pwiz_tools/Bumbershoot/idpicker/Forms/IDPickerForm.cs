@@ -1961,8 +1961,9 @@ namespace IDPicker
             newToolStripMenuItem.Visible = (session != null);
             importToolStripMenuItem.Visible = (session != null);
 
-            // the "Embed" option is enabled if a session is open
+            // the "Export" and "Embed" options are enabled if a session is open
             embedSpectraToolStripMenuItem.Enabled = (session != null);
+            exportToolStripMenuItem.Enabled = (session != null);
         }
 
         private void importToToolStripMenuItem_Click(object sender, EventArgs e)
@@ -2003,6 +2004,31 @@ namespace IDPicker
 
             var form = new EmbedderForm(session) { StartPosition = FormStartPosition.CenterParent };
             form.ShowDialog(this);
+        }
+
+        private void exportSubsetFASTAToolStripMenuItem_Click (object sender, EventArgs e)
+        {
+            if (session == null)
+                return;
+
+            using (var exporter = new Exporter(session) { DataFilter = viewFilter })
+            using (var saveDialog = new SaveFileDialog())
+            {
+                string dataSource = session.Connection.GetDataSource();
+                saveDialog.InitialDirectory = Path.GetDirectoryName(dataSource);
+                saveDialog.FileName = Path.GetFileNameWithoutExtension(dataSource) + ".fasta";
+                saveDialog.Filter = "FASTA|*.fasta";
+                saveDialog.AddExtension = true;
+
+                bool addDecoys = MessageBox.Show("Do you want to add a decoy for each target protein?",
+                                                 "Add Decoys",
+                                                 MessageBoxButtons.YesNo,
+                                                 MessageBoxIcon.Question,
+                                                 MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+
+                if (saveDialog.ShowDialog(this) == DialogResult.OK)
+                    exporter.WriteProteins(saveDialog.FileName, addDecoys);
+            }
         }
     }
 

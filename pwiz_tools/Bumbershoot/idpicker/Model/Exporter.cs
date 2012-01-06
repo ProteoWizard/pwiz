@@ -46,23 +46,48 @@ namespace IDPicker.DataModel
     {
         ISession session;
 
+        public DataFilter DataFilter { get; set; }
+
         public Exporter (string idpDbFilepath)
         {
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbFilepath);
-            this.session = sessionFactory.OpenSession();
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbFilepath))
+            {
+                this.session = sessionFactory.OpenSession();
+            }
         }
 
         public Exporter (ISession session)
         {
-            this.session = session;
+            if (session == null)
+                throw new ArgumentNullException("session");
+
+            this.session = session.SessionFactory.OpenSession();
         }
 
-        public void WriteProteins (string outputFilepath)
+        public void WriteProteins (string outputFilepath, bool addDecoys)
         {
             var pd = new ProteomeData();
             var pl = new ProteinListSimple();
-            foreach (var pro in session.Query<Protein>())
-                pl.proteins.Add(new proteome.Protein(pro.Accession, pl.proteins.Count, pro.Description, pro.Sequence));
+
+            var queryRows = session.CreateQuery("SELECT DISTINCT pro.Accession, pro.IsDecoy, pro.Description, pro.Sequence " +
+                                                DataFilter.GetFilteredQueryString(DataFilter.FromProtein))
+                                   .List<object[]>();
+
+            foreach (var queryRow in queryRows)
+                if ((bool) queryRow[1] == false) // skip decoys from the query
+                    pl.proteins.Add(new proteome.Protein((string) queryRow[0],
+                                                         pl.proteins.Count,
+                                                         (string) queryRow[2],
+                                                         (string) queryRow[3]));
+
+            if (addDecoys)
+                foreach (var queryRow in queryRows)
+                    if ((bool) queryRow[1] == false) // skip decoys from the query
+                        pl.proteins.Add(new proteome.Protein("rev_" + (string) queryRow[0],
+                                                             pl.proteins.Count,
+                                                             String.Empty, // decoys have no description
+                                                             new string(((string) queryRow[3]).Reverse().ToArray())));
+
             pd.proteinList = pl;
             ProteomeDataFile.write(pd, outputFilepath);
         }
@@ -336,13 +361,10 @@ namespace IDPicker.DataModel
             return outputPaths;
         }
 
-        #region IDisposable Members
-
         public void Dispose ()
         {
+            session.Dispose();
         }
-
-        #endregion
     }
 
     public static class ExportExtensions
