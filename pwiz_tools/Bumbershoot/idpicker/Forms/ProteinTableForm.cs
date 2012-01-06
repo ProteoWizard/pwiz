@@ -1106,6 +1106,11 @@ namespace IDPicker.Forms
                 {peptideSequencesColumn.Index, SortOrder.Ascending},
                 {peptideGroupsColumn.Index, SortOrder.Ascending},
             };
+
+            sortColumns = new List<SortColumn>
+            {
+                new SortColumn { Index = distinctPeptidesColumn.Index, Order = SortOrder.Descending }
+            };
         }
 
         private void groupingSetupControl_GroupingChanging (object sender, GroupingChangingEventArgs<GroupBy> e)

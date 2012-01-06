@@ -698,6 +698,11 @@ namespace IDPicker.Forms
                 {proteinAccessionsColumn.Index, SortOrder.Ascending},
                 {proteinGroupsColumn.Index, SortOrder.Ascending},
             };
+
+            sortColumns = new List<SortColumn>
+            {
+                new SortColumn { Index = filteredSpectraColumn.Index, Order = SortOrder.Descending }
+            };
         }
 
         public override void SetData (NHibernate.ISession session, DataFilter dataFilter)
