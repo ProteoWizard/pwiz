@@ -796,7 +796,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            private int GetOverlapCount(IEnumerable<PeptideSchedule> peptideSchedules)
+            private int GetOverlapCount(IList<PeptideSchedule> peptideSchedules)
             {
                 // While this may be less completely correct the less the precursors in a
                 // peptide overlap, wildly different precursor peaks are not all that interesting.
@@ -804,7 +804,7 @@ namespace pwiz.Skyline.Model
                 foreach (var precursorSchedule in _precursorSchedules)
                 {
                     maxOverlap = Math.Max(maxOverlap,
-                        precursorSchedule.GetOverlapCount(GetPrecursorSchedules(peptideSchedules)));
+                        precursorSchedule.GetOverlapCount(GetPrecursorSchedules(peptideSchedules).ToArray()));
                 }
                 return maxOverlap;
             }
@@ -1277,7 +1277,7 @@ namespace pwiz.Skyline.Model
             return StartTime <= time && time <= EndTime;
         }
 
-        public int GetOverlapCount<TBase>(IEnumerable<TBase> schedules)
+        public int GetOverlapCount<TBase>(IList<TBase> schedules)
             where TBase : PrecursorScheduleBase
         {
             // Check for maximum overlap count at start and end times of this
@@ -1507,7 +1507,7 @@ namespace pwiz.Skyline.Model
             string extPeptideId = string.Format("{0}.{1}.{2}{3}.{4}",
                                                 nodePepGroup.Name,
                                                 nodePep.Peptide.Sequence,
-                                                nodeTran.HasLibInfo ? nodeTran.LibInfo.Rank.ToString() : "",
+                                                nodeTran.HasLibInfo ? nodeTran.LibInfo.Rank.ToString(CultureInfo.InvariantCulture) : "",
                                                 nodeTran.Transition.FragmentIonName,
                                                 nodeTranGroup.TransitionGroup.LabelType);
             writer.WriteDsvField(extPeptideId, FieldSeparator);
@@ -1569,9 +1569,7 @@ namespace pwiz.Skyline.Model
             }
 
 
-            var procAnalyst = AnalystProcess;
-            if (procAnalyst == null)
-                procAnalyst = Process.Start(Path.Combine(analystDir, ANALYST_EXE));
+            var procAnalyst = AnalystProcess ?? Process.Start(Path.Combine(analystDir, ANALYST_EXE));
             // Wait for main window to be present.
             ProgressStatus status = null;
             while (!progressMonitor.IsCanceled &&
@@ -1646,7 +1644,7 @@ namespace pwiz.Skyline.Model
             if (RTWindow.HasValue)
             {
                 argv.Add("-w");
-                argv.Add(RTWindow.ToString());
+                argv.Add(RTWindow.Value.ToString(CultureInfo.InvariantCulture));
             }
             return argv;
         }
@@ -2000,7 +1998,7 @@ namespace pwiz.Skyline.Model
             if (Equals(MethodInstrumentType, ExportInstrumentType.Waters_Quattro_Premier))
                 argv.Add("-q");
             argv.Add("-w");
-            argv.Add(RTWindow.ToString());
+            argv.Add(RTWindow.ToString(CultureInfo.InvariantCulture));
             MethodExporter.ExportMethod(EXE_BUILD_WATERS_METHOD,
                 argv, fileName, templateName, MemoryOutput, progressMonitor);
         }

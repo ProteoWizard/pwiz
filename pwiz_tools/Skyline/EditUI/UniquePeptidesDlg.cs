@@ -123,9 +123,10 @@ namespace pwiz.Skyline.EditUI
             _peptideDocNodes = new List<PeptideDocNode>();
             foreach (var child in PeptideGroupDocNode.Children)
             {
-                if (child is PeptideDocNode)
+                var nodePep = child as PeptideDocNode;
+                if (nodePep != null)
                 {
-                    _peptideDocNodes.Add((PeptideDocNode) child);
+                    _peptideDocNodes.Add(nodePep);
                 }
             }
             _peptideProteins = null;
@@ -295,14 +296,9 @@ namespace pwiz.Skyline.EditUI
             PeptideGroupDocNode peptideGroupDocNode = PeptideGroupDocNode;
             foreach (var docNode in srmDocument.Children)
             {
-                if (!Equals(docNode, peptideGroupDocNode))
-                {
-                    children.Add(docNode);
-                }
-                else
-                {
-                    children.Add(ExcludePeptides((PeptideGroupDocNode) docNode));
-                }
+                children.Add(!Equals(docNode, peptideGroupDocNode)
+                                 ? docNode
+                                 : ExcludePeptides((PeptideGroupDocNode) docNode));
             }
             return new SrmDocument(srmDocument, srmDocument.Settings, children);
         }

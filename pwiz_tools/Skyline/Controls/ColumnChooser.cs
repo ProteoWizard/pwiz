@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Controls
         public void SetColumns(IList<string> nameList, IList<bool> checkedList)
         {
             checkedListBox1.Items.Clear();
-            checkedListBox1.Items.AddRange(nameList.ToArray());
+            checkedListBox1.Items.AddRange(nameList.Cast<object>().ToArray());
             for (int i = 0; i < checkedList.Count; i++)
             {
                 checkedListBox1.SetItemChecked(i, checkedList[i]);

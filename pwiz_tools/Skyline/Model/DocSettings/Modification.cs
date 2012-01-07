@@ -296,9 +296,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     // from unmodified amino acid residues.
                     if (Losses == null)
                         throw new InvalidDataException("Modification must specify a formula, labeled atoms or valid monoisotopic and average masses.");
-                    else if (IsVariable)
+                    if (IsVariable)
                         throw new InvalidDataException("Loss-only modifications may not be variable.");
-                    else if (IsExplicit)
+                    if (IsExplicit)
                         throw new InvalidDataException("Loss-only modifications may not be explicit.");
                 }
             }
@@ -619,7 +619,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public ExplicitMods(PeptideDocNode nodePep,
-            IEnumerable<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
+            IList<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
             IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods)
         {
             Peptide = nodePep.Peptide;
@@ -652,7 +652,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         private static IList<ExplicitMod> MergeExplicitMods(IList<ExplicitMod> modsPrimary,
-            IList<ExplicitMod> modsSecondary, IEnumerable<StaticMod> modifications)
+            IList<ExplicitMod> modsSecondary, IList<StaticMod> modifications)
         {
             var listExplicitMods = new List<ExplicitMod>();
             int iPrimary = 0, iSecondary = 0;
@@ -690,7 +690,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="mods">Implicit modifications on the document</param>
         /// <param name="listSettingsMods">All modifications available in the settings</param>
         /// <returns>List of <see cref="ExplicitMod"/> objects for the implicit modifications</returns>
-        private ExplicitMod[] GetImplicitMods(IEnumerable<StaticMod> mods, MappedList<string, StaticMod> listSettingsMods)
+        private ExplicitMod[] GetImplicitMods(IList<StaticMod> mods, MappedList<string, StaticMod> listSettingsMods)
         {
             List<ExplicitMod> listImplicitMods = new List<ExplicitMod>();
 
@@ -803,11 +803,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             heavyMods = heavyModsList ?? heavyMods ?? new StaticMod[0];
             return ChangeGlobalMods(modSettings.StaticModifications, heavyMods,
-                modSettings.GetHeavyModificationTypes());
+                modSettings.GetHeavyModificationTypes().ToArray());
         }
 
         public ExplicitMods ChangeGlobalMods(IList<StaticMod> staticMods, IList<StaticMod> heavyMods,
-            IEnumerable<IsotopeLabelType> heavyLabelTypes)
+            IList<IsotopeLabelType> heavyLabelTypes)
         {
             var modifications = new List<TypedExplicitModifications>();
             int index = GetModIndex(IsotopeLabelType.light);
@@ -863,10 +863,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 var staticMod = staticMods[iStaticMod];
                 if(!staticMod.IsMod(Peptide.Sequence[mod.IndexAA], mod.IndexAA, Peptide.Sequence.Length))
                     continue;
-                if (mod.Modification.EquivalentAll(staticMod))
-                    modsNew.Add(mod);
-                else
-                    modsNew.Add(mod.ChangeModification(staticMod));
+                modsNew.Add(mod.Modification.EquivalentAll(staticMod)
+                                ? mod
+                                : mod.ChangeModification(staticMod));
             }
             ArrayUtil.AssignIfEqualsDeep(modsNew, explicitMods);
             if (ArrayUtil.ReferencesEqual(modsNew, explicitMods))

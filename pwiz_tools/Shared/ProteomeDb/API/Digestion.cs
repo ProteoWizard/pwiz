@@ -62,7 +62,7 @@ namespace pwiz.ProteomeDatabase.API
                     var protein = (DbProtein)values[0];
                     var name = (DbProteinName)values[1];
 
-                    if (protein.Sequence.IndexOf(sequence) < 0)
+                    if (protein.Sequence.IndexOf(sequence, StringComparison.Ordinal) < 0)
                         continue;
 
                     proteins.Add(new Protein(ProteomeDb, protein, name));

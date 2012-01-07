@@ -440,8 +440,8 @@ namespace pwiz.Skyline.Util
             {
                 if (_list.Contains(member))
                     return (member - Mean())/StdDev();
-                else
-                    return double.NaN;
+                
+                return double.NaN;
             }
             catch (Exception)
             {
@@ -790,8 +790,8 @@ namespace pwiz.Skyline.Util
 
                 if (Math.Ceiling(n*p) == n*p)
                     return (ordered[(int) (n*p - 1)] + ordered[(int) (n*p)])/2;
-                else
-                    return ordered[((int) (Math.Ceiling(n*p))) - 1];
+                
+                return ordered[((int) (Math.Ceiling(n*p))) - 1];
             }
             catch (Exception)
             {

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.MSGraph;
@@ -60,10 +61,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 string sequence = transitionGroup.Peptide.Sequence;
                 int charge = transitionGroup.PrecursorCharge;
                 var labelType = SpectrumInfo.LabelType;
-                if (labelType.IsLight)
-                    return string.Format("{0}{1}, Charge {2}", libraryNamePrefix, sequence, charge);
-                else
-                    return string.Format("{0}{1}, Charge {2} ({3})", libraryNamePrefix, sequence, charge, labelType);
+                return labelType.IsLight
+                    ? string.Format("{0}{1}, Charge {2}", libraryNamePrefix, sequence, charge)
+                    : string.Format("{0}{1}, Charge {2} ({3})", libraryNamePrefix, sequence, charge, labelType);
             }
         }
     }
@@ -136,9 +136,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private FontSpec GetFontSpec(Color color, ref FontSpec fontSpec)
         {
-            if (fontSpec == null)
-                fontSpec = CreateFontSpec(color, FontSize);
-            return fontSpec;
+            return fontSpec ?? (fontSpec = CreateFontSpec(color, FontSize));
         }
 
         public override void CustomizeCurve(CurveItem curveItem)
@@ -282,7 +280,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             var label = new StringBuilder(type.ToString());
             if (!Transition.IsPrecursor(type))
-                label.Append(ordinal.ToString());
+                label.Append(ordinal.ToString(CultureInfo.CurrentCulture));
             if (losses != null)
             {
                 label.Append(" -");

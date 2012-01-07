@@ -26,7 +26,7 @@ namespace pwiz.Common.Chemistry
     public class AminoAcidFormulas
     {
 // ReSharper disable InconsistentNaming
-        public static readonly double ProtonMass = 1.00727649;
+        public const double ProtonMass = 1.00727649;
 
         public static readonly IDictionary<String, char> LongNames = new ImmutableDictionary<String,char>(
             new Dictionary<string, char> {

@@ -185,7 +185,9 @@ namespace pwiz.Skyline.Model.Proteome
                 _pathProteome = pathProteome;
             }
 
+// ReSharper disable RedundantAssignment
             public Digestion Digest(ref ProgressStatus progressStatus)
+// ReSharper restore RedundantAssignment
             {
                 var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome);
                 var enzyme = _document.Settings.PeptideSettings.Enzyme;

@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 var data = Data;
-                return data != null ? data.HasOutliers : false;
+                return data != null && data.HasOutliers;
             }
         }
 

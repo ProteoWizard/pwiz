@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -69,7 +70,7 @@ namespace pwiz.Skyline.EditUI
         public int MaxTransitionPeakRank
         { 
             get { return Convert.ToInt32(textMaxPeakRank.Text);}
-            set { textMaxPeakRank.Text = value.ToString(); }
+            set { textMaxPeakRank.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public bool PreferLargerIons
@@ -87,13 +88,13 @@ namespace pwiz.Skyline.EditUI
         public double RTRegressionThreshold
         {
             get { return Convert.ToDouble(textRTRegressionThreshold.Text); }
-            set { textRTRegressionThreshold.Text = value.ToString(); }
+            set { textRTRegressionThreshold.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public double DotProductThreshold
         {
             get { return Convert.ToDouble(textMinDotProduct.Text); }
-            set { textMinDotProduct.Text = value.ToString(); }
+            set { textMinDotProduct.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public void OkDialog()
@@ -246,7 +247,7 @@ namespace pwiz.Skyline.EditUI
         public int MinTransitions
         {
             get { return Convert.ToInt32(textMinTransitions.Text); }
-            set { textMinTransitions.Text = value.ToString(); }
+            set { textMinTransitions.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
     }

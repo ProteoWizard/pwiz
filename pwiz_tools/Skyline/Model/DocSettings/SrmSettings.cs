@@ -107,10 +107,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (mod.Modification.RelativeRT == RelativeRT.Unknown)
                         return RelativeRT.Unknown;
-                    else if (mod.Modification.RelativeRT == RelativeRT.Preceding)
+
+                    if (mod.Modification.RelativeRT == RelativeRT.Preceding)
                         relativeRT = RelativeRT.Preceding;
                     else if (mod.Modification.RelativeRT == RelativeRT.Overlapping &&
-                            relativeRT == RelativeRT.Matching)
+                             relativeRT == RelativeRT.Matching)
                         relativeRT = RelativeRT.Overlapping;
                 }
             }
@@ -122,10 +123,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         continue;
                     if (mod.RelativeRT == RelativeRT.Unknown)
                         return RelativeRT.Unknown;
-                    else if (mod.RelativeRT == RelativeRT.Preceding)
+                    
+                    if (mod.RelativeRT == RelativeRT.Preceding)
                         relativeRT = RelativeRT.Preceding;
                     else if (mod.RelativeRT == RelativeRT.Overlapping &&
-                            relativeRT == RelativeRT.Matching)
+                             relativeRT == RelativeRT.Matching)
                         relativeRT = RelativeRT.Overlapping;
                 }
             }
@@ -388,7 +390,7 @@ namespace pwiz.Skyline.Model.DocSettings
             return calc;
         }
 
-        public bool LibrariesContainMeasurablePeptide(Peptide peptide, IEnumerable<int> precursorCharges, ExplicitMods mods)
+        public bool LibrariesContainMeasurablePeptide(Peptide peptide, IList<int> precursorCharges, ExplicitMods mods)
         {
             if (LibrariesContainMeasurablePeptide(peptide, IsotopeLabelType.light, precursorCharges, mods))
                 return true;
@@ -630,7 +632,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private bool Accept(SrmSettings settings,
                             Peptide peptide,
                             ExplicitMods mods,
-                            IEnumerable<int> precursorCharges,
+                            IList<int> precursorCharges,
                             PeptideFilterType filterType,
                             out bool allowVariableMods)
         {

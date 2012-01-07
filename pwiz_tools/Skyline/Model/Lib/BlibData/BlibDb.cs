@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 }
 
                 // We will have a RetentionTimes table if schemaVersion if 1 or greater.
-                saveRetentionTimes = blibLib.SchemaVersion < 1 ? false : true;
+                saveRetentionTimes = blibLib.SchemaVersion >= 1;
                 majorVer = blibLib.Revision;
                 minorVer = blibLib.SchemaVersion;
 
@@ -416,13 +416,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         throw new InvalidDataException(
                                 string.Format("Multiple reference spectra found for peptide {0} in the library {1}.", 
                                               refSpectra.PeptideModSeq, 
-                                              FilePath
-                                              ));
+                                              FilePath));
                     }
-                    else
-                    {
-                        foundBestSpectrum = true;
-                    }
+                    
+                    foundBestSpectrum = true;
 
                     MakeRefSpectrum(spectrum, refSpectra);
                 }

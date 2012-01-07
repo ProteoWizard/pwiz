@@ -103,11 +103,9 @@ namespace pwiz.Skyline.Controls.Graphs
             int iColor = 0;
             foreach (var pointPairList in _graphData.PointPairLists)
             {
-                Color color;
-                if (displayType == DisplayTypeChrom.total)
-                    color = COLORS_GROUPS[iColor++ % COLORS_GROUPS.Length];
-                else
-                    color = COLORS_TRANSITION[iColor++ % COLORS_TRANSITION.Length];
+                Color color = displayType == DisplayTypeChrom.total
+                    ? COLORS_GROUPS[iColor++ % COLORS_GROUPS.Length]
+                    : COLORS_TRANSITION[iColor++ % COLORS_TRANSITION.Length];
 
                 BarItem curveItem;
                 if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))
@@ -356,12 +354,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         for (int i = 0; i < pointListCount; i++)
                         {
                             var pointPairList = pointPairLists[i];
-                            if (i >= nodeTrans.Length)
-                                pointPairList.Add(CreatePointPairMissing(iGroup));
-                            else
-                            {
-                                pointPairList.Add(CreatePointPair(iGroup, nodeTrans[i], ref groupMaxY, ref groupMinY, resultIndex));
-                            }
+                            pointPairList.Add(i >= nodeTrans.Length
+                                                  ? CreatePointPairMissing(iGroup)
+                                                  : CreatePointPair(iGroup, nodeTrans[i], ref groupMaxY, ref groupMinY,
+                                                                    resultIndex));
                         }
                     }
                     // ReSharper restore DoNotCallOverridableMethodsInConstructor

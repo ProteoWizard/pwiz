@@ -99,14 +99,9 @@ namespace pwiz.Skyline.Controls
                 dxRequired += columnDelta;
             }
             Size = new Size(Math.Min(dxRequired, dxAvailable), Math.Min(dyRequired, dyAvailable));
-            if (displayAbove)
-            {
-                Location = new Point(Math.Min(parentRectangle.Left, screenRect.Right - Size.Width), parentRectangle.Top - Size.Height);
-            }
-            else
-            {
-                Location = new Point(Math.Min(parentRectangle.Left, screenRect.Right - Size.Width), parentRectangle.Bottom);
-            }
+            Location = displayAbove
+                ? new Point(Math.Min(parentRectangle.Left, screenRect.Right - Size.Width), parentRectangle.Top - Size.Height)
+                : new Point(Math.Min(parentRectangle.Left, screenRect.Right - Size.Width), parentRectangle.Bottom);
             // Set the width of the ListView's name column-- this is the width that listView_DrawItem
             // draws into.
             columnName.Width = Size.Width - 2 - columnDelta;
@@ -166,12 +161,12 @@ namespace pwiz.Skyline.Controls
             Rectangle descriptionBounds, Color textColor, Color backColor)
         {
             var findMatch = new FindMatch(description);
-            int ichHighlightBegin = description.ToLower().IndexOf(textToHighlight.ToLower());
+            int ichHighlightBegin = description.ToLower().IndexOf(textToHighlight.ToLower(), StringComparison.Ordinal);
             if (ichHighlightBegin >= 0)
             {
                 findMatch = findMatch.ChangeRange(ichHighlightBegin, ichHighlightBegin + textToHighlight.Length);
             }
-            var textRendererHelper = new TextRendererHelper()
+            var textRendererHelper = new TextRendererHelper
             {
                 Font = ListView.Font,
                 HighlightFont = new Font(ListView.Font, FontStyle.Bold),
@@ -299,10 +294,10 @@ namespace pwiz.Skyline.Controls
             }
             // Setting the Text property of a ListViewItem causes significant flicker 
             // (even if the value is the same) so we only set it if it's different.
+// ReSharper disable RedundantCheckBeforeAssignment
             if (dest.Text != src.Text)
-            {
                 dest.Text = src.Text;
-            }
+// ReSharper restore RedundantCheckBeforeAssignment
             dest.ImageIndex = src.ImageIndex;
             dest.ToolTipText = src.ToolTipText;
             dest.Tag = src.Tag;

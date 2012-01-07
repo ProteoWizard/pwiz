@@ -16,12 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.Collections.Generic;
+
 using System.Diagnostics;
-using System.IO;
-using System.Text;
-using System.Threading;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.Skyline.Util.Extensions
@@ -41,7 +37,7 @@ namespace pwiz.Skyline.Util.Extensions
 
         public static void RunProcess(this ProcessStartInfo psi, string stdin, string messagePrefix, IProgressMonitor progress, ref ProgressStatus status)
         {
-            var processRunner = new ProcessRunner()
+            var processRunner = new ProcessRunner
                                     {
                                         MessagePrefix = messagePrefix,
                                     };

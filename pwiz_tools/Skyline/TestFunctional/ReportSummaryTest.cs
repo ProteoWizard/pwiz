@@ -199,7 +199,7 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsTrue(FastaSequence.IsSequence(value));
                     else if (columnName.StartsWith("Cv"))
                     {
-                        value.EndsWith("%");
+                        Assert.IsTrue(value.EndsWith("%"));
                         Assert.IsTrue(double.Parse(value.Substring(0, value.Length - 1)) > 0);
                     }
                     else if (!columnName.Equals("ProteinName"))

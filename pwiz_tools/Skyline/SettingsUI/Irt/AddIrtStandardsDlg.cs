@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 return 0;
             }
 
-            set { textPeptideCount.Text = value.ToString(); }
+            set { textPeptideCount.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public void OkDialog()

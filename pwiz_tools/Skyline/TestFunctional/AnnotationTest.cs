@@ -133,7 +133,6 @@ namespace pwiz.SkylineTestFunctional
             // Set the annotation value on the first two rows in the ResultsGrid.
             // The annotation is a dropdown with values {blank, "a", "b", "c"}
             Assert.IsNotNull(colPrecursorResultItems);
-            if (colPrecursorResultItems== null) return;  // For ReSharper
             DataGridViewCell cell;
             RunUI(() =>
             {

@@ -17,8 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 

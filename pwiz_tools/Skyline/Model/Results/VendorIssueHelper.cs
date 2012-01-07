@@ -121,20 +121,18 @@ namespace pwiz.Skyline.Model.Results
 
             var sbOut = new StringBuilder();
             var proc = Process.Start(psi);
-            if (proc != null)
-            {
-                var reader = new ProcessStreamReader(proc);
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                    sbOut.AppendLine(line);
 
-                while (!proc.WaitForExit(200))
+            var reader = new ProcessStreamReader(proc);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                sbOut.AppendLine(line);
+
+            while (!proc.WaitForExit(200))
+            {
+                if (monitor.IsCanceled)
                 {
-                    if (monitor.IsCanceled)
-                    {
-                        proc.Kill();
-                        throw new LoadCanceledException(new ProgressStatus("").Cancel());
-                    }
+                    proc.Kill();
+                    throw new LoadCanceledException(new ProgressStatus("").Cancel());
                 }
             }
 

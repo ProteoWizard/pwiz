@@ -70,14 +70,9 @@ namespace pwiz.Skyline.EditUI
             }
             if (zedGraphControl.IsShowCopyMessage)
             {
-                if (success)
-                {
-                    MessageBox.Show(zedGraphControl, "Metafile image copied to clipboard");
-                }
-                else
-                {
-                    MessageBox.Show(zedGraphControl, "Unable to copy metafile image to the clipboard.");
-                }
+                MessageBox.Show(zedGraphControl, success
+                                    ? "Metafile image copied to clipboard"
+                                    : "Unable to copy metafile image to the clipboard.");
             }
         }
 

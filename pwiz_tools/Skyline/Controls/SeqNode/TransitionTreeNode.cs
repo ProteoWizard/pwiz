@@ -19,6 +19,7 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
@@ -61,8 +62,10 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;
             int peakImageIndex = PeakImageIndex;
+// ReSharper disable RedundantCheckBeforeAssignment
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
+// ReSharper restore RedundantCheckBeforeAssignment
             string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
             if (!Equals(label, Text))
                 Text = label;
@@ -110,13 +113,10 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             float? ratio = (nodeTran.HasResults ? nodeTran.GetPeakCountRatio(index) : null);
             if (ratio == null)
-            {
-                return settings.MeasuredResults.IsChromatogramSetLoaded(index) ?
-                    (int)SequenceTree.StateImageId.peak_blank : -1;
-            }
-            else if (ratio == 0)
+                return (int)SequenceTree.StateImageId.peak_blank;
+            if (ratio == 0)
                 return (int)SequenceTree.StateImageId.no_peak;
-            else if (ratio < 1.0)
+            if (ratio < 1.0)
                 return (int)SequenceTree.StateImageId.keep;
 
             return (int)SequenceTree.StateImageId.peak;
@@ -159,19 +159,17 @@ namespace pwiz.Skyline.Controls.SeqNode
                                      Transition.GetChargeIndicator(tran.Charge),
                                      resultsText);
             }
-            else
-            {
-                string rank = nodeTran.HasDistInfo
-                                  ? string.Format("irank {0}", nodeTran.IsotopeDistInfo.Rank)
-                                  : string.Format("rank {0}", nodeTran.LibInfo.Rank);
+            
+            string rank = nodeTran.HasDistInfo
+                              ? string.Format("irank {0}", nodeTran.IsotopeDistInfo.Rank)
+                              : string.Format("rank {0}", nodeTran.LibInfo.Rank);
 
-                return string.Format("{0} - {1:F04}{2} ({3}){4}",
-                                     labelPrefix,
-                                     nodeTran.Mz,
-                                     Transition.GetChargeIndicator(tran.Charge),
-                                     rank,
-                                     resultsText);
-            }
+            return string.Format("{0} - {1:F04}{2} ({3}){4}",
+                                 labelPrefix,
+                                 nodeTran.Mz,
+                                 Transition.GetChargeIndicator(tran.Charge),
+                                 rank,
+                                 resultsText);
         }
 
         #region Implementation of ITipProvider
@@ -195,7 +193,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             using (RenderTools rt = new RenderTools())
             {
                 table.AddDetailRow("Ion", nodeTran.Transition.FragmentIonName, rt);
-                table.AddDetailRow("Charge", nodeTran.Transition.Charge.ToString(), rt);
+                table.AddDetailRow("Charge", nodeTran.Transition.Charge.ToString(CultureInfo.InvariantCulture), rt);
                 table.AddDetailRow("Product m/z", string.Format("{0:F04}", nodeTran.Mz), rt);
                 if (nodeTran.HasLoss)
                 {
@@ -213,9 +211,10 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
                 if (nodeTran.HasLibInfo)
                 {
-                    table.AddDetailRow("Library rank", nodeTran.LibInfo.Rank.ToString(), rt);
+                    table.AddDetailRow("Library rank", nodeTran.LibInfo.Rank.ToString(CultureInfo.InvariantCulture), rt);
                     float intensity = nodeTran.LibInfo.Intensity;
-                    table.AddDetailRow("Library intensity", MathEx.RoundAboveZero(intensity, (intensity < 10 ? 1 : 0), 4).ToString(), rt);
+                    table.AddDetailRow("Library intensity", MathEx.RoundAboveZero(intensity,
+                        (intensity < 10 ? 1 : 0), 4).ToString(CultureInfo.CurrentCulture), rt);
                 }
 
                 SizeF size = table.CalcDimensions(g);

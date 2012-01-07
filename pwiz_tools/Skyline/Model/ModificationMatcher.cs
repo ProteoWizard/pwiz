@@ -148,7 +148,7 @@ namespace pwiz.Skyline.Model
 
         private static string GetSeqModStr(string seq)
         {
-            var result = new StringBuilder(seq[0].ToString());
+            var result = new StringBuilder(seq[0].ToString(CultureInfo.InvariantCulture));
             bool parenExpected = true;
             for (int i = 1; i < seq.Length; i++)
             {
@@ -343,7 +343,7 @@ namespace pwiz.Skyline.Model
                         modTerminus = ModTerminus.N;
                     if (indexAA == aas.Length - 1)
                         modTerminus = ModTerminus.C;
-                    int decPlace = mod.IndexOf(NumberFormatInfo.CurrentInfo.NumberDecimalSeparator);
+                    int decPlace = mod.IndexOf(NumberFormatInfo.CurrentInfo.NumberDecimalSeparator, StringComparison.Ordinal);
                     string name = null;
                     var roundedTo = Math.Min(decPlace == -1 ? 0 : mod.Length - decPlace - 1, DEFAULT_ROUNDING_DIGITS);
                     double? mass = null;
@@ -557,7 +557,8 @@ namespace pwiz.Skyline.Model
             public bool IsModMatch(StaticMod mod)
             {
                 return mod != null
-                    && (string.IsNullOrEmpty(mod.AAs) || mod.AminoAcids.ContainsAA(AA.ToString()))
+                    && (string.IsNullOrEmpty(mod.AAs) ||
+                        mod.AminoAcids.ContainsAA(AA.ToString(CultureInfo.InvariantCulture)))
                     && ((mod.Terminus == null) || Equals(mod.Terminus, Terminus));
             }
         }

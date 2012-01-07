@@ -210,7 +210,9 @@ namespace pwiz.SkylineTestUtil
                 }
             }
 
+// ReSharper disable HeuristicUnreachableCode
             return null;
+// ReSharper restore HeuristicUnreachableCode
         }
 
         public static SrmDocument RoundTripTransitionList(MassListExporter exporter)
@@ -309,7 +311,7 @@ namespace pwiz.SkylineTestUtil
                     string lineActual = readerActual.ReadLine();
                     if (lineTarget == null && lineActual == null)
                         return;
-                    else if (lineTarget == null)
+                    if (lineTarget == null)
                         Assert.Fail(String.Format("Target stops at line {0}.", count));
                     else if (lineActual == null)
                         Assert.Fail(String.Format("Actual stops at line {0}.", count));

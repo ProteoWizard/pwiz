@@ -19,6 +19,7 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -82,14 +83,9 @@ namespace pwiz.Skyline.FileUI
 
         private void SetDocument(SrmDocument document)
         {
-            if (document.Settings.HasResults)
-            {
-                ChromCacheMinimizer = document.Settings.MeasuredResults.GetChromCacheMinimizer(document);
-            }
-            else
-            {
-                ChromCacheMinimizer = null;
-            }
+            ChromCacheMinimizer = document.Settings.HasResults
+                                      ? document.Settings.MeasuredResults.GetChromCacheMinimizer(document)
+                                      : null;
         }
 
         private bool _changingOptimizeSettings;
@@ -116,7 +112,7 @@ namespace pwiz.Skyline.FileUI
                     cbxDiscardUnmatchedChromatograms.Checked = Settings.DiscardUnmatchedChromatograms;
                     if (Settings.NoiseTimeRange.HasValue)
                     {
-                        tbxNoiseTimeRange.Text = Settings.NoiseTimeRange.ToString();
+                        tbxNoiseTimeRange.Text = Settings.NoiseTimeRange.Value.ToString(CultureInfo.CurrentCulture);
                         tbxNoiseTimeRange.Enabled = true;
                         cbxLimitNoiseTime.Checked = true;
                     }
@@ -216,14 +212,9 @@ namespace pwiz.Skyline.FileUI
 
         private void cbxLimitNoiseTime_CheckedChanged(object sender, EventArgs e)
         {
-            if (cbxLimitNoiseTime.Checked)
-            {
-                Settings = Settings.SetNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text));
-            }
-            else
-            {
-                Settings = Settings.SetNoiseTimeRange(null);
-            }
+            Settings = cbxLimitNoiseTime.Checked
+                           ? Settings.SetNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text))
+                           : Settings.SetNoiseTimeRange(null);
         }
 
         private void btnMinimize_Click(object sender, EventArgs e)
@@ -334,7 +325,6 @@ namespace pwiz.Skyline.FileUI
                 skylineWindow.InvalidateChromatogramGraphs();
                 DialogResult = DialogResult.OK;
             }
-            return;
         }
 
         /// <summary>

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -527,16 +528,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         precursorResult.OptStep = chromInfo.OptimizationStep;
                         if (optFunction != null)
                         {
-                            if (optFunction is CollisionEnergyRegression)
+                            var ceRegression = optFunction as CollisionEnergyRegression;
+                            if (ceRegression != null)
                             {
-                                precursorResult.OptCollisionEnergy =
-                                    ((CollisionEnergyRegression)optFunction).GetCollisionEnergy(
+                                precursorResult.OptCollisionEnergy = ceRegression.GetCollisionEnergy(
                                         dbPrecursor.Charge, regressionMz, chromInfo.OptimizationStep);
                             }
-                            if (optFunction is DeclusteringPotentialRegression)
+                            var dpRegression = optFunction as DeclusteringPotentialRegression;
+                            if (dpRegression != null)
                             {
-                                precursorResult.OptDeclusteringPotential =
-                                    ((DeclusteringPotentialRegression)optFunction).GetDeclustringPotential(
+                                precursorResult.OptDeclusteringPotential = dpRegression.GetDeclustringPotential(
                                         regressionMz, chromInfo.OptimizationStep);
                             }
                         }
@@ -586,7 +587,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                               FragmentIon = fragmentIon,
                                               FragmentIonType = transition.IonType.ToString(),
                                               FragmentIonOrdinal = transition.Ordinal,
-                                              CleavageAa = transition.AA.ToString(),
+                                              CleavageAa = transition.AA.ToString(CultureInfo.InvariantCulture),
                                               LossNeutralMass = nodeTran.LostMass,
                                               Note = nodeTran.Note,
                                               IsotopeDistIndex = transition.MassIndex

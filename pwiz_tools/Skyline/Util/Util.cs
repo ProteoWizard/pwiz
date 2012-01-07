@@ -21,6 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -148,7 +149,7 @@ namespace pwiz.Skyline.Util
         /// <summary>
         /// Returns true, if a new list is accepted to replace the current list
         /// </summary>
-        bool AcceptList(Control owner, IEnumerable<TItem> listNew);
+        bool AcceptList(Control owner, IList<TItem> listNew);
     }
 
     /// <summary>
@@ -572,8 +573,10 @@ namespace pwiz.Skyline.Util
         {
             unchecked
             {
+// ReSharper disable NonReadonlyFieldInGetHashCode
                 return ((!Equals(_one, default(TItem)) ? _one.GetHashCode() : 0)*397) ^
                     (_many != null ? _many.GetHashCodeDeep() : 0);
+// ReSharper restore NonReadonlyFieldInGetHashCode
             }
         }
 
@@ -934,7 +937,7 @@ namespace pwiz.Skyline.Util
         /// <typeparam name="TEnum">The enum type</typeparam>
         /// <param name="value">The string to parse</param>
         /// <param name="defaultValue">The value to return, if parsing fails</param>
-        /// <returns>An enum value of type <see cref="T"/></returns>
+        /// <returns>An enum value of type <see cref="TEnum"/></returns>
         public static TEnum ParseEnum<TEnum>(string value, TEnum defaultValue)
         {
             try
@@ -964,7 +967,7 @@ namespace pwiz.Skyline.Util
                         sb.Append('_');
                     lastC = c;
                     if (capitalize && sb.Length == 0)
-                        sb.Append(c.ToString().ToUpper());
+                        sb.Append(c.ToString(CultureInfo.InvariantCulture).ToUpper());
                     else
                         sb.Append(c);
                 }
@@ -1175,7 +1178,7 @@ namespace pwiz.Skyline.Util
 
         private static string NormalizeSeparators(string startLabelText)
         {
-            startLabelText = startLabelText.Replace(ELIPSIS, LABEL_SEP_CHAR.ToString());
+            startLabelText = startLabelText.Replace(ELIPSIS, LABEL_SEP_CHAR.ToString(CultureInfo.InvariantCulture));
             foreach (var spaceChar in SPACE_CHARS)
             {
                 startLabelText = startLabelText.Replace(spaceChar, LABEL_SEP_CHAR);
@@ -1203,7 +1206,7 @@ namespace pwiz.Skyline.Util
         private static string RemoveString(string label, string replaceString, ReplaceLocation location)
         {
             int startIndex = -1;
-            while ((startIndex = label.IndexOf(replaceString, startIndex + 1)) != -1)
+            while ((startIndex = label.IndexOf(replaceString, startIndex + 1, StringComparison.Ordinal)) != -1)
             {
                 int endIndex = startIndex + replaceString.Length;
                 // Not start string and does not end with space
@@ -1221,7 +1224,7 @@ namespace pwiz.Skyline.Util
                 // Check left of the string for the start of the label or a space char
                 if (startIndex == 0)
                     middle = false;
-                else if (startIndex >= ELIPSIS.Length && label.LastIndexOf(ELIPSIS, startIndex) == startIndex - ELIPSIS.Length)
+                else if (startIndex >= ELIPSIS.Length && label.LastIndexOf(ELIPSIS, startIndex, StringComparison.Ordinal) == startIndex - ELIPSIS.Length)
                     elipsisSeen = true;
                 else
                     startIndex--;
@@ -1229,7 +1232,7 @@ namespace pwiz.Skyline.Util
                 // Check right of the string for the end of the label or a space char
                 if (endIndex == label.Length)
                     middle = false;
-                else if (label.IndexOf(ELIPSIS, endIndex) == endIndex)
+                else if (label.IndexOf(ELIPSIS, endIndex, StringComparison.Ordinal) == endIndex)
                     elipsisSeen = true;
                 else
                     endIndex++;

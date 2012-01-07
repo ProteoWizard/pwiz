@@ -132,7 +132,6 @@ namespace pwiz.Skyline.Model.Find
                 }
             }
             MovedToNewDocNode(true);
-            return;
         }
 
         void MoveBackward()
@@ -213,7 +212,8 @@ namespace pwiz.Skyline.Model.Find
                 MovedToNewDocNode(true);
                 if (value.ChromFileInfoId != null)
                 {
-                    _chromInfoIndex = ArrayUtil.IndexOf(_chromInfos, ci => ReferenceEquals(value.ChromFileInfoId, ci.FileId) && value.OptStep == GetOptStep(ci));
+                    _chromInfoIndex = _chromInfos.IndexOf(ci => ReferenceEquals(value.ChromFileInfoId, ci.FileId) &&
+                                                                value.OptStep == GetOptStep(ci));
                     if (_chromInfoIndex < 0)
                     {
                         throw new InvalidBookmarkLocation("No such chrominfo:" + value.ChromFileInfoId);
@@ -320,7 +320,9 @@ namespace pwiz.Skyline.Model.Find
             }
             return new ChromInfo[0];
         }
+// ReSharper disable ParameterTypeCanBeEnumerable.Local
         static IEnumerable<ChromInfo> ListChromInfos<TChromInfo>(Results<TChromInfo> results) where TChromInfo : ChromInfo
+// ReSharper restore ParameterTypeCanBeEnumerable.Local
         {
             if (results == null)
             {

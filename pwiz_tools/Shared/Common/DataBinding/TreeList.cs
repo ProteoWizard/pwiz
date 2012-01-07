@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,7 +27,7 @@ namespace pwiz.Common.DataBinding
     /// A wrapper around a RedBlackTree that implements IList.
     /// Nodes in the RedBlackTree are keyed with <see cref="LongDecimal"/>
     /// </summary>
-    public class TreeList<TItem> : IList<TItem>
+    public class TreeList<TItem> : IList<TItem> where TItem : class
     {
         public TreeList(RedBlackTree<LongDecimal,TItem> tree)
         {

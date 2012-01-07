@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -70,7 +71,7 @@ namespace pwiz.Skyline.SettingsUI
             // Initialize digestion settings
             _driverEnzyme = new SettingsListComboDriver<Enzyme>(comboEnzyme, Settings.Default.EnzymeList);
             _driverEnzyme.LoadList(_peptideSettings.Enzyme.GetKey());
-            cbMissedCleavages.SelectedItem = Digest.MaxMissedCleavages.ToString();
+            cbMissedCleavages.SelectedItem = Digest.MaxMissedCleavages.ToString(CultureInfo.CurrentCulture);
             if (cbMissedCleavages.SelectedIndex < 0)
                 cbMissedCleavages.SelectedIndex = 0;
             cbRaggedEnds.Checked = Digest.ExcludeRaggedEnds;
@@ -81,15 +82,15 @@ namespace pwiz.Skyline.SettingsUI
             _driverRT.LoadList(sel);
             cbUseMeasuredRT.Checked = textMeasureRTWindow.Enabled = Prediction.UseMeasuredRTs;
             if (Prediction.MeasuredRTWindow.HasValue)
-                textMeasureRTWindow.Text = Prediction.MeasuredRTWindow.ToString();
+                textMeasureRTWindow.Text = Prediction.MeasuredRTWindow.Value.ToString(CultureInfo.CurrentCulture);
 
             // Initialize filter settings
             _driverExclusion = new SettingsListBoxDriver<PeptideExcludeRegex>(listboxExclusions, Settings.Default.PeptideExcludeList);
             _driverExclusion.LoadList(null, Filter.Exclusions);
 
-            textExcludeAAs.Text = Filter.ExcludeNTermAAs.ToString();
-            textMaxLength.Text = Filter.MaxPeptideLength.ToString();
-            textMinLength.Text = Filter.MinPeptideLength.ToString();
+            textExcludeAAs.Text = Filter.ExcludeNTermAAs.ToString(CultureInfo.CurrentCulture);
+            textMaxLength.Text = Filter.MaxPeptideLength.ToString(CultureInfo.CurrentCulture);
+            textMinLength.Text = Filter.MinPeptideLength.ToString(CultureInfo.CurrentCulture);
             cbAutoSelect.Checked = Filter.AutoSelect;
 
             // Initialize spectral library settings
@@ -106,7 +107,9 @@ namespace pwiz.Skyline.SettingsUI
             comboMatching.SelectedIndex = (int) Libraries.Pick;
 
             _lastRankId = Libraries.RankId;
-            _lastPeptideCount = Libraries.PeptideCount.ToString();
+            _lastPeptideCount = Libraries.PeptideCount.HasValue
+                                    ? Libraries.PeptideCount.Value.ToString(CultureInfo.CurrentCulture)
+                                    : null;
 
             UpdateRanks(null);
 
@@ -116,8 +119,8 @@ namespace pwiz.Skyline.SettingsUI
             _driverHeavyMod = new SettingsListBoxDriver<StaticMod>(listHeavyMods, Settings.Default.HeavyModList);
             _driverLabelType = new LabelTypeComboDriver(comboLabelType, Modifications, _driverHeavyMod, 
                 labelStandardType, comboStandardType, listStandardTypes);
-            textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString();
-            textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString();
+            textMaxVariableMods.Text = Modifications.MaxVariableMods.ToString(CultureInfo.CurrentCulture);
+            textMaxNeutralLosses.Text = Modifications.MaxNeutralLosses.ToString(CultureInfo.CurrentCulture);
 
             IsShowLibraryExplorer = false;
         }
@@ -499,7 +502,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 PeptideRankId[] rankIds = rankIdSet.ToArray();
                 Array.Sort(rankIds, (id1, id2) => Comparer<string>.Default.Compare(id1.Label, id2.Label));
-                comboRank.Items.AddRange(rankIds);
+                comboRank.Items.AddRange(rankIds.Cast<object>().ToArray());
 
                 // Restore selection
                 if (rankId != null)
@@ -639,8 +642,7 @@ namespace pwiz.Skyline.SettingsUI
                 // else the empty string. 
                 string libName = _driverLibrary.ListBox.SelectedItem != null
                                      ? _driverLibrary.ListBox.SelectedItem.ToString()
-                                     :
-                                         (_driverLibrary.CheckedNames.Count() > 0 ? _driverLibrary.CheckedNames[0] : "");
+                                     : (_driverLibrary.CheckedNames.Any() ? _driverLibrary.CheckedNames[0] : "");
                 var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libName, _parent) { Owner = Owner };
                 viewLibraryDlg.Show();
             }
@@ -713,7 +715,7 @@ namespace pwiz.Skyline.SettingsUI
         public int MissedCleavages
         { 
             get { return Convert.ToInt32(cbMissedCleavages.SelectedItem); }
-            set { cbMissedCleavages.SelectedItem = value.ToString(); }
+            set { cbMissedCleavages.SelectedItem = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public string[] AvailableLibraries
@@ -761,13 +763,13 @@ namespace pwiz.Skyline.SettingsUI
         public int MaxVariableMods
         {
             get { return Convert.ToInt32(textMaxVariableMods.Text); }
-            set { textMaxVariableMods.Text = value.ToString(); }
+            set { textMaxVariableMods.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public int MaxNeutralLosses
         {
             get { return Convert.ToInt32(textMaxNeutralLosses.Text); }
-            set { textMaxNeutralLosses.Text = value.ToString(); }
+            set { textMaxNeutralLosses.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public PeptideRankId RankID
@@ -785,7 +787,7 @@ namespace pwiz.Skyline.SettingsUI
         public int PeptidesPerProtein
         {
             get { return Convert.ToInt32(textPeptideCount.Text); }
-            set { textPeptideCount.Text = value.ToString(); }
+            set { textPeptideCount.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public IEnumerable<IsotopeLabelType> LabelTypes
@@ -800,7 +802,7 @@ namespace pwiz.Skyline.SettingsUI
         public int TimeWindow
         {
             get { return Convert.ToInt32(textMeasureRTWindow.Text); }
-            set { textMeasureRTWindow.Text = value.ToString(); }
+            set { textMeasureRTWindow.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         #endregion
@@ -829,7 +831,7 @@ namespace pwiz.Skyline.SettingsUI
                 ComboIS = comboIS;
                 ListBoxIS = listBoxIS;
                 LoadList(null, modifications.InternalStandardTypes,
-                    modifications.GetHeavyModifications());
+                    modifications.GetHeavyModifications().ToArray());
                 ShowModifications();
             }
 
@@ -844,18 +846,16 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (_singleStandard)
                         return new[] {(IsotopeLabelType) ComboIS.SelectedItem};
-                    else
-                    {
-                        var listStandardTypes = new List<IsotopeLabelType>();
-                        foreach (IsotopeLabelType labelType in ListBoxIS.CheckedItems)
-                            listStandardTypes.Add(labelType);
-                        return listStandardTypes.ToArray();
-                    }
+                    
+                    var listStandardTypes = new List<IsotopeLabelType>();
+                    foreach (IsotopeLabelType labelType in ListBoxIS.CheckedItems)
+                        listStandardTypes.Add(labelType);
+                    return listStandardTypes.ToArray();
                 }
             }
 
             private void LoadList(string selectedItemLast, ICollection<IsotopeLabelType> internalStandardTypes,
-                IEnumerable<TypedModifications> heavyMods)
+                IList<TypedModifications> heavyMods)
             {
                 try
                 {
@@ -957,11 +957,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 UpdateLastSelected();
 
-                foreach (object item in Combo.Items)
-                {
-                    if (item is TypedModifications)
-                        yield return (TypedModifications) item;                    
-                }
+                return Combo.Items.OfType<TypedModifications>();
             }
 
             private bool EditListSelected()
@@ -1005,7 +1001,7 @@ namespace pwiz.Skyline.SettingsUI
 
             public void EditList()
             {
-                var heavyMods = GetHeavyModifications();
+                var heavyMods = GetHeavyModifications().ToArray();
                 using (var dlg = new EditLabelTypeListDlg
                               {
                                   LabelTypes = from typedMods in heavyMods

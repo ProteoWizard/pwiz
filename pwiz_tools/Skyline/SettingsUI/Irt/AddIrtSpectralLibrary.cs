@@ -37,7 +37,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             InitializeComponent();
 
-            comboLibrary.Items.AddRange(librarySpecs.ToArray());
+            comboLibrary.Items.AddRange(librarySpecs.Cast<object>().ToArray());
             ComboHelper.AutoSizeDropDown(comboLibrary);
         }
 
@@ -60,8 +60,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (Source == SpectralLibrarySource.settings)
                     return (LibrarySpec)comboLibrary.SelectedItem;
-                else
-                    return new BiblioSpecLiteSpec("__internal__", textFilePath.Text);
+                return new BiblioSpecLiteSpec("__internal__", textFilePath.Text);
             }
         }
 

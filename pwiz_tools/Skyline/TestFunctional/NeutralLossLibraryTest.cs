@@ -223,13 +223,11 @@ namespace pwiz.SkylineTestFunctional
             return count;
         }
 
-        private static string[] GetChildLabels(TreeNode nodeTree)
+        private static IEnumerable<string> GetChildLabels(TreeNode nodeTree)
         {
             nodeTree.Expand();
-            var listLabels = new List<string>();
-            foreach (TreeNode nodeChild in nodeTree.Nodes)
-                listLabels.Add(nodeChild.Text);
-            return listLabels.ToArray();
+            return from TreeNode nodeChild in nodeTree.Nodes
+                   select nodeChild.Text;
         }
     }
 }

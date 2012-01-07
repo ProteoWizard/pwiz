@@ -69,12 +69,12 @@ namespace pwiz.Skyline.EditUI
                                                   string.Join("\n", invalidLines.ToArray())), Program.Name);
                 return;
             }
-            else if (acceptedPeptides.Count == 0)
+            if (acceptedPeptides.Count == 0)
             {
                 MessageBox.Show(this, "None of the specified peptides are in the document.");
                 return;
             }
-            else if (notFoundLines.Count > 0)
+            if (notFoundLines.Count > 0)
             {
                 string message;
                 if (notFoundLines.Count == 1)
@@ -84,12 +84,12 @@ namespace pwiz.Skyline.EditUI
                 else if (notFoundLines.Count < 15)
                 {
                     message = string.Format("The following peptides are not in the document:\n\n{0}\n\nDo you want to continue?",
-                                                  string.Join("\n", notFoundLines.ToArray()));
+                                            string.Join("\n", notFoundLines.ToArray()));
                 }
                 else
                 {
                     message = string.Format("Of the specified {0} peptides {1} are not in the document.  Do you want to continue?",
-                        notFoundLines.Count + acceptedPeptides.Count, notFoundLines.Count);
+                                            notFoundLines.Count + acceptedPeptides.Count, notFoundLines.Count);
                 }
                 if (MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
                     return;

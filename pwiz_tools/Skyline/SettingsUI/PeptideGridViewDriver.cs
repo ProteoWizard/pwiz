@@ -46,35 +46,34 @@ namespace pwiz.Skyline.SettingsUI
 
         public static string ValidateUniquePeptides(IEnumerable<string> peptides, IEnumerable<string> existing, string existingName)
         {
-            var multiplePeptides = from p in peptides
+            var peptidesArray = peptides.ToArray();
+            var multiplePeptides = (from p in peptidesArray
                                    group p by p into g
                                    where g.Count() > 1
-                                   select g.Key;
+                                   select g.Key).ToArray();
 
-            int countDuplicates = multiplePeptides.Count();
+            int countDuplicates = multiplePeptides.Length;
             if (countDuplicates > 0)
             {
                 if (countDuplicates == 1)
                     return string.Format("The peptide '{0}' appears multiple times in the added list.", multiplePeptides.First());
-                else if (countDuplicates < 15)
+                if (countDuplicates < 15)
                     return string.Format("The following peptides appear multipe times in the added list:\n\n{0}",
-                                            string.Join("\n", multiplePeptides.ToArray()));
-                else
-                    return string.Format("The added lists contains {0} peptides which appear multiple times.",
-                                            countDuplicates);
+                                         string.Join("\n", multiplePeptides.ToArray()));
+                return string.Format("The added lists contains {0} peptides which appear multiple times.",
+                                     countDuplicates);
             }
-            else if (existing != null)
+            if (existing != null)
             {
-                var intersectingPeptides = peptides.Intersect(existing);
-                countDuplicates = intersectingPeptides.Count();
+                var intersectingPeptides = peptidesArray.Intersect(existing).ToArray();
+                countDuplicates = intersectingPeptides.Length;
                 if (countDuplicates == 1)
                     return string.Format("The peptide '{0}' already appears in the {1} list.", intersectingPeptides.First(), existingName);
-                else if (countDuplicates < 15)
+                if (countDuplicates < 15)
                     return string.Format("The following peptides already appear in the {1} list:\n\n{0}",
-                                            string.Join("\n", multiplePeptides.ToArray()), existingName);
-                else
-                    return string.Format("The added lists contains {0} peptides which already appear in the {1} list.",
-                                            countDuplicates, existingName);
+                                         string.Join("\n", multiplePeptides.ToArray()), existingName);
+                return string.Format("The added lists contains {0} peptides which already appear in the {1} list.",
+                                     countDuplicates, existingName);
             }
             return null;
         }
@@ -137,11 +136,15 @@ namespace pwiz.Skyline.SettingsUI
             if (row.IsNewRow)
                 return true;
             var cell = row.Cells[COLUMN_SEQUENCE];
-            string errorText = MeasuredPeptide.ValidateSequence(cell.FormattedValue.ToString());
+            string errorText = MeasuredPeptide.ValidateSequence(cell.FormattedValue != null
+                                                                    ? cell.FormattedValue.ToString()
+                                                                    : null);
             if (errorText == null)
             {
                 cell = row.Cells[COLUMN_TIME];
-                errorText = MeasuredPeptide.ValidateRetentionTime(cell.FormattedValue.ToString(), AllowNegativeTime);
+                errorText = MeasuredPeptide.ValidateRetentionTime(cell.FormattedValue != null
+                                                                      ? cell.FormattedValue.ToString()
+                                                                      : null, AllowNegativeTime);
             }
             if (errorText != null)
             {

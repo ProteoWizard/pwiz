@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
@@ -54,8 +56,8 @@ namespace pwiz.Skyline.Model.Find
             }
             string normalizedText = FindOptions.CaseSensitive ? text : text.ToLower();
             int offset = FindOptions.Forward
-                             ? normalizedText.IndexOf(NormalizedFindText)
-                             : normalizedText.LastIndexOf(NormalizedFindText);
+                             ? normalizedText.IndexOf(NormalizedFindText, StringComparison.CurrentCulture)
+                             : normalizedText.LastIndexOf(NormalizedFindText, StringComparison.CurrentCulture);
             if (offset < 0)
             {
                 return null;

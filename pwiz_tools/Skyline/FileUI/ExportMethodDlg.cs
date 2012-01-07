@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -341,7 +342,7 @@ namespace pwiz.Skyline.FileUI
                 if (string.IsNullOrEmpty(maxTran))
                     MaxTransitions = null;
                 else
-                    MaxTransitions = int.Parse(maxTran);
+                    MaxTransitions = int.Parse(maxTran, CultureInfo.InvariantCulture);
             }
             catch (FormatException)
             {
@@ -368,7 +369,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.DwellTime = value;
-                textDwellTime.Text = _exportProperties.DwellTime.ToString();
+                textDwellTime.Text = _exportProperties.DwellTime.ToString(CultureInfo.CurrentCulture);
             }
         }
 
@@ -378,7 +379,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.RunLength = value;
-                textRunLength.Text = _exportProperties.RunLength.ToString();
+                textRunLength.Text = _exportProperties.RunLength.ToString(CultureInfo.CurrentCulture);
             }
         }
 
@@ -388,8 +389,9 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.MaxTransitions = value;
-                textMaxTransitions.Text = (_exportProperties.MaxTransitions == null ?
-                    "" : _exportProperties.MaxTransitions.ToString());
+                textMaxTransitions.Text = (_exportProperties.MaxTransitions.HasValue
+                    ? _exportProperties.MaxTransitions.Value.ToString(CultureInfo.CurrentCulture)
+                    : "");
             }
         }
 
@@ -418,14 +420,14 @@ namespace pwiz.Skyline.FileUI
                     helper.ShowTextBoxError(textTemplateFile, "A template file is required to export a method.");
                     return;
                 }
-                else if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) ?
-                        !Directory.Exists(templateName) : !File.Exists(templateName))
+                if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) ?
+                                                                                 !Directory.Exists(templateName) : !File.Exists(templateName))
                 {
                     helper.ShowTextBoxError(textTemplateFile, "The template file {0} does not exist.", templateName);
                     return;
                 }
-                else if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) &&
-                        !AgilentMethodExporter.IsAgilentMethodPath(templateName))
+                if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) &&
+                    !AgilentMethodExporter.IsAgilentMethodPath(templateName))
                 {
                     helper.ShowTextBoxError(textTemplateFile, "The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.", templateName);
                     return;
@@ -547,13 +549,13 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.ExportIgnoreProteins = IgnoreProteins;
             if (IsFullScanInstrument)
             {
-                Settings.Default.ExportMethodMaxPrec = (MaxTransitions != null ?
-                    MaxTransitions.ToString() : null);                
+                Settings.Default.ExportMethodMaxPrec = (MaxTransitions.HasValue ?
+                    MaxTransitions.Value.ToString(CultureInfo.InvariantCulture) : null);                
             }
             else
             {
-                Settings.Default.ExportMethodMaxTran = (MaxTransitions != null ?
-                    MaxTransitions.ToString() : null);
+                Settings.Default.ExportMethodMaxTran = (MaxTransitions.HasValue ?
+                    MaxTransitions.Value.ToString(CultureInfo.InvariantCulture) : null);
             }
             Settings.Default.ExportMethodType = _exportProperties.MethodType.ToString();
             if (textDwellTime.Visible)
@@ -853,10 +855,9 @@ namespace pwiz.Skyline.FileUI
                 UpdateMaxTransitions();
 
             MethodTemplateFile templateFile;
-            if (Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile))
-                textTemplateFile.Text = templateFile.FilePath;
-            else
-                textTemplateFile.Text = "";
+            textTemplateFile.Text = Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile)
+                ? templateFile.FilePath
+                : "";
 
             CalcMethodCount();
         }
@@ -910,17 +911,15 @@ namespace pwiz.Skyline.FileUI
         {
             if (standard)
             {
-                if (IsPrecursorOnlyInstrument)
-                    labelMaxTransitions.Text = PREC_PER_SAMPLE_INJ_TXT;
-                else
-                    labelMaxTransitions.Text = TRANS_PER_SAMPLE_INJ_TXT;
+                labelMaxTransitions.Text = IsPrecursorOnlyInstrument
+                    ? PREC_PER_SAMPLE_INJ_TXT
+                    : TRANS_PER_SAMPLE_INJ_TXT;
             }
             else
             {
-                if (IsPrecursorOnlyInstrument)
-                    labelMaxTransitions.Text = CONCUR_PREC_TXT;
-                else
-                    labelMaxTransitions.Text = CONCUR_TRANS_TXT;
+                labelMaxTransitions.Text = IsPrecursorOnlyInstrument
+                    ? CONCUR_PREC_TXT
+                    : CONCUR_TRANS_TXT;
             }
         }
 
@@ -987,7 +986,9 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateMethodCount(int? methodCount)
         {
-            labelMethodNum.Text = methodCount.HasValue ? methodCount.ToString() : "";
+            labelMethodNum.Text = methodCount.HasValue
+                ? methodCount.Value.ToString(CultureInfo.CurrentCulture)
+                : "";
 
             var recalcMethodCountStatus = _recalcMethodCountStatus;
             _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
@@ -1124,10 +1125,7 @@ namespace pwiz.Skyline.FileUI
 
         public void SetMethodType(ExportMethodType type)
         {
-            if (type == ExportMethodType.Standard)
-                comboTargetType.SelectedItem = "Standard";
-            else
-                comboTargetType.SelectedItem = "Scheduled";
+            comboTargetType.SelectedItem = type == ExportMethodType.Standard ? "Standard" : "Scheduled";
         }
 
         public bool IsTargetTypeEnabled

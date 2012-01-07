@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Irt
             return result;
         }
 
-        public IrtDb UpdatePeptides(IEnumerable<DbIrtPeptide> newPeptides, IEnumerable<DbIrtPeptide> oldPeptides)
+        public IrtDb UpdatePeptides(IList<DbIrtPeptide> newPeptides, IList<DbIrtPeptide> oldPeptides)
         {
             var setNew = new HashSet<long>(newPeptides.Select(pep => pep.Id.HasValue ? pep.Id.Value : 0));
             var dictOld = oldPeptides.ToDictionary(pep => pep.PeptideModSeq);

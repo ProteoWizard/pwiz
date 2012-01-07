@@ -27,7 +27,9 @@ namespace pwiz.Skyline.Util.Extensions
     {
         public static int GetOrdinal(this SQLiteDataReader reader, Enum columnName)
         {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
             return reader.GetOrdinal(columnName.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
         }
 
         public static string GetString(this SQLiteDataReader reader, Enum columnName)

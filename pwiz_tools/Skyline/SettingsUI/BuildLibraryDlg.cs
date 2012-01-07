@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -42,6 +43,7 @@ namespace pwiz.Skyline.SettingsUI
                 BiblioSpecLiteBuilder.EXT_PILOT_XML,
                 BiblioSpecLiteBuilder.EXT_IDP_XML,
                 BiblioSpecLiteBuilder.EXT_SQT,
+                BiblioSpecLiteBuilder.EXT_SSL,
                 BiblioSpecLiteBuilder.EXT_PERCOLATOR,
                 BiblioSpecLiteBuilder.EXT_PERCOLATOR_XML,
                 BiblioSpecLiteBuilder.EXT_WATERS_MSE,
@@ -65,7 +67,7 @@ namespace pwiz.Skyline.SettingsUI
             textName.Focus();
             textPath.Text = Settings.Default.LibraryDirectory;
             comboAction.SelectedItem = LibraryBuildAction.Create.ToString();
-            textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString();
+            textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(CultureInfo.CurrentCulture);
             textAuthority.Text = Settings.Default.LibraryAuthority;
 
             _helper = new MessageBoxHelper(this);
@@ -120,7 +122,7 @@ namespace pwiz.Skyline.SettingsUI
                 _helper.ShowTextBoxError(textPath, "You must specify an output file path.", outputPath);
                 return false;                
             }
-            else if (Directory.Exists(outputPath))
+            if (Directory.Exists(outputPath))
             {
                 _helper.ShowTextBoxError(textPath, "The output path {0} is a directory.  You must specify a file path.", outputPath);
                 return false;                
@@ -199,10 +201,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             string id = (name.Length == 0 ? "" : Helpers.MakeId(textName.Text));
             textID.Text = id;
-            if (id.Length == 0)
-                textPath.Text = outputPath;
-            else
-                textPath.Text = Path.Combine(outputPath, id + ".blib");
+            textPath.Text = id.Length == 0
+                                ? outputPath
+                                : Path.Combine(outputPath, id + ".blib");
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -522,7 +523,7 @@ namespace pwiz.Skyline.SettingsUI
                 return (double.TryParse(textCutoff.Text, out cutoff) ? cutoff : 0);
             }
 
-            set { textCutoff.Text = value.ToString(); }
+            set { textCutoff.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public string LibraryAuthority

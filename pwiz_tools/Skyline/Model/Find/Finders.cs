@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Find
     /// </summary>
     public static class Finders
     {
-        private static List<IFinder> _lstFinders = new List<IFinder>();
+        private static readonly List<IFinder> LST_FINDERS = new List<IFinder>();
         /// <summary>
         /// Lists all of the Finders that have been registered.
         /// Currently, the order of the finders returned by this method
@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Model.Find
         /// </summary>
         public static IList<IFinder> ListAllFinders()
         {
-            return _lstFinders.AsReadOnly();
+            return LST_FINDERS.AsReadOnly();
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.Find
         /// </summary>
         public static void AddFinder(IFinder finder)
         {
-            _lstFinders.Add(finder);
+            LST_FINDERS.Add(finder);
         }
 
         static Finders()

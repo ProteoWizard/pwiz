@@ -720,7 +720,9 @@ namespace pwiz.Skyline.Util
                         op1 = sq[dd - 1];    //left by 1
                     if (dd - 2 >= 0 && dd - 2 <= xx)
                         op2 = sq[dd - 2];    //left by 2
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (DUPLICATE_ORIGINAL_CODE)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
                     {
                         if (dd - 1 < 0 && (-(dd - 1)) <= xx)
                             op1 = sq[xx + (dd - 1) + 1];
@@ -752,7 +754,9 @@ namespace pwiz.Skyline.Util
                 return 0.0;
 
             string cc = "0" + sq + "0";
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
             if (ALGORITHM_VERSION == 3)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
             {
                 cc = cc.ReplaceAAs("LIW", "5");
                 cc = cc.ReplaceAAs("AMYV", "1");
@@ -937,9 +941,8 @@ namespace pwiz.Skyline.Util
 
             // compute mass
             double mass = 0.0;
-            for (int i = 0; i < sq.Length; i++)
+            foreach (char cf1 in sq)
             {
-                char cf1 = sq[i];
                 mass += AAPARAMS[cf1].AMASS;
             }
             // compute isoelectric value
@@ -976,8 +979,10 @@ namespace pwiz.Skyline.Util
                     where = i;
                     // Suppress unreachable code warning
 #pragma warning disable 162
-// ReSharper disable HeuristicUnreachableCode
+// ReSharper disable ConditionIsAlwaysTrueOrFalse
                     if (!DUPLICATE_ORIGINAL_CODE)
+// ReSharper restore ConditionIsAlwaysTrueOrFalse
+// ReSharper disable HeuristicUnreachableCode
                         break;
 // ReSharper restore HeuristicUnreachableCode
 #pragma warning restore 162
@@ -1074,7 +1079,7 @@ namespace pwiz.Skyline.Util
                     double trmAdj4 = heli1TermAdj(hc4, i, sqlen);
                     sum += (sc4 * trmAdj4);
                     i = i + 1; //??
-                    continue;
+                    // continue;
                 }
             }
             return HELIX1SCALE * sum;
@@ -1086,7 +1091,6 @@ namespace pwiz.Skyline.Util
         {
             char f01 = pattern[0];
             double prod1 = AAPARAMS[f01].H2BASCORE;
-            string fpart;
             int iss = 0;
             const int OFF1 = 2;
             int acount = 1;
@@ -1106,7 +1110,7 @@ namespace pwiz.Skyline.Util
             }
             for (int i = 1; i < pattern.Length - 2; i = i + 3)
             {
-                fpart = pattern.Substring(i, 2);
+                string fpart = pattern.Substring(i, 2);
                 char gpart = (i + 2) < pattern.Length ? pattern[i + 2] : '\0';
                 double s3 = AAPARAMS[gpart].H2BASCORE;
                 if (fpart.Equals("--"))
@@ -1191,10 +1195,7 @@ namespace pwiz.Skyline.Util
 
             double[] ret = new double[2];
             string traps; //not my()'ed in perl source
-            string lc;
-            string pat;
             string best = "";
-            string sq2;
             const int llim = 50;
             double hiscore = 0.0;
             int best_pos = 0;
@@ -1217,9 +1218,9 @@ namespace pwiz.Skyline.Util
                 char m = pass1[i];
                 if (m == '1')
                 {
-                    lc = pass1.Substring(i);
-                    sq2 = sqCopy.Substring(i);
-                    pat = "";
+                    string lc = pass1.Substring(i);
+                    string sq2 = sqCopy.Substring(i);
+                    string pat = "";
                     int zap = 0;
                     int subt = 0;
 
@@ -1289,12 +1290,10 @@ namespace pwiz.Skyline.Util
                 ret[GSC] = gscore;
                 return ret;
             }
-            else
-            {
-                ret[HISC] = 0.0;
-                ret[GSC] = 0.0;
-                return ret;
-            }
+            
+            ret[HISC] = 0.0;
+            ret[GSC] = 0.0;
+            return ret;
         }
 
         // ============================================================

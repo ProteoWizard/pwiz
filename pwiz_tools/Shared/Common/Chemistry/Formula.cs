@@ -107,7 +107,7 @@ namespace pwiz.Common.Chemistry
                 {
                     return 1;
                 }
-                int keyCompare = thisEnumerator.Current.Key.CompareTo(thatEnumerator.Current.Key);
+                int keyCompare = string.CompareOrdinal(thisEnumerator.Current.Key, thatEnumerator.Current.Key);
                 if (keyCompare != 0)
                 {
                     return keyCompare;

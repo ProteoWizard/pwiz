@@ -1744,7 +1744,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             graphControl.Cursor = Cursors.Hand;
                             return true;
                         }
-                        else if (IsBestPeakBoundary(pt, out graphItem))
+                        if (IsBestPeakBoundary(pt, out graphItem))
                         {
                             graphControl.Cursor = Cursors.VSplit;
                             return true;
@@ -1809,7 +1809,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 FirePickedSpectrum(spectrumTime);
                                 return true;
                             }
-                            else if (IsBestPeakBoundary(pt, out graphItem))
+                            if (IsBestPeakBoundary(pt, out graphItem))
                             {
                                 double time, yTemp;
                                 GraphPane.ReverseTransform(pt, out time, out yTemp);
@@ -1825,10 +1825,9 @@ namespace pwiz.Skyline.Controls.Graphs
                             changeCurves = new[] {(CurveItem) nearest};
                         else if (nearest is XAxis && IsGroupActive)
                         {
-                            if (IsMultiGroup)
-                                changeCurves = GraphPane.CurveList.ToArray();
-                            else
-                                changeCurves = new[] { GraphPane.CurveList[0] };
+                            changeCurves = IsMultiGroup
+                                ? GraphPane.CurveList.ToArray()
+                                : new[] { GraphPane.CurveList[0] };
                         }
                         if (changeCurves != null)
                         {

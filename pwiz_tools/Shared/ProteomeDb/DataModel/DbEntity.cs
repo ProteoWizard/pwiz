@@ -28,7 +28,9 @@ namespace pwiz.ProteomeDatabase.DataModel
         {
             if (Id == null)
             {
+// ReSharper disable BaseObjectEqualsIsObjectEquals
                 return base.Equals(o);
+// ReSharper restore BaseObjectEqualsIsObjectEquals
             }
             DbEntity<T> that = o as DbEntity<T>;
             if (that == null)
@@ -41,7 +43,9 @@ namespace pwiz.ProteomeDatabase.DataModel
         {
             if (Id == null)
             {
+// ReSharper disable BaseObjectGetHashCodeCallInGetHashCode
                 return base.GetHashCode();
+// ReSharper restore BaseObjectGetHashCodeCallInGetHashCode
             }
             return Id.GetHashCode() ^ typeof (T).GetHashCode();
         }

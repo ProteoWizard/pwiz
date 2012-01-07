@@ -208,8 +208,9 @@ namespace pwiz.Skyline.Util
                 var parent = control.Parent;
                 if (parent == null)
                     return null;
-                if (parent is Form)
-                    return (Form) parent;
+                var parentForm = parent as Form;
+                if (parentForm != null)
+                    return parentForm;
                 control = parent;
             }
         }

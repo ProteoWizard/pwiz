@@ -513,10 +513,11 @@ namespace pwiz.Skyline.Controls.SeqNode
         public void Pick(IEnumerable<DocNode> chosen, bool autoManageChildren, bool synchSiblings)
         {
             // Quick check to see if anything changed
-            if (Helpers.Equals(chosen, Chosen) && AutoManageChildren == autoManageChildren && IsSynchSiblings == synchSiblings)
+            var chosenNodes = chosen.ToArray();
+            if (Helpers.Equals(chosenNodes, Chosen) && AutoManageChildren == autoManageChildren && IsSynchSiblings == synchSiblings)
                 return;
 
-            SequenceTree.FirePickedChildren(this, new ChildPickedList(chosen, autoManageChildren), synchSiblings);
+            SequenceTree.FirePickedChildren(this, new ChildPickedList(chosenNodes, autoManageChildren), synchSiblings);
 
             // Make sure this node is open to show changes
             Expand();
@@ -605,7 +606,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     TNode nodeTree = treeNodes[i] as TNode;
                     if (nodeTree == null)
                         break;
-                    else if (!ReferenceEquals(nodeTree.Model, nodeDoc))
+                    if (!ReferenceEquals(nodeTree.Model, nodeDoc))
                     {
                         if (ReferenceEquals(nodeTree.Model.Id, nodeDoc.Id))
                         {

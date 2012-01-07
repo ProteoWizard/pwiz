@@ -194,12 +194,15 @@ namespace pwiz.Skyline.Model.Find
                 ChromFileInfoId = transitionGroupChromInfo.FileId;
                 OptStep = transitionGroupChromInfo.OptimizationStep;
             }
-            public ChromFileInfoId ChromFileInfoId { get; private set; }
-            public int OptStep { get; private set; }
+
+            private ChromFileInfoId ChromFileInfoId { get; set; }
+            private int OptStep { get; set; }
+
             public override int GetHashCode()
             {
                 return RuntimeHelpers.GetHashCode(ChromFileInfoId)*397 ^ OptStep.GetHashCode();
             }
+
             public override bool Equals(object obj)
             {
                 var that = obj as FinderChromFileKey;

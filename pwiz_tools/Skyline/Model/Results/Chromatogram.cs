@@ -447,7 +447,7 @@ namespace pwiz.Skyline.Model.Results
         private string GetOrdinalSaveId(int ordinalIndex)
         {
             if (ordinalIndex == -1)
-                throw new ArgumentOutOfRangeException("Attempting to save results info for a file that cannot be found.");
+                throw new ArgumentOutOfRangeException("ordinalIndex", "Attempting to save results info for a file that cannot be found.");
 
             return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex);
         }

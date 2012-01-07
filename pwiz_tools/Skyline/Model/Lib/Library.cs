@@ -237,10 +237,10 @@ namespace pwiz.Skyline.Model.Lib
         private class LibraryBuildMonitor : IProgressMonitor
         {
             private readonly LibraryManager _manager;
-// ReSharper disable UnaccessedField.Local
             // Might want this someday...
+// ReSharper disable NotAccessedField.Local
             private readonly IDocumentContainer _container;
-// ReSharper restore UnaccessedField.Local
+// ReSharper restore NotAccessedField.Local
 
             public LibraryBuildMonitor(LibraryManager manager, IDocumentContainer container)
             {
@@ -574,12 +574,9 @@ namespace pwiz.Skyline.Model.Lib
             int compare = key.Compare(_libraryEntries[mid].Key);
             if (compare < 0)
                 return FindEntry(key, left, mid - 1);
-            else if (compare > 0)
+            if (compare > 0)
                 return FindEntry(key, mid + 1, right);
-            else
-            {
-                return mid;
-            }
+            return mid;
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
@@ -731,7 +728,7 @@ namespace pwiz.Skyline.Model.Lib
             double[] retentionTimes = GetRetentionTimes(sequence);
             if (retentionTimes.Length == 0)
                 return null;
-            else if (retentionTimes.Length == 1)
+            if (retentionTimes.Length == 1)
                 return retentionTimes[0];
 
             double meanTimes = retentionTimes[0];
@@ -1161,16 +1158,10 @@ namespace pwiz.Skyline.Model.Lib
 
         public int TotalPsmCount { get; set; }
 
-		public IEnumerable<String> DataFiles { 
-            get
-            {
-                if(_dataFiles == null)
-                {
-                    _dataFiles = new List<string>(0);
-                }
-                return _dataFiles;
-            } 
-            set { _dataFiles = value; }
+		public IEnumerable<String> DataFiles
+        { 
+            get { return _dataFiles ?? (_dataFiles = new List<string>(0)); }
+		    set { _dataFiles = value; }
         }
 
         public IEnumerable<LibraryLink> LibLinks

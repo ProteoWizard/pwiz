@@ -209,9 +209,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 };
             }
 
-// ReSharper disable SuggestBaseTypeForParameter
+// ReSharper disable ParameterTypeCanBeEnumerable.Local
             private static bool RowKeyContains(RowKey rowKey, string keyPart)
-// ReSharper restore SuggestBaseTypeForParameter
+// ReSharper restore ParameterTypeCanBeEnumerable.Local
             {
                 string keyPartLower = keyPart.ToLower();
                 string keyPartSpaces = keyPartLower.Replace('_', ' ');  // Ugh.
@@ -331,7 +331,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         return comparable1.CompareTo(o2);
                     }
                 }
-                return o1.ToString().CompareTo(o2.ToString());
+                return String.CompareOrdinal(o1.ToString(), o2.ToString());
             }
 
         }

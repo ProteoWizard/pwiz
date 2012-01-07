@@ -47,7 +47,9 @@ namespace pwiz.Skyline.Model.Hibernate
         {
             if (!Id.HasValue)
             {
+// ReSharper disable BaseObjectEqualsIsObjectEquals
                 return base.Equals(obj);
+// ReSharper restore BaseObjectEqualsIsObjectEquals
             }
             if (obj == this)
             {
@@ -58,13 +60,15 @@ namespace pwiz.Skyline.Model.Hibernate
             {
                 return false;
             }
-            return EntityClass.Equals(that.EntityClass) && Id == that.Id;
+            return EntityClass == that.EntityClass && Id == that.Id;
         }
         public override int GetHashCode()
         {
             if (!Id.HasValue)
             {
+// ReSharper disable BaseObjectGetHashCodeCallInGetHashCode
                 return base.GetHashCode();
+// ReSharper restore BaseObjectGetHashCodeCallInGetHashCode
             }
             return EntityClass.GetHashCode()*31 + Id.GetHashCode();
         }

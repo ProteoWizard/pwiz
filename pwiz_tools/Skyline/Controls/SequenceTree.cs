@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
@@ -240,14 +241,9 @@ namespace pwiz.Skyline.Controls
                 else
                 {
                     var settings = document.Settings;
-                    if (!settings.HasResults)
-                    {
-                        _resultsIndex = 0;
-                    }
-                    else
-                    {
-                        _resultsIndex = Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1);
-                    }
+                    _resultsIndex = settings.HasResults
+                        ? Math.Min(_resultsIndex, settings.MeasuredResults.Chromatograms.Count - 1)
+                        : 0;
                     var mods = settings.PeptideSettings.Modifications;
                     _ratioIndex = Math.Min(_ratioIndex, mods.InternalStandardTypes.Count-1);
                 }
@@ -489,8 +485,9 @@ namespace pwiz.Skyline.Controls
                     else
                     {
                         // Make sure children have been materialized
-                        if (node is SrmTreeNodeParent)
-                            ((SrmTreeNodeParent)node).EnsureChildren();
+                        var nodeParent = node as SrmTreeNodeParent;
+                        if (nodeParent != null)
+                            nodeParent.EnsureChildren();
 
                         // If no children are found, then select this node
                         if (node.Nodes.Count == 0)
@@ -518,7 +515,7 @@ namespace pwiz.Skyline.Controls
                 {
                     if (!traversal.HasNext)
                         return node;
-                    else if (node.Nodes.Count != 0)
+                    if (node.Nodes.Count != 0)
                         return FindAvailableNode(node.Nodes, traversal);
                 }
             }
@@ -634,12 +631,7 @@ namespace pwiz.Skyline.Controls
 
         protected Image DropImage
         {
-            get
-            {
-                if (_dropImage == null)
-                    _dropImage = Resources.DropImage;
-                return _dropImage;
-            }
+            get { return _dropImage ?? (_dropImage = Resources.DropImage); }
         }
 
         protected TreeNode NodeCapture
@@ -843,7 +835,7 @@ namespace pwiz.Skyline.Controls
             if (IsEditableNode(SelectedNode) && !Char.IsControl(e.KeyChar))
             {
                 BeginEdit(true);
-                string keyChar = e.KeyChar.ToString();
+                string keyChar = e.KeyChar.ToString(CultureInfo.CurrentCulture);
                 if (IsKeyLocked(Keys.CapsLock))
                     keyChar = keyChar.ToLower();
                 SendKeys.Send(keyChar);

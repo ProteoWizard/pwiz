@@ -90,7 +90,7 @@ namespace pwiz.SkylineTest
             manager.Redo();
             manager.RedoRestore(10);
 
-            var description = "Success";
+            const string description = "Success";
             using (var undo = manager.BeginTransaction(description))
             {
                 Assert.IsTrue(manager.Recording);

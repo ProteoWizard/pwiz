@@ -26,17 +26,19 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class FindNodeDlg : Form
     {
+        private const int COLLAPSED_HEIGHT = 150;
+
         private bool _advancedVisible;
-        private int _fullHeight;
-        private int _collapsedHeight = 150;
-        private IFinder[] _finders;
+        private readonly int _fullHeight;
+        private readonly IFinder[] _finders;
         public FindNodeDlg()
         {
             InitializeComponent();
             _fullHeight = Height;
             AdvancedVisible = false;
             _finders = Finders.ListAllFinders().ToArray();
-            checkedListBoxFinders.Items.AddRange(_finders.Select(finder=>finder.DisplayName).ToArray());
+            checkedListBoxFinders.Items.AddRange(
+                _finders.Select(finder=>finder.DisplayName).Cast<object>().ToArray());
         }
 
         public FindOptions FindOptions
@@ -145,7 +147,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 else
                 {
-                    Height = _collapsedHeight;
+                    Height = COLLAPSED_HEIGHT;
                     btnShowHideAdvanced.Text = "Show Ad&vanced >>";
                 }
             }

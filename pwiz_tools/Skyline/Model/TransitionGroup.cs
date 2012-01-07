@@ -505,7 +505,7 @@ namespace pwiz.Skyline.Model
             }
             // If not loaded, leave everything alone, and let the update
             // when loading is complete fix things.
-            else if (!libraries.IsLoaded)
+            if (!libraries.IsLoaded)
                 return;
 
             IsotopeLabelType labelType;
@@ -588,10 +588,9 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            if (LabelType.IsLight)
-                return string.Format("Charge {0}", PrecursorCharge);
-            else
-                return string.Format("Charge {0} ({1})", PrecursorCharge, LabelType);
+            return LabelType.IsLight
+                ? string.Format("Charge {0}", PrecursorCharge)
+                : string.Format("Charge {0} ({1})", PrecursorCharge, LabelType);
         }
 
         #endregion

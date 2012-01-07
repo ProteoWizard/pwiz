@@ -115,8 +115,9 @@ namespace pwiz.Skyline.Model
             where TIm : Immutable
         {
             set(immutable, value);
-            if (immutable is IValidating)
-                ((IValidating)immutable).Validate();
+            var validating = immutable as IValidating;
+            if (validating != null)
+                validating.Validate();
             return immutable;
         }
 
@@ -163,8 +164,9 @@ namespace pwiz.Skyline.Model
             where TIm : Immutable
         {
             set(immutable);
-            if (immutable is IValidating)
-                ((IValidating)immutable).Validate();
+            var validating = immutable as IValidating;
+            if (validating != null)
+                (validating).Validate();
             return immutable;
         }
     }

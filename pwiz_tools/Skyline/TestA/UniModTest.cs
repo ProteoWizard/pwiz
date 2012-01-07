@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestA
                 // the name of the modification.
                 var aasAndTermInName = mod.Name.Split(new[] { ' ' }, 2)[1];
                 if (mod.Terminus != null)
-                    Assert.IsTrue(aasAndTermInName.Contains(mod.Terminus.ToString()));
+                    Assert.IsTrue(aasAndTermInName.Contains(mod.Terminus.Value.ToString()));
                 if (mod.AAs != null)
                 {
                     foreach (char aa in mod.AminoAcids)

@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -33,7 +34,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
     {
         private readonly IEnumerable<DbIrtPeptide> _irtPeptides;
 
-        public RecalibrateIrtDlg(IEnumerable<DbIrtPeptide> irtPeptides)
+        public RecalibrateIrtDlg(IList<DbIrtPeptide> irtPeptides)
         {
             _irtPeptides = irtPeptides;
             
@@ -57,9 +58,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 else
                     iFixed1 = 0;
             }
-            comboFixedPoint1.Items.AddRange(standardPeptides);
+            comboFixedPoint1.Items.AddRange(standardPeptides.Cast<object>().ToArray());
             comboFixedPoint1.SelectedIndex = iFixed1;
-            comboFixedPoint2.Items.AddRange(standardPeptides);
+            comboFixedPoint2.Items.AddRange(standardPeptides.Cast<object>().ToArray());
             comboFixedPoint2.SelectedIndex = iFixed2;
         }
 
@@ -120,8 +121,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             double irt2 = comboFixedPoint2.SelectedItem != null
                               ? Math.Round(((DbIrtPeptide) comboFixedPoint2.SelectedItem).Irt, 2)
                               : 100;
-            textMinIrt.Text = Math.Min(irt1, irt2).ToString();
-            textMaxIrt.Text = Math.Max(irt1, irt2).ToString();
+            textMinIrt.Text = Math.Min(irt1, irt2).ToString(CultureInfo.CurrentCulture);
+            textMaxIrt.Text = Math.Max(irt1, irt2).ToString(CultureInfo.CurrentCulture);
         }
     }
 }

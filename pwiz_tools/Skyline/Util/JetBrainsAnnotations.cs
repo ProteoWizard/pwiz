@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
+// ReSharper disable CheckNamespace
 namespace JetBrains.Annotations
+// ReSharper restore CheckNamespace
 {
     /// <summary>
     /// Indicates that marked element should be localized or not.

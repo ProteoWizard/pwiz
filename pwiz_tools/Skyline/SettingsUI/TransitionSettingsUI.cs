@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -82,7 +83,9 @@ namespace pwiz.Skyline.SettingsUI
             textIonTypes.Text = Filter.ToStringIonTypes(true);
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.GetKey();
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.GetKey();
-            textExclusionWindow.Text = Filter.PrecursorMzWindow != 0 ? Filter.PrecursorMzWindow.ToString() : "";            
+            textExclusionWindow.Text = Filter.PrecursorMzWindow != 0
+                ? Filter.PrecursorMzWindow.ToString(CultureInfo.CurrentCulture)
+                : "";            
             cbAutoSelect.Checked = Filter.AutoSelect;
 
             _driverIons = new SettingsListBoxDriver<MeasuredIon>(listAlwaysAdd, Settings.Default.MeasuredIonList);
@@ -90,25 +93,25 @@ namespace pwiz.Skyline.SettingsUI
 
             // Initialize library settings
             cbLibraryPick.Checked = (Libraries.Pick != TransitionLibraryPick.none);
-            panelPick.Visible = cbLibraryPick.Checked; 
-            textTolerance.Text = Libraries.IonMatchTolerance.ToString();
-            textIonCount.Text = Libraries.IonCount.ToString();
+            panelPick.Visible = cbLibraryPick.Checked;
+            textTolerance.Text = Libraries.IonMatchTolerance.ToString(CultureInfo.CurrentCulture);
+            textIonCount.Text = Libraries.IonCount.ToString(CultureInfo.CurrentCulture);
             if (Libraries.Pick == TransitionLibraryPick.filter)
                 radioFiltered.Checked = true;
             else if (Libraries.Pick == TransitionLibraryPick.all_plus)
                 radioAllAndFiltered.Checked = true;
 
             // Initialize instrument settings
-            textMinMz.Text = Instrument.MinMz.ToString();
-            textMaxMz.Text = Instrument.MaxMz.ToString();
+            textMinMz.Text = Instrument.MinMz.ToString(CultureInfo.CurrentCulture);
+            textMaxMz.Text = Instrument.MaxMz.ToString(CultureInfo.CurrentCulture);
             cbDynamicMinimum.Checked = Instrument.IsDynamicMin;
-            textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString();
+            textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString(CultureInfo.CurrentCulture);
             if (Instrument.MaxTransitions.HasValue)
-                textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString();
+                textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString(CultureInfo.CurrentCulture);
             if (Instrument.MinTime.HasValue)
-                textMinTime.Text = Instrument.MinTime.Value.ToString();
+                textMinTime.Text = Instrument.MinTime.Value.ToString(CultureInfo.CurrentCulture);
             if (Instrument.MaxTime.HasValue)
-                textMaxTime.Text = Instrument.MaxTime.Value.ToString();
+                textMaxTime.Text = Instrument.MaxTime.Value.ToString(CultureInfo.CurrentCulture);
 
             // Initialize full-scan settings
             _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments, Settings.Default.IsotopeEnrichmentsList);
@@ -116,13 +119,13 @@ namespace pwiz.Skyline.SettingsUI
             _driverEnrichments.LoadList(sel);
 
             comboPrecursorIsotopes.Items.AddRange(
-                new[]
+                new object[]
                     {
                         FullScanPrecursorIsotopes.None.ToString(),
                         FullScanPrecursorIsotopes.Count.ToString(),
                         FullScanPrecursorIsotopes.Percent.ToString()
                     });
-            comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS);
+            comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
             comboPrecursorIsotopes.SelectedItem = FullScan.PrecursorIsotopes.ToString();
 
             // Update the precursor analyzer type in case the SelectedIndex is still -1
@@ -131,13 +134,13 @@ namespace pwiz.Skyline.SettingsUI
             UpdateIsolationWidths();
 
             comboPrecursorFilterType.Items.AddRange(
-                new[]
+                new object[]
                     {
                         FullScanPrecursorFilterType.None.ToString(),
                         FullScanPrecursorFilterType.Single.ToString(),
                         FullScanPrecursorFilterType.Multiple.ToString()
                     });
-            comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS);            
+            comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());            
             comboPrecursorFilterType.SelectedItem = FullScan.PrecursorFilterType.ToString();
 
             // Update the product analyzer type in case the SelectedIndex is still -1
@@ -255,7 +258,8 @@ namespace pwiz.Skyline.SettingsUI
             types = types.Distinct().ToArray();
 
             double exclusionWindow = 0;
-            if (!string.IsNullOrEmpty(textExclusionWindow.Text) && !Equals(textExclusionWindow.Text, exclusionWindow.ToString()))
+            if (!string.IsNullOrEmpty(textExclusionWindow.Text) &&
+                !Equals(textExclusionWindow.Text, exclusionWindow.ToString(CultureInfo.CurrentCulture)))
             {
                 if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Filter, textExclusionWindow,
                         TransitionFilter.MIN_EXCLUSION_WINDOW, TransitionFilter.MAX_EXCLUSION_WINDOW, out exclusionWindow))
@@ -561,14 +565,14 @@ namespace pwiz.Skyline.SettingsUI
             var countFinder = TransitionFilter.GetEndFragmentFinder(fragmentRangeLastName) as IEndCountFragmentFinder;
             if (countFinder != null)
             {
-                textIonCount.Text = countFinder.Count.ToString();
+                textIonCount.Text = countFinder.Count.ToString(CultureInfo.CurrentCulture);
                 if (!radioAllAndFiltered.Checked)
                     radioAll.Checked = true;
                 radioFiltered.Enabled = false;
             }
             else
             {
-                textIonCount.Text = Libraries.IonCount.ToString();
+                textIonCount.Text = Libraries.IonCount.ToString(CultureInfo.CurrentCulture);
                 radioFiltered.Enabled = true;
             }
         }
@@ -619,15 +623,19 @@ namespace pwiz.Skyline.SettingsUI
                 if (precursorFilterType == FullScan.PrecursorFilterType)
                 {
                     EnablePrecursorFilterMz(precursorFilterType == FullScanPrecursorFilterType.Multiple,
-                                            FullScan.PrecursorFilter.ToString(),
-                                            FullScan.PrecursorRightFilter != null ? FullScan.PrecursorRightFilter.ToString() : null);
+                        FullScan.PrecursorFilter.HasValue
+                            ? FullScan.PrecursorFilter.Value.ToString(CultureInfo.CurrentCulture)
+                            : null,
+                        FullScan.PrecursorRightFilter.HasValue
+                            ? FullScan.PrecursorRightFilter.Value.ToString(CultureInfo.CurrentCulture)
+                            : null);
                     if (!comboProductAnalyzerType.Enabled)
                         comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.ProductMassAnalyzer);
                 }
                 else
                 {
                     EnablePrecursorFilterMz(precursorFilterType == FullScanPrecursorFilterType.Multiple,
-                                            TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER.ToString(),
+                                            TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER.ToString(CultureInfo.CurrentCulture),
                                             null);
                     if (!comboProductAnalyzerType.Enabled)
                         comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.qit);
@@ -662,8 +670,8 @@ namespace pwiz.Skyline.SettingsUI
                 double? halfWidth = null;
                 if (double.TryParse(textPrecursorFilterMz.Text, out totalWidth))
                     halfWidth = totalWidth/2;
-                textPrecursorFilterMz.Text = textRightPrecursorFilterMz.Text =
-                                             halfWidth.HasValue ? halfWidth.ToString() : "";
+                textPrecursorFilterMz.Text = textRightPrecursorFilterMz.Text = halfWidth.HasValue
+                    ? halfWidth.Value.ToString(CultureInfo.CurrentCulture) : "";
             }
             else
             {
@@ -680,7 +688,8 @@ namespace pwiz.Skyline.SettingsUI
                     else
                         totalWidth = leftWidth*2;
                 }
-                textPrecursorFilterMz.Text = totalWidth.HasValue ? totalWidth.ToString() : "";
+                textPrecursorFilterMz.Text = totalWidth.HasValue
+                    ? totalWidth.Value.ToString(CultureInfo.CurrentCulture) : "";
             }
         }
 
@@ -725,7 +734,9 @@ namespace pwiz.Skyline.SettingsUI
                 // If the combo is being set to the type it started with, use the starting values
                 if (precursorIsotopes == FullScan.PrecursorIsotopes)
                 {
-                    textPrecursorIsotopeFilter.Text = FullScan.PrecursorIsotopeFilter.ToString();
+                    textPrecursorIsotopeFilter.Text = FullScan.PrecursorIsotopeFilter.HasValue
+                                                          ? FullScan.PrecursorIsotopeFilter.Value.ToString(CultureInfo.CurrentCulture)
+                                                          : "";
                     if (FullScan.IsotopeEnrichments != null)
                         comboEnrichments.SelectedItem = FullScan.IsotopeEnrichments.Name;
                     if (!comboPrecursorAnalyzerType.Enabled)
@@ -735,7 +746,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textPrecursorIsotopeFilter.Text = (percentType
                                                            ? TransitionFullScan.DEFAULT_ISOTOPE_PERCENT
-                                                           : TransitionFullScan.DEFAULT_ISOTOPE_COUNT).ToString();
+                                                           : TransitionFullScan.DEFAULT_ISOTOPE_COUNT).ToString(CultureInfo.CurrentCulture);
                     
                     var precursorMassAnalyzer = PrecursorMassAnalyzer;
                     if (!comboPrecursorAnalyzerType.Enabled || (percentType && precursorMassAnalyzer == FullScanMassAnalyzerType.qit))
@@ -773,7 +784,7 @@ namespace pwiz.Skyline.SettingsUI
             if (precursorMassAnalyzer == FullScanMassAnalyzerType.qit)
             {
                 comboPrecursorIsotopes.SelectedItem = FullScanPrecursorIsotopes.Count.ToString();
-                textPrecursorIsotopeFilter.Text = 1.ToString();
+                textPrecursorIsotopeFilter.Text = 1.ToString(CultureInfo.CurrentCulture);
                 comboEnrichments.SelectedIndex = -1;
                 comboEnrichments.Enabled = false;
             }
@@ -830,10 +841,9 @@ namespace pwiz.Skyline.SettingsUI
 
                 labelAt.Visible = variableRes;
                 textAt.Visible = variableRes;
-                if (resMzCurrent.HasValue)
-                    textAt.Text = resMzCurrent.ToString();
-                else
-                    textAt.Text = TransitionFullScan.DEFAULT_RES_MZ.ToString();
+                textAt.Text = resMzCurrent.HasValue
+                                  ? resMzCurrent.Value.ToString(CultureInfo.CurrentCulture)
+                                  : TransitionFullScan.DEFAULT_RES_MZ.ToString(CultureInfo.CurrentCulture);
 
                 labelTh.Visible = (textMz != null);
                 if (textMz != null)
@@ -882,13 +892,13 @@ namespace pwiz.Skyline.SettingsUI
         public int InstrumentMaxMz
         {
             get { return Int32.Parse(textMaxMz.Text); }
-            set { textMaxMz.Text = value.ToString(); }
+            set { textMaxMz.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public double MZMatchTolerance
         {
             get { return Double.Parse(textMzMatchTolerance.Text); }
-            set { textMzMatchTolerance.Text = value.ToString(); }
+            set { textMzMatchTolerance.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public CollisionEnergyRegression RegressionCE
@@ -961,7 +971,7 @@ namespace pwiz.Skyline.SettingsUI
         public int IonCount
         {
             get { return Convert.ToInt32(textIonCount.Text); }
-            set { textIonCount.Text = value.ToString(); }
+            set { textIonCount.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public bool UseLibraryPick

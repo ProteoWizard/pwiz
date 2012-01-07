@@ -76,17 +76,11 @@ namespace pwiz.Skyline.FileUI
             get
             {
                 if (radioSingleDataSet.Checked)
-                {
                     return ExportSchedulingAlgorithm.Single;
-                }
-                else if (radioTrends.Checked)
-                {
-                    return ExportSchedulingAlgorithm.Trends;
-                }
-                else
-                {
-                    return ExportSchedulingAlgorithm.Average;
-                }
+
+                return radioTrends.Checked
+                           ? ExportSchedulingAlgorithm.Trends
+                           : ExportSchedulingAlgorithm.Average;
             }
             set
             {

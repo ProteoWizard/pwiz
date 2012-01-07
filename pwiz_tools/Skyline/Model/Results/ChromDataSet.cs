@@ -215,7 +215,7 @@ namespace pwiz.Skyline.Model.Results
                 float time = timesNew[i];
                 if (time == startTime)
                     break;
-                else if (time > startTime)
+                if (time > startTime)
                 {
                     if (inferZeros)
                         i = Math.Max(0, i - 1);
@@ -241,7 +241,7 @@ namespace pwiz.Skyline.Model.Results
                 float time = timesNew[i];
                 if (time == endTime)
                     break;
-                else if (time < endTime)
+                if (time < endTime)
                 {
                     if (inferZeros)
                         i = Math.Min(lastTime, i + 1);
@@ -480,7 +480,7 @@ namespace pwiz.Skyline.Model.Results
                                           dataPeak.Data.Key equals dataPeakTest.Data.Key
                                       where dataPeak.Peak != null && dataPeakTest.Peak != null
                                       select dataPeak;
-                    return sharedPeaks.Count() > 0;
+                    return sharedPeaks.Any();
                 }
             }
             return false;

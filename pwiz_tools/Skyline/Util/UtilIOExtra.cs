@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -260,7 +261,7 @@ namespace pwiz.Skyline.Util
         public override string ToString()
         {
             if (ChecksumValue != 0)
-                return ChecksumValue.ToString();
+                return ChecksumValue.ToString(CultureInfo.InvariantCulture);
             return "Unknown";
         }
 

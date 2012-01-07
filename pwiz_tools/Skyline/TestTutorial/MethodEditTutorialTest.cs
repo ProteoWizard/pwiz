@@ -348,6 +348,7 @@ namespace pwiz.SkylineTestTutorial
             var doc = SkylineWindow.Document;
             var nodePeptide = doc.Peptides.FirstOrDefault(nodePep =>
                 Equals(peptideSequence, nodePep.Peptide.Sequence));
+            Assert.IsNotNull(nodePeptide);
             Assert.IsTrue(nodePeptide.TransitionCount == count);
         }
     }

@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace pwiz.Common.Collections
 {
@@ -97,8 +96,8 @@ namespace pwiz.Common.Collections
 
         class Impl : ConvertedList<TSource, TTarget>
         {
-            private Converter<TSource, TTarget> _converter;
-            private Converter<TTarget, TSource> _deconverter;
+            private readonly Converter<TSource, TTarget> _converter;
+            private readonly Converter<TTarget, TSource> _deconverter;
             public Impl(IList<TSource> sourceList, Converter<TSource,TTarget> converter, Converter<TTarget,TSource> deconverter) : base(sourceList)
             {
                 _converter = converter;

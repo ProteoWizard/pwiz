@@ -451,23 +451,23 @@ namespace pwiz.Skyline
             {
                 return _graphSpectrum ?? CreateGraphSpectrum();                
             }
-            else if (persistentString.EndsWith("Skyline.Controls.GraphRetentionTime") ||  // Backward compatibility
-                    (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
-                    persistentString.EndsWith(typeof(RTGraphController).Name)))
+            if (persistentString.EndsWith("Skyline.Controls.GraphRetentionTime") ||  // Backward compatibility
+                (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
+                 persistentString.EndsWith(typeof(RTGraphController).Name)))
             {
                 return _graphRetentionTime ?? CreateGraphRetentionTime();                
             }
-            else if (persistentString.EndsWith("Skyline.Controls.GraphPeakArea") ||  // Backward compatibility
-                    (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
-                    persistentString.EndsWith(typeof(AreaGraphController).Name)))
+            if (persistentString.EndsWith("Skyline.Controls.GraphPeakArea") ||  // Backward compatibility
+                (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
+                 persistentString.EndsWith(typeof(AreaGraphController).Name)))
             {
                 return _graphPeakArea ?? CreateGraphPeakArea();                
             }
-            else if (Equals(persistentString, typeof(ResultsGridForm).ToString()))
+            if (Equals(persistentString, typeof(ResultsGridForm).ToString()))
             {
                 return _resultsGridForm ?? CreateResultsGrid();
             }
-            else if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
+            if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {
                 string name = GraphChromatogram.GetTabText(persistentString);
                 var settings = DocumentUI.Settings;
@@ -715,7 +715,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
             if (chargesContextMenuItem.DropDownItems.Count == 0)
             {
-                chargesContextMenuItem.DropDownItems.AddRange(new[]
+                chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         charge1ContextMenuItem,
                         charge2ContextMenuItem,
@@ -1064,7 +1064,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, retentionTimesContextMenuItem);
             if (retentionTimesContextMenuItem.DropDownItems.Count == 0)
             {
-                retentionTimesContextMenuItem.DropDownItems.AddRange(new[]
+                retentionTimesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         allRTContextMenuItem,
                         bestRTContextMenuItem,
@@ -1080,7 +1080,7 @@ namespace pwiz.Skyline
             // Sometimes child menuitems are stripped from the parent
             if (transitionsContextMenuItem.DropDownItems.Count == 0)
             {
-                transitionsContextMenuItem.DropDownItems.AddRange(new[]
+                transitionsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         allTranContextMenuItem,
                         precursorsTranContextMenuItem,
@@ -1093,7 +1093,7 @@ namespace pwiz.Skyline
             // Sometimes child menuitems are stripped from the parent
             if (transformChromContextMenuItem.DropDownItems.Count == 0)
             {
-                transformChromContextMenuItem.DropDownItems.AddRange(new[]
+                transformChromContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         transformChromNoneContextMenuItem,
                         secondDerivativeContextMenuItem,
@@ -1106,7 +1106,7 @@ namespace pwiz.Skyline
             // Sometimes child menuitems are stripped from the parent
             if (autoZoomContextMenuItem.DropDownItems.Count == 0)
             {
-                autoZoomContextMenuItem.DropDownItems.AddRange(new[]
+                autoZoomContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         autoZoomNoneContextMenuItem,
                         autoZoomBestPeakContextMenuItem,
@@ -2005,7 +2005,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, timeGraphContextMenuItem);
             if (timeGraphContextMenuItem.DropDownItems.Count == 0)
             {
-                timeGraphContextMenuItem.DropDownItems.AddRange(new[]
+                timeGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                 {
                     replicateComparisonContextMenuItem,
                     timePeptideComparisonContextMenuItem,
@@ -2027,7 +2027,7 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, replicatesRTContextMenuItem);
                     if (replicatesRTContextMenuItem.DropDownItems.Count == 0)
                     {
-                        replicatesRTContextMenuItem.DropDownItems.AddRange(new[]
+                        replicatesRTContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             averageReplicatesContextMenuItem,
                             singleReplicateRTContextMenuItem,
@@ -2071,7 +2071,7 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, peptideRTValueMenuItem);
                     if (peptideRTValueMenuItem.DropDownItems.Count == 0)
                     {
-                        peptideRTValueMenuItem.DropDownItems.AddRange(new[]
+                        peptideRTValueMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             allRTValueContextMenuItem,
                             timeRTValueContextMenuItem,
@@ -2084,7 +2084,7 @@ namespace pwiz.Skyline
                 // Sometimes child menuitems are stripped from the parent
                 if (transitionsContextMenuItem.DropDownItems.Count == 0)
                 {
-                    transitionsContextMenuItem.DropDownItems.AddRange(new[]
+                    transitionsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         allTranContextMenuItem,
                         precursorsTranContextMenuItem,
@@ -2098,7 +2098,7 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
                     if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
                     {
-                        replicateOrderContextMenuItem.DropDownItems.AddRange(new[]
+                        replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             replicateOrderDocumentContextMenuItem,
                             replicateOrderAcqTimeContextMenuItem
@@ -2116,7 +2116,7 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, peptideOrderContextMenuItem);
                     if (peptideOrderContextMenuItem.DropDownItems.Count == 0)
                     {
-                        peptideOrderContextMenuItem.DropDownItems.AddRange(new[]
+                        peptideOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             peptideOrderDocumentContextMenuItem,
                             peptideOrderRTContextMenuItem,
@@ -2130,7 +2130,7 @@ namespace pwiz.Skyline
                         menuStrip.Items.Insert(iInsert++, replicatesRTContextMenuItem);
                         if (replicatesRTContextMenuItem.DropDownItems.Count == 0)
                         {
-                            replicatesRTContextMenuItem.DropDownItems.AddRange(new[]
+                            replicatesRTContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             averageReplicatesContextMenuItem,
                             singleReplicateRTContextMenuItem,
@@ -2141,7 +2141,7 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, scopeContextMenuItem);
                     if (scopeContextMenuItem.DropDownItems.Count == 0)
                     {
-                        scopeContextMenuItem.DropDownItems.AddRange(new[]
+                        scopeContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             documentScopeContextMenuItem,
                             proteinScopeContextMenuItem
@@ -2572,7 +2572,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, areaGraphContextMenuItem);
             if (areaGraphContextMenuItem.DropDownItems.Count == 0)
             {
-                areaGraphContextMenuItem.DropDownItems.AddRange(new[]
+                areaGraphContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                 {
                     areaReplicateComparisonContextMenuItem,
                     areaPeptideComparisonContextMenuItem
@@ -2585,7 +2585,7 @@ namespace pwiz.Skyline
             // Sometimes child menuitems are stripped from the parent
             if (transitionsContextMenuItem.DropDownItems.Count == 0)
             {
-                transitionsContextMenuItem.DropDownItems.AddRange(new[]
+                transitionsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                 {
                     allTranContextMenuItem,
                     precursorsTranMenuItem,
@@ -2600,7 +2600,7 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
                 if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
                 {
-                    replicateOrderContextMenuItem.DropDownItems.AddRange(new[]
+                    replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             replicateOrderDocumentContextMenuItem,
                             replicateOrderAcqTimeContextMenuItem
@@ -2656,7 +2656,7 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, peptideOrderContextMenuItem);
                 if (peptideOrderContextMenuItem.DropDownItems.Count == 0)
                 {
-                    peptideOrderContextMenuItem.DropDownItems.AddRange(new[]
+                    peptideOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             peptideOrderDocumentContextMenuItem,
                             peptideOrderRTContextMenuItem,
@@ -2670,7 +2670,7 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, replicatesRTContextMenuItem);
                     if (replicatesRTContextMenuItem.DropDownItems.Count == 0)
                     {
-                        replicatesRTContextMenuItem.DropDownItems.AddRange(new[]
+                        replicatesRTContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             averageReplicatesContextMenuItem,
                             singleReplicateRTContextMenuItem,
@@ -2681,7 +2681,7 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, scopeContextMenuItem);
                 if (scopeContextMenuItem.DropDownItems.Count == 0)
                 {
-                    scopeContextMenuItem.DropDownItems.AddRange(new[]
+                    scopeContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                         {
                             documentScopeContextMenuItem,
                             proteinScopeContextMenuItem

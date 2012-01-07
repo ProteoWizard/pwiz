@@ -157,9 +157,9 @@ namespace pwiz.Skyline.FileUI
             }
             cbxPivotReplicate.Checked = false;
             cbxPivotIsotopeLabel.Checked = false;
-            if (report is PivotReport)
+            var pivotReport = report as PivotReport;
+            if (pivotReport != null)
             {
-                PivotReport pivotReport = (PivotReport) report;
                 var testColumns = pivotReport.Columns.Union(pivotReport.CrossTabValues).ToArray();
                 foreach(var id in pivotReport.CrossTabHeaders)
                 {

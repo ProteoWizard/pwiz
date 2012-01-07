@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -65,16 +66,16 @@ namespace pwiz.Skyline.SettingsUI
                     textName.Text = "";
                     textSlope.Text = "";
                     textIntercept.Text = "";
-                    textStepSize.Text = DeclusteringPotentialRegression.DEFAULT_STEP_SIZE.ToString();
-                    textStepCount.Text = DeclusteringPotentialRegression.DEFAULT_STEP_COUNT.ToString();
+                    textStepSize.Text = DeclusteringPotentialRegression.DEFAULT_STEP_SIZE.ToString(CultureInfo.CurrentCulture);
+                    textStepCount.Text = DeclusteringPotentialRegression.DEFAULT_STEP_COUNT.ToString(CultureInfo.CurrentCulture);
                 }
                 else
                 {
                     textName.Text = _regression.Name;
-                    textSlope.Text = _regression.Slope.ToString();
-                    textIntercept.Text = _regression.Intercept.ToString();
-                    textStepSize.Text = _regression.StepSize.ToString();
-                    textStepCount.Text = _regression.StepCount.ToString();
+                    textSlope.Text = _regression.Slope.ToString(CultureInfo.CurrentCulture);
+                    textIntercept.Text = _regression.Intercept.ToString(CultureInfo.CurrentCulture);
+                    textStepSize.Text = _regression.StepSize.ToString(CultureInfo.CurrentCulture);
+                    textStepCount.Text = _regression.StepCount.ToString(CultureInfo.CurrentCulture);
                 }                
             }
         }

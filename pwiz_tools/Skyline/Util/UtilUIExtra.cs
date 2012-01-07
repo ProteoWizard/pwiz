@@ -317,8 +317,10 @@ EndSelection:<<<<<<<3
             }
 
             string precision = format.Substring(2);
-            if (String.IsNullOrEmpty(precision)) precision = "2";
-            return String.Format("{0:N" + precision + "}{1}", size, suffix);
+            if (String.IsNullOrEmpty(precision))
+                precision = "2";
+            string formatString = "{0:N" + precision + "}{1}";  // Avoid ReSharper analysis
+            return String.Format(formatString, size, suffix);
         }
 
         private static string DefaultFormat(string format, object arg, IFormatProvider formatProvider)
@@ -372,14 +374,13 @@ EndSelection:<<<<<<<3
             try
             {
                 IntPtr hwnd = GetOpenClipboardWindow();
-                if (hwnd != null)
+                if (hwnd != IntPtr.Zero)
                 {
                     uint processId;
                     GetWindowThreadProcessId(hwnd, out processId);
                     var process = Process.GetProcessById((int)processId);
-                    if (process != null)
-                        return string.Format("{0}\nThe the process '{1}' (ID = {2}) has the clipboard open.",
-                            prefix, process.ProcessName, processId);
+                    return string.Format("{0}\nThe the process '{1}' (ID = {2}) has the clipboard open.",
+                        prefix, process.ProcessName, processId);
                 }
             }
             catch (Exception)

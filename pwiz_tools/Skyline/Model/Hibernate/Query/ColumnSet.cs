@@ -216,7 +216,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     label = RatioPropertyAccessor.GetDisplayName(label);
                 else if (AnnotationDef.IsAnnotationProperty(label))
                     label = AnnotationDef.GetColumnDisplayName(label);
-                else if (label.IndexOf("Ratio") != -1)
+                else if (label.IndexOf("Ratio", StringComparison.Ordinal) != -1)
                     lastRatioIndex = result.Count;
                 var columnInfo = CreateColumnInfo(identifier, classMetadata, propertyName);
                 if (columnInfo.IsHidden)
@@ -389,9 +389,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 return;
             }
             var allColumns = new List<ReportColumn>(simpleReport.Columns);
-            if (simpleReport is PivotReport)
+            var pivotReport = simpleReport as PivotReport;
+            if (pivotReport != null)
             {
-                allColumns.AddRange(((PivotReport)simpleReport).CrossTabValues);
+                allColumns.AddRange(pivotReport.CrossTabValues);
             }
             var allTables = new HashSet<Type>(from reportColumn in allColumns
                                               select reportColumn.Table);

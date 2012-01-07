@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model
         {
             if (annotationDef.Type == AnnotationDef.AnnotationType.true_false)
             {
-                return GetAnnotation(annotationDef.Name) == null ? false : true;
+                return GetAnnotation(annotationDef.Name) != null;
             }
             return GetAnnotation(annotationDef.Name);
         }

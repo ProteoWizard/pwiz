@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 
@@ -60,7 +61,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _stepSize = value;
-                textStepSize.Text = _stepSize.ToString();
+                textStepSize.Text = _stepSize.ToString(CultureInfo.CurrentCulture);
             }
         }
 
@@ -70,7 +71,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _stepCount = value;
-                textStepCount.Text = _stepCount.ToString();
+                textStepCount.Text = _stepCount.ToString(CultureInfo.CurrentCulture);
             }
         }
 

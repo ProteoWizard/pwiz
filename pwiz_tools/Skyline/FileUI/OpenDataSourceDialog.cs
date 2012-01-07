@@ -18,6 +18,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
@@ -56,7 +58,7 @@ namespace pwiz.Skyline.FileUI
 				//"Sequest DTA"
             };
 
-            sourceTypeComboBox.Items.AddRange( sourceTypes );
+            sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());
             sourceTypeComboBox.SelectedIndex = 0;
 
             ImageList imageList = new ImageList {ColorDepth = ColorDepth.Depth32Bit};
@@ -226,7 +228,7 @@ namespace pwiz.Skyline.FileUI
             {
                 return sourceInfo;
             }
-            else if(!sourceInfo.isUnknown)
+            if(!sourceInfo.isUnknown)
             {
                 sourceInfo.size = 0;
                 foreach( FileInfo fileInfo in dirInfo.GetFiles() )
@@ -471,11 +473,12 @@ namespace pwiz.Skyline.FileUI
                     label = "Network Share (access failure)";
                     imageIndex = 7;
                 }
-                TreeNode driveNode;
-                if (label.Length > 0)
-                    driveNode = myComputerNode.Nodes.Add( sublabel, String.Format( "{0} ({1})", label, sublabel ), imageIndex, imageIndex );
-                else
-                    driveNode = myComputerNode.Nodes.Add( sublabel, sublabel, imageIndex, imageIndex );
+                TreeNode driveNode = myComputerNode.Nodes.Add(sublabel,
+                                                              label.Length > 0
+                                                                  ? String.Format("{0} ({1})", label, sublabel)
+                                                                  : sublabel,
+                                                              imageIndex,
+                                                              imageIndex);
                 driveNode.Tag = sublabel;
                 lookInComboBox.Items.Insert( 3 + driveCount, driveNode );
 
@@ -490,7 +493,7 @@ namespace pwiz.Skyline.FileUI
                     {
                         ++driveCount;
                         pathNode = pathNode.Nodes.Add( branches[i], branches[i], 8, 8 );
-                        pathNode.Tag = String.Join( Path.DirectorySeparatorChar.ToString(),
+                        pathNode.Tag = String.Join(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture),
                                                     branches.GetRange( 0, i + 1 ).ToArray() );
                         lookInComboBox.Items.Insert( 3 + driveCount, pathNode );
                     }
@@ -564,11 +567,11 @@ namespace pwiz.Skyline.FileUI
             if( e.Column == _listViewColumnSorter.SortColumn )
             {
                 // Reverse the current sort direction for this column.
-                if (_listViewColumnSorter.Order == SortOrder.Ascending)
-                    _listViewColumnSorter.Order = SortOrder.Descending;
-                else
-                    _listViewColumnSorter.Order = SortOrder.Ascending;
-            } else
+                _listViewColumnSorter.Order = _listViewColumnSorter.Order == SortOrder.Ascending
+                                                  ? SortOrder.Descending
+                                                  : SortOrder.Ascending;
+            } 
+            else
             {
                 // Set the column number that is to be sorted; default to ascending.
                 _listViewColumnSorter.SortColumn = e.Column;

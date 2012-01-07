@@ -196,11 +196,6 @@ namespace pwiz.Skyline.Controls
             control.Focus();
         }
 
-        public void ShowTextBoxError(Control control, string message)
-        {
-            ShowTextBoxError(control, message, new string[] { null });
-        }
-
         /// <summary>
         /// Show a message box for a value error in a text box control,
         /// including the preceding label in a formatted message string.
@@ -231,7 +226,7 @@ namespace pwiz.Skyline.Controls
         public string GetControlMessage(Control control)
         {
             Control label = control;
-            while(!(label is Label))
+            while(label != null && !(label is Label))
                 label = _parent.GetNextControl(label, false);
             string message = (label == null ? "Field" : label.Text);
             message = message.Replace("&", "");

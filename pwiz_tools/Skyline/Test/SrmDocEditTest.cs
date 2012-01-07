@@ -96,9 +96,6 @@ namespace pwiz.SkylineTest
                         Assert.Fail("Unexpected cleavage at {0}", last);
                     Assert.IsNotNull(peptide.Begin);
                     Assert.IsNotNull(peptide.End);
-                    // Keep ReSharper happy
-                    if (!peptide.Begin.HasValue || !peptide.End.HasValue)
-                        continue;
                     
                     // Make sure peptides are ordered, and not overlapping
                     if (peptide.Begin.Value < lastEnd)

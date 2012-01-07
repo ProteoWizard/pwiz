@@ -22,7 +22,6 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 
@@ -42,7 +41,9 @@ namespace pwiz.SkylineTestUtil
             catch (Exception x)
             {
                 Assert.Fail("Exception thrown: " + x.Message);
+// ReSharper disable HeuristicUnreachableCode
                 throw;  // Will never happen, but is necessary to compile
+// ReSharper restore HeuristicUnreachableCode
             }
         }
 
@@ -58,7 +59,9 @@ namespace pwiz.SkylineTestUtil
             catch (Exception x)
             {
                 Assert.Fail("Exception thrown: " + x.Message);
+// ReSharper disable HeuristicUnreachableCode
                 throw;  // Will never happen, but is necessary to compile
+// ReSharper restore HeuristicUnreachableCode
             }
         }
 
@@ -74,7 +77,9 @@ namespace pwiz.SkylineTestUtil
             catch (Exception x)
             {
                 Assert.Fail("Exception thrown: " + x.Message);
+// ReSharper disable HeuristicUnreachableCode
                 throw;  // Will never happen, but is necessary to compile
+// ReSharper restore HeuristicUnreachableCode
             }
         }
     }
@@ -93,15 +98,13 @@ namespace pwiz.SkylineTestUtil
 
         public void AssertComplete()
         {
-            if (LastProgress != null)
-            {
-                if (LastProgress.IsError)
-                    throw LastProgress.ErrorException;
-                else if (LastProgress.IsCanceled)
-                    Assert.Fail("Loader cancelled");
-                else
-                    Assert.Fail("Unknown progress state");
-            }
+            if (LastProgress == null) return;
+            if (LastProgress.IsError)
+                throw LastProgress.ErrorException;
+
+            Assert.Fail(LastProgress.IsCanceled
+                            ? "Loader cancelled"
+                            : "Unknown progress state");
         }
 
         public SrmDocument ChangeMeasuredResults(MeasuredResults measuredResults,

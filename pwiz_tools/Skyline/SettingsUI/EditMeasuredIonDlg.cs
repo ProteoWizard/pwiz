@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -60,12 +61,13 @@ namespace pwiz.Skyline.SettingsUI
                 _measuredIon = value;
                 if (_measuredIon == null)
                 {
-                    radioReporter.Checked = !(radioFragment.Checked = true);
+                    radioFragment.Checked = true;
+                    radioReporter.Checked = false;
                     textName.Text = "";
                     textFragment.Text = "";
                     textRestrict.Text = "";
                     comboDirection.SelectedIndex = 0;
-                    textMinAas.Text = MeasuredIon.DEFAULT_MIN_FRAGMENT_LENGTH.ToString();
+                    textMinAas.Text = MeasuredIon.DEFAULT_MIN_FRAGMENT_LENGTH.ToString(CultureInfo.CurrentCulture);
                     textFormula.Text = "";
                     textMonoMass.Text = "";
                     textAverageMass.Text = "";
@@ -86,7 +88,9 @@ namespace pwiz.Skyline.SettingsUI
                 textFragment.Text = _measuredIon.Fragment;
                 textRestrict.Text = _measuredIon.Restrict;
                 comboDirection.SelectedIndex = (_measuredIon.Terminus == SequenceTerminus.C ? 0 : 1);
-                textMinAas.Text = _measuredIon.MinFragmentLength.ToString();
+                textMinAas.Text = _measuredIon.MinFragmentLength.HasValue
+                                      ? _measuredIon.MinFragmentLength.Value.ToString(CultureInfo.CurrentCulture)
+                                      : "";
             }
             else if (!string.IsNullOrEmpty(_measuredIon.Formula))
             {
@@ -95,10 +99,10 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 textFormula.Text = "";
-                textMonoMass.Text = (_measuredIon.MonoisotopicMass != 0 ?
-                    _measuredIon.MonoisotopicMass.ToString() : "");
-                textAverageMass.Text = (_measuredIon.AverageMass != 0 ?
-                    _measuredIon.AverageMass.ToString() : "");
+                textMonoMass.Text = (_measuredIon.MonoisotopicMass.HasValue ?
+                    _measuredIon.MonoisotopicMass.Value.ToString(CultureInfo.CurrentCulture) : "");
+                textAverageMass.Text = (_measuredIon.AverageMass.HasValue ?
+                    _measuredIon.AverageMass.Value.ToString(CultureInfo.CurrentCulture) : "");
             }
         }
 
@@ -252,7 +256,7 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     comboDirection.SelectedIndex = 0;
-                    textMinAas.Text = MeasuredIon.DEFAULT_MIN_FRAGMENT_LENGTH.ToString();
+                    textMinAas.Text = MeasuredIon.DEFAULT_MIN_FRAGMENT_LENGTH.ToString(CultureInfo.CurrentCulture);
                 }
             }
             else
@@ -288,8 +292,10 @@ namespace pwiz.Skyline.SettingsUI
                 textMonoMass.Enabled = textAverageMass.Enabled = false;
                 try
                 {
-                    textMonoMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula).ToString();
-                    textAverageMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula).ToString();
+                    textMonoMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC,
+                        formula).ToString(CultureInfo.CurrentCulture);
+                    textAverageMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE,
+                        formula).ToString(CultureInfo.CurrentCulture);
                     textFormula.ForeColor = Color.Black;
                 }
                 catch (ArgumentException)

@@ -262,13 +262,11 @@ namespace pwiz.SkylineTestA
         /// <returns>Number of StaticMods equivalent to modToMatch. If there are no equivalent values, function will return 1.</returns>
         public int CountEquivalent(KeyValuePair<string, StaticMod>[] dict, StaticMod modToMatch, SortedDictionary<string, int> equivMods, int index)
         {
-            StaticMod mod;
-
             int totalCount = 0;
             for (int i = 0; i < dict.Length; i++)
             {
                 int count = 0;
-                mod = dict[i].Value;
+                StaticMod mod = dict[i].Value;
 
                 if (index != -1 && index == i)
                     Assert.IsTrue(mod.Equivalent(modToMatch));

@@ -360,10 +360,12 @@ namespace pwiz.Skyline.Model
 
         public void AddHeavyModifications(IEnumerable<StaticMod> mods)
         {
-            AddModifications(mods, _modMasses);
+            var modsArray = mods.ToArray(); // Avoid multiple iteration
+
+            AddModifications(modsArray, _modMasses);
 
             _modMassesHeavy = new ModMasses();
-            AddModifications(mods, _modMassesHeavy);
+            AddModifications(modsArray, _modMassesHeavy);
         }
 
         private void AddModifications(IEnumerable<StaticMod> mods, ModMasses modMasses)

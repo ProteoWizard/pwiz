@@ -97,7 +97,6 @@ namespace pwiz.Skyline.Model.Results
             for (int iHeader = 0; iHeader < ChromGroupHeaderInfos.Count; iHeader++)
             {
                 var chromGroupInfo = chromGroups[iHeader];
-                MinimizedChromGroup minimizedChromGroup;
                 IList<TransitionGroupDocNode> transitionGroupDocNodes;
                 if (chromGroupInfo == null)
                 {
@@ -112,7 +111,8 @@ namespace pwiz.Skyline.Model.Results
                 {
                     chromGroupInfo.ReadChromatogram(ChromatogramCache);
                 }
-                minimizedChromGroup = MinimizeChromGroup(settings, chromGroupInfo, transitionGroupDocNodes);
+                MinimizedChromGroup minimizedChromGroup = MinimizeChromGroup(settings,
+                    chromGroupInfo, transitionGroupDocNodes);
                 statisticsCollector.ProcessChromGroup(minimizedChromGroup);
                 if (progressCallback != null)
                 {
@@ -313,9 +313,9 @@ namespace pwiz.Skyline.Model.Results
 
         class StatisticsCollector
         {
-            public static readonly int CHROM_GROUP_HEADER_INFO_SIZE;
-            public static readonly int PEAK_SIZE;
-            public static readonly int TRANSITION_SIZE;
+            private static readonly int CHROM_GROUP_HEADER_INFO_SIZE;
+            private static readonly int PEAK_SIZE;
+            private static readonly int TRANSITION_SIZE;
             static unsafe StatisticsCollector()
             {
                 CHROM_GROUP_HEADER_INFO_SIZE = sizeof(ChromGroupHeaderInfo);
@@ -323,10 +323,11 @@ namespace pwiz.Skyline.Model.Results
                 TRANSITION_SIZE = sizeof(ChromTransition);
             }
 
-            private Statistics.Replicate[] _replicates;
-            private int[] _fileIndexToReplicateIndex;
+            private readonly Statistics.Replicate[] _replicates;
+            private readonly int[] _fileIndexToReplicateIndex;
             private int _processedGroupCount;
-            public static long GetFileSize(ChromGroupHeaderInfo chromGroupHeaderInfo)
+
+            private static long GetFileSize(ChromGroupHeaderInfo chromGroupHeaderInfo)
             {
                 return CHROM_GROUP_HEADER_INFO_SIZE + chromGroupHeaderInfo.CompressedSize
                        + chromGroupHeaderInfo.NumPeaks * chromGroupHeaderInfo.NumTransitions * PEAK_SIZE
@@ -378,8 +379,8 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
 
-            public ChromCacheMinimizer ChromCacheMinimizer { get; private set; }
-            public SrmDocument Document { get { return ChromCacheMinimizer.Document; } }
+            private ChromCacheMinimizer ChromCacheMinimizer { get; set; }
+            private SrmDocument Document { get { return ChromCacheMinimizer.Document; } }
 
             internal void ProcessChromGroup(MinimizedChromGroup minimizedChromGroup)
             {
@@ -482,7 +483,7 @@ namespace pwiz.Skyline.Model.Results
                 int maxPeakIndex;
                 if (retainedPeakIndexes.Contains(originalHeader.MaxPeakIndex))
                 {
-                    maxPeakIndex = retainedPeakIndexes.Where(index => index < originalHeader.MaxPeakIndex).Count();
+                    maxPeakIndex = retainedPeakIndexes.Count(index => index < originalHeader.MaxPeakIndex);
                 }
                 else
                 {
@@ -496,17 +497,15 @@ namespace pwiz.Skyline.Model.Results
                 foreach (var originalIndex in minimizedChromGroup.RetainedTransitionIndexes)
                 {
                     _transitions.Add(_originalCache.GetTransition(originalIndex + originalHeader.StartTransitionIndex));
-                    int peakIndex = 0;
                     for (int originalPeakIndex = 0; originalPeakIndex < originalHeader.NumPeaks; originalPeakIndex ++)
                     {
                         if (!retainedPeakIndexes.Contains(originalPeakIndex))
-                        {
                             continue;
-                        }
-                        var originalPeak =
-                            _originalCache.GetPeak(originalHeader.StartPeakIndex + originalIndex*originalHeader.NumPeaks + originalPeakIndex);
+
+                        var originalPeak = _originalCache.GetPeak(originalHeader.StartPeakIndex +
+                                                                  originalIndex*originalHeader.NumPeaks +
+                                                                  originalPeakIndex);
                         _peaks.Add(originalPeak);
-                        peakIndex++;
                     }
                     intensities.Add(originalChromGroup.IntensityArray[originalIndex]
                         .Skip(minimizedChromGroup.OptimizedFirstScan)

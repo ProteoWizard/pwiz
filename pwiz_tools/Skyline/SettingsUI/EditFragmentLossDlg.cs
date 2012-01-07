@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -67,9 +68,9 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textLossFormula.Text = "";
                     textLossMonoMass.Text = (_loss.MonoisotopicMass != 0 ?
-                        _loss.MonoisotopicMass.ToString() : "");
+                        _loss.MonoisotopicMass.ToString(CultureInfo.CurrentCulture) : "");
                     textLossAverageMass.Text = (_loss.AverageMass != 0 ?
-                        _loss.AverageMass.ToString() : "");
+                        _loss.AverageMass.ToString(CultureInfo.CurrentCulture) : "");
                 }
             }
         }
@@ -160,8 +161,10 @@ namespace pwiz.Skyline.SettingsUI
                 textLossMonoMass.Enabled = textLossAverageMass.Enabled = false;
                 try
                 {
-                    textLossMonoMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula).ToString();
-                    textLossAverageMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula).ToString();
+                    textLossMonoMass.Text = SequenceMassCalc.ParseModMass(
+                        BioMassCalc.MONOISOTOPIC, formula).ToString(CultureInfo.CurrentCulture);
+                    textLossAverageMass.Text = SequenceMassCalc.ParseModMass(
+                        BioMassCalc.AVERAGE, formula).ToString(CultureInfo.CurrentCulture);
                     textLossFormula.ForeColor = Color.Black;
                 }
                 catch (ArgumentException)

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
@@ -143,8 +142,10 @@ namespace pwiz.Skyline.Model.V01
             return (MaxTransitions != null && count > 0 && count > MaxTransitions);
         }
 
+// ReSharper disable RedundantAssignment
         private void NextFile(string baseName, string suffix, ref TextWriter writer,
                               ref int fileCount, ref int transitionCount)
+// ReSharper restore RedundantAssignment
         {
             if (writer != null)
                 writer.Close();
@@ -152,10 +153,10 @@ namespace pwiz.Skyline.Model.V01
             fileCount++;
             // Make sure file names sort into the order in which they were
             // written.  This will help the results load in tree order.
-            if (suffix == null)
-                baseName = string.Format("{0}_{1:0000}", baseName, fileCount);
-            else
-                baseName = string.Format("{0}_{1:0000}_{2}", baseName, fileCount, suffix);
+            baseName = suffix == null
+                           ? string.Format("{0}_{1:0000}", baseName, fileCount)
+                           : string.Format("{0}_{1:0000}_{2}", baseName, fileCount, suffix);
+
             if (TestOutput == null)
                 writer = new StreamWriter(baseName + ".csv");
             else
@@ -171,10 +172,7 @@ namespace pwiz.Skyline.Model.V01
             StringBuilder sb = new StringBuilder();
             foreach (char c in namePart)
             {
-                if ("/\\:*?\"<>|".IndexOf(c) == -1)
-                    sb.Append(c);
-                else
-                    sb.Append('_');
+                sb.Append("/\\:*?\"<>|".IndexOf(c) == -1 ? c : '_');
             }
             return sb.ToString();
         }
@@ -201,7 +199,8 @@ namespace pwiz.Skyline.Model.V01
             writer.Write(separator);
             if (MethodType == ExportMethodType.Scheduled)
             {
-                Debug.Assert(transition.StartRT.HasValue && transition.StartRT.HasValue);
+                if (!transition.StartRT.HasValue || !transition.StopRT.HasValue)
+                    throw new InvalidOperationException("Attempt to write scheduling parameters failed.");
                 writer.Write(transition.StartRT.Value.ToString(_cultureInfo));
                 writer.Write(separator);
                 writer.Write(transition.StopRT.Value.ToString(_cultureInfo));
@@ -239,7 +238,8 @@ namespace pwiz.Skyline.Model.V01
                 writer.Write(Math.Round(DwellTime, 2).ToString(_cultureInfo));
             else
             {
-                Debug.Assert(peptide.PredictedRetentionTime.HasValue);
+                if (!peptide.PredictedRetentionTime.HasValue)
+                    throw new InvalidOperationException("Attempt to write scheduling parameters failed.");
                 writer.Write(peptide.PredictedRetentionTime.Value.ToString(_cultureInfo));
             }
             writer.Write(separator);

@@ -139,18 +139,19 @@ namespace pwiz.Skyline.Model
 
             foreach (var file in zip.EntryFileNames)
             {
+                if (file == null) continue; // ReSharper
+
                 // Shared files should not have subfolders.
                 if (Path.GetFileName(file) != file)
-                {
                     throw new IOException("The zip file is not a shared file.");
-                }
+
                 // Shared files must have exactly one Skyline Document(.sky).
-                if (file.EndsWith(SrmDocument.EXT))
-                {
-                    if (!string.IsNullOrEmpty(skylineFile))
-                        throw new IOException("The zip file is not a shared file. The file contains multiple Skyline documents.");
-                    skylineFile = file;
-                }
+                if (!file.EndsWith(SrmDocument.EXT)) continue;
+
+                if (!string.IsNullOrEmpty(skylineFile))
+                    throw new IOException("The zip file is not a shared file. The file contains multiple Skyline documents.");
+
+                skylineFile = file;
             }
 
             if (string.IsNullOrEmpty(skylineFile))

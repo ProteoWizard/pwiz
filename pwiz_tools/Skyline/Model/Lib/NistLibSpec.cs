@@ -158,9 +158,9 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (ReferenceEquals(rankId, NistLibSpecBase.PEP_RANK_TFRATIO))
                 return TFRatio;
-            else if (ReferenceEquals(rankId, LibrarySpec.PEP_RANK_TOTAL_INTENSITY))
+            if (ReferenceEquals(rankId, LibrarySpec.PEP_RANK_TOTAL_INTENSITY))
                 return TotalIntensity;
-            else if (ReferenceEquals(rankId, LibrarySpec.PEP_RANK_COPIES))
+            if (ReferenceEquals(rankId, LibrarySpec.PEP_RANK_COPIES))
                 return SpectrumCount;
 
             return base.GetRankValue(rankId);
@@ -171,11 +171,11 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 yield return new KeyValuePair<PeptideRankId, string>(NistLibSpecBase.PEP_RANK_TFRATIO,
-                    TFRatio.ToString());
+                    TFRatio.ToString(CultureInfo.CurrentCulture));
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_TOTAL_INTENSITY,
                     string.Format("{0:F0}", TotalIntensity));
                 yield return new KeyValuePair<PeptideRankId, string>(LibrarySpec.PEP_RANK_COPIES,
-                    SpectrumCount.ToString());
+                    SpectrumCount.ToString(CultureInfo.CurrentCulture));
             }
         }
 
@@ -555,7 +555,7 @@ namespace pwiz.Skyline.Model.Lib
                 return -1;
             if (libRevision == null)
                 return 1;
-            return string.Compare(Revision, libRevision);
+            return String.CompareOrdinal(Revision, libRevision);
         }
 
         // ReSharper disable UnusedMember.Local
@@ -1069,7 +1069,7 @@ namespace pwiz.Skyline.Model.Lib
 
         #region object overrides
 
-        public bool Equals(XHunterLibrary obj)
+        public bool Equals(NistLibraryBase obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
@@ -1083,7 +1083,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj as XHunterLibrary);
+            return Equals(obj as NistLibraryBase);
         }
 
         public override int GetHashCode()

@@ -31,7 +31,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private readonly IDictionary<string, DbIrtPeptide> _dictSequenceToPeptide;
         private IList<DbIrtPeptide> _standardPeptides;
 
-        public ChangeIrtPeptidesDlg(IEnumerable<DbIrtPeptide> irtPeptides)
+        public ChangeIrtPeptidesDlg(IList<DbIrtPeptide> irtPeptides)
         {
             _dictSequenceToPeptide = new Dictionary<string, DbIrtPeptide>();
             foreach (var peptide in irtPeptides)

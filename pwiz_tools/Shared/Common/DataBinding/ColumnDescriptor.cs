@@ -156,7 +156,7 @@ namespace pwiz.Common.DataBinding
             {
                 return ReflectedPropertyDescriptor.GetValue(parentComponent);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
                 return null;
             }

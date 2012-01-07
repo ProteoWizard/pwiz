@@ -164,10 +164,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             get
             {
-                return Equals(ColumnType, typeof (int)) ||
-                       Equals(ColumnType, typeof (double)) ||
-                       Equals(ColumnType, typeof (int?)) ||
-                       Equals(ColumnType, typeof (double?));
+                return ReferenceEquals(ColumnType, typeof (int)) ||
+                       ReferenceEquals(ColumnType, typeof(double)) ||
+                       ReferenceEquals(ColumnType, typeof(int?)) ||
+                       ReferenceEquals(ColumnType, typeof(double?));
             }
         }
     }

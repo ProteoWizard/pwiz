@@ -63,8 +63,8 @@ namespace pwiz.SkylineTestFunctional
             // Keep all peptides.
             PastePeptides(insertPeptidesDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
             Assert.AreEqual(10, insertPeptidesDlg.PeptideRowCount);
-            Assert.IsTrue(insertPeptidesDlg.PeptideRowsContainProtein(protein => string.IsNullOrEmpty(protein)));
-            Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainPeptide(peptide => string.IsNullOrEmpty(peptide)));
+            Assert.IsTrue(insertPeptidesDlg.PeptideRowsContainProtein(string.IsNullOrEmpty));
+            Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainPeptide(string.IsNullOrEmpty));
             OkDialog(insertPeptidesDlg, insertPeptidesDlg.OkDialog);
             // Test adding to document.
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 6, 9, 9, 28);
@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(insertPeptidesDlg1.ClearRows);
             // Filter unmatched.
             PastePeptides(insertPeptidesDlg1, BackgroundProteome.DuplicateProteinsFilter.AddToAll, false, true);
-            Assert.IsFalse(insertPeptidesDlg1.PeptideRowsContainProtein(protein => string.IsNullOrEmpty(protein)));
+            Assert.IsFalse(insertPeptidesDlg1.PeptideRowsContainProtein(string.IsNullOrEmpty));
             RunUI(insertPeptidesDlg1.ClearRows);
             // Filter peptides not matching settings.
             PastePeptides(insertPeptidesDlg1, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, false);

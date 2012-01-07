@@ -18,6 +18,7 @@
  */
 using System.Data;
 using System.Data.OleDb;
+using System.Globalization;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
@@ -130,10 +131,9 @@ namespace pwiz.SkylineTestTutorial
             FindNode(string.Format("{0:F03}",854.4));   // I18N
             WaitForGraphs();
             // Unfornunately, label hiding may mean that the selected ion is not labeled
-            if (SkylineWindow.GraphSpectrum.SelectedIonLabel != null)
-                Assert.IsTrue(SkylineWindow.GraphSpectrum.SelectedIonLabel.Contains("y7"));
-            else
-                Assert.IsTrue(SkylineWindow.GraphSpectrum.IonLabels.Contains(ionLabel => ionLabel.Contains("y7")));
+            Assert.IsTrue(SkylineWindow.GraphSpectrum.SelectedIonLabel != null
+                              ? SkylineWindow.GraphSpectrum.SelectedIonLabel.Contains("y7")
+                              : SkylineWindow.GraphSpectrum.IonLabels.Contains(ionLabel => ionLabel.Contains("y7")));
             RunUI(() =>
             {
                 SkylineWindow.GraphSpectrumSettings.ShowBIons = true;
@@ -166,7 +166,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.RemovePeak(SkylineWindow.SequenceTree.SelectedPath.GetPathTo((int)SrmDocument.Level.TransitionGroups),
                 ((TransitionGroupTreeNode)selNode.Parent).DocNode, selNode.DocNode);
                 Assert.IsTrue(Equals(SkylineWindow.SequenceTree.SelectedNode.StateImageIndex,
-                    (int)SequenceTree.StateImageId.no_peak) && SkylineWindow.SequenceTree.SelectedNode.Parent.Text.Contains((0.24).ToString()));
+                    (int)SequenceTree.StateImageId.no_peak) && SkylineWindow.SequenceTree.SelectedNode.Parent.Text.Contains((0.24).ToString(CultureInfo.CurrentCulture)));
             });
 
             // Adjusting Peak Boundaries to Exclude Interference, p. 14.
@@ -397,7 +397,8 @@ namespace pwiz.SkylineTestTutorial
                 PeptideTreeNode selNode = ((PeptideTreeNode)SkylineWindow.SequenceTree.SelectedNode);
                 IEnumerable<DocNode> choices = selNode.GetChoices(true);
                 Assert.IsTrue(choices.Contains(node =>
-                    ((TransitionGroupDocNode)node).PrecursorMz.ToString().Contains(expectedPrecursorMz.ToString())));
+                    ((TransitionGroupDocNode)node).PrecursorMz.ToString(CultureInfo.CurrentCulture)
+                        .Contains(expectedPrecursorMz.ToString(CultureInfo.CurrentCulture))));
                 selNode.Pick(choices, false, false);
             });
         }

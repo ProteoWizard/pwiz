@@ -247,9 +247,9 @@ namespace pwiz.Skyline.Model.Results
             }
 
             string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
-            var enumCachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>());
-            var dictCachedFiles = enumCachedFiles.ToDictionary(cachedFile => cachedFile.FilePath);
-            var enumCachedNames = enumCachedFiles.Select(cachedFile => SampleHelp.GetFileName(cachedFile.FilePath));
+            var cachedFiles = results.CachedFileInfos.Distinct(new PathComparer<ChromCachedFile>()).ToArray();
+            var dictCachedFiles = cachedFiles.ToDictionary(cachedFile => cachedFile.FilePath);
+            var enumCachedNames = cachedFiles.Select(cachedFile => SampleHelp.GetFileName(cachedFile.FilePath));
             var setCachedFileNames = new HashSet<string>(enumCachedNames);
             var chromatogramSets = new List<ChromatogramSet>();
             foreach (var chromSet in results.Chromatograms)
@@ -840,8 +840,10 @@ namespace pwiz.Skyline.Model.Results
                         _resultsClone._listPartialCaches = MakeReadOnly(listPartialCaches);
                     }
                     // Make sure none of the failed cache paths get tried again
-                    var sharedCachePaths = _resultsClone._listSharedCachePaths.Intersect(
-                        _resultsClone._listPartialCaches.Select(cache => cache.CachePath)).ToArray();
+                    var sharedCachePaths = _resultsClone._listPartialCaches != null
+                           ? _resultsClone._listSharedCachePaths.Intersect(
+                               _resultsClone._listPartialCaches.Select(cache => cache.CachePath)).ToArray()
+                           : _resultsClone._listSharedCachePaths.ToArray();
                     _resultsClone._listSharedCachePaths = MakeReadOnly(sharedCachePaths);
                 }
 

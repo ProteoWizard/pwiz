@@ -380,7 +380,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Table, Table) && Equals(other.Column, Column);
+            return ReferenceEquals(other.Table, Table) && Equals(other.Column, Column);
         }
 
         public override bool Equals(object obj)

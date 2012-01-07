@@ -1282,17 +1282,19 @@ namespace pwiz.Skyline.Controls
                 {
                     double regressionMz = settings.GetRegressionMz(SelectedPeptideDocNode,
                         SelectedTransitionGroupDocNode);
-                    if (optFunc is CollisionEnergyRegression)
+                    var ceRegression = optFunc as CollisionEnergyRegression;
+                    if (ceRegression != null)
                     {
                         int charge = SelectedTransitionGroupDocNode.TransitionGroup.PrecursorCharge;
                         row.Cells[OptCollisionEnergyColumn.Index].Value =
-                            ((CollisionEnergyRegression)optFunc).GetCollisionEnergy(
+                            ceRegression.GetCollisionEnergy(
                                 charge, regressionMz, chromInfo.OptimizationStep);
                     }
-                    if (optFunc is DeclusteringPotentialRegression)
+                    var dpRegression = optFunc as DeclusteringPotentialRegression;
+                    if (dpRegression != null)
                     {
                         row.Cells[OptDeclusteringPotentialColumn.Index].Value =
-                            ((DeclusteringPotentialRegression)optFunc).GetDeclustringPotential(
+                            dpRegression.GetDeclustringPotential(
                                 regressionMz, chromInfo.OptimizationStep);
                     }
                 }

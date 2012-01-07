@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Deployment.Application;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -909,10 +910,7 @@ namespace pwiz.Skyline
                 }
                 try
                 {
-                    if (string.IsNullOrEmpty(textCsv))
-                        Paste(text);
-                    else
-                        Paste(textCsv);
+                    Paste(string.IsNullOrEmpty(textCsv) ? text : textCsv);
                 }
                 catch (InvalidDataException x)
                 {
@@ -2075,7 +2073,7 @@ namespace pwiz.Skyline
                     // Return the focused control
                     return c;
                 }
-                else if (c.ContainsFocus)
+                if (c.ContainsFocus)
                 {
                     // If the focus is contained inside a control's children
                     // return the child
@@ -2174,7 +2172,8 @@ namespace pwiz.Skyline
                     string peptideSequence = null;
                     if (!backgroundProteome.IsNone)
                     {
-                        int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR);
+                        int ichPeptideSeparator = labelText.IndexOf(FastaSequence.PEPTIDE_SEQUENCE_SEPARATOR,
+                                                                    StringComparison.Ordinal);
                         string proteinName;
                         if (ichPeptideSeparator >= 0)
                         {
@@ -2374,7 +2373,7 @@ namespace pwiz.Skyline
                         Peptide peptide = (Peptide)srmNode.Model.Id;
                         allow = peptide.FastaSequence == null;
                     }
-                    if (!allow || (listDragNodes.Count > 0 && !Equals(srmNode.GetType(), listDragNodes[0].GetType())))
+                    if (!allow || (listDragNodes.Count > 0 && srmNode.GetType() != listDragNodes[0].GetType()))
                         return;
 
                     listDragNodes.Add(srmNode);
@@ -2494,7 +2493,7 @@ namespace pwiz.Skyline
                     node = node.Parent;
                 return node.NextNode;
             }
-            else if (isPeptide)
+            if (isPeptide)
             {
                 SrmTreeNode nodeTree = GetSrmTreeNodeAt(e.X, e.Y);
                 // Allow drop of peptide on peptide list node itself
@@ -2661,7 +2660,7 @@ namespace pwiz.Skyline
             int count = DocumentUI.GetCount(l);
             string tag;
             if (count == 0)
-                tag = count.ToString();
+                tag = count.ToString(CultureInfo.InvariantCulture);
             else
             {
                 int pos = 0;

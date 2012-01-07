@@ -282,7 +282,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         public static RetentionTimeRegression CalcRegression(string name,
-                                                             IEnumerable<RetentionScoreCalculatorSpec> calculators,
+                                                             IList<RetentionScoreCalculatorSpec> calculators,
                                                              IList<MeasuredRetentionTime> measuredPeptides,
                                                              out RetentionTimeStatistics statistics)
         {
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="calculatorSpec">The best calculator</param>
         /// <returns></returns>
         public static RetentionTimeRegression CalcRegression(string name,
-                                                             IEnumerable<RetentionScoreCalculatorSpec> calculators,
+                                                             IList<RetentionScoreCalculatorSpec> calculators,
                                                              IList<MeasuredRetentionTime> measuredPeptides,
                                                              RetentionTimeScoreCache scoreCache,
                                                              bool allPeptides,
@@ -553,12 +553,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
                     ref statisticsResult, ref outIndexes);
             }
-            else
-            {
-                return regressionNew.FindThreshold(threshold, precision, left, mid - 1,
-                    standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
-                    ref statisticsResult, ref outIndexes);
-            }
+
+            return regressionNew.FindThreshold(threshold, precision, left, mid - 1,
+                standardPeptides, variablePeptides, statisticsResult, calculator, scoreCache, isCanceled,
+                ref statisticsResult, ref outIndexes);
         }
 
         private RetentionTimeRegression RecalcRegression(int mid,
@@ -661,7 +659,7 @@ namespace pwiz.Skyline.Model.DocSettings
             new Dictionary<string, Dictionary<string, double>>();
 
         public RetentionTimeScoreCache(IEnumerable<IRetentionScoreCalculator> calculators,
-            IEnumerable<MeasuredRetentionTime> peptidesTimes, RetentionTimeScoreCache cachePrevious)
+            IList<MeasuredRetentionTime> peptidesTimes, RetentionTimeScoreCache cachePrevious)
         {
             foreach (var calculator in calculators)
             {

@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -52,7 +53,8 @@ namespace pwiz.Skyline.SettingsUI
             // Remove everything, and paste new contents
             grid.Rows.Clear();
 
-            DoPasteText(parent, textClip, grid.ColumnCount, validate, values => grid.Rows.Add(values));
+            DoPasteText(parent, textClip, grid.ColumnCount, validate,
+                values => grid.Rows.Add(values.Cast<object>().ToArray()));
 
             grid.ResumeLayout();
             return true;

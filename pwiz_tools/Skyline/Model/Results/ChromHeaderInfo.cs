@@ -95,11 +95,12 @@ namespace pwiz.Skyline.Model.Results
         public static unsafe ChromGroupHeaderInfo[] ReadArray(Stream stream, int count)
         {
             // Use fast version, if this is a file
-            if (stream is FileStream)
+            var fileStream = stream as FileStream;
+            if (fileStream != null)
             {
                 try
                 {
-                    return ReadArray(((FileStream)stream).SafeFileHandle, count);
+                    return ReadArray(fileStream.SafeFileHandle, count);
                 }
                 catch (BulkReadException)
                 {
@@ -152,8 +153,8 @@ namespace pwiz.Skyline.Model.Results
                     // reading the slow way.
                     if (cbReadActual == 0)
                         throw new BulkReadException();
-                    else
-                        throw new InvalidDataException();
+                    
+                    throw new InvalidDataException();
                 }
             }
 
@@ -209,11 +210,12 @@ namespace pwiz.Skyline.Model.Results
         public static unsafe ChromTransition[] ReadArray(Stream stream, int count)
         {
             // Use fast version, if this is a file
-            if (stream is FileStream)
+            var fileStream = stream as FileStream;
+            if (fileStream != null)
             {
                 try
                 {
-                    return ReadArray(((FileStream)stream).SafeFileHandle, count);
+                    return ReadArray(fileStream.SafeFileHandle, count);
                 }
                 catch (BulkReadException)
                 {
@@ -268,8 +270,8 @@ namespace pwiz.Skyline.Model.Results
                     // reading the slow way.
                     if (cbReadActual == 0)
                         throw new BulkReadException();
-                    else
-                        throw new InvalidDataException();                    
+                    
+                    throw new InvalidDataException();
                 }
             }
 
@@ -303,7 +305,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Product.ToString();
+            return Product.ToString(CultureInfo.CurrentCulture);
         }
 
         #endregion
@@ -436,11 +438,12 @@ namespace pwiz.Skyline.Model.Results
         public static unsafe ChromPeak[] ReadArray(Stream stream, int count)
         {
             // Use fast version, if this is a file
-            if (stream is FileStream)
+            var fileStream = stream as FileStream;
+            if (fileStream != null)
             {
                 try
                 {
-                    return ReadArray(((FileStream)stream).SafeFileHandle, count);                
+                    return ReadArray(fileStream.SafeFileHandle, count);                
                 }
                 catch (BulkReadException)
                 {
@@ -495,8 +498,8 @@ namespace pwiz.Skyline.Model.Results
                         // reading the slow way.
                         if (cbReadActual == 0)
                             throw new BulkReadException();
-                        else
-                            throw new InvalidDataException();                        
+                        
+                        throw new InvalidDataException();
                     }
                 }
             }

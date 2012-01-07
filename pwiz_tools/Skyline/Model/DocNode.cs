@@ -126,8 +126,8 @@ namespace pwiz.Skyline.Model
         {
             if (caseSensitive)
                 return GetDisplayText(settings).Contains(searchString);
-            else
-                return GetDisplayText(settings).ToLower().Contains(searchString);
+            
+            return GetDisplayText(settings).ToLower().Contains(searchString);
         }
 
         #region object overrides
@@ -301,9 +301,10 @@ namespace pwiz.Skyline.Model
                 DocNode nodeNext = FindNode(traversal.Next());
                 if (!traversal.HasNext)
                     return nodeNext;
-                else if (nodeNext is DocNodeParent)
-                    return ((DocNodeParent) nodeNext).FindNode(traversal);
-                return null;
+                var docNodeParent = nodeNext as DocNodeParent;
+                return docNodeParent != null
+                    ? docNodeParent.FindNode(traversal)
+                    : null;
             }
             return this;
         }
@@ -342,12 +343,13 @@ namespace pwiz.Skyline.Model
                 int index = FindNodeIndex(traversal.Next());
                 if (!traversal.HasNext)
                     return index;
-                else if (Children[index] is DocNodeParent)
+                var docNodeParent = Children[index] as DocNodeParent;
+                if (docNodeParent != null)
                 {
                     int countPreceding = 0;
                     for (int i = 0; i < index; i++)
                         countPreceding += ((DocNodeParent) Children[i]).GetCount(traversal.Remaining - 1);
-                    return countPreceding + ((DocNodeParent) Children[index]).FindNodeIndex(traversal);
+                    return countPreceding + docNodeParent.FindNodeIndex(traversal);
                 }
                 return -1;
             }
@@ -399,11 +401,12 @@ namespace pwiz.Skyline.Model
                 int[] positions = GetNodePositions(traversal.Next());
                 if (!traversal.HasNext)
                     return positions;
-                else if (Children[positions[0]] is DocNodeParent)
+                var docNodeParent = Children[positions[0]] as DocNodeParent;
+                if (docNodeParent != null)
                 {
                     // Get the positions of the next id in the path, and add them to
                     // the positions for the current id.
-                    var childPositions = ((DocNodeParent) Children[positions[0]]).GetNodePositions(traversal);
+                    var childPositions = docNodeParent.GetNodePositions(traversal);
                     for (int i = 0; i < childPositions.Length; i++)
                         positions[i + 1] += childPositions[i];
                     return positions;
@@ -834,8 +837,9 @@ namespace pwiz.Skyline.Model
                     continue;
 
                 var childNew = child;
-                if (child is DocNodeParent)
-                    childNew = ((DocNodeParent) child).RemoveAll(descendentsRemoveIds);
+                var docNodeParent = child as DocNodeParent;
+                if (docNodeParent != null)
+                    childNew = docNodeParent.RemoveAll(descendentsRemoveIds);
                 childrenNew.Add(childNew);
                 AddCounts(childNew, nodeCountStack);
             }
@@ -893,7 +897,7 @@ namespace pwiz.Skyline.Model
                 return ChangeChildrenChecked(listNewChildren);
             // Otherwise, if this node itself is to be preserved, then include all of
             // its children
-            else if (preserveIndexes.Contains(Id.GlobalIndex))
+            if (preserveIndexes.Contains(Id.GlobalIndex))
                 return this;
             // Skip this node and allow the parent to decide
             return null;

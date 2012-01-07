@@ -87,7 +87,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             get
             {
                 if (_originalPeptides == null)
-                    return AllPeptides.Count() > 0;
+                    return AllPeptides.Any();
 
                 var dictOriginalPeptides = _originalPeptides.ToDictionary(pep => pep.Id);
                 long countPeptides = 0;
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, String.Format("The file {0} could not be created.", path, x));
+                MessageDlg.Show(this, String.Format("The file {0} could not be created.\n{1}", path, x.Message));
             }
         }
 
@@ -245,7 +245,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             try
             {
                 IrtDb db = IrtDb.GetIrtDb(path, null); // TODO: LongWaitDlg
-                var dbPeptides = db.GetPeptides();
+                var dbPeptides = db.GetPeptides().ToArray();
 
                 LoadStandard(dbPeptides);
                 LoadLibrary(dbPeptides);
@@ -336,13 +336,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 var calculator = new RCalcIrt(textCalculatorName.Text, path);
 
-                IrtDb db;
-                if (File.Exists(path))
-                    db = IrtDb.GetIrtDb(path, null);   // CONSIDER: LongWaitDlg?
-                else
-                    db = IrtDb.CreateIrtDb(path);
+                IrtDb db = File.Exists(path)
+                               ? IrtDb.GetIrtDb(path, null)
+                               : IrtDb.CreateIrtDb(path);
 
-                db = db.UpdatePeptides(AllPeptides, _originalPeptides ?? new DbIrtPeptide[0]);
+                db = db.UpdatePeptides(AllPeptides.ToArray(), _originalPeptides ?? new DbIrtPeptide[0]);
 
                 Calculator = calculator.ChangeDatabase(db);
             }
@@ -368,7 +366,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // CONSIDER: Select the peptide row
                 if (!FastaSequence.IsExSequence(seqModified))
                 {
-                    MessageDlg.Show(this, string.Format("The value {0} is not a valid modified peptide sequence.", seqModified, tableName));
+                    MessageDlg.Show(this, string.Format("The value {0} is not a valid modified peptide sequence.", seqModified));
                     return false;
                 }
 
@@ -409,7 +407,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void Recalibrate()
         {
-            using (var recalibrateDlg = new RecalibrateIrtDlg(AllPeptides))
+            using (var recalibrateDlg = new RecalibrateIrtDlg(AllPeptides.ToArray()))
             {
                 if (recalibrateDlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -421,7 +419,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         private void btnPeptides_Click(object sender, EventArgs e)
         {
-            using (var changeDlg = new ChangeIrtPeptidesDlg(AllPeptides))
+            using (var changeDlg = new ChangeIrtPeptidesDlg(AllPeptides.ToArray()))
             {
                 if (changeDlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -634,7 +632,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                     catch (Exception x)
                     {
-                        MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to add results from current document.\n{1}", x.Message));
+                        MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to add results from current document.\n{0}", x.Message));
                         return;
                     }
                 }
@@ -1069,7 +1067,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 try
                 {
                     // Add the new peptides to the library list
-                    foreach (var peptide in libraryPeptidesNew)
+                    foreach (var peptide in listPeptidesNew)
                     {
                         int peptideIndex;
                         if (!dictLibraryIndices.TryGetValue(peptide.PeptideModSeq, out peptideIndex))

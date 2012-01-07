@@ -123,7 +123,9 @@ namespace pwiz.ProteomeDatabase.API
 
         public int CompareTo(Protein other)
         {
+// ReSharper disable StringCompareToIsCultureSpecific
             return Name.CompareTo(other.Name);
+// ReSharper restore StringCompareToIsCultureSpecific
         }
     }
 

@@ -223,7 +223,7 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(_yeastDoc.Peptides.Contains(nodePep => nodePep.HasVariableMods));
         }
 
-        private static SrmDocument ChangePeptideModifications(SrmDocument doc, IEnumerable<TypedModifications> typedHeavyMods)
+        private static SrmDocument ChangePeptideModifications(SrmDocument doc, IList<TypedModifications> typedHeavyMods)
         {
             var settingsNew =
                 doc.Settings.ChangePeptideModifications(mods => new PeptideModifications(mods.StaticModifications,

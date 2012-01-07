@@ -258,7 +258,7 @@ namespace pwiz.SkylineTest.Results
                 {
                     float? ratioGroup = nodeGroupHeavy.Results[0][0].Ratio;
                     Assert.IsTrue(ratioGroup.HasValue, "Group ratio removed with transition ratios");
-                    Assert.AreEqual(ratioStart ?? 0.0, ratioGroup ?? 0.0, 0.1,
+                    Assert.AreEqual(ratioStart.Value, ratioGroup.Value, 0.1,
                                     "Unexpected group ratio change by more than 0.1");
                 }
                 else

@@ -262,11 +262,9 @@ namespace pwiz.ProteomeDatabase.API
         }
         public Digestion Digest(IProtease protease, ProgressMonitor progressMonitor)
         {
-            DbDigestion dbDigestion;
-            List<DbProtein> proteins;
             using (ISession session = OpenWriteSession())
             {
-                dbDigestion = GetDbDigestion(protease.Name);
+                DbDigestion dbDigestion = GetDbDigestion(protease.Name);
                 HashSet<string> existingSequences = new HashSet<string>();
                 using (var transaction = session.BeginTransaction())
                 {
@@ -303,7 +301,7 @@ namespace pwiz.ProteomeDatabase.API
                     {
                         return null;
                     }
-                    proteins = new List<DbProtein>();
+                    List<DbProtein> proteins = new List<DbProtein>();
                     session.CreateCriteria(typeof(DbProtein)).List(proteins);
                     Dictionary<String, long> digestedPeptideIds
                         = new Dictionary<string, long>();

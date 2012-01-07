@@ -161,7 +161,7 @@ namespace pwiz.Common.Controls
                                 continue;
                             }
                             var strValue = cell.Value.ToString();
-                            if (strValue.IndexOf(text) >= 0)
+                            if (strValue.IndexOf(text, StringComparison.Ordinal) >= 0)
                             {
                                 filteredRowIndexes.Add(rowIndex);
                                 visible = true;

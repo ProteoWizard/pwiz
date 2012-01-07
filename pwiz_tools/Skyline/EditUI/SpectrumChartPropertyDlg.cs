@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
@@ -36,8 +37,8 @@ namespace pwiz.Skyline.EditUI
 
             _helper = new MessageBoxHelper(this);
 
-            textLineWidth.Text = Settings.Default.SpectrumLineWidth.ToString();
-            textFontSize.Text = Settings.Default.SpectrumFontSize.ToString();
+            textLineWidth.Text = Settings.Default.SpectrumLineWidth.ToString(CultureInfo.CurrentCulture);
+            textFontSize.Text = Settings.Default.SpectrumFontSize.ToString(CultureInfo.CurrentCulture);
         }
 
         protected override void OnClosing(CancelEventArgs e)

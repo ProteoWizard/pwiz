@@ -19,7 +19,7 @@ namespace pwiz.Skyline.Alerts
             SetLibraryLinks(libraryDetails);
 
             // list of data files, if available
-            if(libraryDetails.DataFiles.Count() > 0)
+            if(libraryDetails.DataFiles.Any())
             {
                 SetDataFileList(libraryDetails);
                 textBoxDataFiles.Show();
@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Alerts
         {
             linkSpecLibLinks.Text = "";
 
-            if(libraryDetails.LibLinks.Count() > 0)
+            if(libraryDetails.LibLinks.Any())
             {
                 string labelStr = libraryDetails.LibLinks.Count() == 1 ? "Library source: " : "Library sources: ";
 
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Alerts
 
         private void SetDataFileList(LibraryDetails libraryDetails)
         {
-            if(libraryDetails.DataFiles.Count() == 0)
+            if(!libraryDetails.DataFiles.Any())
                 return;
 
             var fileList = new StringBuilder();
@@ -85,7 +85,7 @@ namespace pwiz.Skyline.Alerts
             {
                 detailsText += string.Format(("Matched spectra: {0}\n"), libraryDetails.TotalPsmCount.ToString(numFormat));
             }
-            if (libraryDetails.DataFiles.Count() > 0)
+            if (libraryDetails.DataFiles.Any())
             {
                 detailsText += string.Format(("Data files: {0}\n"), libraryDetails.DataFiles.Count());
             }
@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Alerts
 
             // Display the appropriate link based on the value of the 
             // LinkData property of the Link object.
-            string target = e.Link.LinkData as string;
+            string target = e.Link.LinkData.ToString();
 
             System.Diagnostics.Process.Start(target);
         }

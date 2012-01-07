@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
@@ -31,8 +32,8 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
-            textLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString();
-            textFontSize.Text = Settings.Default.ChromatogramFontSize.ToString();
+            textLineWidth.Text = Settings.Default.ChromatogramLineWidth.ToString(CultureInfo.CurrentCulture);
+            textFontSize.Text = Settings.Default.ChromatogramFontSize.ToString(CultureInfo.CurrentCulture);
 
             if (Settings.Default.ChromatogramTimeRange == 0)
             {
@@ -41,10 +42,10 @@ namespace pwiz.Skyline.EditUI
             }
 
             cbRelative.Checked = Settings.Default.ChromatogramTimeRangeRelative;
-            textTimeRange.Text = Settings.Default.ChromatogramTimeRange.ToString();
+            textTimeRange.Text = Settings.Default.ChromatogramTimeRange.ToString(CultureInfo.CurrentCulture);
 
             if (Settings.Default.ChromatogramMaxIntensity != 0)
-                textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString();
+                textMaxIntensity.Text = Settings.Default.ChromatogramMaxIntensity.ToString(CultureInfo.CurrentCulture);
         }
 
         public void OkDialog()

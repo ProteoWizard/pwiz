@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.Skyline.Util;
 
@@ -119,7 +120,7 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            return GlobalIndex.ToString();
+            return GlobalIndex.ToString(CultureInfo.InvariantCulture);
         }
 
         #endregion

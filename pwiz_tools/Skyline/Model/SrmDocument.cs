@@ -862,7 +862,7 @@ namespace pwiz.Skyline.Model
             if (mods != null)
             {
                 mods = mods.ChangeGlobalMods(listGlobalStaticMods, listGlobalHeavyMods,
-                    pepMods.GetHeavyModificationTypes());
+                    pepMods.GetHeavyModificationTypes().ToArray());
             }
             // If modifications have changed, update the peptide.
             var modsPep = nodePeptide.ExplicitMods;
@@ -1770,7 +1770,10 @@ namespace pwiz.Skyline.Model
             }
             while (reader.IsStartElement(EL.annotation))
             {
-                annotations[reader.GetAttribute(ATTR.name)] = reader.ReadElementString();
+                string name = reader.GetAttribute(ATTR.name);
+                if (name == null)
+                    throw new InvalidDataException("Annotation found without name.");
+                annotations[name] = reader.ReadElementString();
             }
 
             return note != null || annotations.Count > 0

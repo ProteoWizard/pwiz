@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -65,8 +66,8 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = "";
                     gridRegression.Rows.Clear();
-                    textStepSize.Text = CollisionEnergyRegression.DEFAULT_STEP_SIZE.ToString();
-                    textStepCount.Text = CollisionEnergyRegression.DEFAULT_STEP_COUNT.ToString();
+                    textStepSize.Text = CollisionEnergyRegression.DEFAULT_STEP_SIZE.ToString(CultureInfo.CurrentCulture);
+                    textStepCount.Text = CollisionEnergyRegression.DEFAULT_STEP_COUNT.ToString(CultureInfo.CurrentCulture);
                 }
                 else
                 {
@@ -74,11 +75,12 @@ namespace pwiz.Skyline.SettingsUI
                     gridRegression.Rows.Clear();
                     foreach (ChargeRegressionLine r in _regression.Conversions)
                     {
-                        gridRegression.Rows.Add(r.Charge.ToString(),
-                            r.Slope.ToString(), r.Intercept.ToString());
+                        gridRegression.Rows.Add(r.Charge.ToString(CultureInfo.CurrentCulture),
+                                                r.Slope.ToString(CultureInfo.CurrentCulture),
+                                                r.Intercept.ToString(CultureInfo.CurrentCulture));
                     }
-                    textStepSize.Text = _regression.StepSize.ToString();
-                    textStepCount.Text = _regression.StepCount.ToString();
+                    textStepSize.Text = _regression.StepSize.ToString(CultureInfo.CurrentCulture);
+                    textStepCount.Text = _regression.StepCount.ToString(CultureInfo.CurrentCulture);
                 }
             }
         }
@@ -234,12 +236,9 @@ namespace pwiz.Skyline.SettingsUI
 
         private bool ValidateRegressionCellValues(string[] values)
         {
-            try
-            {
-                // Parse charge
-                int.Parse(values[0].Trim());
-            }
-            catch (FormatException)
+            // Parse charge
+            int tempInt;
+            if (!int.TryParse(values[0].Trim(), out tempInt))
             {
                 string message = string.Format("The value {0} is not a valid charge.  " +
                     "Charges must be integer values between 1 and 5.", values[0]);
@@ -247,24 +246,17 @@ namespace pwiz.Skyline.SettingsUI
                 return false;
             }
 
-            try
-            {
-                // Parse slope
-                double.Parse(values[1].Trim());
-            }
-            catch (FormatException)
+            // Parse slope
+            double tempDouble;
+            if (!double.TryParse(values[1].Trim(), out tempDouble))
             {
                 string message = string.Format("The value {0} is not a valid slope.", values[1]);
                 MessageBox.Show(this, message, Program.Name);
                 return false;
             }
 
-            try
-            {
-                // Parse intercept
-                double.Parse(values[2].Trim());
-            }
-            catch (FormatException)
+            // Parse intercept
+            if (!double.TryParse(values[2].Trim(), out tempDouble))
             {
                 string message = string.Format("The value {0} is not a valid intercept.", values[2]);
                 MessageBox.Show(this, message, Program.Name);
@@ -307,9 +299,9 @@ namespace pwiz.Skyline.SettingsUI
                 var regressionLine = regressionLines[i];
                 if (regressionLine == null)
                     continue;
-                gridRegression.Rows.Add(new[]
+                gridRegression.Rows.Add(new object[]
                                             {
-                                                i.ToString(),
+                                                i.ToString(CultureInfo.CurrentCulture),
                                                 string.Format("{0:F04}", regressionLine.Slope),
                                                 string.Format("{0:F04}", regressionLine.Intercept)
                                             });

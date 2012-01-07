@@ -105,10 +105,7 @@ namespace pwiz.Common.SystemUtil
             // Handle progress zooming, if a range of progress has been zoomed
             if (PercentZoomEnd != 0)
             {
-                if (prop == 100)
-                    prop = PercentZoomEnd;
-                else
-                    prop = ZoomedToPercent(prop);
+                prop = prop == 100 ? PercentZoomEnd : ZoomedToPercent(prop);
             }
             // Allow -1 as a way of allowing a looping progress indicator
             if (prop != -1)

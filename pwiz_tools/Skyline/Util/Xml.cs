@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Util
 
         protected virtual IXmlElementHelper<TValue>[] GetXmlElementHelpers()
         {
-            return new [] { new XmlElementHelper<TValue>() };
+            return new IXmlElementHelper<TValue>[] { new XmlElementHelper<TValue>() };
         }
 
         #endregion // IXmlSerializable Members
@@ -154,7 +154,9 @@ namespace pwiz.Skyline.Util
 
         public static void WriteAttributeString(this XmlWriter writer, Enum name, string value)
         {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
             writer.WriteAttributeString(name.ToString(), value);
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
         }
 
         public static void WriteAttributeNullable<TStruct>(this XmlWriter writer, Enum name, TStruct? value)
@@ -236,7 +238,9 @@ namespace pwiz.Skyline.Util
 
         public static void WriteStartElement(this XmlWriter writer, Enum name)
         {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
             writer.WriteStartElement(name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
         }
 
         public static void WriteAttributeNullable<TStruct>(this XmlWriter writer, string name, TStruct? value)
@@ -359,7 +363,9 @@ namespace pwiz.Skyline.Util
 
         public static void WriteElement(this XmlWriter writer, Enum name, IXmlSerializable child)
         {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
             writer.WriteElement(name.ToString(), child);
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
         }
 
         public static void WriteElement(this XmlWriter writer, string name, IXmlSerializable child)
@@ -427,7 +433,9 @@ namespace pwiz.Skyline.Util
 
         public static string GetAttribute(this XmlReader reader, Enum name)
         {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
             return reader.GetAttribute(name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
         }
 
         public static TOutput? GetAttribute<TOutput>(this XmlReader reader, Enum name,
@@ -660,12 +668,16 @@ namespace pwiz.Skyline.Util
 
         public static bool IsStartElement(this XmlReader reader, Enum name)
         {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
             return reader.IsStartElement(name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
         }
 
         public static void ReadStartElement(this XmlReader reader, Enum name)
         {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
             reader.ReadStartElement(name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
         }
 
         public static double ReadElementContentAsDoubleInvariant(this XmlReader reader)
@@ -735,7 +747,9 @@ namespace pwiz.Skyline.Util
         public static TObj DeserializeElement<TObj>(this XmlReader reader, Enum name)
             where TObj : class
         {
+// ReSharper disable SpecifyACultureInStringConversionExplicitly
             var helper = new XmlElementHelper<TObj>(name == null ? null : name.ToString());
+// ReSharper restore SpecifyACultureInStringConversionExplicitly
             if (reader.IsStartElement(helper.ElementNames))
                 return helper.Deserialize(reader);
             return null;
@@ -755,8 +769,8 @@ namespace pwiz.Skyline.Util
                 {
                     if (column == 0 && IsSmallAndWhiteSpace(path))
                         return "The file is empty.\nIt may have been truncated during file transfer.";
-                    else
-                        return "The file does not appear to be valid XML.";
+                    
+                    return "The file does not appear to be valid XML.";
                 }
             }
             while (x != null)
@@ -888,7 +902,7 @@ namespace pwiz.Skyline.Util
 //            {
                 return (TElem)typeof(TElem).InvokeMember("Deserialize",
                                                  BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod,
-                                                 null, null, new[] { reader });
+                                                 null, null, new object[] { reader });
 //            }
 //            catch (TargetInvocationException)
 //            {

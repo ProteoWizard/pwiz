@@ -785,7 +785,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 StartFragmentFinder result;
                 if (FragmentStartFinders.TryGetValue(finderName, out result))
                     return result;
-                else if (_mapLegacyStartNames.TryGetValue(finderName, out finderName))
+                if (_mapLegacyStartNames.TryGetValue(finderName, out finderName))
                     return FragmentStartFinders[finderName];
             }
             return null;
@@ -834,7 +834,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 EndFragmentFinder result;
                 if (FragmentEndFinders.TryGetValue(finderName, out result))
                     return result;
-                else if (_mapLegacyEndNames.TryGetValue(finderName, out finderName))
+                if (_mapLegacyEndNames.TryGetValue(finderName, out finderName))
                     return FragmentEndFinders[finderName];
             }
             return null;
@@ -906,8 +906,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 if (Transition.IsNTerminal(type))
                     return Math.Min(_ordinal, length) - 1;
-                else
-                    return Math.Max(0, length - _ordinal);
+                
+                return Math.Max(0, length - _ordinal);
             }
 
             #endregion
@@ -969,26 +969,24 @@ namespace pwiz.Skyline.Model.DocSettings
                     }
                     return length - 1;
                 }
-                else
+
+                for (int i = length - 1; i >= 0; i--)
                 {
-                    for (int i = length - 1; i >= 0; i--)
+                    if (SequenceMassCalc.GetMZ(masses[(int)type, i], charge) > thresholdMz)
                     {
-                        if (SequenceMassCalc.GetMZ(masses[(int)type, i], charge) > thresholdMz)
+                        int indexRet;
+                        do
                         {
-                            int indexRet;
-                            do
-                            {
-                                indexRet = Math.Max(0, Math.Min(length - 1, i - offset));
-                                offset--;
-                            }
-                            // Be sure not to start with a m/z value inside the exclusion window
-                            while (precursorMzWindow > 0 && offset < 0 && i - offset < length &&
-                                Math.Abs(SequenceMassCalc.GetMZ(masses[(int)type, indexRet], charge) - precursorMz)*2 < precursorMzWindow);
-                            return indexRet;
+                            indexRet = Math.Max(0, Math.Min(length - 1, i - offset));
+                            offset--;
                         }
+                            // Be sure not to start with a m/z value inside the exclusion window
+                        while (precursorMzWindow > 0 && offset < 0 && i - offset < length &&
+                               Math.Abs(SequenceMassCalc.GetMZ(masses[(int)type, indexRet], charge) - precursorMz)*2 < precursorMzWindow);
+                        return indexRet;
                     }
-                    return 0;
                 }
+                return 0;
             }
 
             #endregion
@@ -1023,8 +1021,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 int end = length - 1;
                 if (Transition.IsNTerminal(type))
                     return Math.Max(0, end - _offset);
-                else
-                    return Math.Min(end, _offset);
+                
+                return Math.Min(end, _offset);
             }
 
             #endregion
@@ -1053,8 +1051,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 if (Transition.IsNTerminal(type))
                     return Math.Min(start + _count, length) - 1;
-                else
-                    return Math.Max(0, start - _count + 1);                
+                
+                return Math.Max(0, start - _count + 1);
             }
 
             #endregion

@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestUtil
                     if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://"))
                     {
                         string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder), "Downloads");
+                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? "", "Downloads");
                         string tutorialsFolder = Path.Combine(downloadsFolder, "Tutorials");
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
                         string zipFilePath = Path.Combine(tutorialsFolder, fileName);

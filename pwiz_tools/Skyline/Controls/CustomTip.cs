@@ -590,10 +590,9 @@ namespace pwiz.Skyline.Controls
 
         private void PerformWmNcCalcSize(ref Message m)
         {
-            RECT rect1;
             if (m.WParam == User32.FALSE)
             {
-                rect1 = (RECT) m.GetLParam(typeof(RECT));
+                RECT rect1 = (RECT) m.GetLParam(typeof(RECT));
                 Rectangle rectProposed = rect1.Rectangle;
                 OnNcCalcSize(ref rectProposed);
                 rect1 = RECT.FromRectangle(rectProposed);

@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
@@ -14,11 +15,11 @@ namespace pwiz.Skyline.EditUI
 
             cbDecimalCvs.Checked = Settings.Default.PeakDecimalCv;
             if (Settings.Default.PeakTimeMax != 0)
-                textMaxTime.Text = Settings.Default.PeakTimeMax.ToString();
+                textMaxTime.Text = Settings.Default.PeakTimeMax.ToString(CultureInfo.CurrentCulture);
             if (Settings.Default.PeakTimeMin != 0)
-                textMinTime.Text = Settings.Default.PeakTimeMin.ToString();
+                textMinTime.Text = Settings.Default.PeakTimeMin.ToString(CultureInfo.CurrentCulture);
             if (Settings.Default.PeakTimeMaxCv != 0)
-                textMaxCv.Text = Settings.Default.PeakTimeMaxCv.ToString();
+                textMaxCv.Text = Settings.Default.PeakTimeMaxCv.ToString(CultureInfo.CurrentCulture);
         }
 
         public void OkDialog()
@@ -71,7 +72,7 @@ namespace pwiz.Skyline.EditUI
             double factor = (cbDecimalCvs.Checked ? 0.01 : 100);
             double maxCv;
             if (double.TryParse(textMaxCv.Text, out maxCv))
-                textMaxCv.Text = (maxCv*factor).ToString();
+                textMaxCv.Text = (maxCv * factor).ToString(CultureInfo.CurrentCulture);
         }
     }
 }

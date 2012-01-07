@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+
 using System.Collections.Generic;
 using System.ComponentModel;
 using pwiz.Common.SystemUtil;
@@ -25,8 +25,8 @@ namespace pwiz.Common.DataBinding.Controls
 {
     internal class ApplyRowFilterTask : MustDispose
     {
-        private RowItem[] _rows;
-        private PropertyDescriptor[] _properties;
+        private readonly RowItem[] _rows;
+        private readonly PropertyDescriptor[] _properties;
         public ApplyRowFilterTask(RowItem[] rows, PropertyDescriptor[] properties, string filterText, bool matchCase)
         {
             _rows = rows;

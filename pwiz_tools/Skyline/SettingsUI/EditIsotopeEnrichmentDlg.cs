@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -83,7 +84,7 @@ namespace pwiz.Skyline.SettingsUI
                             : BioMassCalc.GetIsotopeEnrichmentDefault(isotopeSymbol);
                     }
                     row.Cells[COL_ENRICHMENT].Value = enrichmentValue.HasValue
-                        ? (enrichmentValue * 100).ToString()
+                        ? (enrichmentValue.Value * 100).ToString(CultureInfo.CurrentCulture)
                         : string.Empty;
                 }
             }

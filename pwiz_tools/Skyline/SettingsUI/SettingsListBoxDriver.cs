@@ -62,7 +62,7 @@ namespace pwiz.Skyline.SettingsUI
             LoadList(Chosen);
         }
 
-        public void LoadList(IEnumerable<TItem> chosen)
+        public void LoadList(IList<TItem> chosen)
         {
             string selectedItemLast = null;
             if (ListBox.SelectedItem != null)
@@ -70,7 +70,7 @@ namespace pwiz.Skyline.SettingsUI
             LoadList(selectedItemLast, chosen);
         }
 
-        public void LoadList(string selectedItemLast, IEnumerable<TItem> chosen)
+        public void LoadList(string selectedItemLast, IList<TItem> chosen)
         {
             ListBox.BeginUpdate();
             ListBox.Items.Clear();

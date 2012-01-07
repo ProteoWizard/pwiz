@@ -364,7 +364,7 @@ namespace pwiz.Skyline.Controls
             _proteinMatcherLast = proteinMatchQuery;
         }
 
-        private void DisplayResultsNow(IEnumerable<ProteinMatch> matches)
+        private void DisplayResultsNow(IList<ProteinMatch> matches)
         {
             if (TextBox == null || TextBox.Parent == null)
             {
@@ -387,7 +387,7 @@ namespace pwiz.Skyline.Controls
             protein,
             peptide,
         }
-        public static IList<ListViewItem> CreateListViewItems(IEnumerable<ProteinMatch> matches, String searchText, ProteinMatchType matchTypes)
+        public static IList<ListViewItem> CreateListViewItems(IList<ProteinMatch> matches, String searchText, ProteinMatchType matchTypes)
         {
             var listItems = new List<ListViewItem>();
             foreach (var match in matches)

@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Skyline;
+using pwiz.Skyline.Model;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -25,15 +25,12 @@ namespace pwiz.SkylineTestUtil
     {
         public void AssertComplete()
         {
-            if (LastProgress != null)
-            {
-                if (LastProgress.IsError)
-                    throw LastProgress.ErrorException;
-                else if (LastProgress.IsCanceled)
-                    Assert.Fail("Loader cancelled");
-                else
-                    Assert.Fail("Unknown progress state");
-            }
+            if (LastProgress == null) return;
+            if (LastProgress.IsError)
+                throw LastProgress.ErrorException;
+            Assert.Fail(LastProgress.IsCanceled
+                            ? "Loader cancelled"
+                            : "Unknown progress state");
         }
     }
 }

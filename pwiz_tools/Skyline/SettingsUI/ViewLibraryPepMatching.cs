@@ -380,7 +380,7 @@ namespace pwiz.Skyline.SettingsUI
                     // then we don't touch this particular node.
                     if (!dictCopy.TryGetValue(key, out peptideMatch) ||
                         (nodePepGroup.IsPeptideList && 
-                        (peptideMatch.Proteins != null && peptideMatch.Proteins.Count() > 0))) 
+                        (peptideMatch.Proteins != null && peptideMatch.Proteins.Any()))) 
                         nodePeps.Add(nodePep);
                     else
                     {
@@ -443,10 +443,9 @@ namespace pwiz.Skyline.SettingsUI
                         // Change the selected path.
                         if (PeptideMatches.Count == 1)
                         {
-                            if (nodeGroupChargeId == null)
-                                selectedPath = new IdentityPath(new[] { nodePepGroup.Id, nodePepAdd.Id });
-                            else
-                                selectedPath = new IdentityPath(new[] { nodePepGroup.Id, nodePepAdd.Id, nodeGroupChargeId });                            
+                            selectedPath = nodeGroupChargeId == null
+                                                ? new IdentityPath(new[] { nodePepGroup.Id, nodePepAdd.Id })
+                                                : new IdentityPath(new[] { nodePepGroup.Id, nodePepAdd.Id, nodeGroupChargeId });
                         }
                         nodePeps.Add(nodePepAdd);
                         // Remove this peptide from the list of peptides we need to add to the document
@@ -558,7 +557,7 @@ namespace pwiz.Skyline.SettingsUI
                     var fastaSequence = peptideGroupDocNode.PeptideGroup as FastaSequence;
                     var peptideSequence = pepMatch.NodePep.Peptide.Sequence;
                     // ReSharper disable PossibleNullReferenceException
-                    var begin = fastaSequence.Sequence.IndexOf(peptideSequence);
+                    var begin = fastaSequence.Sequence.IndexOf(peptideSequence, StringComparison.Ordinal);
                     // ReSharper restore PossibleNullReferenceException
                     // Create a new PeptideDocNode using this peptide.
                     var newPeptide = new Peptide(fastaSequence, peptideSequence, begin, begin + peptideSequence.Length,
@@ -681,15 +680,13 @@ namespace pwiz.Skyline.SettingsUI
                 selectedPath = (listPeptides.Count == 1 ? new IdentityPath(nodePepGroupNew.Id, listPeptides[0].Id) : toPath);
                 return (SrmDocument) document.ReplaceChild(nodePepGroupNew.ChangeChildren(newChildren));   
             }  
-            else
-            {
-                nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(), "Library Peptides", "", listPeptides.ToArray());
-                IdentityPath nextAdd;
-                document = document.AddPeptideGroups(new[] { nodePepGroupNew }, true,
-                    toPath, out selectedPath, out nextAdd);
-                selectedPath = new IdentityPath(selectedPath, nodePepGroupNew.Children[0].Id);
-                return document;
-            }
+
+            nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(), "Library Peptides", "", listPeptides.ToArray());
+            IdentityPath nextAdd;
+            document = document.AddPeptideGroups(new[] { nodePepGroupNew }, true,
+                toPath, out selectedPath, out nextAdd);
+            selectedPath = new IdentityPath(selectedPath, nodePepGroupNew.Children[0].Id);
+            return document;
         }
 
         private static PeptideGroupDocNode FindPeptideGroupDocNode(SrmDocument document, String name)

@@ -59,14 +59,16 @@ namespace pwiz.Skyline.Util
             {
                 // Try to compare the items as numeric
                 decimal xd, yd;
-                if( Decimal.TryParse( xText, out xd ) && Decimal.TryParse( yText, out yd ) )
+                if(Decimal.TryParse(xText, out xd) && Decimal.TryParse(yText, out yd))
                 {
-                    compareResult = xd.CompareTo( yd );
+                    compareResult = xd.CompareTo(yd);
                 }
                 else
                 {
                     // compare the items as strings
-                    compareResult = xText.CompareTo( yText );
+// ReSharper disable StringCompareToIsCultureSpecific
+                    compareResult = xText.CompareTo(yText);
+// ReSharper restore StringCompareToIsCultureSpecific
                 }
             }
 

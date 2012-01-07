@@ -173,7 +173,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         break;
                     }
-                    else if (Helpers.RemoveRepeatedLabelText(XAxis.Scale.TextLabels, FirstDataIndex))
+                    if (Helpers.RemoveRepeatedLabelText(XAxis.Scale.TextLabels, FirstDataIndex))
                     {
                         maxWidth = MaxWidth(font, XAxis.Scale.TextLabels);
                         if (maxWidth <= dpAvailable)
@@ -182,7 +182,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            if (!ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _originalTextLabels))
+            if (XAxis.Scale.TextLabels != null && !ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _originalTextLabels))
                 _reducedTextLabels = XAxis.Scale.TextLabels.ToArray();
 
             XAxis.Scale.FontSpec.Size = pointSize;

@@ -52,11 +52,9 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_withMod.sky")));
 
-            SequenceTree sequenceTree;
-
             RunUI(() =>
             {
-                sequenceTree = SkylineWindow.SequenceTree;
+                SequenceTree sequenceTree = SkylineWindow.SequenceTree;
 
                 // Test single node copy.
                 sequenceTree.ExpandAll();
@@ -166,8 +164,8 @@ namespace pwiz.SkylineTestFunctional
             htmlSb.AppendLine();
             textSb.AppendLine();
 
-            string clipboardText;
-            string clipboardHtml;
+            string clipboardText = null;
+            string clipboardHtml = null;
 
             try
             {
@@ -177,7 +175,6 @@ namespace pwiz.SkylineTestFunctional
             catch (ExternalException)
             {
                 Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failure getting data from the clipboard."));
-                return;
             }
 
             Assert.AreEqual(textSb.ToString(), clipboardText);

@@ -126,8 +126,6 @@ namespace pwiz.Skyline.FileUI
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
-            string name;
-
             if (NamedPathSets == null)
             {
                 if (radioAddExisting.Checked)
@@ -156,14 +154,15 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
+                    string name;
                     if (!helper.ValidateNameTextBox(e, textName, out name))
                         return;
-                    else if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
+                    if (name.IndexOfAny(Path.GetInvalidFileNameChars()) != -1)
                     {
                         helper.ShowTextBoxError(e, textName, "A result name may not contain any of the characters '{0}'.", Path.GetInvalidFileNameChars());
                         return;
                     }
-                    else if (ResultsExist(name))
+                    if (ResultsExist(name))
                     {
                         helper.ShowTextBoxError(e, textName, "The specified name already exists for this document.");
                         return;
@@ -204,7 +203,7 @@ namespace pwiz.Skyline.FileUI
                         {
                             return;
                         }
-                        else if (result == DialogResult.Yes)
+                        if (result == DialogResult.Yes)
                         {
                             // Rename all the replicates to remove the specified prefix.
                             for (int i = 0; i < NamedPathSets.Length; i++)
@@ -256,10 +255,9 @@ namespace pwiz.Skyline.FileUI
             if (dlgOpen.ShowDialog(this) != DialogResult.OK)
                 return null;
 
-            if (!Equals(_documentSavedPath, dlgOpen.CurrentDirectory))
-                Settings.Default.SrmResultsDirectory = dlgOpen.CurrentDirectory;
-            else
-                Settings.Default.SrmResultsDirectory = "";
+            Settings.Default.SrmResultsDirectory = !Equals(_documentSavedPath, dlgOpen.CurrentDirectory)
+                                                       ? dlgOpen.CurrentDirectory
+                                                       : "";
             Settings.Default.SrmResultsSourceType = dlgOpen.SourceTypeName;
 
             string[] dataSources = dlgOpen.DataSources;
@@ -394,7 +392,7 @@ namespace pwiz.Skyline.FileUI
                     prefix = value;
                     continue;
                 }
-                else if (prefix == "")
+                if (prefix == "")
                 {
                     break;
                 }
@@ -483,10 +481,7 @@ namespace pwiz.Skyline.FileUI
                 comboName.Enabled = labelNameAdd.Enabled = false;
                 bool multiple = IsMultiple;
                 textName.Enabled = labelNameNew.Enabled = !multiple;
-                if (multiple)
-                    textName.Text = "";
-                else
-                    textName.Text = DefaultNewName;
+                textName.Text = multiple ? "" : DefaultNewName;
             }
 
             if (radioCreateMultipleMulti.Checked)

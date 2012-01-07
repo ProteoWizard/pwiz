@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model
 
         public double LostMass { get { return HasLoss ? Losses.Mass : 0; } }
 
-        public bool IsLossPossible(int maxLossMods, IEnumerable<StaticMod> modsLossAvailable)
+        public bool IsLossPossible(int maxLossMods, IList<StaticMod> modsLossAvailable)
         {
             if (HasLoss)
             {

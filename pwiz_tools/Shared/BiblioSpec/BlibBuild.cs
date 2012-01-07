@@ -32,7 +32,7 @@ namespace pwiz.BiblioSpec
 
     public sealed class BlibBuild
     {
-        public const string EXE_BLIB_BUILD = "BlibBuild";
+        private const string EXE_BLIB_BUILD = "BlibBuild";
         public const string EXT_SQLITE_JOURNAL = "-journal";
 
         private ReadOnlyCollection<string> _inputFiles;

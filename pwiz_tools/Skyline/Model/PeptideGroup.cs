@@ -228,7 +228,7 @@ namespace pwiz.Skyline.Model
                     return peptideDocNode;
             }
 
-            int begin = Sequence.IndexOf(peptideSequence);
+            int begin = Sequence.IndexOf(peptideSequence, StringComparison.Ordinal);
             if (begin < 0)
                 return null;
 

@@ -28,9 +28,11 @@ namespace pwiz.BiblioSpec
         public const string EXE_BLIB_FILTER = "BlibFilter";
         public bool Filter(string sourceFile, string destinationFile, IProgressMonitor progressMonitor, ref ProgressStatus status)
         {
-            var argv = new List<string>();
-            argv.Add("\"" + sourceFile + "\"");
-            argv.Add("\"" + destinationFile + "\"");
+            var argv = new List<string>
+                           {
+                               "\"" + sourceFile + "\"",
+                               "\"" + destinationFile + "\""
+                           };
 
             var psiBlibFilter = new ProcessStartInfo(EXE_BLIB_FILTER)
             {

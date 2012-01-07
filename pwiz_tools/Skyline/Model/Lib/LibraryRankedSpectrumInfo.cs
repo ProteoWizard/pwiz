@@ -224,7 +224,9 @@ namespace pwiz.Skyline.Model.Lib
 
         public IsotopeLabelType LabelType { get; private set; }
 
-        private static void FindIntensityCutoff(IEnumerable<SpectrumPeaksInfo.MI> listMI, float left, float right, int minPeaks, int calls, ref float cutoff, ref int len)
+// ReSharper disable ParameterTypeCanBeEnumerable.Local
+        private static void FindIntensityCutoff(IList<SpectrumPeaksInfo.MI> listMI, float left, float right, int minPeaks, int calls, ref float cutoff, ref int len)
+// ReSharper restore ParameterTypeCanBeEnumerable.Local
         {
             if (calls < 3)
             {
@@ -511,33 +513,31 @@ namespace pwiz.Skyline.Model.Lib
                         rp.matched = true;
                         return false;
                     }
-                    else
+                    
+                    // Avoid using the same predicted m/z on two different peaks
+                    if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
                     {
-                        // Avoid using the same predicted m/z on two different peaks
-                        if (predictedMz == ionMz || !rp.IsSeen(predictedMz))
-                        {
-                            rp.Seen(predictedMz);
+                        rp.Seen(predictedMz);
 
-                             // Avoid ranking precursor ions without losses, if the precursor isotopes will
-                             // not be taken from product ions
-                            if (!rp.excludePrecursorIsotopes || type != IonType.precursor || losses != null)
+                        // Avoid ranking precursor ions without losses, if the precursor isotopes will
+                        // not be taken from product ions
+                        if (!rp.excludePrecursorIsotopes || type != IonType.precursor || losses != null)
+                        {
+                            if (!filter || rp.filter.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
                             {
-                                if (!filter || rp.filter.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
-                                {
-                                    if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
-                                                         rp.rankTypes.Contains(type) &&
-                                                         (rp.rankCharges.Contains(charge) || type == IonType.precursor)))
-                                        Rank = rp.RankNext();
-                                }
+                                if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
+                                                     rp.rankTypes.Contains(type) &&
+                                                     (rp.rankCharges.Contains(charge) || type == IonType.precursor)))
+                                    Rank = rp.RankNext();
                             }
-                            IonType = type;
-                            Charge = charge;
-                            Ordinal = ordinal;
-                            Losses = losses;
-                            PredictedMz = predictedMz;
-                            rp.matched = (!rp.matchAll);
-                            return rp.matchAll;
                         }
+                        IonType = type;
+                        Charge = charge;
+                        Ordinal = ordinal;
+                        Losses = losses;
+                        PredictedMz = predictedMz;
+                        rp.matched = (!rp.matchAll);
+                        return rp.matchAll;
                     }
                 }
                 // Stop looking once the mass has been passed, unless there are losses to consider

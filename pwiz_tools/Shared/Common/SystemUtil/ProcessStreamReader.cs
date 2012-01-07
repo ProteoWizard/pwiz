@@ -69,9 +69,9 @@ namespace pwiz.Common.SystemUtil
                         _readLines.RemoveAt(0);
                         return line;
                     }
-                    else if (_readException != null)
+                    if (_readException != null)
                         throw _readException;
-                    else if (_isOutComplete && _isErrComplete)
+                    if (_isOutComplete && _isErrComplete)
                         return null;
 
                     Monitor.Wait(_readLines);

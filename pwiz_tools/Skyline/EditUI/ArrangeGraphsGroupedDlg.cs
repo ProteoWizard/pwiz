@@ -18,6 +18,7 @@
  */
 using System;
 using System.ComponentModel;
+using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
@@ -41,7 +42,7 @@ namespace pwiz.Skyline.EditUI
 
             _countGraphs = countGraphs;
 
-            textGroups.Text = Groups.ToString();
+            textGroups.Text = Groups.ToString(CultureInfo.CurrentCulture);
             if (GroupType == GroupGraphsType.distributed)
                 radioDistribute.Checked = true;
             comboSortOrder.SelectedItem = GroupOrder.ToString();
@@ -53,7 +54,7 @@ namespace pwiz.Skyline.EditUI
             get { return Settings.Default.ArrangeGraphsGroups; }
             set
             {
-                textGroups.Text = value.ToString();
+                textGroups.Text = value.ToString(CultureInfo.CurrentCulture);
                 Settings.Default.ArrangeGraphsGroups = value;
             }
         }

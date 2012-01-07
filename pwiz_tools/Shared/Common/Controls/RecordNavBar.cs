@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.Windows.Forms;
 
 namespace pwiz.Common.Controls
@@ -121,20 +122,15 @@ namespace pwiz.Common.Controls
             }
             int filteredRowCount = GetVisibleRowCount();
             int totalRowCount = DataGridView.Rows.Count;
-            if (filteredRowCount == totalRowCount)
-            {
-                lblFilteredFrom.Text = "";
-            }
-            else
-            {
-                lblFilteredFrom.Text = "(Filtered from " + totalRowCount + ")";
-            }
+            lblFilteredFrom.Text = filteredRowCount == totalRowCount
+                ? "" 
+                : string.Format("(Filtered from {0})", totalRowCount);
             int currentVisibleRowIndex = GetVisibleRowIndex(GetCurrentRowIndex());
             btnNavFirst.Enabled = btnNavPrev.Enabled = currentVisibleRowIndex > 0;
             btnNavNext.Enabled = btnNavLast.Enabled = currentVisibleRowIndex < GetVisibleRowCount() - 1;
             if (!tbxRecordNumber.Focused)
             {
-                tbxRecordNumber.Text = (currentVisibleRowIndex + 1) + " of " + filteredRowCount;
+                tbxRecordNumber.Text = string.Format("{0} of {1}", (currentVisibleRowIndex + 1), filteredRowCount);
             }
         }
 
@@ -227,7 +223,7 @@ namespace pwiz.Common.Controls
         private void tbxRecordNumber_Enter(object sender, EventArgs e)
         {
             int currentVisibleRowIndex = GetVisibleRowIndex(GetCurrentRowIndex());
-            tbxRecordNumber.Text = (currentVisibleRowIndex + 1).ToString();
+            tbxRecordNumber.Text = (currentVisibleRowIndex + 1).ToString(CultureInfo.InvariantCulture);
         }
 
         private void tbxRecordNumber_Leave(object sender, EventArgs e)

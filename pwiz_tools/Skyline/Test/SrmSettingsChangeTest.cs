@@ -222,7 +222,8 @@ namespace pwiz.SkylineTest
             // Exclude RP/KP
             docFasta2 = docFasta.ChangeSettings(settings.ChangePeptideFilter(
                 f => f.ChangeExclusions(new[] { exclusions["RP/KP"] })));
-            CheckPeptides(docFasta, docFasta2, node => node.Peptide.Sequence.IndexOf("RP") == -1 && node.Peptide.Sequence.IndexOf("KP") == -1);
+            CheckPeptides(docFasta, docFasta2, node => node.Peptide.Sequence.IndexOf("RP", StringComparison.Ordinal) == -1 &&
+                                                       node.Peptide.Sequence.IndexOf("KP", StringComparison.Ordinal) == -1);
 
             // Custom exclude ^Q*K$
             var excludeCustom = new PeptideExcludeRegex("Custom", "^Q.*K$");

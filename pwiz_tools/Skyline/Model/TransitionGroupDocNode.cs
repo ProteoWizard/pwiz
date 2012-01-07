@@ -346,8 +346,9 @@ namespace pwiz.Skyline.Model
         {
             var enumScheduleTimes = schedulingGroups.Select(nodeGroup =>
                     nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum))
-                .Where(scheduleTimes => scheduleTimes != null);
-            if (enumScheduleTimes.Count() < 2)
+                .Where(scheduleTimes => scheduleTimes != null)
+                .ToArray();
+            if (enumScheduleTimes.Length < 2)
                 return enumScheduleTimes.FirstOrDefault();
 
             return new ScheduleTimes

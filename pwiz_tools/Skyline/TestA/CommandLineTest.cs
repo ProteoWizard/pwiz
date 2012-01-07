@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -127,7 +129,7 @@ namespace pwiz.SkylineTestA
 
             //Before generating this report, check that it exists
             const string reportName = "Peptide Ratio Results";
-            var defaultReportSpecs = Settings.Default.ReportSpecList.GetDefaults();
+            var defaultReportSpecs = Settings.Default.ReportSpecList.GetDefaults().ToArray();
             Assert.IsNotNull(defaultReportSpecs.FirstOrDefault(r => r.Name.Equals(reportName)));
             Settings.Default.ReportSpecList = new ReportSpecList();
             Settings.Default.ReportSpecList.AddRange(defaultReportSpecs);
@@ -473,12 +475,12 @@ namespace pwiz.SkylineTestA
             }
 
             int count = 0;
-            int lastIndex = searchSpace.IndexOf(search);
+            int lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
             for (; !Equals(-1, lastIndex) && lastIndex + search.Length <= searchSpace.Length; count++)
             {
-                lastIndex = searchSpace.IndexOf(search);
+                lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
                 searchSpace = searchSpace.Substring(lastIndex + 1);
-                lastIndex = searchSpace.IndexOf(search);
+                lastIndex = searchSpace.IndexOf(search, StringComparison.Ordinal);
             }
 
             return count;
@@ -487,17 +489,20 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void ConsoleMultiReplicateImportTest()
         {
-            const string testZipPath = @"TestA\ImportAllCmdLineTest.zip";
+            string testZipPath = ExtensionTestContext.CanImportThermoRaw
+                                     ? @"TestA\ImportAllCmdLineTest.zip"
+                                     : @"TestA\ImportAllCmdLineTestMzml.zip";
+
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Contents:
             // ImportAllCmdLineTest
             //   -- REP01
-            //       -- CE_Vantage_15mTorr_0001_REP1_01.raw
-            //       -- CE_Vantage_15mTorr_0001_REP1_02.raw
+            //       -- CE_Vantage_15mTorr_0001_REP1_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
             //   -- REP02
-            //       -- CE_Vantage_15mTorr_0001_REP2_01.raw
-            //       -- CE_Vantage_15mTorr_0001_REP2_02.raw
+            //       -- CE_Vantage_15mTorr_0001_REP2_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
             //   -- 160109_Mix1_calcurve_070.mzML
             //   -- 160109_Mix1_calcurve_073.mzML
             //   -- 160109_Mix1_calcurve_071.raw
@@ -509,7 +514,8 @@ namespace pwiz.SkylineTestA
             var outPath2 = testFilesDir.GetTestPath("Imported_multiple2.sky");
             var outPath3 = testFilesDir.GetTestPath("Imported_multiple3.sky");
 
-            var rawPath = testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01.raw");
+            var rawPath = testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
+                ExtensionTestContext.ExtThermoRaw);
             
             // Test: Cannot use --import-file and --import-all options simultaneously
             var msg = RunCommand("--in=" + docPath,
@@ -517,9 +523,9 @@ namespace pwiz.SkylineTestA
                                  "--import-replicate-name=Unscheduled01",
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains("Error:"));
+            Assert.IsTrue(msg.Contains("Error:"), msg);
             // output file should not exist
-            Assert.IsTrue(!File.Exists(outPath1));
+            Assert.IsFalse(File.Exists(outPath1));
 
 
 
@@ -528,9 +534,9 @@ namespace pwiz.SkylineTestA
                              "--import-replicate-name=Unscheduled01",
                              "--import-all=" + testFilesDir.FullPath,
                              "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains("Error:"));
+            Assert.IsTrue(msg.Contains("Error:"), msg);
             // output file should not exist
-            Assert.IsTrue(!File.Exists(outPath1));
+            Assert.IsFalse(File.Exists(outPath1));
 
 
 
@@ -539,9 +545,9 @@ namespace pwiz.SkylineTestA
                                  "--import-file=" + rawPath,
                                  "--import-naming-pattern=prefix_(.*)",
                                  "--out=" + outPath1);
-            Assert.IsTrue(msg.Contains("Error:"));
+            Assert.IsTrue(msg.Contains("Error:"), msg);
             // output file should not exist
-            Assert.IsTrue(!File.Exists(outPath1));
+            Assert.IsFalse(File.Exists(outPath1));
 
 
 
@@ -552,8 +558,8 @@ namespace pwiz.SkylineTestA
                                  "--import-naming-pattern=",
                                  "--out=" + outPath1);
             // output file should not exist
-            Assert.IsTrue(!File.Exists(outPath1));
-            Assert.IsTrue(msg.Contains("Error: Regular expression '' does not have any groups."));
+            Assert.IsFalse(File.Exists(outPath1));
+            Assert.IsTrue(msg.Contains("Error: Regular expression '' does not have any groups."), msg);
 
 
 
@@ -564,7 +570,7 @@ namespace pwiz.SkylineTestA
                       "--out=" + outPath1);
             // output file should not exist
             Assert.IsTrue(!File.Exists(outPath1));
-            Assert.IsTrue(msg.Contains("Error: Regular expression 'invalid' does not have any groups."));
+            Assert.IsTrue(msg.Contains("Error: Regular expression 'invalid' does not have any groups."), msg);
 
 
 
@@ -576,17 +582,17 @@ namespace pwiz.SkylineTestA
                              "--import-naming-pattern=.*_(REP[0-9]+)_(.+)",
                              "--out=" + outPath1);
             Assert.IsFalse(File.Exists(outPath1));
-            Assert.IsTrue(msg.Contains("Error: Duplicate replicate name"));
+            Assert.IsTrue(msg.Contains("Error: Duplicate replicate name"), msg);
 
 
 
 
             // Test: Import files in the "REP01" directory; Use a naming pattern
-            RunCommand("--in=" + docPath,
+            msg = RunCommand("--in=" + docPath,
                              "--import-all=" + testFilesDir.GetTestPath("REP01"),
                              "--import-naming-pattern=.*_([0-9]+)",
                              "--out=" + outPath1);
-            Assert.IsTrue(File.Exists(outPath1));
+            Assert.IsTrue(File.Exists(outPath1), msg);
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath1);
             Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count);
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("01"));
@@ -599,11 +605,11 @@ namespace pwiz.SkylineTestA
             // Test: Import a single file
             // Import REP01\CE_Vantage_15mTorr_0001_REP1_01.raw;
             // Use replicate name "REP01"
-            RunCommand("--in=" + docPath,
+            msg = RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath,
                        "--import-replicate-name=REP01",
                        "--out=" + outPath2);
-            Assert.IsTrue(File.Exists(outPath2));
+            Assert.IsTrue(File.Exists(outPath2), msg);
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
             int initialFileCount = 0;
@@ -629,9 +635,12 @@ namespace pwiz.SkylineTestA
             msg = RunCommand("--in=" + outPath2,
                              "--import-all=" + testFilesDir.FullPath,
                              "--save");
-            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPath)));
-            Assert.IsTrue(msg.Contains("Note: The file has already been imported. Ignoring...."));
-            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)));
+            // ExtensionTestContext.ExtThermo raw uses different case from file on disk
+            // which happens to make a good test case.
+            string rawPathDisk = GetThermoDiskPath(rawPath);
+            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPathDisk)), msg);
+            Assert.IsTrue(msg.Contains("Note: The file has already been imported. Ignoring..."), msg);
+            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg);
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
             // count the number of files imported into the document
@@ -648,11 +657,13 @@ namespace pwiz.SkylineTestA
             doc.Settings.MeasuredResults.TryGetChromatogramSet("REP01", out chromatogramSet, out index);
             Assert.IsNotNull(chromatogramSet);
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Count() == 2);
-            chromatogramSet.MSDataFilePaths.Contains(rawPath);
-            chromatogramSet.MSDataFilePaths.Contains(
-                testFilesDir.GetTestPath(@"\REP01\CE_Vantage_15mTorr_0001_REP1_01.raw"));
-            chromatogramSet.MSDataFilePaths.Contains(
-                testFilesDir.GetTestPath(@"\REP01\CE_Vantage_15mTorr_0001_REP1_02.raw"));
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(rawPath));
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
+                testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
+                ExtensionTestContext.ExtThermoRaw)));
+            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
+                GetThermoDiskPath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" +
+                ExtensionTestContext.ExtThermoRaw))));
 
            
 
@@ -665,7 +676,7 @@ namespace pwiz.SkylineTestA
                        "--import-file=" + rawPath3,
                        "--import-replicate-name=REP01",
                        "--out=" + outPath3);
-            Assert.IsTrue(File.Exists(outPath3));
+            Assert.IsTrue(File.Exists(outPath3), msg);
             doc = ResultsUtil.DeserializeDocument(outPath3);
             Assert.AreEqual(1, doc.Settings.MeasuredResults.Chromatograms.Count);
             // Now import all files and sub-folders in test directory.
@@ -678,8 +689,15 @@ namespace pwiz.SkylineTestA
                 msg.Contains(
                     string.Format(
                         "Error: Replicate REP01 in the document has an unexpected file {0}",
-                        rawPath3)));
+                        rawPath3)), msg);
 
+        }
+
+        private string GetThermoDiskPath(string pathToRaw)
+        {
+            return ExtensionTestContext.CanImportThermoRaw
+                ? Path.ChangeExtension(pathToRaw, "raw")
+                : pathToRaw;
         }
     }
 }

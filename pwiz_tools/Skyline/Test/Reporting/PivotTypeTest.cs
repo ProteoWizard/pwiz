@@ -72,10 +72,10 @@ namespace pwiz.SkylineTest.Reporting
         private static void AssertValidProperty(Type type, String property)
         {
             Assert.IsNotNull(type.GetProperty(property),
-                "No such property " + property + " on type " + type);
+                             string.Format("No such property {0} on type {1}", property, type));
         }
 
-        private static void AssertValidProperties(Type type, ICollection<String> properties)
+        private static void AssertValidProperties(Type type, IEnumerable<string> properties)
         {
             foreach (String property in properties)
             {

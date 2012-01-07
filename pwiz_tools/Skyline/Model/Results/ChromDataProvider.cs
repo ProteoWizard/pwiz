@@ -856,16 +856,14 @@ namespace pwiz.Skyline.Model.Results
             int compare = CompareMz(precursorMz, _filterMzValues[mid].Q1, window);
             if (compare < 0)
                 return IndexOfFilter(precursorMz, window, left, mid - 1);
-            else if (compare > 0)
+            if (compare > 0)
                 return IndexOfFilter(precursorMz, window, mid + 1, right);
-            else
-            {
-                // Scan backward until the first matching element is found.
-                while (mid > 0 && CompareMz(precursorMz, _filterMzValues[mid - 1].Q1, window) == 0)
-                    mid--;
+            
+            // Scan backward until the first matching element is found.
+            while (mid > 0 && CompareMz(precursorMz, _filterMzValues[mid - 1].Q1, window) == 0)
+                mid--;
 
-                return mid;
-            }
+            return mid;
         }
 
         private static int CompareMz(double mz1, double mz2, double window)

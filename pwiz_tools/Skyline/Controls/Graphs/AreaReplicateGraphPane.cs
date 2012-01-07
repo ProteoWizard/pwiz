@@ -217,10 +217,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 normalizeData = AreaNormalizeToData.optimization;
             else if (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
             {
-                if (BarSettings.Type == BarType.Stack)
-                    normalizeData = AreaNormalizeToData.maximum_stack;
-                else
-                    normalizeData = AreaNormalizeToData.maximum;
+                normalizeData = BarSettings.Type == BarType.Stack
+                                    ? AreaNormalizeToData.maximum_stack
+                                    : AreaNormalizeToData.maximum;
             }
             else if(BarSettings.Type == BarType.PercentStack)
                 normalizeData = AreaNormalizeToData.total;
@@ -235,7 +234,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     AreaGraphController.AreaView != AreaNormalizeToView.area_ratio_view &&
                     !(optimizationPresent && displayType == DisplayTypeChrom.single))
             {
-                var displayTrans = GraphChromatogram.GetDisplayTransitions(parentGroupNode, displayType);
+                var displayTrans = GraphChromatogram.GetDisplayTransitions(parentGroupNode, displayType).ToArray();
                 bool isShowingMs = displayTrans.Any(nodeTran => nodeTran.IsMs1);
                 bool isShowingMsMs = displayTrans.Any(nodeTran => !nodeTran.IsMs1);
                 bool isFullScanMs = document.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
@@ -446,10 +445,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         YAxis.Scale.MaxAuto = true;
                     }
-                      if(AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view)
-                        YAxis.Title.Text = string.Format("Peak Area Ratio To {0}", standardType.Title);
-                    else
-                        YAxis.Title.Text = "Peak Area";
+                    YAxis.Title.Text = AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view
+                          ? string.Format("Peak Area Ratio To {0}", standardType.Title)
+                          : "Peak Area";
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -597,9 +595,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     // so return a selectionIndex of 0
                     if (GraphSummary.ActiveLibrary)
                         return 0;
-                    else
-                        // otherwise, offset the index by 1
-                        return base.SelectedIndex + 1;
+                    
+                    return base.SelectedIndex + 1;
                 }
                 return base.SelectedIndex;
             }
@@ -863,10 +860,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     double maxBarHeight = listTotals.Aggregate(Math.Max);
 
                     // Normalizes each non-missing point by max bar height
-                    if (_expectedVisible != AreaExpectedValue.none)
-                        NormalizeTo(maxBarHeight, firstColumnHeight);
-                    else
-                        NormalizeTo(maxBarHeight, 0);
+                    NormalizeTo(maxBarHeight, _expectedVisible != AreaExpectedValue.none
+                                                  ? firstColumnHeight
+                                                  : 0);
                 }
             }
 

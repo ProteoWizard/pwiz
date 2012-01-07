@@ -1,5 +1,6 @@
 /*
  * Original author: Tahmina Baker <tabaker .at. u.washington.edu>,
+ *                  Alana Killeen <killea .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *
  * Copyright 2010 University of Washington - Seattle, WA
@@ -26,7 +27,6 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using pwiz.Common.SystemUtil;
 using pwiz.MSGraph;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -580,7 +580,7 @@ namespace pwiz.Skyline.SettingsUI
                             foreach (var modInfo in modList)
                             {
                                 var smod = new StaticMod("temp",
-                                                         modInfo.ModifiedAminoAcid.ToString(),
+                                                         modInfo.ModifiedAminoAcid.ToString(CultureInfo.InvariantCulture),
                                                          null,
                                                          null,
                                                          LabelAtoms.None,
@@ -766,7 +766,7 @@ namespace pwiz.Skyline.SettingsUI
             menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
             if (chargesContextMenuItem.DropDownItems.Count == 0)
             {
-                chargesContextMenuItem.DropDownItems.AddRange(new[]
+                chargesContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
                         charge1ContextMenuItem,
                         charge2ContextMenuItem,

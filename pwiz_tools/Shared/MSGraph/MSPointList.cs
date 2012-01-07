@@ -35,8 +35,10 @@ namespace pwiz.MSGraph
         private double _scaledMax;
         private double _scaleRange;
         private double _scaleFactor;
+// ReSharper disable NotAccessedField.Local
         private int _scaledMinIndex;
         private int _scaledMaxIndex;
+// ReSharper restore NotAccessedField.Local
 
         public MSPointList( IPointList sourcePointList )
         {
@@ -194,7 +196,7 @@ namespace pwiz.MSGraph
 
             int min = 0;
             int max = _fullPointList.Count;
-            int best = max - 1;
+            int best;
             while (true)
             {
                 int i = (max + min) / 2;
@@ -226,7 +228,7 @@ namespace pwiz.MSGraph
 
             int min = 0;
             int max = _scaledPointList.Count;
-            int best = max - 1;
+            int best;
             while( true )
             {
                 int i = ( max + min ) / 2;
@@ -235,7 +237,8 @@ namespace pwiz.MSGraph
                     if( min == i )
                         return ( max == _scaledPointList.Count ? -1 : max );
                     min = i;
-                } else
+                }
+                else
                 {
                     best = i;
                     max = i;

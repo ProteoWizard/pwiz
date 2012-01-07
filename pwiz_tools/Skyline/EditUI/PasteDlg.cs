@@ -1119,38 +1119,20 @@ namespace pwiz.Skyline.EditUI
 
         private void gridViewPeptides_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
-            if (e.ColumnIndex == colPeptideSequence.Index)
-            {
-                _statementCompletionEditBox.MatchTypes = ProteinMatchType.sequence;
-            }
-            else
-            {
-                _statementCompletionEditBox.MatchTypes = 0;
-            }
+            _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colPeptideSequence.Index
+                ? ProteinMatchType.sequence : 0;
         }
 
         private void gridViewProteins_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
-            if (e.ColumnIndex == colProteinName.Index)
-            {
-                _statementCompletionEditBox.MatchTypes = ProteinMatchType.name | ProteinMatchType.description;
-            }
-            else
-            {
-                _statementCompletionEditBox.MatchTypes = 0;
-            }
+            _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colProteinName.Index
+                ? (ProteinMatchType.name | ProteinMatchType.description) : 0;
         }
 
         private void gridViewTransitionList_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
-            if (e.ColumnIndex == colTransitionPeptide.Index)
-            {
-                _statementCompletionEditBox.MatchTypes = ProteinMatchType.sequence;
-            }
-            else
-            {
-                _statementCompletionEditBox.MatchTypes = 0;
-            }
+            _statementCompletionEditBox.MatchTypes = e.ColumnIndex == colTransitionPeptide.Index
+                ? ProteinMatchType.sequence : 0;
         }
 
         private void gridViewProteins_KeyDown(object sender, KeyEventArgs e)

@@ -16,14 +16,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
-using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline
+namespace pwiz.Skyline.Model
 {
     public class MemoryDocumentContainer : IDocumentContainer
     {

@@ -104,7 +104,7 @@ namespace pwiz.Common.SystemUtil
             }
             // Make to complete the status, if the process succeeded, but never
             // printed 100% to the console
-            else if (percentLast < 100)
+            if (percentLast < 100)
             {
                 status = status.ChangePercentComplete(100);
                 if (status.SegmentCount > 0)

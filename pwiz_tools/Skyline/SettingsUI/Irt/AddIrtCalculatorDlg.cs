@@ -37,7 +37,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             InitializeComponent();
 
-            comboLibrary.Items.AddRange(calculators.ToArray());
+            comboLibrary.Items.AddRange(calculators.Cast<object>().ToArray());
             ComboHelper.AutoSizeDropDown(comboLibrary);
         }
 
@@ -60,8 +60,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (Source == IrtCalculatorSource.settings)
                     return (RCalcIrt)comboLibrary.SelectedItem;
-                else
-                    return new RCalcIrt("", textFilePath.Text);
+                return new RCalcIrt("", textFilePath.Text);
             }
         }
 

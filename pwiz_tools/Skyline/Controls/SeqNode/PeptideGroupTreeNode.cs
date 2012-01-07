@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
                 // If the next node is the same peptide and has explicit modifications,
                 // insert before it.
-                else if (Equals(nodePep.Peptide, nodeNext.Peptide) && nodeNext.HasExplicitMods)
+                if (Equals(nodePep.Peptide, nodeNext.Peptide) && nodeNext.HasExplicitMods)
                 {
                     return i;
                 }
@@ -261,7 +261,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     heightTotal += heightDesc;
                 }
 
-                IEnumerable<DocNode> peptidesChoices = GetChoices(true);
+                IList<DocNode> peptidesChoices = GetChoices(true).ToArray();
                 HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
 
                 // Make sure all chosen peptides get listed
@@ -303,18 +303,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                         RenderAALine(aa, peptideList, i, false, false,
                                      peptidesChoices, peptidesChosen, peptideSelected,
                                      g, rt, heightTotal, widthLine);
-                        if (i < aa.Length)
-                        {
-                            RenderAALine(aa, peptideList, i, true, true,
-                                         peptidesChoices, peptidesChosen, peptideSelected,
-                                         g, rt, heightTotal, widthLine);
-                        }
-                        else
-                        {
-                            RenderAALine(aa, peptideList, i, false, true,
-                                         peptidesChoices, peptidesChosen, peptideSelected,
-                                         g, rt, heightTotal, widthLine);
-                        }
+                        RenderAALine(aa, peptideList, i, i < aa.Length, true,
+                                     peptidesChoices, peptidesChosen, peptideSelected,
+                                     g, rt, heightTotal, widthLine);
                         heightTotal += heightLine;
                         break;
                     }
@@ -436,7 +427,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             IEnumerator<DocNode> peptides = GetChoices(true).GetEnumerator();
             HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
             PeptideDocNode nodePep = (PeptideDocNode)(peptides.MoveNext() ? peptides.Current : null);
-            bool chosen = (nodePep != null ? peptidesChosen.Contains(nodePep) : false);
+            bool chosen = (nodePep != null && peptidesChosen.Contains(nodePep));
 
             bool inPeptide = false;
             string aa = fastaSeq.Sequence;
@@ -454,10 +445,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                     {
                         if (!inPeptide)
                         {
-                            if (chosen)
-                                sb.Append("<font style=\"font-weight: bold; color: blue\">");
-                            else
-                                sb.Append("<font style=\"font-weight: bold\">");
+                            sb.Append(chosen
+                                          ? "<font style=\"font-weight: bold; color: blue\">"
+                                          : "<font style=\"font-weight: bold\">");
                             inPeptide = true;
                         }
                     }

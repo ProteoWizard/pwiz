@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Model.Results
         public bool IsCovered(IEnumerable<ChromatogramCache> caches)
         {
             // True if there are not any paths that are not covered
-            return !CachedFilePaths.Any(path => !IsCovered(path, caches));
+            return CachedFilePaths.All(path => IsCovered(path, caches));
         }
 
         /// <summary>
@@ -246,16 +246,14 @@ namespace pwiz.Skyline.Model.Results
             int compare = CompareMz(precursorMz, _chromatogramEntries[mid].Precursor, tolerance);
             if (compare < 0)
                 return FindEntry(precursorMz, tolerance, left, mid - 1);
-            else if (compare > 0)
+            if (compare > 0)
                 return FindEntry(precursorMz, tolerance, mid + 1, right);
-            else
-            {
-                // Scan backward until the first matching element is found.
-                while (mid > 0 && MatchMz(precursorMz, tolerance, _chromatogramEntries[mid - 1].Precursor))
-                    mid--;
+            
+            // Scan backward until the first matching element is found.
+            while (mid > 0 && MatchMz(precursorMz, tolerance, _chromatogramEntries[mid - 1].Precursor))
+                mid--;
 
-                return mid;
-            }
+            return mid;
         }
 
         private static int CompareMz(float precursorMz1, float precursorMz2, float tolerance)

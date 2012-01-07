@@ -1034,7 +1034,7 @@ namespace pwiz.Skyline.Properties
     
     public sealed class RTScoreCalculatorList : SettingsList<RetentionScoreCalculatorSpec>
     {
-        private static readonly RetentionScoreCalculatorSpec[] DEFAULTS =
+        private static readonly RetentionScoreCalculator[] DEFAULTS =
             new[]
                 {
                     new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
@@ -1045,7 +1045,7 @@ namespace pwiz.Skyline.Properties
         /// <see cref="RetentionTimeRegression"/> objects depend on calculators. If a user deletes or changes a calculator,
         /// the <see cref="RetentionTimeRegression"/> objects that depend on it may need to be removed.
         /// </summary>
-        public override bool AcceptList(Control owner, IEnumerable<RetentionScoreCalculatorSpec> listNew)
+        public override bool AcceptList(Control owner, IList<RetentionScoreCalculatorSpec> listNew)
         {
             var listMissingCalc = new List<RetentionTimeRegression>();
             var listChangedCalc = new List<RetentionTimeRegression>();
@@ -1626,7 +1626,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (dlg.ShowDialog(owner) == DialogResult.OK)
                 {
-                    var listNew = dlg.GetAllEdited();
+                    var listNew = dlg.GetAllEdited().ToArray();
                     if (AcceptList(owner, listNew))
                         return listNew;
                 }
@@ -1634,7 +1634,7 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public virtual bool AcceptList(Control owner, IEnumerable<TItem> listNew)
+        public virtual bool AcceptList(Control owner, IList<TItem> listNew)
         {
             return true;
         }

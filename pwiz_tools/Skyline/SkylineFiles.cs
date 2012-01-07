@@ -287,7 +287,7 @@ namespace pwiz.Skyline
 
             // First look for the file name in the document directory
             string fileName = Path.GetFileName(irtCalc.DatabasePath);
-            string filePath = Path.Combine(Path.GetDirectoryName(documentPath), fileName);
+            string filePath = Path.Combine(Path.GetDirectoryName(documentPath) ?? "", fileName ?? "");
 
             if (File.Exists(filePath))
             {
@@ -316,19 +316,15 @@ namespace pwiz.Skyline
                     if (dlg.ShowDialog(this) == DialogResult.OK)
                     {
                         if (dlg.FilePath == null)
-                        {
                             return RCalcIrt.NONE;
-                        }
-                        else
+                        
+                        try
                         {
-                            try
-                            {
-                                return irtCalc.ChangeDatabasePath(dlg.FilePath);
-                            }
-                            catch (DatabaseOpeningException e)
-                            {
-                                MessageBox.Show(string.Format("The database file specified could not be opened:\n{0}", e.Message));
-                            }
+                            return irtCalc.ChangeDatabasePath(dlg.FilePath);
+                        }
+                        catch (DatabaseOpeningException e)
+                        {
+                            MessageBox.Show(string.Format("The database file specified could not be opened:\n{0}", e.Message));
                         }
                     }
                     else
@@ -384,10 +380,9 @@ namespace pwiz.Skyline
                     {
                         return BackgroundProteomeList.GetDefault();
                     }
-                    else
-                    {
-                        Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(dlg.FilePath);
-                    }
+                    
+                    Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(dlg.FilePath);
+                    
                     return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, dlg.FilePath);
                 }
             }
@@ -488,8 +483,8 @@ namespace pwiz.Skyline
             string fileName = DocumentFilePath;
             if (string.IsNullOrEmpty(fileName))
                 return SaveDocumentAs();
-            else
-                return SaveDocument(fileName);
+            
+            return SaveDocument(fileName);
         }
 
         private bool SaveDocumentAs()
@@ -1202,39 +1197,37 @@ namespace pwiz.Skyline
 
             if (namedResults.Length == 1)
                 return ImportResults(doc, namedResults[0].Key, namedResults[0].Value, optimizationFunction);
-            else
+
+            // Add all chosen files as separate result sets.
+            var results = doc.Settings.MeasuredResults;
+            var listChrom = new List<ChromatogramSet>();
+            if (results != null)
+                listChrom.AddRange(results.Chromatograms);
+
+            foreach (var namedResult in namedResults)
             {
-                // Add all chosen files as separate result sets.
-                var results = doc.Settings.MeasuredResults;
-                var listChrom = new List<ChromatogramSet>();
-                if (results != null)
-                    listChrom.AddRange(results.Chromatograms);
+                string nameResult = namedResult.Key;
 
-                foreach (var namedResult in namedResults)
+                // Skip results that have already been loaded.
+                if (GetChromatogramByName(nameResult, results) != null)
+                    continue;
+
+                try
                 {
-                    string nameResult = namedResult.Key;
-
-                    // Skip results that have already been loaded.
-                    if (GetChromatogramByName(nameResult, results) != null)
-                        continue;
-
-                    try
-                    {
-                        // Delete caches that will be overwritten
-                        File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
-                    }
-                    catch (Exception)
-                    {
-                        Debug.Assert(true); // Ignore
-                    }
-
-                    listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, optimizationFunction));
+                    // Delete caches that will be overwritten
+                    File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
+                }
+                catch (Exception)
+                {
+                    Debug.Assert(true); // Ignore
                 }
 
-                var arrayChrom = listChrom.ToArray();
-                return doc.ChangeMeasuredResults(results == null ?
-                    new MeasuredResults(arrayChrom) : results.ChangeChromatograms(arrayChrom));                
+                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, optimizationFunction));
             }
+
+            var arrayChrom = listChrom.ToArray();
+            return doc.ChangeMeasuredResults(results == null ?
+                                                                 new MeasuredResults(arrayChrom) : results.ChangeChromatograms(arrayChrom));
         }
 
         private SrmDocument ImportResults(SrmDocument doc, string nameResult, IEnumerable<string> dataSources,

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Find
 {

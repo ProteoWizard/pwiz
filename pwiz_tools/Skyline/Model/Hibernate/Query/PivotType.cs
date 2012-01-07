@@ -61,7 +61,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             foreach (ReportColumn id in list)
             {
-                if (Equals(key.Table, id.Table) && key.Column.StartsWith(id.Column))
+                if (key.Table == id.Table && key.Column.StartsWith(id.Column))
                 {
                     return true;
                 }
@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         protected static bool Contains(IEnumerable<ReportColumn> columns, Type table)
         {
-            return columns.Contains(column => Equals(table, column.Table));
+            return columns.Contains(column => table == column.Table);
         }
 
         protected static IEnumerable<Identifier> AddPrefix(IEnumerable<Identifier> source, Identifier prefix)

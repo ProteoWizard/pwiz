@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -76,8 +77,10 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;
             int peakImageIndex = PeakImageIndex;
+// ReSharper disable RedundantCheckBeforeAssignment
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
+// ReSharper restore RedundantCheckBeforeAssignment
             var nodePep = (PeptideDocNode) Model;
             string label = DisplayText(nodePep, SequenceTree.GetDisplaySettings(nodePep));
             if (!string.Equals(label, Text))
@@ -126,13 +129,10 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             float? ratio = (nodePep.HasResults ? nodePep.GetPeakCountRatio(index) : null);
             if (ratio == null)
-            {
-                return settings.MeasuredResults.IsChromatogramSetLoaded(index) ?
-                    (int)SequenceTree.StateImageId.peak_blank : -1;
-            }
-            else if (ratio < 0.5)
+                return (int)SequenceTree.StateImageId.peak_blank;
+            if (ratio < 0.5)
                 return (int)SequenceTree.StateImageId.no_peak;
-            else if (ratio < 1.0)
+            if (ratio < 1.0)
                 return (int)SequenceTree.StateImageId.keep;
 
             return (int)SequenceTree.StateImageId.peak;                            
@@ -208,7 +208,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             else
             {
                 string pepSequence = nodePep.Peptide.Sequence;
-                int startPep = label.IndexOf(pepSequence);
+                int startPep = label.IndexOf(pepSequence, StringComparison.Ordinal);
                 int endPep = startPep + pepSequence.Length;
 
                 // Add prefix plain-text if necessary
@@ -297,10 +297,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (Equals(color, Color.Black) && !Equals(modString, modStringHeavy))
                 {
                     color = textSequences[i].Color;
-                    if (modString == null)
-                        font = textSequences[i].Font;
-                    else
-                        font = fonts.LightAndHeavy;
+                    font = modString == null ? textSequences[i].Font : fonts.LightAndHeavy;
                 }
             }
 
@@ -566,7 +563,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                    // With one child, its tip detail will be appended
                    nodePep.Children.Count == 1 ||
                    // With multiple children, modification sequences may be shown
-                   GetTypedModifiedSequences(nodePep, settings).Count() > 0;
+                   GetTypedModifiedSequences(nodePep, settings).Any();
         }
 
         public override Size RenderTip(Graphics g, Size sizeMax, bool draw)
@@ -605,13 +602,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                     // Add a spacing row, if anything was added
                     if (table.Count > 0)
                         table.AddDetailRow(" ", " ", rt);
-                    table.AddDetailRow("Previous", peptide.PrevAA.ToString(), rt);
-                    table.AddDetailRow("First", peptide.Begin.ToString(), rt);
-                    table.AddDetailRow("Last", ((peptide.End ?? 1) - 1).ToString(), rt);
-                    table.AddDetailRow("Next", peptide.NextAA.ToString(), rt);
+                    table.AddDetailRow("Previous", peptide.PrevAA.ToString(CultureInfo.InvariantCulture), rt);
+                    table.AddDetailRow("First", peptide.Begin.Value.ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow("Last", ((peptide.End ?? 1) - 1).ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow("Next", peptide.NextAA.ToString(CultureInfo.InvariantCulture), rt);
                 }
                 if (nodePep.Rank.HasValue)
-                    table.AddDetailRow("Rank", nodePep.Rank.ToString(), rt);
+                    table.AddDetailRow("Rank", nodePep.Rank.Value.ToString(CultureInfo.CurrentCulture), rt);
                
                 SizeF size = table.CalcDimensions(g);
                 if (draw)

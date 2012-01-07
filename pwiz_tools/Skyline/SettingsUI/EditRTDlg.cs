@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
@@ -94,9 +95,9 @@ namespace pwiz.Skyline.SettingsUI
                     textIntercept.Text = string.Format("{0:F04}", _regression.Conversion.Intercept);
                     textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow);
                      */
-                    textSlope.Text = _regression.Conversion.Slope.ToString();
-                    textIntercept.Text = _regression.Conversion.Intercept.ToString();
-                    textTimeWindow.Text = _regression.TimeWindow.ToString();
+                    textSlope.Text = _regression.Conversion.Slope.ToString(CultureInfo.CurrentCulture);
+                    textIntercept.Text = _regression.Conversion.Intercept.ToString(CultureInfo.CurrentCulture);
+                    textTimeWindow.Text = _regression.TimeWindow.ToString(CultureInfo.CurrentCulture);
                 }
             }
         }
@@ -259,10 +260,10 @@ namespace pwiz.Skyline.SettingsUI
 
             public void SetTablePeptides(IEnumerable<MeasuredRetentionTime> tablePeps)
             {
-                SetTablePeptides(tablePeps.Select(p => new MeasuredPeptide(p.PeptideSequence, p.RetentionTime)));
+                SetTablePeptides(tablePeps.Select(p => new MeasuredPeptide(p.PeptideSequence, p.RetentionTime)).ToArray());
             }
 
-            private void SetTablePeptides(IEnumerable<MeasuredPeptide> tablePeps)
+            private void SetTablePeptides(IList<MeasuredPeptide> tablePeps)
             {
                 string message = ValidateUniquePeptides(tablePeps.Select(p => p.Sequence), null, null);
                 if (message != null)
@@ -501,7 +502,7 @@ namespace pwiz.Skyline.SettingsUI
             RecalcRegression(new[] { calculator }, peptides);
         }
 
-        private RetentionScoreCalculatorSpec RecalcRegression(IEnumerable<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> peptidesTimes)
+        private RetentionScoreCalculatorSpec RecalcRegression(IList<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> peptidesTimes)
         {
             RetentionScoreCalculatorSpec calculatorSpec;
             RetentionTimeStatistics statistics;
@@ -598,7 +599,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetTimeWindow(double time)
         {
-            textTimeWindow.Text = time.ToString();
+            textTimeWindow.Text = time.ToString(CultureInfo.CurrentCulture);
         }
 
         public void SetRegressionName(string name)
@@ -653,7 +654,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (sequence == null)
                 return "A modified peptide sequence is required for each entry.";
-            else if (!FastaSequence.IsExSequence(sequence))
+            if (!FastaSequence.IsExSequence(sequence))
                 return string.Format("The sequence '{0}' is not a valid modified peptide sequence.", sequence);
             return null;
         }
@@ -661,9 +662,9 @@ namespace pwiz.Skyline.SettingsUI
         public static string ValidateRetentionTime(string rtText, bool allowNegative)
         {
             double rtValue;
-            if (!double.TryParse(rtText, out rtValue))
+            if (rtText == null || !double.TryParse(rtText, out rtValue))
                 return "Measured retention times must be valid decimal numbers.";
-            else if (!allowNegative && rtValue <= 0)
+            if (!allowNegative && rtValue <= 0)
                 return "Measured retention times must be greater than zero.";
             return null;
         }

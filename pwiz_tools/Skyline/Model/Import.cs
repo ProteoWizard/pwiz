@@ -163,8 +163,10 @@ namespace pwiz.Skyline.Model
     {
         private const int INSPECT_LINES = 50;
 
+// ReSharper disable NotAccessedField.Local
         private int _countPeptides;
         private int _countIons;
+// ReSharper restore NotAccessedField.Local
 
         public MassListImporter(SrmDocument document, IFormatProvider provider, char separator)
         {
@@ -754,11 +756,8 @@ namespace pwiz.Skyline.Model
                         continue;
 
                     string fieldValue = fields[i];
-                    try
-                    {
-                        double.Parse(fieldValue, provider);
-                    }
-                    catch (FormatException)
+                    double tempDouble;
+                    if (!double.TryParse(fieldValue, NumberStyles.Number, provider, out tempDouble))
                     {
                         if (fieldValue.Length > 2 && !EXCLUDE_PROTEIN_VALUES.Contains(fieldValue.ToLower()))
                             listDescriptive.Add(i);
@@ -1436,7 +1435,7 @@ namespace pwiz.Skyline.Model
                 int? end = null;
                 if (_activeFastaSeq != null)
                 {
-                    begin = _activeFastaSeq.Sequence.IndexOf(sequence);
+                    begin = _activeFastaSeq.Sequence.IndexOf(sequence, StringComparison.Ordinal);
                     if (begin == -1)
                         // CONSIDER: Use fasta sequence format code currently in SrmDocument to show formatted sequence.
                         throw new InvalidDataException(string.Format("The peptide {0} was not found in the sequence {1}.", sequence, _activeFastaSeq.Name));

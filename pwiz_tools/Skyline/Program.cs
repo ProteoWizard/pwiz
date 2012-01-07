@@ -51,9 +51,7 @@ namespace pwiz.Skyline
         [STAThread]
         public static void Main()
         {
-            if(AppDomain.CurrentDomain != null &&
-                AppDomain.CurrentDomain.SetupInformation != null &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
+            if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0] == "CMD")

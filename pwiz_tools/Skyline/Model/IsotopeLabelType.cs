@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -59,7 +60,8 @@ namespace pwiz.Skyline.Model
                 if (char.IsUpper(Name[0]))
                     return Name;
 
-                return Name[0].ToString().ToUpper() + (Name.Length > 1 ? Name.Substring(1) : "");
+                return Name[0].ToString(CultureInfo.InvariantCulture).ToUpper() +
+                    (Name.Length > 1 ? Name.Substring(1) : "");
             }
         }
 

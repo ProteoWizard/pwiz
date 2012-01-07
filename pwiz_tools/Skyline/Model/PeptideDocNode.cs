@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model
 
         public bool HasVariableMods { get { return HasExplicitMods && ExplicitMods.IsVariableStaticMods; } }
 
-        public bool AreVariableModsPossible(int maxVariableMods, IEnumerable<StaticMod> modsVarAvailable)
+        public bool AreVariableModsPossible(int maxVariableMods, IList<StaticMod> modsVarAvailable)
         {
             if (HasVariableMods)
             {
@@ -763,12 +763,14 @@ namespace pwiz.Skyline.Model
                 {
                     // Update transition group ratios
                     var nodeGroupConvert = nodeGroup;
-                    var listGroupInfoList = _listResultCalcs.ConvertAll(calc =>
-                                                                        calc.UpdateTransitonGroupRatios(nodeGroupConvert,
-                                                                                                        nodeGroupConvert.HasResults ? nodeGroupConvert.Results[calc.ResultsIndex] : null));
+                    var listGroupInfoList = _listResultCalcs.ConvertAll(
+                        calc => calc.UpdateTransitonGroupRatios(nodeGroupConvert,
+                                                                nodeGroupConvert.HasResults
+                                                                    ? nodeGroupConvert.Results[calc.ResultsIndex]
+                                                                    : null));
                     var resultsGroup = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listGroupInfoList);
                     var nodeGroupNew = nodeGroup;
-                    if (!ReferenceEquals(results, nodeGroup.Results))
+                    if (!ReferenceEquals(resultsGroup, nodeGroup.Results))
                         nodeGroupNew = nodeGroup.ChangeResults(resultsGroup);
 
                     var listTransNew = new List<DocNode>();
@@ -776,11 +778,12 @@ namespace pwiz.Skyline.Model
                     {
                         // Update transition ratios
                         var nodeTranConvert = nodeTran;
-                        var listTranInfoList = _listResultCalcs.ConvertAll(calc =>
-                                                                           calc.UpdateTransitonRatios(nodeTranConvert, nodeTranConvert.Results[calc.ResultsIndex]));
+                        var listTranInfoList = _listResultCalcs.ConvertAll(
+                            calc => calc.UpdateTransitonRatios(nodeTranConvert, nodeTranConvert.Results[calc.ResultsIndex]));
                         var resultsTran = Results<TransitionChromInfo>.Merge(nodeTran.Results, listTranInfoList);
-                        listTransNew.Add(ReferenceEquals(results, nodeTran.Results) ?
-                                                                                        nodeTran : nodeTran.ChangeResults(resultsTran));
+                        listTransNew.Add(ReferenceEquals(resultsTran, nodeTran.Results)
+                                             ? nodeTran
+                                             : nodeTran.ChangeResults(resultsTran));
                     }
                     listGroupsNew.Add(nodeGroupNew.ChangeChildrenChecked(listTransNew));
                 }

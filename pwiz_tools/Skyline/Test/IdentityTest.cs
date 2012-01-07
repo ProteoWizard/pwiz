@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
@@ -149,9 +150,9 @@ namespace pwiz.SkylineTest
                 Value = value;
             }
 
-            public int Value { get; private set; }
+            private int Value { get; set; }
 
-            public bool Equals(NumericIdentity obj)
+            private bool Equals(NumericIdentity obj)
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
@@ -177,7 +178,7 @@ namespace pwiz.SkylineTest
 
             public override string ToString()
             {
-                return Value.ToString();
+                return Value.ToString(CultureInfo.CurrentCulture);
             }
         }
     }

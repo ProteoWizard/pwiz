@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
@@ -103,7 +104,7 @@ namespace pwiz.Skyline.EditUI
                     comboStaticLast = comboStatic1;
                     foreach (var labelType in _listLabelTypeHeavy)
                     {
-                        if (listComboHeavyLast == null || listLabelHeavyLast == null)   // Resharper
+                        if (listComboHeavyLast == null)
                         {
                             listComboHeavyLast = new List<ComboBox> { comboHeavy1_1 };
                             listLabelHeavyLast = new List<Label> { labelHeavy1 };
@@ -192,7 +193,7 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
                 // Store amino acid labels
-                labelAALast.Text = aa.ToString();
+                labelAALast.Text = aa.ToString(CultureInfo.InvariantCulture);
                 _listLabelAA.Add(labelAALast);
             }
             for (int i = 0; i < _listLabelAA.Count; i++)
@@ -271,18 +272,13 @@ namespace pwiz.Skyline.EditUI
         {
             var modsDoc = DocSettings.PeptideSettings.Modifications;
             var modsExp = NodePeptide.ExplicitMods;
-            if (type.IsLight)
-            {
-                return InitModificationCombo(combo, modsDoc.StaticModifications,
+            return type.IsLight
+                ? InitModificationCombo(combo, modsDoc.StaticModifications,
                     modsExp != null ? modsExp.StaticModifications : null, StaticList, indexAA,
-                    modsExp != null && modsExp.IsVariableStaticMods);
-            }
-            else
-            {
-                return InitModificationCombo(combo, modsDoc.GetModifications(type),
+                    modsExp != null && modsExp.IsVariableStaticMods)
+                : InitModificationCombo(combo, modsDoc.GetModifications(type),
                     modsExp != null ? modsExp.GetModifications(type) : null, HeavyList, indexAA,
                     false);
-            }
         }
 
         private ComboBox InitModificationCombo(ComboBox combo,
@@ -465,10 +461,13 @@ namespace pwiz.Skyline.EditUI
                 label.Font = new Font(label.Font.Name, label.Font.SizeInPoints,
                     fontStyle, GraphicsUnit.Point, 0);
             }
+
+// ReSharper disable RedundantCheckBeforeAssignment
             if (label.ForeColor != textColor)
             {
                 label.ForeColor = textColor;
             }
+// ReSharper restore RedundantCheckBeforeAssignment
         }
 
         private void SelectedIndexChangedEvent(ComboBox combo,
@@ -520,7 +519,7 @@ namespace pwiz.Skyline.EditUI
             listSelectedIndex[indexAA] = combo.SelectedIndex;
         }
 
-        private void LoadLists(IEnumerable<StaticMod> listSettingsMods, IList<ExplicitMod> listExplicitMods,
+        private void LoadLists(IList<StaticMod> listSettingsMods, IList<ExplicitMod> listExplicitMods,
             IList<ComboBox> listCombo, int indexAA, string selectedItem, bool selectEither)
         {
             for (int i = 0; i < listCombo.Count; i++)

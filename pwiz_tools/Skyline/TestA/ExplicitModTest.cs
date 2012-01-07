@@ -143,7 +143,6 @@ namespace pwiz.SkylineTestA
             //       so much of the logic in PeptideDocNode and PeptideTreeNode
             var pepPath = docStudy7.GetPathTo((int) SrmDocument.Level.Peptides, 10);
             var nodePep = (PeptideDocNode) docStudy7.FindNode(pepPath);
-            string seq = nodePep.Peptide.Sequence;
             var mods = nodePep.ExplicitMods;
             var nodeGroupLight = (TransitionGroupDocNode) nodePep.Children[0];
             var settings = docStudy7.Settings;

@@ -22,6 +22,7 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -178,8 +179,8 @@ namespace pwiz.Skyline.Model.Lib
                 LibraryDetails details = new LibraryDetails
                                              {
                                                  Format = "BiblioSpec",
-                                                 Revision = Revision.ToString(),
-                                                 Version = SchemaVersion.ToString(),
+                                                 Revision = Revision.ToString(CultureInfo.CurrentCulture),
+                                                 Version = SchemaVersion.ToString(CultureInfo.CurrentCulture),
                                                  PeptideCount = SpectrumCount,
                                                  DataFiles = dataFiles
                                              };
@@ -882,7 +883,7 @@ namespace pwiz.Skyline.Model.Lib
                         double time = reader.GetDouble(i);
                         if (!Equals(sequence, sequenceNext))
                         {
-                            if (listTimes.Count > 0)
+                            if (sequence != null && listTimes.Count > 0)
                                 dictKeyTimes.Add(sequence, listTimes.ToArray());
 
                             sequence = sequenceNext;
@@ -890,7 +891,7 @@ namespace pwiz.Skyline.Model.Lib
                         }
                         listTimes.Add(time);
                     }
-                    if (listTimes.Count > 0)
+                    if (sequence != null && listTimes.Count > 0)
                         dictKeyTimes.Add(sequence, listTimes.ToArray());
                     return dictKeyTimes;
                 }

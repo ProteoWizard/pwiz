@@ -172,7 +172,6 @@ namespace pwiz.ProteomeDatabase.API
             {
                 _callback.Invoke(this);
             }
-            return;
         }
 
         public List<ProteinMatch> GetMatches()
@@ -319,7 +318,8 @@ namespace pwiz.ProteomeDatabase.API
             if (0 != (proteinMatchSettings.MatchTypes & ProteinMatchType.description))
             {
                 String ltext = proteinMatchSettings.SearchText.ToLower();
-                if (protein.Description.ToLower().IndexOf(ltext) >= 0 || protein.Name.ToLower().IndexOf(ltext) >= 0)
+                if (protein.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0 ||
+                    protein.Name.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
                 {
                     MatchType |= ProteinMatchType.description;
                 }
@@ -327,7 +327,8 @@ namespace pwiz.ProteomeDatabase.API
                 {
                     foreach (AlternativeName alternative in Protein.AlternativeNames)
                     {
-                        if (alternative.Description.ToLower().IndexOf(ltext) >= 0 || alternative.Description.ToLower().IndexOf(ltext) >= 0)
+                        if (alternative.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0 ||
+                            alternative.Description.ToLower().IndexOf(ltext, StringComparison.Ordinal) >= 0)
                         {
                             MatchType |= ProteinMatchType.description;
                             AlternativeDescription = alternative;

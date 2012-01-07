@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -186,11 +187,13 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ExpandPeptides();
 
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text.Contains((0.78).ToString()));
+                Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text
+                    .Contains((0.78).ToString(CultureInfo.CurrentCulture)));
                 SkylineWindow.EditDelete();
 
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text.Contains((0.63).ToString()));
+                Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text
+                    .Contains((0.63).ToString(CultureInfo.CurrentCulture)));
                 SkylineWindow.EditDelete();
 
                 PeptideTreeNode nodePep;

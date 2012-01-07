@@ -147,7 +147,7 @@ namespace pwiz.Skyline.Model.Hibernate
             {
                 string value;
                 ((DbEntity)target).Annotations.TryGetValue(_name, out value);
-                return value == null ? false : true;
+                return value != null;
             }
 
             public object GetForInsert(object owner, IDictionary mergeMap, ISessionImplementor session)

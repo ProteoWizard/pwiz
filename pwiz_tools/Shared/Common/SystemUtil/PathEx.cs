@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace pwiz.Common.SystemUtil
@@ -43,10 +44,9 @@ namespace pwiz.Common.SystemUtil
             foreach (string path in paths)
             {
                 string dirName = Path.GetDirectoryName(path) + Path.DirectorySeparatorChar;
-                if (string.IsNullOrEmpty(rootPath))
-                    rootPath = dirName;
-                else
-                    rootPath = GetCommonRoot(rootPath, dirName);
+                rootPath = string.IsNullOrEmpty(rootPath)
+                    ? dirName
+                    : GetCommonRoot(rootPath, dirName);
             }
             return rootPath;
         }
@@ -84,7 +84,7 @@ namespace pwiz.Common.SystemUtil
                     return parts[parts.Count - 1];
             }
             parts.RemoveAt(iRemove);
-            return string.Join(Path.DirectorySeparatorChar.ToString(), parts.ToArray());
+            return string.Join(Path.DirectorySeparatorChar.ToString(CultureInfo.InvariantCulture), parts.ToArray());
         }
     }
 }

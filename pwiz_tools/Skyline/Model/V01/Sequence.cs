@@ -432,8 +432,8 @@ namespace pwiz.Skyline.Model.V01
         {
             if (IsNTerminal(type))
                 return ordinal - 1;
-            else
-                return len - ordinal - 1;
+            
+            return len - ordinal - 1;
         }
 
         private readonly PepV01 _peptide;

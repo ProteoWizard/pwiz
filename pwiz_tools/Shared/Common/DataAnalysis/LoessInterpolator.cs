@@ -239,15 +239,9 @@ namespace pwiz.Common.DataAnalysis
 
                     // Compute the point of the bandwidth interval that is
                     // farthest from x
-                    int edge;
-                    if (xval[i] - xval[ileft] > xval[iright] - xval[i])
-                    {
-                        edge = ileft;
-                    }
-                    else
-                    {
-                        edge = iright;
-                    }
+                    int edge = xval[i] - xval[ileft] > xval[iright] - xval[i]
+                        ? ileft
+                        : iright;
 
                     // Compute a least-squares linear fit weighted by
                     // the product of robustness weights and the tricube
@@ -430,7 +424,9 @@ namespace pwiz.Common.DataAnalysis
          * @param pattern pattern of the error message
          * @throws MathException if one of the values is not a finite real number
          */
+// ReSharper disable UnusedParameter.Local
         private static void CheckAllFiniteReal(IEnumerable<double> values)
+// ReSharper restore UnusedParameter.Local
         {
             if (values.Any(x => double.IsInfinity(x) || Double.IsNaN(x)))
             {

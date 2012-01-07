@@ -136,7 +136,7 @@ namespace pwiz.Skyline
             {
                 if(value == null)
                 {
-                    _optimizeType = value;
+                    _optimizeType = null;
                     return;
                 }
 
@@ -313,7 +313,8 @@ namespace pwiz.Skyline
                         }
                         catch (Exception e)
                         {
-                            _out.WriteLine("Error: Regular expression {0} cannot be parsed.\n{1}", importNamingPatternVal, e.Message);
+                            _out.WriteLine("Error: Regular expression {0} cannot be parsed.", importNamingPatternVal);
+                            _out.WriteLine(e.Message);
                             return false;
                         }
 
@@ -348,7 +349,7 @@ namespace pwiz.Skyline
                     else
                     {
                         _out.WriteLine("Warning: The report format {0} is invalid. It must be either \"CSV\" or \"TSV\".", pair.Value);
-                        _out.WriteLine("Defaulting to CSV.", pair.Value);
+                        _out.WriteLine("Defaulting to CSV.");
                         ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
                     }
                 }
@@ -598,7 +599,6 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine("Error: You cannot simultaneously export a transition list and a method.");
                 _out.WriteLine("Neither will be exported. Please change your command line parameters.");
-                return;
             }
             else
             {
@@ -667,17 +667,18 @@ namespace pwiz.Skyline
         private IEnumerable<KeyValuePair<string, string[]>> GetDataSources(string sourceDir, Regex namingPattern)
         {   
             // get all the valid data sources (files and sub directories) in this directory.
-            IEnumerable<KeyValuePair<string, string[]>> listNamedPaths;
+            IList<KeyValuePair<string, string[]>> listNamedPaths;
             try
             {
-                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir);
+                listNamedPaths = DataSourceUtil.GetDataSources(sourceDir).ToArray();
             }
             catch(IOException e)
             {
-                _out.WriteLine("Error: Failure reading file information from directory {0}.\n{1}.", sourceDir, e.Message);
+                _out.WriteLine("Error: Failure reading file information from directory {0}.", sourceDir);
+                _out.WriteLine(e.Message);
                 return null;
             }
-            if (listNamedPaths.Count() == 0)
+            if (!listNamedPaths.Any())
             {
                 _out.WriteLine("Error: No data sources found in directory {0}.", sourceDir);
                 return null;
@@ -712,7 +713,7 @@ namespace pwiz.Skyline
         private bool ApplyNamingPattern(IEnumerable<KeyValuePair<string, string[]>> listNamedPaths, Regex namingPattern, 
                                         out List<KeyValuePair<string, string[]>> listRenamedPaths)
         {
-            listRenamedPaths = new List<KeyValuePair<string, string[]>>(listNamedPaths.Count());
+            listRenamedPaths = new List<KeyValuePair<string, string[]>>();
 
             var uniqNames = new HashSet<string>();
 
@@ -728,18 +729,15 @@ namespace pwiz.Skyline
                     {
                         _out.WriteLine("Error: Match to regular expression is empty for {0}.", replName);
                         return false;
-                    }
-                    else
+                    }                    
+                    if (uniqNames.Contains(replNameNew))
                     {
-                        if (uniqNames.Contains(replNameNew))
-                        {
-                            _out.WriteLine("Error: Duplicate replicate name '{0}'");
-                            _out.WriteLine("       after applying regular expression.", replNameNew, replName);
-                            return false;
-                        }
-                        uniqNames.Add(replNameNew);
-                        listRenamedPaths.Add(new KeyValuePair<string, string[]>(replNameNew, namedPaths.Value));
+                        _out.WriteLine("Error: Duplicate replicate name '{0}'", replNameNew);
+                        _out.WriteLine("       after applying regular expression.");
+                        return false;
                     }
+                    uniqNames.Add(replNameNew);
+                    listRenamedPaths.Add(new KeyValuePair<string, string[]>(replNameNew, namedPaths.Value));
                 }
                 else
                 {
@@ -771,10 +769,12 @@ namespace pwiz.Skyline
                 ChromatogramSet chromatogram;
                 if (_doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out indexChrom))
                 {
-                    var filePaths = new HashSet<string>(namedPaths.Value);
+                    // and whether the files it contains match what is expected
+                    // compare case-insensitive on Windows
+                    var filePaths = new HashSet<string>(namedPaths.Value.Select(path => path.ToLower()));
                     foreach (var dataFilePath in chromatogram.MSDataFilePaths)
                     {
-                        if (!filePaths.Contains(dataFilePath))
+                        if (!filePaths.Contains(dataFilePath.ToLower()))
                         {
                             _out.WriteLine(
                                 "Error: Replicate {0} in the document has an unexpected file {1}.",
@@ -815,18 +815,16 @@ namespace pwiz.Skyline
                 {   
                     // We are appending to an existing replicate in the document.
                     // Remove files that are already associated with the replicate
-                    var chromatFilePaths = new HashSet<string>(chromatogram.MSDataFilePaths);
+                    var chromatFilePaths = new HashSet<string>(chromatogram.MSDataFilePaths.Select(path => path.ToLower()));
 
                     var filePaths = namedPaths.Value;
                     var filePathsNotInRepl = new List<string>(filePaths.Length);
                     foreach (var fpath in filePaths)
                     {
-                        if (chromatFilePaths.Contains(fpath))
+                        if (chromatFilePaths.Contains(fpath.ToLower()))
                         {
-                            _out.WriteLine(
-                                "{0} -> {1}\nNote: The file has already been imported. Ignoring....",
-                                replicateName,
-                                fpath);
+                            _out.WriteLine("{0} -> {1}", replicateName, fpath);
+                            _out.WriteLine("  Note: The file has already been imported. Ignoring...");
                         }
                         else
                         {
@@ -861,23 +859,19 @@ namespace pwiz.Skyline
                     _out.WriteLine("The replicate will not be added to the document.");
                     return true;
                 }
-                else
+                
+                // If we are appending to an existing replicate in the document
+                // make sure this file is not already in the replicate.
+                ChromatogramSet chromatogram;
+                int index;
+                _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out index);
+
+                if (chromatogram.MSDataFilePaths.Contains(replicateFile, StringComparer.OrdinalIgnoreCase))
                 {
-                    // If we are appending to an existing replicate in the document
-                    // make sure this file is not already in the replicate.
-                    ChromatogramSet chromatogram;
-                    int index;
-                    _doc.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogram, out index);
+                    _out.WriteLine("{0} -> {1}", replicateName, replicateFile);
+                    _out.WriteLine("    Note: The file has already been imported. Ignoring...");
 
-                    if (chromatogram.MSDataFilePaths.Contains(replicateFile))
-                    {
-                        _out.WriteLine(
-                            "{0} -> {1}\nNote: The file has already been imported. Ignoring....",
-                            replicateName,
-                            replicateFile);
-
-                        return true;
-                    }
+                    return true;
                 }
             }
 
@@ -895,7 +889,8 @@ namespace pwiz.Skyline
 
             if (status.IsError && status.ErrorException != null)
             {
-                _out.WriteLine("Error: Failed importing the results file {0}.\n{1}", replicateFile, status.ErrorException.Message);
+                _out.WriteLine("Error: Failed importing the results file {0}.", replicateFile);
+                _out.WriteLine(status.ErrorException.Message);
                 return false;
             }
             if (!status.IsComplete || ReferenceEquals(_doc, newDoc))
@@ -1009,15 +1004,15 @@ namespace pwiz.Skyline
                     _out.WriteLine("Error: A template file is required to export a method.");
                     return;
                 }
-                else if (Equals(args.MethodInstrumentType, ExportInstrumentType.Agilent6400)
-                             ? !Directory.Exists(args.TemplateFile)
-                             : !File.Exists(args.TemplateFile))
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.Agilent6400)
+                        ? !Directory.Exists(args.TemplateFile)
+                        : !File.Exists(args.TemplateFile))
                 {
                     _out.WriteLine("Error: The template file {0} does not exist.", args.TemplateFile);
                     return;
                 }
-                else if (Equals(args.MethodInstrumentType, ExportInstrumentType.Agilent6400) &&
-                         !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.Agilent6400) &&
+                    !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
                     _out.WriteLine("Error: The folder {0} does not appear to contain an Agilent QQQ", args.TemplateFile);
                     _out.WriteLine("method template.  The folder is expected to have a .m extension, and contain the");
@@ -1249,7 +1244,8 @@ namespace pwiz.Skyline
             }
             else
             {
-                listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFile }));
+                string dataFileNormalized = Path.GetFullPath(dataFile);
+                listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFileNormalized }));
             }
 
             var results = doc.Settings.HasResults

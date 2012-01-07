@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -126,7 +127,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (_modification.Terminus == null)
                         comboTerm.SelectedIndex = 0;
                     else
-                        comboTerm.SelectedItem = _modification.Terminus.ToString();
+                        comboTerm.SelectedItem = _modification.Terminus.Value.ToString();
                     cbVariableMod.Checked = _modification.IsVariable;
                     if (_modification.Formula != null)
                     {
@@ -137,10 +138,10 @@ namespace pwiz.Skyline.SettingsUI
                     else
                     {
                         Formula = "";
-                        textMonoMass.Text = (_modification.MonoisotopicMass == null ?
-                            "" : _modification.MonoisotopicMass.ToString());
-                        textAverageMass.Text = (_modification.AverageMass == null ?
-                            "" : _modification.AverageMass.ToString());
+                        textMonoMass.Text = (_modification.MonoisotopicMass.HasValue ?
+                            _modification.MonoisotopicMass.Value.ToString(CultureInfo.CurrentCulture) : "");
+                        textAverageMass.Text = (_modification.AverageMass.HasValue ?
+                            _modification.AverageMass.Value.ToString(CultureInfo.CurrentCulture) : "");
                         // Force the label atom check boxes to show, if any are checked
                         if (_modification.LabelAtoms != LabelAtoms.None)
                             cbChemicalFormula.Checked = false;
@@ -183,7 +184,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var losses = FragmentLoss.SortByMz(value.ToArray());
                 listNeutralLosses.Items.Clear();
-                listNeutralLosses.Items.AddRange(losses.ToArray());
+                listNeutralLosses.Items.AddRange(losses.Cast<object>().ToArray());
             }
         }
 
@@ -529,8 +530,10 @@ namespace pwiz.Skyline.SettingsUI
                 textMonoMass.Enabled = textAverageMass.Enabled = false;
                 try
                 {
-                    textMonoMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, formula).ToString();
-                    textAverageMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formula).ToString();
+                    textMonoMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC,
+                        formula).ToString(CultureInfo.CurrentCulture);
+                    textAverageMass.Text = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE,
+                        formula).ToString(CultureInfo.CurrentCulture);
                     textFormula.ForeColor = Color.Black;
                 }
                 catch (ArgumentException)
@@ -741,7 +744,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             comboMod.Items.Clear();
             comboMod.Items.Add(Settings.Default.StaticModsShowMore ? "<Show common...>" : "<Show all...>");
-            comboMod.Items.AddRange(ListAvailableMods().ToArray());
+            comboMod.Items.AddRange(ListAvailableMods().Cast<object>().ToArray());
         }
 
         public List<string> ListAvailableMods()

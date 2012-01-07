@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model;
@@ -80,8 +81,10 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (typeImageIndex != ImageIndex)
                 ImageIndex = SelectedImageIndex = typeImageIndex;
             int peakImageIndex = PeakImageIndex;
+// ReSharper disable RedundantCheckBeforeAssignment
             if (peakImageIndex != StateImageIndex)
                 StateImageIndex = peakImageIndex;
+// ReSharper restore RedundantCheckBeforeAssignment
             string label = DisplayText(DocNode, SequenceTree.GetDisplaySettings(PepNode));
             if (!Equals(label, Text))
                 Text = label;
@@ -132,13 +135,10 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             float? ratio = (nodeGroup.HasResults ? nodeGroup.GetPeakCountRatio(index) : null);
             if (ratio == null)
-            {
-                return settings.MeasuredResults.IsChromatogramSetLoaded(index) ?
-                    (int)SequenceTree.StateImageId.peak_blank : -1;
-            }
-            else if (ratio < 0.5)
+                return (int)SequenceTree.StateImageId.peak_blank;
+            if (ratio < 0.5)
                 return (int)SequenceTree.StateImageId.no_peak;
-            else if (ratio < 1.0)
+            if (ratio < 1.0)
                 return (int)SequenceTree.StateImageId.keep;
 
             return (int)SequenceTree.StateImageId.peak;
@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
                 var precursorMz = nodeGroup.PrecursorMz;
-                tableDetails.AddDetailRow("Precursor charge", precursorCharge.ToString(), rt);
+                tableDetails.AddDetailRow("Precursor charge", precursorCharge.ToString(CultureInfo.InvariantCulture), rt);
                 tableDetails.AddDetailRow("Precursor m/z", string.Format("{0:F04}", precursorMz), rt);
                 tableDetails.AddDetailRow("Precursor m+h", string.Format("{0:F04}", SequenceMassCalc.GetMH(precursorMz, precursorCharge)), rt);
                 if (nodeGroup.HasLibInfo)
@@ -452,9 +452,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                         var row = new RowDesc
                                   {
-                                      CreateRowLabel(i == len - 1 ? "" : (i + 1).ToString(), rt),
+                                      CreateRowLabel(i == len - 1 ? "" : (i + 1).ToString(CultureInfo.InvariantCulture), rt),
                                       cellAA,
-                                      CreateRowLabel(i == 0 ? "" : (len - i).ToString(), rt)
+                                      CreateRowLabel(i == 0 ? "" : (len - i).ToString(CultureInfo.InvariantCulture), rt)
                                   };
 
                         foreach (int charge in charges)
@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                         cell.Brush = rt.BrushSelected; // Stop after selected
                         break;
                     }
-                    else if (!chosen.Contains(nodeTran))
+                    if (!chosen.Contains(nodeTran))
                         cell.Brush = rt.BrushChoice;  // Keep looking
                     else
                     {

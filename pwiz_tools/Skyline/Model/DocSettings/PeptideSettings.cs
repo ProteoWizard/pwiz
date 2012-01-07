@@ -878,7 +878,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private ReadOnlyCollection<IsotopeLabelType> _internalStandardTypes;
 
         public PeptideModifications(IList<StaticMod> staticMods,
-            IEnumerable<TypedModifications> heavyMods)
+            IList<TypedModifications> heavyMods)
             : this(staticMods, DEFAULT_MAX_VARIABLE_MODS, DEFAULT_MAX_NEUTRAL_LOSSES,
                    heavyMods, new[] { IsotopeLabelType.heavy })
         {

@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Controls
                     //       of the base exception type, which could hide coding errors.
                     if (x is InvalidDataException)
                         throw new InvalidDataException(x.Message, x);
-                    else if (x is IOException)
+                    if (x is IOException)
                         throw new IOException(x.Message, x);
                     throw new TargetInvocationException(x.Message, x);
                 }

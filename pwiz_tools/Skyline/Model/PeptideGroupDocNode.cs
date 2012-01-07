@@ -273,9 +273,7 @@ namespace pwiz.Skyline.Model
                 {
                     if (nodePep.HasExplicitMods && !nodePep.HasVariableMods)
                         yield return nodePep;
-                    else if (setNonExplicit.Contains(nodePep.Peptide))
-                        continue;
-                    else
+                    else if (!setNonExplicit.Contains(nodePep.Peptide))
                     {
                         bool returnedResult = false;
                         var peptide = nodePep.Peptide;
@@ -324,7 +322,7 @@ namespace pwiz.Skyline.Model
 
         public static int CompareNames(PeptideGroupDocNode p1, PeptideGroupDocNode p2)
         {
-            return string.Compare(p1.Name, p2.Name);
+            return string.Compare(p1.Name, p2.Name, StringComparison.CurrentCulture);
         }
 
         #region object overrides

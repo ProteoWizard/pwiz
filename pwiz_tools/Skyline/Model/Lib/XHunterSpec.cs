@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -91,7 +92,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (ReferenceEquals(rankId, XHunterLibSpec.PEP_RANK_EXPECT))
                 return -Expect;
-            else if (ReferenceEquals(rankId, XHunterLibSpec.PEP_RANK_PROCESSED_INTENSITY))
+            if (ReferenceEquals(rankId, XHunterLibSpec.PEP_RANK_PROCESSED_INTENSITY))
                 return ProcessedIntensity;
             return base.GetRankValue(rankId);
         }
@@ -101,9 +102,9 @@ namespace pwiz.Skyline.Model.Lib
             get
             {
                 yield return new KeyValuePair<PeptideRankId, string>(XHunterLibSpec.PEP_RANK_EXPECT,
-                    Expect.ToString());
+                    Expect.ToString(CultureInfo.CurrentCulture));
                 yield return new KeyValuePair<PeptideRankId, string>(XHunterLibSpec.PEP_RANK_PROCESSED_INTENSITY,
-                    ProcessedIntensity.ToString());
+                    ProcessedIntensity.ToString(CultureInfo.CurrentCulture));
             }
         }
 
@@ -275,7 +276,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             // Not a valid request, if the two libraries are not the same.
             Debug.Assert(IsSameLibrary(library));
-            return string.Compare(Revision, ((XHunterLibrary)library).Revision);
+            return string.CompareOrdinal(Revision, ((XHunterLibrary)library).Revision);
         }
 
         // ReSharper disable UnusedMember.Local
