@@ -1,0 +1,14 @@
+The files in this directory assume the following version of MSFileReader:
+
+    2.2.61.0
+
+You can check your version by inspecting the file properties (Details tab) of 
+"c:\Program Files (x86)\Thermo\XRawFile2.dll".
+
+If you have an earlier version, you can install a new version here:
+
+    http://sjsupport.thermofinnigan.com/public/detail.asp?id=703
+
+If you have a later version, the side-by-side manifest file (MSFileReader.XRawfile2.SxS.manifest.real)
+in this directory must be modified.  That process is described in the file
+"--- README --- How to update MSFileReader.txt" in this directory.
