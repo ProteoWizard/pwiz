@@ -966,11 +966,15 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
+    public enum TimeSource { scan, peak }
+
     public interface IRetentionTimeProvider
     {
         string Name { get; }
 
         double? GetRetentionTime(string sequence);
+
+        TimeSource? GetTimeSource(string sequence);
 
         IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes { get; }
     }

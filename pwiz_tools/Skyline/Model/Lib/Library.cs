@@ -754,6 +754,11 @@ namespace pwiz.Skyline.Model.Lib
             return retentionTimes.Average();
         }
 
+        public TimeSource? GetTimeSource(string sequence)
+        {
+            return TimeSource.scan;
+        }
+
         public IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes
         {
             get

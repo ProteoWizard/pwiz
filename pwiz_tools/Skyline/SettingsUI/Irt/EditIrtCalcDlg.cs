@@ -675,6 +675,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     return null;
                 }
 
+                public TimeSource? GetTimeSource(string sequence)
+                {
+                    return TimeSource.peak;
+                }
+
                 public IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes
                 {
                     get
@@ -781,10 +786,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     {
                         var status = longWait.PerformWork(MessageParent, 800, monitor =>
                         {
-                            irtCalc = (RCalcIrt) Settings.Default.RTScoreCalculatorList.Initialize(monitor, irtCalc);
+                            var irtDb = IrtDb.GetIrtDb(irtCalc.DatabasePath, monitor);
 
                             irtAverages = ProcessRetetionTimes(monitor,
-                                new[] { new IrtRetentionTimeProvider(irtCalc) }, 1);
+                                new[] { new IrtRetentionTimeProvider(irtCalc.Name, irtDb) }, 1);
                         });
                         if (status.IsError)
                         {
@@ -804,29 +809,39 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private sealed class IrtRetentionTimeProvider : IRetentionTimeProvider
             {
-                private readonly RCalcIrt _irtCalculator;
+                private readonly string _name;
+                private readonly Dictionary<string, DbIrtPeptide> _dictSequenceToPeptide;
 
-                public IrtRetentionTimeProvider(RCalcIrt irtCalculator)
+                public IrtRetentionTimeProvider(string name, IrtDb irtDb)
                 {
-                    _irtCalculator = irtCalculator;
+                    _name = name;
+                    _dictSequenceToPeptide = irtDb.GetPeptides().ToDictionary(peptide => peptide.PeptideModSeq);
                 }
 
                 public string Name
                 {
-                    get { return _irtCalculator.Name; }
+                    get { return _name; }
                 }
 
                 public double? GetRetentionTime(string sequence)
                 {
-                    double? score = _irtCalculator.ScoreSequence(sequence);
-                    if (!score.HasValue || score.Value == _irtCalculator.UnknownScore)
-                        return null;
-                    return score;
+                    DbIrtPeptide peptide;
+                    if (_dictSequenceToPeptide.TryGetValue(sequence, out peptide))
+                        return peptide.Irt;
+                    return null;
+                }
+
+                public TimeSource? GetTimeSource(string sequence)
+                {
+                    DbIrtPeptide peptide;
+                    if (_dictSequenceToPeptide.TryGetValue(sequence, out peptide))
+                        return (TimeSource?) peptide.TimeSource;
+                    return null;
                 }
 
                 public IEnumerable<MeasuredRetentionTime> PeptideRetentionTimes
                 {
-                    get { return _irtCalculator.PeptideScores.Select(p => new MeasuredRetentionTime(p.Key, p.Value)); }
+                    get { return _dictSequenceToPeptide.Select(p => new MeasuredRetentionTime(p.Key, p.Value.Irt)); }
                 }
             }
 
@@ -883,9 +898,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (!isCountable)
                     runCount = regressionLineCount = 0;
 
+                // TODO: Something better than making unknown times source equal to peak
                 AddToLibrary(from pepAverage in irtAverages.DictPeptideIrtAverages.Values
                              orderby pepAverage.IrtAverage
-                             select new DbIrtPeptide(pepAverage.PeptideModSeq, pepAverage.IrtAverage, false, TimeSource.scan),
+                             select new DbIrtPeptide(pepAverage.PeptideModSeq, pepAverage.IrtAverage, false, pepAverage.TimeSource ?? TimeSource.peak),
                              regressionLineCount,
                              runCount - regressionLineCount);
             }
@@ -989,10 +1005,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 foreach (var pepTime in retentionTimes.PeptideRetentionTimes.Where(p => !setStandards.Contains(p.PeptideSequence)))
                 {
                     string peptideModSeq = pepTime.PeptideSequence;
+                    TimeSource? timeSource = retentionTimes.GetTimeSource(peptideModSeq);
                     double irt = regressionLine.GetY(pepTime.RetentionTime);
                     IrtPeptideAverages pepAverage;
                     if (!dictPeptideAverages.TryGetValue(peptideModSeq, out pepAverage))
-                        dictPeptideAverages.Add(peptideModSeq, new IrtPeptideAverages(peptideModSeq, irt));
+                        dictPeptideAverages.Add(peptideModSeq, new IrtPeptideAverages(peptideModSeq, irt, timeSource));
                     else
                         pepAverage.AddIrt(irt);
                 }
@@ -1000,15 +1017,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             private class IrtPeptideAverages
             {
-                public IrtPeptideAverages(string peptideModSeq, double irtAverage)
+                public IrtPeptideAverages(string peptideModSeq, double irtAverage, TimeSource? timeSource)
                 {
                     PeptideModSeq = peptideModSeq;
                     IrtAverage = irtAverage;
+                    TimeSource = timeSource;
                     RunCount = 1;
                 }
 
                 public string PeptideModSeq { get; private set; }
                 public double IrtAverage { get; private set; }
+                public TimeSource? TimeSource { get; private set; }
                 private int RunCount { get; set; }
 
                 public void AddIrt(double irt)
@@ -1031,6 +1050,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var listPeptidesNew = libraryPeptidesNew.ToList();
                 var listChangedPeptides = new List<string>();
                 var listOverwritePeptides = new List<string>();
+                var listKeepPeptides = new List<string>();
 
                 // Check for existing matching peptides
                 foreach (var peptide in listPeptidesNew)
@@ -1043,20 +1063,37 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         continue;
 
                     if (peptide.TimeSource != peptideExist.TimeSource &&
-                            peptideExist.TimeSource.HasValue &&
-                            peptideExist.TimeSource.Value == (int)TimeSource.scan)
-                        listOverwritePeptides.Add(peptide.PeptideModSeq);
-                    else
-                        listChangedPeptides.Add(peptide.PeptideModSeq);
+                            peptideExist.TimeSource.HasValue)
+                    {
+                        switch (peptideExist.TimeSource.Value)
+                        {
+                            case (int)TimeSource.scan:
+                                listOverwritePeptides.Add(peptide.PeptideModSeq);
+                                continue;
+                            case (int)TimeSource.peak:
+                                listKeepPeptides.Add(peptide.PeptideModSeq);
+                                continue;
+                        }
+                    }
+
+                    listChangedPeptides.Add(peptide.PeptideModSeq);
                 }
+
+                listChangedPeptides.Sort();
+                listOverwritePeptides.Sort();
+                listKeepPeptides.Sort();
 
                 // If there were any matches, get user feedback
                 AddIrtPeptidesAction action;
-                using (var dlg = new AddIrtPeptidesDlg(listPeptidesNew.Count - listChangedPeptides.Count,
+                using (var dlg = new AddIrtPeptidesDlg(listPeptidesNew.Count - 
+                                                           listChangedPeptides.Count - 
+                                                           listOverwritePeptides.Count - 
+                                                           listKeepPeptides.Count,
                                                        runsConvertedCount,
                                                        runsFailedCount,
                                                        listChangedPeptides,
-                                                       listOverwritePeptides))
+                                                       listOverwritePeptides,
+                                                       listKeepPeptides))
                 {
                     if (dlg.ShowDialog(MessageParent) != DialogResult.OK)
                         return;
@@ -1067,30 +1104,42 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 try
                 {
                     // Add the new peptides to the library list
+                    var setOverwritePeptides = new HashSet<string>(listOverwritePeptides);
+                    var setKeepPeptides = new HashSet<string>(listKeepPeptides);
                     foreach (var peptide in listPeptidesNew)
                     {
+                        string seq = peptide.PeptideModSeq;
                         int peptideIndex;
-                        if (!dictLibraryIndices.TryGetValue(peptide.PeptideModSeq, out peptideIndex))
+                        // Add any peptides not yet in the library
+                        if (!dictLibraryIndices.TryGetValue(seq, out peptideIndex))
                         {
                             Items.Add(peptide);
                             continue;
                         }
-                        var peptideExist = Items[peptideIndex];
-                        if (action == AddIrtPeptidesAction.skip || Equals(peptide, peptideExist))
+                        // Skip any peptides where the peak type is less accurate than that
+                        // of the existing iRT value.
+                        if (setKeepPeptides.Contains(seq))
                             continue;
 
-                        if (action == AddIrtPeptidesAction.replace ||
-                                (peptide.TimeSource != peptideExist.TimeSource &&
-                                 peptideExist.TimeSource.HasValue &&
-                                 peptideExist.TimeSource.Value == (int)TimeSource.scan))
+                        var peptideExist = Items[peptideIndex];
+                        // Replace peptides if the user said to, or if the peak type is more accurate
+                        // than that of the existing iRT value.
+                        if (action == AddIrtPeptidesAction.replace || setOverwritePeptides.Contains(seq))
                         {
                             peptideExist.Irt = peptide.Irt;
                             peptideExist.TimeSource = peptide.TimeSource;
                         }
-                        else // if (action == AddIrtPeptidesAction.average)
+                        // Skip peptides if the user said to, or no change has occurred.
+                        else if (action == AddIrtPeptidesAction.skip || Equals(peptide, peptideExist))
+                        {
+                            continue;
+                        }
+                        // Average existing and new if that is what the user specified.
+                        else if (action == AddIrtPeptidesAction.average)
                         {
                             peptideExist.Irt = (peptide.Irt + peptideExist.Irt) / 2;
                         }
+                        
                         Items.ResetItem(peptideIndex);
                     }
                 }

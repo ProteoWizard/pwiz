@@ -43,8 +43,12 @@
             this.labelPeptidesAdded = new System.Windows.Forms.Label();
             this.labelRunsConverted = new System.Windows.Forms.Label();
             this.labelRunsFailed = new System.Windows.Forms.Label();
+            this.panelKeep = new System.Windows.Forms.Panel();
+            this.labelKeep = new System.Windows.Forms.Label();
+            this.listKeep = new System.Windows.Forms.ListBox();
             this.panelExisting.SuspendLayout();
             this.panelOverwrite.SuspendLayout();
+            this.panelKeep.SuspendLayout();
             this.SuspendLayout();
             // 
             // listExisting
@@ -55,7 +59,7 @@
             this.listExisting.FormattingEnabled = true;
             this.listExisting.Location = new System.Drawing.Point(7, 19);
             this.listExisting.Name = "listExisting";
-            this.listExisting.Size = new System.Drawing.Size(290, 108);
+            this.listExisting.Size = new System.Drawing.Size(326, 108);
             this.listExisting.TabIndex = 1;
             // 
             // listOverwrite
@@ -65,7 +69,7 @@
             this.listOverwrite.FormattingEnabled = true;
             this.listOverwrite.Location = new System.Drawing.Point(7, 32);
             this.listOverwrite.Name = "listOverwrite";
-            this.listOverwrite.Size = new System.Drawing.Size(290, 82);
+            this.listOverwrite.Size = new System.Drawing.Size(326, 82);
             this.listOverwrite.TabIndex = 1;
             // 
             // labelExisting
@@ -73,9 +77,9 @@
             this.labelExisting.AutoSize = true;
             this.labelExisting.Location = new System.Drawing.Point(4, 3);
             this.labelExisting.Name = "labelExisting";
-            this.labelExisting.Size = new System.Drawing.Size(290, 13);
+            this.labelExisting.Size = new System.Drawing.Size(224, 13);
             this.labelExisting.TabIndex = 0;
-            this.labelExisting.Text = "The following {0} peptides already have values in the library:";
+            this.labelExisting.Text = "{0} peptides already have values in the library:";
             // 
             // labelChoice
             // 
@@ -83,9 +87,9 @@
             this.labelChoice.AutoSize = true;
             this.labelChoice.Location = new System.Drawing.Point(8, 136);
             this.labelChoice.Name = "labelChoice";
-            this.labelChoice.Size = new System.Drawing.Size(261, 13);
+            this.labelChoice.Size = new System.Drawing.Size(258, 13);
             this.labelChoice.TabIndex = 2;
-            this.labelChoice.Text = "Choose how you would like to handle the new values:";
+            this.labelChoice.Text = "Choose how you would like to handle these peptides:";
             // 
             // radioSkip
             // 
@@ -94,10 +98,10 @@
             this.radioSkip.Checked = true;
             this.radioSkip.Location = new System.Drawing.Point(11, 153);
             this.radioSkip.Name = "radioSkip";
-            this.radioSkip.Size = new System.Drawing.Size(168, 17);
+            this.radioSkip.Size = new System.Drawing.Size(127, 17);
             this.radioSkip.TabIndex = 3;
             this.radioSkip.TabStop = true;
-            this.radioSkip.Text = "Skip and leave existing values";
+            this.radioSkip.Text = "Leave existing values";
             this.radioSkip.UseVisualStyleBackColor = true;
             // 
             // radioReplace
@@ -106,9 +110,9 @@
             this.radioReplace.AutoSize = true;
             this.radioReplace.Location = new System.Drawing.Point(11, 177);
             this.radioReplace.Name = "radioReplace";
-            this.radioReplace.Size = new System.Drawing.Size(181, 17);
+            this.radioReplace.Size = new System.Drawing.Size(137, 17);
             this.radioReplace.TabIndex = 4;
-            this.radioReplace.Text = "Keep and replace existing values";
+            this.radioReplace.Text = "Replace existing values";
             this.radioReplace.UseVisualStyleBackColor = true;
             // 
             // radioAverage
@@ -127,16 +131,16 @@
             this.labelOverwrite.AutoSize = true;
             this.labelOverwrite.Location = new System.Drawing.Point(4, 3);
             this.labelOverwrite.Name = "labelOverwrite";
-            this.labelOverwrite.Size = new System.Drawing.Size(295, 26);
+            this.labelOverwrite.Size = new System.Drawing.Size(335, 26);
             this.labelOverwrite.TabIndex = 0;
-            this.labelOverwrite.Text = "The following peptides have values based on MS/MS scans,\r\nwhich will be replaced " +
-                "with new values:";
+            this.labelOverwrite.Text = "{0} peptide iRT values calculated from MS/MS scans will be replaced\r\nwith iRT val" +
+                "ues calculated from chromatogram peaks:";
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(350, 44);
+            this.btnCancel.Location = new System.Drawing.Point(386, 44);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 6;
@@ -147,7 +151,7 @@
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOk.Location = new System.Drawing.Point(350, 14);
+            this.btnOk.Location = new System.Drawing.Point(386, 14);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 5;
@@ -165,9 +169,9 @@
             this.panelExisting.Controls.Add(this.labelChoice);
             this.panelExisting.Controls.Add(this.labelExisting);
             this.panelExisting.Controls.Add(this.listExisting);
-            this.panelExisting.Location = new System.Drawing.Point(6, 209);
+            this.panelExisting.Location = new System.Drawing.Point(5, 341);
             this.panelExisting.Name = "panelExisting";
-            this.panelExisting.Size = new System.Drawing.Size(334, 224);
+            this.panelExisting.Size = new System.Drawing.Size(370, 224);
             this.panelExisting.TabIndex = 4;
             // 
             // panelOverwrite
@@ -176,9 +180,9 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.panelOverwrite.Controls.Add(this.labelOverwrite);
             this.panelOverwrite.Controls.Add(this.listOverwrite);
-            this.panelOverwrite.Location = new System.Drawing.Point(6, 75);
+            this.panelOverwrite.Location = new System.Drawing.Point(5, 75);
             this.panelOverwrite.Name = "panelOverwrite";
-            this.panelOverwrite.Size = new System.Drawing.Size(334, 134);
+            this.panelOverwrite.Size = new System.Drawing.Size(370, 134);
             this.panelOverwrite.TabIndex = 3;
             // 
             // labelPeptidesAdded
@@ -208,13 +212,45 @@
             this.labelRunsFailed.TabIndex = 2;
             this.labelRunsFailed.Text = "{0} runs were not converted due to insufficient correlation.";
             // 
+            // panelKeep
+            // 
+            this.panelKeep.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelKeep.Controls.Add(this.labelKeep);
+            this.panelKeep.Controls.Add(this.listKeep);
+            this.panelKeep.Location = new System.Drawing.Point(5, 208);
+            this.panelKeep.Name = "panelKeep";
+            this.panelKeep.Size = new System.Drawing.Size(370, 134);
+            this.panelKeep.TabIndex = 4;
+            // 
+            // labelKeep
+            // 
+            this.labelKeep.AutoSize = true;
+            this.labelKeep.Location = new System.Drawing.Point(4, 3);
+            this.labelKeep.Name = "labelKeep";
+            this.labelKeep.Size = new System.Drawing.Size(346, 26);
+            this.labelKeep.TabIndex = 0;
+            this.labelKeep.Text = "{0} peptide iRT values calculated from chromatogram peaks will be kept\r\nand newer" +
+                " iRT values calculated from MS/MS scans ignored:";
+            // 
+            // listKeep
+            // 
+            this.listKeep.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.listKeep.FormattingEnabled = true;
+            this.listKeep.Location = new System.Drawing.Point(7, 32);
+            this.listKeep.Name = "listKeep";
+            this.listKeep.Size = new System.Drawing.Size(326, 82);
+            this.listKeep.TabIndex = 1;
+            // 
             // AddIrtPeptidesDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(437, 442);
+            this.ClientSize = new System.Drawing.Size(473, 577);
+            this.Controls.Add(this.panelKeep);
             this.Controls.Add(this.labelRunsFailed);
             this.Controls.Add(this.labelRunsConverted);
             this.Controls.Add(this.labelPeptidesAdded);
@@ -232,6 +268,8 @@
             this.panelExisting.PerformLayout();
             this.panelOverwrite.ResumeLayout(false);
             this.panelOverwrite.PerformLayout();
+            this.panelKeep.ResumeLayout(false);
+            this.panelKeep.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -254,5 +292,8 @@
         private System.Windows.Forms.Label labelPeptidesAdded;
         private System.Windows.Forms.Label labelRunsConverted;
         private System.Windows.Forms.Label labelRunsFailed;
+        private System.Windows.Forms.Panel panelKeep;
+        private System.Windows.Forms.Label labelKeep;
+        private System.Windows.Forms.ListBox listKeep;
     }
 }

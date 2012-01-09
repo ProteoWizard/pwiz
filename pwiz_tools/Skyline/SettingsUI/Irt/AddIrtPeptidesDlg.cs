@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 
@@ -30,7 +31,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             int runsConvertedCount,
             int runsFailedCount,
             IEnumerable<string> existingPeptides,
-            IEnumerable<string> overwritePeptides)
+            IEnumerable<string> overwritePeptides,
+            IEnumerable<string> keepPeptides)
         {
             InitializeComponent();
 
@@ -61,27 +63,35 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                            : "1 run was not converted due to insufficient correlation.";
             }
                 
-            foreach (string existingPeptide in existingPeptides)
-                listExisting.Items.Add(existingPeptide);
-            foreach (string overwritePeptide in overwritePeptides)
-                listOverwrite.Items.Add(overwritePeptide);
+            listExisting.Items.AddRange(existingPeptides.Cast<object>().ToArray());
+            listOverwrite.Items.AddRange(overwritePeptides.Cast<object>().ToArray());
+            listKeep.Items.AddRange(keepPeptides.Cast<object>().ToArray());
 
             labelExisting.Text = string.Format(labelExisting.Text, listExisting.Items.Count);
+            labelOverwrite.Text = string.Format(labelOverwrite.Text, listOverwrite.Items.Count);
+            labelKeep.Text = string.Format(labelKeep.Text, listKeep.Items.Count);
 
+            panelExisting.Anchor &= ~AnchorStyles.Bottom;
             if (listOverwrite.Items.Count == 0)
             {
                 panelOverwrite.Visible = false;
+                panelKeep.Top -= panelOverwrite.Height;
                 panelExisting.Top -= panelOverwrite.Height;
-                panelExisting.Anchor &= ~AnchorStyles.Bottom;
                 Height -= panelOverwrite.Height;
-                panelExisting.Anchor |= AnchorStyles.Bottom;
             }
+            if (listKeep.Items.Count == 0)
+            {
+                panelKeep.Visible = false;
+                panelExisting.Top -= panelKeep.Height;
+                Height -= panelKeep.Height;
+            }
+            panelExisting.Anchor |= AnchorStyles.Bottom;
             if (listExisting.Items.Count == 0)
             {
                 panelExisting.Visible = false;
                 Height -= panelExisting.Height;
             }
-            if (!panelOverwrite.Visible && !panelExisting.Visible)
+            if (!panelOverwrite.Visible && !panelKeep.Visible && !panelExisting.Visible)
                 FormBorderStyle = FormBorderStyle.FixedDialog;
         }
 

@@ -18,12 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib.BlibData;
 
 namespace pwiz.Skyline.Model.Irt
 {
-    public enum TimeSource { scan, peak }
-
     public interface IPeptideData
     {
         string Sequence { get; }
@@ -56,7 +55,7 @@ namespace pwiz.Skyline.Model.Irt
         /// <summary>
         /// For NHibernate only
         /// </summary>
-        public DbIrtPeptide()
+        protected DbIrtPeptide()
         {            
         }
 
