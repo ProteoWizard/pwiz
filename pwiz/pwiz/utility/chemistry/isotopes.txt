@@ -1,0 +1,2819 @@
+# data obtained from:
+#   http://physics.nist.gov/PhysRefData/Compositions/index.html
+
+Atomic Number = 1
+Atomic Symbol = H
+Mass Number = 1
+Relative Atomic Mass = 1.0078250321(4)
+Isotopic Composition = 99.9885(70)
+Standard Atomic Weight = 1.00794(7)
+Notes = g,m,r,c,w
+
+Atomic Number = 1
+Atomic Symbol = D
+Mass Number = 2
+Relative Atomic Mass = 2.0141017780(4)
+Isotopic Composition = 0.0115(70)
+Standard Atomic Weight = 1.00794(7)
+Notes = g,m,r,c,w
+
+Atomic Number = 1
+Atomic Symbol = T
+Mass Number = 3
+Relative Atomic Mass = 3.0160492675(11)
+Isotopic Composition = 
+Standard Atomic Weight = 1.00794(7)
+Notes = g,m,r,c,w
+
+Atomic Number = 2
+Atomic Symbol = He
+Mass Number = 3
+Relative Atomic Mass = 3.0160293097(9)
+Isotopic Composition = 0.000137(3)
+Standard Atomic Weight = 4.002602(2)
+Notes = g,r,a
+
+Atomic Number = 2
+Atomic Symbol = He
+Mass Number = 4
+Relative Atomic Mass = 4.0026032497(10)
+Isotopic Composition = 99.999863(3)
+Standard Atomic Weight = 4.002602(2)
+Notes = g,r,a
+
+Atomic Number = 3
+Atomic Symbol = Li
+Mass Number = 6
+Relative Atomic Mass = 6.0151223(5)
+Isotopic Composition = 7.59(4)
+Standard Atomic Weight = 6.941(2)
+Notes = g,m,r,b,d
+
+Atomic Number = 3
+Atomic Symbol = Li
+Mass Number = 7
+Relative Atomic Mass = 7.0160040(5)
+Isotopic Composition = 92.41(4)
+Standard Atomic Weight = 6.941(2)
+Notes = g,m,r,b,d
+
+Atomic Number = 4
+Atomic Symbol = Be
+Mass Number = 9
+Relative Atomic Mass = 9.0121821(4)
+Isotopic Composition = 100
+Standard Atomic Weight = 9.012182(3)
+Notes =  
+
+Atomic Number = 5
+Atomic Symbol = B
+Mass Number = 10
+Relative Atomic Mass = 10.0129370(4)
+Isotopic Composition = 19.9(7)
+Standard Atomic Weight = 10.811(7)
+Notes = g,m,r
+
+Atomic Number = 5
+Atomic Symbol = B
+Mass Number = 11
+Relative Atomic Mass = 11.0093055(5)
+Isotopic Composition = 80.1(7)
+Standard Atomic Weight = 10.811(7)
+Notes = g,m,r
+
+Atomic Number = 6
+Atomic Symbol = C
+Mass Number = 12
+Relative Atomic Mass = 12.0000000(0)
+Isotopic Composition = 98.93(8)
+Standard Atomic Weight = 12.0107(8)
+Notes = g,r
+
+Atomic Number = 6
+Atomic Symbol = C
+Mass Number = 13
+Relative Atomic Mass = 13.0033548378(10)
+Isotopic Composition = 1.07(8)
+Standard Atomic Weight = 12.0107(8)
+Notes = g,r
+
+Atomic Number = 6
+Atomic Symbol = C
+Mass Number = 14
+Relative Atomic Mass = 14.003241988(4)
+Isotopic Composition = 
+Standard Atomic Weight = 12.0107(8)
+Notes = g,r
+
+Atomic Number = 7
+Atomic Symbol = N
+Mass Number = 14
+Relative Atomic Mass = 14.0030740052(9)
+Isotopic Composition = 99.632(7)
+Standard Atomic Weight = 14.0067(2)
+Notes = g,r,e
+
+Atomic Number = 7
+Atomic Symbol = N
+Mass Number = 15
+Relative Atomic Mass = 15.0001088984(9)
+Isotopic Composition = 0.368(7)
+Standard Atomic Weight = 14.0067(2)
+Notes = g,r,e
+
+Atomic Number = 8
+Atomic Symbol = O
+Mass Number = 16
+Relative Atomic Mass = 15.9949146221(15)
+Isotopic Composition = 99.757(16)
+Standard Atomic Weight = 15.9994(3)
+Notes = g,r
+
+Atomic Number = 8
+Atomic Symbol = O
+Mass Number = 17
+Relative Atomic Mass = 16.99913150(22)
+Isotopic Composition = 0.038(1)
+Standard Atomic Weight = 15.9994(3)
+Notes = g,r
+
+Atomic Number = 8
+Atomic Symbol = O
+Mass Number = 18
+Relative Atomic Mass = 17.9991604(9)
+Isotopic Composition = 0.205(14)
+Standard Atomic Weight = 15.9994(3)
+Notes = g,r
+
+Atomic Number = 9
+Atomic Symbol = F
+Mass Number = 19
+Relative Atomic Mass = 18.99840320(7)
+Isotopic Composition = 100
+Standard Atomic Weight = 18.9984032(5)
+Notes =  
+
+Atomic Number = 10
+Atomic Symbol = Ne
+Mass Number = 20
+Relative Atomic Mass = 19.9924401759(20)
+Isotopic Composition = 90.48(3)
+Standard Atomic Weight = 20.1797(6)
+Notes = g,m,r,a
+
+Atomic Number = 10
+Atomic Symbol = Ne
+Mass Number = 21
+Relative Atomic Mass = 20.99384674(4)
+Isotopic Composition = 0.27(1)
+Standard Atomic Weight = 20.1797(6)
+Notes = g,m,r,a
+
+Atomic Number = 10
+Atomic Symbol = Ne
+Mass Number = 22
+Relative Atomic Mass = 21.99138551(23)
+Isotopic Composition = 9.25(3)
+Standard Atomic Weight = 20.1797(6)
+Notes = g,m,r,a
+
+Atomic Number = 11
+Atomic Symbol = Na
+Mass Number = 23
+Relative Atomic Mass = 22.98976967(23)
+Isotopic Composition = 100
+Standard Atomic Weight = 22.989770(2)
+Notes =  
+
+Atomic Number = 12
+Atomic Symbol = Mg
+Mass Number = 24
+Relative Atomic Mass = 23.98504190(20)
+Isotopic Composition = 78.99(4)
+Standard Atomic Weight = 24.3050(6)
+Notes =  
+
+Atomic Number = 12
+Atomic Symbol = Mg
+Mass Number = 25
+Relative Atomic Mass = 24.98583702(20)
+Isotopic Composition = 10.00(1)
+Standard Atomic Weight = 24.3050(6)
+Notes =  
+
+Atomic Number = 12
+Atomic Symbol = Mg
+Mass Number = 26
+Relative Atomic Mass = 25.98259304(21)
+Isotopic Composition = 11.01(3)
+Standard Atomic Weight = 24.3050(6)
+Notes =  
+
+Atomic Number = 13
+Atomic Symbol = Al
+Mass Number = 27
+Relative Atomic Mass = 26.98153844(14)
+Isotopic Composition = 100
+Standard Atomic Weight = 26.981538(2)
+Notes =  
+
+Atomic Number = 14
+Atomic Symbol = Si
+Mass Number = 28
+Relative Atomic Mass = 27.9769265327(20)
+Isotopic Composition = 92.2297(7)
+Standard Atomic Weight = 28.0855(3)
+Notes = r
+
+Atomic Number = 14
+Atomic Symbol = Si
+Mass Number = 29
+Relative Atomic Mass = 28.97649472(3)
+Isotopic Composition = 4.6832(5)
+Standard Atomic Weight = 28.0855(3)
+Notes = r
+
+Atomic Number = 14
+Atomic Symbol = Si
+Mass Number = 30
+Relative Atomic Mass = 29.97377022(5)
+Isotopic Composition = 3.0872(5)
+Standard Atomic Weight = 28.0855(3)
+Notes = r
+
+Atomic Number = 15
+Atomic Symbol = P
+Mass Number = 31
+Relative Atomic Mass = 30.97376151(20)
+Isotopic Composition = 100
+Standard Atomic Weight = 30.973761(2)
+Notes =  
+
+Atomic Number = 16
+Atomic Symbol = S
+Mass Number = 32
+Relative Atomic Mass = 31.97207069(12)
+Isotopic Composition = 94.93(31)
+Standard Atomic Weight = 32.065(5)
+Notes = g,r
+
+Atomic Number = 16
+Atomic Symbol = S
+Mass Number = 33
+Relative Atomic Mass = 32.97145850(12)
+Isotopic Composition = 0.76(2)
+Standard Atomic Weight = 32.065(5)
+Notes = g,r
+
+Atomic Number = 16
+Atomic Symbol = S
+Mass Number = 34
+Relative Atomic Mass = 33.96786683(11)
+Isotopic Composition = 4.29(28)
+Standard Atomic Weight = 32.065(5)
+Notes = g,r
+
+Atomic Number = 16
+Atomic Symbol = S
+Mass Number = 36
+Relative Atomic Mass = 35.96708088(25)
+Isotopic Composition = 0.02(1)
+Standard Atomic Weight = 32.065(5)
+Notes = g,r
+
+Atomic Number = 17
+Atomic Symbol = Cl
+Mass Number = 35
+Relative Atomic Mass = 34.96885271(4)
+Isotopic Composition = 75.78(4)
+Standard Atomic Weight = 35.453(2)
+Notes = m
+
+Atomic Number = 17
+Atomic Symbol = Cl
+Mass Number = 37
+Relative Atomic Mass = 36.96590260(5)
+Isotopic Composition = 24.22(4)
+Standard Atomic Weight = 35.453(2)
+Notes = m
+
+Atomic Number = 18
+Atomic Symbol = Ar
+Mass Number = 36
+Relative Atomic Mass = 35.96754628(27)
+Isotopic Composition = 0.3365(30)
+Standard Atomic Weight = 39.948(1)
+Notes = g,r,a
+
+Atomic Number = 18
+Atomic Symbol = Ar
+Mass Number = 38
+Relative Atomic Mass = 37.9627322(5)
+Isotopic Composition = 0.0632(5)
+Standard Atomic Weight = 39.948(1)
+Notes = g,r,a
+
+Atomic Number = 18
+Atomic Symbol = Ar
+Mass Number = 40
+Relative Atomic Mass = 39.962383123(3)
+Isotopic Composition = 99.6003(30)
+Standard Atomic Weight = 39.948(1)
+Notes = g,r,a
+
+Atomic Number = 19
+Atomic Symbol = K
+Mass Number = 39
+Relative Atomic Mass = 38.9637069(3)
+Isotopic Composition = 93.2581(44)
+Standard Atomic Weight = 39.0983(1)
+Notes =  
+
+Atomic Number = 19
+Atomic Symbol = K
+Mass Number = 40
+Relative Atomic Mass = 39.96399867(29)
+Isotopic Composition = 0.0117(1)
+Standard Atomic Weight = 39.0983(1)
+Notes =  
+
+Atomic Number = 19
+Atomic Symbol = K
+Mass Number = 41
+Relative Atomic Mass = 40.96182597(28)
+Isotopic Composition = 6.7302(44)
+Standard Atomic Weight = 39.0983(1)
+Notes =  
+
+Atomic Number = 20
+Atomic Symbol = Ca
+Mass Number = 40
+Relative Atomic Mass = 39.9625912(3)
+Isotopic Composition = 96.941(156)
+Standard Atomic Weight = 40.078(4)
+Notes = g,r,f
+
+Atomic Number = 20
+Atomic Symbol = Ca
+Mass Number = 42
+Relative Atomic Mass = 41.9586183(4)
+Isotopic Composition = 0.647(23)
+Standard Atomic Weight = 40.078(4)
+Notes = g,r,f
+
+Atomic Number = 20
+Atomic Symbol = Ca
+Mass Number = 43
+Relative Atomic Mass = 42.9587668(5)
+Isotopic Composition = 0.135(10)
+Standard Atomic Weight = 40.078(4)
+Notes = g,r,f
+
+Atomic Number = 20
+Atomic Symbol = Ca
+Mass Number = 44
+Relative Atomic Mass = 43.9554811(9)
+Isotopic Composition = 2.086(110)
+Standard Atomic Weight = 40.078(4)
+Notes = g,r,f
+
+Atomic Number = 20
+Atomic Symbol = Ca
+Mass Number = 46
+Relative Atomic Mass = 45.9536928(25)
+Isotopic Composition = 0.004(3)
+Standard Atomic Weight = 40.078(4)
+Notes = g,r,f
+
+Atomic Number = 20
+Atomic Symbol = Ca
+Mass Number = 48
+Relative Atomic Mass = 47.952534(4)
+Isotopic Composition = 0.187(21)
+Standard Atomic Weight = 40.078(4)
+Notes = g,r,f
+
+Atomic Number = 21
+Atomic Symbol = Sc
+Mass Number = 45
+Relative Atomic Mass = 44.9559102(12)
+Isotopic Composition = 100
+Standard Atomic Weight = 44.955910(8)
+Notes =  
+
+Atomic Number = 22
+Atomic Symbol = Ti
+Mass Number = 46
+Relative Atomic Mass = 45.9526295(12)
+Isotopic Composition = 8.25(3)
+Standard Atomic Weight = 47.867(1)
+Notes =  
+
+Atomic Number = 22
+Atomic Symbol = Ti
+Mass Number = 47
+Relative Atomic Mass = 46.9517638(10)
+Isotopic Composition = 7.44(2)
+Standard Atomic Weight = 47.867(1)
+Notes =  
+
+Atomic Number = 22
+Atomic Symbol = Ti
+Mass Number = 48
+Relative Atomic Mass = 47.9479471(10)
+Isotopic Composition = 73.72(3)
+Standard Atomic Weight = 47.867(1)
+Notes =  
+
+Atomic Number = 22
+Atomic Symbol = Ti
+Mass Number = 49
+Relative Atomic Mass = 48.9478708(10)
+Isotopic Composition = 5.41(2)
+Standard Atomic Weight = 47.867(1)
+Notes =  
+
+Atomic Number = 22
+Atomic Symbol = Ti
+Mass Number = 50
+Relative Atomic Mass = 49.9447921(11)
+Isotopic Composition = 5.18(2)
+Standard Atomic Weight = 47.867(1)
+Notes =  
+
+Atomic Number = 23
+Atomic Symbol = V
+Mass Number = 50
+Relative Atomic Mass = 49.9471628(14)
+Isotopic Composition = 0.250(4)
+Standard Atomic Weight = 50.9415(1)
+Notes =  
+
+Atomic Number = 23
+Atomic Symbol = V
+Mass Number = 51
+Relative Atomic Mass = 50.9439637(14)
+Isotopic Composition = 99.750(4)
+Standard Atomic Weight = 50.9415(1)
+Notes =  
+
+Atomic Number = 24
+Atomic Symbol = Cr
+Mass Number = 50
+Relative Atomic Mass = 49.9460496(14)
+Isotopic Composition = 4.345(13)
+Standard Atomic Weight = 51.9961(6)
+Notes =  
+
+Atomic Number = 24
+Atomic Symbol = Cr
+Mass Number = 52
+Relative Atomic Mass = 51.9405119(15)
+Isotopic Composition = 83.789(18)
+Standard Atomic Weight = 51.9961(6)
+Notes =  
+
+Atomic Number = 24
+Atomic Symbol = Cr
+Mass Number = 53
+Relative Atomic Mass = 52.9406538(15)
+Isotopic Composition = 9.501(17)
+Standard Atomic Weight = 51.9961(6)
+Notes =  
+
+Atomic Number = 24
+Atomic Symbol = Cr
+Mass Number = 54
+Relative Atomic Mass = 53.9388849(15)
+Isotopic Composition = 2.365(7)
+Standard Atomic Weight = 51.9961(6)
+Notes =  
+
+Atomic Number = 25
+Atomic Symbol = Mn
+Mass Number = 55
+Relative Atomic Mass = 54.9380496(14)
+Isotopic Composition = 100
+Standard Atomic Weight = 54.938049(9)
+Notes =  
+
+Atomic Number = 26
+Atomic Symbol = Fe
+Mass Number = 54
+Relative Atomic Mass = 53.9396148(14)
+Isotopic Composition = 5.845(35)
+Standard Atomic Weight = 55.845(2)
+Notes =  
+
+Atomic Number = 26
+Atomic Symbol = Fe
+Mass Number = 56
+Relative Atomic Mass = 55.9349421(15)
+Isotopic Composition = 91.754(36)
+Standard Atomic Weight = 55.845(2)
+Notes =  
+
+Atomic Number = 26
+Atomic Symbol = Fe
+Mass Number = 57
+Relative Atomic Mass = 56.9353987(15)
+Isotopic Composition = 2.119(10)
+Standard Atomic Weight = 55.845(2)
+Notes =  
+
+Atomic Number = 26
+Atomic Symbol = Fe
+Mass Number = 58
+Relative Atomic Mass = 57.9332805(15)
+Isotopic Composition = 0.282(4)
+Standard Atomic Weight = 55.845(2)
+Notes =  
+
+Atomic Number = 27
+Atomic Symbol = Co
+Mass Number = 59
+Relative Atomic Mass = 58.9332002(15)
+Isotopic Composition = 100
+Standard Atomic Weight = 58.933200(9)
+Notes =  
+
+Atomic Number = 28
+Atomic Symbol = Ni
+Mass Number = 58
+Relative Atomic Mass = 57.9353479(15)
+Isotopic Composition = 68.0769(89)
+Standard Atomic Weight = 58.6934(2)
+Notes =  
+
+Atomic Number = 28
+Atomic Symbol = Ni
+Mass Number = 60
+Relative Atomic Mass = 59.9307906(15)
+Isotopic Composition = 26.2231(77)
+Standard Atomic Weight = 58.6934(2)
+Notes =  
+
+Atomic Number = 28
+Atomic Symbol = Ni
+Mass Number = 61
+Relative Atomic Mass = 60.9310604(15)
+Isotopic Composition = 1.1399(6)
+Standard Atomic Weight = 58.6934(2)
+Notes =  
+
+Atomic Number = 28
+Atomic Symbol = Ni
+Mass Number = 62
+Relative Atomic Mass = 61.9283488(15)
+Isotopic Composition = 3.6345(17)
+Standard Atomic Weight = 58.6934(2)
+Notes =  
+
+Atomic Number = 28
+Atomic Symbol = Ni
+Mass Number = 64
+Relative Atomic Mass = 63.9279696(16)
+Isotopic Composition = 0.9256(9)
+Standard Atomic Weight = 58.6934(2)
+Notes =  
+
+Atomic Number = 29
+Atomic Symbol = Cu
+Mass Number = 63
+Relative Atomic Mass = 62.9296011(15)
+Isotopic Composition = 69.17(3)
+Standard Atomic Weight = 63.546(3)
+Notes = r
+
+Atomic Number = 29
+Atomic Symbol = Cu
+Mass Number = 65
+Relative Atomic Mass = 64.9277937(19)
+Isotopic Composition = 30.83(3)
+Standard Atomic Weight = 63.546(3)
+Notes = r
+
+Atomic Number = 30
+Atomic Symbol = Zn
+Mass Number = 64
+Relative Atomic Mass = 63.9291466(18)
+Isotopic Composition = 48.63(60)
+Standard Atomic Weight = 65.409(4)
+Notes =  
+
+Atomic Number = 30
+Atomic Symbol = Zn
+Mass Number = 66
+Relative Atomic Mass = 65.9260368(16)
+Isotopic Composition = 27.90(27)
+Standard Atomic Weight = 65.409(4)
+Notes =  
+
+Atomic Number = 30
+Atomic Symbol = Zn
+Mass Number = 67
+Relative Atomic Mass = 66.9271309(17)
+Isotopic Composition = 4.10(13)
+Standard Atomic Weight = 65.409(4)
+Notes =  
+
+Atomic Number = 30
+Atomic Symbol = Zn
+Mass Number = 68
+Relative Atomic Mass = 67.9248476(17)
+Isotopic Composition = 18.75(51)
+Standard Atomic Weight = 65.409(4)
+Notes =  
+
+Atomic Number = 30
+Atomic Symbol = Zn
+Mass Number = 70
+Relative Atomic Mass = 69.925325(4)
+Isotopic Composition = 0.62(3)
+Standard Atomic Weight = 65.409(4)
+Notes =  
+
+Atomic Number = 31
+Atomic Symbol = Ga
+Mass Number = 69
+Relative Atomic Mass = 68.925581(3)
+Isotopic Composition = 60.108(9)
+Standard Atomic Weight = 69.723(1)
+Notes = m
+
+Atomic Number = 31
+Atomic Symbol = Ga
+Mass Number = 71
+Relative Atomic Mass = 70.9247050(19)
+Isotopic Composition = 39.892(9)
+Standard Atomic Weight = 69.723(1)
+Notes = m
+
+Atomic Number = 32
+Atomic Symbol = Ge
+Mass Number = 70
+Relative Atomic Mass = 69.9242504(19)
+Isotopic Composition = 20.84(87)
+Standard Atomic Weight = 72.64(1)
+Notes = h
+
+Atomic Number = 32
+Atomic Symbol = Ge
+Mass Number = 72
+Relative Atomic Mass = 71.9220762(16)
+Isotopic Composition = 27.54(34)
+Standard Atomic Weight = 72.64(1)
+Notes = h
+
+Atomic Number = 32
+Atomic Symbol = Ge
+Mass Number = 73
+Relative Atomic Mass = 72.9234594(16)
+Isotopic Composition = 7.73(5)
+Standard Atomic Weight = 72.64(1)
+Notes = h
+
+Atomic Number = 32
+Atomic Symbol = Ge
+Mass Number = 74
+Relative Atomic Mass = 73.9211782(16)
+Isotopic Composition = 36.28(73)
+Standard Atomic Weight = 72.64(1)
+Notes = h
+
+Atomic Number = 32
+Atomic Symbol = Ge
+Mass Number = 76
+Relative Atomic Mass = 75.9214027(16)
+Isotopic Composition = 7.61(38)
+Standard Atomic Weight = 72.64(1)
+Notes = h
+
+Atomic Number = 33
+Atomic Symbol = As
+Mass Number = 75
+Relative Atomic Mass = 74.9215964(18)
+Isotopic Composition = 100
+Standard Atomic Weight = 74.92160(2)
+Notes =  
+
+Atomic Number = 34
+Atomic Symbol = Se
+Mass Number = 74
+Relative Atomic Mass = 73.9224766(16)
+Isotopic Composition = 0.89(4)
+Standard Atomic Weight = 78.96(3)
+Notes = r
+
+Atomic Number = 34
+Atomic Symbol = Se
+Mass Number = 76
+Relative Atomic Mass = 75.9192141(16)
+Isotopic Composition = 9.37(29)
+Standard Atomic Weight = 78.96(3)
+Notes = r
+
+Atomic Number = 34
+Atomic Symbol = Se
+Mass Number = 77
+Relative Atomic Mass = 76.9199146(16)
+Isotopic Composition = 7.63(16)
+Standard Atomic Weight = 78.96(3)
+Notes = r
+
+Atomic Number = 34
+Atomic Symbol = Se
+Mass Number = 78
+Relative Atomic Mass = 77.9173095(16)
+Isotopic Composition = 23.77(28)
+Standard Atomic Weight = 78.96(3)
+Notes = r
+
+Atomic Number = 34
+Atomic Symbol = Se
+Mass Number = 80
+Relative Atomic Mass = 79.9165218(20)
+Isotopic Composition = 49.61(41)
+Standard Atomic Weight = 78.96(3)
+Notes = r
+
+Atomic Number = 34
+Atomic Symbol = Se
+Mass Number = 82
+Relative Atomic Mass = 81.9167000(22)
+Isotopic Composition = 8.73(22)
+Standard Atomic Weight = 78.96(3)
+Notes = r
+
+Atomic Number = 35
+Atomic Symbol = Br
+Mass Number = 79
+Relative Atomic Mass = 78.9183376(20)
+Isotopic Composition = 50.69(7)
+Standard Atomic Weight = 79.904(1)
+Notes =  
+
+Atomic Number = 35
+Atomic Symbol = Br
+Mass Number = 81
+Relative Atomic Mass = 80.916291(3)
+Isotopic Composition = 49.31(7)
+Standard Atomic Weight = 79.904(1)
+Notes =  
+
+Atomic Number = 36
+Atomic Symbol = Kr
+Mass Number = 78
+Relative Atomic Mass = 77.920386(7)
+Isotopic Composition = 0.35(1)
+Standard Atomic Weight = 83.798(2)
+Notes = g,m,a
+
+Atomic Number = 36
+Atomic Symbol = Kr
+Mass Number = 80
+Relative Atomic Mass = 79.916378(4)
+Isotopic Composition = 2.28(6)
+Standard Atomic Weight = 83.798(2)
+Notes = g,m,a
+
+Atomic Number = 36
+Atomic Symbol = Kr
+Mass Number = 82
+Relative Atomic Mass = 81.9134846(28)
+Isotopic Composition = 11.58(14)
+Standard Atomic Weight = 83.798(2)
+Notes = g,m,a
+
+Atomic Number = 36
+Atomic Symbol = Kr
+Mass Number = 83
+Relative Atomic Mass = 82.914136(3)
+Isotopic Composition = 11.49(6)
+Standard Atomic Weight = 83.798(2)
+Notes = g,m,a
+
+Atomic Number = 36
+Atomic Symbol = Kr
+Mass Number = 84
+Relative Atomic Mass = 83.911507(3)
+Isotopic Composition = 57.00(4)
+Standard Atomic Weight = 83.798(2)
+Notes = g,m,a
+
+Atomic Number = 36
+Atomic Symbol = Kr
+Mass Number = 86
+Relative Atomic Mass = 85.9106103(12)
+Isotopic Composition = 17.30(22)
+Standard Atomic Weight = 83.798(2)
+Notes = g,m,a
+
+Atomic Number = 37
+Atomic Symbol = Rb
+Mass Number = 85
+Relative Atomic Mass = 84.9117893(25)
+Isotopic Composition = 72.17(2)
+Standard Atomic Weight = 85.4678(3)
+Notes = g
+
+Atomic Number = 37
+Atomic Symbol = Rb
+Mass Number = 87
+Relative Atomic Mass = 86.9091835(27)
+Isotopic Composition = 27.83(2)
+Standard Atomic Weight = 85.4678(3)
+Notes = g
+
+Atomic Number = 38
+Atomic Symbol = Sr
+Mass Number = 84
+Relative Atomic Mass = 83.913425(4)
+Isotopic Composition = 0.56(1)
+Standard Atomic Weight = 87.62(1)
+Notes = g,r,f
+
+Atomic Number = 38
+Atomic Symbol = Sr
+Mass Number = 86
+Relative Atomic Mass = 85.9092624(24)
+Isotopic Composition = 9.86(1)
+Standard Atomic Weight = 87.62(1)
+Notes = g,r,f
+
+Atomic Number = 38
+Atomic Symbol = Sr
+Mass Number = 87
+Relative Atomic Mass = 86.9088793(24)
+Isotopic Composition = 7.00(1)
+Standard Atomic Weight = 87.62(1)
+Notes = g,r,f
+
+Atomic Number = 38
+Atomic Symbol = Sr
+Mass Number = 88
+Relative Atomic Mass = 87.9056143(24)
+Isotopic Composition = 82.58(1)
+Standard Atomic Weight = 87.62(1)
+Notes = g,r,f
+
+Atomic Number = 39
+Atomic Symbol = Y
+Mass Number = 89
+Relative Atomic Mass = 88.9058479(25)
+Isotopic Composition = 100
+Standard Atomic Weight = 88.90585(2)
+Notes =  
+
+Atomic Number = 40
+Atomic Symbol = Zr
+Mass Number = 90
+Relative Atomic Mass = 89.9047037(23)
+Isotopic Composition = 51.45(40)
+Standard Atomic Weight = 91.224(2)
+Notes = g
+
+Atomic Number = 40
+Atomic Symbol = Zr
+Mass Number = 91
+Relative Atomic Mass = 90.9056450(23)
+Isotopic Composition = 11.22(5)
+Standard Atomic Weight = 91.224(2)
+Notes = g
+
+Atomic Number = 40
+Atomic Symbol = Zr
+Mass Number = 92
+Relative Atomic Mass = 91.9050401(23)
+Isotopic Composition = 17.15(8)
+Standard Atomic Weight = 91.224(2)
+Notes = g
+
+Atomic Number = 40
+Atomic Symbol = Zr
+Mass Number = 94
+Relative Atomic Mass = 93.9063158(25)
+Isotopic Composition = 17.38(28)
+Standard Atomic Weight = 91.224(2)
+Notes = g
+
+Atomic Number = 40
+Atomic Symbol = Zr
+Mass Number = 96
+Relative Atomic Mass = 95.908276(3)
+Isotopic Composition = 2.80(9)
+Standard Atomic Weight = 91.224(2)
+Notes = g
+
+Atomic Number = 41
+Atomic Symbol = Nb
+Mass Number = 93
+Relative Atomic Mass = 92.9063775(24)
+Isotopic Composition = 100
+Standard Atomic Weight = 92.90638(2)
+Notes =  
+
+Atomic Number = 42
+Atomic Symbol = Mo
+Mass Number = 92
+Relative Atomic Mass = 91.906810(4)
+Isotopic Composition = 14.84(35)
+Standard Atomic Weight = 95.94(2)
+Notes = g
+
+Atomic Number = 42
+Atomic Symbol = Mo
+Mass Number = 94
+Relative Atomic Mass = 93.9050876(20)
+Isotopic Composition = 9.25(12)
+Standard Atomic Weight = 95.94(2)
+Notes = g
+
+Atomic Number = 42
+Atomic Symbol = Mo
+Mass Number = 95
+Relative Atomic Mass = 94.9058415(20)
+Isotopic Composition = 15.92(13)
+Standard Atomic Weight = 95.94(2)
+Notes = g
+
+Atomic Number = 42
+Atomic Symbol = Mo
+Mass Number = 96
+Relative Atomic Mass = 95.9046789(20)
+Isotopic Composition = 16.68(2)
+Standard Atomic Weight = 95.94(2)
+Notes = g
+
+Atomic Number = 42
+Atomic Symbol = Mo
+Mass Number = 97
+Relative Atomic Mass = 96.9060210(20)
+Isotopic Composition = 9.55(8)
+Standard Atomic Weight = 95.94(2)
+Notes = g
+
+Atomic Number = 42
+Atomic Symbol = Mo
+Mass Number = 98
+Relative Atomic Mass = 97.9054078(20)
+Isotopic Composition = 24.13(31)
+Standard Atomic Weight = 95.94(2)
+Notes = g
+
+Atomic Number = 42
+Atomic Symbol = Mo
+Mass Number = 100
+Relative Atomic Mass = 99.907477(6)
+Isotopic Composition = 9.63(23)
+Standard Atomic Weight = 95.94(2)
+Notes = g
+
+Atomic Number = 43
+Atomic Symbol = Tc
+Mass Number = 97
+Relative Atomic Mass = 96.906365(5)
+Isotopic Composition = 
+Standard Atomic Weight = [98]
+Notes =  
+
+Atomic Number = 43
+Atomic Symbol = Tc
+Mass Number = 98
+Relative Atomic Mass = 97.907216(4)
+Isotopic Composition = 
+Standard Atomic Weight = [98]
+Notes =  
+
+Atomic Number = 43
+Atomic Symbol = Tc
+Mass Number = 99
+Relative Atomic Mass = 98.9062546(21)
+Isotopic Composition = 
+Standard Atomic Weight = [98]
+Notes =  
+
+Atomic Number = 44
+Atomic Symbol = Ru
+Mass Number = 96
+Relative Atomic Mass = 95.907598(8)
+Isotopic Composition = 5.54(14)
+Standard Atomic Weight = 101.07(2)
+Notes = g
+
+Atomic Number = 44
+Atomic Symbol = Ru
+Mass Number = 98
+Relative Atomic Mass = 97.905287(7)
+Isotopic Composition = 1.87(3)
+Standard Atomic Weight = 101.07(2)
+Notes = g
+
+Atomic Number = 44
+Atomic Symbol = Ru
+Mass Number = 99
+Relative Atomic Mass = 98.9059393(21)
+Isotopic Composition = 12.76(14)
+Standard Atomic Weight = 101.07(2)
+Notes = g
+
+Atomic Number = 44
+Atomic Symbol = Ru
+Mass Number = 100
+Relative Atomic Mass = 99.9042197(22)
+Isotopic Composition = 12.60(7)
+Standard Atomic Weight = 101.07(2)
+Notes = g
+
+Atomic Number = 44
+Atomic Symbol = Ru
+Mass Number = 101
+Relative Atomic Mass = 100.9055822(22)
+Isotopic Composition = 17.06(2)
+Standard Atomic Weight = 101.07(2)
+Notes = g
+
+Atomic Number = 44
+Atomic Symbol = Ru
+Mass Number = 102
+Relative Atomic Mass = 101.9043495(22)
+Isotopic Composition = 31.55(14)
+Standard Atomic Weight = 101.07(2)
+Notes = g
+
+Atomic Number = 44
+Atomic Symbol = Ru
+Mass Number = 104
+Relative Atomic Mass = 103.905430(4)
+Isotopic Composition = 18.62(27)
+Standard Atomic Weight = 101.07(2)
+Notes = g
+
+Atomic Number = 45
+Atomic Symbol = Rh
+Mass Number = 103
+Relative Atomic Mass = 102.905504(3)
+Isotopic Composition = 100
+Standard Atomic Weight = 102.90550(2)
+Notes =  
+
+Atomic Number = 46
+Atomic Symbol = Pd
+Mass Number = 102
+Relative Atomic Mass = 101.905608(3)
+Isotopic Composition = 1.02(1)
+Standard Atomic Weight = 106.42(1)
+Notes = g,r
+
+Atomic Number = 46
+Atomic Symbol = Pd
+Mass Number = 104
+Relative Atomic Mass = 103.904035(5)
+Isotopic Composition = 11.14(8)
+Standard Atomic Weight = 106.42(1)
+Notes = g,r
+
+Atomic Number = 46
+Atomic Symbol = Pd
+Mass Number = 105
+Relative Atomic Mass = 104.905084(5)
+Isotopic Composition = 22.33(8)
+Standard Atomic Weight = 106.42(1)
+Notes = g,r
+
+Atomic Number = 46
+Atomic Symbol = Pd
+Mass Number = 106
+Relative Atomic Mass = 105.903483(5)
+Isotopic Composition = 27.33(3)
+Standard Atomic Weight = 106.42(1)
+Notes = g,r
+
+Atomic Number = 46
+Atomic Symbol = Pd
+Mass Number = 108
+Relative Atomic Mass = 107.903894(4)
+Isotopic Composition = 26.46(9)
+Standard Atomic Weight = 106.42(1)
+Notes = g,r
+
+Atomic Number = 46
+Atomic Symbol = Pd
+Mass Number = 110
+Relative Atomic Mass = 109.905152(12)
+Isotopic Composition = 11.72(9)
+Standard Atomic Weight = 106.42(1)
+Notes = g,r
+
+Atomic Number = 47
+Atomic Symbol = Ag
+Mass Number = 107
+Relative Atomic Mass = 106.905093(6)
+Isotopic Composition = 51.839(8)
+Standard Atomic Weight = 107.8682(2)
+Notes = g
+
+Atomic Number = 47
+Atomic Symbol = Ag
+Mass Number = 109
+Relative Atomic Mass = 108.904756(3)
+Isotopic Composition = 48.161(8)
+Standard Atomic Weight = 107.8682(2)
+Notes = g
+
+Atomic Number = 48
+Atomic Symbol = Cd
+Mass Number = 106
+Relative Atomic Mass = 105.906458(6)
+Isotopic Composition = 1.25(6)
+Standard Atomic Weight = 112.411(8)
+Notes = g
+
+Atomic Number = 48
+Atomic Symbol = Cd
+Mass Number = 108
+Relative Atomic Mass = 107.904183(6)
+Isotopic Composition = 0.89(3)
+Standard Atomic Weight = 112.411(8)
+Notes = g
+
+Atomic Number = 48
+Atomic Symbol = Cd
+Mass Number = 110
+Relative Atomic Mass = 109.903006(3)
+Isotopic Composition = 12.49(18)
+Standard Atomic Weight = 112.411(8)
+Notes = g
+
+Atomic Number = 48
+Atomic Symbol = Cd
+Mass Number = 111
+Relative Atomic Mass = 110.904182(3)
+Isotopic Composition = 12.80(12)
+Standard Atomic Weight = 112.411(8)
+Notes = g
+
+Atomic Number = 48
+Atomic Symbol = Cd
+Mass Number = 112
+Relative Atomic Mass = 111.9027572(30)
+Isotopic Composition = 24.13(21)
+Standard Atomic Weight = 112.411(8)
+Notes = g
+
+Atomic Number = 48
+Atomic Symbol = Cd
+Mass Number = 113
+Relative Atomic Mass = 112.9044009(30)
+Isotopic Composition = 12.22(12)
+Standard Atomic Weight = 112.411(8)
+Notes = g
+
+Atomic Number = 48
+Atomic Symbol = Cd
+Mass Number = 114
+Relative Atomic Mass = 113.9033581(30)
+Isotopic Composition = 28.73(42)
+Standard Atomic Weight = 112.411(8)
+Notes = g
+
+Atomic Number = 48
+Atomic Symbol = Cd
+Mass Number = 116
+Relative Atomic Mass = 115.904755(3)
+Isotopic Composition = 7.49(18)
+Standard Atomic Weight = 112.411(8)
+Notes = g
+
+Atomic Number = 49
+Atomic Symbol = In
+Mass Number = 113
+Relative Atomic Mass = 112.904061(4)
+Isotopic Composition = 4.29(5)
+Standard Atomic Weight = 114.818(3)
+Notes =  
+
+Atomic Number = 49
+Atomic Symbol = In
+Mass Number = 115
+Relative Atomic Mass = 114.903878(5)
+Isotopic Composition = 95.71(5)
+Standard Atomic Weight = 114.818(3)
+Notes =  
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 112
+Relative Atomic Mass = 111.904821(5)
+Isotopic Composition = 0.97(1)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 114
+Relative Atomic Mass = 113.902782(3)
+Isotopic Composition = 0.66(1)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 115
+Relative Atomic Mass = 114.903346(3)
+Isotopic Composition = 0.34(1)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 116
+Relative Atomic Mass = 115.901744(3)
+Isotopic Composition = 14.54(9)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 117
+Relative Atomic Mass = 116.902954(3)
+Isotopic Composition = 7.68(7)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 118
+Relative Atomic Mass = 117.901606(3)
+Isotopic Composition = 24.22(9)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 119
+Relative Atomic Mass = 118.903309(3)
+Isotopic Composition = 8.59(4)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 120
+Relative Atomic Mass = 119.9021966(27)
+Isotopic Composition = 32.58(9)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 122
+Relative Atomic Mass = 121.9034401(29)
+Isotopic Composition = 4.63(3)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 50
+Atomic Symbol = Sn
+Mass Number = 124
+Relative Atomic Mass = 123.9052746(15)
+Isotopic Composition = 5.79(5)
+Standard Atomic Weight = 118.710(7)
+Notes = g
+
+Atomic Number = 51
+Atomic Symbol = Sb
+Mass Number = 121
+Relative Atomic Mass = 120.9038180(24)
+Isotopic Composition = 57.21(5)
+Standard Atomic Weight = 121.760(1)
+Notes = g
+
+Atomic Number = 51
+Atomic Symbol = Sb
+Mass Number = 123
+Relative Atomic Mass = 122.9042157(22)
+Isotopic Composition = 42.79(5)
+Standard Atomic Weight = 121.760(1)
+Notes = g
+
+Atomic Number = 52
+Atomic Symbol = Te
+Mass Number = 120
+Relative Atomic Mass = 119.904020(11)
+Isotopic Composition = 0.09(1)
+Standard Atomic Weight = 127.60(3)
+Notes = g,h
+
+Atomic Number = 52
+Atomic Symbol = Te
+Mass Number = 122
+Relative Atomic Mass = 121.9030471(20)
+Isotopic Composition = 2.55(12)
+Standard Atomic Weight = 127.60(3)
+Notes = g,h
+
+Atomic Number = 52
+Atomic Symbol = Te
+Mass Number = 123
+Relative Atomic Mass = 122.9042730(19)
+Isotopic Composition = 0.89(3)
+Standard Atomic Weight = 127.60(3)
+Notes = g,h
+
+Atomic Number = 52
+Atomic Symbol = Te
+Mass Number = 124
+Relative Atomic Mass = 123.9028195(16)
+Isotopic Composition = 4.74(14)
+Standard Atomic Weight = 127.60(3)
+Notes = g,h
+
+Atomic Number = 52
+Atomic Symbol = Te
+Mass Number = 125
+Relative Atomic Mass = 124.9044247(20)
+Isotopic Composition = 7.07(15)
+Standard Atomic Weight = 127.60(3)
+Notes = g,h
+
+Atomic Number = 52
+Atomic Symbol = Te
+Mass Number = 126
+Relative Atomic Mass = 125.9033055(20)
+Isotopic Composition = 18.84(25)
+Standard Atomic Weight = 127.60(3)
+Notes = g,h
+
+Atomic Number = 52
+Atomic Symbol = Te
+Mass Number = 128
+Relative Atomic Mass = 127.9044614(19)
+Isotopic Composition = 31.74(8)
+Standard Atomic Weight = 127.60(3)
+Notes = g,h
+
+Atomic Number = 52
+Atomic Symbol = Te
+Mass Number = 130
+Relative Atomic Mass = 129.9062228(21)
+Isotopic Composition = 34.08(62)
+Standard Atomic Weight = 127.60(3)
+Notes = g,h
+
+Atomic Number = 53
+Atomic Symbol = I
+Mass Number = 127
+Relative Atomic Mass = 126.904468(4)
+Isotopic Composition = 100
+Standard Atomic Weight = 126.90447(3)
+Notes =  
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 124
+Relative Atomic Mass = 123.9058958(21)
+Isotopic Composition = 0.09(1)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 126
+Relative Atomic Mass = 125.904269(7)
+Isotopic Composition = 0.09(1)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 128
+Relative Atomic Mass = 127.9035304(15)
+Isotopic Composition = 1.92(3)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 129
+Relative Atomic Mass = 128.9047795(9)
+Isotopic Composition = 26.44(24)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 130
+Relative Atomic Mass = 129.9035079(10)
+Isotopic Composition = 4.08(2)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 131
+Relative Atomic Mass = 130.9050819(10)
+Isotopic Composition = 21.18(3)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 132
+Relative Atomic Mass = 131.9041545(12)
+Isotopic Composition = 26.89(6)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 134
+Relative Atomic Mass = 133.9053945(9)
+Isotopic Composition = 10.44(10)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 54
+Atomic Symbol = Xe
+Mass Number = 136
+Relative Atomic Mass = 135.907220(8)
+Isotopic Composition = 8.87(16)
+Standard Atomic Weight = 131.293(6)
+Notes = g,m
+
+Atomic Number = 55
+Atomic Symbol = Cs
+Mass Number = 133
+Relative Atomic Mass = 132.905447(3)
+Isotopic Composition = 100
+Standard Atomic Weight = 132.90545(2)
+Notes =  
+
+Atomic Number = 56
+Atomic Symbol = Ba
+Mass Number = 130
+Relative Atomic Mass = 129.906310(7)
+Isotopic Composition = 0.106(1)
+Standard Atomic Weight = 137.327(7)
+Notes =  
+
+Atomic Number = 56
+Atomic Symbol = Ba
+Mass Number = 132
+Relative Atomic Mass = 131.905056(3)
+Isotopic Composition = 0.101(1)
+Standard Atomic Weight = 137.327(7)
+Notes =  
+
+Atomic Number = 56
+Atomic Symbol = Ba
+Mass Number = 134
+Relative Atomic Mass = 133.904503(3)
+Isotopic Composition = 2.417(18)
+Standard Atomic Weight = 137.327(7)
+Notes =  
+
+Atomic Number = 56
+Atomic Symbol = Ba
+Mass Number = 135
+Relative Atomic Mass = 134.905683(3)
+Isotopic Composition = 6.592(12)
+Standard Atomic Weight = 137.327(7)
+Notes =  
+
+Atomic Number = 56
+Atomic Symbol = Ba
+Mass Number = 136
+Relative Atomic Mass = 135.904570(3)
+Isotopic Composition = 7.854(24)
+Standard Atomic Weight = 137.327(7)
+Notes =  
+
+Atomic Number = 56
+Atomic Symbol = Ba
+Mass Number = 137
+Relative Atomic Mass = 136.905821(3)
+Isotopic Composition = 11.232(24)
+Standard Atomic Weight = 137.327(7)
+Notes =  
+
+Atomic Number = 56
+Atomic Symbol = Ba
+Mass Number = 138
+Relative Atomic Mass = 137.905241(3)
+Isotopic Composition = 71.698(42)
+Standard Atomic Weight = 137.327(7)
+Notes =  
+
+Atomic Number = 57
+Atomic Symbol = La
+Mass Number = 138
+Relative Atomic Mass = 137.907107(4)
+Isotopic Composition = 0.090(1)
+Standard Atomic Weight = 138.9055(2)
+Notes = g
+
+Atomic Number = 57
+Atomic Symbol = La
+Mass Number = 139
+Relative Atomic Mass = 138.906348(3)
+Isotopic Composition = 99.910(1)
+Standard Atomic Weight = 138.9055(2)
+Notes = g
+
+Atomic Number = 58
+Atomic Symbol = Ce
+Mass Number = 136
+Relative Atomic Mass = 135.907140(50)
+Isotopic Composition = 0.185(2)
+Standard Atomic Weight = 140.116(1)
+Notes = g,f
+
+Atomic Number = 58
+Atomic Symbol = Ce
+Mass Number = 138
+Relative Atomic Mass = 137.905986(11)
+Isotopic Composition = 0.251(2)
+Standard Atomic Weight = 140.116(1)
+Notes = g,f
+
+Atomic Number = 58
+Atomic Symbol = Ce
+Mass Number = 140
+Relative Atomic Mass = 139.905434(3)
+Isotopic Composition = 88.450(51)
+Standard Atomic Weight = 140.116(1)
+Notes = g,f
+
+Atomic Number = 58
+Atomic Symbol = Ce
+Mass Number = 142
+Relative Atomic Mass = 141.909240(4)
+Isotopic Composition = 11.114(51)
+Standard Atomic Weight = 140.116(1)
+Notes = g,f
+
+Atomic Number = 59
+Atomic Symbol = Pr
+Mass Number = 141
+Relative Atomic Mass = 140.907648(3)
+Isotopic Composition = 100
+Standard Atomic Weight = 140.90765(2)
+Notes =  
+
+Atomic Number = 60
+Atomic Symbol = Nd
+Mass Number = 142
+Relative Atomic Mass = 141.907719(3)
+Isotopic Composition = 27.2(5)
+Standard Atomic Weight = 144.24(3)
+Notes = g,f
+
+Atomic Number = 60
+Atomic Symbol = Nd
+Mass Number = 143
+Relative Atomic Mass = 142.909810(3)
+Isotopic Composition = 12.2(2)
+Standard Atomic Weight = 144.24(3)
+Notes = g,f
+
+Atomic Number = 60
+Atomic Symbol = Nd
+Mass Number = 144
+Relative Atomic Mass = 143.910083(3)
+Isotopic Composition = 23.8(3)
+Standard Atomic Weight = 144.24(3)
+Notes = g,f
+
+Atomic Number = 60
+Atomic Symbol = Nd
+Mass Number = 145
+Relative Atomic Mass = 144.912569(3)
+Isotopic Composition = 8.3(1)
+Standard Atomic Weight = 144.24(3)
+Notes = g,f
+
+Atomic Number = 60
+Atomic Symbol = Nd
+Mass Number = 146
+Relative Atomic Mass = 145.913112(3)
+Isotopic Composition = 17.2(3)
+Standard Atomic Weight = 144.24(3)
+Notes = g,f
+
+Atomic Number = 60
+Atomic Symbol = Nd
+Mass Number = 148
+Relative Atomic Mass = 147.916889(3)
+Isotopic Composition = 5.7(1)
+Standard Atomic Weight = 144.24(3)
+Notes = g,f
+
+Atomic Number = 60
+Atomic Symbol = Nd
+Mass Number = 150
+Relative Atomic Mass = 149.920887(4)
+Isotopic Composition = 5.6(2)
+Standard Atomic Weight = 144.24(3)
+Notes = g,f
+
+Atomic Number = 61
+Atomic Symbol = Pm
+Mass Number = 145
+Relative Atomic Mass = 144.912744(4)
+Isotopic Composition = 
+Standard Atomic Weight = [145]
+Notes =  
+
+Atomic Number = 61
+Atomic Symbol = Pm
+Mass Number = 147
+Relative Atomic Mass = 146.915134(3)
+Isotopic Composition = 
+Standard Atomic Weight = [145]
+Notes =  
+
+Atomic Number = 62
+Atomic Symbol = Sm
+Mass Number = 144
+Relative Atomic Mass = 143.911995(4)
+Isotopic Composition = 3.07(7)
+Standard Atomic Weight = 150.36(3)
+Notes = g
+
+Atomic Number = 62
+Atomic Symbol = Sm
+Mass Number = 147
+Relative Atomic Mass = 146.914893(3)
+Isotopic Composition = 14.99(18)
+Standard Atomic Weight = 150.36(3)
+Notes = g
+
+Atomic Number = 62
+Atomic Symbol = Sm
+Mass Number = 148
+Relative Atomic Mass = 147.914818(3)
+Isotopic Composition = 11.24(10)
+Standard Atomic Weight = 150.36(3)
+Notes = g
+
+Atomic Number = 62
+Atomic Symbol = Sm
+Mass Number = 149
+Relative Atomic Mass = 148.917180(3)
+Isotopic Composition = 13.82(7)
+Standard Atomic Weight = 150.36(3)
+Notes = g
+
+Atomic Number = 62
+Atomic Symbol = Sm
+Mass Number = 150
+Relative Atomic Mass = 149.917271(3)
+Isotopic Composition = 7.38(1)
+Standard Atomic Weight = 150.36(3)
+Notes = g
+
+Atomic Number = 62
+Atomic Symbol = Sm
+Mass Number = 152
+Relative Atomic Mass = 151.919728(3)
+Isotopic Composition = 26.75(16)
+Standard Atomic Weight = 150.36(3)
+Notes = g
+
+Atomic Number = 62
+Atomic Symbol = Sm
+Mass Number = 154
+Relative Atomic Mass = 153.922205(3)
+Isotopic Composition = 22.75(29)
+Standard Atomic Weight = 150.36(3)
+Notes = g
+
+Atomic Number = 63
+Atomic Symbol = Eu
+Mass Number = 151
+Relative Atomic Mass = 150.919846(3)
+Isotopic Composition = 47.81(3)
+Standard Atomic Weight = 151.964(1)
+Notes = g
+
+Atomic Number = 63
+Atomic Symbol = Eu
+Mass Number = 153
+Relative Atomic Mass = 152.921226(3)
+Isotopic Composition = 52.19(3)
+Standard Atomic Weight = 151.964(1)
+Notes = g
+
+Atomic Number = 64
+Atomic Symbol = Gd
+Mass Number = 152
+Relative Atomic Mass = 151.919788(3)
+Isotopic Composition = 0.20(1)
+Standard Atomic Weight = 157.25(3)
+Notes = g
+
+Atomic Number = 64
+Atomic Symbol = Gd
+Mass Number = 154
+Relative Atomic Mass = 153.920862(3)
+Isotopic Composition = 2.18(3)
+Standard Atomic Weight = 157.25(3)
+Notes = g
+
+Atomic Number = 64
+Atomic Symbol = Gd
+Mass Number = 155
+Relative Atomic Mass = 154.922619(3)
+Isotopic Composition = 14.80(12)
+Standard Atomic Weight = 157.25(3)
+Notes = g
+
+Atomic Number = 64
+Atomic Symbol = Gd
+Mass Number = 156
+Relative Atomic Mass = 155.922120(3)
+Isotopic Composition = 20.47(9)
+Standard Atomic Weight = 157.25(3)
+Notes = g
+
+Atomic Number = 64
+Atomic Symbol = Gd
+Mass Number = 157
+Relative Atomic Mass = 156.923957(3)
+Isotopic Composition = 15.65(2)
+Standard Atomic Weight = 157.25(3)
+Notes = g
+
+Atomic Number = 64
+Atomic Symbol = Gd
+Mass Number = 158
+Relative Atomic Mass = 157.924101(3)
+Isotopic Composition = 24.84(7)
+Standard Atomic Weight = 157.25(3)
+Notes = g
+
+Atomic Number = 64
+Atomic Symbol = Gd
+Mass Number = 160
+Relative Atomic Mass = 159.927051(3)
+Isotopic Composition = 21.86(19)
+Standard Atomic Weight = 157.25(3)
+Notes = g
+
+Atomic Number = 65
+Atomic Symbol = Tb
+Mass Number = 159
+Relative Atomic Mass = 158.925343(3)
+Isotopic Composition = 100
+Standard Atomic Weight = 158.92534(2)
+Notes =  
+
+Atomic Number = 66
+Atomic Symbol = Dy
+Mass Number = 156
+Relative Atomic Mass = 155.924278(7)
+Isotopic Composition = 0.06(1)
+Standard Atomic Weight = 162.500(1)
+Notes = g
+
+Atomic Number = 66
+Atomic Symbol = Dy
+Mass Number = 158
+Relative Atomic Mass = 157.924405(4)
+Isotopic Composition = 0.10(1)
+Standard Atomic Weight = 162.500(1)
+Notes = g
+
+Atomic Number = 66
+Atomic Symbol = Dy
+Mass Number = 160
+Relative Atomic Mass = 159.925194(3)
+Isotopic Composition = 2.34(8)
+Standard Atomic Weight = 162.500(1)
+Notes = g
+
+Atomic Number = 66
+Atomic Symbol = Dy
+Mass Number = 161
+Relative Atomic Mass = 160.926930(3)
+Isotopic Composition = 18.91(24)
+Standard Atomic Weight = 162.500(1)
+Notes = g
+
+Atomic Number = 66
+Atomic Symbol = Dy
+Mass Number = 162
+Relative Atomic Mass = 161.926795(3)
+Isotopic Composition = 25.51(26)
+Standard Atomic Weight = 162.500(1)
+Notes = g
+
+Atomic Number = 66
+Atomic Symbol = Dy
+Mass Number = 163
+Relative Atomic Mass = 162.928728(3)
+Isotopic Composition = 24.90(16)
+Standard Atomic Weight = 162.500(1)
+Notes = g
+
+Atomic Number = 66
+Atomic Symbol = Dy
+Mass Number = 164
+Relative Atomic Mass = 163.929171(3)
+Isotopic Composition = 28.18(37)
+Standard Atomic Weight = 162.500(1)
+Notes = g
+
+Atomic Number = 67
+Atomic Symbol = Ho
+Mass Number = 165
+Relative Atomic Mass = 164.930319(3)
+Isotopic Composition = 100
+Standard Atomic Weight = 164.93032(2)
+Notes =  
+
+Atomic Number = 68
+Atomic Symbol = Er
+Mass Number = 162
+Relative Atomic Mass = 161.928775(4)
+Isotopic Composition = 0.14(1)
+Standard Atomic Weight = 167.259(3)
+Notes = g
+
+Atomic Number = 68
+Atomic Symbol = Er
+Mass Number = 164
+Relative Atomic Mass = 163.929197(4)
+Isotopic Composition = 1.61(3)
+Standard Atomic Weight = 167.259(3)
+Notes = g
+
+Atomic Number = 68
+Atomic Symbol = Er
+Mass Number = 166
+Relative Atomic Mass = 165.930290(3)
+Isotopic Composition = 33.61(35)
+Standard Atomic Weight = 167.259(3)
+Notes = g
+
+Atomic Number = 68
+Atomic Symbol = Er
+Mass Number = 167
+Relative Atomic Mass = 166.932045(3)
+Isotopic Composition = 22.93(17)
+Standard Atomic Weight = 167.259(3)
+Notes = g
+
+Atomic Number = 68
+Atomic Symbol = Er
+Mass Number = 168
+Relative Atomic Mass = 167.932368(3)
+Isotopic Composition = 26.78(26)
+Standard Atomic Weight = 167.259(3)
+Notes = g
+
+Atomic Number = 68
+Atomic Symbol = Er
+Mass Number = 170
+Relative Atomic Mass = 169.935460(3)
+Isotopic Composition = 14.93(27)
+Standard Atomic Weight = 167.259(3)
+Notes = g
+
+Atomic Number = 69
+Atomic Symbol = Tm
+Mass Number = 169
+Relative Atomic Mass = 168.934211(3)
+Isotopic Composition = 100
+Standard Atomic Weight = 168.93421(2)
+Notes =  
+
+Atomic Number = 70
+Atomic Symbol = Yb
+Mass Number = 168
+Relative Atomic Mass = 167.933894(5)
+Isotopic Composition = 0.13(1)
+Standard Atomic Weight = 173.04(3)
+Notes = g
+
+Atomic Number = 70
+Atomic Symbol = Yb
+Mass Number = 170
+Relative Atomic Mass = 169.934759(3)
+Isotopic Composition = 3.04(15)
+Standard Atomic Weight = 173.04(3)
+Notes = g
+
+Atomic Number = 70
+Atomic Symbol = Yb
+Mass Number = 171
+Relative Atomic Mass = 170.936322(3)
+Isotopic Composition = 14.28(57)
+Standard Atomic Weight = 173.04(3)
+Notes = g
+
+Atomic Number = 70
+Atomic Symbol = Yb
+Mass Number = 172
+Relative Atomic Mass = 171.9363777(30)
+Isotopic Composition = 21.83(67)
+Standard Atomic Weight = 173.04(3)
+Notes = g
+
+Atomic Number = 70
+Atomic Symbol = Yb
+Mass Number = 173
+Relative Atomic Mass = 172.9382068(30)
+Isotopic Composition = 16.13(27)
+Standard Atomic Weight = 173.04(3)
+Notes = g
+
+Atomic Number = 70
+Atomic Symbol = Yb
+Mass Number = 174
+Relative Atomic Mass = 173.9388581(30)
+Isotopic Composition = 31.83(92)
+Standard Atomic Weight = 173.04(3)
+Notes = g
+
+Atomic Number = 70
+Atomic Symbol = Yb
+Mass Number = 176
+Relative Atomic Mass = 175.942568(3)
+Isotopic Composition = 12.76(41)
+Standard Atomic Weight = 173.04(3)
+Notes = g
+
+Atomic Number = 71
+Atomic Symbol = Lu
+Mass Number = 175
+Relative Atomic Mass = 174.9407679(28)
+Isotopic Composition = 97.41(2)
+Standard Atomic Weight = 174.967(1)
+Notes = g
+
+Atomic Number = 71
+Atomic Symbol = Lu
+Mass Number = 176
+Relative Atomic Mass = 175.9426824(28)
+Isotopic Composition = 2.59(2)
+Standard Atomic Weight = 174.967(1)
+Notes = g
+
+Atomic Number = 72
+Atomic Symbol = Hf
+Mass Number = 174
+Relative Atomic Mass = 173.940040(3)
+Isotopic Composition = 0.16(1)
+Standard Atomic Weight = 178.49(2)
+Notes = f
+
+Atomic Number = 72
+Atomic Symbol = Hf
+Mass Number = 176
+Relative Atomic Mass = 175.9414018(29)
+Isotopic Composition = 5.26(7)
+Standard Atomic Weight = 178.49(2)
+Notes = f
+
+Atomic Number = 72
+Atomic Symbol = Hf
+Mass Number = 177
+Relative Atomic Mass = 176.9432200(27)
+Isotopic Composition = 18.60(9)
+Standard Atomic Weight = 178.49(2)
+Notes = f
+
+Atomic Number = 72
+Atomic Symbol = Hf
+Mass Number = 178
+Relative Atomic Mass = 177.9436977(27)
+Isotopic Composition = 27.28(7)
+Standard Atomic Weight = 178.49(2)
+Notes = f
+
+Atomic Number = 72
+Atomic Symbol = Hf
+Mass Number = 179
+Relative Atomic Mass = 178.9458151(27)
+Isotopic Composition = 13.62(2)
+Standard Atomic Weight = 178.49(2)
+Notes = f
+
+Atomic Number = 72
+Atomic Symbol = Hf
+Mass Number = 180
+Relative Atomic Mass = 179.9465488(27)
+Isotopic Composition = 35.08(16)
+Standard Atomic Weight = 178.49(2)
+Notes = f
+
+Atomic Number = 73
+Atomic Symbol = Ta
+Mass Number = 180
+Relative Atomic Mass = 179.947466(3)
+Isotopic Composition = 0.012(2)
+Standard Atomic Weight = 180.9479(1)
+Notes =  
+
+Atomic Number = 73
+Atomic Symbol = Ta
+Mass Number = 181
+Relative Atomic Mass = 180.947996(3)
+Isotopic Composition = 99.988(2)
+Standard Atomic Weight = 180.9479(1)
+Notes =  
+
+Atomic Number = 74
+Atomic Symbol = W
+Mass Number = 180
+Relative Atomic Mass = 179.946706(5)
+Isotopic Composition = 0.12(1)
+Standard Atomic Weight = 183.84(1)
+Notes =  
+
+Atomic Number = 74
+Atomic Symbol = W
+Mass Number = 182
+Relative Atomic Mass = 181.948206(3)
+Isotopic Composition = 26.50(16)
+Standard Atomic Weight = 183.84(1)
+Notes =  
+
+Atomic Number = 74
+Atomic Symbol = W
+Mass Number = 183
+Relative Atomic Mass = 182.9502245(29)
+Isotopic Composition = 14.31(4)
+Standard Atomic Weight = 183.84(1)
+Notes =  
+
+Atomic Number = 74
+Atomic Symbol = W
+Mass Number = 184
+Relative Atomic Mass = 183.9509326(29)
+Isotopic Composition = 30.64(2)
+Standard Atomic Weight = 183.84(1)
+Notes =  
+
+Atomic Number = 74
+Atomic Symbol = W
+Mass Number = 186
+Relative Atomic Mass = 185.954362(3)
+Isotopic Composition = 28.43(19)
+Standard Atomic Weight = 183.84(1)
+Notes =  
+
+Atomic Number = 75
+Atomic Symbol = Re
+Mass Number = 185
+Relative Atomic Mass = 184.9529557(30)
+Isotopic Composition = 37.40(2)
+Standard Atomic Weight = 186.207(1)
+Notes =  
+
+Atomic Number = 75
+Atomic Symbol = Re
+Mass Number = 187
+Relative Atomic Mass = 186.9557508(30)
+Isotopic Composition = 62.60(2)
+Standard Atomic Weight = 186.207(1)
+Notes =  
+
+Atomic Number = 76
+Atomic Symbol = Os
+Mass Number = 184
+Relative Atomic Mass = 183.952491(3)
+Isotopic Composition = 0.02(1)
+Standard Atomic Weight = 190.23(3)
+Notes = g,r,f
+
+Atomic Number = 76
+Atomic Symbol = Os
+Mass Number = 186
+Relative Atomic Mass = 185.953838(3)
+Isotopic Composition = 1.59(3)
+Standard Atomic Weight = 190.23(3)
+Notes = g,r,f
+
+Atomic Number = 76
+Atomic Symbol = Os
+Mass Number = 187
+Relative Atomic Mass = 186.9557479(30)
+Isotopic Composition = 1.96(2)
+Standard Atomic Weight = 190.23(3)
+Notes = g,r,f
+
+Atomic Number = 76
+Atomic Symbol = Os
+Mass Number = 188
+Relative Atomic Mass = 187.9558360(30)
+Isotopic Composition = 13.24(8)
+Standard Atomic Weight = 190.23(3)
+Notes = g,r,f
+
+Atomic Number = 76
+Atomic Symbol = Os
+Mass Number = 189
+Relative Atomic Mass = 188.9581449(30)
+Isotopic Composition = 16.15(5)
+Standard Atomic Weight = 190.23(3)
+Notes = g,r,f
+
+Atomic Number = 76
+Atomic Symbol = Os
+Mass Number = 190
+Relative Atomic Mass = 189.958445(3)
+Isotopic Composition = 26.26(2)
+Standard Atomic Weight = 190.23(3)
+Notes = g,r,f
+
+Atomic Number = 76
+Atomic Symbol = Os
+Mass Number = 192
+Relative Atomic Mass = 191.961479(4)
+Isotopic Composition = 40.78(19)
+Standard Atomic Weight = 190.23(3)
+Notes = g,r,f
+
+Atomic Number = 77
+Atomic Symbol = Ir
+Mass Number = 191
+Relative Atomic Mass = 190.960591(3)
+Isotopic Composition = 37.3(2)
+Standard Atomic Weight = 192.217(3)
+Notes =  
+
+Atomic Number = 77
+Atomic Symbol = Ir
+Mass Number = 193
+Relative Atomic Mass = 192.962924(3)
+Isotopic Composition = 62.7(2)
+Standard Atomic Weight = 192.217(3)
+Notes =  
+
+Atomic Number = 78
+Atomic Symbol = Pt
+Mass Number = 190
+Relative Atomic Mass = 189.959930(7)
+Isotopic Composition = 0.014(1)
+Standard Atomic Weight = 195.078(2)
+Notes =  
+
+Atomic Number = 78
+Atomic Symbol = Pt
+Mass Number = 192
+Relative Atomic Mass = 191.961035(4)
+Isotopic Composition = 0.782(7)
+Standard Atomic Weight = 195.078(2)
+Notes =  
+
+Atomic Number = 78
+Atomic Symbol = Pt
+Mass Number = 194
+Relative Atomic Mass = 193.962664(3)
+Isotopic Composition = 32.967(99)
+Standard Atomic Weight = 195.078(2)
+Notes =  
+
+Atomic Number = 78
+Atomic Symbol = Pt
+Mass Number = 195
+Relative Atomic Mass = 194.964774(3)
+Isotopic Composition = 33.832(10)
+Standard Atomic Weight = 195.078(2)
+Notes =  
+
+Atomic Number = 78
+Atomic Symbol = Pt
+Mass Number = 196
+Relative Atomic Mass = 195.964935(3)
+Isotopic Composition = 25.242(41)
+Standard Atomic Weight = 195.078(2)
+Notes =  
+
+Atomic Number = 78
+Atomic Symbol = Pt
+Mass Number = 198
+Relative Atomic Mass = 197.967876(4)
+Isotopic Composition = 7.163(55)
+Standard Atomic Weight = 195.078(2)
+Notes =  
+
+Atomic Number = 79
+Atomic Symbol = Au
+Mass Number = 197
+Relative Atomic Mass = 196.966552(3)
+Isotopic Composition = 100
+Standard Atomic Weight = 196.96655(2)
+Notes =  
+
+Atomic Number = 80
+Atomic Symbol = Hg
+Mass Number = 196
+Relative Atomic Mass = 195.965815(4)
+Isotopic Composition = 0.15(1)
+Standard Atomic Weight = 200.59(2)
+Notes =  
+
+Atomic Number = 80
+Atomic Symbol = Hg
+Mass Number = 198
+Relative Atomic Mass = 197.966752(3)
+Isotopic Composition = 9.97(20)
+Standard Atomic Weight = 200.59(2)
+Notes =  
+
+Atomic Number = 80
+Atomic Symbol = Hg
+Mass Number = 199
+Relative Atomic Mass = 198.968262(3)
+Isotopic Composition = 16.87(22)
+Standard Atomic Weight = 200.59(2)
+Notes =  
+
+Atomic Number = 80
+Atomic Symbol = Hg
+Mass Number = 200
+Relative Atomic Mass = 199.968309(3)
+Isotopic Composition = 23.10(19)
+Standard Atomic Weight = 200.59(2)
+Notes =  
+
+Atomic Number = 80
+Atomic Symbol = Hg
+Mass Number = 201
+Relative Atomic Mass = 200.970285(3)
+Isotopic Composition = 13.18(9)
+Standard Atomic Weight = 200.59(2)
+Notes =  
+
+Atomic Number = 80
+Atomic Symbol = Hg
+Mass Number = 202
+Relative Atomic Mass = 201.970626(3)
+Isotopic Composition = 29.86(26)
+Standard Atomic Weight = 200.59(2)
+Notes =  
+
+Atomic Number = 80
+Atomic Symbol = Hg
+Mass Number = 204
+Relative Atomic Mass = 203.973476(3)
+Isotopic Composition = 6.87(15)
+Standard Atomic Weight = 200.59(2)
+Notes =  
+
+Atomic Number = 81
+Atomic Symbol = Tl
+Mass Number = 203
+Relative Atomic Mass = 202.972329(3)
+Isotopic Composition = 29.524(14)
+Standard Atomic Weight = 204.3833(2)
+Notes =  
+
+Atomic Number = 81
+Atomic Symbol = Tl
+Mass Number = 205
+Relative Atomic Mass = 204.974412(3)
+Isotopic Composition = 70.476(14)
+Standard Atomic Weight = 204.3833(2)
+Notes =  
+
+Atomic Number = 82
+Atomic Symbol = Pb
+Mass Number = 204
+Relative Atomic Mass = 203.973029(3)
+Isotopic Composition = 1.4(1)
+Standard Atomic Weight = 207.2(1)
+Notes = g,r,f
+
+Atomic Number = 82
+Atomic Symbol = Pb
+Mass Number = 206
+Relative Atomic Mass = 205.974449(3)
+Isotopic Composition = 24.1(1)
+Standard Atomic Weight = 207.2(1)
+Notes = g,r,f
+
+Atomic Number = 82
+Atomic Symbol = Pb
+Mass Number = 207
+Relative Atomic Mass = 206.975881(3)
+Isotopic Composition = 22.1(1)
+Standard Atomic Weight = 207.2(1)
+Notes = g,r,f
+
+Atomic Number = 82
+Atomic Symbol = Pb
+Mass Number = 208
+Relative Atomic Mass = 207.976636(3)
+Isotopic Composition = 52.4(1)
+Standard Atomic Weight = 207.2(1)
+Notes = g,r,f
+
+Atomic Number = 83
+Atomic Symbol = Bi
+Mass Number = 209
+Relative Atomic Mass = 208.980383(3)
+Isotopic Composition = 100
+Standard Atomic Weight = 208.98038(2)
+Notes =  
+
+Atomic Number = 84
+Atomic Symbol = Po
+Mass Number = 209
+Relative Atomic Mass = 208.982416(3)
+Isotopic Composition = 
+Standard Atomic Weight = [209]
+Notes =  
+
+Atomic Number = 84
+Atomic Symbol = Po
+Mass Number = 210
+Relative Atomic Mass = 209.982857(3)
+Isotopic Composition = 
+Standard Atomic Weight = [209]
+Notes =  
+
+Atomic Number = 85
+Atomic Symbol = At
+Mass Number = 210
+Relative Atomic Mass = 209.987131(9)
+Isotopic Composition = 
+Standard Atomic Weight = [210]
+Notes =  
+
+Atomic Number = 85
+Atomic Symbol = At
+Mass Number = 211
+Relative Atomic Mass = 210.987481(4)
+Isotopic Composition = 
+Standard Atomic Weight = [210]
+Notes =  
+
+Atomic Number = 86
+Atomic Symbol = Rn
+Mass Number = 211
+Relative Atomic Mass = 210.990585(8)
+Isotopic Composition = 
+Standard Atomic Weight = [222]
+Notes =  
+
+Atomic Number = 86
+Atomic Symbol = Rn
+Mass Number = 220
+Relative Atomic Mass = 220.0113841(29)
+Isotopic Composition = 
+Standard Atomic Weight = [222]
+Notes =  
+
+Atomic Number = 86
+Atomic Symbol = Rn
+Mass Number = 222
+Relative Atomic Mass = 222.0175705(27)
+Isotopic Composition = 
+Standard Atomic Weight = [222]
+Notes =  
+
+Atomic Number = 87
+Atomic Symbol = Fr
+Mass Number = 223
+Relative Atomic Mass = 223.0197307(29)
+Isotopic Composition = 
+Standard Atomic Weight = [223]
+Notes =  
+
+Atomic Number = 88
+Atomic Symbol = Ra
+Mass Number = 223
+Relative Atomic Mass = 223.018497(3)
+Isotopic Composition = 
+Standard Atomic Weight = [226]
+Notes =  
+
+Atomic Number = 88
+Atomic Symbol = Ra
+Mass Number = 224
+Relative Atomic Mass = 224.0202020(29)
+Isotopic Composition = 
+Standard Atomic Weight = [226]
+Notes =  
+
+Atomic Number = 88
+Atomic Symbol = Ra
+Mass Number = 226
+Relative Atomic Mass = 226.0254026(27)
+Isotopic Composition = 
+Standard Atomic Weight = [226]
+Notes =  
+
+Atomic Number = 88
+Atomic Symbol = Ra
+Mass Number = 228
+Relative Atomic Mass = 228.0310641(27)
+Isotopic Composition = 
+Standard Atomic Weight = [226]
+Notes =  
+
+Atomic Number = 89
+Atomic Symbol = Ac
+Mass Number = 227
+Relative Atomic Mass = 227.0277470(29)
+Isotopic Composition = 
+Standard Atomic Weight = [227]
+Notes =  
+
+Atomic Number = 90
+Atomic Symbol = Th
+Mass Number = 230
+Relative Atomic Mass = 230.0331266(22)
+Isotopic Composition = 
+Standard Atomic Weight = 232.0381(1)
+Notes = g
+
+Atomic Number = 90
+Atomic Symbol = Th
+Mass Number = 232
+Relative Atomic Mass = 232.0380504(22)
+Isotopic Composition = 100
+Standard Atomic Weight = 232.0381(1)
+Notes = g
+
+Atomic Number = 91
+Atomic Symbol = Pa
+Mass Number = 231
+Relative Atomic Mass = 231.0358789(28)
+Isotopic Composition = 100
+Standard Atomic Weight = 231.03588(2)
+Notes =  
+
+Atomic Number = 92
+Atomic Symbol = U
+Mass Number = 233
+Relative Atomic Mass = 233.039628(3)
+Isotopic Composition = 
+Standard Atomic Weight = 238.02891(3)
+Notes = g,m,r,d,f
+
+Atomic Number = 92
+Atomic Symbol = U
+Mass Number = 234
+Relative Atomic Mass = 234.0409456(21)
+Isotopic Composition = 0.0055(2)
+Standard Atomic Weight = 238.02891(3)
+Notes = g,m,r,d,f
+
+Atomic Number = 92
+Atomic Symbol = U
+Mass Number = 235
+Relative Atomic Mass = 235.0439231(21)
+Isotopic Composition = 0.7200(51)
+Standard Atomic Weight = 238.02891(3)
+Notes = g,m,r,d,f
+
+Atomic Number = 92
+Atomic Symbol = U
+Mass Number = 236
+Relative Atomic Mass = 236.0455619(21)
+Isotopic Composition = 
+Standard Atomic Weight = 238.02891(3)
+Notes = g,m,r,d,f
+
+Atomic Number = 92
+Atomic Symbol = U
+Mass Number = 238
+Relative Atomic Mass = 238.0507826(21)
+Isotopic Composition = 99.2745(106)
+Standard Atomic Weight = 238.02891(3)
+Notes = g,m,r,d,f
+
+Atomic Number = 93
+Atomic Symbol = Np
+Mass Number = 237
+Relative Atomic Mass = 237.0481673(21)
+Isotopic Composition = 
+Standard Atomic Weight = [237]
+Notes =  
+
+Atomic Number = 93
+Atomic Symbol = Np
+Mass Number = 239
+Relative Atomic Mass = 239.0529314(23)
+Isotopic Composition = 
+Standard Atomic Weight = [237]
+Notes =  
+
+Atomic Number = 94
+Atomic Symbol = Pu
+Mass Number = 238
+Relative Atomic Mass = 238.0495534(21)
+Isotopic Composition = 
+Standard Atomic Weight = [244]
+Notes =  
+
+Atomic Number = 94
+Atomic Symbol = Pu
+Mass Number = 239
+Relative Atomic Mass = 239.0521565(21)
+Isotopic Composition = 
+Standard Atomic Weight = [244]
+Notes =  
+
+Atomic Number = 94
+Atomic Symbol = Pu
+Mass Number = 240
+Relative Atomic Mass = 240.0538075(21)
+Isotopic Composition = 
+Standard Atomic Weight = [244]
+Notes =  
+
+Atomic Number = 94
+Atomic Symbol = Pu
+Mass Number = 241
+Relative Atomic Mass = 241.0568453(21)
+Isotopic Composition = 
+Standard Atomic Weight = [244]
+Notes =  
+
+Atomic Number = 94
+Atomic Symbol = Pu
+Mass Number = 242
+Relative Atomic Mass = 242.0587368(21)
+Isotopic Composition = 
+Standard Atomic Weight = [244]
+Notes =  
+
+Atomic Number = 94
+Atomic Symbol = Pu
+Mass Number = 244
+Relative Atomic Mass = 244.064198(5)
+Isotopic Composition = 
+Standard Atomic Weight = [244]
+Notes =  
+
+Atomic Number = 95
+Atomic Symbol = Am
+Mass Number = 241
+Relative Atomic Mass = 241.0568229(21)
+Isotopic Composition = 
+Standard Atomic Weight = [243]
+Notes =  
+
+Atomic Number = 95
+Atomic Symbol = Am
+Mass Number = 243
+Relative Atomic Mass = 243.0613727(23)
+Isotopic Composition = 
+Standard Atomic Weight = [243]
+Notes =  
+
+Atomic Number = 96
+Atomic Symbol = Cm
+Mass Number = 243
+Relative Atomic Mass = 243.0613822(24)
+Isotopic Composition = 
+Standard Atomic Weight = [247]
+Notes =  
+
+Atomic Number = 96
+Atomic Symbol = Cm
+Mass Number = 244
+Relative Atomic Mass = 244.0627463(21)
+Isotopic Composition = 
+Standard Atomic Weight = [247]
+Notes =  
+
+Atomic Number = 96
+Atomic Symbol = Cm
+Mass Number = 245
+Relative Atomic Mass = 245.0654856(29)
+Isotopic Composition = 
+Standard Atomic Weight = [247]
+Notes =  
+
+Atomic Number = 96
+Atomic Symbol = Cm
+Mass Number = 246
+Relative Atomic Mass = 246.0672176(24)
+Isotopic Composition = 
+Standard Atomic Weight = [247]
+Notes =  
+
+Atomic Number = 96
+Atomic Symbol = Cm
+Mass Number = 247
+Relative Atomic Mass = 247.070347(5)
+Isotopic Composition = 
+Standard Atomic Weight = [247]
+Notes =  
+
+Atomic Number = 96
+Atomic Symbol = Cm
+Mass Number = 248
+Relative Atomic Mass = 248.072342(5)
+Isotopic Composition = 
+Standard Atomic Weight = [247]
+Notes =  
+
+Atomic Number = 97
+Atomic Symbol = Bk
+Mass Number = 247
+Relative Atomic Mass = 247.070299(6)
+Isotopic Composition = 
+Standard Atomic Weight = [247]
+Notes =  
+
+Atomic Number = 97
+Atomic Symbol = Bk
+Mass Number = 249
+Relative Atomic Mass = 249.074980(3)
+Isotopic Composition = 
+Standard Atomic Weight = [247]
+Notes =  
+
+Atomic Number = 98
+Atomic Symbol = Cf
+Mass Number = 249
+Relative Atomic Mass = 249.074847(3)
+Isotopic Composition = 
+Standard Atomic Weight = [251]
+Notes =  
+
+Atomic Number = 98
+Atomic Symbol = Cf
+Mass Number = 250
+Relative Atomic Mass = 250.0764000(24)
+Isotopic Composition = 
+Standard Atomic Weight = [251]
+Notes =  
+
+Atomic Number = 98
+Atomic Symbol = Cf
+Mass Number = 251
+Relative Atomic Mass = 251.079580(5)
+Isotopic Composition = 
+Standard Atomic Weight = [251]
+Notes =  
+
+Atomic Number = 98
+Atomic Symbol = Cf
+Mass Number = 252
+Relative Atomic Mass = 252.081620(5)
+Isotopic Composition = 
+Standard Atomic Weight = [251]
+Notes =  
+
+Atomic Number = 99
+Atomic Symbol = Es
+Mass Number = 252
+Relative Atomic Mass = 252.082970(50)
+Isotopic Composition = 
+Standard Atomic Weight = [252]
+Notes =  
+
+Atomic Number = 100
+Atomic Symbol = Fm
+Mass Number = 257
+Relative Atomic Mass = 257.095099(7)
+Isotopic Composition = 
+Standard Atomic Weight = [257]
+Notes =  
+
+Atomic Number = 101
+Atomic Symbol = Md
+Mass Number = 256
+Relative Atomic Mass = 256.094050(60)
+Isotopic Composition = 
+Standard Atomic Weight = [258]
+Notes =  
+
+Atomic Number = 101
+Atomic Symbol = Md
+Mass Number = 258
+Relative Atomic Mass = 258.098425(5)
+Isotopic Composition = 
+Standard Atomic Weight = [258]
+Notes =  
+
+Atomic Number = 102
+Atomic Symbol = No
+Mass Number = 259
+Relative Atomic Mass = 259.10102(11)#
+Isotopic Composition = 
+Standard Atomic Weight = [259]
+Notes =  
+
+Atomic Number = 103
+Atomic Symbol = Lr
+Mass Number = 262
+Relative Atomic Mass = 262.10969(32)#
+Isotopic Composition = 
+Standard Atomic Weight = [262]
+Notes =  
+
+Atomic Number = 104
+Atomic Symbol = Rf
+Mass Number = 261
+Relative Atomic Mass = 261.10875(11)#
+Isotopic Composition = 
+Standard Atomic Weight = [261]
+Notes =  
+
+Atomic Number = 105
+Atomic Symbol = Db
+Mass Number = 262
+Relative Atomic Mass = 262.11415(20)#
+Isotopic Composition = 
+Standard Atomic Weight = [262]
+Notes =  
+
+Atomic Number = 106
+Atomic Symbol = Sg
+Mass Number = 266
+Relative Atomic Mass = 266.12193(31)#
+Isotopic Composition = 
+Standard Atomic Weight = [266]
+Notes =  
+
+Atomic Number = 107
+Atomic Symbol = Bh
+Mass Number = 264
+Relative Atomic Mass = 264.12473(30)#
+Isotopic Composition = 
+Standard Atomic Weight = [264]
+Notes =  
+
+Atomic Number = 108
+Atomic Symbol = Hs
+Mass Number = 277
+Relative Atomic Mass = 
+Isotopic Composition = 
+Standard Atomic Weight = [277]
+Notes =  
+
+Atomic Number = 109
+Atomic Symbol = Mt
+Mass Number = 268
+Relative Atomic Mass = 268.13882(34)#
+Isotopic Composition = 
+Standard Atomic Weight = [268]
+Notes =  
+
+Atomic Number = 110
+Atomic Symbol = Uun
+Mass Number = 281
+Relative Atomic Mass = 
+Isotopic Composition = 
+Standard Atomic Weight = [281]
+Notes =  
+
+Atomic Number = 111
+Atomic Symbol = Uuu
+Mass Number = 272
+Relative Atomic Mass = 272.15348(36)#
+Isotopic Composition = 
+Standard Atomic Weight = [272]
+Notes =  
+
+Atomic Number = 112
+Atomic Symbol = Uub
+Mass Number = 285
+Relative Atomic Mass = 
+Isotopic Composition = 
+Standard Atomic Weight = [285]
+Notes =  
+
+Atomic Number = 
+Atomic Symbol = 
+Mass Number = 
+Relative Atomic Mass = 
+Isotopic Composition = 
+Standard Atomic Weight =  
+Notes =  
+
+Atomic Number = 114
+Atomic Symbol = Uuq
+Mass Number = 289
+Relative Atomic Mass = 
+Isotopic Composition = 
+Standard Atomic Weight = [289]
+Notes =  
+
+Atomic Number = 
+Atomic Symbol = 
+Mass Number = 
+Relative Atomic Mass = 
+Isotopic Composition = 
+Standard Atomic Weight =  
+Notes =  
+
+Atomic Number = 116
+Atomic Symbol = Uuh
+Mass Number = 292
+Relative Atomic Mass = 
+Isotopic Composition = 
+Standard Atomic Weight = [292]
+Notes =  
+

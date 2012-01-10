@@ -1,0 +1,38 @@
+#!/bin/bash
+
+#
+# parse version from pwiz/Version.cpp
+#
+
+
+pwiz_root=$(dirname $0)/../..
+pushd $pwiz_root > /dev/null
+
+
+get_value()
+{
+    #
+    # grabs the value returned by a function in pwiz/Version.cpp
+    #
+    # $1 == function name in Version.cpp
+    # $2 == local variable name to set
+    #
+
+    eval "$2=$(grep Version::$1 pwiz/Version.cpp | sed 's/;/ /g' | awk '{ print $4 }')"
+
+    if [ $? -ne 0 ]
+    then
+        echo "Error getting version string."
+        return 1
+    fi
+}
+
+
+get_value Major major
+get_value Minor minor
+revision=$(awk '/SVN_REV / { print $3 }' pwiz/svnrev.hpp)
+
+version_string=$major.$minor.$revision
+
+echo $version_string
+

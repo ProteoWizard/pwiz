@@ -1,0 +1,14 @@
+You don't really need to know SWIG unless you want to regenerate the bindings, but if you do here are some notes.
+
+You might want to regenerate the bindings to add another language such as perl, for example.  Right now it's just Java and Python.
+
+The swigjava.bat file shows how the java JNI bindings were produced.  
+
+The swigpython.bat file shows how the Python bindings were produced.
+
+SWIG doesn't handle namespaces so we have to write some wrappers for SWIG to wrap.  (That's less true than it was, but the use of templates can also lead to heartache so masking off boost isn't a bad idea).
+
+For Java, the JVM needs to be told where to look for the module lib you've built.  This is done with the "-Djava.library.path= <your library path>" startup switch.
+For Labkey that's something like -Djava.library.path="C:/Labkey/external/bin"
+
+For MinGW, the gcc statement needs to include  "-Wl,--add-stdcall-alias,--kill-at" to fix up the export name decorations properly.

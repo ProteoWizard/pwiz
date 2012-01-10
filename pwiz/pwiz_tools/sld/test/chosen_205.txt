@@ -1,0 +1,97 @@
+User Label 0: Study
+User Label 1: Client
+User Label 2: Laboratory
+User Label 3: Company
+User Label 4: Phone
+Record count: 3
+
+Record #1
+one: 1
+Sample Type: Unknown
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 1
+Sample Wt: 40
+Sample Vol: 30
+ISTD Amt: 20
+Dil Factor: 10
+unknown4: 0
+Sample Name: sampleName1
+Sample ID: sampleID1
+Comment: comment1
+L1 Study: study1
+L2 Client: client1
+L3 Laboratory: lab1
+L4 Company: company1
+L5 Phone: phone1
+Instrument Method: instmeth1
+Process Method: procmeth
+File Name: filename1
+Path: path1
+Position: pos1
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #2
+one: 1
+Sample Type: Blank
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 2
+Sample Wt: 41
+Sample Vol: 31
+ISTD Amt: 21
+Dil Factor: 11
+unknown4: 0
+Sample Name: sampleName2
+Sample ID: sampleID2
+Comment: comment2
+L1 Study: study2
+L2 Client: client2
+L3 Laboratory: lab2
+L4 Company: company2
+L5 Phone: phone2
+Instrument Method: instmeth2
+Process Method: procmeth
+File Name: filename2
+Path: path2
+Position: pos2
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+
+Record #3
+one: 1
+Sample Type: QC
+unknown1: 0
+unknown2: 0
+unknown3: 0
+Inj Vol: 3
+Sample Wt: 42
+Sample Vol: 32
+ISTD Amt: 22
+Dil Factor: 12
+unknown4: 0
+Sample Name: sampleName3
+Sample ID: sampleID3
+Comment: comment3
+L1 Study: study3
+L2 Client: client3
+L3 Laboratory: lab3
+L4 Company: company3
+L5 Phone: phone3
+Instrument Method: instmeth3
+Process Method: procmeth
+File Name: filename3
+Path: path3
+Position: pos3
+Unknown: 
+Unknown: 
+Unknown: 
+Unknown: 
+

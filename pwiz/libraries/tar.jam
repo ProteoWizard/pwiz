@@ -1,0 +1,477 @@
+#
+# $Id$
+#
+
+import property ;
+import project ;
+import feature ;
+import set ;
+import stage ;
+import common ;
+import path ;
+import type ;
+import targets ;
+import generators ;
+import "class" : new ;
+import os ;
+import regex ;
+import modules ;
+import errors ;
+import sequence ;
+
+# use this feature instead of <source> in tar.create's requirements
+feature.feature tar-source : : free incidental ;
+
+# Make this module into a project.
+project.initialize $(__name__) ;
+project tar ;
+
+rule init ( tar-binary-filepath ? )
+{
+    # try some default tar binaries
+    if ! $(tar-binary-filepath)
+    {
+        local .os = [ modules.peek : OS ] ;
+        if [ os.on-windows ]
+        {
+            tar-binary-filepath = bsdtar.exe ;
+        }
+        else if $(.os:L) = "macosx" || $(.os:L) = "darwin"
+        {
+            tar-binary-filepath = gnutar ;
+        }
+        else
+        {
+            tar-binary-filepath = tar ;
+        }
+    }
+
+    if ! [ path.exists $(tar-binary-filepath) ] &&
+       ! [ path.glob [ path.programs-path ] : $(tar-binary-filepath:D=) ]
+    {
+        errors.error Filepath to tar binary \"$(tar-binary-filepath)\" not found. ;
+    }
+
+    .tar-binary-filepath = [ path.make $(tar-binary-filepath) ] ;
+}
+
+rule tar-binary-filepath { return $(.tar-binary-filepath) ; }
+
+
+type.register TBZ2 : tar.bz2 tbz2 ;
+type.register TGZ : tar.gz tgz ;
+type.register TLZ : tar.lzma tlz ;
+
+# $(.tar-binary-filepath) -cvjf $(<) -T $(<:B)_file_list.txt $(TAR_ARGS)
+actions tar.tbz2.create-really
+{
+    $(.tar-binary-filepath) -cjf $(<) $(TAR_ARGS)
+}
+
+actions tar.tgz.create-really
+{
+    $(.tar-binary-filepath) -czf $(<) $(TAR_ARGS)
+}
+
+actions tar.tlz.create-really
+{
+    $(.tar-binary-filepath) -clf $(<) $(TAR_ARGS)
+}
+
+class create-tar-target-class : basic-target
+{
+    import regex path type targets ;
+
+    rule __init__ ( name : project : sources * : requirements *
+        : default-build * : usage-requirements * )
+    {
+        self.pwd = [ path.make [ path.pwd ] ] ;
+        self.anchor = $(self.pwd) ;
+        self.tar-args += -C [ path.native $(self.anchor) ] ;
+        
+        for local s in $(sources)
+        {
+            add-source $(s) ;
+        }
+
+        self.tar-args = [ sequence.join $(self.tar-args) : " " ] ;
+        #echo tar: $(self.tar-args) ;
+        basic-target.__init__ $(name) : $(project) : $(non-file-sources) :
+            $(requirements) : $(default-build) : $(usage-requirements) ;
+    }
+
+    rule construct ( name : sources * : property-set )
+    {
+        local more-sources = [ feature.get-values <tar-source> : [ $(property-set).raw ] ] ;
+        for local s in $(more-sources)
+        {
+            for local s2 in [ regex.split $(s) "&&" ]
+            {
+                add-source $(s2) ;
+            }
+        }
+
+        local action-name ;
+        local extension = $(name:B=) ;
+        if $(extension) = .bz2 || $(extension) = .tbz2 { action-name = tar.tbz2.create-really ; }
+        else if $(extension) = .gz || $(extension) = .tgz { action-name = tar.tgz.create-really ; }
+        else if $(extension) = .lzma || $(extension) = .tlz { action-name = tar.tlz.create-really ; }
+        else { errors.error Unknown suffix on action ; }
+
+        local name = [ feature.get-values <name> : [ $(property-set).raw ] ] ;
+        name = $(name[-1]) ; # take last <name>
+        name ?= $(self.name) ; # use target name as last resort
+
+        local a = [ new action : $(action-name) : $(property-set) ] ;
+        local t = [ new file-target $(name) exact : [ type.type $(name) ] : $(self.project) : $(a) ] ;
+        local t = [ virtual-target.register $(t) ] ;
+
+        local actual-result = [ $(t).actualize ] ;
+        ALWAYS $(actual-result) ;
+        TAR_ARGS on $(actual-result) = $(self.tar-args) ;
+        return [ property-set.empty ] $(t) ;
+    }
+
+    rule add-source ( s )
+    {
+        local possible-anchor = [ MATCH "^path-anchor:(.*)" : $(s) ] ;
+        local possible-exclude = [ MATCH "^exclude:(.*)" : $(s) ] ;
+
+        # TODO: An include option? It's very hard to do portably :(
+
+        if $(possible-anchor)
+        {
+            local source-path = [ path.root [ path.make $(possible-anchor) ] $(self.pwd) ] ;
+            self.tar-args += -C [ path.relative-to [ path.make $(self.anchor) ] $(source-path) ] ;
+            self.anchor = [ path.make $(source-path) ] ;
+        }
+        else if $(possible-exclude)
+        {
+            self.tar-args += --exclude \"$(possible-exclude)\" ;
+        }
+        else
+        {
+            # move files from main sources to private list that is never virtualized or scanned
+            local native-path = [ path.native $(s) ] ;
+            local entry = [ GLOB $(native-path:D) : $(native-path:D=) ] ;
+            if $(entry) && [ CHECK_IF_FILE $(entry) ]
+            {
+                local source-path = [ path.make $(s) ] ;
+
+                if ! [ path.is-rooted $(source-path) ]
+                {
+                    source-path = [ path.root $(source-path) $(self.pwd) ] ;
+                }
+
+                #echo Anchor: $(anchor) ;
+                #echo Original path: $(source-path) ;
+                #echo Final path: [ path.relative-to [ path.make $(self.anchor) ] $(source-path) ] ;
+                #echo ;
+                self.files += $(s) ;
+                self.tar-args += [ path.relative-to [ path.make $(self.anchor) ] $(source-path) ] ;
+            }
+            #else if ! $(entry)
+            #{
+                #non-file-sources += $(s) ;
+            #}
+            else
+            {
+                local source-path = [ path.make $(s) ] ;
+
+                if ! [ path.is-rooted $(source-path) ]
+                {
+                    source-path = [ path.root $(source-path) $(self.pwd) ] ;
+                }
+
+                self.directories += $(s) ;
+                self.tar-args += [ path.relative-to [ path.make $(self.anchor) ] $(source-path) ] ;
+            }
+        }
+    }
+}
+
+
+actions tar.extract-really
+{
+    $(.tar-binary-filepath) -xf $(TAR_ARGS)
+}
+
+class extract-tar-target-class : basic-target
+{
+    import regex path type targets string ;
+
+    rule __init__ ( name : project : sources * : requirements * : usage-requirements * : check-last-file-only ? )
+    {
+        name = [ path.native $(name) ] ;
+
+        self.tar-binary-filepath = $(sources[1]) ;
+
+        self.include-patterns = $(sources[2-]:J=" ") ;
+        self.include-patterns ?= "" ;
+
+        ECHO "tar.list $(name)" ;
+        self.tar-list = [ SPLIT_BY_CHARACTERS [ SHELL "$(self.tar-binary-filepath) -tf $(name) $(self.include-patterns)" ] : \n ] ;
+
+        basic-target.__init__ $(name) : $(project) : : $(requirements) : : $(usage-requirements) ;
+    }
+
+    rule construct ( name : sources * : property-set )
+    {
+        local tar-files ;
+
+        self.all-files-exist = true ;
+        if $(check-last-file-only)
+        {
+            # if the last file exists, the extraction is skipped
+            if ! [ path.exists $(self.tar-list[-1]) ]
+            {
+                self.all-files-exist = ;
+            }
+        }
+        else
+        {
+            # if all files exist, the extraction is skipped
+            for local tar-line in $(self.tar-list)
+            {
+                if $(self.all-files-exist) &&
+                   ! [ MATCH "^(.*)/$" : $(tar-line) ] &&
+                   ! [ path.exists $(tar-line) ]
+                {
+                    all-files-exist = ;
+                }
+            }
+        }
+
+        if $(self.all-files-exist)
+        {
+            ECHO "tar.extract $(name) (already extracted)" ;
+        }
+        else
+        {
+            # do the extraction now instead of in an action because H/HPP files
+            # in source tarballs must scanned by dependent targets
+            ECHO "tar.extract $(name): $(self.include-patterns)" ;
+            SHELL "$(self.tar-binary-filepath) -xf $(name) $(self.include-patterns)" ;
+        }
+
+            # all targets of the extraction share a common null-action
+            local a = [ new null-action $(property-set) ] ;
+            #local a = [ new action : tar.extract-really : $(property-set) ] ;
+
+            local project = [ project.current ] ;
+            for local tar-line in $(self.tar-list)
+            {
+                if ! [ MATCH "^(.*)/$" : $(tar-line) ]
+                {
+                    # each file entry (i.e. doesn't end in '/') in the tar list becomes a file target
+                    #local tar-file-type = [ type.type $(tar-line) ] ; echo $(tar-file-type) ;
+                    local tar-file-path = $(tar-line) ;
+                    local tar-file = [ new file-target $(tar-file-path) exact : [ type.type $(name) ] : $(project) : $(a) ] ;
+                    #echo $(tar-file-path) ;
+                    tar-files += [ virtual-target.register $(tar-file) ] ;
+                }
+            }
+
+            #local actual-result = [ $(tar-files[0]).actualize ] ;
+            #ALWAYS $(actual-result) ;
+            #TAR_ARGS on $(actual-result) = "$(name) $(self.include-patterns)" ;
+        return [ property-set.empty ] $(tar-files) ;
+    }
+}
+
+
+# TODO: surely there's a better way to do this, but damned if I can figure it out
+# Typed-targets must have at least one source, so use this jamfile as a decoy
+actions quietly tar.noop { }
+
+type.register JAM_DECOY_SOURCE : jam ;
+generators.register-standard tar.noop : : JAM_DECOY_SOURCE ;
+
+rule create ( tar-filepath : tar-sources * : tar-requirements * : tar-usage-requirements * )
+{
+    local project = [ project.current ] ;
+
+    targets.main-target-alternative
+        [ new create-tar-target-class $(tar-filepath) : $(project)
+            : [ targets.main-target-sources $(tar-sources) : $(tar-filepath) ]
+            : [ targets.main-target-requirements $(tar-requirements) : $(project) ]
+            : [ targets.main-target-default-build : $(project) ]
+            : [ targets.main-target-usage-requirements $(tar-usage-requirements) : $(project) ]
+        ] ;
+}
+
+rule quote-string ( string )
+{
+    return \"$(string)\" ;
+}
+
+rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? )
+{
+    if ! --incremental in [ modules.peek : ARGV ]
+    {
+        if ! [ tar-binary-filepath ]
+        {
+            init ;
+        }
+
+        local pwd = [ path.make [ path.pwd ] ] ;
+        local caller-location = [ modules.binding [ CALLER_MODULE ] ] ;
+        caller-location = $(caller-location:D) ;
+        if ! $(caller-location) || $(caller-location) = ""
+        {
+            caller-location = $(pwd) ;
+        }
+        else
+        {
+            caller-location = [ path.make $(caller-location) ] ;
+            if ! [ path.is-rooted $(caller-location) ] { caller-location = [ path.root $(caller-location) $(pwd) ] ; }
+            caller-location = [ path.native $(caller-location) ] ;
+        }
+
+        extract-really $(tar-filepath) : $(include-patterns) : $(tar-requirements) : $(tar-usage-requirements) : $(check-last-file-only) : $(caller-location) ;
+    }
+}
+
+rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? : caller-location )
+{
+    #local project = [ project.current ] ;
+
+    # TODO: make this target-centric approach work (without awful performance)
+    #targets.main-target-alternative
+        #[ new extract-tar-target-class $(tar-filepath) : $(project)
+            #: [ targets.main-target-sources [ tar-binary-filepath ] $(include-patterns) : $(tar-filepath) ]
+            #: [ targets.main-target-requirements $(tar-requirements) : $(project) ]
+            #: [ targets.main-target-usage-requirements $(tar-usage-requirements) : $(project) ]
+            #: $(check-last-file-only)
+        #] ;
+
+
+    #
+    # What follows is a procedural approach to tar extraction (i.e. extraction happens when rule is evaluated)
+    #
+
+    if [ os.name ] = NT
+    {
+        RM = "del /f /q" ;
+        RMDIR = "rmdir /s /q" ;
+        MKDIR = "mkdir" ;
+        CS = "&" ;
+    }
+    else
+    {
+        RM = "rm" ;
+        RMDIR = "rm -fr" ;
+        MKDIR = "mkdir -p" ;
+        CS = ";" ;
+    }
+
+    tar-filepath = [ path.make $(tar-filepath) ] ;
+    if ! [ path.is-rooted $(tar-filepath) ] { tar-filepath = $(caller-location)/$(tar-filepath) ; }
+    tar-filepath = [ path.native $(tar-filepath) ] ;
+
+    local target-location = [ feature.get-values location : $(tar-requirements) ] ;
+    target-location ?= $(caller-location) ;
+    target-location = [ path.make $(target-location) ] ;
+    if ! [ path.is-rooted $(target-location) ] { target-location = $(caller-location)/$(target-location) ; }
+    target-location = [ path.native $(target-location) ] ;
+
+    local tar-binary-filepath = [ tar-binary-filepath ] ;
+
+    include-patterns = [ sequence.transform quote-string : $(include-patterns) ] ;
+    include-patterns = $(include-patterns:J=" ") ;
+    include-patterns ?= "" ;
+
+    # HACK: try to be compatible with "tar" implementations that demand the "--wildcards" option
+    if $(tar-binary-filepath:D=) = "tar" || $(tar-binary-filepath:D=) = "gnutar"
+    {
+        include-patterns = "--wildcards $(include-patterns)" ;
+    }
+
+    ECHO "tar.list $(tar-filepath:D=)" ;
+    local tar-list = [ SPLIT_BY_CHARACTERS [ SHELL "\"$(tar-binary-filepath)\" -tf \"$(tar-filepath)\" $(include-patterns)" ] : \n ] ;
+
+    local args = [ modules.peek : ARGV ] ;
+    if --clean in $(args) && $(tar-filepath) in $(args) ||
+       --clean-all in $(args)
+    {
+        ECHO "tar.clean $(tar-filepath:D=)" ;
+
+        for local tar-line in $(tar-list)
+        {
+            local tokens = [ regex.split $(tar-line) / ] ;
+            if $(tokens[1]) != $(tar-line)
+            {
+                local target-path = $(target-location)/$(tokens[1]) ;
+                if ! $(target-path) in $(basepaths) &&
+                   [ path.exists $(target-path) ]
+                {
+                    basepaths += $(target-path) ;
+                }
+            }
+            else
+            {
+                if [ path.exists $(target-location)/$(tar-line) ]
+                {
+                    rootfiles += $(target-location)/$(tar-line) ;
+                }
+            }
+        }
+
+        for local basepath in $(basepaths)
+        {
+            basepath = [ path.native $(basepath) ] ;
+            ECHO "tar.rmdir $(basepath)" ;
+            SHELL "$(RMDIR) \"$(basepath)\"" ;
+        }
+
+        for local rootfile in $(rootfiles)
+        {
+            rootfile = [ path.native $(rootfile) ] ;
+            ECHO "tar.rm $(rootfile)" ;
+            SHELL "$(RM) \"$(rootfile)\"" ;
+        }
+    }
+    else
+    {
+        local all-files-exist = true ;
+
+        if $(check-last-file-only)
+        {
+            # if the last file exists, the extraction is skipped
+            if ! [ path.exists $(target-location)/$(tar-list[-1]) ]
+            {
+                all-files-exist = ;
+            }
+        }
+        else
+        {
+            # if all files exist, the extraction is skipped
+            for local tar-line in $(tar-list)
+            {
+                if $(all-files-exist) &&
+                   #! [ MATCH "^(.*)/$" : $(tar-line) ] &&
+                   ! [ path.exists $(target-location)/$(tar-line) ]
+                {
+                    all-files-exist = ;
+                }
+            }
+        }
+
+        if $(all-files-exist)
+        {
+            ECHO "tar.extract $(tar-filepath:D=) (already extracted)" ;
+        }
+        else
+        {
+            ECHO "tar.extract $(tar-filepath:D=): $(include-patterns)" ;
+            if ! [ path.exists $(target-location) ] { SHELL "$(MKDIR) \"$(target-location)\"" ; }
+            #echo "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" -xf \"$(tar-filepath)\" $(include-patterns)" ;
+            SHELL "cd \"$(target-location)\" $(CS) \"$(tar-binary-filepath)\" -xf \"$(tar-filepath)\" $(include-patterns)" ;
+            RESCAN ;
+            if ! [ path.exists $(target-location)/$(tar-list[-1]) ]
+            {
+                errors.error "Path.exists failed after tar extraction." ;
+            }
+        }
+    }
+}

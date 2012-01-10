@@ -1,0 +1,172 @@
+﻿<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1B7E62FF-463B-4B3E-8E37-72F1A7C2BFD9}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>pwiz.SkylineTestFunctional</RootNamespace>
+    <AssemblyName>TestFunctional</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="DigitalRune.Windows.Docking, Version=1.3.5.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
+    </Reference>
+    <Reference Include="Ionic.Zip, Version=1.8.4.5, Culture=neutral, PublicKeyToken=edbe51ad942a3f5c, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\DotNetZip-v1.8\Release\Ionic.Zip.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Data.DataSetExtensions">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data.SQLite, Version=1.0.60.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\System.Data.SQLite.DLL</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="UIAutomationClient">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="UIAutomationTypes">
+      <RequiredTargetFramework>3.0</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AnnotationTest.cs" />
+    <Compile Include="FullScanIdTest.cs" />
+    <Compile Include="ImportDocTest.cs" />
+    <Compile Include="CopyPasteTest.cs" />
+    <Compile Include="EditNoteTest.cs" />
+    <Compile Include="EditStaticModTest.cs" />
+    <Compile Include="ExplicitMultiTypeTest.cs" />
+    <Compile Include="ExplicitVariableTest.cs" />
+    <Compile Include="InsertModTest.cs" />
+    <Compile Include="InsertTest.cs" />
+    <Compile Include="IrtTest.cs" />
+    <Compile Include="LibraryExplorerTest.cs" />
+    <Compile Include="ManageResultsTest.cs" />
+    <Compile Include="MultiSelectTest.cs" />
+    <Compile Include="NeutralLossLibraryTest.cs" />
+    <Compile Include="NeutralLossTest.cs" />
+    <Compile Include="PrecursorTest.cs" />
+    <Compile Include="ReportSummaryTest.cs" />
+    <Compile Include="ScheduleMethodDlgTest.cs" />
+    <Compile Include="ShareDocumentTest.cs" />
+    <Compile Include="LibraryBuildTest.cs" />
+    <Compile Include="OptimizeTest.cs" />
+    <Compile Include="SynchSiblingsTest.cs" />
+    <Compile Include="BackgroundProteomeTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ExportMethodDialogTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
+      <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
+      <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj">
+      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
+      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
+      <Name>MSGraph</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
+      <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
+      <Name>ProteomeDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
+      <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
+      <Name>ProteowizardWrapper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Skyline.csproj">
+      <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
+      <Name>Skyline</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestUtil\TestUtil.csproj">
+      <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
+      <Name>TestUtil</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="AnnotationTest.zip" />
+    <None Include="BackgroundProteomeTest.zip" />
+    <None Include="CopyPasteTest.zip" />
+    <None Include="EditNoteTest.zip" />
+    <None Include="FullScanIdTest.zip" />
+    <None Include="ImportDocTest.zip" />
+    <None Include="InsertTest.zip" />
+    <None Include="IrtTest.zip" />
+    <None Include="LibraryBuildTest.zip" />
+    <None Include="LibraryExplorerTest.zip" />
+    <None Include="LibraryShareTest.zip" />
+    <None Include="ManageResultsTest.zip" />
+    <None Include="NeutralLossLibraryTest.zip" />
+    <None Include="OptimizeTest.zip" />
+    <None Include="PrecursorTest.zip" />
+    <None Include="ReportSummaryTest.zip" />
+    <None Include="SynchSiblingsTest.zip" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

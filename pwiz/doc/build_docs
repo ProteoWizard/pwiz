@@ -1,0 +1,8 @@
+#!/bin/bash
+
+pushd dox
+rm -rf html
+doxygen
+popd
+
+echo "Done generating docs"

@@ -1,0 +1,135 @@
+﻿<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.30729</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>pwiz.SkylineTestA</RootNamespace>
+    <AssemblyName>TestA</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\x86\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
+    <OutputPath>bin\x86\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x86</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.XML" />
+    <Reference Include="System.Xml.Linq">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="CommandLineTest.cs" />
+    <Compile Include="ExplicitModTest.cs" />
+    <Compile Include="FastaImporterTest.cs" />
+    <Compile Include="FindNodeTest.cs" />
+    <Compile Include="IsotypeModTest.cs" />
+    <Compile Include="LibraryLoadTest.cs" />
+    <Compile Include="LibrarySettingsTest.cs" />
+    <Compile Include="LossesTest.cs" />
+    <Compile Include="MassCalcTest.cs" />
+    <Compile Include="ModEquivalentTest.cs" />
+    <Compile Include="ModificationMatcherTest.cs" />
+    <Compile Include="PasteTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RefineTest.cs" />
+    <Compile Include="Results\ChromCacheMinimizerTest.cs" />
+    <Compile Include="Results\AsymDiaTest.cs" />
+    <Compile Include="Results\FullScanTest.cs" />
+    <Compile Include="StringHelpersTest.cs" />
+    <Compile Include="TransitionSettings07Test.cs" />
+    <Compile Include="UniModTest.cs" />
+    <Compile Include="VariableModTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Study7_0-7.sky" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj">
+      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
+      <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
+      <Name>ProteomeDb</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
+      <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
+      <Name>ProteowizardWrapper</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Skyline.csproj">
+      <Project>{DDA2EA4C-B632-4FDF-94BA-F71E4C152056}</Project>
+      <Name>Skyline</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TestUtil\TestUtil.csproj">
+      <Project>{1A76F2B4-353A-4BCF-9D15-70D4B387E480}</Project>
+      <Name>TestUtil</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="CommandLineTest.zip" />
+    <None Include="ImportAllCmdLineTest.zip" />
+    <None Include="Refine.zip" />
+    <None Include="Results\AsymDIA.zip" />
+    <None Include="Results\FullScan.zip" />
+    <EmbeddedResource Include="Results\HeavyVariable.sky" />
+    <EmbeddedResource Include="Results\MultiLabel.sky" />
+    <EmbeddedResource Include="Study7.sky" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="UniModHeavyList.xml" />
+    <EmbeddedResource Include="UniModStaticList.xml" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

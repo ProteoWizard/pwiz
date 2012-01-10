@@ -1,0 +1,165 @@
+#
+# $Id$
+#
+#
+# Original author: Robert Burke <robetr.burke@proteowizard.org>
+#
+# Copyright 2009 Spielberg Family Center for Applied Proteomics
+#   University of Southern California, Los Angeles, California  90033
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
+import path tar ;
+
+project
+    : requirements
+        <toolset>gcc:<cxxflags>-fno-strict-aliasing
+        # hacks to allow building with <warnings>all with MSVC and boost
+        <toolset>msvc:<cxxflags>/wd4702 # warning: unreachable code # (boost/numeric/ublas/lu.hpp)
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+;
+
+
+# -fno-strict-aliasing necessary to avoid warnings from gcc 4.1+
+#  with regards to float <-> dword conversions during en/decoding 
+# gcc 4.1.2 regression bug: 
+# -O2 without -fno-strict-aliasing causes miscompilation in MSRunPeaksEncoder.cpp 
+
+# Add MascotReader if we're in a supported OS & platform
+import os ;
+import modules ;
+import path ;
+
+local ProgramFiles = [ os.environ ProgramFiles ] ;
+ProgramFiles ?= "C:\\Program Files" ;
+
+# Assign the most likely msparser library path
+local msparser_lib_path = [ MATCH --msparser-path=(.*) : [ modules.peek : ARGV ] ] ;
+
+if ! $(msparser_path)
+{
+    if "NT" in [ modules.peek : OS ]
+    {
+        msparser_path = $(ProgramFiles)/msparser ;
+    }
+    else if "LINUX" in [ modules.peek : OS ]
+    {
+        msparser_path = "/usr/local/msparser" ;
+    }
+}
+
+local mascot_sources ;
+local mascot_libs ;
+
+# Check for libmsparser existence.
+if "NT" in [ modules.peek : OS ] && [ path.exists $(msparser_path)/lib/libmsparser.lib ]
+{
+   lib mascot : : <name>msparser <search>$(msparser_path)/lib : : <include>$(msparser_path)/include ;
+
+   mascot_sources += MascotReader.cpp ;
+   mascot_libs +=  <library>mascot ;
+}
+else if "LINUX" in [ modules.peek : OS ] && [ path.exists $(msparser_path)/lib/libmsparser.a ]
+{
+   lib mascot : : <name>msparser <search>$(msparser_path)/lib : : <include>$(msparser_path)/include ;
+
+   mascot_sources += MascotReader.cpp ;
+   mascot_libs += <library>mascot ;
+}
+else
+{
+   echo "Warning: No mascot support found for the mzIdentML library. " ;
+   mascot_sources += MascotReader_dummy.cpp ;
+}
+
+lib pwiz_data_identdata_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
+
+
+lib pwiz_data_identdata 
+    : # sources
+        Diff.cpp
+        IdentData.cpp
+        IdentDataFile.cpp
+        Reader.cpp
+        DefaultReaderList.cpp
+        IO.cpp
+        Serializer_mzid.cpp
+        Serializer_pepXML.cpp
+        Serializer_Text.cpp
+        Pep2MzIdent.cpp
+        DelimWriter.cpp
+        DelimReader.cpp
+        References.cpp
+        KwCVMap.cpp
+        $(mascot_sources)
+    : # requirements
+        <library>pwiz_data_identdata_version
+        <library>../proteome//pwiz_data_proteome
+        <library>../common//pwiz_data_common
+        <library>../msdata//pwiz_data_msdata
+        <library>../misc//pwiz_data_misc
+        <library>../../utility/chemistry//pwiz_utility_chemistry
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
+        $(mascot_libs)
+    : # default-build
+    : # usage-requirements
+        <library>pwiz_data_identdata_version
+        <library>../proteome//pwiz_data_proteome
+        <library>../common//pwiz_data_common
+        <library>../msdata//pwiz_data_msdata
+        <library>../misc//pwiz_data_misc
+        <library>../../utility/chemistry//pwiz_utility_chemistry
+        <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
+        <library>/ext/boost//regex
+    ;
+
+
+lib pwiz_data_identdata_examples
+    :   examples.cpp
+    :   <library>pwiz_data_identdata
+    :
+    :	<library>pwiz_data_identdata
+    ;
+
+
+#
+# testing tools
+#
+
+exe ExtendedReaderTest
+    : ExtendedReadTest.cpp
+      pwiz_data_identdata
+    : <include>../..
+    ;
+explicit ExtendedReaderTest ;
+
+
+#
+# unit tests (ordered by dependency)
+#
+
+unit-test-if-exists IdentDataTest : IdentDataTest.cpp pwiz_data_identdata pwiz_data_identdata_examples ; 
+unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_identdata pwiz_data_identdata_examples ;
+unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_identdata ;
+unit-test-if-exists IOTest : IOTest.cpp pwiz_data_identdata pwiz_data_identdata_examples ;
+unit-test-if-exists Serializer_mzid_Test : Serializer_mzid_Test.cpp pwiz_data_identdata pwiz_data_identdata_examples ;
+unit-test-if-exists Serializer_pepXML_Test : Serializer_pepXML_Test.cpp pwiz_data_identdata pwiz_data_identdata_examples ;
+unit-test-if-exists Serializer_Text_Test : Serializer_Text_Test.cpp pwiz_data_identdata pwiz_data_identdata_examples ;
+unit-test-if-exists KwCVMapTest : KwCVMapTest.cpp pwiz_data_identdata pwiz_data_identdata_examples ;
+#unit-test-if-exists Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_identdata ;
+#unit-test-if-exists TraDataFileTest : TraDataFileTest.cpp pwiz_data_tradata pwiz_data_tradata_examples /ext/boost//filesystem ;
+#unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_tradata ;
+
+

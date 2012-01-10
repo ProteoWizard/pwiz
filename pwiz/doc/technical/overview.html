@@ -1,0 +1,121 @@
+<html>
+
+<head>
+    <title>ProteoWizard Documentation: Project Overview</title>
+    <link rel="stylesheet" href="main.css" type="text/css" media="screen" />
+</head>
+
+<body>
+
+    <h1>ProteoWizard Project Overview</h1>
+    <hr/>
+
+    <p>
+        <h2>Directory Layout</h2>
+        <ul>
+            <li><code>[root]</code></li>
+            <ul>
+                <li><code>build</code> &nbsp; [everything is built here]</li>
+                <li><code>doc</code> &nbsp; [documentation]</li>
+                <li><code>example_data</code> &nbsp; [some example data files]</li>
+                <li><code>libraries</code> &nbsp; [3rd party library archives]</li>
+                <li><code>pwiz</code> &nbsp; [main source tree -- all Apache licensed] </li>
+                <li><code>pwiz_aux</code> &nbsp; [non-Apache licensed contributed code] </li>
+                <li><code>pwiz_tools</code> &nbsp; [source code for tools] </li>
+            </ul>
+        </ul>
+    </p>
+
+
+    <p>
+        <h2>Projects</h2>
+        Here is an outline of the various ProteoWizard projects, organized by dependency level. &nbsp;
+        There may be dependencies within a given level, but there should never be any 
+        up-level dependencies. &nbsp; Unless otherwise noted, all projects are cross-platform. &nbsp;
+        Each project's source files are contained in the subdirectory of <code>pwiz</code>
+        of the same name.
+
+        <ul>
+            <li><h4>level 0 (pwiz/utility):</h4>
+            <ul>                
+                <li><code>math:&nbsp;</code> Mathematics classes (linear algebra, statistics,
+                    special mathematical functions)
+                </li>
+                <li><code>misc:&nbsp;</code> Miscellaneous standalone utility classes (Base64, SHA-1, 
+                    2D drawing, unit testing) 
+                </li>
+                <li><code>minimxml:&nbsp;</code> XML parsing and writing
+                </li>
+                <li><code>proteome:&nbsp;</code> Chemical formula, peptide, and isotope calculations.
+                </li>
+                <li><code>vendor_api:&nbsp;</code> Vendor-specific API wrappers (Windows only)
+                </li>
+            </ul> 
+            </li>
+
+            <li><h4>level 1 (pwiz/data):</h4> 
+            <ul>
+                <li><code>msdata:&nbsp;</code> Mass spec file format abstraction layer. 
+                </li>
+                <li><code>misc:&nbsp;</code> Library containing classes for handling FT transient data,
+                    complex frequency data, MS1 peak data.
+                </li>
+                <li><code>vendor_readers:&nbsp;</code> Vendor-specific Reader implementations 
+                </li> 
+            </ul> 
+            </li>
+
+            <li><h4>level 2 (pwiz/analysis):</h4>
+            <ul>
+                <li><code>chromatogram_processing:&nbsp;</code> Chromatogram analysis
+                </li>
+                <li><code>frequency:&nbsp;</code> Library of routines for frequency-domain peak detection.
+                </li>
+                <li><code>passive:&nbsp;</code> Event-driven analysis modules
+                </li>
+                <li><code>peakdetect:&nbsp;</code> General interface for peak detection
+                </li>
+                <li><code>peptideid:&nbsp;</code> Modules handling peptide id info abstraction and parsing
+                </li>
+                <li><code>spectrum_processing:&nbsp;</code> Spectrum analysis
+                </li>
+            </ul>
+            </li>
+
+            <li><h4>level 3 (pwiz_tools):</h4>
+            <ul>
+                <li><code>commandline:&nbsp;</code> Command-line tools</li>
+                <li><code>SeeMS:&nbsp;</code> Graphic data visualization program (Windows only)</li>
+            </ul>
+            </li>
+        </ul>
+    </p>
+    
+    <p>
+        <h2>Code Conventions</h2>
+
+        A code module consists of an interface (Foo.hpp), implementation (Foo.cpp), and a unit
+        test (FooTest.cpp). &nbsp; The interface should be self-documenting, with optional inclusion
+        of comment markup for automated documentation tools (e.g. Doxygen). &nbsp;
+        
+        The unit test serves two purposes:
+        <ol>
+            <li>To exercise the module's interface and validate its behavior independent 
+                of other modules.
+            </li>
+            <li>To document the intended usage of the code module.
+            </li>
+        </ol>
+        
+        Clients of a code module should never need to look at the implementation for questions
+        about usage.
+
+    </p>
+
+    <hr/>
+    <a href="index.html">Technical documentation home</a>
+
+</body>
+
+</html>
+
