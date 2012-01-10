@@ -58,13 +58,6 @@
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 //
-// [unimod.obo]
-#define _UNIMOD_OBO_
-//   format-version: 1.2
-//   date: 14:07:2011 12:49
-//   saved-by: psi-pi_team
-//   default-namespace: UNIMOD
-//
 // [unit.obo]
 #define _UNIT_OBO_
 //   format-version: 1.2
@@ -5623,3542 +5616,851 @@ enum PWIZ_API_DECL CVID
     /// TWIMS (travelling wave ion mobility mass spectrometer): An ion mobility mass spectrometry technique based on the superimposition of travelling voltage waves on a radially-confining RF voltage in a gas-filled, stacked-ring ion guide.
     MS_TWIMS = MS_travelling_wave_ion_mobility_mass_spectrometer,
 
-    /// unimod root node: The root node of the unimod modifications ontology.
-    UNIMOD_unimod_root_node = 100000000,
-
-    /// Acetyl: Acetylation.
-    UNIMOD_Acetyl = 100000001,
-
-    /// Amidated: Amidation.
-    UNIMOD_Amidated = 100000002,
-
-    /// Biotin: Biotinylation.
-    UNIMOD_Biotin = 100000003,
-
-    /// Carbamidomethyl: Iodoacetamide derivative.
-    UNIMOD_Carbamidomethyl = 100000004,
-
-    /// Carbamyl: Carbamylation.
-    UNIMOD_Carbamyl = 100000005,
-
-    /// Carboxymethyl: Iodoacetic acid derivative.
-    UNIMOD_Carboxymethyl = 100000006,
-
-    /// Deamidated: Deamidation.
-    UNIMOD_Deamidated = 100000007,
-
-    /// ICAT-G: Gygi ICAT(TM) d0.
-    UNIMOD_ICAT_G = 100000008,
-
-    /// ICAT-G:2H(8): Gygi ICAT(TM) d8.
-    UNIMOD_ICAT_G_2H_8_ = 100000009,
-
-    /// Met->Hse: Homoserine.
-    UNIMOD_Met__Hse = 100000010,
-
-    /// Met->Hsl: Homoserine lactone.
-    UNIMOD_Met__Hsl = 100000011,
-
-    /// ICAT-D:2H(8): Applied Biosystems original ICAT(TM) d8.
-    UNIMOD_ICAT_D_2H_8_ = 100000012,
-
-    /// ICAT-D: Applied Biosystems original ICAT(TM) d0.
-    UNIMOD_ICAT_D = 100000013,
-
-    /// NIPCAM: N-isopropylcarboxamidomethyl.
-    UNIMOD_NIPCAM = 100000017,
-
-    /// PEO-Iodoacetyl-LC-Biotin: Biotinyl-iodoacetamidyl-3,6-dioxaoctanediamine.
-    UNIMOD_PEO_Iodoacetyl_LC_Biotin = 100000020,
-
-    /// Phospho: Phosphorylation.
-    UNIMOD_Phospho = 100000021,
-
-    /// Dehydrated: Dehydration.
-    UNIMOD_Dehydrated = 100000023,
-
-    /// Propionamide: Acrylamide adduct.
-    UNIMOD_Propionamide = 100000024,
-
-    /// Pyridylacetyl: Pyridylacetyl.
-    UNIMOD_Pyridylacetyl = 100000025,
-
-    /// Pyro-carbamidomethyl: S-carbamoylmethylcysteine cyclization (N-terminus).
-    UNIMOD_Pyro_carbamidomethyl = 100000026,
-
-    /// Glu->pyro-Glu: Pyro-glu from E.
-    UNIMOD_Glu__pyro_Glu = 100000027,
-
-    /// Gln->pyro-Glu: Pyro-glu from Q.
-    UNIMOD_Gln__pyro_Glu = 100000028,
-
-    /// SMA: N-Succinimidyl-2-morpholine acetate.
-    UNIMOD_SMA = 100000029,
-
-    /// Cation:Na: Sodium adduct.
-    UNIMOD_Cation_Na = 100000030,
-
-    /// Pyridylethyl: S-pyridylethylation.
-    UNIMOD_Pyridylethyl = 100000031,
-
-    /// Methyl: Methylation.
-    UNIMOD_Methyl = 100000034,
-
-    /// Oxidation: Oxidation or Hydroxylation.
-    UNIMOD_Oxidation = 100000035,
-
-    /// Dimethyl: Di-Methylation.
-    UNIMOD_Dimethyl = 100000036,
-
-    /// Trimethyl: Tri-Methylation.
-    UNIMOD_Trimethyl = 100000037,
-
-    /// Methylthio: Beta-methylthiolation.
-    UNIMOD_Methylthio = 100000039,
-
-    /// Sulfo: O-Sulfonation.
-    UNIMOD_Sulfo = 100000040,
-
-    /// Hex: Hexose.
-    UNIMOD_Hex = 100000041,
-
-    /// Lipoyl: Lipoyl.
-    UNIMOD_Lipoyl = 100000042,
-
-    /// HexNAc: N-Acetylhexosamine.
-    UNIMOD_HexNAc = 100000043,
-
-    /// Farnesyl: Farnesylation.
-    UNIMOD_Farnesyl = 100000044,
-
-    /// Myristoyl: Myristoylation.
-    UNIMOD_Myristoyl = 100000045,
-
-    /// PyridoxalPhosphate: Pyridoxal phosphate.
-    UNIMOD_PyridoxalPhosphate = 100000046,
-
-    /// Palmitoyl: Palmitoylation.
-    UNIMOD_Palmitoyl = 100000047,
-
-    /// GeranylGeranyl: Geranyl-geranyl.
-    UNIMOD_GeranylGeranyl = 100000048,
-
-    /// Phosphopantetheine: Phosphopantetheine.
-    UNIMOD_Phosphopantetheine = 100000049,
-
-    /// FAD: Flavin adenine dinucleotide.
-    UNIMOD_FAD = 100000050,
-
-    /// Tripalmitate: N-acyl diglyceride cysteine.
-    UNIMOD_Tripalmitate = 100000051,
-
-    /// Guanidinyl: Guanidination.
-    UNIMOD_Guanidinyl = 100000052,
-
-    /// HNE: 4-hydroxynonenal (HNE).
-    UNIMOD_HNE = 100000053,
-
-    /// Glucuronyl: N-glucuronylation.
-    UNIMOD_Glucuronyl = 100000054,
-
-    /// Glutathione: Glutathione disulfide.
-    UNIMOD_Glutathione = 100000055,
-
-    /// Acetyl:2H(3): Acetate labeling reagent (N-term & K) (heavy form, +3amu).
-    UNIMOD_Acetyl_2H_3_ = 100000056,
-
-    /// Propionyl: Propionate labeling reagent light form (N-term & K).
-    UNIMOD_Propionyl = 100000058,
-
-    /// Propionyl:13C(3): Propionate labeling reagent heavy form (+3amu), N-term & K.
-    UNIMOD_Propionyl_13C_3_ = 100000059,
-
-    /// GIST-Quat: Quaternary amine labeling reagent light form (N-term & K).
-    UNIMOD_GIST_Quat = 100000060,
-
-    /// GIST-Quat:2H(3): Quaternary amine labeling reagent heavy (+3amu) form, N-term & K.
-    UNIMOD_GIST_Quat_2H_3_ = 100000061,
-
-    /// GIST-Quat:2H(6): Quaternary amine labeling reagent heavy form (+6amu), N-term & K.
-    UNIMOD_GIST_Quat_2H_6_ = 100000062,
-
-    /// GIST-Quat:2H(9): Quaternary amine labeling reagent heavy form (+9amu), N-term & K.
-    UNIMOD_GIST_Quat_2H_9_ = 100000063,
-
-    /// Succinyl: Succinic anhydride labeling reagent light form (N-term & K).
-    UNIMOD_Succinyl = 100000064,
-
-    /// Succinyl:2H(4): Succinic anhydride labeling reagent, heavy form (+4amu, 4H2), N-term & K.
-    UNIMOD_Succinyl_2H_4_ = 100000065,
-
-    /// Succinyl:13C(4): Succinic anhydride labeling reagent, heavy form (+4amu, 4C13), N-term & K.
-    UNIMOD_Succinyl_13C_4_ = 100000066,
-
-    /// Iminobiotin: Iminobiotinylation.
-    UNIMOD_Iminobiotin = 100000089,
-
-    /// ESP: ESP-Tag light d0.
-    UNIMOD_ESP = 100000090,
-
-    /// ESP:2H(10): ESP-Tag heavy d10.
-    UNIMOD_ESP_2H_10_ = 100000091,
-
-    /// NHS-LC-Biotin: NHS-LC-Biotin.
-    UNIMOD_NHS_LC_Biotin = 100000092,
-
-    /// EDT-maleimide-PEO-biotin: EDT-maleimide-PEO-biotin.
-    UNIMOD_EDT_maleimide_PEO_biotin = 100000093,
-
-    /// IMID: IMID d0.
-    UNIMOD_IMID = 100000094,
-
-    /// IMID:2H(4): IMID d4.
-    UNIMOD_IMID_2H_4_ = 100000095,
-
-    /// Propionamide:2H(3): Acrylamide d3.
-    UNIMOD_Propionamide_2H_3_ = 100000097,
-
-    /// ICAT-C: Applied Biosystems cleavable ICAT(TM) light.
-    UNIMOD_ICAT_C = 100000105,
-
-    /// ICAT-C:13C(9): Applied Biosystems cleavable ICAT(TM) heavy.
-    UNIMOD_ICAT_C_13C_9_ = 100000106,
-
-    /// FormylMet: Addition of N-formyl met.
-    UNIMOD_FormylMet = 100000107,
-
-    /// Nethylmaleimide: N-ethylmaleimide on cysteines.
-    UNIMOD_Nethylmaleimide = 100000108,
-
-    /// OxLysBiotinRed: Oxidized lysine biotinylated with biotin-LC-hydrazide, reduced.
-    UNIMOD_OxLysBiotinRed = 100000112,
-
-    /// OxLysBiotin: Oxidized lysine biotinylated with biotin-LC-hydrazide.
-    UNIMOD_OxLysBiotin = 100000113,
-
-    /// OxProBiotinRed: Oxidized proline biotinylated with biotin-LC-hydrazide, reduced.
-    UNIMOD_OxProBiotinRed = 100000114,
-
-    /// OxProBiotin: Oxidized Proline biotinylated with biotin-LC-hydrazide.
-    UNIMOD_OxProBiotin = 100000115,
-
-    /// OxArgBiotin: Oxidized arginine biotinylated with biotin-LC-hydrazide.
-    UNIMOD_OxArgBiotin = 100000116,
-
-    /// OxArgBiotinRed: Oxidized arginine biotinylated with biotin-LC-hydrazide, reduced.
-    UNIMOD_OxArgBiotinRed = 100000117,
-
-    /// EDT-iodoacetyl-PEO-biotin: EDT-iodo-PEO-biotin.
-    UNIMOD_EDT_iodoacetyl_PEO_biotin = 100000118,
-
-    /// IBTP: Thio Ether Formation - BTP Adduct.
-    UNIMOD_IBTP = 100000119,
-
-    /// GlyGly: Ubiquitinylation residue.
-    UNIMOD_GlyGly = 100000121,
-
-    /// Formyl: Formylation.
-    UNIMOD_Formyl = 100000122,
-
-    /// ICAT-H: N-iodoacetyl, p-chlorobenzyl-12C6-glucamine.
-    UNIMOD_ICAT_H = 100000123,
-
-    /// ICAT-H:13C(6): N-iodoacetyl, p-chlorobenzyl-13C6-glucamine.
-    UNIMOD_ICAT_H_13C_6_ = 100000124,
-
-    /// Thioacyl: 3-sulfanylpropanoyl.
-    UNIMOD_Thioacyl = 100000126,
-
-    /// Fluoro: Fluorophenylalanine replacement of phenylalanine.
-    UNIMOD_Fluoro = 100000127,
-
-    /// Fluorescein: 5-Iodoacetamidofluorescein (Molecular Probe, Eugene, OR).
-    UNIMOD_Fluorescein = 100000128,
-
-    /// Iodo: Iodination.
-    UNIMOD_Iodo = 100000129,
-
-    /// Diiodo: Di-Iodination.
-    UNIMOD_Diiodo = 100000130,
-
-    /// Triiodo: Tri-Iodination.
-    UNIMOD_Triiodo = 100000131,
-
-    /// Myristoleyl: (cis-delta 5)-tetradecaenoyl.
-    UNIMOD_Myristoleyl = 100000134,
-
-    /// Myristoyl+Delta:H(-4): (cis,cis-delta 5, delta 8)-tetradecadienoyl.
-    UNIMOD_Myristoyl_Delta_H__4_ = 100000135,
-
-    /// Benzoyl: Labeling reagent light form (N-term & K).
-    UNIMOD_Benzoyl = 100000136,
-
-    /// Hex(5)HexNAc(2): N-linked glycan core.
-    UNIMOD_Hex_5_HexNAc_2_ = 100000137,
-
-    /// Dansyl: 5-dimethylaminonaphthalene-1-sulfonyl.
-    UNIMOD_Dansyl = 100000139,
-
-    /// a-type-ion: ISD a-series (C-Term).
-    UNIMOD_a_type_ion = 100000140,
-
-    /// Amidine: Amidination of lysines or N-terminal amines with methyl acetimidate.
-    UNIMOD_Amidine = 100000141,
-
-    /// HexNAc(1)dHex(1): HexNAc1dHex1.
-    UNIMOD_HexNAc_1_dHex_1_ = 100000142,
-
-    /// HexNAc(2): HexNAc2.
-    UNIMOD_HexNAc_2_ = 100000143,
-
-    /// Hex(3): Hex3.
-    UNIMOD_Hex_3_ = 100000144,
-
-    /// HexNAc(1)dHex(2): HexNAc1dHex2.
-    UNIMOD_HexNAc_1_dHex_2_ = 100000145,
-
-    /// Hex(1)HexNAc(1)dHex(1): Hex1HexNAc1dHex1.
-    UNIMOD_Hex_1_HexNAc_1_dHex_1_ = 100000146,
-
-    /// HexNAc(2)dHex(1): HexNAc2dHex1.
-    UNIMOD_HexNAc_2_dHex_1_ = 100000147,
-
-    /// Hex(1)HexNAc(2): Hex1HexNAc2.
-    UNIMOD_Hex_1_HexNAc_2_ = 100000148,
-
-    /// Hex(1)HexNAc(1)NeuAc(1): Hex1HexNAc1NeuAc1.
-    UNIMOD_Hex_1_HexNAc_1_NeuAc_1_ = 100000149,
-
-    /// HexNAc(2)dHex(2): HexNAc2dHex2.
-    UNIMOD_HexNAc_2_dHex_2_ = 100000150,
-
-    /// Hex(1)HexNAc(2)Pent(1): Hex1HexNAc2Pent1.
-    UNIMOD_Hex_1_HexNAc_2_Pent_1_ = 100000151,
-
-    /// Hex(1)HexNAc(2)dHex(1): Hex1HexNAc2dHex1.
-    UNIMOD_Hex_1_HexNAc_2_dHex_1_ = 100000152,
-
-    /// Hex(2)HexNAc(2): Hex2HexNAc2.
-    UNIMOD_Hex_2_HexNAc_2_ = 100000153,
-
-    /// Hex(3)HexNAc(1)Pent(1): Hex3HexNAc1Pent1.
-    UNIMOD_Hex_3_HexNAc_1_Pent_1_ = 100000154,
-
-    /// Hex(1)HexNAc(2)dHex(1)Pent(1): Hex1HexNAc2dHex1Pent1.
-    UNIMOD_Hex_1_HexNAc_2_dHex_1_Pent_1_ = 100000155,
-
-    /// Hex(1)HexNAc(2)dHex(2): Hex1HexNAc2dHex2.
-    UNIMOD_Hex_1_HexNAc_2_dHex_2_ = 100000156,
-
-    /// Hex(2)HexNAc(2)Pent(1): Hex2HexNAc2Pent1.
-    UNIMOD_Hex_2_HexNAc_2_Pent_1_ = 100000157,
-
-    /// Hex(2)HexNAc(2)dHex(1): Hex2HexNAc2dHex1.
-    UNIMOD_Hex_2_HexNAc_2_dHex_1_ = 100000158,
-
-    /// Hex(3)HexNAc(2): Hex3HexNAc2.
-    UNIMOD_Hex_3_HexNAc_2_ = 100000159,
-
-    /// Hex(1)HexNAc(1)NeuAc(2): Hex1HexNAc1NeuAc2.
-    UNIMOD_Hex_1_HexNAc_1_NeuAc_2_ = 100000160,
-
-    /// Hex(3)HexNAc(2)P(1): Hex3HexNAc2P1.
-    UNIMOD_Hex_3_HexNAc_2_P_1_ = 100000161,
-
-    /// Delta:S(-1)Se(1): Selenium replaces sulphur.
-    UNIMOD_Delta_S__1_Se_1_ = 100000162,
-
-    /// Delta:H(1)O(-1)18O(1): Glycosylated asparagine 18O labeling.
-    UNIMOD_Delta_H_1_O__1_18O_1_ = 100000170,
-
-    /// NBS:13C(6): Shimadzu NBS-13C.
-    UNIMOD_NBS_13C_6_ = 100000171,
-
-    /// NBS: Shimadzu NBS-12C.
-    UNIMOD_NBS = 100000172,
-
-    /// BHT: Michael addition of BHT quinone methide to Cysteine and Lysine.
-    UNIMOD_BHT = 100000176,
-
-    /// DAET: Phosphorylation to amine thiol.
-    UNIMOD_DAET = 100000178,
-
-    /// Label:13C(9): 13C(9) Silac label.
-    UNIMOD_Label_13C_9_ = 100000184,
-
-    /// Label:13C(9)+Phospho: C13 label (Phosphotyrosine).
-    UNIMOD_Label_13C_9__Phospho = 100000185,
-
-    /// HPG: Hydroxyphenylglyoxal arginine.
-    UNIMOD_HPG = 100000186,
-
-    /// 2HPG: Bis(hydroxphenylglyoxal) arginine.
-    UNIMOD_2HPG = 100000187,
-
-    /// Label:13C(6): 13C(6) Silac label.
-    UNIMOD_Label_13C_6_ = 100000188,
-
-    /// Label:18O(2): O18 label at both C-terminal oxygens.
-    UNIMOD_Label_18O_2_ = 100000193,
-
-    /// AccQTag: 6-aminoquinolyl-N-hydroxysuccinimidyl carbamate.
-    UNIMOD_AccQTag = 100000194,
-
-    /// QAT: APTA-d0.
-    UNIMOD_QAT = 100000195,
-
-    /// QAT:2H(3): APTA d3.
-    UNIMOD_QAT_2H_3_ = 100000196,
-
-    /// EQAT: EAPTA d0.
-    UNIMOD_EQAT = 100000197,
-
-    /// EQAT:2H(5): EAPTA d5.
-    UNIMOD_EQAT_2H_5_ = 100000198,
-
-    /// Dimethyl:2H(4): DiMethyl-CHD2.
-    UNIMOD_Dimethyl_2H_4_ = 100000199,
-
-    /// Ethanedithiol: EDT.
-    UNIMOD_Ethanedithiol = 100000200,
-
-    /// Delta:H(6)C(6)O(1): Acrolein addition +94.
-    UNIMOD_Delta_H_6_C_6_O_1_ = 100000205,
-
-    /// Delta:H(4)C(3)O(1): Acrolein addition +56.
-    UNIMOD_Delta_H_4_C_3_O_1_ = 100000206,
-
-    /// Delta:H(2)C(3): Acrolein addition +38.
-    UNIMOD_Delta_H_2_C_3_ = 100000207,
-
-    /// Delta:H(4)C(6): Acrolein addition +76.
-    UNIMOD_Delta_H_4_C_6_ = 100000208,
-
-    /// Delta:H(8)C(6)O(2): Acrolein addition +112.
-    UNIMOD_Delta_H_8_C_6_O_2_ = 100000209,
-
-    /// NEIAA: N-ethyl iodoacetamide-d0.
-    UNIMOD_NEIAA = 100000211,
-
-    /// NEIAA:2H(5): N-ethyl iodoacetamide-d5.
-    UNIMOD_NEIAA_2H_5_ = 100000212,
-
-    /// ADP-Ribosyl: ADP Ribose addition.
-    UNIMOD_ADP_Ribosyl = 100000213,
-
-    /// iTRAQ4plex: Representative mass and accurate mass for 116 & 117.
-    UNIMOD_iTRAQ4plex = 100000214,
-
-    /// IGBP: Light IDBEST tag for quantitation.
-    UNIMOD_IGBP = 100000243,
-
-    /// Crotonaldehyde: Crotonaldehyde.
-    UNIMOD_Crotonaldehyde = 100000253,
-
-    /// Delta:H(2)C(2): Acetaldehyde +26.
-    UNIMOD_Delta_H_2_C_2_ = 100000254,
-
-    /// Delta:H(4)C(2): Acetaldehyde +28.
-    UNIMOD_Delta_H_4_C_2_ = 100000255,
-
-    /// Delta:H(4)C(3): Propionaldehyde +40.
-    UNIMOD_Delta_H_4_C_3_ = 100000256,
-
-    /// Label:18O(1): O18 Labeling.
-    UNIMOD_Label_18O_1_ = 100000258,
-
-    /// Label:13C(6)15N(2): 13C(6) 15N(2) Silac label.
-    UNIMOD_Label_13C_6_15N_2_ = 100000259,
-
-    /// Thiophospho: Thiophosphorylation.
-    UNIMOD_Thiophospho = 100000260,
-
-    /// SPITC: 4-sulfophenyl isothiocyanate.
-    UNIMOD_SPITC = 100000261,
-
-    /// Label:2H(3): Trideuteration.
-    UNIMOD_Label_2H_3_ = 100000262,
-
-    /// PET: Phosphorylation to pyridyl thiol.
-    UNIMOD_PET = 100000264,
-
-    /// Label:13C(6)15N(4): 13C(6) 15N(4) Silac label.
-    UNIMOD_Label_13C_6_15N_4_ = 100000267,
-
-    /// Label:13C(5)15N(1): 13C(5) 15N(1) Silac label.
-    UNIMOD_Label_13C_5_15N_1_ = 100000268,
-
-    /// Label:13C(9)15N(1): 13C(9) 15N(1) Silac label.
-    UNIMOD_Label_13C_9_15N_1_ = 100000269,
-
-    /// Cytopiloyne: Nucleophilic addtion to cytopiloyne.
-    UNIMOD_Cytopiloyne = 100000270,
-
-    /// Cytopiloyne+water: Nucleophilic addition to cytopiloyne+H2O.
-    UNIMOD_Cytopiloyne_water = 100000271,
-
-    /// CAF: Sulfonation of N-terminus.
-    UNIMOD_CAF = 100000272,
-
-    /// Xlink:SSD: Covalent modification of lysine by cross-linking reagent.
-    UNIMOD_Xlink_SSD = 100000273,
-
-    /// Nitrosyl: S-nitrosylation.
-    UNIMOD_Nitrosyl = 100000275,
-
-    /// AEBS: Aminoethylbenzenesulfonylation.
-    UNIMOD_AEBS = 100000276,
-
-    /// Ethanolyl: Ethanolation.
-    UNIMOD_Ethanolyl = 100000278,
-
-    /// Ethyl: Ethylation.
-    UNIMOD_Ethyl = 100000280,
-
-    /// CoenzymeA: Cysteine modified Coenzyme A.
-    UNIMOD_CoenzymeA = 100000281,
-
-    /// Methyl:2H(2): Deuterium Methylation of Lysine.
-    UNIMOD_Methyl_2H_2_ = 100000284,
-
-    /// SulfanilicAcid: Light Sulfanilic Acid (SA) C12.
-    UNIMOD_SulfanilicAcid = 100000285,
-
-    /// SulfanilicAcid:13C(6): Heavy Sulfanilic Acid (SA) C13.
-    UNIMOD_SulfanilicAcid_13C_6_ = 100000286,
-
-    /// Trp->Oxolactone: Tryptophan oxidation to oxolactone.
-    UNIMOD_Trp__Oxolactone = 100000288,
-
-    /// Biotin-PEO-Amine: Biotin polyethyleneoxide amine.
-    UNIMOD_Biotin_PEO_Amine = 100000289,
-
-    /// Biotin-HPDP: Pierce EZ-Link Biotin-HPDP.
-    UNIMOD_Biotin_HPDP = 100000290,
-
-    /// Delta:Hg(1): Mercury Mercaptan.
-    UNIMOD_Delta_Hg_1_ = 100000291,
-
-    /// IodoU-AMP: Cross-link of (Iodo)-uracil MP with W,F,Y.
-    UNIMOD_IodoU_AMP = 100000292,
-
-    /// CAMthiopropanoyl: 3-(carbamidomethylthio)propanoyl.
-    UNIMOD_CAMthiopropanoyl = 100000293,
-
-    /// IED-Biotin: Biotinoyl-iodoacetyl-ethylenediamine.
-    UNIMOD_IED_Biotin = 100000294,
-
-    /// dHex: Fucose.
-    UNIMOD_dHex = 100000295,
-
-    /// Methyl:2H(3): Deuterated methyl ester.
-    UNIMOD_Methyl_2H_3_ = 100000298,
-
-    /// Carboxy: Carboxylation.
-    UNIMOD_Carboxy = 100000299,
-
-    /// Bromobimane: Monobromobimane derivative.
-    UNIMOD_Bromobimane = 100000301,
-
-    /// Menadione: Menadione quinone derivative.
-    UNIMOD_Menadione = 100000302,
-
-    /// DeStreak: Cysteine mercaptoethanol.
-    UNIMOD_DeStreak = 100000303,
-
-    /// dHex(1)Hex(3)HexNAc(4): Fucosylated biantennary (-2 galactose).
-    UNIMOD_dHex_1_Hex_3_HexNAc_4_ = 100000305,
-
-    /// dHex(1)Hex(4)HexNAc(4): Fucosylated biantennary (-1 galactose).
-    UNIMOD_dHex_1_Hex_4_HexNAc_4_ = 100000307,
-
-    /// dHex(1)Hex(5)HexNAc(4): Fucosylated biantennary.
-    UNIMOD_dHex_1_Hex_5_HexNAc_4_ = 100000308,
-
-    /// Hex(3)HexNAc(4): Biantennary (-2 galactose).
-    UNIMOD_Hex_3_HexNAc_4_ = 100000309,
-
-    /// Hex(4)HexNAc(4): Biantennary (-1 galactose).
-    UNIMOD_Hex_4_HexNAc_4_ = 100000310,
-
-    /// Hex(5)HexNAc(4): Biantennary.
-    UNIMOD_Hex_5_HexNAc_4_ = 100000311,
-
-    /// Cysteinyl: Cysteinylation.
-    UNIMOD_Cysteinyl = 100000312,
-
-    /// Lys-loss: Loss of C-terminal K from Heavy Chain of MAb.
-    UNIMOD_Lys_loss = 100000313,
-
-    /// Nmethylmaleimide: Nmethylmaleimide.
-    UNIMOD_Nmethylmaleimide = 100000314,
-
-    /// DimethylpyrroleAdduct: 2,5-dimethypyrrole.
-    UNIMOD_DimethylpyrroleAdduct = 100000316,
-
-    /// Delta:H(2)C(5): MDA adduct +62.
-    UNIMOD_Delta_H_2_C_5_ = 100000318,
-
-    /// Delta:H(2)C(3)O(1): MDA adduct +54.
-    UNIMOD_Delta_H_2_C_3_O_1_ = 100000319,
-
-    /// Nethylmaleimide+water: Nethylmaleimidehydrolysis.
-    UNIMOD_Nethylmaleimide_water = 100000320,
-
-    /// Xlink:B10621: Bis-N-I-sulfonerahodamine.
-    UNIMOD_Xlink_B10621 = 100000323,
-
-    /// DTBP: Dimethyl 3,3\'-dithiobispropionimidate.
-    UNIMOD_DTBP = 100000324,
-
-    /// FP-Biotin: 10-ethoxyphosphinyl-N-(biotinamidopentyl)decanamide.
-    UNIMOD_FP_Biotin = 100000325,
-
-    /// Delta:H(4)C(2)O(-1)S(1): S-Ethylcystine from Serine.
-    UNIMOD_Delta_H_4_C_2_O__1_S_1_ = 100000327,
-
-    /// Methyl:2H(3)13C(1): Monomethylated arginine.
-    UNIMOD_Methyl_2H_3_13C_1_ = 100000329,
-
-    /// Dimethyl:2H(6)13C(2): Dimethylated arginine.
-    UNIMOD_Dimethyl_2H_6_13C_2_ = 100000330,
-
-    /// Thiophos-S-S-biotin: Thiophosphate labeled with biotin-HPDP.
-    UNIMOD_Thiophos_S_S_biotin = 100000332,
-
-    /// Can-FP-biotin: 6-N-biotinylaminohexyl isopropyl phosphate.
-    UNIMOD_Can_FP_biotin = 100000333,
-
-    /// HNE+Delta:H(2): Reduced 4-Hydroxynonenal.
-    UNIMOD_HNE_Delta_H_2_ = 100000335,
-
-    /// Methylamine: Michael addition with methylamine.
-    UNIMOD_Methylamine = 100000337,
-
-    /// Bromo: Bromination.
-    UNIMOD_Bromo = 100000340,
-
-    /// Amino: Tyrosine oxidation to 2-aminotyrosine.
-    UNIMOD_Amino = 100000342,
-
-    /// Argbiotinhydrazide: Oxidized Arginine biotinylated with biotin hydrazide.
-    UNIMOD_Argbiotinhydrazide = 100000343,
-
-    /// Arg->GluSA: Arginine oxidation to glutamic semialdehyde.
-    UNIMOD_Arg__GluSA = 100000344,
-
-    /// Trioxidation: Cysteine oxidation to cysteic acid.
-    UNIMOD_Trioxidation = 100000345,
-
-    /// His->Asn: His->Asn substitution.
-    UNIMOD_His__Asn = 100000348,
-
-    /// His->Asp: His->Asp substitution.
-    UNIMOD_His__Asp = 100000349,
-
-    /// Trp->Hydroxykynurenin: Tryptophan oxidation to hydroxykynurenin.
-    UNIMOD_Trp__Hydroxykynurenin = 100000350,
-
-    /// Trp->Kynurenin: Tryptophan oxidation to kynurenin.
-    UNIMOD_Trp__Kynurenin = 100000351,
-
-    /// Lys->Allysine: Lysine oxidation to aminoadipic semialdehyde.
-    UNIMOD_Lys__Allysine = 100000352,
-
-    /// Lysbiotinhydrazide: Oxidized Lysine biotinylated with biotin hydrazide.
-    UNIMOD_Lysbiotinhydrazide = 100000353,
-
-    /// Nitro: Oxidation to nitro.
-    UNIMOD_Nitro = 100000354,
-
-    /// probiotinhydrazide: Oxidized proline biotinylated with biotin hydrazide.
-    UNIMOD_probiotinhydrazide = 100000357,
-
-    /// Pro->pyro-Glu: Proline oxidation to pyroglutamic acid.
-    UNIMOD_Pro__pyro_Glu = 100000359,
-
-    /// Pro->Pyrrolidinone: Proline oxidation to pyrrolidinone.
-    UNIMOD_Pro__Pyrrolidinone = 100000360,
-
-    /// Thrbiotinhydrazide: Oxidized Threonine biotinylated with biotin hydrazide.
-    UNIMOD_Thrbiotinhydrazide = 100000361,
-
-    /// Diisopropylphosphate: O-Diisopropylphosphorylation.
-    UNIMOD_Diisopropylphosphate = 100000362,
-
-    /// Isopropylphospho: O-Isopropylphosphorylation.
-    UNIMOD_Isopropylphospho = 100000363,
-
-    /// ICPL:13C(6): Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, heavy form.
-    UNIMOD_ICPL_13C_6_ = 100000364,
-
-    /// ICPL: Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, light form.
-    UNIMOD_ICPL = 100000365,
-
-    /// Deamidated:18O(1): Deamidation in presence of O18.
-    UNIMOD_Deamidated_18O_1_ = 100000366,
-
-    /// Cys->Dha: Dehydroalanine (from Cysteine).
-    UNIMOD_Cys__Dha = 100000368,
-
-    /// Pro->Pyrrolidone: Pyrrolidone from Proline.
-    UNIMOD_Pro__Pyrrolidone = 100000369,
-
-    /// HMVK: Michael addition of hydroxymethylvinyl ketone to cysteine.
-    UNIMOD_HMVK = 100000371,
-
-    /// Arg->Orn: Ornithine from Arginine.
-    UNIMOD_Arg__Orn = 100000372,
-
-    /// Dehydro: Half of a disulfide bridge.
-    UNIMOD_Dehydro = 100000374,
-
-    /// Diphthamide: Diphthamide.
-    UNIMOD_Diphthamide = 100000375,
-
-    /// Hydroxyfarnesyl: Hydroxyfarnesyl.
-    UNIMOD_Hydroxyfarnesyl = 100000376,
-
-    /// Diacylglycerol: Diacylglycerol.
-    UNIMOD_Diacylglycerol = 100000377,
-
-    /// Carboxyethyl: Carboxyethyl.
-    UNIMOD_Carboxyethyl = 100000378,
-
-    /// Hypusine: Hypusine.
-    UNIMOD_Hypusine = 100000379,
-
-    /// Retinylidene: Retinal.
-    UNIMOD_Retinylidene = 100000380,
-
-    /// Lys->AminoadipicAcid: Alpha-amino adipic acid.
-    UNIMOD_Lys__AminoadipicAcid = 100000381,
-
-    /// Cys->PyruvicAcid: Pyruvic acid from N-term cys.
-    UNIMOD_Cys__PyruvicAcid = 100000382,
-
-    /// Ammonia-loss: Loss of ammonia.
-    UNIMOD_Ammonia_loss = 100000385,
-
-    /// Phycocyanobilin: Phycocyanobilin.
-    UNIMOD_Phycocyanobilin = 100000387,
-
-    /// Phycoerythrobilin: Phycoerythrobilin.
-    UNIMOD_Phycoerythrobilin = 100000388,
-
-    /// Phytochromobilin: Phytochromobilin.
-    UNIMOD_Phytochromobilin = 100000389,
-
-    /// Heme: Heme.
-    UNIMOD_Heme = 100000390,
-
-    /// Molybdopterin: Molybdopterin.
-    UNIMOD_Molybdopterin = 100000391,
-
-    /// Quinone: Quinone.
-    UNIMOD_Quinone = 100000392,
-
-    /// Glucosylgalactosyl: Glucosylgalactosyl hydroxylysine.
-    UNIMOD_Glucosylgalactosyl = 100000393,
-
-    /// GPIanchor: Glycosylphosphatidylinositol.
-    UNIMOD_GPIanchor = 100000394,
-
-    /// PhosphoribosyldephosphoCoA: Phosphoribosyl dephospho-coenzyme A.
-    UNIMOD_PhosphoribosyldephosphoCoA = 100000395,
-
-    /// GlycerylPE: Glycerylphosphorylethanolamine.
-    UNIMOD_GlycerylPE = 100000396,
-
-    /// Triiodothyronine: Triiodo.
-    UNIMOD_Triiodothyronine = 100000397,
-
-    /// Thyroxine: Tetraiodo.
-    UNIMOD_Thyroxine = 100000398,
-
-    /// Tyr->Dha: Dehydroalanine (from Tyrosine).
-    UNIMOD_Tyr__Dha = 100000400,
-
-    /// Didehydro: 2-amino-3-oxo-butanoic_acid.
-    UNIMOD_Didehydro = 100000401,
-
-    /// Cys->Oxoalanine: Oxoalanine.
-    UNIMOD_Cys__Oxoalanine = 100000402,
-
-    /// Ser->LacticAcid: Lactic acid from N-term Ser.
-    UNIMOD_Ser__LacticAcid = 100000403,
-
-    /// Phosphoadenosine: AMP binding site.
-    UNIMOD_Phosphoadenosine = 100000405,
-
-    /// Hydroxycinnamyl: Hydroxycinnamyl.
-    UNIMOD_Hydroxycinnamyl = 100000407,
-
-    /// Glycosyl: Glycosyl-L-hydroxyproline.
-    UNIMOD_Glycosyl = 100000408,
-
-    /// FMNH: Flavin mononucleotide.
-    UNIMOD_FMNH = 100000409,
-
-    /// Archaeol: S-diphytanylglycerol diether.
-    UNIMOD_Archaeol = 100000410,
-
-    /// Phenylisocyanate: Phenyl isocyanate.
-    UNIMOD_Phenylisocyanate = 100000411,
-
-    /// Phenylisocyanate:2H(5): D5-phenyl isocyanate.
-    UNIMOD_Phenylisocyanate_2H_5_ = 100000412,
-
-    /// Phosphoguanosine: Phospho-guanosine.
-    UNIMOD_Phosphoguanosine = 100000413,
-
-    /// Hydroxymethyl: Hydroxymethyl.
-    UNIMOD_Hydroxymethyl = 100000414,
-
-    /// MolybdopterinGD+Delta:S(-1)Se(1): L-selenocysteinyl molybdenum bis(molybdopterin guanine dinucleotide).
-    UNIMOD_MolybdopterinGD_Delta_S__1_Se_1_ = 100000415,
-
-    /// Dipyrrolylmethanemethyl: Dipyrrolylmethanemethyl.
-    UNIMOD_Dipyrrolylmethanemethyl = 100000416,
-
-    /// PhosphoUridine: Uridine phosphodiester.
-    UNIMOD_PhosphoUridine = 100000417,
-
-    /// Glycerophospho: Glycerophospho.
-    UNIMOD_Glycerophospho = 100000419,
-
-    /// Carboxy->Thiocarboxy: Thiocarboxylic acid.
-    UNIMOD_Carboxy__Thiocarboxy = 100000420,
-
-    /// Sulfide: Persulfide.
-    UNIMOD_Sulfide = 100000421,
-
-    /// PyruvicAcidIminyl: N-pyruvic acid 2-iminyl.
-    UNIMOD_PyruvicAcidIminyl = 100000422,
-
-    /// Delta:Se(1): Selenyl.
-    UNIMOD_Delta_Se_1_ = 100000423,
-
-    /// MolybdopterinGD: Molybdenum bis(molybdopterin guanine dinucleotide).
-    UNIMOD_MolybdopterinGD = 100000424,
-
-    /// Dioxidation: Dihydroxy.
-    UNIMOD_Dioxidation = 100000425,
-
-    /// Octanoyl: Octanoyl.
-    UNIMOD_Octanoyl = 100000426,
-
-    /// PhosphoHexNAc: N-acetylglucosamine-1-phosphoryl.
-    UNIMOD_PhosphoHexNAc = 100000428,
-
-    /// PhosphoHex: Phosphoglycosyl-D-mannose-1-phosphoryl.
-    UNIMOD_PhosphoHex = 100000429,
-
-    /// Palmitoleyl: Palmitoleyl.
-    UNIMOD_Palmitoleyl = 100000431,
-
-    /// Cholesterol: Cholesterol ester.
-    UNIMOD_Cholesterol = 100000432,
-
-    /// Didehydroretinylidene: 3,4-didehydroretinylidene.
-    UNIMOD_Didehydroretinylidene = 100000433,
-
-    /// CHDH: Cis-14-hydroxy-10,13-dioxo-7-heptadecenoic ester.
-    UNIMOD_CHDH = 100000434,
-
-    /// Methylpyrroline: 4-methyl-delta-1-pyrroline-5-carboxyl.
-    UNIMOD_Methylpyrroline = 100000435,
-
-    /// Hydroxyheme: Hydroxyheme.
-    UNIMOD_Hydroxyheme = 100000436,
-
-    /// MicrocinC7: (3-aminopropyl)(L-aspartyl-1-amino)phosphoryl-5-adenosine.
-    UNIMOD_MicrocinC7 = 100000437,
-
-    /// Cyano: Cyano.
-    UNIMOD_Cyano = 100000438,
-
-    /// Diironsubcluster: Hydrogenase diiron subcluster.
-    UNIMOD_Diironsubcluster = 100000439,
-
-    /// Amidino: Amidino.
-    UNIMOD_Amidino = 100000440,
-
-    /// FMN: O3-(riboflavin phosphoryl).
-    UNIMOD_FMN = 100000442,
-
-    /// FMNC: S-(4a-FMN).
-    UNIMOD_FMNC = 100000443,
-
-    /// CuSMo: Copper sulfido molybdopterin cytosine dinuncleotide.
-    UNIMOD_CuSMo = 100000444,
-
-    /// Hydroxytrimethyl: 5-hydroxy-N6,N6,N6-trimethyl.
-    UNIMOD_Hydroxytrimethyl = 100000445,
-
-    /// Deoxy: Reduction.
-    UNIMOD_Deoxy = 100000447,
-
-    /// Microcin: Microcin E492 siderophore ester from serine.
-    UNIMOD_Microcin = 100000448,
-
-    /// Decanoyl: Lipid.
-    UNIMOD_Decanoyl = 100000449,
-
-    /// Glu: Monoglutamyl.
-    UNIMOD_Glu = 100000450,
-
-    /// GluGlu: Diglutamyl.
-    UNIMOD_GluGlu = 100000451,
-
-    /// GluGluGlu: Triglutamyl.
-    UNIMOD_GluGluGlu = 100000452,
-
-    /// GluGluGluGlu: Tetraglutamyl.
-    UNIMOD_GluGluGluGlu = 100000453,
-
-    /// HexN: Hexosamine.
-    UNIMOD_HexN = 100000454,
-
-    /// Xlink:DMP-s: One end of crosslink attached, one end free.
-    UNIMOD_Xlink_DMP_s = 100000455,
-
-    /// Xlink:DMP: Both ends of crosslink attached to same peptide.
-    UNIMOD_Xlink_DMP = 100000456,
-
-    /// NDA: Naphthalene-2,3-dicarboxaldehyde.
-    UNIMOD_NDA = 100000457,
-
-    /// SPITC:13C(6): 4-sulfophenyl isothiocyanate (Heavy C13).
-    UNIMOD_SPITC_13C_6_ = 100000464,
-
-    /// AEC-MAEC: Aminoethylcysteine.
-    UNIMOD_AEC_MAEC = 100000472,
-
-    /// TMAB: 4-trimethyllammoniumbutyryl-.
-    UNIMOD_TMAB = 100000476,
-
-    /// TMAB:2H(9): D9-4-trimethyllammoniumbutyryl-.
-    UNIMOD_TMAB_2H_9_ = 100000477,
-
-    /// FTC: Fluorescein-5-thiosemicarbazide.
-    UNIMOD_FTC = 100000478,
-
-    /// Label:2H(4): 4,4,5,5-D4 Lysine.
-    UNIMOD_Label_2H_4_ = 100000481,
-
-    /// DHP: Dehydropyrrolizidine alkaloid (dehydroretronecine) on cysteines.
-    UNIMOD_DHP = 100000488,
-
-    /// Hep: Heptose.
-    UNIMOD_Hep = 100000490,
-
-    /// BADGE: Bisphenol A diglycidyl ether derivative.
-    UNIMOD_BADGE = 100000493,
-
-    /// CyDye-Cy3: Cy3 CyDye DIGE Fluor saturation dye.
-    UNIMOD_CyDye_Cy3 = 100000494,
-
-    /// CyDye-Cy5: Cy5 CyDye DIGE Fluor saturation dye.
-    UNIMOD_CyDye_Cy5 = 100000495,
-
-    /// BHTOH: Michael addition of t-butyl hydroxylated BHT (BHTOH) to C, H or K.
-    UNIMOD_BHTOH = 100000498,
-
-    /// IGBP:13C(2): Heavy IDBEST tag for quantitation.
-    UNIMOD_IGBP_13C_2_ = 100000499,
-
-    /// Nmethylmaleimide+water: Nmethylmaleimidehydrolysis.
-    UNIMOD_Nmethylmaleimide_water = 100000500,
-
-    /// PyMIC: 3-methyl-2-pyridyl isocyanate.
-    UNIMOD_PyMIC = 100000501,
-
-    /// LG-lactam-K: Levuglandinyl - lysine lactam adduct.
-    UNIMOD_LG_lactam_K = 100000503,
-
-    /// LG-Hlactam-K: Levuglandinyl - lysine hydroxylactam adduct.
-    UNIMOD_LG_Hlactam_K = 100000504,
-
-    /// LG-lactam-R: Levuglandinyl - arginine lactam adduct.
-    UNIMOD_LG_lactam_R = 100000505,
-
-    /// LG-Hlactam-R: Levuglandinyl - arginine hydroxylactam adduct.
-    UNIMOD_LG_Hlactam_R = 100000506,
-
-    /// Dimethyl:2H(4)13C(2): DiMethyl-C13HD2.
-    UNIMOD_Dimethyl_2H_4_13C_2_ = 100000510,
-
-    /// Hex(2): Lactosylation.
-    UNIMOD_Hex_2_ = 100000512,
-
-    /// C8-QAT: [3-(2,5)-Dioxopyrrolidin-1-yloxycarbonyl)-propyl]dimethyloctylammonium.
-    UNIMOD_C8_QAT = 100000513,
-
-    /// PropylNAGthiazoline: Propyl-1,2-dideoxy-2\'-methyl-alpha-D-glucopyranoso-[2,1-d]-Delta2\'-thiazoline.
-    UNIMOD_PropylNAGthiazoline = 100000514,
-
-    /// FNEM: Fluorescein-5-maleimide.
-    UNIMOD_FNEM = 100000515,
-
-    /// Diethyl: Diethylation, analogous to Dimethylation.
-    UNIMOD_Diethyl = 100000518,
-
-    /// BisANS: 4,4\'-dianilino-1,1\'-binaphthyl-5,5\'-disulfonic acid.
-    UNIMOD_BisANS = 100000519,
-
-    /// Piperidine: Piperidination.
-    UNIMOD_Piperidine = 100000520,
-
-    /// Maleimide-PEO2-Biotin: Maleimide-Biotin.
-    UNIMOD_Maleimide_PEO2_Biotin = 100000522,
-
-    /// Sulfo-NHS-LC-LC-Biotin: Biot_LC_LC.
-    UNIMOD_Sulfo_NHS_LC_LC_Biotin = 100000523,
-
-    /// CLIP_TRAQ_2: CLIP_TRAQ_2.
-    UNIMOD_CLIP_TRAQ_2 = 100000525,
-
-    /// Dethiomethyl: Prompt loss of side chain from oxidised Met.
-    UNIMOD_Dethiomethyl = 100000526,
-
-    /// Methyl+Deamidated: Deamidation followed by a methylation.
-    UNIMOD_Methyl_Deamidated = 100000528,
-
-    /// Delta:H(5)C(2): Dimethylation of proline residue.
-    UNIMOD_Delta_H_5_C_2_ = 100000529,
-
-    /// Cation:K: Replacement of proton by potassium.
-    UNIMOD_Cation_K = 100000530,
-
-    /// Cation:Cu[I]: Replacement of proton by copper.
-    UNIMOD_Cation_Cu_I_ = 100000531,
-
-    /// iTRAQ4plex114: Accurate mass for 114.
-    UNIMOD_iTRAQ4plex114 = 100000532,
-
-    /// iTRAQ4plex115: Accurate mass for 115.
-    UNIMOD_iTRAQ4plex115 = 100000533,
-
-    /// Dibromo: Dibromo.
-    UNIMOD_Dibromo = 100000534,
-
-    /// LeuArgGlyGly: Ubiquitination.
-    UNIMOD_LeuArgGlyGly = 100000535,
-
-    /// CLIP_TRAQ_3: CLIP_TRAQ_3.
-    UNIMOD_CLIP_TRAQ_3 = 100000536,
-
-    /// CLIP_TRAQ_4: CLIP_TRAQ_4.
-    UNIMOD_CLIP_TRAQ_4 = 100000537,
-
-    /// Biotin:Cayman-10141: Was 15dB-biotin.
-    UNIMOD_Biotin_Cayman_10141 = 100000538,
-
-    /// Biotin:Cayman-10013: Was PGA1-biotin.
-    UNIMOD_Biotin_Cayman_10013 = 100000539,
-
-    /// Ala->Ser: Ala->Ser substitution.
-    UNIMOD_Ala__Ser = 100000540,
-
-    /// Ala->Thr: Ala->Thr substitution.
-    UNIMOD_Ala__Thr = 100000541,
-
-    /// Ala->Asp: Ala->Asp substitution.
-    UNIMOD_Ala__Asp = 100000542,
-
-    /// Ala->Pro: Ala->Pro substitution.
-    UNIMOD_Ala__Pro = 100000543,
-
-    /// Ala->Gly: Ala->Gly substitution.
-    UNIMOD_Ala__Gly = 100000544,
-
-    /// Ala->Glu: Ala->Glu substitution.
-    UNIMOD_Ala__Glu = 100000545,
-
-    /// Ala->Val: Ala->Val substitution.
-    UNIMOD_Ala__Val = 100000546,
-
-    /// Cys->Phe: Cys->Phe substitution.
-    UNIMOD_Cys__Phe = 100000547,
-
-    /// Cys->Ser: Cys->Ser substitution.
-    UNIMOD_Cys__Ser = 100000548,
-
-    /// Cys->Trp: Cys->Trp substitution.
-    UNIMOD_Cys__Trp = 100000549,
-
-    /// Cys->Tyr: Cys->Tyr substitution.
-    UNIMOD_Cys__Tyr = 100000550,
-
-    /// Cys->Arg: Cys->Arg substitution.
-    UNIMOD_Cys__Arg = 100000551,
-
-    /// Cys->Gly: Cys->Gly substitution.
-    UNIMOD_Cys__Gly = 100000552,
-
-    /// Asp->Ala: Asp->Ala substitution.
-    UNIMOD_Asp__Ala = 100000553,
-
-    /// Asp->His: Asp->His substitution.
-    UNIMOD_Asp__His = 100000554,
-
-    /// Asp->Asn: Asp->Asn substitution.
-    UNIMOD_Asp__Asn = 100000555,
-
-    /// Asp->Gly: Asp->Gly substitution.
-    UNIMOD_Asp__Gly = 100000556,
-
-    /// Asp->Tyr: Asp->Tyr substitution.
-    UNIMOD_Asp__Tyr = 100000557,
-
-    /// Asp->Glu: Asp->Glu substitution.
-    UNIMOD_Asp__Glu = 100000558,
-
-    /// Asp->Val: Asp->Val substitution.
-    UNIMOD_Asp__Val = 100000559,
-
-    /// Glu->Ala: Glu->Ala substitution.
-    UNIMOD_Glu__Ala = 100000560,
-
-    /// Glu->Gln: Glu->Gln substitution.
-    UNIMOD_Glu__Gln = 100000561,
-
-    /// Glu->Asp: Glu->Asp substitution.
-    UNIMOD_Glu__Asp = 100000562,
-
-    /// Glu->Lys: Glu->Lys substitution.
-    UNIMOD_Glu__Lys = 100000563,
-
-    /// Glu->Gly: Glu->Gly substitution.
-    UNIMOD_Glu__Gly = 100000564,
-
-    /// Glu->Val: Glu->Val substitution.
-    UNIMOD_Glu__Val = 100000565,
-
-    /// Phe->Ser: Phe->Ser substitution.
-    UNIMOD_Phe__Ser = 100000566,
-
-    /// Phe->Cys: Phe->Cys substitution.
-    UNIMOD_Phe__Cys = 100000567,
-
-    /// Phe->Xle: Phe->Leu/Ile substitution.
-    UNIMOD_Phe__Xle = 100000568,
-
-    /// Phe->Tyr: Phe->Tyr substitution.
-    UNIMOD_Phe__Tyr = 100000569,
-
-    /// Phe->Val: Phe->Val substitution.
-    UNIMOD_Phe__Val = 100000570,
-
-    /// Gly->Ala: Gly->Ala substitution.
-    UNIMOD_Gly__Ala = 100000571,
-
-    /// Gly->Ser: Gly->Ser substitution.
-    UNIMOD_Gly__Ser = 100000572,
-
-    /// Gly->Trp: Gly->Trp substitution.
-    UNIMOD_Gly__Trp = 100000573,
-
-    /// Gly->Glu: Gly->Glu substitution.
-    UNIMOD_Gly__Glu = 100000574,
-
-    /// Gly->Val: Gly->Val substitution.
-    UNIMOD_Gly__Val = 100000575,
-
-    /// Gly->Asp: Gly->Asp substitution.
-    UNIMOD_Gly__Asp = 100000576,
-
-    /// Gly->Cys: Gly->Cys substitution.
-    UNIMOD_Gly__Cys = 100000577,
-
-    /// Gly->Arg: Gly->Arg substitution.
-    UNIMOD_Gly__Arg = 100000578,
-
-    /// His->Pro: His->Pro substitution.
-    UNIMOD_His__Pro = 100000580,
-
-    /// His->Tyr: His->Tyr substitution.
-    UNIMOD_His__Tyr = 100000581,
-
-    /// His->Gln: His->Gln substitution.
-    UNIMOD_His__Gln = 100000582,
-
-    /// His->Arg: His->Arg substitution.
-    UNIMOD_His__Arg = 100000584,
-
-    /// His->Xle: His->Leu/Ile substitution.
-    UNIMOD_His__Xle = 100000585,
-
-    /// Xle->Thr: Leu/Ile->Thr substitution.
-    UNIMOD_Xle__Thr = 100000588,
-
-    /// Xle->Asn: Leu/Ile->Asn substitution.
-    UNIMOD_Xle__Asn = 100000589,
-
-    /// Xle->Lys: Leu/Ile->Lys substitution.
-    UNIMOD_Xle__Lys = 100000590,
-
-    /// Lys->Thr: Lys->Thr substitution.
-    UNIMOD_Lys__Thr = 100000594,
-
-    /// Lys->Asn: Lys->Asn substitution.
-    UNIMOD_Lys__Asn = 100000595,
-
-    /// Lys->Glu: Lys->Glu substitution.
-    UNIMOD_Lys__Glu = 100000596,
-
-    /// Lys->Gln: Lys->Gln substitution.
-    UNIMOD_Lys__Gln = 100000597,
-
-    /// Lys->Met: Lys->Met substitution.
-    UNIMOD_Lys__Met = 100000598,
-
-    /// Lys->Arg: Lys->Arg substitution.
-    UNIMOD_Lys__Arg = 100000599,
-
-    /// Lys->Xle: Lys->Leu/Ile substitution.
-    UNIMOD_Lys__Xle = 100000600,
-
-    /// Xle->Ser: Leu/Ile->Ser substitution.
-    UNIMOD_Xle__Ser = 100000601,
-
-    /// Xle->Phe: Leu/Ile->Phe substitution.
-    UNIMOD_Xle__Phe = 100000602,
-
-    /// Xle->Trp: Leu/Ile->Trp substitution.
-    UNIMOD_Xle__Trp = 100000603,
-
-    /// Xle->Pro: Leu/Ile->Pro substitution.
-    UNIMOD_Xle__Pro = 100000604,
-
-    /// Xle->Val: Leu/Ile->Val substitution.
-    UNIMOD_Xle__Val = 100000605,
-
-    /// Xle->His: Leu/Ile->His substitution.
-    UNIMOD_Xle__His = 100000606,
-
-    /// Xle->Gln: Leu/Ile->Gln substitution.
-    UNIMOD_Xle__Gln = 100000607,
-
-    /// Xle->Met: Leu/Ile->Met substitution.
-    UNIMOD_Xle__Met = 100000608,
-
-    /// Xle->Arg: Leu/Ile->Arg substitution.
-    UNIMOD_Xle__Arg = 100000609,
-
-    /// Met->Thr: Met->Thr substitution.
-    UNIMOD_Met__Thr = 100000610,
-
-    /// Met->Arg: Met->Arg substitution.
-    UNIMOD_Met__Arg = 100000611,
-
-    /// Met->Lys: Met->Lys substitution.
-    UNIMOD_Met__Lys = 100000613,
-
-    /// Met->Xle: Met->Leu/Ile substitution.
-    UNIMOD_Met__Xle = 100000614,
-
-    /// Met->Val: Met->Val substitution.
-    UNIMOD_Met__Val = 100000615,
-
-    /// Asn->Ser: Asn->Ser substitution.
-    UNIMOD_Asn__Ser = 100000616,
-
-    /// Asn->Thr: Asn->Thr substitution.
-    UNIMOD_Asn__Thr = 100000617,
-
-    /// Asn->Lys: Asn->Lys substitution.
-    UNIMOD_Asn__Lys = 100000618,
-
-    /// Asn->Tyr: Asn->Tyr substitution.
-    UNIMOD_Asn__Tyr = 100000619,
-
-    /// Asn->His: Asn->His substitution.
-    UNIMOD_Asn__His = 100000620,
-
-    /// Asn->Asp: Asn->Asp substitution.
-    UNIMOD_Asn__Asp = 100000621,
-
-    /// Asn->Xle: Asn->Leu/Ile substitution.
-    UNIMOD_Asn__Xle = 100000622,
-
-    /// Pro->Ser: Pro->Ser substitution.
-    UNIMOD_Pro__Ser = 100000623,
-
-    /// Pro->Ala: Pro->Ala substitution.
-    UNIMOD_Pro__Ala = 100000624,
-
-    /// Pro->His: Pro->His substitution.
-    UNIMOD_Pro__His = 100000625,
-
-    /// Pro->Gln: Pro->Gln substitution.
-    UNIMOD_Pro__Gln = 100000626,
-
-    /// Pro->Thr: Pro->Thr substitution.
-    UNIMOD_Pro__Thr = 100000627,
-
-    /// Pro->Arg: Pro->Arg substitution.
-    UNIMOD_Pro__Arg = 100000628,
-
-    /// Pro->Xle: Pro->Leu/Ile substitution.
-    UNIMOD_Pro__Xle = 100000629,
-
-    /// Gln->Pro: Gln->Pro substitution.
-    UNIMOD_Gln__Pro = 100000630,
-
-    /// Gln->Lys: Gln->Lys substitution.
-    UNIMOD_Gln__Lys = 100000631,
-
-    /// Gln->Glu: Gln->Glu substitution.
-    UNIMOD_Gln__Glu = 100000632,
-
-    /// Gln->His: Gln->His substitution.
-    UNIMOD_Gln__His = 100000633,
-
-    /// Gln->Arg: Gln->Arg substitution.
-    UNIMOD_Gln__Arg = 100000634,
-
-    /// Gln->Xle: Gln->Leu/Ile substitution.
-    UNIMOD_Gln__Xle = 100000635,
-
-    /// Arg->Ser: Arg->Ser substitution.
-    UNIMOD_Arg__Ser = 100000636,
-
-    /// Arg->Trp: Arg->Trp substitution.
-    UNIMOD_Arg__Trp = 100000637,
-
-    /// Arg->Thr: Arg->Thr substitution.
-    UNIMOD_Arg__Thr = 100000638,
-
-    /// Arg->Pro: Arg->Pro substitution.
-    UNIMOD_Arg__Pro = 100000639,
-
-    /// Arg->Lys: Arg->Lys substitution.
-    UNIMOD_Arg__Lys = 100000640,
-
-    /// Arg->His: Arg->His substitution.
-    UNIMOD_Arg__His = 100000641,
-
-    /// Arg->Gln: Arg->Gln substitution.
-    UNIMOD_Arg__Gln = 100000642,
-
-    /// Arg->Met: Arg->Met substitution.
-    UNIMOD_Arg__Met = 100000643,
-
-    /// Arg->Cys: Arg->Cys substitution.
-    UNIMOD_Arg__Cys = 100000644,
-
-    /// Arg->Xle: Arg->Leu/Ile substitution.
-    UNIMOD_Arg__Xle = 100000645,
-
-    /// Arg->Gly: Arg->Gly substitution.
-    UNIMOD_Arg__Gly = 100000646,
-
-    /// Ser->Phe: Ser->Phe substitution.
-    UNIMOD_Ser__Phe = 100000647,
-
-    /// Ser->Ala: Ser->Ala substitution.
-    UNIMOD_Ser__Ala = 100000648,
-
-    /// Ser->Trp: Ser->Trp substitution.
-    UNIMOD_Ser__Trp = 100000649,
-
-    /// Ser->Thr: Ser->Thr substitution.
-    UNIMOD_Ser__Thr = 100000650,
-
-    /// Ser->Asn: Ser->Asn substitution.
-    UNIMOD_Ser__Asn = 100000651,
-
-    /// Ser->Pro: Ser->Pro substitution.
-    UNIMOD_Ser__Pro = 100000652,
-
-    /// Ser->Tyr: Ser->Tyr substitution.
-    UNIMOD_Ser__Tyr = 100000653,
-
-    /// Ser->Cys: Ser->Cys substitution.
-    UNIMOD_Ser__Cys = 100000654,
-
-    /// Ser->Arg: Ser->Arg substitution.
-    UNIMOD_Ser__Arg = 100000655,
-
-    /// Ser->Xle: Ser->Leu/Ile substitution.
-    UNIMOD_Ser__Xle = 100000656,
-
-    /// Ser->Gly: Ser->Gly substitution.
-    UNIMOD_Ser__Gly = 100000657,
-
-    /// Thr->Ser: Thr->Ser substitution.
-    UNIMOD_Thr__Ser = 100000658,
-
-    /// Thr->Ala: Thr->Ala substitution.
-    UNIMOD_Thr__Ala = 100000659,
-
-    /// Thr->Asn: Thr->Asn substitution.
-    UNIMOD_Thr__Asn = 100000660,
-
-    /// Thr->Lys: Thr->Lys substitution.
-    UNIMOD_Thr__Lys = 100000661,
-
-    /// Thr->Pro: Thr->Pro substitution.
-    UNIMOD_Thr__Pro = 100000662,
-
-    /// Thr->Met: Thr->Met substitution.
-    UNIMOD_Thr__Met = 100000663,
-
-    /// Thr->Xle: Thr->Leu/Ile substitution.
-    UNIMOD_Thr__Xle = 100000664,
-
-    /// Thr->Arg: Thr->Arg substitution.
-    UNIMOD_Thr__Arg = 100000665,
-
-    /// Val->Phe: Val->Phe substitution.
-    UNIMOD_Val__Phe = 100000666,
-
-    /// Val->Ala: Val->Ala substitution.
-    UNIMOD_Val__Ala = 100000667,
-
-    /// Val->Glu: Val->Glu substitution.
-    UNIMOD_Val__Glu = 100000668,
-
-    /// Val->Met: Val->Met substitution.
-    UNIMOD_Val__Met = 100000669,
-
-    /// Val->Asp: Val->Asp substitution.
-    UNIMOD_Val__Asp = 100000670,
-
-    /// Val->Xle: Val->Leu/Ile substitution.
-    UNIMOD_Val__Xle = 100000671,
-
-    /// Val->Gly: Val->Gly substitution.
-    UNIMOD_Val__Gly = 100000672,
-
-    /// Trp->Ser: Trp->Ser substitution.
-    UNIMOD_Trp__Ser = 100000673,
-
-    /// Trp->Cys: Trp->Cys substitution.
-    UNIMOD_Trp__Cys = 100000674,
-
-    /// Trp->Arg: Trp->Arg substitution.
-    UNIMOD_Trp__Arg = 100000675,
-
-    /// Trp->Gly: Trp->Gly substitution.
-    UNIMOD_Trp__Gly = 100000676,
-
-    /// Trp->Xle: Trp->Leu/Ile substitution.
-    UNIMOD_Trp__Xle = 100000677,
-
-    /// Tyr->Phe: Tyr->Phe substitution.
-    UNIMOD_Tyr__Phe = 100000678,
-
-    /// Tyr->Ser: Tyr->Ser substitution.
-    UNIMOD_Tyr__Ser = 100000679,
-
-    /// Tyr->Asn: Tyr->Asn substitution.
-    UNIMOD_Tyr__Asn = 100000680,
-
-    /// Tyr->His: Tyr->His substitution.
-    UNIMOD_Tyr__His = 100000681,
-
-    /// Tyr->Asp: Tyr->Asp substitution.
-    UNIMOD_Tyr__Asp = 100000682,
-
-    /// Tyr->Cys: Tyr->Cys substitution.
-    UNIMOD_Tyr__Cys = 100000683,
-
-    /// BDMAPP: Mass Defect Tag on lysine e-amino.
-    UNIMOD_BDMAPP = 100000684,
-
-    /// NA-LNO2: Nitroalkylation by Nitro Linoleic Acid.
-    UNIMOD_NA_LNO2 = 100000685,
-
-    /// NA-OA-NO2: Nitroalkylation by Nitro Oleic Acid.
-    UNIMOD_NA_OA_NO2 = 100000686,
-
-    /// ICPL:2H(4): Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, medium form.
-    UNIMOD_ICPL_2H_4_ = 100000687,
-
-    /// Label:13C(6)15N(1): 13C(6) 15N(1) Silac label.
-    UNIMOD_Label_13C_6_15N_1_ = 100000695,
-
-    /// Label:2H(9)13C(6)15N(2): 13C(6) 15N(2) (D)9 SILAC label.
-    UNIMOD_Label_2H_9_13C_6_15N_2_ = 100000696,
-
-    /// NIC: Nicotinic Acid.
-    UNIMOD_NIC = 100000697,
-
-    /// dNIC: Deuterated Nicotinic Acid.
-    UNIMOD_dNIC = 100000698,
-
-    /// HNE-Delta:H(2)O: Dehydrated 4-hydroxynonenal.
-    UNIMOD_HNE_Delta_H_2_O = 100000720,
-
-    /// 4-ONE: 4-Oxononenal (ONE).
-    UNIMOD_4_ONE = 100000721,
-
-    /// O-Dimethylphosphate: O-Dimethylphosphorylation.
-    UNIMOD_O_Dimethylphosphate = 100000723,
-
-    /// O-Methylphosphate: O-Methylphosphorylation.
-    UNIMOD_O_Methylphosphate = 100000724,
-
-    /// O-Diethylphosphate: O-Diethylphosphorylation.
-    UNIMOD_O_Diethylphosphate = 100000725,
-
-    /// O-Ethylphosphate: O-Ethylphosphorylation.
-    UNIMOD_O_Ethylphosphate = 100000726,
-
-    /// O-pinacolylmethylphosphonate: O-pinacolylmethylphosphonylation.
-    UNIMOD_O_pinacolylmethylphosphonate = 100000727,
-
-    /// Methylphosphonate: Methylphosphonylation.
-    UNIMOD_Methylphosphonate = 100000728,
-
-    /// O-Isopropylmethylphosphonate: O-Isopropylmethylphosphonylation.
-    UNIMOD_O_Isopropylmethylphosphonate = 100000729,
-
-    /// iTRAQ8plex: Representative mass and accurate mass for 113, 114, 116 & 117.
-    UNIMOD_iTRAQ8plex = 100000730,
-
-    /// iTRAQ8plex:13C(6)15N(2): Accurate mass for 115, 118, 119 & 121.
-    UNIMOD_iTRAQ8plex_13C_6_15N_2_ = 100000731,
-
-    /// Ethanolamine: Carboxyl modification with ethanolamine.
-    UNIMOD_Ethanolamine = 100000734,
-
-    /// DTT_ST: Dithiothreitol (DTT).
-    UNIMOD_DTT_ST = 100000735,
-
-    /// DTT_C: Dithiothreitol (DTT) on Cys.
-    UNIMOD_DTT_C = 100000736,
-
-    /// TMT6plex: Sixplex Tandem Mass Tag®.
-    UNIMOD_TMT6plex = 100000737,
-
-    /// TMT2plex: Duplex Tandem Mass Tag®.
-    UNIMOD_TMT2plex = 100000738,
-
-    /// TMT: Native Tandem Mass Tag®.
-    UNIMOD_TMT = 100000739,
-
-    /// ExacTagThiol: ExacTag Thiol label mass for 2-4-7-10 plex.
-    UNIMOD_ExacTagThiol = 100000740,
-
-    /// ExacTagAmine: ExacTag Amine label mass for 2-4-7-10 plex.
-    UNIMOD_ExacTagAmine = 100000741,
-
-    /// 4-ONE+Delta:H(-2)O(-1): Dehydrated 4-Oxononenal Michael adduct.
-    UNIMOD_4_ONE_Delta_H__2_O__1_ = 100000743,
-
-    /// NO_SMX_SEMD: Nitroso Sulfamethoxazole Sulphenamide thiol adduct.
-    UNIMOD_NO_SMX_SEMD = 100000744,
-
-    /// NO_SMX_SMCT: Nitroso Sulfamethoxazole semimercaptal thiol adduct.
-    UNIMOD_NO_SMX_SMCT = 100000745,
-
-    /// NO_SMX_SIMD: Nitroso Sulfamethoxazole Sulfinamide thiol adduct.
-    UNIMOD_NO_SMX_SIMD = 100000746,
-
-    /// Malonyl: Malonylation of C and S residues.
-    UNIMOD_Malonyl = 100000747,
-
-    /// 3sulfo: Derivatization by N-term modification using 3-Sulfobenzoic succinimidyl ester.
-    UNIMOD_3sulfo = 100000748,
-
-    /// trifluoro: Trifluoroleucine replacement of leucine.
-    UNIMOD_trifluoro = 100000750,
-
-    /// TNBS: Tri nitro benzene.
-    UNIMOD_TNBS = 100000751,
-
-    /// IDEnT: Isotope Distribution Encoded Tag.
-    UNIMOD_IDEnT = 100000762,
-
-    /// DTT_ST:2H(6): Isotopically labeled Dithiothreitol (DTT) modification of serines or threonines.
-    UNIMOD_DTT_ST_2H_6_ = 100000763,
-
-    /// DTT_C:2H(6): Isotopically labeled Dithiothreitol (DTT) modification of cysteines.
-    UNIMOD_DTT_C_2H_6_ = 100000764,
-
-    /// Met-loss: Removal of initiator methionine from protein N-terminus.
-    UNIMOD_Met_loss = 100000765,
-
-    /// Met-loss+Acetyl: Removal of initiator methionine from protein N-terminus, then acetylation of the new N-terminus.
-    UNIMOD_Met_loss_Acetyl = 100000766,
-
-    /// Menadione-HQ: Menadione hydroquinone derivative.
-    UNIMOD_Menadione_HQ = 100000767,
-
-    /// Methyl+Acetyl:2H(3): Mono-methylated lysine labelled with Acetyl_heavy.
-    UNIMOD_Methyl_Acetyl_2H_3_ = 100000768,
-
-    /// lapachenole: Lapachenole photochemically added to cysteine.
-    UNIMOD_lapachenole = 100000771,
-
-    /// Label:13C(5): 13C(5) Silac label.
-    UNIMOD_Label_13C_5_ = 100000772,
-
-    /// maleimide: Maleimide.
-    UNIMOD_maleimide = 100000773,
-
-    /// Biotin-phenacyl: Alkylation by biotinylated form of phenacyl bromide.
-    UNIMOD_Biotin_phenacyl = 100000774,
-
-    /// Carboxymethyl:13C(2): Iodoacetic acid derivative w/ 13C label.
-    UNIMOD_Carboxymethyl_13C_2_ = 100000775,
-
-    /// NEM:2H(5): D5 N-ethylmaleimide on cysteines.
-    UNIMOD_NEM_2H_5_ = 100000776,
-
-    /// AEC-MAEC:2H(4): Deuterium cysteamine modification to S or T.
-    UNIMOD_AEC_MAEC_2H_4_ = 100000792,
-
-    /// Hex1HexNAc1: Hex1HexNAc1.
-    UNIMOD_Hex1HexNAc1 = 100000793,
-
-    /// Label:13C(6)+GlyGly: 13C6 labeled ubiquitinylation residue.
-    UNIMOD_Label_13C_6__GlyGly = 100000799,
-
-    /// Biotin:Thermo-21345: Was PentylamineBiotin.
-    UNIMOD_Biotin_Thermo_21345 = 100000800,
-
-    /// Pentylamine: Labeling transglutaminase substrate on glutamine side chain.
-    UNIMOD_Pentylamine = 100000801,
-
-    /// Biotin:Thermo-21360: Was Biotin-PEO4-hydrazide.
-    UNIMOD_Biotin_Thermo_21360 = 100000811,
-
-    /// Cy3b-maleimide: Fluorescent dye that labels cysteines.
-    UNIMOD_Cy3b_maleimide = 100000821,
-
-    /// Gly-loss+Amide: Enzymatic glycine removal leaving an amidated C-terminus.
-    UNIMOD_Gly_loss_Amide = 100000822,
-
-    /// BMOE: Addition of BMOE crosslinker.
-    UNIMOD_BMOE = 100000824,
-
-    /// DFDNB: Addition of DFDNB crosslinker.
-    UNIMOD_DFDNB = 100000825,
-
-    /// TMPP-Ac: Tris(2,4,6-trimethoxyphenyl)phosphonium acetic acid N-hydroxysuccinimide ester derivative.
-    UNIMOD_TMPP_Ac = 100000827,
-
-    /// Dihydroxyimidazolidine: Dihydroxy methylglyoxal adduct.
-    UNIMOD_Dihydroxyimidazolidine = 100000830,
-
-    /// Label:2H(4)+Acetyl: Acetyl 4,4,5,5-D4 Lysine.
-    UNIMOD_Label_2H_4__Acetyl = 100000834,
-
-    /// Label:13C(6)+Acetyl: Acetyl 13C(6) Silac label.
-    UNIMOD_Label_13C_6__Acetyl = 100000835,
-
-    /// Label:13C(6)15N(2)+Acetyl: Acetyl_13C(6) 15N(2) Silac label.
-    UNIMOD_Label_13C_6_15N_2__Acetyl = 100000836,
-
-    /// Arg->Npo: Arginine replacement by Nitropyrimidyl ornithine.
-    UNIMOD_Arg__Npo = 100000837,
-
-    /// EQIGG: Sumo mutant Smt3-WT tail following trypsin digestion.
-    UNIMOD_EQIGG = 100000846,
-
-    /// Arg2PG: Adduct of phenylglyoxal with Arg.
-    UNIMOD_Arg2PG = 100000848,
-
-    /// cGMP: S-guanylation.
-    UNIMOD_cGMP = 100000849,
-
-    /// cGMP+RMP-loss: S-guanylation-2.
-    UNIMOD_cGMP_RMP_loss = 100000851,
-
-    /// Label:2H(4)+GlyGly: Ubiquitination 2H4 lysine.
-    UNIMOD_Label_2H_4__GlyGly = 100000853,
-
-    /// Label:13C(8)15N(2): 13C(8) 15N(2) Silac label.
-    UNIMOD_Label_13C_8_15N_2_ = 100000854,
-
-    /// MG-H1: Methylglyoxal-derived hydroimidazolone.
-    UNIMOD_MG_H1 = 100000859,
-
-    /// G-H1: Glyoxal-derived hydroimiadazolone.
-    UNIMOD_G_H1 = 100000860,
-
-    /// ZGB: NHS ester linked Green Fluorescent Bodipy Dye.
-    UNIMOD_ZGB = 100000861,
-
-    /// Label:13C(1)2H(3): SILAC.
-    UNIMOD_Label_13C_1_2H_3_ = 100000862,
-
-    /// Label:13C(6)15N(2)+GlyGly: 13C(6) 15N(2) Lysine glygly.
-    UNIMOD_Label_13C_6_15N_2__GlyGly = 100000864,
-
-    /// ICPL:13C(6)2H(4): Bruker Daltonics SERVA-ICPL(TM) quantification chemistry, +10 Da form.
-    UNIMOD_ICPL_13C_6_2H_4_ = 100000866,
-
-    /// QEQTGG: SUMOylation by SUMO-1.
-    UNIMOD_QEQTGG = 100000876,
-
-    /// QQQTGG: SUMOylation by SUMO-2/3.
-    UNIMOD_QQQTGG = 100000877,
-
-    /// Bodipy: Bodipy modifications onto cysteine.
-    UNIMOD_Bodipy = 100000878,
-
-    /// Biotin:Thermo-21325: Was ChromoBiotin.
-    UNIMOD_Biotin_Thermo_21325 = 100000884,
-
-    /// Label:13C(1)2H(3)+Oxidation: Oxidised methionine 13C(1)2H(3) SILAC label.
-    UNIMOD_Label_13C_1_2H_3__Oxidation = 100000885,
-
-    /// HydroxymethylOP: 2-ammonio-6-[4-(hydroxymethyl)-3-oxidopyridinium-1-yl]- hexanoate.
-    UNIMOD_HydroxymethylOP = 100000886,
-
-    /// MDCC: Covalent linkage of maleimidyl coumarin probe (Molecular Probes D-10253).
-    UNIMOD_MDCC = 100000887,
-
-    /// mTRAQ: MTRAQ light.
-    UNIMOD_mTRAQ = 100000888,
-
-    /// mTRAQ:13C(3)15N(1): MTRAQ heavy.
-    UNIMOD_mTRAQ_13C_3_15N_1_ = 100000889,
-
-    /// DyLight-maleimide: Thiol-reactive dye for fluorescence labelling of proteins.
-    UNIMOD_DyLight_maleimide = 100000890,
-
-    /// Methyl-PEO12-Maleimide: Methyl-PEO12-Maleimide.
-    UNIMOD_Methyl_PEO12_Maleimide = 100000891,
-
-    /// CarbamidomethylDTT: Carbamidomethylated DTT modification of cysteine.
-    UNIMOD_CarbamidomethylDTT = 100000893,
-
-    /// CarboxymethylDTT: Carboxymethylated DTT modification of cysteine.
-    UNIMOD_CarboxymethylDTT = 100000894,
-
-    /// Biotin-PEG-PRA: Biotin polyethyleneoxide (n=3) alkyne.
-    UNIMOD_Biotin_PEG_PRA = 100000895,
-
-    /// Met->Aha: Methionine replacement by azido homoalanine.
-    UNIMOD_Met__Aha = 100000896,
-
-    /// Label:15N(4): SILAC 15N(4).
-    UNIMOD_Label_15N_4_ = 100000897,
-
-    /// pyrophospho: Pyrophosphorylation of Ser/Thr.
-    UNIMOD_pyrophospho = 100000898,
-
-    /// Met->Hpg: Methionine replacement by homopropargylglycine.
-    UNIMOD_Met__Hpg = 100000899,
-
-    /// 4AcAllylGal: 2,3,4,6-tetra-O-Acetyl-1-allyl-alpha-D-galactopyranoside modification of cysteine.
-    UNIMOD_4AcAllylGal = 100000901,
-
-    /// DimethylArsino: Reaction with dimethylarsinous (AsIII) acid.
-    UNIMOD_DimethylArsino = 100000902,
-
-    /// Lys->CamCys: Lys->Cys substitution and carbamidomethylation.
-    UNIMOD_Lys__CamCys = 100000903,
-
-    /// Phe->CamCys: Phe->Cys substitution and carbamidomethylation.
-    UNIMOD_Phe__CamCys = 100000904,
-
-    /// Leu->MetOx: Leu->Met substitution and sulfoxidation.
-    UNIMOD_Leu__MetOx = 100000905,
-
-    /// Lys->MetOx: Lys->Met substitution and sulfoxidation.
-    UNIMOD_Lys__MetOx = 100000906,
-
-    /// Galactosyl: Galactosyl hydroxylysine.
-    UNIMOD_Galactosyl = 100000907,
-
-    /// SMCC-maleimide: Modified SMCC maleimide with 3-(dimethylamino)-1-propylamine.
-    UNIMOD_SMCC_maleimide = 100000908,
-
-    /// Bacillosamine: 2,4-diacetamido-2,4,6-trideoxyglucopyranose.
-    UNIMOD_Bacillosamine = 100000910,
-
-    /// MTSL: Cys modification by (1-oxyl-2,2,5,5-tetramethyl-3-pyrroline-3-methyl)methanesulfonate (MTSL).
-    UNIMOD_MTSL = 100000911,
-
-    /// HNE-BAHAH: 4-hydroxy-2-nonenal and biotinamidohexanoic acid hydrazide, reduced.
-    UNIMOD_HNE_BAHAH = 100000912,
-
-    /// Methylmalonylation: Methylmalonylation on Serine.
-    UNIMOD_Methylmalonylation = 100000914,
-
-    /// Ethoxyformyl: Ethoxyformylation.
-    UNIMOD_Ethoxyformyl = 100000915,
-
-    /// Label:13C(4)15N(2)+GlyGly: 13C(4) 15N(2) Lysine glygly.
-    UNIMOD_Label_13C_4_15N_2__GlyGly = 100000923,
-
-    /// ethylamino: Ethyl amino.
-    UNIMOD_ethylamino = 100000926,
-
-    /// MercaptoEthanol: 2-OH-ethyl thio-Ser.
-    UNIMOD_MercaptoEthanol = 100000928,
-
-    /// EthylAmide: Solvolysis of amide group on Asn or Gln by ethanol.
-    UNIMOD_EthylAmide = 100000931,
-
-    /// VFQQQTGG: SUMOylation by SUMO-2/3 (formic acid cleavage).
-    UNIMOD_VFQQQTGG = 100000932,
-
-    /// VIEVYQEQTGG: SUMOylation by SUMO-1 (formic acid cleavage).
-    UNIMOD_VIEVYQEQTGG = 100000933,
-
-    /// AMTzHexNAc2: Photocleavable Biotin + GalNAz on O-GlcNAc.
-    UNIMOD_AMTzHexNAc2 = 100000934,
-
-    /// Atto495Maleimide: High molecular absorption maleimide label for proteins.
-    UNIMOD_Atto495Maleimide = 100000935,
-
-    /// Chlorination: Chlorination of tyrosine residues.
-    UNIMOD_Chlorination = 100000936,
-
-    /// dichlorination: Dichlorination of tyrosine residues.
-    UNIMOD_dichlorination = 100000937,
-
-    /// AROD: Cysteine modifier.
-    UNIMOD_AROD = 100000938,
-
-    /// Cys->methylaminoAla: Carbamidomethylated Cys that undergoes beta-elimination and Michael addition of methylamine.
-    UNIMOD_Cys__methylaminoAla = 100000939,
-
-    /// Cys->ethylaminoAla: Carbamidomethylated Cys that undergoes beta-elimination and Michael addition of ethylamine.
-    UNIMOD_Cys__ethylaminoAla = 100000940,
-
-    /// DNPS: 2,4-Dinitrobenzenesulfenyl.
-    UNIMOD_DNPS = 100000941,
-
-    /// SulfoGMBS: High molecular absorption label for proteins.
-    UNIMOD_SulfoGMBS = 100000942,
-
-    /// DimethylamineGMBS: Modified GMBS X linker for proteins.
-    UNIMOD_DimethylamineGMBS = 100000943,
-
-    /// Label:15N(2)2H(9): SILAC label.
-    UNIMOD_Label_15N_2_2H_9_ = 100000944,
-
-    /// LG-anhydrolactam: Levuglandinyl-lysine anhydrolactam adduct.
-    UNIMOD_LG_anhydrolactam = 100000946,
-
-    /// LG-pyrrole: Levuglandinyl-lysine pyrrole adduct.
-    UNIMOD_LG_pyrrole = 100000947,
-
-    /// LG-anhyropyrrole: Levuglandinyl-lysine anhyropyrrole adduct.
-    UNIMOD_LG_anhyropyrrole = 100000948,
-
-    /// 3-deoxyglucosone: Condensation product of 3-deoxyglucosone.
-    UNIMOD_3_deoxyglucosone = 100000949,
-
-    /// Cation:Li: Replacement of proton by lithium.
-    UNIMOD_Cation_Li = 100000950,
-
-    /// Cation:Ca[II]: Replacement of 2 protons by calcium.
-    UNIMOD_Cation_Ca_II_ = 100000951,
-
-    /// Cation:Fe[II]: Replacement of 2 protons by iron.
-    UNIMOD_Cation_Fe_II_ = 100000952,
-
-    /// Cation:Ni[II]: Replacement of 2 protons by nickel.
-    UNIMOD_Cation_Ni_II_ = 100000953,
-
-    /// Cation:Zn[II]: Replacement of 2 protons by zinc.
-    UNIMOD_Cation_Zn_II_ = 100000954,
-
-    /// Cation:Ag: Replacement of proton by silver.
-    UNIMOD_Cation_Ag = 100000955,
-
-    /// Cation:Mg[II]: Replacement of 2 protons by magnesium.
-    UNIMOD_Cation_Mg_II_ = 100000956,
-
-    /// 2-succinyl: S-(2-succinyl) cysteine.
-    UNIMOD_2_succinyl = 100000957,
-
-    /// Propargylamine: Propargylamine.
-    UNIMOD_Propargylamine = 100000958,
-
-    /// Phosphopropargyl: Phospho-propargylamine.
-    UNIMOD_Phosphopropargyl = 100000959,
-
-    /// SUMO2135: SUMOylation by SUMO-1 after tryptic cleavage.
-    UNIMOD_SUMO2135 = 100000960,
-
-    /// SUMO3549: SUMOylation by SUMO-2/3 after tryptic cleavage.
-    UNIMOD_SUMO3549 = 100000961,
-
-    /// thioacylPA: Membrane protein extraction.
-    UNIMOD_thioacylPA = 100000967,
-
-    /// maleimide3: Maleimide-3-saccharide.
-    UNIMOD_maleimide3 = 100000971,
-
-    /// maleimide5: Maleimide-5-saccharide.
-    UNIMOD_maleimide5 = 100000972,
-
-    /// Puromycin: Puromycin.
-    UNIMOD_Puromycin = 100000973,
-
-    /// Chlorpyrifos: O,O-diethyl o-3,5,6-trichloro-2-pyridyl phosphorothioate.
-    UNIMOD_Chlorpyrifos = 100000975,
-
-    /// Carbofuran: 2,3-dihydro-2,2-dimethyl-7-benzofuranol N-methyl carbamate.
-    UNIMOD_Carbofuran = 100000977,
-
-    /// BITC: Benzyl isothiocyanate.
-    UNIMOD_BITC = 100000978,
-
-    /// PEITC: Phenethyl isothiocyanate.
-    UNIMOD_PEITC = 100000979,
-
-    /// glucosone: Condensation product of glucosone.
-    UNIMOD_glucosone = 100000981,
-
-    /// cysTMT: Native cysteine-reactive Tandem Mass Tag®.
-    UNIMOD_cysTMT = 100000984,
-
-    /// cysTMT6plex: Cysteine-reactive Sixplex Tandem Mass Tag®.
-    UNIMOD_cysTMT6plex = 100000985,
-
-    /// Label:13C(6)+Dimethyl: Dimethyl 13C(6) Silac label.
-    UNIMOD_Label_13C_6__Dimethyl = 100000986,
-
-    /// Label:13C(6)15N(2)+Dimethyl: Dimethyl 13C(6)15N(2) Silac label.
-    UNIMOD_Label_13C_6_15N_2__Dimethyl = 100000987,
-
-    /// Ammonium: Replacement of proton with ammonium ion.
-    UNIMOD_Ammonium = 100000989,
-
-    /// ISD_z+2_ion: ISD (z+2)-series.
-    UNIMOD_ISD_z_2_ion = 100000991,
-
-    /// Biotin:Sigma-B1267: Was Biotin-maleimide.
-    UNIMOD_Biotin_Sigma_B1267 = 100000993,
-
-    /// Label:15N(1): SILAS 15N(1).
-    UNIMOD_Label_15N_1_ = 100000994,
-
-    /// Label:15N(2): SILAS 15N(2).
-    UNIMOD_Label_15N_2_ = 100000995,
-
-    /// Label:15N(3): SILAS 15N(3).
-    UNIMOD_Label_15N_3_ = 100000996,
-
-    /// sulfo+amino: Aminotyrosine with sulfation.
-    UNIMOD_sulfo_amino = 100000997,
-
-    /// BHAc: N-biotinyl-6-aminohexanoyl.
-    UNIMOD_BHAc = 100000998,
-
-    /// AHA-Alkyne: Azidohomoalanine (AHA) bound to propargylglycine-NH2 (alkyne).
-    UNIMOD_AHA_Alkyne = 100001000,
-
-    /// AHA-Alkyne-KDDDD: Azidohomoalanine (AHA) bound to DDDDK-propargylglycine-NH2 (alkyne).
-    UNIMOD_AHA_Alkyne_KDDDD = 100001001,
-
-    /// EGCG1: (-)-epigallocatechin-3-gallate.
-    UNIMOD_EGCG1 = 100001002,
-
-    /// EGCG2: (-)-dehydroepigallocatechin.
-    UNIMOD_EGCG2 = 100001003,
-
-    /// Label:13C(6)15N(4)+Methyl: Monomethylated Arg13C(6) 15N(4).
-    UNIMOD_Label_13C_6_15N_4__Methyl = 100001004,
-
-    /// Label:13C(6)15N(4)+Dimethyl: Dimethylated Arg13C(6) 15N(4).
-    UNIMOD_Label_13C_6_15N_4__Dimethyl = 100001005,
-
-    /// Label:13C(6)15N(4)+Methyl:2H(3)13C(1): 2H(3) 13C(1) monomethylated Arg13C(6) 15N(4).
-    UNIMOD_Label_13C_6_15N_4__Methyl_2H_3_13C_1_ = 100001006,
-
-    /// Label:13C(6)15N(4)+Dimethyl:2H(6)13C(2): 2H(6) 13C(2) Dimethylated Arg13C(6) 15N(4).
-    UNIMOD_Label_13C_6_15N_4__Dimethyl_2H_6_13C_2_ = 100001007,
-
-    /// SecCarbamidomethyl: Sec Iodoacetamide derivative.
-    UNIMOD_SecCarbamidomethyl = 100001008,
-
-    /// Thiazolidine: Addition of Carbon to cysteine.
-    UNIMOD_Thiazolidine = 100001009,
-
-    /// DEDGFLYMVYASQETFG: Addition of DEDGFLYMVYASQETFG.
-    UNIMOD_DEDGFLYMVYASQETFG = 100001010,
-
-    /// Biotin:Invitrogen-M1602: Nalpha-(3-maleimidylpropionyl)biocytin.
-    UNIMOD_Biotin_Invitrogen_M1602 = 100001012,
-
-    /// glycidamide: Glycidamide adduct.
-    UNIMOD_glycidamide = 100001014,
-
-    /// Ahx2+Hsl: C-terminal homoserine lactone and two aminohexanoic acids.
-    UNIMOD_Ahx2_Hsl = 100001015,
-
-    /// DMPO: DMPO spin-trap nitrone adduct.
-    UNIMOD_DMPO = 100001017,
-
-    /// ICDID: Isotope-Coded Dimedone light form.
-    UNIMOD_ICDID = 100001018,
-
-    /// ICDID:2H(6): Isotope-Coded Dimedone heavy form.
-    UNIMOD_ICDID_2H_6_ = 100001019,
-
-    /// Xlink:DSS: Monolink of DSS/BS3 crosslinker to Lys or N-terminus.
-    UNIMOD_Xlink_DSS = 100001020,
-
-    /// Xlink:EGS: Monolink of EGS crosslinker to Lys or N-terminus.
-    UNIMOD_Xlink_EGS = 100001021,
-
-    /// Xlink:DST: Monolink of DST crosslinker to Lys or N-terminus.
-    UNIMOD_Xlink_DST = 100001022,
-
-    /// Xlink:DTSSP: Monolink of DSP/DTSSP crosslinker to Lys or N-terminus.
-    UNIMOD_Xlink_DTSSP = 100001023,
-
-    /// Xlink:SMCC: Monolink of sulfoSMCC/SMCC crosslinker to Cys.
-    UNIMOD_Xlink_SMCC = 100001024,
-
-    /// Xlink:DMP-de: Monolink of DMP crosslinker to Lys or N-terminus.
-    UNIMOD_Xlink_DMP_de = 100001027,
-
-    /// Xlink:EGScleaved: EGS crosslinker to Lys or N-terminus following hydroxylamine cleavage.
-    UNIMOD_Xlink_EGScleaved = 100001028,
-
-    /// Biotin:Thermo-88310: Desthiobiotin modification of lysine.
-    UNIMOD_Biotin_Thermo_88310 = 100001031,
-
-    /// 2-nitrobenzyl: Tyrosine caged with 2-nitrobenzyl (ONB).
-    UNIMOD_2_nitrobenzyl = 100001032,
-
-    /// SecNEM: N-ethylmaleimide on selenocysteines.
-    UNIMOD_SecNEM = 100001033,
-
-    /// SecNEM:2H(5): D5 N-ethylmaleimide on selenocysteines.
-    UNIMOD_SecNEM_2H_5_ = 100001034,
-
-    /// Thiadiazole: Thiadiazolydation of Cys.
-    UNIMOD_Thiadiazole = 100001035,
-
-    /// Withaferin: Modification of cystein by withaferin.
-    UNIMOD_Withaferin = 100001036,
-
-    /// Biotin:Thermo-88317: Desthiobiotin fluorophosphonate.
-    UNIMOD_Biotin_Thermo_88317 = 100001037,
-
-    /// TAMRA-FP: TAMRA fluorophosphonate modification of serine.
-    UNIMOD_TAMRA_FP = 100001038,
-
-    /// Biotin:Thermo-21901+H2O: Maleimide-Biotin + Water.
-    UNIMOD_Biotin_Thermo_21901_H2O = 100001039,
-
-    /// Deoxyhypusine: Deoxyhypusine.
-    UNIMOD_Deoxyhypusine = 100001041,
-
-    /// Acetyldeoxyhypusine: Acetyldeoxyhypusine.
-    UNIMOD_Acetyldeoxyhypusine = 100001042,
-
-    /// Acetylhypusine: Acetylhypusine.
-    UNIMOD_Acetylhypusine = 100001043,
-
-    /// Ala->Cys: Ala->Cys substitution.
-    UNIMOD_Ala__Cys = 100001044,
-
-    /// Ala->Phe: Ala->Phe substitution.
-    UNIMOD_Ala__Phe = 100001045,
-
-    /// Ala->His: Ala->His substitution.
-    UNIMOD_Ala__His = 100001046,
-
-    /// Ala->Xle: Ala->Leu/Ile substitution.
-    UNIMOD_Ala__Xle = 100001047,
-
-    /// Ala->Lys: Ala->Lys substitution.
-    UNIMOD_Ala__Lys = 100001048,
-
-    /// Ala->Met: Ala->Met substitution.
-    UNIMOD_Ala__Met = 100001049,
-
-    /// Ala->Asn: Ala->Asn substitution.
-    UNIMOD_Ala__Asn = 100001050,
-
-    /// Ala->Gln: Ala->Gln substitution.
-    UNIMOD_Ala__Gln = 100001051,
-
-    /// Ala->Arg: Ala->Arg substitution.
-    UNIMOD_Ala__Arg = 100001052,
-
-    /// Ala->Trp: Ala->Trp substitution.
-    UNIMOD_Ala__Trp = 100001053,
-
-    /// Ala->Tyr: Ala->Tyr substitution.
-    UNIMOD_Ala__Tyr = 100001054,
-
-    /// Cys->Ala: Cys->Ala substitution.
-    UNIMOD_Cys__Ala = 100001055,
-
-    /// Cys->Asp: Cys->Asp substitution.
-    UNIMOD_Cys__Asp = 100001056,
-
-    /// Cys->Glu: Cys->Glu substitution.
-    UNIMOD_Cys__Glu = 100001057,
-
-    /// Cys->His: Cys->His substitution.
-    UNIMOD_Cys__His = 100001058,
-
-    /// Cys->Xle: Cys->Leu/Ile substitution.
-    UNIMOD_Cys__Xle = 100001059,
-
-    /// Cys->Lys: Cys->Lys substitution.
-    UNIMOD_Cys__Lys = 100001060,
-
-    /// Cys->Met: Cys->Met substitution.
-    UNIMOD_Cys__Met = 100001061,
-
-    /// Cys->Asn: Cys->Asn substitution.
-    UNIMOD_Cys__Asn = 100001062,
-
-    /// Cys->Pro: Cys->Pro substitution.
-    UNIMOD_Cys__Pro = 100001063,
-
-    /// Cys->Gln: Cys->Gln substitution.
-    UNIMOD_Cys__Gln = 100001064,
-
-    /// Cys->Thr: Cys->Thr substitution.
-    UNIMOD_Cys__Thr = 100001065,
-
-    /// Cys->Val: Cys->Val substitution.
-    UNIMOD_Cys__Val = 100001066,
-
-    /// Asp->Cys: Asp->Cys substitution.
-    UNIMOD_Asp__Cys = 100001067,
-
-    /// Asp->Phe: Asp->Phe substitution.
-    UNIMOD_Asp__Phe = 100001068,
-
-    /// Asp->Xle: Asp->Leu/Ile substitution.
-    UNIMOD_Asp__Xle = 100001069,
-
-    /// Asp->Lys: Asp->Lys substitution.
-    UNIMOD_Asp__Lys = 100001070,
-
-    /// Asp->Met: Asp->Met substitution.
-    UNIMOD_Asp__Met = 100001071,
-
-    /// Asp->Pro: Asp->Pro substitution.
-    UNIMOD_Asp__Pro = 100001072,
-
-    /// Asp->Gln: Asp->Gln substitution.
-    UNIMOD_Asp__Gln = 100001073,
-
-    /// Asp->Arg: Asp->Arg substitution.
-    UNIMOD_Asp__Arg = 100001074,
-
-    /// Asp->Ser: Asp->Ser substitution.
-    UNIMOD_Asp__Ser = 100001075,
-
-    /// Asp->Thr: Asp->Thr substitution.
-    UNIMOD_Asp__Thr = 100001076,
-
-    /// Asp->Trp: Asp->Trp substitution.
-    UNIMOD_Asp__Trp = 100001077,
-
-    /// Glu->Cys: Glu->Cys substitution.
-    UNIMOD_Glu__Cys = 100001078,
-
-    /// Glu->Phe: Glu->Phe substitution.
-    UNIMOD_Glu__Phe = 100001079,
-
-    /// Glu->His: Glu->His substitution.
-    UNIMOD_Glu__His = 100001080,
-
-    /// Glu->Xle: Glu->Leu/Ile substitution.
-    UNIMOD_Glu__Xle = 100001081,
-
-    /// Glu->Met: Glu->Met substitution.
-    UNIMOD_Glu__Met = 100001082,
-
-    /// Glu->Asn: Glu->Asn substitution.
-    UNIMOD_Glu__Asn = 100001083,
-
-    /// Glu->Pro: Glu->Pro substitution.
-    UNIMOD_Glu__Pro = 100001084,
-
-    /// Glu->Arg: Glu->Arg substitution.
-    UNIMOD_Glu__Arg = 100001085,
-
-    /// Glu->Ser: Glu->Ser substitution.
-    UNIMOD_Glu__Ser = 100001086,
-
-    /// Glu->Thr: Glu->Thr substitution.
-    UNIMOD_Glu__Thr = 100001087,
-
-    /// Glu->Trp: Glu->Trp substitution.
-    UNIMOD_Glu__Trp = 100001088,
-
-    /// Glu->Tyr: Glu->Tyr substitution.
-    UNIMOD_Glu__Tyr = 100001089,
-
-    /// Phe->Ala: Phe->Ala substitution.
-    UNIMOD_Phe__Ala = 100001090,
-
-    /// Phe->Asp: Phe->Asp substitution.
-    UNIMOD_Phe__Asp = 100001091,
-
-    /// Phe->Glu: Phe->Glu substitution.
-    UNIMOD_Phe__Glu = 100001092,
-
-    /// Phe->Gly: Phe->Gly substitution.
-    UNIMOD_Phe__Gly = 100001093,
-
-    /// Phe->His: Phe->His substitution.
-    UNIMOD_Phe__His = 100001094,
-
-    /// Phe->Lys: Phe->Lys substitution.
-    UNIMOD_Phe__Lys = 100001095,
-
-    /// Phe->Met: Phe->Met substitution.
-    UNIMOD_Phe__Met = 100001096,
-
-    /// Phe->Asn: Phe->Asn substitution.
-    UNIMOD_Phe__Asn = 100001097,
-
-    /// Phe->Pro: Phe->Pro substitution.
-    UNIMOD_Phe__Pro = 100001098,
-
-    /// Phe->Gln: Phe->Gln substitution.
-    UNIMOD_Phe__Gln = 100001099,
-
-    /// Phe->Arg: Phe->Arg substitution.
-    UNIMOD_Phe__Arg = 100001100,
-
-    /// Phe->Thr: Phe->Thr substitution.
-    UNIMOD_Phe__Thr = 100001101,
-
-    /// Phe->Trp: Phe->Trp substitution.
-    UNIMOD_Phe__Trp = 100001102,
-
-    /// Gly->Phe: Gly->Phe substitution.
-    UNIMOD_Gly__Phe = 100001103,
-
-    /// Gly->His: Gly->His substitution.
-    UNIMOD_Gly__His = 100001104,
-
-    /// Gly->Xle: Gly->Leu/Ile substitution.
-    UNIMOD_Gly__Xle = 100001105,
-
-    /// Gly->Lys: Gly->Lys substitution.
-    UNIMOD_Gly__Lys = 100001106,
-
-    /// Gly->Met: Gly->Met substitution.
-    UNIMOD_Gly__Met = 100001107,
-
-    /// Gly->Asn: Gly->Asn substitution.
-    UNIMOD_Gly__Asn = 100001108,
-
-    /// Gly->Pro: Gly->Pro substitution.
-    UNIMOD_Gly__Pro = 100001109,
-
-    /// Gly->Gln: Gly->Gln substitution.
-    UNIMOD_Gly__Gln = 100001110,
-
-    /// Gly->Thr: Gly->Thr substitution.
-    UNIMOD_Gly__Thr = 100001111,
-
-    /// Gly->Tyr: Gly->Tyr substitution.
-    UNIMOD_Gly__Tyr = 100001112,
-
-    /// His->Ala: His->Ala substitution.
-    UNIMOD_His__Ala = 100001113,
-
-    /// His->Cys: His->Cys substitution.
-    UNIMOD_His__Cys = 100001114,
-
-    /// His->Glu: His->Glu substitution.
-    UNIMOD_His__Glu = 100001115,
-
-    /// His->Phe: His->Phe substitution.
-    UNIMOD_His__Phe = 100001116,
-
-    /// His->Gly: His->Gly substitution.
-    UNIMOD_His__Gly = 100001117,
-
-    /// His->Lys: His->Lys substitution.
-    UNIMOD_His__Lys = 100001119,
-
-    /// His->Met: His->Met substitution.
-    UNIMOD_His__Met = 100001120,
-
-    /// His->Ser: His->Ser substitution.
-    UNIMOD_His__Ser = 100001121,
-
-    /// His->Thr: His->Thr substitution.
-    UNIMOD_His__Thr = 100001122,
-
-    /// His->Val: His->Val substitution.
-    UNIMOD_His__Val = 100001123,
-
-    /// His->Trp: His->Trp substitution.
-    UNIMOD_His__Trp = 100001124,
-
-    /// Xle->Ala: Leu/Ile->Ala substitution.
-    UNIMOD_Xle__Ala = 100001125,
-
-    /// Xle->Cys: Leu/Ile->Cys substitution.
-    UNIMOD_Xle__Cys = 100001126,
-
-    /// Xle->Asp: Leu/Ile->Asp substitution.
-    UNIMOD_Xle__Asp = 100001127,
-
-    /// Xle->Glu: Leu/Ile->Glu substitution.
-    UNIMOD_Xle__Glu = 100001128,
-
-    /// Xle->Gly: Leu/Ile->Gly substitution.
-    UNIMOD_Xle__Gly = 100001129,
-
-    /// Xle->Tyr: Leu/Ile->Tyr substitution.
-    UNIMOD_Xle__Tyr = 100001130,
-
-    /// Lys->Ala: Lys->Ala substitution.
-    UNIMOD_Lys__Ala = 100001131,
-
-    /// Lys->Cys: Lys->Cys substitution.
-    UNIMOD_Lys__Cys = 100001132,
-
-    /// Lys->Asp: Lys->Asp substitution.
-    UNIMOD_Lys__Asp = 100001133,
-
-    /// Lys->Phe: Lys->Phe substitution.
-    UNIMOD_Lys__Phe = 100001134,
-
-    /// Lys->Gly: Lys->Gly substitution.
-    UNIMOD_Lys__Gly = 100001135,
-
-    /// Lys->His: Lys->His substitution.
-    UNIMOD_Lys__His = 100001136,
-
-    /// Lys->Pro: Lys->Pro substitution.
-    UNIMOD_Lys__Pro = 100001137,
-
-    /// Lys->Ser: Lys->Ser substitution.
-    UNIMOD_Lys__Ser = 100001138,
-
-    /// Lys->Val: Lys->Val substitution.
-    UNIMOD_Lys__Val = 100001139,
-
-    /// Lys->Trp: Lys->Trp substitution.
-    UNIMOD_Lys__Trp = 100001140,
-
-    /// Lys->Tyr: Lys->Tyr substitution.
-    UNIMOD_Lys__Tyr = 100001141,
-
-    /// Met->Ala: Met->Ala substitution.
-    UNIMOD_Met__Ala = 100001142,
-
-    /// Met->Cys: Met->Cys substitution.
-    UNIMOD_Met__Cys = 100001143,
-
-    /// Met->Asp: Met->Asp substitution.
-    UNIMOD_Met__Asp = 100001144,
-
-    /// Met->Glu: Met->Glu substitution.
-    UNIMOD_Met__Glu = 100001145,
-
-    /// Met->Phe: Met->Phe substitution.
-    UNIMOD_Met__Phe = 100001146,
-
-    /// Met->Gly: Met->Gly substitution.
-    UNIMOD_Met__Gly = 100001147,
-
-    /// Met->His: Met->His substitution.
-    UNIMOD_Met__His = 100001148,
-
-    /// Met->Asn: Met->Asn substitution.
-    UNIMOD_Met__Asn = 100001149,
-
-    /// Met->Pro: Met->Pro substitution.
-    UNIMOD_Met__Pro = 100001150,
-
-    /// Met->Gln: Met->Gln substitution.
-    UNIMOD_Met__Gln = 100001151,
-
-    /// Met->Ser: Met->Ser substitution.
-    UNIMOD_Met__Ser = 100001152,
-
-    /// Met->Trp: Met->Trp substitution.
-    UNIMOD_Met__Trp = 100001153,
-
-    /// Met->Tyr: Met->Tyr substitution.
-    UNIMOD_Met__Tyr = 100001154,
-
-    /// Asn->Ala: Asn->Ala substitution.
-    UNIMOD_Asn__Ala = 100001155,
-
-    /// Asn->Cys: Asn->Cys substitution.
-    UNIMOD_Asn__Cys = 100001156,
-
-    /// Asn->Glu: Asn->Glu substitution.
-    UNIMOD_Asn__Glu = 100001157,
-
-    /// Asn->Phe: Asn->Phe substitution.
-    UNIMOD_Asn__Phe = 100001158,
-
-    /// Asn->Gly: Asn->Gly substitution.
-    UNIMOD_Asn__Gly = 100001159,
-
-    /// Asn->Met: Asn->Met substitution.
-    UNIMOD_Asn__Met = 100001160,
-
-    /// Asn->Pro: Asn->Pro substitution.
-    UNIMOD_Asn__Pro = 100001161,
-
-    /// Asn->Gln: Asn->Gln substitution.
-    UNIMOD_Asn__Gln = 100001162,
-
-    /// Asn->Arg: Asn->Arg substitution.
-    UNIMOD_Asn__Arg = 100001163,
-
-    /// Asn->Val: Asn->Val substitution.
-    UNIMOD_Asn__Val = 100001164,
-
-    /// Asn->Trp: Asn->Trp substitution.
-    UNIMOD_Asn__Trp = 100001165,
-
-    /// Pro->Cys: Pro->Cys substitution.
-    UNIMOD_Pro__Cys = 100001166,
-
-    /// Pro->Asp: Pro->Asp substitution.
-    UNIMOD_Pro__Asp = 100001167,
-
-    /// Pro->Glu: Pro->Glu substitution.
-    UNIMOD_Pro__Glu = 100001168,
-
-    /// Pro->Phe: Pro->Phe substitution.
-    UNIMOD_Pro__Phe = 100001169,
-
-    /// Pro->Gly: Pro->Gly substitution.
-    UNIMOD_Pro__Gly = 100001170,
-
-    /// Pro->Lys: Pro->Lys substitution.
-    UNIMOD_Pro__Lys = 100001171,
-
-    /// Pro->Met: Pro->Met substitution.
-    UNIMOD_Pro__Met = 100001172,
-
-    /// Pro->Asn: Pro->Asn substitution.
-    UNIMOD_Pro__Asn = 100001173,
-
-    /// Pro->Val: Pro->Val substitution.
-    UNIMOD_Pro__Val = 100001174,
-
-    /// Pro->Trp: Pro->Trp substitution.
-    UNIMOD_Pro__Trp = 100001175,
-
-    /// Pro->Tyr: Pro->Tyr substitution.
-    UNIMOD_Pro__Tyr = 100001176,
-
-    /// Gln->Ala: Gln->Ala substitution.
-    UNIMOD_Gln__Ala = 100001177,
-
-    /// Gln->Cys: Gln->Cys substitution.
-    UNIMOD_Gln__Cys = 100001178,
-
-    /// Gln->Asp: Gln->Asp substitution.
-    UNIMOD_Gln__Asp = 100001179,
-
-    /// Gln->Phe: Gln->Phe substitution.
-    UNIMOD_Gln__Phe = 100001180,
-
-    /// Gln->Gly: Gln->Gly substitution.
-    UNIMOD_Gln__Gly = 100001181,
-
-    /// Gln->Met: Gln->Met substitution.
-    UNIMOD_Gln__Met = 100001182,
-
-    /// Gln->Asn: Gln->Asn substitution.
-    UNIMOD_Gln__Asn = 100001183,
-
-    /// Gln->Ser: Gln->Ser substitution.
-    UNIMOD_Gln__Ser = 100001184,
-
-    /// Gln->Thr: Gln->Thr substitution.
-    UNIMOD_Gln__Thr = 100001185,
-
-    /// Gln->Val: Gln->Val substitution.
-    UNIMOD_Gln__Val = 100001186,
-
-    /// Gln->Trp: Gln->Trp substitution.
-    UNIMOD_Gln__Trp = 100001187,
-
-    /// Gln->Tyr: Gln->Tyr substitution.
-    UNIMOD_Gln__Tyr = 100001188,
-
-    /// Arg->Ala: Arg->Ala substitution.
-    UNIMOD_Arg__Ala = 100001189,
-
-    /// Arg->Asp: Arg->Asp substitution.
-    UNIMOD_Arg__Asp = 100001190,
-
-    /// Arg->Glu: Arg->Glu substitution.
-    UNIMOD_Arg__Glu = 100001191,
-
-    /// Arg->Asn: Arg->Asn substitution.
-    UNIMOD_Arg__Asn = 100001192,
-
-    /// Arg->Val: Arg->Val substitution.
-    UNIMOD_Arg__Val = 100001193,
-
-    /// Arg->Tyr: Arg->Tyr substitution.
-    UNIMOD_Arg__Tyr = 100001194,
-
-    /// Arg->Phe: Arg->Phe substitution.
-    UNIMOD_Arg__Phe = 100001195,
-
-    /// Ser->Asp: Ser->Asp substitution.
-    UNIMOD_Ser__Asp = 100001196,
-
-    /// Ser->Glu: Ser->Glu substitution.
-    UNIMOD_Ser__Glu = 100001197,
-
-    /// Ser->His: Ser->His substitution.
-    UNIMOD_Ser__His = 100001198,
-
-    /// Ser->Lys: Ser->Lys substitution.
-    UNIMOD_Ser__Lys = 100001199,
-
-    /// Ser->Met: Ser->Met substitution.
-    UNIMOD_Ser__Met = 100001200,
-
-    /// Ser->Gln: Ser->Gln substitution.
-    UNIMOD_Ser__Gln = 100001201,
-
-    /// Ser->Val: Ser->Val substitution.
-    UNIMOD_Ser__Val = 100001202,
-
-    /// Thr->Cys: Thr->Cys substitution.
-    UNIMOD_Thr__Cys = 100001203,
-
-    /// Thr->Asp: Thr->Asp substitution.
-    UNIMOD_Thr__Asp = 100001204,
-
-    /// Thr->Glu: Thr->Glu substitution.
-    UNIMOD_Thr__Glu = 100001205,
-
-    /// Thr->Phe: Thr->Phe substitution.
-    UNIMOD_Thr__Phe = 100001206,
-
-    /// Thr->Gly: Thr->Gly substitution.
-    UNIMOD_Thr__Gly = 100001207,
-
-    /// Thr->His: Thr->His substitution.
-    UNIMOD_Thr__His = 100001208,
-
-    /// Thr->Gln: Thr->Gln substitution.
-    UNIMOD_Thr__Gln = 100001209,
-
-    /// Thr->Val: Thr->Val substitution.
-    UNIMOD_Thr__Val = 100001210,
-
-    /// Thr->Trp: Thr->Trp substitution.
-    UNIMOD_Thr__Trp = 100001211,
-
-    /// Thr->Tyr: Thr->Tyr substitution.
-    UNIMOD_Thr__Tyr = 100001212,
-
-    /// Val->Cys: Val->Cys substitution.
-    UNIMOD_Val__Cys = 100001213,
-
-    /// Val->His: Val->His substitution.
-    UNIMOD_Val__His = 100001214,
-
-    /// Val->Lys: Val->Lys substitution.
-    UNIMOD_Val__Lys = 100001215,
-
-    /// Val->Asn: Val->Asn substitution.
-    UNIMOD_Val__Asn = 100001216,
-
-    /// Val->Pro: Val->Pro substitution.
-    UNIMOD_Val__Pro = 100001217,
-
-    /// Val->Gln: Val->Gln substitution.
-    UNIMOD_Val__Gln = 100001218,
-
-    /// Val->Arg: Val->Arg substitution.
-    UNIMOD_Val__Arg = 100001219,
-
-    /// Val->Ser: Val->Ser substitution.
-    UNIMOD_Val__Ser = 100001220,
-
-    /// Val->Thr: Val->Thr substitution.
-    UNIMOD_Val__Thr = 100001221,
-
-    /// Val->Trp: Val->Trp substitution.
-    UNIMOD_Val__Trp = 100001222,
-
-    /// Val->Tyr: Val->Tyr substitution.
-    UNIMOD_Val__Tyr = 100001223,
-
-    /// Trp->Ala: Trp->Ala substitution.
-    UNIMOD_Trp__Ala = 100001224,
-
-    /// Trp->Asp: Trp->Asp substitution.
-    UNIMOD_Trp__Asp = 100001225,
-
-    /// Trp->Glu: Trp->Glu substitution.
-    UNIMOD_Trp__Glu = 100001226,
-
-    /// Trp->Phe: Trp->Phe substitution.
-    UNIMOD_Trp__Phe = 100001227,
-
-    /// Trp->His: Trp->His substitution.
-    UNIMOD_Trp__His = 100001228,
-
-    /// Trp->Lys: Trp->Lys substitution.
-    UNIMOD_Trp__Lys = 100001229,
-
-    /// Trp->Met: Trp->Met substitution.
-    UNIMOD_Trp__Met = 100001230,
-
-    /// Trp->Asn: Trp->Asn substitution.
-    UNIMOD_Trp__Asn = 100001231,
-
-    /// Trp->Pro: Trp->Pro substitution.
-    UNIMOD_Trp__Pro = 100001232,
-
-    /// Trp->Gln: Trp->Gln substitution.
-    UNIMOD_Trp__Gln = 100001233,
-
-    /// Trp->Thr: Trp->Thr substitution.
-    UNIMOD_Trp__Thr = 100001234,
-
-    /// Trp->Val: Trp->Val substitution.
-    UNIMOD_Trp__Val = 100001235,
-
-    /// Trp->Tyr: Trp->Tyr substitution.
-    UNIMOD_Trp__Tyr = 100001236,
-
-    /// Tyr->Ala: Tyr->Ala substitution.
-    UNIMOD_Tyr__Ala = 100001237,
-
-    /// Tyr->Glu: Tyr->Glu substitution.
-    UNIMOD_Tyr__Glu = 100001238,
-
-    /// Tyr->Gly: Tyr->Gly substitution.
-    UNIMOD_Tyr__Gly = 100001239,
-
-    /// Tyr->Lys: Tyr->Lys substitution.
-    UNIMOD_Tyr__Lys = 100001240,
-
-    /// Tyr->Met: Tyr->Met substitution.
-    UNIMOD_Tyr__Met = 100001241,
-
-    /// Tyr->Pro: Tyr->Pro substitution.
-    UNIMOD_Tyr__Pro = 100001242,
-
-    /// Tyr->Gln: Tyr->Gln substitution.
-    UNIMOD_Tyr__Gln = 100001243,
-
-    /// Tyr->Arg: Tyr->Arg substitution.
-    UNIMOD_Tyr__Arg = 100001244,
-
-    /// Tyr->Thr: Tyr->Thr substitution.
-    UNIMOD_Tyr__Thr = 100001245,
-
-    /// Tyr->Val: Tyr->Val substitution.
-    UNIMOD_Tyr__Val = 100001246,
-
-    /// Tyr->Trp: Tyr->Trp substitution.
-    UNIMOD_Tyr__Trp = 100001247,
-
-    /// Tyr->Xle: Tyr->Leu/Ile substitution.
-    UNIMOD_Tyr__Xle = 100001248,
-
-    /// AHA-SS: Azidohomoalanine coupled to reductively cleaved tag.
-    UNIMOD_AHA_SS = 100001249,
-
-    /// AHA-SS_CAM: Carbamidomethylated form of reductively cleaved tag coupled to azidohomoalanine.
-    UNIMOD_AHA_SS_CAM = 100001250,
-
-    /// Biotin:Thermo-33033: Sulfo-SBED Label Photoreactive Biotin Crosslinker.
-    UNIMOD_Biotin_Thermo_33033 = 100001251,
-
-    /// Biotin:Thermo-33033-H: Sulfo-SBED Label Photoreactive Biotin Crosslinker minus Hydrogen.
-    UNIMOD_Biotin_Thermo_33033_H = 100001252,
-
-    /// 2-monomethylsuccinyl: S-(2-monomethylsuccinyl) cysteine.
-    UNIMOD_2_monomethylsuccinyl = 100001253,
-
-    /// Saligenin: O-toluene.
-    UNIMOD_Saligenin = 100001254,
-
-    /// Cresylphosphate: O-toluyl-phosphorylation.
-    UNIMOD_Cresylphosphate = 100001255,
-
-    /// CresylSaligeninPhosphate: Cresyl-Saligenin-phosphorylation.
-    UNIMOD_CresylSaligeninPhosphate = 100001256,
-
-    /// Ub-Br2: Ub Bromide probe addition.
-    UNIMOD_Ub_Br2 = 100001257,
-
-    /// Ub-VME: Ubiquitin vinylmethylester.
-    UNIMOD_Ub_VME = 100001258,
-
-    /// Ub-amide: Ub amide probe addition.
-    UNIMOD_Ub_amide = 100001260,
-
-    /// Ub-fluorescein: Ub Fluorescein probe addition.
-    UNIMOD_Ub_fluorescein = 100001261,
-
-    /// 2-dimethylsuccinyl: S-(2-dimethylsuccinyl) cysteine.
-    UNIMOD_2_dimethylsuccinyl = 100001262,
-
-    /// Gly: Addition of Glycine.
-    UNIMOD_Gly = 100001263,
-
-    /// pupylation: Addition of GGE.
-    UNIMOD_pupylation = 100001264,
-
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
-    UO_unit = 200000000,
+    UO_unit = 100000000,
 
     /// length unit: A unit which is a standard measure of the distance between two points.
-    UO_length_unit = 200000001,
+    UO_length_unit = 100000001,
 
     /// mass unit: A unit which is a standard measure of the amount of matter/energy of a physical object.
-    UO_mass_unit = 200000002,
+    UO_mass_unit = 100000002,
 
     /// time unit: A unit which is a standard measure of the dimension in which events occur in sequence.
-    UO_time_unit = 200000003,
+    UO_time_unit = 100000003,
 
     /// electric current unit: A unit which is a standard measure of the flow of electric charge.
-    UO_electric_current_unit = 200000004,
+    UO_electric_current_unit = 100000004,
 
     /// temperature unit: A unit which is a standard measure of the average kinetic energy of the particles in a sample of matter.
-    UO_temperature_unit = 200000005,
+    UO_temperature_unit = 100000005,
 
     /// substance unit: A unit which is a standardised quantity of an element or compound with uniform composition.
-    UO_substance_unit = 200000006,
+    UO_substance_unit = 100000006,
 
     /// luminous intensity unit: A unit which is a standard measure of the wavelength-weighted power emitted by a light source in a particular direction.
-    UO_luminous_intensity_unit = 200000007,
+    UO_luminous_intensity_unit = 100000007,
 
     /// meter: A length unit which is equal to the length of the path traveled by light in vacuum during a time interval of 1/299 792 458 of a second.
-    UO_meter = 200000008,
+    UO_meter = 100000008,
 
     /// kilogram: A mass unit which is equal to the mass of the International Prototype Kilogram kept by the BIPM at Svres, France.
-    UO_kilogram = 200000009,
+    UO_kilogram = 100000009,
 
     /// second: A time unit which is equal to the duration of 9 192 631 770 periods of the radiation corresponding to the transition between the two hyperfine levels of the ground state of the caesium 133 atom.
-    UO_second = 200000010,
+    UO_second = 100000010,
 
     /// ampere: An electric current unit which is equal to the constant current which, if maintained in two straight parallel conductors of infinite length, of negligible circular cross-section, and placed 1 m apart in vacuum, would produce between these conductors a force equal to 2 x 10^[-7] newton per meter of length.
-    UO_ampere = 200000011,
+    UO_ampere = 100000011,
 
     /// kelvin: A thermodynamic temperature unit which is equal to the fraction 1/273.16 of the thermodynamic temperature of the triple point of water.
-    UO_kelvin = 200000012,
+    UO_kelvin = 100000012,
 
     /// mole: A substance unit which is equal to the amount of substance of a molecular system which contains as many elementary entities as there are atoms in 0.012 kilogram of carbon 12.
-    UO_mole = 200000013,
+    UO_mole = 100000013,
 
     /// candela: A luminous intensity unit which equal to the luminous intensity, in a given direction, of a source that emits monochromatic radiation of frequency 540 x 1012 hertz and that has a radiant intensity in that direction of 1/683 watt per steradian.
-    UO_candela = 200000014,
+    UO_candela = 100000014,
 
     /// centimeter: A length unit which is equal to one hundredth of a meter or 10^[-2] m.
-    UO_centimeter = 200000015,
+    UO_centimeter = 100000015,
 
     /// millimeter: A length unit which is equal to one thousandth of a meter or 10^[-3] m.
-    UO_millimeter = 200000016,
+    UO_millimeter = 100000016,
 
     /// micrometer: A length unit which is equal to one millionth of a meter or 10^[-6] m.
-    UO_micrometer = 200000017,
+    UO_micrometer = 100000017,
 
     /// nanometer: A length unit which is equal to one thousandth of one millionth of a meter or 10^[-9] m.
-    UO_nanometer = 200000018,
+    UO_nanometer = 100000018,
 
     /// angstrom: A length unit which is equal to 10 [-10] m.
-    UO_angstrom = 200000019,
+    UO_angstrom = 100000019,
 
     /// picometer: A length unit which is equal to 10^[-12] m.
-    UO_picometer = 200000020,
+    UO_picometer = 100000020,
 
     /// gram: A mass unit which is equal to one thousandth of a kilogram or 10^[-3] kg.
-    UO_gram = 200000021,
+    UO_gram = 100000021,
 
     /// milligram: A mass unit which is equal to one thousandth of a gram or 10^[-3] g.
-    UO_milligram = 200000022,
+    UO_milligram = 100000022,
 
     /// microgram: A mass unit which is equal to one millionth of a gram or 10^[-6] g.
-    UO_microgram = 200000023,
+    UO_microgram = 100000023,
 
     /// nanogram: A mass unit which is equal to one thousandth of one millionth of a gram or 10^[-9] g.
-    UO_nanogram = 200000024,
+    UO_nanogram = 100000024,
 
     /// picogram: A mass unit which is equal to 10^[-12] g.
-    UO_picogram = 200000025,
+    UO_picogram = 100000025,
 
     /// femtogram: A mass unit which is equal to 10^[-15] g.
-    UO_femtogram = 200000026,
+    UO_femtogram = 100000026,
 
     /// degree celsius: A temperature unit which is equal to one Kelvin degree. However, they have their zeros at different points. The Centigrade scale has its zero at 273.15 K.
-    UO_degree_celsius = 200000027,
+    UO_degree_celsius = 100000027,
 
     /// millisecond: A time unit which is equal to one thousandth of a second or 10^[-3] s.
-    UO_millisecond = 200000028,
+    UO_millisecond = 100000028,
 
     /// microsecond: A time unit which is equal to one millionth of a second or 10^[-6] s.
-    UO_microsecond = 200000029,
+    UO_microsecond = 100000029,
 
     /// picosecond: A time unit which is equal to 10^[-12] s.
-    UO_picosecond = 200000030,
+    UO_picosecond = 100000030,
 
     /// minute: A time unit which is equal to 60 seconds.
-    UO_minute = 200000031,
+    UO_minute = 100000031,
 
     /// hour: A time unit which is equal to 3600 seconds or 60 minutes.
-    UO_hour = 200000032,
+    UO_hour = 100000032,
 
     /// day: A time unit which is equal to 24 hours.
-    UO_day = 200000033,
+    UO_day = 100000033,
 
     /// week: A time unit which is equal to 7 days.
-    UO_week = 200000034,
+    UO_week = 100000034,
 
     /// month: A time unit which is approximately equal to the length of time of one of cycle of the moon's phases which is science is taken to be equal to 30 days.
-    UO_month = 200000035,
+    UO_month = 100000035,
 
     /// year: A time unit which is equal to 12 months which is science is taken to be equal to 365.25 days.
-    UO_year = 200000036,
+    UO_year = 100000036,
 
     /// milliampere: An electric current unit current which is equal to one thousandth of an ampere or 10^[-3] A.
-    UO_milliampere = 200000037,
+    UO_milliampere = 100000037,
 
     /// microampere: An electric current unit current which is equal to one millionth of an ampere or 10^[-6] A.
-    UO_microampere = 200000038,
+    UO_microampere = 100000038,
 
     /// micromole: A substance unit equal to a millionth of a mol or 10^[-6] mol.
-    UO_micromole = 200000039,
+    UO_micromole = 100000039,
 
     /// millimole: A substance unit equal to a thousandth of a mol or 10^[-3] mol.
-    UO_millimole = 200000040,
+    UO_millimole = 100000040,
 
     /// nanomole: A substance unit equal to one thousandth of one millionth of a mole or 10^[-9] mol.
-    UO_nanomole = 200000041,
+    UO_nanomole = 100000041,
 
     /// picomole: A substance unit equal to 10^[-12] mol.
-    UO_picomole = 200000042,
+    UO_picomole = 100000042,
 
     /// femtomole: A substance unit equal to 10^[-15] mol.
-    UO_femtomole = 200000043,
+    UO_femtomole = 100000043,
 
     /// attomole: A substance unit equal to 10^[-18] mol.
-    UO_attomole = 200000044,
+    UO_attomole = 100000044,
 
     /// base unit: A unit which is one of a particular measure to which all measures of that type can be related.
-    UO_base_unit = 200000045,
+    UO_base_unit = 100000045,
 
     /// derived unit: A unit which is derived from base units.
-    UO_derived_unit_OBSOLETE = 200000046,
+    UO_derived_unit_OBSOLETE = 100000046,
 
     /// area unit: A unit which is a standard measure of the amount of a 2-dimensional flat surface.
-    UO_area_unit = 200000047,
+    UO_area_unit = 100000047,
 
     /// acceleration unit: A unit which is a standard measure of the rate of change of velocity in either speed or direction.
-    UO_acceleration_unit = 200000048,
+    UO_acceleration_unit = 100000048,
 
     /// angular velocity unit: A unit which is a standard measure of the rate of angular movement about an axis; the angle rotated in a given time.
-    UO_angular_velocity_unit = 200000049,
+    UO_angular_velocity_unit = 100000049,
 
     /// angular acceleration unit: A unit which is a standard measure of the rate of change of angular velocity.
-    UO_angular_acceleration_unit = 200000050,
+    UO_angular_acceleration_unit = 100000050,
 
     /// concentration unit: A unit which represents a standard measurement of how much of a given substance there is mixed with another substance.
-    UO_concentration_unit = 200000051,
+    UO_concentration_unit = 100000051,
 
     /// mass density unit: A density unit which is a standard measure of the mass of a substance in a given volume.
-    UO_mass_density_unit = 200000052,
+    UO_mass_density_unit = 100000052,
 
     /// luminance unit: A unit which is a standard measure of the luminous intensity impinging on a given area.
-    UO_luminance_unit = 200000053,
+    UO_luminance_unit = 100000053,
 
     /// area density unit: A density unit which is a standard measure of the mass exerting an influence on a given area.
-    UO_area_density_unit = 200000054,
+    UO_area_density_unit = 100000054,
 
     /// molar mass unit: A unit which is a standard measure of the mass of a homogeneous substance containing 6.02 x 1023 atoms or molecules.
-    UO_molar_mass_unit = 200000055,
+    UO_molar_mass_unit = 100000055,
 
     /// molar volume unit: A unit which is a standard measure of the volume of a homogeneous substance containing 6.02 x 1023 atoms or molecules.
-    UO_molar_volume_unit = 200000056,
+    UO_molar_volume_unit = 100000056,
 
     /// momentum unit: A unit which is a standard measure of the quantity of motion measured by the product of mass and velocity.
-    UO_momentum_unit = 200000057,
+    UO_momentum_unit = 100000057,
 
     /// rotational frequency unit: A unit which is a standard measure of the number of rotations in a given time.
-    UO_rotational_frequency_unit = 200000058,
+    UO_rotational_frequency_unit = 100000058,
 
     /// specific volume unit: A unit which is a standard measure of the volume of a given mass of substance (the reciprocal of density).
-    UO_specific_volume_unit = 200000059,
+    UO_specific_volume_unit = 100000059,
 
     /// speed/velocity unit: A unit which is a standard measure of the rate of movement. Speed is measured in the same physical units of measurement as velocity, but does not contain the element of direction that velocity has. Speed is thus the magnitude component of velocity.
-    UO_speed_velocity_unit = 200000060,
+    UO_speed_velocity_unit = 100000060,
 
     /// unit of molarity: A concentration unit which is a standard measure of the number of moles of a given substance per liter of solution.
-    UO_unit_of_molarity = 200000061,
+    UO_unit_of_molarity = 100000061,
 
     /// molar: A unit of concentration which expresses a concentration of 1 mole of solute per liter of solution (mol/L).
-    UO_molar = 200000062,
+    UO_molar = 100000062,
 
     /// millimolar: A unit of molarity which is equal to one thousandth of a molar or 10^[-3] M.
-    UO_millimolar = 200000063,
+    UO_millimolar = 100000063,
 
     /// micromolar: A unit of molarity which is equal to one millionth of a molar or 10^[-6] M.
-    UO_micromolar = 200000064,
+    UO_micromolar = 100000064,
 
     /// nanomolar: A unit of molarity which is equal to one thousandth of one millionth of a molar or 10^[-9] M.
-    UO_nanomolar = 200000065,
+    UO_nanomolar = 100000065,
 
     /// picomolar: A unit of molarity which is equal to 10^[-12] M.
-    UO_picomolar = 200000066,
+    UO_picomolar = 100000066,
 
     /// unit of molality: A concentration unit which is a standard measure of the number of moles of a given substance per kilogram of solvent.
-    UO_unit_of_molality = 200000067,
+    UO_unit_of_molality = 100000067,
 
     /// molal: A unit of concentration which expresses a concentration of a solution of 1 mole per kilogram of solvent (mol/kg).
-    UO_molal = 200000068,
+    UO_molal = 100000068,
 
     /// millimolal: A molality unit which is equal to one thousandth of a molal or 10^[-3] m.
-    UO_millimolal = 200000069,
+    UO_millimolal = 100000069,
 
     /// micromolal: A molality unit which is equal to one millionth of a molal or 10^[-6] m.
-    UO_micromolal = 200000070,
+    UO_micromolal = 100000070,
 
     /// nanomolal: A molality unit which is equal to one thousandth of one millionth of a molal or 10^[-9] m.
-    UO_nanomolal = 200000071,
+    UO_nanomolal = 100000071,
 
     /// picomolal: A molality unit which is equal to 10^[-12] m.
-    UO_picomolal = 200000072,
+    UO_picomolal = 100000072,
 
     /// femtomolar: A unit of molarity which is equal to 10^[-15] M.
-    UO_femtomolar = 200000073,
+    UO_femtomolar = 100000073,
 
     /// unit of normality: A unit of concentration which highlights the chemical nature of salts.
-    UO_unit_of_normality = 200000074,
+    UO_unit_of_normality = 100000074,
 
     /// normal: A unit of concentration which is one gram equivalent of a solute per liter of solution. A gram equivalent weight or equivalent is a measure of the reactive capacity of a given molecule.
-    UO_normal = 200000075,
+    UO_normal = 100000075,
 
     /// mole fraction: A concentration unit which denotes the number of moles of solute as a proportion of the total number of moles in a solution.
-    UO_mole_fraction = 200000076,
+    UO_mole_fraction = 100000076,
 
     /// meter per second per second: An acceleration unit which is equal to the acceleration an object changing its velocity by 1meter/s over a time period that equals one second.
-    UO_meter_per_second_per_second = 200000077,
+    UO_meter_per_second_per_second = 100000077,
 
     /// radian per second per second: An angular unit acceleration which is equal to the angular acceleration of an object changing its angular velocity by 1rad/s over a time period that equals one second.
-    UO_radian_per_second_per_second = 200000078,
+    UO_radian_per_second_per_second = 100000078,
 
     /// radian per second: An angular unit velocity which is equal to about 9.54930 rpm (revolutions per minute).
-    UO_radian_per_second = 200000079,
+    UO_radian_per_second = 100000079,
 
     /// square meter: An area unit which is equal to an area enclosed by a square with sides each 1 meter long.
-    UO_square_meter = 200000080,
+    UO_square_meter = 100000080,
 
     /// square centimeter: An area unit which is equal to one thousand of square meter or 10^[-3] m^[2].
-    UO_square_centimeter = 200000081,
+    UO_square_centimeter = 100000081,
 
     /// square millimeter: An area unit which is equal to one millionth of a square meter or 10^[-6] m^[2].
-    UO_square_millimeter = 200000082,
+    UO_square_millimeter = 100000082,
 
     /// kilogram per cubic meter: A mass unit density which is equal to mass of an object in kilograms divided by the volume in cubic meters.
-    UO_kilogram_per_cubic_meter = 200000083,
+    UO_kilogram_per_cubic_meter = 100000083,
 
     /// gram per cubic centimeter: A mass unit density which is equal to mass of an object in grams divided by the volume in cubic centimeters.
-    UO_gram_per_cubic_centimeter = 200000084,
+    UO_gram_per_cubic_centimeter = 100000084,
 
     /// candela per square meter: A luminance unit which is equal to a luminous intensity of one candela radiating from a surface whose area is one square meter.
-    UO_candela_per_square_meter = 200000085,
+    UO_candela_per_square_meter = 100000085,
 
     /// kilogram per square meter: An area density unit which is equal to the mass of an object in kilograms divided by the surface area in meters squared.
-    UO_kilogram_per_square_meter = 200000086,
+    UO_kilogram_per_square_meter = 100000086,
 
     /// kilogram per mole: A molar mass unit which is equal to one kilogram of mass of one mole of chemical element or chemical compound.
-    UO_kilogram_per_mole = 200000087,
+    UO_kilogram_per_mole = 100000087,
 
     /// gram per mole: A molar mass unit which is equal to one gram of mass of one mole of chemical element or chemical compound.
-    UO_gram_per_mole = 200000088,
+    UO_gram_per_mole = 100000088,
 
     /// cubic meter per mole: A molar volume unit which is equal to 1 cubic meter occupied by one mole of a substance in the form of a solid, liquid, or gas.
-    UO_cubic_meter_per_mole = 200000089,
+    UO_cubic_meter_per_mole = 100000089,
 
     /// cubic centimeter per mole: A molar volume unit which is equal to 1 cubic centimeter occupied by one mole of a substance in the form of a solid, liquid, or gas.
-    UO_cubic_centimeter_per_mole = 200000090,
+    UO_cubic_centimeter_per_mole = 100000090,
 
     /// kilogram meter per second: A momentum unit which is equal to the momentum of a one kilogram mass object with a speed of one meter per second.
-    UO_kilogram_meter_per_second = 200000091,
+    UO_kilogram_meter_per_second = 100000091,
 
     /// turns per second: A rotational frequency unit which is equal to the number complete turn in a period of time that equals to 1 second.
-    UO_turns_per_second = 200000092,
+    UO_turns_per_second = 100000092,
 
     /// cubic meter per kilogram: A specific volume unit which is equal to one cubic meter volume occupied by one kilogram of a particular substance.
-    UO_cubic_meter_per_kilogram = 200000093,
+    UO_cubic_meter_per_kilogram = 100000093,
 
     /// meter per second: A speed/velocity unit which is equal to the speed of an object traveling 1 meter distance in one second.
-    UO_meter_per_second = 200000094,
+    UO_meter_per_second = 100000094,
 
     /// volume unit: A unit which is a standard measure of the amount of space occupied by any substance, whether solid, liquid, or gas.
-    UO_volume_unit = 200000095,
+    UO_volume_unit = 100000095,
 
     /// cubic meter: A volume unit which is equal to the volume of a cube with edges one meter in length. One cubic meter equals to 1000 liters.
-    UO_cubic_meter = 200000096,
+    UO_cubic_meter = 100000096,
 
     /// cubic centimeter: A volume unit which is equal to one millionth of a cubic meter or 10^[-9] m^[3], or to 1 ml.
-    UO_cubic_centimeter = 200000097,
+    UO_cubic_centimeter = 100000097,
 
     /// milliliter: A volume unit which is equal to one thousandth of a liter or 10^[-3] L, or to 1 cubic centimeter.
-    UO_milliliter = 200000098,
+    UO_milliliter = 100000098,
 
     /// liter: A volume unit which is equal to one thousandth of a cubic meter or 10^[-3] m^[3], or to 1 decimeter.
-    UO_liter = 200000099,
+    UO_liter = 100000099,
 
     /// cubic decimeter: A volume unit which is equal to one thousand of a cubic meter or 10^[-3] m^[3], or to 1 L.
-    UO_cubic_decimeter = 200000100,
+    UO_cubic_decimeter = 100000100,
 
     /// microliter: A volume unit which is equal to one millionth of a liter or 10^[-6] L.
-    UO_microliter = 200000101,
+    UO_microliter = 100000101,
 
     /// nanoliter: A volume unit which is equal to one thousandth of one millionth of a liter or 10^[-9] L.
-    UO_nanoliter = 200000102,
+    UO_nanoliter = 100000102,
 
     /// picoliter: A volume unit which is equal to 10^[-12] L.
-    UO_picoliter = 200000103,
+    UO_picoliter = 100000103,
 
     /// femtoliter: A volume unit which is equal to 10^[-15] L.
-    UO_femtoliter = 200000104,
+    UO_femtoliter = 100000104,
 
     /// frequency unit: A unit which is a standard measure of the number of repetitive actions in a particular time.
-    UO_frequency_unit = 200000105,
+    UO_frequency_unit = 100000105,
 
     /// hertz: A frequency unit which is equal to 1 complete cycle of a recurring phenomenon in 1 second.
-    UO_hertz = 200000106,
+    UO_hertz = 100000106,
 
     /// force unit: A unit which is a standard measure of the force is applied when a mass is accelerated.
-    UO_force_unit = 200000107,
+    UO_force_unit = 100000107,
 
     /// newton: A force unit which is equal to the force required to cause an acceleration of 1m/s2 of a mass of 1 Kg in the direction of the force.
-    UO_newton = 200000108,
+    UO_newton = 100000108,
 
     /// pressure unit: A unit which is a standard measure of the force applied to a given area.
-    UO_pressure_unit = 200000109,
+    UO_pressure_unit = 100000109,
 
     /// pascal: A pressure unit which is equal to the pressure or stress on a surface caused by a force of 1 newton spread over a surface of 1 m^[2].
-    UO_pascal = 200000110,
+    UO_pascal = 100000110,
 
     /// energy unit: A unit which is a standard measure of the work done by a certain force (gravitational, electric, magnetic, force of inertia, etc).
-    UO_energy_unit = 200000111,
+    UO_energy_unit = 100000111,
 
     /// joule: An energy unit which is equal to the energy required when a force of 1 newton moves an object 1 meter in the direction of the force.
-    UO_joule = 200000112,
+    UO_joule = 100000112,
 
     /// power unit: A unit which is a standard measure power or the rate of doing work.
-    UO_power_unit = 200000113,
+    UO_power_unit = 100000113,
 
     /// watt: A power unit which is equal to the power used when work is done at the rate of 1 joule per second.
-    UO_watt = 200000114,
+    UO_watt = 100000114,
 
     /// illuminance unit: A unit which is a standard measure of the luminous flux incident on a unit area.
-    UO_illuminance_unit = 200000115,
+    UO_illuminance_unit = 100000115,
 
     /// lux: An illuminance unit which is equal to the illuminance produced by 1 lumen evenly spread over an area 1 m^[2].
-    UO_lux = 200000116,
+    UO_lux = 100000116,
 
     /// luminous flux unit: A unit which is a standard measure of the flow of radiant energy.
-    UO_luminous_flux_unit = 200000117,
+    UO_luminous_flux_unit = 100000117,
 
     /// lumen: A luminous flux unit which is equal to the luminous flux emitted into 1 steradian by a point source of 1 candela.
-    UO_lumen = 200000118,
+    UO_lumen = 100000118,
 
     /// catalytic activity unit: A unit which is a standard measure of the amount of the action of a catalyst.
-    UO_catalytic_activity_unit = 200000119,
+    UO_catalytic_activity_unit = 100000119,
 
     /// katal: A catalytic unit activity which is equal to the activity of a catalyst in moles per second, such as the amount of an enzyme needed to transform one mole of substrate per second.
-    UO_katal = 200000120,
+    UO_katal = 100000120,
 
     /// angle unit: A unit which is a standard measure of the figure or space formed by the junction of two lines or planes.
-    UO_angle_unit = 200000121,
+    UO_angle_unit = 100000121,
 
     /// plane angle unit: A unit which is a standard measure of the angle formed by two straight lines in the same plane.
-    UO_plane_angle_unit = 200000122,
+    UO_plane_angle_unit = 100000122,
 
     /// radian: A plane angle unit which is equal to the angle subtended at the center of a circle by an arc equal in length to the radius of the circle, approximately 57 degrees 17 minutes and 44.6 seconds.
-    UO_radian = 200000123,
+    UO_radian = 100000123,
 
     /// solid angle unit: A unit which is a standard measure of the angle formed by three or more planes intersecting at a common point.
-    UO_solid_angle_unit = 200000124,
+    UO_solid_angle_unit = 100000124,
 
     /// steradian: A solid angle unit which is equal to the solid angle subtended at the center of a sphere by an area on the surface of the sphere that is equal to the radius squared.
-    UO_steradian = 200000125,
+    UO_steradian = 100000125,
 
     /// radiation unit: A unit which is a standard measure of the amount of radiation emitted by a given radiation source as well as the amount of radiation absorbed or deposited in a specific material by a radiation source.
-    UO_radiation_unit = 200000127,
+    UO_radiation_unit = 100000127,
 
     /// activity (of a radionuclide) unit: A unit which is a standard measure of the transformation (disintegration) rate of a radioactive substance.
-    UO_activity__of_a_radionuclide__unit = 200000128,
+    UO_activity__of_a_radionuclide__unit = 100000128,
 
     /// absorbed dose unit: A unit which is a standard measure of the energy imparted by ionizing radiation to unit mass of matter such as tissue.
-    UO_absorbed_dose_unit = 200000129,
+    UO_absorbed_dose_unit = 100000129,
 
     /// dose equivalent unit: A unit which is a standard measure of the expression of dose in terms of its biological effect.
-    UO_dose_equivalent_unit = 200000130,
+    UO_dose_equivalent_unit = 100000130,
 
     /// exposure unit: A unit which is a standard measure of the quantity that expresses the ability of radiation to ionize air and thereby create electric charges which can be collected and measured.
-    UO_exposure_unit = 200000131,
+    UO_exposure_unit = 100000131,
 
     /// becquerel: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second (dps).
-    UO_becquerel = 200000132,
+    UO_becquerel = 100000132,
 
     /// curie: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which there are 3.7 x 10^[10] atom disintegration per second (dps).
-    UO_curie = 200000133,
+    UO_curie = 100000133,
 
     /// gray: An absorbed dose unit which is equal to the absorption of one joule of radiation energy by one kilogram of matter.
-    UO_gray = 200000134,
+    UO_gray = 100000134,
 
     /// rad: An absorbed dose unit which is equal to 0.01 gray (Gy).
-    UO_rad = 200000135,
+    UO_rad = 100000135,
 
     /// roentgen: An exposure unit which is equal to the amount of radiation required to liberate positive and negative charges of one electrostatic unit of charge in 1 cm^[3] of air at standard temperature and pressure (STP). This corresponds to the generation of approximately 2.0810^[9] ion pairs.
-    UO_roentgen = 200000136,
+    UO_roentgen = 100000136,
 
     /// sievert: A dose equivalent unit which is equal to the absorption of one joule of radiation energy by one kilogram of matter.
-    UO_sievert = 200000137,
+    UO_sievert = 100000137,
 
     /// millisievert: A dose equivalent unit which is equal to one thousandth of a sievert or 10^[-3] Sv.
-    UO_millisievert = 200000138,
+    UO_millisievert = 100000138,
 
     /// microsievert: A dose equivalent unit which is equal to one millionth of a sievert or 10^[-6] Sv.
-    UO_microsievert = 200000139,
+    UO_microsievert = 100000139,
 
     /// Roentgen equivalent man: A dose equivalent unit which when multiplied by hundred is equal to one sievert or 1 Sv. 1 Sv is equal to 100 rem.
-    UO_Roentgen_equivalent_man = 200000140,
+    UO_Roentgen_equivalent_man = 100000140,
 
     /// microgray: An absorbed dose unit which is equal to one millionth of a gray or 10^[-6] Gy.
-    UO_microgray = 200000141,
+    UO_microgray = 100000141,
 
     /// milligray: An absorbed dose unit which is equal to one thousandth of a gray or 10^[-3] Gy.
-    UO_milligray = 200000142,
+    UO_milligray = 100000142,
 
     /// nanogray: An absorbed dose unit which is equal to one thousandth of a millionth of a gray or 10^[-9] Gy.
-    UO_nanogray = 200000143,
+    UO_nanogray = 100000143,
 
     /// nanosievert: A dose equivalent unit which is equal to one thousandth of a millionth of a sievert or 10^[-9] Sv.
-    UO_nanosievert = 200000144,
+    UO_nanosievert = 100000144,
 
     /// millicurie: An activity (of a radionuclide) unit which is equal to one thousandth of a curie or 10^[-3] Ci.
-    UO_millicurie = 200000145,
+    UO_millicurie = 100000145,
 
     /// microcurie: An activity (of a radionuclide) unit which is equal to one millionth of a curie or 10^[-6] Ci.
-    UO_microcurie = 200000146,
+    UO_microcurie = 100000146,
 
     /// disintegrations per minute: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per minute or there is one atom disintegration per minute.
-    UO_disintegrations_per_minute = 200000147,
+    UO_disintegrations_per_minute = 100000147,
 
     /// counts per minute: An activity (of a radionuclide) unit which is equal to the number of light emissions produced by ionizing radiation in one minute.
-    UO_counts_per_minute = 200000148,
+    UO_counts_per_minute = 100000148,
 
     /// nanosecond: A time unit which is equal to one thousandth of one millionth of a second or 10^[-9] s.
-    UO_nanosecond = 200000150,
+    UO_nanosecond = 100000150,
 
     /// century: A time unit which is equal to 100 years.
-    UO_century = 200000151,
+    UO_century = 100000151,
 
     /// half life: A time unit which represents the period over which the activity or concentration of a specified chemical or element falls to half its original activity or concentration.
-    UO_half_life = 200000152,
+    UO_half_life = 100000152,
 
     /// foot candle: An illuminance unit which is equal to the illuminance produced by 1 lumen evenly spread over an area 1 foot^[2]. One footcandle is equal to 10.76 lux.
-    UO_foot_candle = 200000153,
+    UO_foot_candle = 100000153,
 
     /// irradiance unit: A unit which is a standard measure of the power of electromagnetic radiation at a surface, per unit area.
-    UO_irradiance_unit = 200000154,
+    UO_irradiance_unit = 100000154,
 
     /// watt per square meter: An irradiance unit which is equal to 1 watt of radiant power incident per one square meter surface area.
-    UO_watt_per_square_meter = 200000155,
+    UO_watt_per_square_meter = 100000155,
 
     /// einstein per square meter per second: An irradiance unit which is equal to one einstein per square meter per second. One einstein is one mole of photons, regardless of their frequency. Therefore, the number of photons in an einstein is Avogadro's number.
-    UO_einstein_per_square_meter_per_second = 200000156,
+    UO_einstein_per_square_meter_per_second = 100000156,
 
     /// light unit: A unit which is a standard measure of the intensity of light.
-    UO_light_unit = 200000157,
+    UO_light_unit = 100000157,
 
     /// watt per steradian per square meter: A radiance unit which is equal to one watt of radiant power incident per steradian solid angle per one square meter projected area of the source, as viewed from the given direction.
-    UO_watt_per_steradian_per_square_meter = 200000158,
+    UO_watt_per_steradian_per_square_meter = 100000158,
 
     /// radiant intensity unit: A unit which is a standard measure of the intensity of electromagnetic radiation.
-    UO_radiant_intensity_unit = 200000159,
+    UO_radiant_intensity_unit = 100000159,
 
     /// microeinstein per square meter per second: An irradiance unit which is equal to one microeinstein per square meter per second or 10^[-6] microeinstein/sm^[2].
-    UO_microeinstein_per_square_meter_per_second = 200000160,
+    UO_microeinstein_per_square_meter_per_second = 100000160,
 
     /// radiance unit: A unit which is a standard measure of the power of electromagnetic radiation through space or through a material medium in the form of electromagnetic waves.
-    UO_radiance_unit = 200000161,
+    UO_radiance_unit = 100000161,
 
     /// watt per steradian: A radiant intensity unit which is equal to one kilogram meter squared per second cubed per steradian.
-    UO_watt_per_steradian = 200000162,
+    UO_watt_per_steradian = 100000162,
 
     /// mass percentage: A dimensionless concentration unit which denotes the mass of a substance in a mixture as a percentage of the mass of the entire mixture.
-    UO_mass_percentage = 200000163,
+    UO_mass_percentage = 100000163,
 
     /// mass volume percentage: A dimensionless concentration unit which denotes the mass of the substance in a mixture as a percentage of the volume of the entire mixture.
-    UO_mass_volume_percentage = 200000164,
+    UO_mass_volume_percentage = 100000164,
 
     /// volume percentage: A dimensionless concentration unit which denotes the volume of the solute in mL per 100 mL of the resulting solution.
-    UO_volume_percentage = 200000165,
+    UO_volume_percentage = 100000165,
 
     /// parts per notation unit: A dimensionless concentration notation which describes the amount of one substance in another. It is the ratio of the amount of the substance of interest to the amount of that substance plus the amount of the substance.
-    UO_parts_per_notation_unit = 200000166,
+    UO_parts_per_notation_unit = 100000166,
 
     /// parts per hundred: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 100 regardless of the units of measure as long as they are the same.
-    UO_parts_per_hundred = 200000167,
+    UO_parts_per_hundred = 100000167,
 
     /// parts per thousand: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1000 regardless of the units of measure as long as they are the same.
-    UO_parts_per_thousand = 200000168,
+    UO_parts_per_thousand = 100000168,
 
     /// parts per million: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[6].
-    UO_parts_per_million = 200000169,
+    UO_parts_per_million = 100000169,
 
     /// parts per billion: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000 regardless of the units of measure as long as they are the same or 1 part in 10^[9].
-    UO_parts_per_billion = 200000170,
+    UO_parts_per_billion = 100000170,
 
     /// parts per trillion: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[12].
-    UO_parts_per_trillion = 200000171,
+    UO_parts_per_trillion = 100000171,
 
     /// parts per quadrillion: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 1,000,000,000,000 regardless of the units of measure used as long as they are the same or 1 part in 10^[15].
-    UO_parts_per_quadrillion = 200000172,
+    UO_parts_per_quadrillion = 100000172,
 
     /// gram per milliliter: A mass unit density which is equal to mass of an object in grams divided by the volume in milliliter.
-    UO_gram_per_milliliter = 200000173,
+    UO_gram_per_milliliter = 100000173,
 
     /// kilogram per liter: A mass unit density which is equal to mass of an object in kilograms divided by the volume in liters.
-    UO_kilogram_per_liter = 200000174,
+    UO_kilogram_per_liter = 100000174,
 
     /// gram per liter: A mass unit density which is equal to mass of an object in grams divided by the volume in liters.
-    UO_gram_per_liter = 200000175,
+    UO_gram_per_liter = 100000175,
 
     /// milligram per milliliter: A mass unit density which is equal to mass of an object in milligrams divided by the volume in milliliters.
-    UO_milligram_per_milliliter = 200000176,
+    UO_milligram_per_milliliter = 100000176,
 
     /// unit per volume unit: A concentration unit which is a standard measure of the number of units, as an agreed arbitrary amount, of a given substance per a specific volume of solution.
-    UO_unit_per_volume_unit = 200000177,
+    UO_unit_per_volume_unit = 100000177,
 
     /// unit per milliliter: A unit per milliliter unit which is equal to one unit of an agreed arbitrary amount per one milliliter.
-    UO_unit_per_milliliter = 200000178,
+    UO_unit_per_milliliter = 100000178,
 
     /// unit per liter: A unit per milliliter unit which is equal to one unit of an agreed arbitrary amount per one liter.
-    UO_unit_per_liter = 200000179,
+    UO_unit_per_liter = 100000179,
 
     /// mass per unit volume: A concentration unit which is a standard measure of the mass of a substance in a given volume (density).
-    UO_mass_per_unit_volume = 200000180,
+    UO_mass_per_unit_volume = 100000180,
 
     /// enzyme unit: A catalytic unit activity which is equal to the amount of the enzyme that catalyzes the conversion of 1 micro mole of substrate per minute.
-    UO_enzyme_unit = 200000181,
+    UO_enzyme_unit = 100000181,
 
     /// density unit: A unit which is a standard measure of the influence exerted by some mass.
-    UO_density_unit = 200000182,
+    UO_density_unit = 100000182,
 
     /// linear density unit: A density unit which is a standard measure of the mass exerting an influence on a one-dimensional object.
-    UO_linear_density_unit = 200000183,
+    UO_linear_density_unit = 100000183,
 
     /// kilogram per meter: An area density unit which is equal to the mass of an object in kilograms divided by one meter.
-    UO_kilogram_per_meter = 200000184,
+    UO_kilogram_per_meter = 100000184,
 
     /// degree: A plane angle unit which is equal to 1/360 of a full rotation or 1.7453310^[-2] rad.
-    UO_degree = 200000185,
+    UO_degree = 100000185,
 
     /// dimensionless unit: A unit which is a standard measure of physical quantity consisting of only a numerical number without any units.
-    UO_dimensionless_unit = 200000186,
+    UO_dimensionless_unit = 100000186,
 
     /// percent: A dimensionless ratio unit which denotes numbers as fractions of 100.
-    UO_percent = 200000187,
+    UO_percent = 100000187,
 
     /// pi: A dimensionless unit which denoted an irrational real number, approximately equal to 3.14159 which is the ratio of a circle's circumference to its diameter in Euclidean geometry.
-    UO_pi = 200000188,
+    UO_pi = 100000188,
 
     /// count unit: A dimensionless unit which denotes a simple count of things.
-    UO_count_unit = 200000189,
+    UO_count_unit = 100000189,
 
     /// ratio: A dimensionless unit which denotes an amount or magnitude of one quantity relative to another.
-    UO_ratio = 200000190,
+    UO_ratio = 100000190,
 
     /// fraction: A dimensionless ratio unit which relates the part (the numerator) to the whole (the denominator).
-    UO_fraction = 200000191,
+    UO_fraction = 100000191,
 
     /// molecule count: A dimensionless count unit which denotes the number of molecules.
-    UO_molecule_count = 200000192,
+    UO_molecule_count = 100000192,
 
     /// purity percentage: A dimensionless percent unit which denotes the homogeneity of a biomaterial.
-    UO_purity_percentage = 200000193,
+    UO_purity_percentage = 100000193,
 
     /// confluence percentage: A dimensionless percent unit which denotes the density of an attached or monolayer culture (e.g., cell culture).
-    UO_confluence_percentage = 200000194,
+    UO_confluence_percentage = 100000194,
 
     /// degree fahrenheit: A temperature unit which is equal to 5/9ths of a kelvin. Negative 40 degrees Fahrenheit is equal to negative 40 degrees Celsius.
-    UO_degree_fahrenheit = 200000195,
+    UO_degree_fahrenheit = 100000195,
 
     /// pH: A dimensionless concentration notation which denotes the acidity of a solution in terms of activity of hydrogen ions (H+).
-    UO_pH = 200000196,
+    UO_pH = 100000196,
 
     /// liter per kilogram: A specific volume unit which is equal to one liter volume occupied by one kilogram of a particular substance.
-    UO_liter_per_kilogram = 200000197,
+    UO_liter_per_kilogram = 100000197,
 
     /// milliliter per kilogram: A specific volume unit which is equal to a thousandth of a liter per kilogram or 10^[-3] l/kg.
-    UO_milliliter_per_kilogram = 200000198,
+    UO_milliliter_per_kilogram = 100000198,
 
     /// microliter per kilogram: A specific volume unit which is equal to one millionth of a liter per kilogram or 10^[-6] l/kg.
-    UO_microliter_per_kilogram = 200000199,
+    UO_microliter_per_kilogram = 100000199,
 
     /// cell concentration unit: A concentration unit which denotes the average cell number in a given volume.
-    UO_cell_concentration_unit = 200000200,
+    UO_cell_concentration_unit = 100000200,
 
     /// cells per milliliter: A unit of cell concentration which is equal to one cell in a volume of 1 milliliter.
-    UO_cells_per_milliliter = 200000201,
+    UO_cells_per_milliliter = 100000201,
 
     /// catalytic (activity) concentration unit: A concentration unit which is a standard measure of the amount of the action of a catalyst in a given volume.
-    UO_catalytic__activity__concentration_unit = 200000202,
+    UO_catalytic__activity__concentration_unit = 100000202,
 
     /// katal per cubic meter: A catalytic (activity) concentration unit which is equal to 1 katal activity of a catalyst in a given volume of one cubic meter.
-    UO_katal_per_cubic_meter = 200000203,
+    UO_katal_per_cubic_meter = 100000203,
 
     /// katal per liter: A catalytic (activity) concentration unit which is equal to 1 katal activity of a catalyst in a given volume of one thousandth of a cubic meter.
-    UO_katal_per_liter = 200000204,
+    UO_katal_per_liter = 100000204,
 
     /// volume per unit volume: A dimensionless concentration unit which denotes the given volume of the solute in the total volume of the resulting solution.
-    UO_volume_per_unit_volume = 200000205,
+    UO_volume_per_unit_volume = 100000205,
 
     /// milliliter per cubic meter: A volume per unit volume unit which is equal to one millionth of a liter of solute in one cubic meter of solution.
-    UO_milliliter_per_cubic_meter = 200000206,
+    UO_milliliter_per_cubic_meter = 100000206,
 
     /// milliliter per liter: A volume per unit volume unit which is equal to one millionth of a liter of solute in one liter of solution.
-    UO_milliliter_per_liter = 200000207,
+    UO_milliliter_per_liter = 100000207,
 
     /// gram per deciliter: A mass density unit which is equal to mass of an object in grams divided by the volume in deciliters.
-    UO_gram_per_deciliter = 200000208,
+    UO_gram_per_deciliter = 100000208,
 
     /// deciliter: A volume unit which is equal to one tenth of a liter or 10^[-1] L.
-    UO_deciliter = 200000209,
+    UO_deciliter = 100000209,
 
     /// colony forming unit: A dimensionless count unit which a measure of viable bacterial numbers.
-    UO_colony_forming_unit = 200000210,
+    UO_colony_forming_unit = 100000210,
 
     /// plaque forming unit: A dimensionless count unit which a measure of plague forming units in a given volume.
-    UO_plaque_forming_unit = 200000211,
+    UO_plaque_forming_unit = 100000211,
 
     /// colony forming unit per volume: A concentration unit which a measure of viable bacterial numbers in a given volume.
-    UO_colony_forming_unit_per_volume = 200000212,
+    UO_colony_forming_unit_per_volume = 100000212,
 
     /// colony forming unit per milliliter: A colony forming unit which a measure of viable bacterial numbers in one milliliter.
-    UO_colony_forming_unit_per_milliliter = 200000213,
+    UO_colony_forming_unit_per_milliliter = 100000213,
 
     /// plaque forming unit per volume: A concentration unit which a measure of plague forming units in a given volume.
-    UO_plaque_forming_unit_per_volume = 200000214,
+    UO_plaque_forming_unit_per_volume = 100000214,
 
     /// plaque forming unit per milliliter: A concentration unit which a measure of plague forming units in one milliliter.
-    UO_plaque_forming_unit_per_milliliter = 200000215,
+    UO_plaque_forming_unit_per_milliliter = 100000215,
 
     /// disintegrations per second: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second.
-    UO_disintegrations_per_second = 200000216,
+    UO_disintegrations_per_second = 100000216,
 
     /// electric potential difference unit: A unit which is a standard measure of the work done per unit charge as a charge is moved between two points in an electric field.
-    UO_electric_potential_difference_unit = 200000217,
+    UO_electric_potential_difference_unit = 100000217,
 
     /// volt: An electric potential difference unit which is equal to the work per unit charge. One volt is the potential difference required to move one coulomb of charge between two points in a circuit while using one joule of energy.
-    UO_volt = 200000218,
+    UO_volt = 100000218,
 
     /// electric charge: A unit which is a standard measure of the quantity of unbalanced electricity in a body (either positive or negative) and construed as an excess or deficiency of electrons.
-    UO_electric_charge = 200000219,
+    UO_electric_charge = 100000219,
 
     /// coulomb: An electrical charge unit which is equal to the amount of charge transferred by a current of 1 ampere in 1 second.
-    UO_coulomb = 200000220,
+    UO_coulomb = 100000220,
 
     /// dalton: An independently to the base SI units defined mass unit which is equal to one twelfth of the mass of an unbound atom of the carbon-12 nuclide, at rest and in its ground state.
-    UO_dalton = 200000221,
+    UO_dalton = 100000221,
 
     /// kilodalton: A mass unit which is equal to one thousand daltons.
-    UO_kilodalton = 200000222,
+    UO_kilodalton = 100000222,
 
     /// watt-hour: An energy unit which is equal to the amount of electrical energy equivalent to a one-watt load drawing power for one hour.
-    UO_watt_hour = 200000223,
+    UO_watt_hour = 100000223,
 
     /// kilowatt-hour: An energy unit which is equal to 1,000 watt-hours.
-    UO_kilowatt_hour = 200000224,
+    UO_kilowatt_hour = 100000224,
 
     /// magnetic flux unit: A unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field.
-    UO_magnetic_flux_unit = 200000225,
+    UO_magnetic_flux_unit = 100000225,
 
     /// weber: A magnetic flux unit which is equal to the amount of flux that when linked with a single turn of wire for an interval of one second will induce an electromotive force of one volt.
-    UO_weber = 200000226,
+    UO_weber = 100000226,
 
     /// magnetic flux density unit: A unit which is a standard measure of the strength of a magnetic field.
-    UO_magnetic_flux_density_unit = 200000227,
+    UO_magnetic_flux_density_unit = 100000227,
 
     /// tesla: A magnetic flux density unit which is equal to one weber per square meter.
-    UO_tesla = 200000228,
+    UO_tesla = 100000228,
 
     /// volt-hour: A magnetic flux unit which is equal to 3600 Wb.
-    UO_volt_hour = 200000229,
+    UO_volt_hour = 100000229,
 
     /// kilovolt-hour: A magnetic flux unit which is equal to one thousand volt-hours.
-    UO_kilovolt_hour = 200000230,
+    UO_kilovolt_hour = 100000230,
 
     /// information unit: A unit which is a standard measure of the amount of information.
-    UO_information_unit = 200000231,
+    UO_information_unit = 100000231,
 
     /// bit: An information unit which refers to a digit in the binary numeral system, which consists of base 2 digits (ie there are only 2 possible values: 0 or 1).
-    UO_bit = 200000232,
+    UO_bit = 100000232,
 
     /// byte: An information unit which is equal to 8 bits.
-    UO_byte = 200000233,
+    UO_byte = 100000233,
 
     /// kilobyte: An information unit which is equal to 1000 bytes.
-    UO_kilobyte = 200000234,
+    UO_kilobyte = 100000234,
 
     /// megabyte: An information unit which is equal to 1000 kB.
-    UO_megabyte = 200000235,
+    UO_megabyte = 100000235,
 
     /// image resolution unit: An information unit which is a standard measure of the detail an image holds.
-    UO_image_resolution_unit = 200000236,
+    UO_image_resolution_unit = 100000236,
 
     /// chroma sampling unit: An image resolution unit which is a standard measure of the amount of spatial detail in an image.
-    UO_chroma_sampling_unit = 200000237,
+    UO_chroma_sampling_unit = 100000237,
 
     /// dynamic range unit: An image resolution unit which is a standard measure of the amount of contrast available in a pixel.
-    UO_dynamic_range_unit = 200000238,
+    UO_dynamic_range_unit = 100000238,
 
     /// spatial resolution unit: An image resolution unit which is a standard measure of the way luminance and chrominance may be sampled at different levels.
-    UO_spatial_resolution_unit = 200000239,
+    UO_spatial_resolution_unit = 100000239,
 
     /// dots per inch: A spatial resolution unit which is a standard measure of the printing resolution, in particular the number of individual dots of ink a printer or toner can produce within a linear one-inch space.
-    UO_dots_per_inch = 200000240,
+    UO_dots_per_inch = 100000240,
 
     /// micron pixel: A spatial resolution unit which is equal to a pixel size of one micrometer.
-    UO_micron_pixel = 200000241,
+    UO_micron_pixel = 100000241,
 
     /// pixels per inch: A spatial resolution unit which is a standard measure of the resolution of a computer display, related to the size of the display in inches and the total number of pixels in the horizontal and vertical directions.
-    UO_pixels_per_inch = 200000242,
+    UO_pixels_per_inch = 100000242,
 
     /// pixels per millimeter: A spatial resolution unit which is a standard measure of the number of pixels in one millimeter length or width of a digital image divided by the physical length or width of a printed image.
-    UO_pixels_per_millimeter = 200000243,
+    UO_pixels_per_millimeter = 100000243,
 
     /// base pair: A count unit which contains one nucleotide.
-    UO_base_pair = 200000244,
+    UO_base_pair = 100000244,
 
     /// kibibyte: An information unit which is equal to 1024 B.
-    UO_kibibyte = 200000245,
+    UO_kibibyte = 100000245,
 
     /// mebibyte: An information unit which is equal to 1024 KiB.
-    UO_mebibyte = 200000246,
+    UO_mebibyte = 100000246,
 
     /// millivolt: An electric potential difference unit which is equal to one thousandth of a volt or 10^[-3] V.
-    UO_millivolt = 200000247,
+    UO_millivolt = 100000247,
 
     /// kilovolt: An electric potential difference unit which is equal to one thousand volts or 10^[3] V.
-    UO_kilovolt = 200000248,
+    UO_kilovolt = 100000248,
 
     /// microvolt: An electric potential difference unit which is equal to one millionth of a volt or 10^[-6] V.
-    UO_microvolt = 200000249,
+    UO_microvolt = 100000249,
 
     /// nanovolt: An electric potential difference unit which is equal to one billionth of a volt or 10^[-12] V.
-    UO_nanovolt = 200000250,
+    UO_nanovolt = 100000250,
 
     /// picovolt: An electric potential difference unit which is equal to one trillionth of a volt or 10^[-12] V.
-    UO_picovolt = 200000251,
+    UO_picovolt = 100000251,
 
     /// megavolt: An electric potential difference unit which is equal to one million volts or 10^[6] V.
-    UO_megavolt = 200000252,
+    UO_megavolt = 100000252,
 
     /// surface tension unit: A unit which is a standard measure of the ability of a liguid to attraction of molecules at its surface as a result of unbalanced molecular cohesive forces.
-    UO_surface_tension_unit = 200000253,
+    UO_surface_tension_unit = 100000253,
 
     /// newton per meter: A surface tension unit which is equal to one newton per meter.
-    UO_newton_per_meter = 200000254,
+    UO_newton_per_meter = 100000254,
 
     /// dyne per cm: A surface tension unit which is equal to one dyne per centimeter.
-    UO_dyne_per_cm = 200000255,
+    UO_dyne_per_cm = 100000255,
 
     /// viscosity unit: A unit which is a standard measure of the internal resistance of fluids to flow.
-    UO_viscosity_unit = 200000256,
+    UO_viscosity_unit = 100000256,
 
     /// pascal second: A viscosity unit which is equal to one pascale per second.
-    UO_pascal_second = 200000257,
+    UO_pascal_second = 100000257,
 
     /// poise: A viscosity unit which is equal to one dyne second per square centimeter.
-    UO_poise = 200000258,
+    UO_poise = 100000258,
 
     /// decibel: An ratio unit which is an indicator of sound power per unit area.
-    UO_decibel = 200000259,
+    UO_decibel = 100000259,
 
     /// effective dose unit: A unit which is a standard measure of the estimate of the stochastic effect that a non-uniform radiation dose has on a human.
-    UO_effective_dose_unit = 200000260,
+    UO_effective_dose_unit = 100000260,
 
     /// conduction unit: A unit which represents a standard measurement of the transmission of an entity through a medium.
-    UO_conduction_unit = 200000261,
+    UO_conduction_unit = 100000261,
 
     /// electrical conduction unit: A unit which represents a standard measurement of the movement of electrically charged particles through a transmission medium (electrical conductor).
-    UO_electrical_conduction_unit = 200000262,
+    UO_electrical_conduction_unit = 100000262,
 
     /// heat conduction unit: A unit which represents a standard measurement of the spontaneous transfer of thermal energy through matter, from a region of higher temperature to a region of lower temperature.
-    UO_heat_conduction_unit = 200000263,
+    UO_heat_conduction_unit = 100000263,
 
     /// siemens: An electrical conduction unit which is equal to A/V.
-    UO_siemens = 200000264,
+    UO_siemens = 100000264,
 
     /// watt per meter kelvin: An heat conduction unit which is equal to one watt divided by meter kelvin.
-    UO_watt_per_meter_kelvin = 200000265,
+    UO_watt_per_meter_kelvin = 100000265,
 
     /// electronvolt: A non-SI unit of energy (eV) defined as the energy acquired by a single unbound electron when it passes through an electrostatic potential difference of one volt. An electronvolt is equal to 1.602 176 53(14) x 10^-19 J.
-    UO_electronvolt = 200000266,
+    UO_electronvolt = 100000266,
 
     /// electric field strength unit: The electric field strength is a unit which is a measure of the potential difference between two points some distance apart.
-    UO_electric_field_strength_unit = 200000267,
+    UO_electric_field_strength_unit = 100000267,
 
     /// volt per meter: The volt per meter is a unit of electric field strength equal to the a potential difference of 1 volt existing between two points that are 1 meter apart.
-    UO_volt_per_meter = 200000268,
+    UO_volt_per_meter = 100000268,
 
     /// absorbance unit: A dimensionless logarithmic unit assigned to a measure of absorbance of light through a partially absorbing substance, defined as -log10(I/I_0) where I = transmitted light and I_0 = incident light.
-    UO_absorbance_unit = 200000269,
+    UO_absorbance_unit = 100000269,
 
     /// volumetric flow rate unit: A unit which is a standard measure of the volume of fluid which passes through a given surface per unit time .
-    UO_volumetric_flow_rate_unit = 200000270,
+    UO_volumetric_flow_rate_unit = 100000270,
 
     /// microliters per minute: A volumetric flow rate unit which is equal to one microliter volume through a given surface in one minute.
-    UO_microliters_per_minute = 200000271,
+    UO_microliters_per_minute = 100000271,
 
     /// millimetres of mercury: A unit of pressure equal to the amount of fluid pressure one millimeter deep in mercury at zero degrees centigrade on Earth.
-    UO_millimetres_of_mercury = 200000272,
+    UO_millimetres_of_mercury = 100000272,
 
     /// milligram per liter: A mass unit density which is equal to mass of an object in milligrams divided by the volume in liters.
-    UO_milligram_per_liter = 200000273,
+    UO_milligram_per_liter = 100000273,
 
     /// microgram per milliliter: A mass unit density which is equal to mass of an object in micrograms divided by the volume in millliters.
-    UO_microgram_per_milliliter = 200000274,
+    UO_microgram_per_milliliter = 100000274,
 
     /// nanogram per milliliter: A mass unit density which is equal to mass of an object in nanograms divided by the volume in milliliters.
-    UO_nanogram_per_milliliter = 200000275,
+    UO_nanogram_per_milliliter = 100000275,
 
     /// amount per container: A concentration unit which is a standard measure of the amount of a substance in a given container.
-    UO_amount_per_container = 200000276,
+    UO_amount_per_container = 100000276,
 
     /// ug/disk: A unit which is equal to one microgram per disk, where a disk is some physical surface/container upon which the substance is deposited.
-    UO_ug_disk_200000277 = 200000277,
+    UO_ug_disk_100000277 = 100000277,
 
     /// ug/disk: A unit which is equal to one nanomole per disk, where a disk is some physical surface/container upon which the substance is deposited.
-    UO_ug_disk_200000278 = 200000278,
+    UO_ug_disk_100000278 = 100000278,
 
     /// milliunits per milliliter: A unit per milliliter unit which is equal to one thousandth of a unit of an agreed arbitrary amount per one milliliter.
-    UO_milliunits_per_milliliter = 200000279,
+    UO_milliunits_per_milliliter = 100000279,
 
     /// rate unit: A unit which represents a standard measurement occurrence of a process per unit time.
-    UO_rate_unit = 200000280,
+    UO_rate_unit = 100000280,
 
     /// count per nanomolar second: A rate unit which is equal to one over one nanomolar second.
-    UO_count_per_nanomolar_second = 200000281,
+    UO_count_per_nanomolar_second = 100000281,
 
     /// count per molar second: A rate unit which is equal to one over one molar second.
-    UO_count_per_molar_second = 200000282,
+    UO_count_per_molar_second = 100000282,
 
     /// microgram per liter: A mass unit density which is equal to mass of an object in micrograms divided by the volume in liters.
-    UO_microgram_per_liter = 200000301
+    UO_microgram_per_liter = 100000301
 }; // enum CVID
 
 
@@ -9217,7 +6519,6 @@ PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid);
 
 
 /// returns CV term info for the specified id (accession number)
-PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char *id);
 PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id);
 
 
