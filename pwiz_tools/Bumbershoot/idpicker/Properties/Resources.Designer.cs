@@ -116,6 +116,13 @@ namespace IDPicker.Properties {
             }
         }
         
+        internal static System.Drawing.Icon IDPicker {
+            get {
+                object obj = ResourceManager.GetObject("IDPicker", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to function tglDsp(e)
         ///{
@@ -168,6 +175,20 @@ namespace IDPicker.Properties {
         internal static string idpicker_style {
             get {
                 return ResourceManager.GetString("idpicker_style", resourceCulture);
+            }
+        }
+        
+        internal static System.Drawing.Icon IDPickerDatabase {
+            get {
+                object obj = ResourceManager.GetObject("IDPickerDatabase", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon IDPickerInputFile {
+            get {
+                object obj = ResourceManager.GetObject("IDPickerInputFile", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
         

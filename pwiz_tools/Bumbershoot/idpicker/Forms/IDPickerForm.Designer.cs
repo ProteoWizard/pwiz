@@ -52,6 +52,7 @@ namespace IDPicker
         /// </summary>
         private void InitializeComponent ()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(IDPickerForm));
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
@@ -175,7 +176,7 @@ namespace IDPicker
             this.newToolStripMenuItem,
             this.importToolStripMenuItem});
             this.importToToolStripMenuItem.Name = "importToToolStripMenuItem";
-            this.importToToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.importToToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
             this.importToToolStripMenuItem.Text = "Import files";
             this.importToToolStripMenuItem.Click += new System.EventHandler(this.importToToolStripMenuItem_Click);
             // 
@@ -203,7 +204,7 @@ namespace IDPicker
             // toolStripSeparator4
             // 
             this.toolStripSeparator4.Name = "toolStripSeparator4";
-            this.toolStripSeparator4.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator4.Size = new System.Drawing.Size(158, 6);
             // 
             // exportToolStripMenuItem
             // 
@@ -262,12 +263,12 @@ namespace IDPicker
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(158, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -282,7 +283,7 @@ namespace IDPicker
             // optionsToolStripMenuItem
             // 
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(125, 22);
             this.optionsToolStripMenuItem.Text = "Options...";
             this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
             // 
@@ -361,6 +362,7 @@ namespace IDPicker
             this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.dockPanel);
             this.Controls.Add(this.breadCrumbPanel);
+            this.Icon = ((System.Drawing.Icon) (resources.GetObject("$this.Icon")));
             this.Name = "IDPickerForm";
             this.Text = "IDPicker";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.IDPickerForm_FormClosing);

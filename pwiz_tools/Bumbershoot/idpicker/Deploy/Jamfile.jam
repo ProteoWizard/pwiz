@@ -53,8 +53,13 @@ actions msbuild_deploy
     pushd $(THIS_PATH)
     msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);Platform=x86;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     $(OUTPUT_PATH)SetupDeployProject.exe "$(INPUT_PATH)" "$(BUILD_PATH)"
-    devenv Deploy.vdproj /Build Release
+    pushd $(BUILD_PATH)
+    "%ProgramFiles%\Windows Installer XML v3.6\bin\candle.exe" *.wxs
+    "%ProgramFiles%\Windows Installer XML v3.6\bin\light.exe" *.wixObj -ext WixUIExtension -cultures:en-us
+    set EXIT=%ERRORLEVEL%
     popd
+    popd
+    if %EXIT% NEQ 0 exit %EXIT%
 }
 
 

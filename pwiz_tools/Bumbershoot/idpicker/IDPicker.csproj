@@ -28,6 +28,9 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <Win32Resource>D:\idpicker\branches\IDPicker-3\Resources\Resources.res</Win32Resource>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -474,6 +477,15 @@
     </None>
     <None Include="Resources\PeptideGroup.png" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\IDPicker.ico" />
+    <None Include="Resources\IDPickerInputFile.ico" />
+    <None Include="Resources\IDPickerDatabase.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Resources.rc" />
+    <None Include="Resources\Resources.res" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
@@ -485,5 +497,6 @@
   <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
+    <PreBuildEvent>rc.exe $(ProjectDir)/Resources/Resources.rc</PreBuildEvent>
   </PropertyGroup>
 </Project>
