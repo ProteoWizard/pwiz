@@ -374,7 +374,7 @@ namespace pwiz.Skyline.Model.Lib
                     // checksum.MakeForBuff(specHeader, checksum.ChecksumValue);
                     
                     int charge = GetInt32(specHeader, (int)SpectrumHeaders.charge);
-                    if (charge > 10)
+                    if (charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                         throw new InvalidDataException("Invalid precursor charge found. File may be corrupted.");
 
                     int numPeaks = GetInt32(specHeader, (int)SpectrumHeaders.num_peaks);

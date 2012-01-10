@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// <param name="separator">The separator being used</param>
         public static string ToDsvField(this string text, char separator)
         {
-            if (text.IndexOfAny(new[] {'"', separator}) == -1)
+            if (text.IndexOfAny(new[] {'"', separator, '\r', '\n'}) == -1)
                 return text;
             return '"' + text.Replace("\"", "\"\"") + '"';
         }
