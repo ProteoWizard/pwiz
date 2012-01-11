@@ -87,5 +87,15 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 listBoxRecentWorkspaces.SelectedItems.Clear();
             }
         }
+
+        private void btnCreateOnlineWorkspace_Click(object sender, EventArgs e)
+        {
+            TurnoverForm.NewOnlineWorkspace();
+        }
+
+        private void btnCreateLocalWorkspace_Click(object sender, EventArgs e)
+        {
+            TurnoverForm.NewWorkspace();
+        }
     }
 }

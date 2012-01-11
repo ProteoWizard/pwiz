@@ -48,6 +48,30 @@ namespace pwiz.Topograph.ui.Forms
             InitializeComponent();
             Instance = this;
             ShowDashboard();
+            var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
+            string[] args = (activationArgs != null ? activationArgs.ActivationData : null);
+            if (args != null && args.Length != 0)
+            {
+                try
+                {
+                    Uri uri = new Uri(args[0]);
+                    if (!uri.IsFile)
+                        throw new UriFormatException("The URI " + uri + " is not a file.");
+
+                    string pathOpen = Uri.UnescapeDataString(uri.AbsolutePath);
+
+                    // Handle direct open from UNC path names
+                    if (!string.IsNullOrEmpty(uri.Host))
+                        pathOpen = "//" + uri.Host + pathOpen;
+
+                    Workspace = OpenWorkspace(pathOpen);
+                }
+                catch (UriFormatException)
+                {
+                    MessageBox.Show(this, "Invalid file specified.", Program.AppName);
+                }
+            }
+
         }
 
         void ErrorHandler_ErrorAdded(Topograph.Util.Error error)
@@ -330,6 +354,11 @@ namespace pwiz.Topograph.ui.Forms
 
         private void newWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            NewWorkspace();
+        }
+
+        public void NewWorkspace()
+        {
             if (!PromptToSaveWorkspace())
             {
                 return;
@@ -357,8 +386,7 @@ namespace pwiz.Topograph.ui.Forms
                     InitWorkspace(sessionFactory);
                 }
                 Workspace = new Workspace(filename);
-                enrichmentToolStripMenuItem_Click(sender, e);
-                
+                EditIsotopeLabels();
             }
         }
 
@@ -757,15 +785,20 @@ namespace pwiz.Topograph.ui.Forms
 
         private void newOnlineWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            NewOnlineWorkspace();
+        }
+
+        public void NewOnlineWorkspace()
+        {
             if (!PromptToSaveWorkspace())
             {
                 return;
             }
             using (var dialog = new TpgLinkForm
-                {
-                    ShowReadOnlyCheckbox = false,
-                    BrowseOnOk = true,
-                })
+            {
+                ShowReadOnlyCheckbox = false,
+                BrowseOnOk = true,
+            })
             {
                 while (true)
                 {

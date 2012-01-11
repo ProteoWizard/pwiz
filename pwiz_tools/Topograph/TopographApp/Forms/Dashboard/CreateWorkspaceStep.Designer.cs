@@ -42,13 +42,13 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.label3 = new System.Windows.Forms.Label();
             this.btnCreateOnlineWorkspace = new System.Windows.Forms.Button();
             this.panelNoWorkspace = new System.Windows.Forms.Panel();
-            this.panel1 = new System.Windows.Forms.Panel();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.panelWorkspaceOpen.SuspendLayout();
             this.groupBoxOpenRecent.SuspendLayout();
             this.panelNoWorkspace.SuspendLayout();
-            this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // panelWorkspaceOpen
@@ -153,6 +153,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.btnCreateLocalWorkspace.TabIndex = 2;
             this.btnCreateLocalWorkspace.Text = "Create Workspace File...";
             this.btnCreateLocalWorkspace.UseVisualStyleBackColor = true;
+            this.btnCreateLocalWorkspace.Click += new System.EventHandler(this.btnCreateLocalWorkspace_Click);
             // 
             // label3
             // 
@@ -174,6 +175,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.btnCreateOnlineWorkspace.TabIndex = 4;
             this.btnCreateOnlineWorkspace.Text = "Create Online Workspace...";
             this.btnCreateOnlineWorkspace.UseVisualStyleBackColor = true;
+            this.btnCreateOnlineWorkspace.Click += new System.EventHandler(this.btnCreateOnlineWorkspace_Click);
             // 
             // panelNoWorkspace
             // 
@@ -189,17 +191,6 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.panelNoWorkspace.Size = new System.Drawing.Size(1156, 255);
             this.panelNoWorkspace.TabIndex = 3;
             // 
-            // panel1
-            // 
-            this.panel1.AutoSize = true;
-            this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.panel1.Controls.Add(this.btnCreateLocalWorkspace);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel1.Location = new System.Drawing.Point(0, 164);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1156, 26);
-            this.panel1.TabIndex = 4;
-            // 
             // panel2
             // 
             this.panel2.AutoSize = true;
@@ -210,6 +201,17 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(1156, 26);
             this.panel2.TabIndex = 4;
+            // 
+            // panel1
+            // 
+            this.panel1.AutoSize = true;
+            this.panel1.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.panel1.Controls.Add(this.btnCreateLocalWorkspace);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.panel1.Location = new System.Drawing.Point(0, 164);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(1156, 26);
+            this.panel1.TabIndex = 4;
             // 
             // CreateWorkspaceStep
             // 
@@ -226,10 +228,10 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             this.groupBoxOpenRecent.ResumeLayout(false);
             this.panelNoWorkspace.ResumeLayout(false);
             this.panelNoWorkspace.PerformLayout();
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 

@@ -29,7 +29,7 @@
     <AssemblyName>Topograph</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <IsWebBootstrapper>true</IsWebBootstrapper>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <ManifestCertificateThumbprint>B7819BCE89E3A3A6502DEEC1880A1216E17CA9D6</ManifestCertificateThumbprint>
     <ManifestKeyFile>topograph_2_TemporaryKey.pfx</ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
@@ -40,21 +40,20 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
-    <InstallFrom>Web</InstallFrom>
-    <UpdateEnabled>true</UpdateEnabled>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
     <UpdateMode>Foreground</UpdateMode>
     <UpdateInterval>7</UpdateInterval>
     <UpdateIntervalUnits>Days</UpdateIntervalUnits>
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>http://proteome.gs.washington.edu/software/topograph/</InstallUrl>
     <ProductName>Topograph</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
-    <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>210</ApplicationRevision>
+    <AutorunEnabled>true</AutorunEnabled>
+    <ApplicationRevision>222</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -905,6 +904,20 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <FileAssociation Include=".tpg">
+      <Visible>False</Visible>
+      <Description>Topograph Workspace</Description>
+      <Progid>Topograph.Workspace.0</Progid>
+      <DefaultIcon>Topograph.ico</DefaultIcon>
+    </FileAssociation>
+    <FileAssociation Include=".tpglnk">
+      <Visible>False</Visible>
+      <Description>Topograph Workspace</Description>
+      <Progid>Topograph.Workspace.1</Progid>
+      <DefaultIcon>Topograph.ico</DefaultIcon>
+    </FileAssociation>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
