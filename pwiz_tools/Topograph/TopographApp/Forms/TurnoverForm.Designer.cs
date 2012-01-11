@@ -46,6 +46,7 @@
             this.mruAfterToolStripSeparator = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.dashboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptidesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataFilesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideAnalysesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -53,7 +54,7 @@
             this.mercuryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.halfLivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorEnrichmentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tracerAmountsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resultsPerGroupToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resultsByReplicateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.alignmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -70,15 +71,14 @@
             this.errorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.recalculateResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.databaseSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorPoolSimulatorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // dockPanel
             // 
             this.dockPanel.ActiveAutoHideContent = null;
-            this.dockPanel.DefaultFloatingWindowSize = new System.Drawing.Size(300, 300);
             this.dockPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dockPanel.Location = new System.Drawing.Point(0, 24);
             this.dockPanel.Name = "dockPanel";
@@ -210,6 +210,7 @@
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.dashboardToolStripMenuItem,
             this.peptidesToolStripMenuItem,
             this.dataFilesToolStripMenuItem,
             this.peptideAnalysesToolStripMenuItem,
@@ -217,12 +218,19 @@
             this.mercuryToolStripMenuItem,
             this.halfLivesToolStripMenuItem,
             this.precursorEnrichmentsToolStripMenuItem,
-            this.tracerAmountsToolStripMenuItem,
+            this.resultsPerGroupToolStripMenuItem,
             this.resultsByReplicateToolStripMenuItem,
             this.alignmentToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "View";
+            // 
+            // dashboardToolStripMenuItem
+            // 
+            this.dashboardToolStripMenuItem.Name = "dashboardToolStripMenuItem";
+            this.dashboardToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.dashboardToolStripMenuItem.Text = "Dashboard";
+            this.dashboardToolStripMenuItem.Click += new System.EventHandler(this.dashboardToolStripMenuItem_Click);
             // 
             // peptidesToolStripMenuItem
             // 
@@ -280,13 +288,13 @@
             this.precursorEnrichmentsToolStripMenuItem.Text = "Precursor Enrichments";
             this.precursorEnrichmentsToolStripMenuItem.Click += new System.EventHandler(this.precursorEnrichmentsToolStripMenuItem_Click);
             // 
-            // tracerAmountsToolStripMenuItem
+            // resultsPerGroupToolStripMenuItem
             // 
-            this.tracerAmountsToolStripMenuItem.Enabled = false;
-            this.tracerAmountsToolStripMenuItem.Name = "tracerAmountsToolStripMenuItem";
-            this.tracerAmountsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.tracerAmountsToolStripMenuItem.Text = "Results By Cohort";
-            this.tracerAmountsToolStripMenuItem.Click += new System.EventHandler(this.tracerAmountsToolStripMenuItem_Click);
+            this.resultsPerGroupToolStripMenuItem.Enabled = false;
+            this.resultsPerGroupToolStripMenuItem.Name = "resultsPerGroupToolStripMenuItem";
+            this.resultsPerGroupToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.resultsPerGroupToolStripMenuItem.Text = "Results By Cohort";
+            this.resultsPerGroupToolStripMenuItem.Click += new System.EventHandler(this.resultsPerGroupToolStripMenuItem_Click);
             // 
             // resultsByReplicateToolStripMenuItem
             // 
@@ -425,12 +433,6 @@
             this.databaseSizeToolStripMenuItem.Text = "Database Size...";
             this.databaseSizeToolStripMenuItem.Click += new System.EventHandler(this.databaseSizeToolStripMenuItem_Click);
             // 
-            // debuggingToolStripMenuItem
-            // 
-            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
-            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
-            this.debuggingToolStripMenuItem.Text = "Debugging";
-            // 
             // precursorPoolSimulatorToolStripMenuItem
             // 
             this.precursorPoolSimulatorToolStripMenuItem.Enabled = false;
@@ -438,6 +440,12 @@
             this.precursorPoolSimulatorToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.precursorPoolSimulatorToolStripMenuItem.Text = "Precursor Pool Simulator...";
             this.precursorPoolSimulatorToolStripMenuItem.Click += new System.EventHandler(this.precursorPoolSimulatorToolStripMenuItem_Click);
+            // 
+            // debuggingToolStripMenuItem
+            // 
+            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
+            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
+            this.debuggingToolStripMenuItem.Text = "Debugging";
             // 
             // TurnoverForm
             // 
@@ -491,7 +499,7 @@
         private System.Windows.Forms.ToolStripMenuItem debuggingToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem databaseLocksToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem errorsToolStripMenuItem1;
-        private System.Windows.Forms.ToolStripMenuItem tracerAmountsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem resultsPerGroupToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorEnrichmentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem recalculateResultsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem displayToolStripMenuItem;
@@ -502,5 +510,6 @@
         private System.Windows.Forms.ToolStripMenuItem databaseSizeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem acceptanceCriteriaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorPoolSimulatorToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem dashboardToolStripMenuItem;
     }
 }

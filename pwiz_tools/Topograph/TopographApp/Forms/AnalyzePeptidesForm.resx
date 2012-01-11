@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="label6.Text" xml:space="preserve">
+    <value>If you would like Topograph to look for peptides in all of your samples, not just ones that have an MS2 identification, then check this box.  Topograph will look at the samples where the peptide was identified in order to figure out where in the retention time to find the peptide in the rest of the samples.</value>
+  </data>
+  <data name="label3.Text" xml:space="preserve">
+    <value>Use this form to tell Topograph which peptides you are interested in analyzing.  Topograph will then go through all of the peptides in the workspace, and ensure that a Peptide Analysis has been created for each one that matches your criteria.  You can use this form to analyze additional peptides if you have previously cancelled this while it was running, or if you have added new peptide search results.</value>
+  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

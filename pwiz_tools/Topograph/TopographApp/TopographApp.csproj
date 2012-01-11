@@ -190,6 +190,63 @@
     <Compile Include="Forms\CreateFileAnalysesForm.Designer.cs">
       <DependentUpon>CreateFileAnalysesForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\Dashboard\AddSearchResultsStep.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\AddSearchResultsStep.Designer.cs">
+      <DependentUpon>AddSearchResultsStep.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard\AnalyzePeptidesStep.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\AnalyzePeptidesStep.Designer.cs">
+      <DependentUpon>AnalyzePeptidesStep.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard\CreateWorkspaceStep.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\CreateWorkspaceStep.Designer.cs">
+      <DependentUpon>CreateWorkspaceStep.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard\DashboardForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\DashboardForm.Designer.cs">
+      <DependentUpon>DashboardForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard\DashboardStep.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\DashboardStepFrame.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\DashboardStepFrame.Designer.cs">
+      <DependentUpon>DashboardStepFrame.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard\RawFilesStep.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\RawFilesStep.Designer.cs">
+      <DependentUpon>RawFilesStep.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard\SettingsStep.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\SettingsStep.Designer.cs">
+      <DependentUpon>SettingsStep.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard\ViewResultsStep.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\ViewResultsStep.Designer.cs">
+      <DependentUpon>ViewResultsStep.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\Dashboard\WaitForResultsStep.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Forms\Dashboard\WaitForResultsStep.Designer.cs">
+      <DependentUpon>WaitForResultsStep.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\DatabaseSizeForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -459,6 +516,33 @@
     <EmbeddedResource Include="Forms\CreateFileAnalysesForm.resx">
       <DependentUpon>CreateFileAnalysesForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\AddSearchResultsStep.resx">
+      <DependentUpon>AddSearchResultsStep.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\AnalyzePeptidesStep.resx">
+      <DependentUpon>AnalyzePeptidesStep.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\CreateWorkspaceStep.resx">
+      <DependentUpon>CreateWorkspaceStep.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\DashboardForm.resx">
+      <DependentUpon>DashboardForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\DashboardStepFrame.resx">
+      <DependentUpon>DashboardStepFrame.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\RawFilesStep.resx">
+      <DependentUpon>RawFilesStep.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\SettingsStep.resx">
+      <DependentUpon>SettingsStep.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\ViewResultsStep.resx">
+      <DependentUpon>ViewResultsStep.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\Dashboard\WaitForResultsStep.resx">
+      <DependentUpon>WaitForResultsStep.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\DatabaseSizeForm.resx">
       <DependentUpon>DatabaseSizeForm.cs</DependentUpon>
@@ -743,6 +827,8 @@
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\Collapse.png" />
+    <None Include="Resources\Expand.png" />
     <Content Include="Topograph.ico" />
   </ItemGroup>
   <ItemGroup>

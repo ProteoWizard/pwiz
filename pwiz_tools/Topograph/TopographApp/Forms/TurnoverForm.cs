@@ -29,6 +29,7 @@ using pwiz.Topograph.Data.Snapshot;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.Forms.Dashboard;
 using pwiz.Topograph.ui.Properties;
 using pwiz.Topograph.Util;
 
@@ -46,6 +47,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             Instance = this;
+            ShowDashboard();
         }
 
         void ErrorHandler_ErrorAdded(Topograph.Util.Error error)
@@ -112,7 +114,7 @@ namespace pwiz.Topograph.ui.Forms
                                mercuryToolStripMenuItem,
                                halfLivesToolStripMenuItem,
                                dataDirectoryToolStripMenuItem,
-                               tracerAmountsToolStripMenuItem,
+                               resultsPerGroupToolStripMenuItem,
                                precursorEnrichmentsToolStripMenuItem,
                                resultsByReplicateToolStripMenuItem,
                                alignmentToolStripMenuItem,
@@ -202,8 +204,14 @@ namespace pwiz.Topograph.ui.Forms
                         Settings.Default.Save();
                     }
                 }
+                if (WorkspaceChange != null)
+                {
+                    WorkspaceChange.Invoke(this, new EventArgs());
+                }
             }
         }
+
+        public event EventHandler WorkspaceChange;
 
         void Workspace_WorkspaceDirty(Workspace workspace)
         {
@@ -288,14 +296,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 menuItem.Enabled = true;
             }
-            if (_workspace.PeptideAnalyses.GetChildCount() > 0)
-            {
-                new PeptideAnalysesForm(_workspace).Show(dockPanel, DockState.Document);
-            }
-            else
-            {
-                new PeptidesForm(_workspace).Show(dockPanel, DockState.Document);
-            }
+            ShowDashboard();
             EnsureDataDirectory(_workspace);
         }
 
@@ -416,20 +417,25 @@ namespace pwiz.Topograph.ui.Forms
 
         private void openWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            DisplayOpenWorkspaceDialog();
+        }
+
+        public DialogResult DisplayOpenWorkspaceDialog()
+        {
             if (!PromptToSaveWorkspace())
             {
-                return;
+                return DialogResult.Cancel;
             }
             Settings.Default.Reload();
             using (var fileDialog = new OpenFileDialog
-                {
-                    Filter = AnyWorkspaceFilter,
-                    InitialDirectory = Settings.Default.WorkspaceDirectory
-                })
+            {
+                Filter = AnyWorkspaceFilter,
+                InitialDirectory = Settings.Default.WorkspaceDirectory
+            })
             {
                 if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
                 {
-                    return;
+                    return DialogResult.Cancel;
                 }
                 String filename = fileDialog.FileName;
                 Settings.Default.WorkspaceDirectory = Path.GetDirectoryName(filename);
@@ -439,19 +445,38 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     Workspace = workspace;
                 }
-                
+
             }
+            return DialogResult.OK;
         }
 
         private void addSearchResultsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddSearchResults();
+        }
+
+        public void AddSearchResults()
         {
             new AddSearchResultsForm(Workspace).Show(this);
         }
 
         private void enrichmentToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var dialog = new EnrichmentDialog(Workspace);
-            dialog.Show(this);
+            EditIsotopeLabels();
+        }
+
+        public void EditIsotopeLabels()
+        {
+            var dialog = Program.FindOpenForm<EnrichmentDialog>();
+            if (dialog != null)
+            {
+                dialog.Activate();
+            }
+            else
+            {
+                dialog = new EnrichmentDialog(Workspace);
+                    dialog.Show(this);
+            }
         }
 
         private void peptidesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -504,11 +529,17 @@ namespace pwiz.Topograph.ui.Forms
 
         private void closeWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            CloseWorkspace();
+        }
+
+        public DialogResult CloseWorkspace()
+        {
             if (!PromptToSaveWorkspace())
             {
-                return;
+                return DialogResult.Cancel;
             }
             Workspace = null;
+            return DialogResult.OK;
         }
 
         public bool EnsureMsDataFile(MsDataFile msDataFile)
@@ -561,6 +592,11 @@ namespace pwiz.Topograph.ui.Forms
 
         private void dataFilesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ShowDataFiles();
+        }
+
+        public void ShowDataFiles()
+        {
             var dataFilesForm = Program.FindOpenForm<DataFilesForm>();
             if (dataFilesForm != null)
             {
@@ -594,6 +630,11 @@ namespace pwiz.Topograph.ui.Forms
 
         private void peptideAnalysesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ShowPeptideAnalyses();
+        }
+
+        public void ShowPeptideAnalyses()
+        {
             var peptideComparisonsForm = Program.FindOpenForm<PeptideAnalysesForm>();
             if (peptideComparisonsForm != null)
             {
@@ -607,9 +648,14 @@ namespace pwiz.Topograph.ui.Forms
 
         private void modificationsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            EditModifications();
+        }
+
+        public DialogResult EditModifications()
+        {
             using (var form = new ModificationsForm(Workspace))
             {
-                form.ShowDialog(TopLevelControl);
+                return form.ShowDialog(TopLevelControl);
             }
         }
 
@@ -680,9 +726,14 @@ namespace pwiz.Topograph.ui.Forms
 
         private void machineSettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            EditMachineSettings();
+        }
+
+        public DialogResult EditMachineSettings()
+        {
             using (var form = new MiscSettingsForm(Workspace))
             {
-                form.ShowDialog(TopLevelControl);
+                return form.ShowDialog(TopLevelControl);
             }
         }
 
@@ -693,18 +744,13 @@ namespace pwiz.Topograph.ui.Forms
 
         private void halfLivesToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            HalfLivesForm ratesForm;
-            if (false) // Allow the user to open more than one HalfLivesForm
-            {
-                ratesForm = Program.FindOpenForm<HalfLivesForm>();
-                if (ratesForm != null)
-                {
-                    ratesForm.Activate();
-                    return;
-                }
-            }
-            ratesForm = new HalfLivesForm(Workspace);
-            ratesForm.Show(dockPanel, DockState.Document);
+            ShowHalfLivesForm();
+        }
+
+        public void ShowHalfLivesForm()
+        {
+            HalfLivesForm halfLivesForm = new HalfLivesForm(Workspace);
+            halfLivesForm.Show(dockPanel, DockState.Document);
         }
 
         public DockPanel DocumentPanel { get { return dockPanel; } }
@@ -930,7 +976,12 @@ namespace pwiz.Topograph.ui.Forms
             new ErrorForm().Show(this);
         }
 
-        private void tracerAmountsToolStripMenuItem_Click(object sender, EventArgs e)
+        private void resultsPerGroupToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowResultsPerGroup();
+        }
+
+        public void ShowResultsPerGroup()
         {
             var tracerAmountsForm = new ResultsPerGroupForm(Workspace);
             tracerAmountsForm.Show(dockPanel, DockState.Document);
@@ -1023,6 +1074,11 @@ namespace pwiz.Topograph.ui.Forms
 
         private void resultsByReplicateToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ShowResultsByReplicate();
+        }
+
+        public void ShowResultsByReplicate()
+        {
             var resultsPerReplicateForm = new ResultsPerReplicateForm(Workspace);
             resultsPerReplicateForm.Show(dockPanel, DockState.Document);
         }
@@ -1048,6 +1104,30 @@ namespace pwiz.Topograph.ui.Forms
         private void precursorPoolSimulatorToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new PrecursorPoolSimulator(Workspace).Show(this);
+        }
+
+        private void dashboardToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowDashboard();
+        }
+
+        public void ShowDashboard()
+        {
+            var dashboardForm = Program.FindOpenForm<DashboardForm>();
+            if (dashboardForm != null)
+            {
+                dashboardForm.Activate();
+            }
+            else
+            {
+                dashboardForm = new DashboardForm(this);
+                dashboardForm.Show(dockPanel, DockState.Document);
+            }
+        }
+
+        public void AnalyzePeptides()
+        {
+            new AnalyzePeptidesForm(Workspace).Show(this);
         }
     }
 }

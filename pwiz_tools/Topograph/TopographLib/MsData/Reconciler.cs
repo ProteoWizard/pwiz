@@ -449,6 +449,7 @@ namespace pwiz.Topograph.MsData
         {
             _eventWaitHandle.Set();
         }
+        public long LastChangeId { get { return _lastChangeId; } }
     }
 
     public class WorkspaceData
@@ -472,5 +473,6 @@ namespace pwiz.Topograph.MsData
         {
             return _data[type][id];
         }
+
     }
 }

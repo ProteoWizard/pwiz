@@ -966,7 +966,7 @@ namespace pwiz.Topograph.Model
         {
             return GetDataFilePath(msDataFileName, GetDataDirectory());
         }
-        private string GetDataFilePath(String msDataFileName, String dataDirectory)
+        public static string GetDataFilePath(String msDataFileName, String dataDirectory)
         {
             if (string.IsNullOrEmpty(dataDirectory))
             {
@@ -1013,6 +1013,11 @@ namespace pwiz.Topograph.Model
         {
             _rejectedMsDataFileIds.Clear();
         }
+
+        public bool IsShared
+        {
+            get { return DatabasePath.EndsWith("tpglnk"); }
+        }
     }
 
     public delegate void EntitiesChangeListener(EntitiesChangedEventArgs entitiesChangedEventArgs);
@@ -1022,5 +1027,6 @@ namespace pwiz.Topograph.Model
     public delegate void WorkspaceLoadedListener(Workspace workspace);
 
     public delegate void ActionInvoker(Action action);
+
 
 }
