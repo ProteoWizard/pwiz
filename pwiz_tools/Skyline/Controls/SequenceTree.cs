@@ -80,7 +80,11 @@ namespace pwiz.Skyline.Controls
             fragment,
             peptide_lib,
             tran_group_lib,
-            fragment_lib
+            fragment_lib,
+            peptide_decoy,
+            tran_group_decoy,
+            fragment_decoy,
+            protein_decoy
         }
 
         public enum StateImageId
@@ -115,6 +119,11 @@ namespace pwiz.Skyline.Controls
             ImageList.Images.Add(Resources.PeptideLib);
             ImageList.Images.Add(Resources.TransitionGroupLib);
             ImageList.Images.Add(Resources.FragmentLib);
+            ImageList.Images.Add(Resources.PeptideDecoy);
+            ImageList.Images.Add(Resources.TransitionGroupDecoy);
+            ImageList.Images.Add(Resources.FragmentDecoy);
+            ImageList.Images.Add(Resources.ProteinDecoy);
+
 
             StateImageList = new ImageList();
             StateImageList.Images.Add(Resources.Peak);
@@ -922,7 +931,7 @@ namespace pwiz.Skyline.Controls
             if (SelectedNode is EmptyNode)
                 return true;
             PeptideGroupTreeNode nodeTree = node as PeptideGroupTreeNode;
-            return (nodeTree != null && nodeTree.DocNode.IsPeptideList);
+            return (nodeTree != null && nodeTree.DocNode.IsPeptideList && !nodeTree.DocNode.IsDecoy);
         }
 
         public void BeginEdit(bool commitOnLoseFocus)

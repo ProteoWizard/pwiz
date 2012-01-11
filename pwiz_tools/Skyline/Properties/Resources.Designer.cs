@@ -214,9 +214,23 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        public static System.Drawing.Bitmap FragmentDecoy {
+            get {
+                object obj = ResourceManager.GetObject("FragmentDecoy", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         public static System.Drawing.Bitmap FragmentLib {
             get {
                 object obj = ResourceManager.GetObject("FragmentLib", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap GenerateDecoys {
+            get {
+                object obj = ResourceManager.GetObject("GenerateDecoys", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -354,6 +368,13 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        public static System.Drawing.Bitmap PeptideDecoy {
+            get {
+                object obj = ResourceManager.GetObject("PeptideDecoy", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         public static System.Drawing.Bitmap PeptideLib {
             get {
                 object obj = ResourceManager.GetObject("PeptideLib", resourceCulture);
@@ -392,6 +413,13 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap Protein {
             get {
                 object obj = ResourceManager.GetObject("Protein", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap ProteinDecoy {
+            get {
+                object obj = ResourceManager.GetObject("ProteinDecoy", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -479,6 +507,13 @@ namespace pwiz.Skyline.Properties {
         public static System.Drawing.Bitmap TransitionGroup {
             get {
                 object obj = ResourceManager.GetObject("TransitionGroup", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        public static System.Drawing.Bitmap TransitionGroupDecoy {
+            get {
+                object obj = ResourceManager.GetObject("TransitionGroupDecoy", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

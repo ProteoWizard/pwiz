@@ -33,19 +33,24 @@ namespace pwiz.Skyline.Model
         public const int MAX_PRECURSOR_CHARGE = 20;
         public const int MAX_PRECURSOR_CHARGE_PICK = 6;
 
+        public const int MIN_PRECURSOR_DECOY_MASS_SHIFT = -10;
+        public const int MAX_PRECURSOR_DECOY_MASS_SHIFT = -3;
+
+
         private readonly Peptide _peptide;
 
         public TransitionGroup(Peptide peptide, int precursorCharge, IsotopeLabelType labelType)
-            : this(peptide, precursorCharge, labelType, false)
+            : this(peptide, precursorCharge, labelType, false, null)
         {            
         }
 
-        public TransitionGroup(Peptide peptide, int precursorCharge, IsotopeLabelType labelType, bool unlimitedCharge)
+        public TransitionGroup(Peptide peptide, int precursorCharge, IsotopeLabelType labelType, bool unlimitedCharge, int? decoyMassShift)
         {
             _peptide = peptide;
 
             PrecursorCharge = precursorCharge;
             LabelType = labelType;
+            DecoyMassShift = decoyMassShift;
 
             Validate(unlimitedCharge);
         }
@@ -54,7 +59,8 @@ namespace pwiz.Skyline.Model
 
         public int PrecursorCharge { get; private set; }
         public IsotopeLabelType LabelType { get; private set; }
-
+        public int? DecoyMassShift { get; private set; }
+       
         public string LabelTypeText
         {
             get { return (!LabelType.IsLight ? " ("+ LabelType + ")" : ""); }
@@ -554,6 +560,15 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException(string.Format("Precursor charge {0} must be between {1} and {2}.",
                     PrecursorCharge, MIN_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
             }
+            if (DecoyMassShift.HasValue)
+            {
+                if ((DecoyMassShift != 0) && (DecoyMassShift < MIN_PRECURSOR_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRECURSOR_DECOY_MASS_SHIFT))
+                {
+                    throw new InvalidDataException(
+                        string.Format("Precursor decoy mass shift {0} must be between {1} and {2}.",
+                                      DecoyMassShift, MIN_PRECURSOR_DECOY_MASS_SHIFT, MAX_PRECURSOR_DECOY_MASS_SHIFT));
+                }
+            }
         }
 
         #region object overrides
@@ -564,7 +579,8 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(this, obj)) return true;
             return Equals(obj._peptide, _peptide) &&
                 obj.PrecursorCharge == PrecursorCharge &&
-                obj.LabelType.Equals(LabelType);
+                obj.LabelType.Equals(LabelType) &&
+                obj.DecoyMassShift.Equals(DecoyMassShift);
         }
 
         public override bool Equals(object obj)
@@ -582,6 +598,7 @@ namespace pwiz.Skyline.Model
                 int result = _peptide.GetHashCode();
                 result = (result*397) ^ PrecursorCharge;
                 result = (result*397) ^ LabelType.GetHashCode();
+                result = (result*397) ^ (DecoyMassShift.HasValue ? DecoyMassShift.Value : 0);
                 return result;
             }
         }
@@ -589,8 +606,8 @@ namespace pwiz.Skyline.Model
         public override string ToString()
         {
             return LabelType.IsLight
-                ? string.Format("Charge {0}", PrecursorCharge)
-                : string.Format("Charge {0} ({1})", PrecursorCharge, LabelType);
+                ? string.Format("Charge {0} {1}", PrecursorCharge, Transition.GetDecoyText(DecoyMassShift))
+                : string.Format("Charge {0} ({1}) {2}", PrecursorCharge, LabelType, Transition.GetDecoyText(DecoyMassShift));
         }
 
         #endregion

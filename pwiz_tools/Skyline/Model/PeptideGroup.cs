@@ -36,6 +36,18 @@ namespace pwiz.Skyline.Model
         public virtual string Description { get { return null; } }
         public virtual string Sequence { get { return null; } }
 
+        public bool IsDecoy { get; private set; }
+
+        public PeptideGroup()
+        {
+            IsDecoy = false;
+        }
+
+        public PeptideGroup(bool isDecoy)
+        {
+            IsDecoy = isDecoy;
+        }
+
         public static IList<DocNode> RankPeptides(IList<DocNode> listPeptides, SrmSettings settings, bool useLimit)
         {
             // If no rank ID is set, just return the input list
@@ -145,8 +157,15 @@ namespace pwiz.Skyline.Model
         private readonly string _name;
         private readonly string _description;
         private readonly string _sequence;
+        private readonly bool _isDecoy;
 
         public FastaSequence(string name, string description, IList<AlternativeProtein> alternatives, string sequence)
+            : this(name, description, alternatives, sequence, false)
+        {
+        }
+
+
+        public FastaSequence(string name, string description, IList<AlternativeProtein> alternatives, string sequence, bool isDecoy)
         {
             // Null name means it is editable by the user.
             _name = (string.IsNullOrEmpty(name) ? null : name);
@@ -154,6 +173,7 @@ namespace pwiz.Skyline.Model
             _description = description;
             Alternatives = new ReadOnlyCollection<AlternativeProtein>(alternatives ?? new AlternativeProtein[0]);
             _sequence = sequence;
+            _isDecoy = isDecoy;
 
             Validate();
         }
@@ -161,6 +181,7 @@ namespace pwiz.Skyline.Model
         public override string Name { get { return _name; } }
         public override string Description { get { return _description; } }
         public override string Sequence { get { return _sequence; } }
+        public new bool IsDecoy { get { return _isDecoy; } }
         public IList<AlternativeProtein> Alternatives { get; private set; }
         public IEnumerable<string> AlternativesText
         {
@@ -265,7 +286,8 @@ namespace pwiz.Skyline.Model
             return Equals(obj._name, _name) &&
                 Equals(obj._description, _description) &&
                 Equals(obj._sequence, _sequence) &&
-                ArrayUtil.EqualsDeep(obj.Alternatives, Alternatives);
+                ArrayUtil.EqualsDeep(obj.Alternatives, Alternatives) &&
+                obj.IsDecoy == IsDecoy;
         }
 
         public override bool Equals(object obj)
@@ -284,6 +306,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (_description != null ? _description.GetHashCode() : 0);
                 result = (result*397) ^ _sequence.GetHashCode();
                 result = (result*397) ^ Alternatives.GetHashCodeDeep();
+                result = (result*397) ^ IsDecoy.GetHashCode();
                 return result;
             }
         }

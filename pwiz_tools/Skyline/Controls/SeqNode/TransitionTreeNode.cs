@@ -84,7 +84,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         private static int GetTypeImageIndex(TransitionDocNode nodeTran)
         {
             return (int)(nodeTran.HasLibInfo ?
-                    SequenceTree.ImageId.fragment_lib : SequenceTree.ImageId.fragment);
+                    SequenceTree.ImageId.fragment_lib : (nodeTran.IsDecoy ?
+                        SequenceTree.ImageId.fragment_decoy : SequenceTree.ImageId.fragment));
         }
 
         public int PeakImageIndex
@@ -153,9 +154,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             if (!nodeTran.HasLibInfo && !nodeTran.HasDistInfo)
             {
-                return string.Format("{0} - {1:F04}{2}{3}",
+                return string.Format("{0} - {1}{2}{3}",
                                      labelPrefix,
-                                     nodeTran.Mz,
+                                     GetMzLabel(nodeTran),
                                      Transition.GetChargeIndicator(tran.Charge),
                                      resultsText);
             }
@@ -164,12 +165,19 @@ namespace pwiz.Skyline.Controls.SeqNode
                               ? string.Format("irank {0}", nodeTran.IsotopeDistInfo.Rank)
                               : string.Format("rank {0}", nodeTran.LibInfo.Rank);
 
-            return string.Format("{0} - {1:F04}{2} ({3}){4}",
+            return string.Format("{0} - {1}{2} ({3}){4}",
                                  labelPrefix,
-                                 nodeTran.Mz,
+                                 GetMzLabel(nodeTran),
                                  Transition.GetChargeIndicator(tran.Charge),
                                  rank,
                                  resultsText);
+        }
+
+        private static string GetMzLabel(TransitionDocNode nodeTran)
+        {
+            int? massShift = nodeTran.Transition.DecoyMassShift;
+            return string.Format("{0:F04}{1}", nodeTran.Mz - (massShift ?? 0),
+                Transition.GetDecoyText(massShift));
         }
 
         #region Implementation of ITipProvider
@@ -193,8 +201,12 @@ namespace pwiz.Skyline.Controls.SeqNode
             using (RenderTools rt = new RenderTools())
             {
                 table.AddDetailRow("Ion", nodeTran.Transition.FragmentIonName, rt);
-                table.AddDetailRow("Charge", nodeTran.Transition.Charge.ToString(CultureInfo.InvariantCulture), rt);
+                table.AddDetailRow("Charge", nodeTran.Transition.Charge.ToString(CultureInfo.CurrentCulture), rt);
                 table.AddDetailRow("Product m/z", string.Format("{0:F04}", nodeTran.Mz), rt);
+                int? decoyMassShift = nodeTran.Transition.DecoyMassShift;
+                if (decoyMassShift.HasValue)
+                    table.AddDetailRow("Decoy Mass Shift", decoyMassShift.Value.ToString(CultureInfo.CurrentCulture), rt);
+
                 if (nodeTran.HasLoss)
                 {
                     // If there is only one loss, show its full description
@@ -211,7 +223,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
                 if (nodeTran.HasLibInfo)
                 {
-                    table.AddDetailRow("Library rank", nodeTran.LibInfo.Rank.ToString(CultureInfo.InvariantCulture), rt);
+                    table.AddDetailRow("Library rank", nodeTran.LibInfo.Rank.ToString(CultureInfo.CurrentCulture), rt);
                     float intensity = nodeTran.LibInfo.Intensity;
                     table.AddDetailRow("Library intensity", MathEx.RoundAboveZero(intensity,
                         (intensity < 10 ? 1 : 0), 4).ToString(CultureInfo.CurrentCulture), rt);

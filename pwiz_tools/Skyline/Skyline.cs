@@ -2366,12 +2366,12 @@ namespace pwiz.Skyline
                 SrmTreeNode srmNode = node as SrmTreeNode;
                 if (srmNode != null)
                 {
-                    // Only sequence nodes and peptides in peptides in peptide lists may be dragged.
+                    // Only sequence nodes and peptides in peptide lists may be dragged.
                     bool allow = srmNode is PeptideGroupTreeNode;
                     if (!allow && srmNode.Model.Id is Peptide)
                     {
                         Peptide peptide = (Peptide)srmNode.Model.Id;
-                        allow = peptide.FastaSequence == null;
+                        allow = (peptide.FastaSequence == null && !peptide.IsDecoy);
                     }
                     if (!allow || (listDragNodes.Count > 0 && srmNode.GetType() != listDragNodes[0].GetType()))
                         return;
@@ -2497,13 +2497,24 @@ namespace pwiz.Skyline
             {
                 SrmTreeNode nodeTree = GetSrmTreeNodeAt(e.X, e.Y);
                 // Allow drop of peptide on peptide list node itself
-                if (nodeTree is PeptideGroupTreeNode)
-                    return (nodeTree.Model.Id is FastaSequence ? null : nodeTree);
+                var nodePepGroupTree = nodeTree as PeptideGroupTreeNode;
+                if (nodePepGroupTree != null)
+                {
+                    var nodePeptideGroup = nodePepGroupTree.DocNode;
+                    return nodePeptideGroup.Id is FastaSequence || nodePeptideGroup.IsDecoy
+                        ? null
+                        : nodeTree;
+                }
 
                 // Allow drop on a peptide in a peptide list
-                PeptideTreeNode nodePepTree = nodeTree as PeptideTreeNode;
+                var nodePepTree = nodeTree as PeptideTreeNode;
                 if (nodePepTree != null)
-                    return (nodePepTree.DocNode.Peptide.FastaSequence == null ? nodePepTree : null);
+                {
+                    var nodePep = nodePepTree.DocNode;
+                    return (nodePep.Peptide.FastaSequence != null || nodePep.IsDecoy
+                        ? null
+                        : nodePepTree);
+                }
 
                 // Otherwise allow drop on children of peptides in peptide lists
                 while (nodeTree != null)
@@ -2511,7 +2522,8 @@ namespace pwiz.Skyline
                     nodePepTree = nodeTree as PeptideTreeNode;
                     if (nodePepTree != null)
                     {
-                        if (nodePepTree.DocNode.Peptide.FastaSequence != null)
+                        var nodePep = nodePepTree.DocNode;
+                        if (nodePep.Peptide.FastaSequence != null || nodePep.IsDecoy)
                             return null;
 
                         return nodePepTree.NextNode ?? nodePepTree.Parent.NextNode;
@@ -2959,6 +2971,35 @@ namespace pwiz.Skyline
                 Settings.Default.TextZoom = TreeViewMS.DEFAULT_TEXT_FACTOR; 
             }
             SequenceTree.OnTextZoomChanged();
+        }
+
+        private void generateDecoysMenuItem_Click(object sender, EventArgs e)
+        {
+            if (DocumentUI.PeptideGroups.Any(nodePeptideGroup => nodePeptideGroup.IsDecoy))
+            {
+                // Warn about removing existing decoys
+                var result = MessageBox.Show(this, "This operation will replace the existing decoys.\nAre you sure you want to continue?",
+                                             Program.Name, MessageBoxButtons.OKCancel);
+                if (result == DialogResult.Cancel)
+                    return;
+            }
+
+            ShowGenerateDecoysDlg();                    
+        }
+
+        public void ShowGenerateDecoysDlg()
+        {
+            using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
+            {
+                if (decoysDlg.ShowDialog(this) == DialogResult.OK)
+                {                
+                    var refinementSettings = new RefinementSettings{ NumberOfDecoys = decoysDlg.NumDecoys, DecoysLabelUsed = decoysDlg.DecoysLabelType, DecoysMethod = decoysDlg.DecoysMethod };
+                    ModifyDocument("Generate Decoys", refinementSettings.GenerateDecoys);
+
+                    var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
+                    SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.PeptideGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
+                }
+            }
         }
     }
 }

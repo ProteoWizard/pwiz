@@ -415,7 +415,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                             IsotopeLabelType = tranGroup.LabelType,
                                             NeutralMass = SequenceMassCalc.PersistentNeutral(SequenceMassCalc.GetMH(nodeGroup.PrecursorMz, tranGroup.PrecursorCharge)),
                                             Mz = SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz),
-                                            Note = nodeGroup.Note
+                                            Note = nodeGroup.Note,
+                                            IsDecoy = nodeGroup.IsDecoy
                                         };
             AddAnnotations(docInfo, dbPrecursor, nodeGroup.Annotations);
             double regressionMz = docInfo.Settings.GetRegressionMz(nodePeptide, nodeGroup);

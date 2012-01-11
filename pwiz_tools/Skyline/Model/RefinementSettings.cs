@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -32,6 +33,18 @@ namespace pwiz.Skyline.Model
         peptides = 0x1,
         precursors = 0x2,
         transitions = 0x4
+    }
+
+    public static class DecoyGeneration
+    {
+        public const string ADD_RANDOM = "Random Mass Shift";
+        public const string RANDOM_SEQUENCE = "Random Sequence";
+        public const string REVERSE_SEQUENCE = "Reverse Sequence";
+
+        public static IEnumerable<string> Methods
+        {
+            get { return new[] {ADD_RANDOM, RANDOM_SEQUENCE, REVERSE_SEQUENCE}; }
+        }
     }
 
     public sealed class RefinementSettings
@@ -70,6 +83,9 @@ namespace pwiz.Skyline.Model
         public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
         public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
         public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
+        public int NumberOfDecoys { get; set; }
+        public IsotopeLabelType DecoysLabelUsed { get; set; }
+        public string DecoysMethod { get; set; }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -447,6 +463,257 @@ namespace pwiz.Skyline.Model
             }
 
             return nodeGroupRefined;
+        }
+
+        public SrmDocument RemoveDecoys(SrmDocument document)
+        {
+            // Remove the existing decoys
+            return (SrmDocument) document.RemoveAll(document.PeptideGroups.Where(nodePeptideGroup => nodePeptideGroup.IsDecoy)
+                                                        .Select(nodePeptideGroup => nodePeptideGroup.Id.GlobalIndex).ToArray()); 
+        }
+
+
+        public SrmDocument GenerateDecoys(SrmDocument document)
+        {
+            return GenerateDecoys(document, NumberOfDecoys, DecoysLabelUsed, DecoysMethod);
+        }
+
+        public SrmDocument GenerateDecoys(SrmDocument document, int numDecoys, IsotopeLabelType useLabel, string decoysMethod)
+        {
+            // Remove the existing decoys
+            document = RemoveDecoys(document);
+
+            if (decoysMethod == DecoyGeneration.RANDOM_SEQUENCE)
+                return GenerateDecoysRandomSequence(document, numDecoys, DecoysLabelUsed);
+            
+            if (decoysMethod == DecoyGeneration.REVERSE_SEQUENCE)
+                return GenerateDecoysReverseSequence(document, numDecoys, DecoysLabelUsed);
+
+            return GenerateDecoysAddRandom(document, numDecoys, DecoysLabelUsed);
+        }
+
+        public SrmDocument GenerateDecoysAddRandom(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
+        {
+            // Loop through the existing tree and "copy" transitions as decoys
+            var decoyNodePepList = new List<PeptideDocNode>();
+
+            foreach (var nodePep in document.Peptides)
+            {
+                var peptide = nodePep.Peptide;
+                var decoyPeptide = new Peptide(null, peptide.Sequence, null, null, peptide.MissedCleavages, true);
+                var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, useLabel, document, true);
+                decoyNodePepList.Add(new PeptideDocNode(decoyPeptide, nodePep.ExplicitMods,
+                                                        decoyNodeTranGroupList.ToArray(), false));
+            }
+            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys",
+                                                            null, decoyNodePepList.ToArray(), false);
+            decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+
+            if (decoyNodePepGroup.TransitionGroupCount > numDecoys)
+            {
+                decoyNodePepGroup = DeleteRandomDecoyGroups(decoyNodePepGroup,
+                    decoyNodePepGroup.TransitionGroupCount - numDecoys, document.Settings);
+            }
+
+            return (SrmDocument)document.Add(decoyNodePepGroup);
+        }
+
+        private static PeptideGroupDocNode DeleteRandomDecoyGroups(PeptideGroupDocNode nodePepGroup, int numGroups, SrmSettings settings)
+        {
+            PeptideGroupDocNode newNodePepGroup = nodePepGroup;
+
+            for (int i = 0; i < numGroups; i++)
+            {
+                int j = 0;
+                bool groupDeleted = false;
+                int index = RANDOM.Next(0, nodePepGroup.TransitionGroupCount);
+                foreach (var nodePep in nodePepGroup.GetPeptideNodes(settings, false))
+                {
+                    PeptideDocNode newNodePep = nodePep;
+                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                    {
+                        if (j == index)
+                        {
+                            newNodePep = (PeptideDocNode) nodePep.RemoveChild(nodeGroup);
+                            groupDeleted = true;
+                            break;
+                        }
+                        j++;
+                    }
+                    if (groupDeleted)
+                    {
+                        newNodePepGroup = (PeptideGroupDocNode) nodePepGroup.RemoveChild(nodePep);
+                        if (newNodePep.TransitionGroupCount > 0)
+                            newNodePepGroup = (PeptideGroupDocNode) newNodePepGroup.Add(newNodePep);
+                        break;
+                    }
+                }
+                nodePepGroup = newNodePepGroup;
+            }
+            return nodePepGroup;
+        }
+
+        private static List<TransitionGroupDocNode> GetDecoyGroups(PeptideDocNode nodePep, Peptide decoyPeptide, IsotopeLabelType useLabel, SrmDocument document, bool shiftMass)
+        {
+            var decoyNodeTranGroupList = new List<TransitionGroupDocNode>();
+                
+            foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+            {
+                var transGroup = nodeGroup.TransitionGroup;
+                if (useLabel == null || transGroup.LabelType == useLabel)
+                {
+
+                    int precursorMassShift = (shiftMass ? GetPrecursorMassShift() : 0);
+                    var decoyGroup = new TransitionGroup(decoyPeptide, transGroup.PrecursorCharge,
+                                                         transGroup.LabelType, false, precursorMassShift);
+
+                    var decoyNodeTranList = GetDecoyTransitions(nodeGroup, decoyGroup, shiftMass);
+
+                    decoyNodeTranGroupList.Add(new TransitionGroupDocNode(decoyGroup,
+                                                                          Annotations.EMPTY,
+                                                                          document.Settings,
+                                                                          nodePep.ExplicitMods,
+                                                                          nodeGroup.LibInfo,
+                                                                          nodeGroup.Results,
+                                                                          decoyNodeTranList.ToArray(),
+                                                                          false));
+                }
+            }
+
+            return decoyNodeTranGroupList;
+        }
+
+        private static List<TransitionDocNode> GetDecoyTransitions(TransitionGroupDocNode nodeGroup, TransitionGroup decoyGroup, bool shiftMass)
+        {
+            var decoyNodeTranList = new List<TransitionDocNode>();
+            foreach (var nodeTran in nodeGroup.Transitions)
+            {
+                var transition = nodeTran.Transition;
+                int productMassShift = (shiftMass ? GetProductMassShift() : 0);
+                var decoyTransition = new Transition(decoyGroup, transition.IonType, transition.CleavageOffset,
+                                                     transition.MassIndex, transition.Charge, productMassShift);
+                decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, nodeTran.Losses, 0,
+                                                            nodeTran.IsotopeDistInfo, nodeTran.LibInfo));
+            }
+            return decoyNodeTranList;
+        }
+
+        static readonly Random RANDOM = new Random();
+
+        private static int GetPrecursorMassShift()
+        {
+            // Do not allow zero for the mass shift of the precursor
+            int massShift = RANDOM.Next(TransitionGroup.MIN_PRECURSOR_DECOY_MASS_SHIFT,
+                                          TransitionGroup.MAX_PRECURSOR_DECOY_MASS_SHIFT);
+            return massShift < 0 ? massShift : massShift + 1;
+        }
+
+        private static int GetProductMassShift()
+        {
+            int massShift = RANDOM.Next(Transition.MIN_PRODUCT_DECOY_MASS_SHIFT,
+                                        Transition.MAX_PRODUCT_DECOY_MASS_SHIFT + 1);
+            // TODO: Validation code
+
+            return massShift;
+        }
+
+        public SrmDocument GenerateDecoysRandomSequence(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
+        {
+            // Loop throug the existing tree and "copy" transitions as decoys
+            var decoyNodePepList = new List<PeptideDocNode>();
+
+            for (int i=0; i<document.PeptideCount; i++)
+            {
+                var decoyPeptide = new Peptide(null, GetRandomPeptideSequence(null), null, null, 0, true);
+                var decoyNodeTranGroupList = GetRandomDecoyGroups(decoyPeptide, useLabel, document);   
+                decoyNodePepList.Add(new PeptideDocNode(decoyPeptide, null, decoyNodeTranGroupList.ToArray(), false));
+            }
+            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys",
+                                                            null, decoyNodePepList.ToArray(), false);
+            decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+
+            if (decoyNodePepGroup.TransitionGroupCount > numDecoys)
+                decoyNodePepGroup = DeleteRandomDecoyGroups(decoyNodePepGroup, decoyNodePepGroup.TransitionGroupCount - numDecoys, document.Settings);
+
+            return (SrmDocument)document.Add(decoyNodePepGroup);
+        }
+
+        private static List<TransitionGroupDocNode> GetRandomDecoyGroups(Peptide decoyPeptide, IsotopeLabelType useLabel, SrmDocument document)
+        {
+            var decoyNodeTranGroupList = new List<TransitionGroupDocNode>();
+
+            for (int i = 0; i <= 3; i++)
+            {
+                var decoyGroup = new TransitionGroup(decoyPeptide, RANDOM.Next(1,4),
+                                                         useLabel, false, 0);
+
+                var decoyNodeTranList = GetRandomDecoyTransitions(decoyGroup, decoyPeptide.Sequence);
+
+                decoyNodeTranGroupList.Add(new TransitionGroupDocNode(decoyGroup, Annotations.EMPTY, document.Settings,
+                                                                          null, null, null, decoyNodeTranList.ToArray(), false));
+            }
+            return decoyNodeTranGroupList;
+        }
+
+        private static List<TransitionDocNode> GetRandomDecoyTransitions(TransitionGroup decoyGroup, string sequence)
+        {
+            var decoyNodeTranList = new List<TransitionDocNode>();
+            for (int i = 0; i < 3; i++)
+            {
+                 var decoyTransition = new Transition(decoyGroup, (RANDOM.Next(0, 2) > 0 ? IonType.b : IonType.y), RANDOM.Next(2, sequence.Length-2),
+                                                     0, RANDOM.Next(1, 3), 0);
+                decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, null, 0,null, null));
+            }
+            return decoyNodeTranList;
+        }
+
+        public SrmDocument GenerateDecoysReverseSequence(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
+        {
+            // Loop throug the existing tree and "copy" transitions as decoys
+            var decoyNodePepList = new List<PeptideDocNode>();
+
+            foreach (var nodePep in document.Peptides)
+            {
+                var peptide = nodePep.Peptide;
+                var decoyPeptide = new Peptide(null, GetReversedPeptideSequence(peptide.Sequence), null, null, 0, true);
+                var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, useLabel, document, false);
+                decoyNodePepList.Add(new PeptideDocNode(decoyPeptide, nodePep.ExplicitMods, nodePep.Rank, nodePep.Annotations,
+                                                         nodePep.Results, decoyNodeTranGroupList.ToArray(), false));
+            }
+            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys",
+                                                            null, decoyNodePepList.ToArray(), false);
+            decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
+
+            if (decoyNodePepGroup.TransitionGroupCount > numDecoys)
+                decoyNodePepGroup = DeleteRandomDecoyGroups(decoyNodePepGroup, decoyNodePepGroup.TransitionGroupCount - numDecoys, document.Settings);
+
+            return (SrmDocument)document.Add(decoyNodePepGroup);
+        }
+
+        private static string GetRandomPeptideSequence(int? seqLen)
+        {
+            const string aminoacids = "ACDEFGHILMNOPQSTUVWY";
+            const string endaminoacids = "RK";
+            var newRandomSeq = "";
+
+            if ((seqLen == 0) || (seqLen == null)) seqLen = RANDOM.Next(6, 21);
+
+            for (int i = 0; i < seqLen; i++)
+            {
+                newRandomSeq += aminoacids.ToCharArray()[RANDOM.Next(0, aminoacids.Length)];
+            }
+            newRandomSeq += endaminoacids.ToCharArray()[RANDOM.Next(0, endaminoacids.Length)];
+
+            return newRandomSeq;
+        }
+
+        private static string GetReversedPeptideSequence(string sequence)
+        {
+            char finalA = sequence.Last();
+            sequence = sequence.Substring(0, sequence.Length - 1);
+            char[] reversedArray = sequence.ToCharArray();
+            Array.Reverse(reversedArray);
+            return new string(reversedArray) + finalA;
         }
 
         private sealed class AreaSortInfo

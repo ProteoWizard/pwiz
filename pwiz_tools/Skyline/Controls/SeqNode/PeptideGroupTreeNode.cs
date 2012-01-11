@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public int TypeImageIndex
         {
-            get { return (int)SequenceTree.ImageId.protein; }
+            get { return (int) (DocNode.IsDecoy ? SequenceTree.ImageId.protein_decoy : SequenceTree.ImageId.protein); }
         }
 
         protected override void UpdateChildren(bool materialize)
@@ -107,7 +107,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override bool CanShow
         {
-            get { return DocNode.Id is FastaSequence || ChildDocNodes.Count > 0; }
+            get { return (!DocNode.IsDecoy && (DocNode.Id is FastaSequence || ChildDocNodes.Count > 0)); }
         }
 
         public override bool Filtered

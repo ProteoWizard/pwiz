@@ -106,7 +106,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         private static int GetTypeImageIndex(TransitionGroupDocNode nodeGroup)
         {
             return (int)(nodeGroup.HasLibInfo ?
-                SequenceTree.ImageId.tran_group_lib : SequenceTree.ImageId.tran_group);
+                SequenceTree.ImageId.tran_group_lib : (nodeGroup.IsDecoy ? 
+                    SequenceTree.ImageId.tran_group_decoy : SequenceTree.ImageId.tran_group));
         }
 
         public int PeakImageIndex
@@ -196,12 +197,27 @@ namespace pwiz.Skyline.Controls.SeqNode
         public static string GetLabel(TransitionGroup tranGroup, double precursorMz,
             string resultsText)
         {
-            return string.Format("{0:F04}{1}{2}{3}", precursorMz,
+            return string.Format("{0}{1}{2}{3}", GetMzLabel(tranGroup ,precursorMz),
                                  Transition.GetChargeIndicator(tranGroup.PrecursorCharge),
                                  tranGroup.LabelTypeText, resultsText);
         }
 
+        private static string GetMzLabel(TransitionGroup tranGroup, double precursorMz)
+        {
+            int? massShift = tranGroup.DecoyMassShift;
+            return string.Format("{0:F04}{1}", precursorMz - (massShift ?? 0),
+                Transition.GetDecoyText(massShift));
+        }
+
         #region IChildPicker Members
+
+        public override bool CanShow
+        {
+            get
+            {
+                return (!DocNode.IsDecoy && base.CanShow);
+            }
+        }
 
         public override string GetPickLabel(DocNode child)
         {
@@ -413,9 +429,14 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
                 var precursorMz = nodeGroup.PrecursorMz;
-                tableDetails.AddDetailRow("Precursor charge", precursorCharge.ToString(CultureInfo.InvariantCulture), rt);
+                tableDetails.AddDetailRow("Precursor charge", precursorCharge.ToString(CultureInfo.CurrentCulture), rt);
                 tableDetails.AddDetailRow("Precursor m/z", string.Format("{0:F04}", precursorMz), rt);
                 tableDetails.AddDetailRow("Precursor m+h", string.Format("{0:F04}", SequenceMassCalc.GetMH(precursorMz, precursorCharge)), rt);
+                int? decoyMassShift = nodeGroup.TransitionGroup.DecoyMassShift;
+                if (decoyMassShift.HasValue)
+                {
+                    tableDetails.AddDetailRow("Decoy Mass Shift", decoyMassShift.Value.ToString(CultureInfo.CurrentCulture), rt);
+                }
                 if (nodeGroup.HasLibInfo)
                 {
                     foreach (KeyValuePair<PeptideRankId, string> pair in nodeGroup.LibInfo.RankValues)

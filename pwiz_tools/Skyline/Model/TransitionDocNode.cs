@@ -52,6 +52,8 @@ namespace pwiz.Skyline.Model
             if (losses != null)
                 massH -= losses.Mass;
             Mz = SequenceMassCalc.GetMZ(massH, id.Charge);
+            if (id.DecoyMassShift.HasValue)
+                Mz += id.DecoyMassShift.Value;
             IsotopeDistInfo = isotopeDistInfo;
             LibInfo = libInfo;
             Results = results;
@@ -64,6 +66,8 @@ namespace pwiz.Skyline.Model
         public TransitionLossKey Key { get { return new TransitionLossKey(Transition, Losses); } }
 
         public double Mz { get; private set; }
+
+        public bool IsDecoy { get { return Transition.DecoyMassShift.HasValue; } }
 
         public TransitionLosses Losses { get; private set; }
 

@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CommandLineTest.cs" />
+    <Compile Include="DecoysTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
@@ -76,7 +77,9 @@
     <Compile Include="ModificationMatcherTest.cs" />
     <Compile Include="PasteTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RefineTest.cs" />
+    <Compile Include="RefineTest.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Results\ChromCacheMinimizerTest.cs" />
     <Compile Include="Results\AsymDiaTest.cs" />
     <Compile Include="Results\FullScanTest.cs" />
@@ -116,6 +119,7 @@
     <None Include="Refine.zip" />
     <None Include="Results\AsymDIA.zip" />
     <None Include="Results\FullScan.zip" />
+    <None Include="SimpleDecoys.zip" />
     <EmbeddedResource Include="Results\HeavyVariable.sky" />
     <EmbeddedResource Include="Results\MultiLabel.sky" />
     <EmbeddedResource Include="Study7.sky" />

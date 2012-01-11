@@ -98,6 +98,7 @@ namespace pwiz.Skyline.Model
         }
 
         public int? Rank { get; private set; }
+        public bool IsDecoy { get { return Peptide.IsDecoy; } }
 
         public Results<PeptideChromInfo> Results { get; private set; }
 

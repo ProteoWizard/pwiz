@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+//TODO transitions and transition group
+// Move stuff to refinement
+
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -1019,6 +1022,8 @@ namespace pwiz.Skyline.Model
             public const string rank = "rank";
             public const string intensity = "intensity";
             public const string auto_manage_children = "auto_manage_children";
+            public const string decoy = "decoy";
+            public const string decoy_mass_shift = "decoy_mass_shift";
             // Results
             public const string replicate = "replicate";
             public const string file = "file";
@@ -1275,8 +1280,9 @@ namespace pwiz.Skyline.Model
             string name = reader.GetAttribute(ATTR.label_name) ?? "";
             string description = reader.GetAttribute(ATTR.label_description) ?? "";
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
 
-            PeptideGroup group = new PeptideGroup();
+            PeptideGroup group = new PeptideGroup(isDecoy);
 
             Annotations annotations = Annotations.EMPTY;
             PeptideDocNode[] children = null;
@@ -1344,8 +1350,9 @@ namespace pwiz.Skyline.Model
             // CONSIDER: Trusted value
             int? rank = reader.GetNullableIntAttribute(ATTR.rank);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
+            bool isDecoy = reader.GetBoolAttribute(ATTR.decoy);
 
-            Peptide peptide = new Peptide(group as FastaSequence, sequence, start, end, missedCleavages);
+            Peptide peptide = new Peptide(group as FastaSequence, sequence, start, end, missedCleavages, isDecoy);
 
             var annotations = Annotations.EMPTY;
             ExplicitMods mods = null;
@@ -1520,7 +1527,8 @@ namespace pwiz.Skyline.Model
             int precursorCharge = reader.GetIntAttribute(ATTR.charge);
 
             var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
-            TransitionGroup group = new TransitionGroup(peptide, precursorCharge, typedMods.LabelType);
+            int? decoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
+            TransitionGroup group = new TransitionGroup(peptide, precursorCharge, typedMods.LabelType, false, decoyMassShift);
             var children = new TransitionDocNode[0];    // Empty until proven otherwise
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
 
@@ -1742,16 +1750,19 @@ namespace pwiz.Skyline.Model
 
             Transition transition;
             if (Transition.IsPrecursor(info.IonType))
-                transition = new Transition(group, info.MassIndex);
+                transition = new Transition(group, IonType.precursor, group.Peptide.Length - 1, info.MassIndex, group.PrecursorCharge, info.DecoyMassShift);
             else
             {
                 int offset = Transition.OrdinalToOffset(info.IonType,
                     info.Ordinal, group.Peptide.Length);
-                transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge);
+                transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge,info.DecoyMassShift);
             }
 
             double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, isotopeDist);
+
+            if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
+                throw new InvalidDataException("All transitions of decoy precursors must have a decoy mass shift.");
 
             return new TransitionDocNode(transition, info.Annotations, info.Losses,
                 massH, isotopeDistInfo, info.LibInfo, info.Results);
@@ -1795,6 +1806,7 @@ namespace pwiz.Skyline.Model
             public int MassIndex { get; private set; }
             public int PrecursorCharge { get; private set; }
             public int Charge { get; private set; }
+            public int? DecoyMassShift { get; private set; }
             public TransitionLosses Losses { get; private set; }
             public Annotations Annotations { get; private set; }
             public TransitionLibInfo LibInfo { get; private set; }
@@ -1808,6 +1820,7 @@ namespace pwiz.Skyline.Model
                 MassIndex = reader.GetIntAttribute(ATTR.mass_index);
                 PrecursorCharge = reader.GetIntAttribute(ATTR.precursor_charge);
                 Charge = reader.GetIntAttribute(ATTR.product_charge);
+                DecoyMassShift = reader.GetNullableIntAttribute(ATTR.decoy_mass_shift);
 
                 if (reader.IsEmptyElement)
                     reader.Read();
@@ -2033,6 +2046,8 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttributeIfString(ATTR.label_description, node.Description);                
             }
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
+            writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
+
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
 
@@ -2114,6 +2129,7 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttributeString(ATTR.sequence, sequence);                
             }
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
+            writer.WriteAttribute(ATTR.decoy, node.IsDecoy);
 
             double massH = Settings.GetPrecursorCalc(IsotopeLabelType.light, node.ExplicitMods).GetPrecursorMass(sequence);
             writer.WriteAttribute(ATTR.calc_neutral_pep_mass,
@@ -2217,6 +2233,8 @@ namespace pwiz.Skyline.Model
             if (!group.LabelType.IsLight)
                 writer.WriteAttribute(ATTR.isotope_label, group.LabelType);
             writer.WriteAttribute(ATTR.auto_manage_children, node.AutoManageChildren, true);
+            writer.WriteAttributeNullable(ATTR.decoy_mass_shift, group.DecoyMassShift);
+
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
             if (node.HasLibInfo)
@@ -2268,6 +2286,8 @@ namespace pwiz.Skyline.Model
         {
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
+            writer.WriteAttributeNullable(ATTR.decoy_mass_shift, transition.DecoyMassShift);
+
             if (transition.MassIndex != 0)
                 writer.WriteAttribute(ATTR.mass_index, transition.MassIndex);
             if (!transition.IsPrecursor())

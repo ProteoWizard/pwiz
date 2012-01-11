@@ -116,6 +116,8 @@ namespace pwiz.Skyline.Model
 
         public double PrecursorMz { get; private set; }
 
+        public bool IsDecoy { get { return TransitionGroup.DecoyMassShift.HasValue; } }
+
         public IsotopeDistInfo IsotopeDist { get; private set; }
 
         public bool HasIsotopeDist { get { return IsotopeDist != null; } }
@@ -521,6 +523,8 @@ namespace pwiz.Skyline.Model
             var calc = settings.GetPrecursorCalc(labelType, mods);
             double massH = calc.GetPrecursorMass(seq);
             double mz = SequenceMassCalc.GetMZ(massH, charge);
+            if (TransitionGroup.DecoyMassShift.HasValue)
+                mz += TransitionGroup.DecoyMassShift.Value;
 
             isotopeDist = null;
             var fullScan = settings.TransitionSettings.FullScan;

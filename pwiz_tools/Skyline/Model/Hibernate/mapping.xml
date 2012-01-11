@@ -86,6 +86,7 @@
     <property name="LibraryScore1" />
     <property name="LibraryScore2" />
     <property name="LibraryScore3" />
+    <property name="IsDecoy" />
   </class>
   <class name="DbPrecursorResult">
     <id name="Id">

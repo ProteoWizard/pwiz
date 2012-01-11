@@ -59,6 +59,7 @@ namespace pwiz.Skyline.Model
         }
 
         public bool IsPeptideList { get { return !(PeptideGroup is FastaSequence); } }
+        public bool IsDecoy { get { return PeptideGroup.IsDecoy; } }
 
         public string Name { get { return PeptideGroup.Name ?? _name; } }
         public string Description { get { return PeptideGroup.Description ?? _description; } }

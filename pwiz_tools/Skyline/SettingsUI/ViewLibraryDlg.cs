@@ -571,7 +571,7 @@ namespace pwiz.Skyline.SettingsUI
                             var peptide = new Peptide(null, _peptides[index].GetAASequence(_lookupPool),
                                                       null, null, 0);
                             transitionGroup = new TransitionGroup(peptide, _peptides[index].Charge,
-                                                                  IsotopeLabelType.light, true);
+                                                                  IsotopeLabelType.light, true, null);
 
                             // Because the document modifications do not explain this peptide, a set of
                             // explicit modifications must be constructed, even if they are empty.

@@ -28,6 +28,11 @@ namespace pwiz.Skyline.Model
         private readonly FastaSequence _fastaSequence;
 
         public Peptide(FastaSequence fastaSequence, string sequence, int? begin, int? end, int missedCleavages)
+            :this(fastaSequence, sequence, begin, end, missedCleavages, false)
+        {
+        }
+
+        public Peptide(FastaSequence fastaSequence, string sequence, int? begin, int? end, int missedCleavages, bool isDecoy)
         {
             _fastaSequence = fastaSequence;
 
@@ -35,6 +40,7 @@ namespace pwiz.Skyline.Model
             Begin = begin;
             End = end;
             MissedCleavages = missedCleavages;
+            IsDecoy = isDecoy;
 
             Validate();
         }
@@ -45,6 +51,7 @@ namespace pwiz.Skyline.Model
         public int? Begin { get; private set; }
         public int? End { get; private set; } // non-inclusive
         public int MissedCleavages { get; private set; }
+        public bool IsDecoy { get; private set; }
 
         public int Length { get { return Sequence.Length; } }
 
@@ -281,7 +288,8 @@ namespace pwiz.Skyline.Model
                 Equals(obj.Sequence, Sequence) &&
                 obj.Begin.Equals(Begin) &&
                 obj.End.Equals(End) &&
-                obj.MissedCleavages == MissedCleavages;
+                obj.MissedCleavages == MissedCleavages &&
+                obj.IsDecoy == IsDecoy;
         }
 
         public override bool Equals(object obj)
@@ -301,6 +309,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ (Begin.HasValue ? Begin.Value : 0);
                 result = (result*397) ^ (End.HasValue ? End.Value : 0);
                 result = (result*397) ^ MissedCleavages;
+                result = (result*397) ^ IsDecoy.GetHashCode();
                 return result;
             }
         }

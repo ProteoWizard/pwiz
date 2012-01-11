@@ -33,6 +33,9 @@ namespace pwiz.Skyline.Model
         public const int MIN_PRODUCT_CHARGE = 1;
         public const int MAX_PRODUCT_CHARGE = 5;
 
+        public const int MIN_PRODUCT_DECOY_MASS_SHIFT = -5;
+        public const int MAX_PRODUCT_DECOY_MASS_SHIFT = 5;
+
         /// <summary>
         /// Prioritized list of all possible product ion charges
         /// </summary>
@@ -117,6 +120,15 @@ namespace pwiz.Skyline.Model
             return string.Format(" [M{0}{1}]", massIndex > 0 ? "+" : "", massIndex);
         }
 
+        public static string GetDecoyText(int? decoyMassShift)
+        {
+            if (!decoyMassShift.HasValue || decoyMassShift.Value == 0)
+                return "";
+            return string.Format("({0}{1})",
+                                 decoyMassShift.Value >= 0 ? "+" : "",
+                                 decoyMassShift.Value);
+        }
+
         private readonly TransitionGroup _group;
 
         /// <summary>
@@ -130,6 +142,11 @@ namespace pwiz.Skyline.Model
         }
 
         public Transition(TransitionGroup group, IonType type, int offset, int massIndex, int charge)
+            :this(group, type, offset, massIndex, charge, null)
+        {
+        }
+
+        public Transition(TransitionGroup group, IonType type, int offset, int massIndex, int charge, int? decoyMassShift)
         {
             _group = group;
 
@@ -137,6 +154,7 @@ namespace pwiz.Skyline.Model
             CleavageOffset = offset;
             MassIndex = massIndex;
             Charge = charge;
+            DecoyMassShift = decoyMassShift;
 
             // Derived values
             Peptide peptide = group.Peptide;
@@ -156,6 +174,7 @@ namespace pwiz.Skyline.Model
         public IonType IonType { get; private set; }
         public int CleavageOffset { get; private set; }
         public int MassIndex { get; private set; }
+        public int? DecoyMassShift { get; private set; }
 
         // Derived values
         public int Ordinal { get; private set; }
@@ -211,7 +230,6 @@ namespace pwiz.Skyline.Model
                     throw new InvalidDataException(string.Format("Precursor charge {0} must be between {1} and {2}.",
                         Charge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));                    
                 }
-
             }
             else if (MIN_PRODUCT_CHARGE > Charge || Charge > MAX_PRODUCT_CHARGE)
             {
@@ -231,6 +249,16 @@ namespace pwiz.Skyline.Model
                 throw new InvalidDataException(string.Format("Fragment ordinal {0} exceeds the maximum {1} for the peptide {2}.",
                                                              Ordinal, Group.Peptide.Length - 1, Group.Peptide.Sequence));
             }
+
+            if (DecoyMassShift.HasValue)
+            {
+                if (DecoyMassShift < MIN_PRODUCT_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRODUCT_DECOY_MASS_SHIFT)
+                {
+                    throw new InvalidDataException(
+                        string.Format("Fragment decoy mass shift {0} must be between {1} and {2}.",
+                                      DecoyMassShift, MIN_PRODUCT_DECOY_MASS_SHIFT, MAX_PRODUCT_DECOY_MASS_SHIFT));
+                }
+            }
         }
 
         /// <summary>
@@ -241,7 +269,8 @@ namespace pwiz.Skyline.Model
         {
             return Equals(obj.IonType, IonType) &&
                 obj.CleavageOffset == CleavageOffset &&
-                obj.Charge == Charge;
+                obj.Charge == Charge &&
+                obj.DecoyMassShift.Equals(DecoyMassShift);
         }
 
         #region object overrides
@@ -254,7 +283,8 @@ namespace pwiz.Skyline.Model
                 Equals(obj.IonType, IonType) &&
                 obj.CleavageOffset == CleavageOffset &&
                 obj.MassIndex == MassIndex &&
-                obj.Charge == Charge;
+                obj.Charge == Charge && 
+                obj.DecoyMassShift.Equals(DecoyMassShift);
         }
 
         public override bool Equals(object obj)
@@ -274,6 +304,7 @@ namespace pwiz.Skyline.Model
                 result = (result*397) ^ CleavageOffset;
                 result = (result*397) ^ MassIndex;
                 result = (result*397) ^ Charge;
+                result = (result*397) ^ (DecoyMassShift.HasValue ? DecoyMassShift.Value : 0);
                 return result;
             }
         }
@@ -285,10 +316,11 @@ namespace pwiz.Skyline.Model
                 return "precursor" + GetChargeIndicator(Charge) + GetMassIndexText(MassIndex);
             }
 
-            return string.Format("{0} - {1}{2}{3}",
+            return string.Format("{0} - {1}{2}{3}{4}",
                                  AA,
                                  IonType.ToString().ToLower(),
                                  Ordinal,
+                                 GetDecoyText(DecoyMassShift),
                                  GetChargeIndicator(Charge));
         }
 
