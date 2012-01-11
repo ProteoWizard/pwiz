@@ -82,7 +82,7 @@ namespace pwiz.Common.DataBinding
         protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListView bindingListView, IDataFormat dataFormat)
         {
             IList<RowItem> rows = Array.AsReadOnly(bindingListView.ToArray());
-            IList<PropertyDescriptor> properties = Array.AsReadOnly(bindingListView.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray());
+            IList<PropertyDescriptor> properties = bindingListView.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray();
             var status = new ProgressStatus("Writing " + rows.Count + " rows");
             dataFormat.WriteRow(writer, properties.Select(pd=>pd.DisplayName));
             var rowCount = rows.Count;
@@ -101,27 +101,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public static string Escape(object value)
-        {
-            if (value == null)
-            {
-                return "";
-            }
-            var strValue = value.ToString();
-            var result = new StringBuilder("\"", strValue.Length + 2);
-            foreach (var ch in strValue)
-            {
-                if (ch == '"')
-                {
-                    result.Append('"');
-                }
-                result.Append(ch);
-            }
-            result.Append('"');
-            return result.ToString();
-        }
-
-        public void Export(Control owner, ViewSpec viewSpec, IEnumerable<RowItem> values)
+        public void Export(Control owner, BindingListView bindingListView)
         {
             var dataFormats = new[] { DataFormats.Csv, DataFormats.Tsv };
             string fileFilter = string.Join("|", dataFormats.Select(format => format.FileFilter).ToArray());
@@ -129,7 +109,7 @@ namespace pwiz.Common.DataBinding
             {
                 Filter = fileFilter,
                 InitialDirectory = GetExportDirectory(),
-                FileName = GetDefaultExportFilename(viewSpec),
+                FileName = GetDefaultExportFilename(bindingListView.ViewSpec),
             })
             {
                 if (saveFileDialog.ShowDialog(owner.TopLevelControl) == DialogResult.Cancel)
@@ -141,7 +121,7 @@ namespace pwiz.Common.DataBinding
                 {
                     using (var writer = new StreamWriter(File.OpenWrite(saveFileDialog.FileName), new UTF8Encoding(false)))
                     {
-                        WriteData(progressMonitor, writer, null, dataFormat);
+                        WriteData(progressMonitor, writer, bindingListView, dataFormat);
                     }
                 });
                 SetExportDirectory(Path.GetDirectoryName(saveFileDialog.FileName));

@@ -32,7 +32,7 @@ namespace pwiz.Common.DataBinding
         ColumnDescriptor ParentColumn { get; }
         IEnumerable<ViewSpec> BuiltInViewSpecs { get; }
         IEnumerable<ViewSpec> CustomViewSpecs { get; }
-        void Export(Control owner, ViewSpec viewSpec, IEnumerable<RowItem> values);
+        void Export(Control owner, BindingListView bindingListView);
         ViewSpec CustomizeView(Control owner, ViewSpec viewSpec);
         void ManageViews(Control owner);
         ViewSpec SaveView(ViewSpec viewSpec);

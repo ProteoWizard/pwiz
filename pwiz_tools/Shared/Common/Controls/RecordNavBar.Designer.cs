@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnNavFirst = new System.Windows.Forms.Button();
             this.btnNavPrev = new System.Windows.Forms.Button();
@@ -38,6 +39,8 @@
             this.label2 = new System.Windows.Forms.Label();
             this.findBox = new pwiz.Common.Controls.FindBox();
             this.lblFilteredFrom = new System.Windows.Forms.Label();
+            this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
+            this.navBar2 = new pwiz.Common.DataBinding.Controls.NavBar();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -175,16 +178,39 @@
             this.lblFilteredFrom.Text = "(Filtered from ########)";
             this.lblFilteredFrom.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // navBar1
+            // 
+            this.navBar1.AutoSize = true;
+            this.navBar1.BindingSource = null;
+            this.navBar1.Location = new System.Drawing.Point(0, 0);
+            this.navBar1.Name = "navBar1";
+            this.navBar1.Size = new System.Drawing.Size(0, 25);
+            this.navBar1.TabIndex = 1;
+            this.navBar1.ViewContext = null;
+            // 
+            // navBar2
+            // 
+            this.navBar2.AutoSize = true;
+            this.navBar2.BindingSource = null;
+            this.navBar2.Location = new System.Drawing.Point(0, 0);
+            this.navBar2.Name = "navBar2";
+            this.navBar2.Size = new System.Drawing.Size(0, 25);
+            this.navBar2.TabIndex = 2;
+            this.navBar2.ViewContext = null;
+            // 
             // RecordNavBar
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.Controls.Add(this.navBar2);
+            this.Controls.Add(this.navBar1);
             this.Controls.Add(this.tableLayoutPanel1);
             this.Name = "RecordNavBar";
             this.Size = new System.Drawing.Size(667, 21);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -200,6 +226,8 @@
         private System.Windows.Forms.Label label2;
         private FindBox findBox;
         private System.Windows.Forms.Label lblFilteredFrom;
+        private pwiz.Common.DataBinding.Controls.NavBar navBar1;
+        private pwiz.Common.DataBinding.Controls.NavBar navBar2;
 
     }
 }

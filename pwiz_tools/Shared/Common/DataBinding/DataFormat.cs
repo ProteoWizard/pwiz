@@ -63,6 +63,10 @@ namespace pwiz.Common.DataBinding
                 {
                     return "";
                 }
+                if (o.GetType().IsPrimitive && !(o is char))
+                {
+                    return o.ToString();
+                }
                 return "\"" + RegexQuote.Replace(o.ToString(), "\"\"") + "\"";
             }
         }

@@ -205,7 +205,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         void OnExport(object sender, EventArgs eventArgs)
         {
-            // ViewContext.Export(this, GetBindingListView());
+            ViewContext.Export(this, BindingListView);
         }
 
         private void findBox_TextChanged(object sender, EventArgs e)
