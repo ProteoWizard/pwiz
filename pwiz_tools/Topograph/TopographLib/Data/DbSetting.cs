@@ -46,5 +46,6 @@ namespace pwiz.Topograph.Data
         accept_min_deconvolution_score,
         accept_integration_notes,
         accept_min_auc,
+        accept_min_turnover_score,
     }
 }

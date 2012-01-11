@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 
 namespace pwiz.Common.DataBinding
 {
@@ -26,6 +27,7 @@ namespace pwiz.Common.DataBinding
     public interface ILinkValue
     {
         EventHandler ClickEventHandler { get; }
+        object Value { get; }
     }
     public struct LinkValue<T> : ILinkValue
     {
@@ -34,7 +36,7 @@ namespace pwiz.Common.DataBinding
             Value = value;
             ClickEventHandler = clickEventHandler;
         }
-
+        object ILinkValue.Value { get { return Value; } }
         public T Value { get; private set; }
         public EventHandler ClickEventHandler { get; private set; }
         public override string ToString()
@@ -42,5 +44,4 @@ namespace pwiz.Common.DataBinding
             return ReferenceEquals(null, Value) ? "" : Value.ToString();
         }
     }
-
 }

@@ -41,6 +41,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxFinalPercent.Text = tracerDef.FinalApe.ToString();
             tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
             tbxMinAuc.Text = workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
+            tbxMinTurnoverScore.Text = workspace.GetAcceptMinTurnoverScore().ToString();
             colTurnover.DefaultCellStyle.Format = "#.##%";
             colPrecursorPool.DefaultCellStyle.Format = "#.##%";
             comboCalculationType.SelectedIndex = 0;
@@ -141,6 +142,15 @@ namespace pwiz.Topograph.ui.Forms
             set 
             { 
                 tbxMinAuc.Text = value.ToString();
+                Requery();
+            }
+        }
+        public double MinTurnoverScore
+        {
+            get { return ParseDouble(tbxMinTurnoverScore.Text); }
+            set 
+            { 
+                tbxMinTurnoverScore.Text = value.ToString();
                 Requery();
             }
         }
@@ -781,6 +791,11 @@ namespace pwiz.Topograph.ui.Forms
         }
 
         private void tbxMinAuc_TextChanged(object sender, EventArgs e)
+        {
+            UpdateRows();
+        }
+
+        private void tbxMinTurnoverScore_TextChanged(object sender, EventArgs e)
         {
             UpdateRows();
         }

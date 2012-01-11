@@ -39,6 +39,8 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
             this.tbxMinAuc = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbxMinTurnoverScore = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
@@ -137,6 +139,22 @@
             this.tbxMinAuc.Size = new System.Drawing.Size(214, 20);
             this.tbxMinAuc.TabIndex = 9;
             // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(19, 135);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(125, 13);
+            this.label5.TabIndex = 10;
+            this.label5.Text = "Minimum Turnover Score";
+            // 
+            // tbxMinTurnoverScore
+            // 
+            this.tbxMinTurnoverScore.Location = new System.Drawing.Point(195, 134);
+            this.tbxMinTurnoverScore.Name = "tbxMinTurnoverScore";
+            this.tbxMinTurnoverScore.Size = new System.Drawing.Size(259, 20);
+            this.tbxMinTurnoverScore.TabIndex = 11;
+            // 
             // AcceptanceCriteriaForm
             // 
             this.AcceptButton = this.btnSave;
@@ -144,6 +162,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(508, 485);
+            this.Controls.Add(this.tbxMinTurnoverScore);
+            this.Controls.Add(this.label5);
             this.Controls.Add(this.tbxMinAuc);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.btnCancel);
@@ -174,5 +194,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox tbxMinAuc;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbxMinTurnoverScore;
     }
 }

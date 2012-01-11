@@ -35,9 +35,6 @@ namespace pwiz.Topograph.ui.Forms
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.cbxByProtein = new System.Windows.Forms.CheckBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.tbxMinScore = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.cbxGroupByCohort = new System.Windows.Forms.CheckBox();
             this.cbxGroupByTimePoint = new System.Windows.Forms.CheckBox();
@@ -48,6 +45,11 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMinAuc = new System.Windows.Forms.TextBox();
             this.btnRequery = new System.Windows.Forms.Button();
             this.cbxGroupByFile = new System.Windows.Forms.CheckBox();
+            this.cbxByProtein = new System.Windows.Forms.CheckBox();
+            this.tbxMinScore = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.tbxMinTurnoverScore = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -72,14 +74,11 @@ namespace pwiz.Topograph.ui.Forms
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 5;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 122F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
-            this.tableLayoutPanel1.Controls.Add(this.cbxByProtein, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.tbxMinScore, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.label4, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.cbxGroupByCohort, 2, 2);
             this.tableLayoutPanel1.Controls.Add(this.cbxGroupByTimePoint, 1, 2);
@@ -90,6 +89,11 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.tbxMinAuc, 3, 1);
             this.tableLayoutPanel1.Controls.Add(this.btnRequery, 4, 0);
             this.tableLayoutPanel1.Controls.Add(this.cbxGroupByFile, 4, 2);
+            this.tableLayoutPanel1.Controls.Add(this.cbxByProtein, 4, 1);
+            this.tableLayoutPanel1.Controls.Add(this.tbxMinScore, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.tbxMinTurnoverScore, 1, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -102,35 +106,6 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Size = new System.Drawing.Size(892, 77);
             this.tableLayoutPanel1.TabIndex = 0;
-            // 
-            // cbxByProtein
-            // 
-            this.cbxByProtein.AutoSize = true;
-            this.cbxByProtein.Location = new System.Drawing.Point(103, 3);
-            this.cbxByProtein.Name = "cbxByProtein";
-            this.cbxByProtein.Size = new System.Drawing.Size(74, 17);
-            this.cbxByProtein.TabIndex = 0;
-            this.cbxByProtein.Text = "By Protein";
-            this.cbxByProtein.UseVisualStyleBackColor = true;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(3, 25);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(94, 25);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Minimum Score:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            // 
-            // tbxMinScore
-            // 
-            this.tbxMinScore.Location = new System.Drawing.Point(103, 28);
-            this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(100, 20);
-            this.tbxMinScore.TabIndex = 3;
-            this.tbxMinScore.Text = "0";
             // 
             // label4
             // 
@@ -146,7 +121,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxGroupByCohort.AutoSize = true;
             this.cbxGroupByCohort.Checked = true;
             this.cbxGroupByCohort.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxGroupByCohort.Location = new System.Drawing.Point(399, 53);
+            this.cbxGroupByCohort.Location = new System.Drawing.Point(410, 53);
             this.cbxGroupByCohort.Name = "cbxGroupByCohort";
             this.cbxGroupByCohort.Size = new System.Drawing.Size(57, 17);
             this.cbxGroupByCohort.TabIndex = 13;
@@ -158,7 +133,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxGroupByTimePoint.AutoSize = true;
             this.cbxGroupByTimePoint.Checked = true;
             this.cbxGroupByTimePoint.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxGroupByTimePoint.Location = new System.Drawing.Point(103, 53);
+            this.cbxGroupByTimePoint.Location = new System.Drawing.Point(125, 53);
             this.cbxGroupByTimePoint.Name = "cbxGroupByTimePoint";
             this.cbxGroupByTimePoint.Size = new System.Drawing.Size(76, 17);
             this.cbxGroupByTimePoint.TabIndex = 14;
@@ -170,7 +145,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxGroupBySample.AutoSize = true;
             this.cbxGroupBySample.Checked = true;
             this.cbxGroupBySample.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxGroupBySample.Location = new System.Drawing.Point(499, 53);
+            this.cbxGroupBySample.Location = new System.Drawing.Point(510, 53);
             this.cbxGroupBySample.Name = "cbxGroupBySample";
             this.cbxGroupBySample.Size = new System.Drawing.Size(61, 17);
             this.cbxGroupBySample.TabIndex = 15;
@@ -180,36 +155,41 @@ namespace pwiz.Topograph.ui.Forms
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(399, 0);
+            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label2.Location = new System.Drawing.Point(410, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(66, 13);
+            this.label2.Size = new System.Drawing.Size(94, 25);
             this.label2.TabIndex = 20;
             this.label2.Text = "Evvie\'s Filter";
+            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // comboEvviesFilter
             // 
             this.comboEvviesFilter.Dock = System.Windows.Forms.DockStyle.Fill;
             this.comboEvviesFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboEvviesFilter.FormattingEnabled = true;
-            this.comboEvviesFilter.Location = new System.Drawing.Point(499, 3);
+            this.comboEvviesFilter.Location = new System.Drawing.Point(510, 3);
             this.comboEvviesFilter.Name = "comboEvviesFilter";
-            this.comboEvviesFilter.Size = new System.Drawing.Size(290, 21);
+            this.comboEvviesFilter.Size = new System.Drawing.Size(279, 21);
             this.comboEvviesFilter.TabIndex = 34;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(399, 25);
+            this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label3.Location = new System.Drawing.Point(410, 25);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(73, 13);
+            this.label3.Size = new System.Drawing.Size(94, 25);
             this.label3.TabIndex = 35;
             this.label3.Text = "Minimum AUC";
+            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // tbxMinAuc
             // 
-            this.tbxMinAuc.Location = new System.Drawing.Point(499, 28);
+            this.tbxMinAuc.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxMinAuc.Location = new System.Drawing.Point(510, 28);
             this.tbxMinAuc.Name = "tbxMinAuc";
-            this.tbxMinAuc.Size = new System.Drawing.Size(100, 20);
+            this.tbxMinAuc.Size = new System.Drawing.Size(279, 20);
             this.tbxMinAuc.TabIndex = 36;
             // 
             // btnRequery
@@ -233,6 +213,55 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxGroupByFile.UseVisualStyleBackColor = true;
             this.cbxGroupByFile.CheckedChanged += new System.EventHandler(this.cbxGroupByFile_CheckedChanged);
             // 
+            // cbxByProtein
+            // 
+            this.cbxByProtein.AutoSize = true;
+            this.cbxByProtein.Location = new System.Drawing.Point(795, 28);
+            this.cbxByProtein.Name = "cbxByProtein";
+            this.cbxByProtein.Size = new System.Drawing.Size(74, 17);
+            this.cbxByProtein.TabIndex = 0;
+            this.cbxByProtein.Text = "By Protein";
+            this.cbxByProtein.UseVisualStyleBackColor = true;
+            // 
+            // tbxMinScore
+            // 
+            this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxMinScore.Location = new System.Drawing.Point(125, 3);
+            this.tbxMinScore.Name = "tbxMinScore";
+            this.tbxMinScore.Size = new System.Drawing.Size(279, 20);
+            this.tbxMinScore.TabIndex = 3;
+            this.tbxMinScore.Text = "0";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label1.Location = new System.Drawing.Point(3, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(116, 25);
+            this.label1.TabIndex = 2;
+            this.label1.Text = "Minimum Score:";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label5.Location = new System.Drawing.Point(3, 25);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(116, 25);
+            this.label5.TabIndex = 38;
+            this.label5.Text = "Min Turnover Score:";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // tbxMinTurnoverScore
+            // 
+            this.tbxMinTurnoverScore.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxMinTurnoverScore.Location = new System.Drawing.Point(125, 28);
+            this.tbxMinTurnoverScore.Name = "tbxMinTurnoverScore";
+            this.tbxMinTurnoverScore.Size = new System.Drawing.Size(279, 20);
+            this.tbxMinTurnoverScore.TabIndex = 39;
+            // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
@@ -247,6 +276,7 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.DataSource = this.bindingSource1;
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -417,5 +447,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.TextBox tbxMinAuc;
         private System.Windows.Forms.CheckBox cbxGroupByFile;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox tbxMinTurnoverScore;
     }
 }

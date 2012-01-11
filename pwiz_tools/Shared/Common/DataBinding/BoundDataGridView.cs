@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections;
 using System.Linq;
 using System.Windows.Forms;
@@ -41,22 +43,14 @@ namespace pwiz.Common.DataBinding
                                   };
         }
 
-        public new BindingSource DataSource
+        protected override void OnDataSourceChanged(EventArgs e)
         {
-            get { return _bindingSource; }
-            set
+            _bindingSource = DataSource as BindingSource;
+            if (_bindingSource != null)
             {
-                if (ReferenceEquals(_bindingSource, value))
-                {
-                    return;
-                }    
-                base.DataSource = value;
-                _bindingSource = value;
-                if (DataSource != null)
-                {
-                    DataSource.DataSource = BindingListView;
-                }
+                _bindingSource.DataSource = BindingListView;
             }
+            base.OnDataSourceChanged(e);
         }
 
         public IEnumerable RowSource

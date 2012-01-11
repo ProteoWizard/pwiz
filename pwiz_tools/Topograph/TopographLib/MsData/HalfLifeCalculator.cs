@@ -24,6 +24,7 @@ namespace pwiz.Topograph.MsData
             FinalPercent = 100;
             ExcludedTimePoints = new double[0];
             MinScore = workspace.GetAcceptMinDeconvolutionScore();
+            MinTurnoverScore = workspace.GetAcceptMinTurnoverScore();
             AcceptMissingMs2Id = workspace.GetAcceptSamplesWithoutMs2Id();
             AcceptIntegrationNotes = new HashSet<IntegrationNote>(workspace.GetAcceptIntegrationNotes());
         }
@@ -80,7 +81,7 @@ namespace pwiz.Topograph.MsData
 
         public ICollection<double> ExcludedTimePoints { get; set; }
 
-        private List<RowData> QueryRowDatas()
+        private List<RowData> QueryRowDatas(LongOperationBroker longOperationBroker)
         {
             var hql = new StringBuilder();
             hql.Append("SELECT"
@@ -102,6 +103,7 @@ namespace pwiz.Topograph.MsData
             {
                 query.SetMaxResults(MaxResults.Value);
             }
+            longOperationBroker.UpdateStatusMessage("Querying database");
             var peaksQuery = Session.CreateQuery("SELECT P.PeptideFileAnalysis.Id, P.Name, P.TotalArea, P.StartTime, P.EndTime"
                                                  + "\nFROM " + typeof (DbPeak) + " P");
             var peaksDict = new Dictionary<long, IDictionary<TracerFormula, PeakData>>();
@@ -124,8 +126,12 @@ namespace pwiz.Topograph.MsData
                     );
             }
             var result = new List<RowData>();
-            foreach (object[] row in query.List())
+            var rowList = new List<object[]>();
+            query.List(rowList);
+            for (int iRow = 0; iRow < rowList.Count; iRow ++)
             {
+                var row = rowList[iRow];
+                longOperationBroker.UpdateStatusMessage(string.Format("Calculating row {0} of {1}", iRow, rowList.Count));
                 try
                 {
                     var peptideFileAnalysisId = Convert.ToInt32(row[5]);
@@ -133,21 +139,25 @@ namespace pwiz.Topograph.MsData
                     peaksDict.TryGetValue(peptideFileAnalysisId, out peaks);
                     var rowData = new RowData
                                       {
-                                          IndTurnover = (double?) row[0],
-                                          IndPrecursorEnrichment =  (double?) row[6],
-                                          IndTurnoverScore = (double?) row[7],
-                                          TracerPercent = (double) row[1],
-                                          DeconvolutionScore = (double) row[2],
-                                          Peptide = Workspace.Peptides.GetChild((long) row[3]),
-                                          MsDataFile = Workspace.MsDataFiles.GetChild((long) row[4]),
+                                          IndTurnover = (double?)row[0],
+                                          IndPrecursorEnrichment = (double?)row[6],
+                                          IndTurnoverScore = (double?)row[7],
+                                          TracerPercent = (double)row[1],
+                                          DeconvolutionScore = (double)row[2],
+                                          Peptide = Workspace.Peptides.GetChild((long)row[3]),
+                                          MsDataFile = Workspace.MsDataFiles.GetChild((long)row[4]),
                                           Peaks = peaks,
                                           PeptideFileAnalysisId = peptideFileAnalysisId,
-                                          ValidationStatus = (ValidationStatus) row[8],
-                                          PsmCount = (int) row[9],
-                                          IntegrationNote = IntegrationNote.Parse((string) row[10]),
+                                          ValidationStatus = (ValidationStatus)row[8],
+                                          PsmCount = (int)row[9],
+                                          IntegrationNote = IntegrationNote.Parse((string)row[10]),
                                       };
                     rowData.Accept = IsAcceptable(rowData);
                     ComputeAvgTurnover(rowData);
+                    if (rowData.Accept && MinTurnoverScore > 0)
+                    {
+                        rowData.Accept = rowData.AvgTurnoverScore >= MinTurnoverScore;
+                    }
                     result.Add(rowData);
                 }
                 catch (Exception e)
@@ -245,8 +255,7 @@ namespace pwiz.Topograph.MsData
                     longOperationBroker.UpdateStatusMessage("Querying precursor pools");
                     _precursorPools = GetPrecursorPools(Session);
                 }
-                longOperationBroker.UpdateStatusMessage("Querying database");
-                RowDatas = QueryRowDatas();
+                RowDatas = QueryRowDatas(longOperationBroker);
             }
             var groupedRowDatas = new Dictionary<String, List<RowData>>();
             var cohorts = new HashSet<String> {""};
@@ -275,10 +284,12 @@ namespace pwiz.Topograph.MsData
                 }
             }
             Cohorts = cohorts;
-            longOperationBroker.UpdateStatusMessage("Calculating results");
+            var groupRowDatasList = groupedRowDatas.ToArray();
             var resultRows = new List<ResultRow>();
-            foreach (var entry in groupedRowDatas)
+            for (int iGroupRow = 0; iGroupRow < groupRowDatasList.Count(); iGroupRow++)
             {
+                longOperationBroker.UpdateStatusMessage(string.Format("Calculating final results {0}/{1}", iGroupRow, groupRowDatasList.Length));
+                var entry = groupRowDatasList[iGroupRow];
                 if (longOperationBroker.WasCancelled)
                 {
                     return;
@@ -651,6 +662,7 @@ namespace pwiz.Topograph.MsData
         public bool BySample { get; set; }
         public bool ByFile { get; set; }
         public double MinScore { get; set; }
+        public double MinTurnoverScore { get; set; }
         public double MinAuc { get; set; }
         ISession Session { get; set; }
         public IList<ResultRow> ResultRows { get; private set; }
@@ -735,7 +747,7 @@ namespace pwiz.Topograph.MsData
             public IDictionary<String, ResultData> HalfLives { get; private set;}
         }
 
-        public class ResultData
+        public class ResultData: IComparable
         {
             public double YIntercept { get; set; }
             public double XIntercept {get
@@ -778,6 +790,15 @@ namespace pwiz.Topograph.MsData
             public override string ToString()
             {
                 return HalfLife + " [" + MinHalfLife + "," + MaxHalfLife + "]";
+            }
+
+            public int CompareTo(object obj)
+            {
+                if (null == obj)
+                {
+                    return 1;
+                }
+                return HalfLife.CompareTo(((ResultData) obj).HalfLife);
             }
         }
 

@@ -38,6 +38,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxInitialTracerPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalTracerPercent.Text = tracerDef.FinalApe.ToString();
             tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
+            tbxMinTurnoverScore.Text = workspace.GetAcceptMinTurnoverScore().ToString();
             tbxMinAuc.Text = workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
             comboCalculationType.SelectedIndex = (int) HalfLifeCalculationType.GroupPrecursorPool;
             UpdateTimePoints();
@@ -81,6 +82,25 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
+        public double MinTurnoverScore
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(tbxMinTurnoverScore.Text))
+                {
+                    return 0;
+                }
+                try
+                {
+                    return double.Parse(tbxMinTurnoverScore.Text);
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+        }
+
         public double MinAuc
         {
             get
@@ -108,6 +128,7 @@ namespace pwiz.Topograph.ui.Forms
                                      BySample = cbxBySample.Checked,
                                      MinScore = MinScore,
                                      MinAuc = MinAuc,
+                                     MinTurnoverScore = MinTurnoverScore,
                                      InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
                                      FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
                                      FixedInitialPercent = cbxFixYIntercept.Checked,
@@ -298,6 +319,7 @@ namespace pwiz.Topograph.ui.Forms
                                            Cohort = cohort,
                                            MinScore = _form.MinScore,
                                            MinAuc = _form.MinAuc,
+                                           MinTurnoverScore = _form.MinTurnoverScore,
                                            InitialPercent = double.Parse(_form.tbxInitialTracerPercent.Text),
                                            FinalPercent = double.Parse(_form.tbxFinalTracerPercent.Text),
                                            FixedInitialPercent = _form.cbxFixYIntercept.Checked,

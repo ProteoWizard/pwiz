@@ -18,12 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Data;
 
@@ -39,6 +34,7 @@ namespace pwiz.Topograph.ui.Forms
             MinDeconvolutionScore = workspace.GetAcceptMinDeconvolutionScore();
             MinAuc = workspace.GetAcceptMinAreaUnderChromatogramCurve();
             IntegrationNotes = workspace.GetAcceptIntegrationNotes();
+            MinTurnoverScore = workspace.GetAcceptMinTurnoverScore();
         }
 
         public void Save()
@@ -49,6 +45,7 @@ namespace pwiz.Topograph.ui.Forms
                 Workspace.SetAcceptMinDeconvolutionScore(MinDeconvolutionScore);
                 Workspace.SetAcceptMinAreaUnderChromatogramCurve(MinAuc);
                 Workspace.SetAcceptIntegrationNotes(IntegrationNotes);
+                Workspace.SetAcceptMinTurnoverScore(MinTurnoverScore);
             }
         }
 
@@ -77,17 +74,32 @@ namespace pwiz.Topograph.ui.Forms
 
         public double MinAuc
         {
-            get { double result;
-            if (Double.TryParse(tbxMinAuc.Text, out result))
-            {
-                return result;
-            }
+            get { 
+                double result;
+                if (Double.TryParse(tbxMinAuc.Text, out result))
+                {
+                    return result;
+                }
                 return 0;
             }
             set
             {
                 tbxMinAuc.Text = value.ToString();
             }
+        }
+
+        public double MinTurnoverScore
+        {
+            get 
+            { 
+                double result;
+                if (Double.TryParse(tbxMinTurnoverScore.Text, out result))
+                {
+                    return result;
+                }
+                return 0;
+            }
+            set { tbxMinTurnoverScore.Text = value.ToString(); }
         }
 
         public IEnumerable<IntegrationNote> IntegrationNotes

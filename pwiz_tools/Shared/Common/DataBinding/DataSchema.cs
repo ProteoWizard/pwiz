@@ -120,6 +120,14 @@ namespace pwiz.Common.DataBinding
             {
                 return 0;
             }
+            while (o1 is ILinkValue)
+            {
+                o1 = ((ILinkValue) o1).Value;
+            }
+            while (o2 is ILinkValue)
+            {
+                o2 = ((ILinkValue) o2).Value;
+            }
             if (o1 is IComparable || o2 is IComparable)
             {
                 return Comparer.Default.Compare(o1, o2);

@@ -25,6 +25,7 @@ namespace pwiz.Topograph.ui.Forms
             navBar1.ViewContext = _viewContext;
             tbxMinAuc.Text = Workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
             tbxMinScore.Text = Workspace.GetAcceptMinDeconvolutionScore().ToString();
+            tbxMinTurnoverScore.Text = Workspace.GetAcceptMinTurnoverScore().ToString();
         }
 
         public EvviesFilterEnum EvviesFilter
@@ -196,6 +197,7 @@ namespace pwiz.Topograph.ui.Forms
                                            Cohort = cohortBuilder.ToString(),
                                            MinScore = double.Parse(_form.tbxMinScore.Text),
                                            MinAuc = double.Parse(_form.tbxMinAuc.Text),
+                                           MinTurnoverScore = double.Parse(_form.tbxMinTurnoverScore.Text),
                                            HalfLifeCalculationType = halfLifeCalculationType,
                                            EvviesFilter = _displayRow.GetHalfLifeCalculator().EvviesFilter,
                                        };
@@ -244,6 +246,7 @@ namespace pwiz.Topograph.ui.Forms
                                              EvviesFilter = EvviesFilter,
                                              MinScore = double.Parse(tbxMinScore.Text),
                                              MinAuc =  double.Parse(tbxMinAuc.Text),
+                                             MinTurnoverScore = double.Parse(tbxMinTurnoverScore.Text),
                                              ByProtein = cbxByProtein.Checked, 
                                              BySample = cbxGroupBySample.Checked,
                                              ByFile = cbxGroupByFile.Checked,

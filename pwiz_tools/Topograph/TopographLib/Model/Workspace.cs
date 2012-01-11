@@ -355,6 +355,14 @@ namespace pwiz.Topograph.Model
         {
             _settings.SetSetting(SettingEnum.accept_integration_notes, IntegrationNote.ToString(integrationNotes));
         }
+        public double GetAcceptMinTurnoverScore()
+        {
+            return _settings.GetSetting(SettingEnum.accept_min_turnover_score, 0.0);
+        }
+        public void SetAcceptMinTurnoverScore(double value)
+        {
+            _settings.SetSetting(SettingEnum.accept_min_turnover_score, value);
+        }
 
         public void SetProteinDescriptionKey(String proteinDescriptionKey)
         {
