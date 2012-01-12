@@ -403,7 +403,7 @@ namespace IDPicker
                 return;
 
             var parentIndexHierachy = new List<int>(rowIndexHierarchy.Take(rowIndexHierarchy.Count-1));
-            int siblingCount = spectrumTableForm.GetRowFromRowHierarchy(parentIndexHierachy).ChildRows.Count;
+            int siblingCount = parentIndexHierachy.Any() ? spectrumTableForm.GetRowFromRowHierarchy(parentIndexHierachy).ChildRows.Count : tlv.RowCount;
             bool previousRowIsPSM = rowIndexHierarchy.Last() > 0;
             bool nextRowIsPSM = rowIndexHierarchy.Last() + 1 < siblingCount;
 

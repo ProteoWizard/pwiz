@@ -819,7 +819,7 @@ namespace IDPicker.Forms
             else if (baseRow is AnalysisRow)
             {
                 var row = baseRow as AnalysisRow;
-                if (columnIndex == keyColumn.Index) return String.Format("{0} {1} {2}", row.Analysis.Id, row.Analysis.Software.Name, row.Analysis.Software.Version);
+                if (columnIndex == keyColumn.Index) return String.Format("{0} {1}", row.Analysis.Id, row.Analysis.Name);
             }
             else if (baseRow is PeptideRow)
             {
@@ -838,7 +838,7 @@ namespace IDPicker.Forms
                 else if (columnIndex == observedMassColumn.Index) return row.ObservedMass;
                 else if (columnIndex == exactMassColumn.Index) return row.ExactMass;
                 else if (columnIndex == massErrorColumn.Index) return row.ExactMass - row.ObservedMass;
-                else if (columnIndex == analysisColumn.Index) return String.Format("{0} {1} {2}", row.Analysis.Id, row.Analysis.Software.Name, row.Analysis.Software.Version);
+                else if (columnIndex == analysisColumn.Index) return String.Format("{0} {1}", row.Analysis.Id, row.Analysis.Name);
                 else if (columnIndex == chargeColumn.Index) return row.Charge;
                 else if (columnIndex == qvalueColumn.Index) return row.QValue > 1 ? Double.PositiveInfinity : row.QValue;
                 else if (columnIndex == sequenceColumn.Index) return row.ModifiedSequence;
