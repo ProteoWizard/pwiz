@@ -208,7 +208,11 @@ namespace IDPicker.Forms
             private static string SqlQueryFormat =
                 "SELECT {{s.*}}, {{ss.*}}, {{ssg.*}}, {{a.*}}," +
                 "       psm.Id, Rank, Charge, QValue, psm.MonoisotopicMass," +
-                "       GROUP_CONCAT(DISTINCT mod.MonoMassDelta || '@' || pm.Offset) AS Mods," +
+                "       IFNULL(dm.DistinctMatchKey, " +
+                "              (SELECT GROUP_CONCAT(DISTINCT ROUND(mod.MonoMassDelta, 4) || '@' || pm.Offset)" +
+                "               FROM PeptideModification pm" +
+                "               JOIN Modification mod ON pm.Modification=mod.Id" +
+                "               WHERE pm.PeptideSpectrumMatch=psm.Id)) AS DistinctMatchKey," +
                 "       IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), DecoySequence) AS Sequence " +
                 "FROM UnfilteredPeptideSpectrumMatch psm " +
                 "JOIN UnfilteredPeptide pep ON psm.Peptide=pep.Id " +
@@ -216,23 +220,26 @@ namespace IDPicker.Forms
                 "LEFT JOIN ProteinData pd ON pi.Protein=pd.Id " +
                 "LEFT JOIN PeptideModification pm ON psm.Id=pm.PeptideSpectrumMatch " +
                 "LEFT JOIN Modification mod ON pm.Modification=mod.Id " +
+                "LEFT JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
                 "JOIN Spectrum s ON psm.Spectrum=s.Id " +
                 "JOIN SpectrumSource ss ON s.Source=ss.Id " +
                 "JOIN SpectrumSourceGroup ssg ON ss.Group_=ssg.Id " +
                 "JOIN Analysis a ON psm.Analysis=a.Id " +
                 "{0} " +
-                "GROUP BY psm.Id";
+                "GROUP BY psm.Id " +
+                "ORDER BY Rank, QValue";
 
             private static string HqlQueryFormat =
                 "SELECT s, ss, ssg, a," +
                 "       psm.Id, psm.Rank, psm.Charge, psm.QValue, psm.MonoisotopicMass," +
-                "       DISTINCT_GROUP_CONCAT(mod.MonoMassDelta || '@' || pm.Offset) AS Mods," +
+                "       psm.DistinctMatchKey," +
                 "       pep.Sequence ";
 
             public static NHibernate.IQuery GetQuery(NHibernate.ISession session, DataFilter dataFilter)
             {
                 if (dataFilter.Spectrum != null && dataFilter.Spectrum.Count == 1 ||
-                    dataFilter.Peptide != null && dataFilter.Peptide.Count == 1)
+                    dataFilter.Peptide != null && dataFilter.Peptide.Count == 1 ||
+                    dataFilter.DistinctMatchKey != null && dataFilter.DistinctMatchKey.Count == 1)
                 {
                     string sql = String.Format(SqlQueryFormat, dataFilter.GetFilteredSqlWhereClause());
                     return session.CreateSQLQuery(sql)
@@ -245,7 +252,7 @@ namespace IDPicker.Forms
                         .AddScalar("Charge", NHibernate.NHibernateUtil.Int32)
                         .AddScalar("QValue", NHibernate.NHibernateUtil.Double)
                         .AddScalar("MonoisotopicMass", NHibernate.NHibernateUtil.Double)
-                        .AddScalar("Mods", NHibernate.NHibernateUtil.String)
+                        .AddScalar("DistinctMatchKey", NHibernate.NHibernateUtil.String)
                         .AddScalar("Sequence", NHibernate.NHibernateUtil.String);
                 }
                 
@@ -281,25 +288,25 @@ namespace IDPicker.Forms
                 string modificationString = (string) queryRow[++column];
                 ModifiedSequence = (string) queryRow[++column];
 
-                if (!String.IsNullOrEmpty(modificationString))
+                if (!String.IsNullOrEmpty(modificationString) && modificationString.Contains('@'))
                 {
                     // build modified sequence
-                    var modifications = modificationString.Split(',')
+                    var modifications = modificationString.Split(' ').Last()
+                                                          .Split(',')
                                                           .Select(o => o.Split('@'))
                                                           .Select(o => new { Offset = Convert.ToInt32(o[1]), DeltaMass = Convert.ToDouble(o[0]) })
                                                           .OrderByDescending(o => o.Offset);
 
                     var sb = new StringBuilder(ModifiedSequence);
+                    string formatString = "[{0}]";
                     foreach (var mod in modifications)
-                    {
-                        string modString = String.Format("[{0}]", DataFilter.DistinctMatchFormat.Round(mod.DeltaMass));
                         if (mod.Offset == int.MinValue)
-                            sb.Insert(0, modString);
+                            sb.Insert(0, String.Format(formatString, mod.DeltaMass));
                         else if (mod.Offset == int.MaxValue)
-                            sb.Append(modString);
+                            sb.AppendFormat(formatString, mod.DeltaMass);
                         else
-                            sb.Insert(mod.Offset + 1, modString);
-                    }
+                            sb.Insert(mod.Offset + 1, String.Format(formatString, mod.DeltaMass));
+
                     ModifiedSequence = sb.ToString();
                 }
 
@@ -485,7 +492,7 @@ namespace IDPicker.Forms
         {
             long psmId = parentRow.PeptideSpectrumMatchId;
             lock (session)
-                return session.CreateSQLQuery("SELECT Name, Value " +
+                return session.CreateSQLQuery("SELECT Name, CAST (Value AS REAL) " +
                                               "FROM PeptideSpectrumMatchScore " +
                                               "JOIN PeptideSpectrumMatchScoreName ON ScoreNameId = Id " +
                                               "WHERE PsmId = " + psmId)
@@ -709,6 +716,7 @@ namespace IDPicker.Forms
                          //"LEFT JOIN ProteinData pd ON pi.Protein=pd.Id " +
                          "LEFT JOIN PeptideModification pm ON psm.Id=pm.PeptideSpectrumMatch " +
                          "LEFT JOIN Modification mod ON pm.Modification=mod.Id " +
+                         "LEFT JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
                          "JOIN Spectrum s ON psm.Spectrum=s.Id " +
                          "JOIN SpectrumSource ss ON s.Source=ss.Id " +
                          "JOIN SpectrumSourceGroup ssg ON ss.Group_=ssg.Id " +

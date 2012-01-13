@@ -1023,7 +1023,9 @@ namespace IDPicker.DataModel
                 peptideConditions.Add(String.Format("pi.Peptide IN ({0})", String.Join(",", Peptide.Select(o => o.Id.ToString()).ToArray())));
 
             if (!DistinctMatchKey.IsNullOrEmpty())
-                peptideConditions.Add(String.Format("dm.DistinctMatchKey IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o => o.Key).ToArray())));
+                peptideConditions.Add(String.Format("IFNULL(dm.DistinctMatchKey, " +
+                                                    DistinctMatchFormat.SqlExpression +
+                                                    ") IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o => o.Key).ToArray())));
 
             if (!ModifiedSite.IsNullOrEmpty())
                 modConditions.Add(String.Format("pm.Site IN ('{0}')", String.Join("','", ModifiedSite.Select(o => o.ToString()).ToArray())));

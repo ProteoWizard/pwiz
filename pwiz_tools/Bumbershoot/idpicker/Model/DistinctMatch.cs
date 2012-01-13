@@ -152,22 +152,20 @@ namespace IDPicker.DataModel
             var sb = new StringBuilder(Peptide.Sequence);
             if (Format.AreModificationsDistinct && tokens.Length > modsIndex)
             {
-                string mods = tokens[modsIndex];
-                var modMassByOffset = new Map<int, double>();
-                foreach (string massOffsetPair in mods.Split(','))
-                {
-                    tokens = massOffsetPair.Split('@');
-                    modMassByOffset[Convert.ToInt32(tokens[1])] = Convert.ToDouble(tokens[0]);
-                }
+                var modifications = tokens[modsIndex].Split(' ').Last()
+                                                     .Split(',')
+                                                     .Select(o => o.Split('@'))
+                                                     .Select(o => new { Offset = Convert.ToInt32(o[1]), DeltaMass = Convert.ToDouble(o[0]) })
+                                                     .OrderByDescending(o => o.Offset);
 
                 string formatString = "[{0}]";
-                foreach (Map<int, double>.MapPair itr in modMassByOffset.Reverse())
-                    if (itr.Key == int.MinValue)
-                        sb.Insert(0, String.Format(formatString, itr.Value));
-                    else if (itr.Key == int.MaxValue)
-                        sb.AppendFormat(formatString, itr.Value);
+                foreach (var mod in modifications)
+                    if (mod.Offset == int.MinValue)
+                        sb.Insert(0, String.Format(formatString, mod.DeltaMass));
+                    else if (mod.Offset == int.MaxValue)
+                        sb.AppendFormat(formatString, mod.DeltaMass);
                     else
-                        sb.Insert(itr.Key + 1, String.Format(formatString, itr.Value));
+                        sb.Insert(mod.Offset + 1, String.Format(formatString, mod.DeltaMass));
             }
 
             if (Format.IsChargeDistinct)
