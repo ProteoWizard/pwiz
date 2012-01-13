@@ -974,6 +974,7 @@ struct ProteinReaderTask
     ProteomeDataPtr proteomeDataPtr;
     int proteinCount;
     vector<PeptideFinderTaskWeakPtr> peptideFinderTasks;
+    string decoyPrefix;
     boost::mutex queueMutex;
     boost::atomic_uint32_t done;
 };
@@ -1000,6 +1001,7 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
     {
         const proteome::ProteomeData& pd = *proteinReaderTask->proteomeDataPtr;
         const proteome::ProteinList& pl = *pd.proteinListPtr;
+        const string& decoyPrefix = proteinReaderTask->decoyPrefix;
 
         const size_t batchSize = 50;
         vector<proteome::ProteinPtr> proteinBatch(batchSize);
@@ -1020,7 +1022,13 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
                 proteinBatch.clear();
 
                 for (int j=0; j < batchSize && i+j < pl.size(); ++j)
-                    proteinBatch.push_back(pl.protein(i+j));
+                {
+                    proteome::ProteinPtr p = pl.protein(i+j);
+
+                    // skip decoy proteins
+                    if (!bal::istarts_with(p->id, decoyPrefix))
+                        proteinBatch.push_back(p);
+                }
                 i += batchSize - 1;
 
                 while (true)
@@ -1196,10 +1204,6 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
 
                 BOOST_FOREACH(proteome::ProteinPtr& protein, proteinBatch)
                 {
-                    // skip decoy proteins
-                    if (bal::starts_with(protein->id, decoyPrefix))
-                        continue;
-
                     typedef boost::shared_ptr<proteome::Digestion> DigestionPtr;
                     proteome::Digestion::Config digestionConfig(100000, 0, 100000, proteome::Digestion::NonSpecific);
                     vector<DigestionPtr> digestions;
@@ -1387,6 +1391,7 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
         ProteinReaderTaskPtr proteinReaderTask(new ProteinReaderTask);
         proteinReaderTask->proteomeDataPtr = taskGroup.proteomeDataPtr;
         proteinReaderTask->proteinCount = taskGroup.proteomeDataPtr->proteinListPtr->size();
+        proteinReaderTask->decoyPrefix = parserTasks[0]->analysis->importSettings.qonverterSettings.decoyPrefix;
         proteinReaderTask->done.store(0);
 
         for (size_t i=0; i < taskGroup.inputFilepaths.size(); ++i)

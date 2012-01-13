@@ -119,6 +119,9 @@ namespace IDPicker.Controls
                 row.Cells[maxRankColumn.Index].Value = Properties.Settings.Default.DefaultMaxRank;
                 row.Cells[maxFDRColumn.Index].Value = Properties.Settings.Default.DefaultMaxFDR;
 
+                if (a.parameters.ContainsKey("Config: DecoyPrefix"))
+                    row.Cells[decoyPrefixColumn.Index].Value = a.parameters["Config: DecoyPrefix"];
+
                 var comboBox = row.Cells[qonverterSettingsColumn.Index] as DataGridViewComboBoxCell;
                 var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.softwareName.ToLower()));
                 comboBox.Value = firstSoftwarePreset == null ? qonverterSettingsByName.Keys.FirstOrDefault() : firstSoftwarePreset;

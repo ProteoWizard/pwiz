@@ -30,7 +30,7 @@
     <BootstrapperEnabled>true</BootstrapperEnabled>
     <ApplicationIcon>
     </ApplicationIcon>
-    <Win32Resource>D:\idpicker\branches\IDPicker-3\Resources\Resources.res</Win32Resource>
+    <Win32Resource>Resources\Resources.res</Win32Resource>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>

@@ -79,12 +79,16 @@ namespace IDPicker.Controls
                 foreach (var p in diffParameters)
                     key += String.Format("; {0}={1}", p.Name, p.Value);
 
+                string defaultDecoyPrefix = a.Parameters.FirstOrDefault(o => o.Name == "Config: DecoyPrefix").Value ??
+                                            Properties.Settings.Default.DecoyPrefix;
+
                 row.Tag = a;
                 row.Cells[0].Value = key;
-                row.Cells[1].Value = Properties.Settings.Default.DecoyPrefix;
+                row.Cells[1].Value = a.QonverterSettings != null ? a.QonverterSettings.DecoyPrefix : defaultDecoyPrefix;
                 var comboBox = row.Cells[2] as DataGridViewComboBoxCell;
                 var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.Software.Name.ToLower()));
                 comboBox.Value = firstSoftwarePreset == null ? qonverterSettingsByName.Keys.FirstOrDefault() : firstSoftwarePreset;
+
                 dataGridView.Rows.Add(row);
             }
 

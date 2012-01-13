@@ -84,6 +84,7 @@
 		</component>
 		<property name="Type"/>
 		<property name="StartTime"/>
+		<one-to-one name="QonverterSettings" fetch="join"/>
 		<set name="Parameters" inverse="true" batch-size="50">
 			<key column="Analysis"/>
 			<one-to-many class="AnalysisParameter"/>

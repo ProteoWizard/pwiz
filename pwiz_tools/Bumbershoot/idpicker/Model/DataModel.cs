@@ -137,6 +137,7 @@ namespace IDPicker.DataModel
         public virtual AnalysisSoftware Software { get; set; }
         public virtual AnalysisType Type { get; set; }
         public virtual DateTime? StartTime { get; set; }
+        public virtual QonverterSettings QonverterSettings { get; set; }
         public virtual ISet<AnalysisParameter> Parameters { get; set; }
         public virtual IList<PeptideSpectrumMatch> Matches { get; set; }
     }
