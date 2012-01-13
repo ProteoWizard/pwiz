@@ -507,7 +507,9 @@ namespace pwiz.Skyline.Model
             {
                 if (!Annotations.IsEmpty)
                     return true;
-                if (HasResults && Results.SelectMany(l => l).Contains(chromInfo => chromInfo.IsUserModified))
+                if (HasResults && Results.Where(l => l != null)
+                                            .SelectMany(l => l)
+                                            .Contains(chromInfo => chromInfo.IsUserModified))
                     return true;
                 return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
             }

@@ -1351,6 +1351,9 @@ namespace pwiz.Skyline
                 else
                 {
                     // Or remove the cache entirely, if everything is being reimported
+                    foreach (var readStream in results.ReadStreams)
+                        readStream.CloseStream();
+
                     string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
                     if (File.Exists(cachePath))
                         File.Delete(cachePath);                    
