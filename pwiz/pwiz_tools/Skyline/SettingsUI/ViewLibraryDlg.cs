@@ -544,6 +544,7 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 int index = GetIndexOfSelectedPeptide();
+                btnAdd.Enabled = (-1 != index);
                 if (-1 != index)
                 {
                     SpectrumPeaksInfo spectrum;
@@ -1132,12 +1133,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddPeptide()
         {
-            if (CheckLibraryInSettings() == DialogResult.Cancel)
+            if (CheckLibraryInSettings() == DialogResult.Cancel || listPeptide.SelectedItem == null)
                 return;
 
             var startingDocument = Document;
-
-            var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
             var pepMatcher = new ViewLibraryPepMatching(startingDocument,
                                                         _selectedLibrary,
                                                         _selectedSpec,
@@ -1147,6 +1146,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
                 return;
 
+            var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
             var nodePepMatched = pepMatcher.MatchSinglePeptide(pepInfo);
             if (nodePepMatched == null)
             {

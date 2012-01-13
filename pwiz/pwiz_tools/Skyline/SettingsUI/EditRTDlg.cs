@@ -282,8 +282,9 @@ namespace pwiz.Skyline.SettingsUI
 
         private IList<MeasuredRetentionTime> GetTablePeptides()
         {
-            return Peptides.Select(p =>
-                new MeasuredRetentionTime(p.Sequence, p.RetentionTime)).ToArray();
+            return (from p in Peptides
+                    where p.Sequence != null
+                    select new MeasuredRetentionTime(p.Sequence, p.RetentionTime)).ToArray();
         }
 
         private void btnUseCurrent_Click(object sender, EventArgs e)

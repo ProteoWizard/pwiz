@@ -104,6 +104,11 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
+        public void ShowTextBoxError(Control control, string message)
+        {
+            ShowTextBoxError(control, message, new object[] { null });
+        }
+
         /// <summary>
         /// Validates a TextBox that should containe an integer value.
         /// </summary>

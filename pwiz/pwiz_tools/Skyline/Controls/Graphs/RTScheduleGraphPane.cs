@@ -77,8 +77,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 var settings = document.Settings.ChangePeptidePrediction(p => p.ChangeMeasuredRTWindow(window));
                 if (!settings.HasResults || !settings.PeptideSettings.Prediction.UseMeasuredRTs)
                 {
-                    settings = settings.ChangePeptidePrediction(p =>
-                        p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindoow(window)));
+                    if (settings.PeptideSettings.Prediction.RetentionTime != null)
+                    {
+                        settings = settings.ChangePeptidePrediction(p =>
+                            p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindoow(window)));
+                    }
                 }
                 var docWindow = document.ChangeSettings(settings);
 

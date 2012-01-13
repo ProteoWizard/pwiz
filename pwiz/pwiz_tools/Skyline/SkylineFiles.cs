@@ -567,6 +567,10 @@ namespace pwiz.Skyline
                 }
                 SaveLayout(fileName);
             }
+            catch (UnauthorizedAccessException)
+            {
+                // Fail silently
+            }
             catch (IOException)
             {
                 // Fail silently

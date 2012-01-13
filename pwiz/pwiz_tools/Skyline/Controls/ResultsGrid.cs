@@ -719,8 +719,23 @@ namespace pwiz.Skyline.Controls
             foreach (DataGridViewColumn column in Columns)
             {
                 if (!ReferenceEquals(column, ReplicateNameColumn))
-                    column.Visible = false;
+                    ShowColumn(column, false);
             }
+        }
+
+        private void ShowColumn(DataGridViewColumn column, bool show)
+        {
+            // If hiding the selected column, set the selected column back to the
+            // replicate column.
+            if (!show && CurrentCell != null && CurrentCell.ColumnIndex != -1 &&
+                    ReferenceEquals(column, Columns[CurrentCell.ColumnIndex]))
+            {
+                int currentRowIndex = CurrentCell.RowIndex;
+                ClearSelection();
+                if (currentRowIndex != -1)
+                    CurrentCell = Rows[currentRowIndex].Cells[0];
+            }
+            column.Visible = show;
         }
 
         /// <summary>
@@ -797,7 +812,6 @@ namespace pwiz.Skyline.Controls
                 srmTreeNode = srmTreeNode.SrmParent;
             }
             SelectedPeptideDocNode = srmTreeNode.Model as PeptideDocNode;
-
         }
 
         private void UpdateAnnotationColumns()
@@ -1207,7 +1221,7 @@ namespace pwiz.Skyline.Controls
             // saved set.
             foreach (DataGridViewColumn column in Columns)
             {
-                column.Visible = visibleColumnNameSet.Contains(column.Name);
+                ShowColumn(column, visibleColumnNameSet.Contains(column.Name));
             }
         }
 
@@ -1455,7 +1469,9 @@ namespace pwiz.Skyline.Controls
             int selectedResultRow = selectedRowId.ReplicateIndex;
             int selectedResult = StateProvider.SelectedResultsIndex;
 
-            int selectedColumn = (SelectedCells.Count > 0 ? SelectedCells[0].ColumnIndex : 0);
+            int selectedColumn = 0;
+            if (CurrentCell != null && CurrentCell.ColumnIndex != -1 && Columns[CurrentCell.ColumnIndex].Visible)
+                selectedColumn = CurrentCell.ColumnIndex;
             if (selectedResult != selectedResultRow)
             {
                 // For some reason GridView seems to store these in reverse order
@@ -1679,7 +1695,7 @@ namespace pwiz.Skyline.Controls
             {
                 return;
             }
-            column.Visible = true;
+            ShowColumn(column, true);
             CurrentCell = row.Cells[column.Index];
         }
 
