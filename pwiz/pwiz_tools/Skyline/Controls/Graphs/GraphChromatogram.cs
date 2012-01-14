@@ -768,11 +768,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (peakAreas != null)
             {
                 var tranGroupChromInfo = GetTransitionGroupChromInfo(nodeGroup, fileId, _chromIndex);
+                double? dotProduct = null;
                 if (tranGroupChromInfo != null)
                 {
-                    bestProduct = (isFullScanMs
-                        ? tranGroupChromInfo.IsotopeDotProduct
-                        : tranGroupChromInfo.LibraryDotProduct) ?? 0;
+                    dotProduct = isFullScanMs
+                                     ? tranGroupChromInfo.IsotopeDotProduct
+                                     : tranGroupChromInfo.LibraryDotProduct;
+                }
+                if (dotProduct.HasValue)
+                {
+                    bestProduct = dotProduct.Value;
 
                     var statExpectedIntensities = new Statistics(expectedIntensities);
                     for (int i = 0; i < peakAreas.Length; i++)
