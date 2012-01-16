@@ -306,7 +306,7 @@ namespace BumberDash.Forms
             DTModTypeList.Text = "Static";
             TRPrecursorMzToleranceRuleBox.Text = "mono";
             TRMinTerminiCleavagesBox.Text = "Fully-Specific";
-            TRMonoPrecursorMzToleranceUnitsList.Text = "mz";
+            TRPrecursorMzToleranceUnitsList.Text = "mz";
             TRFragmentMzToleranceUnitsList.Text = "mz";
             TRNTerminusMzToleranceUnitsList.Text = "mz";
             TRCTerminusMzToleranceUnitsList.Text = "mz";
@@ -557,9 +557,9 @@ namespace BumberDash.Forms
             if (root == "DeisotopingMode")
                 return ((ComboBox)item).SelectedIndex.ToString();
             if (root == "UnimodXML" && TRUnimodXMLBox.Text == "Default")
-                return Path.Combine(Application.StartupPath, @"lib\Bumbershoot\unimod.xml");
+                return Path.Combine(Application.StartupPath, @"lib\Bumbershoot\TagRecon\unimod.xml");
             if (root == "Blosum" && TRBlosumBox.Text == "Default")
-                return Path.Combine(Application.StartupPath, @"lib\Bumbershoot\blosum62.fas");
+                return Path.Combine(Application.StartupPath, @"lib\Bumbershoot\TagRecon\blosum62.fas");
             if (root == "DeisotopingMode")
                 return ((ComboBox)item).SelectedIndex.ToString();
             if (item is ComboBox || item is TextBox)
@@ -592,10 +592,10 @@ namespace BumberDash.Forms
                 return "\"" + item.Text + MyriFragmentMzToleranceUnitsList.Text + "\"";
 
             //TagRecon
-            if (item == TRMonoPrecursorMzToleranceBox)
-                return "\"" + item.Text + TRMonoPrecursorMzToleranceUnitsList.Text + "\"";
-            if (item == TRFragmentMzToleranceBox)
-                return "\"" + item.Text + TRFragmentMzToleranceUnitsList.Text + "\"";
+            //if (item == TRPrecursorMzToleranceBox)
+            //    return "\"" + item.Text + TRMonoPrecursorMzToleranceUnitsList.Text + "\"";
+            //if (item == TRFragmentMzToleranceBox)
+            //    return "\"" + item.Text + TRFragmentMzToleranceUnitsList.Text + "\"";
 
             //Pepitome
             if (item == PepMonoisotopeAdjustmentSetBox)
@@ -658,10 +658,10 @@ namespace BumberDash.Forms
                 }
 
                 //TagRecon
-                if (item == TRMonoPrecursorMzToleranceBox)
+                if (item == TRPrecursorMzToleranceBox)
                 {
                     item.Text = splitValue[0];
-                    TRMonoPrecursorMzToleranceUnitsList.Text = splitValue[1];
+                    TRPrecursorMzToleranceUnitsList.Text = splitValue[1];
                 }
                 if (item == TRFragmentMzToleranceBox)
                 {
@@ -707,8 +707,8 @@ namespace BumberDash.Forms
                 CheckForChange(MyriFragmentMzToleranceBox, e);
 
             //TagRecon
-            else if (item == TRMonoPrecursorMzToleranceUnitsList)
-                CheckForChange(TRMonoPrecursorMzToleranceBox, e);
+            else if (item == TRPrecursorMzToleranceUnitsList)
+                CheckForChange(TRPrecursorMzToleranceBox, e);
             else if (item == TRFragmentMzToleranceUnitsList)
                 CheckForChange(TRFragmentMzToleranceBox, e);
 
@@ -1424,8 +1424,8 @@ namespace BumberDash.Forms
                 DTPrecursorMzToleranceUnitsList.Enabled = true;
                 DTFragmentMzToleranceBox.Enabled = true;
                 DTFragmentMzToleranceUnitsList.Enabled = true;
-                TRMonoPrecursorMzToleranceBox.Enabled = true;
-                TRMonoPrecursorMzToleranceUnitsList.Enabled = true;
+                TRPrecursorMzToleranceBox.Enabled = true;
+                TRPrecursorMzToleranceUnitsList.Enabled = true;
                 TRFragmentMzToleranceBox.Enabled = true;
                 TRFragmentMzToleranceUnitsList.Enabled = true;
                 TRNTerminusMzToleranceBox.Enabled = true;
@@ -1458,8 +1458,8 @@ namespace BumberDash.Forms
                 DTPrecursorMzToleranceUnitsList.Enabled = false;
                 DTFragmentMzToleranceBox.Enabled = false;
                 DTFragmentMzToleranceUnitsList.Enabled = false;
-                TRMonoPrecursorMzToleranceBox.Enabled = false;
-                TRMonoPrecursorMzToleranceUnitsList.Enabled = false;
+                TRPrecursorMzToleranceBox.Enabled = false;
+                TRPrecursorMzToleranceUnitsList.Enabled = false;
                 TRFragmentMzToleranceBox.Enabled = false;
                 TRFragmentMzToleranceUnitsList.Enabled = false;
                 TRNTerminusMzToleranceBox.Enabled = false;

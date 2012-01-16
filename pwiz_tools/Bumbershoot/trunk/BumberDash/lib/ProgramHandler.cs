@@ -249,7 +249,8 @@ namespace BumberDash.lib
 
             if (!_killed && JobFinished != null)
             {
-                if (_filesToProcess > _completedFiles.Count)
+                if ((_destinationProgram == "TagRecon" && _filesToProcess*2 > _completedFiles.Count) ||
+                (_destinationProgram != "TagRecon" && _filesToProcess > _completedFiles.Count))
                     JobFinished(false, true);
                 else if (_destinationProgram == "DirecTag")
                     JobFinished(true, false);
@@ -405,10 +406,15 @@ namespace BumberDash.lib
 
         private void ErrorCaught(object sender, DataReceivedEventArgs e)
         {
-            if (!_scanning || _filesToProcess == _completedFiles.Count || string.IsNullOrEmpty(e.Data) ||
-                e.Data.Contains("Could not find the default configuration file") ||
-                e.Data.Contains("Could not find the default residue masses file"))
+            if (!_scanning || (_destinationProgram == "TagRecon"
+                               && _filesToProcess*2 == _completedFiles.Count) ||
+                (_destinationProgram != "TagRecon"
+                 && _filesToProcess == _completedFiles.Count) ||
+                string.IsNullOrEmpty(e.Data) ||
+                e.Data.ToLower().Contains("could not find the default configuration file") ||
+                e.Data.ToLower().Contains("could not find the default residue masses file"))
                 return;
+
 
             var data = e.Data;
 
@@ -498,7 +504,7 @@ namespace BumberDash.lib
             }
             else if (!_versionCaught)
             {
-                var introMatch = Regex.Match(recievedLine, @"MyriMatch (\d+.\d+.\d)");
+                var introMatch = Regex.Match(recievedLine, @"MyriMatch (\d+.\d+.\d+)");
                 if (introMatch.Success && introMatch.Groups.Count == 2)
                 {
                     Properties.Settings.Default.MyriMatchVersion = introMatch.Groups[1].Value;
