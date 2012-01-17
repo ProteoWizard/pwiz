@@ -1308,6 +1308,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
         catch (exception& e)
         {
             // failure during qonversion is not fatal
+			ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*[QonverterError]*" + lexical_cast<string>(e.what()));
             cerr << "\n[executePeptideFinderTask] thread " << boost::this_thread::get_id() << " failed to apply Q value filter: " << e.what() << endl;
         }
 

@@ -35,6 +35,8 @@ namespace CustomDataSourceDialog
     public partial class BreadCrumbControl : UserControl
     {
         public EventHandler Navigate;
+        public EventHandler BoxCreated;
+        public EventHandler BoxRemoved;
         private Stack<ToolStripMenuItem> _overflowStack;
         private Dictionary<ToolStripMenuItem, ToolStripMenuItem> _itemNeighbors;
         private ToolStripMenuItem _defaultRootMenu;
@@ -149,6 +151,7 @@ namespace CustomDataSourceDialog
             else
                 currentDirectory = string.Empty;
 
+            BoxCreated(null, null);
             _fileCombo = new ComboBox
                                 {
                                     Text = currentDirectory,
@@ -174,6 +177,7 @@ namespace CustomDataSourceDialog
                                               {
                                                   _fileCombo.Visible = false;
                                                   Controls.Remove(_fileCombo);
+                                                  BoxRemoved(null, null);
                                                   Navigate(_fileCombo.Text.TrimEnd('\\'), null);
                                               }
                                               else
@@ -183,6 +187,7 @@ namespace CustomDataSourceDialog
                                           {
                                               _fileCombo.Visible = false;
                                               Controls.Remove(_fileCombo);
+                                              BoxRemoved(null, null);
                                               return;
                                           }
                                       };
@@ -192,6 +197,7 @@ namespace CustomDataSourceDialog
                                                        {
                                                            _fileCombo.Visible = false;
                                                            Controls.Remove(_fileCombo);
+                                                           BoxRemoved(null, null);
                                                            Navigate(_fileCombo.Text.TrimEnd('\\'), null);
                                                        }
                                                        else

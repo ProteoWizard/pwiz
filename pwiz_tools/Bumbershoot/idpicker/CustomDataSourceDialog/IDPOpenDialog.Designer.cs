@@ -65,7 +65,7 @@ namespace CustomDataSourceDialog
             this.MenuPanel = new System.Windows.Forms.Panel();
             this.SubfolderBox = new System.Windows.Forms.CheckBox();
             this.VertSplit = new System.Windows.Forms.SplitContainer();
-            this.RemoveNode = new System.Windows.Forms.Button();
+            this.RemoveNodeButton = new System.Windows.Forms.Button();
             this.AddNode = new System.Windows.Forms.Button();
             this.FileTreeView = new System.Windows.Forms.TreeView();
             this.TopSplit = new System.Windows.Forms.SplitContainer();
@@ -221,7 +221,7 @@ namespace CustomDataSourceDialog
             // 
             // VertSplit.Panel2
             // 
-            this.VertSplit.Panel2.Controls.Add(this.RemoveNode);
+            this.VertSplit.Panel2.Controls.Add(this.RemoveNodeButton);
             this.VertSplit.Panel2.Controls.Add(this.AddNode);
             this.VertSplit.Panel2.Controls.Add(this.FileTreeView);
             this.VertSplit.Size = new System.Drawing.Size(730, 404);
@@ -229,16 +229,16 @@ namespace CustomDataSourceDialog
             this.VertSplit.TabIndex = 43;
             this.VertSplit.TabStop = false;
             // 
-            // RemoveNode
+            // RemoveNodeButton
             // 
-            this.RemoveNode.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.RemoveNode.Location = new System.Drawing.Point(6, 205);
-            this.RemoveNode.Name = "RemoveNode";
-            this.RemoveNode.Size = new System.Drawing.Size(30, 23);
-            this.RemoveNode.TabIndex = 2;
-            this.RemoveNode.Text = "<";
-            this.RemoveNode.UseVisualStyleBackColor = true;
-            this.RemoveNode.Click += new System.EventHandler(this.RemoveNode_Click);
+            this.RemoveNodeButton.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.RemoveNodeButton.Location = new System.Drawing.Point(6, 205);
+            this.RemoveNodeButton.Name = "RemoveNodeButton";
+            this.RemoveNodeButton.Size = new System.Drawing.Size(30, 23);
+            this.RemoveNodeButton.TabIndex = 2;
+            this.RemoveNodeButton.Text = "<";
+            this.RemoveNodeButton.UseVisualStyleBackColor = true;
+            this.RemoveNodeButton.Click += new System.EventHandler(this.RemoveNode_Click);
             // 
             // AddNode
             // 
@@ -331,6 +331,7 @@ namespace CustomDataSourceDialog
             // 
             // IDPOpenDialog
             // 
+            this.AcceptButton = this.openButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.cancelButton;
@@ -384,7 +385,7 @@ namespace CustomDataSourceDialog
         private System.Windows.Forms.Panel MenuPanel;
         private System.Windows.Forms.SplitContainer VertSplit;
         private System.Windows.Forms.SplitContainer TopSplit;
-        private System.Windows.Forms.Button RemoveNode;
+        private System.Windows.Forms.Button RemoveNodeButton;
         private System.Windows.Forms.Button AddNode;
         private System.Windows.Forms.TreeView FileTreeView;
         private System.Windows.Forms.CheckBox SubfolderBox;

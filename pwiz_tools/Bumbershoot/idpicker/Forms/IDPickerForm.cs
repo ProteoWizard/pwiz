@@ -837,6 +837,8 @@ namespace IDPicker
                 // set main window title
                 BeginInvoke(new MethodInvoker(() => Text = commonFilename));
 
+                //set up delayed messages so non-fatal errors that occur at the end arent lost
+                var delayedMessages = new List<string[]>();
                 if (xml_filepaths.Count() > 0)
                 {
                     importCancelled = false;
@@ -849,8 +851,16 @@ namespace IDPicker
                     var progressForm = new ProgressForm(xml_filepaths, ilr)
                     {
                         Text = "Import Progress",
-                        StartPosition = FormStartPosition.CenterParent
+                        StartPosition = FormStartPosition.CenterParent,
                     };
+                    progressForm.NonFatalErrorCaught +=
+                        (rawMessage, emptyargs) =>
+                            {
+                                var message = rawMessage as string[];
+                                if (message == null || message.Length < 2)
+                                    return;
+                                delayedMessages.Add(new[]{message[0], message[1]});
+                            };
 
                     Invoke(new MethodInvoker(() => progressForm.Show(this)));
 
@@ -949,11 +959,62 @@ namespace IDPicker
 
                     if (logForm != null) logForm.Show(dockPanel, DockState.DockBottomAutoHide);
                 }));
+
+                //show list of delayed non-fatal errors
+                if (delayedMessages.Any())
+                {
+                    var sb = new StringBuilder();
+                    foreach (var message in delayedMessages)
+                        sb.AppendLine(string.Format("{0}:{1}{2}{1}", message[0], Environment.NewLine, message[1]));
+                    var messageString = sb.ToString();
+
+                    ShowExpandedMessageBox(messageString);
+                }
             }
             catch (Exception ex)
             {
                 Program.HandleException(ex);
             }
+        }
+
+        private static void ShowExpandedMessageBox(string messageString)
+        {
+            var messageForm = new Form(){Size = new Size(500,300)};
+            var splitContainer = new SplitContainer()
+                                     {
+                                         Dock = DockStyle.Fill,
+                                         IsSplitterFixed = true,
+                                         SplitterWidth = 1,
+                                         SplitterDistance = 300,
+                                         Orientation = Orientation.Horizontal,
+                                         Panel2MinSize = 20
+                                     };
+            splitContainer.Resize +=
+                (x, y) => { splitContainer.SplitterDistance = messageForm.Size.Height - 67; };
+            var okButton = new Button
+                               {
+                                   DialogResult = DialogResult.OK,
+                                   Text = "Ok",
+                                   Anchor = (AnchorStyles.Right | AnchorStyles.Top),
+                                   //Location = new System.Drawing.Point(414, 4),
+                                   Size = new Size(75,23),
+                                   Dock = DockStyle.Right
+                               };
+            splitContainer.Panel2.Controls.Add(okButton);
+            var textBox = new TextBox
+                              {
+                                  Multiline = true,
+                                  ScrollBars = ScrollBars.Both,
+                                  Dock = DockStyle.Fill,
+                                  Text = messageString.Trim(),
+                                  ReadOnly = true,
+                                  SelectionLength = 0,
+                                  TabStop = false
+                              };
+            splitContainer.Panel1.Controls.Add(textBox);
+            messageForm.Controls.Add(splitContainer);
+            messageForm.ShowDialog();
+            okButton.Focus();
         }
 
         internal void LoadLayout(LayoutProperty userLayout)
@@ -1017,10 +1078,10 @@ namespace IDPicker
             importCancelled = e.Cancel = result == DialogResult.Cancel;
         }
 
-        IDictionary<Analysis, QonverterSettings> qonverterSettingsHandler (IList<Analysis> analyses, out bool cancel)
+        IDictionary<Analysis, QonverterSettings> qonverterSettingsHandler (IDictionary<Analysis, QonverterSettings> oldSettings, out bool cancel)
         {
             qonverterSettingsByAnalysis = new Dictionary<Analysis, QonverterSettings>();
-            analyses.ForEach(o => qonverterSettingsByAnalysis.Add(o, null));
+            oldSettings.ForEach(o => qonverterSettingsByAnalysis.Add(o.Key, o.Value));
             var result = UserDialog.Show(this, "Qonverter Settings", new QonverterSettingsByAnalysisControl(qonverterSettingsByAnalysis, showQonverterSettingsManager));
             cancel = result == DialogResult.Cancel;
             return qonverterSettingsByAnalysis;
@@ -1107,11 +1168,12 @@ namespace IDPicker
             lock (session)
             {
                 var databaseAnalysis = session.QueryOver<Analysis>().List();
+            var oldSettings =session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
 
-                bool cancel;
-                var qonverterSettings = qonverterSettingsHandler(databaseAnalysis, out cancel);
-                if (cancel)
-                    return;
+            bool cancel;
+            var qonverterSettings = qonverterSettingsHandler(oldSettings, out cancel);
+            if (cancel)
+                return;
 
                 var qonverter = new Qonverter();
                 qonverter.QonversionProgress += progressMonitor.UpdateProgress;

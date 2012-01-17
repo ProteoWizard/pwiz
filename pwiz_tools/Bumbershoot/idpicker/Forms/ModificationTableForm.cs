@@ -384,6 +384,9 @@ namespace IDPicker.Forms
                     second = dataGridView.SelectedCells[0].OwningColumn.Name
                 };
 
+            _loading = true;
+            MinRowBox.Text = MinColumnBox.Text = "1";
+
             ClearData();
 
             Text = TabText = "Loading modification view...";
@@ -420,6 +423,7 @@ namespace IDPicker.Forms
             ClearData();
         }
 
+        private IList<object[]> _unfilteredQueryRows;
         void setData (object sender, DoWorkEventArgs e)
         {
             try
@@ -437,6 +441,8 @@ namespace IDPicker.Forms
                     {
                         basicDataFilter = new DataFilter(dataFilter);
                         IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
+                        _unfilteredQueryRows = queryRows;
+                        TrimModificationTable(ref queryRows);
                         basicDeltaMassTable = createDeltaMassTableFromQuery(queryRows, out basicTotalModifications, out siteColumnNameToSite);
                         findDeltaMassAnnotations();
                     }
@@ -448,12 +454,70 @@ namespace IDPicker.Forms
                 {
                     Map<string, char> dummy;
                     IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
+                    _unfilteredQueryRows = queryRows;
+                    TrimModificationTable(ref queryRows);
                     deltaMassTable = createDeltaMassTableFromQuery(queryRows, out totalModifications, out dummy);
                 }
             }
             catch (Exception ex)
             {
                 e.Result = ex;
+            }
+            finally
+            {
+                _loading = false;
+            }
+        }
+
+        private void RefilterData(object sender, DoWorkEventArgs e)
+        {
+            Map<string, char> dummy;
+            IList<object[]> queryRows = _unfilteredQueryRows.ToList();
+            TrimModificationTable(ref queryRows);
+            deltaMassTable = createDeltaMassTableFromQuery(queryRows, out totalModifications, out dummy);
+        }
+
+        private void TrimModificationTable(ref IList<object[]> queryRows)
+        {
+            int minColumns, minRows;
+            if (!int.TryParse(MinColumnBox.Text, out minColumns) ||
+                !int.TryParse(MinRowBox.Text, out minRows))
+                return;
+
+            var columnsToRemove = new List<char>();
+            var rowsToRemove = new List<double>();
+            var columnSums = new Dictionary<char, int>();
+            var rowSums = new Dictionary<double, int>();
+
+            foreach (var item in queryRows)
+            {
+                var residue = (char)item[0];
+                var mass = Math.Round(((Modification) item[1]).MonoMassDelta);
+                var spectra = Convert.ToInt32(item[2]);
+
+                if (!columnSums.ContainsKey(residue))
+                    columnSums.Add(residue, spectra);
+                else
+                    columnSums[residue] += spectra;
+
+                if (!rowSums.ContainsKey(mass))
+                    rowSums.Add(mass, spectra);
+                else
+                    rowSums[mass] += spectra;
+            }
+
+            columnsToRemove.AddRange(from kvp in columnSums
+                                     where kvp.Value < minColumns
+                                     select kvp.Key);
+            rowsToRemove.AddRange(from kvp in rowSums
+                                  where kvp.Value < minRows
+                                  select kvp.Key);
+
+            for (var x = queryRows.Count - 1; x >= 0; x--)
+            {
+                if (columnsToRemove.Contains((char)queryRows[x][0]) ||
+                    rowsToRemove.Contains(Math.Round(((Modification) queryRows[x][1]).MonoMassDelta)))
+                    queryRows.RemoveAt(x);
             }
         }
 
@@ -462,7 +526,8 @@ namespace IDPicker.Forms
             if (e.Result is Exception)
                 Program.HandleException(e.Result as Exception);
 
-            Text = TabText = String.Format("Modification View: {0} modifications", totalModifications);
+            if (!_loading)
+                Text = TabText = String.Format("Modification View: {0} modifications", totalModifications);
 
             dataGridView.DataSource = deltaMassTable;
             dataGridView.Columns[deltaMassColumnName].Visible = false;
@@ -761,6 +826,41 @@ namespace IDPicker.Forms
                 session.Close();
                 session.Dispose();
                 session = null;
+            }
+        }
+
+        private void MinCountFilter_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
+                e.Handled = true;
+        }
+
+        private bool _loading;
+        private void MinCountFilter_Leave(object sender, EventArgs e)
+        {
+            if (_loading)
+                return;
+
+            try
+            {
+                int value;
+                if (!int.TryParse(((TextBox)sender).Text, out value) ||
+                    value < 1)
+                    ((TextBox) sender).Text = "1";
+
+                var workerThread = new BackgroundWorker()
+                {
+                    WorkerReportsProgress = true,
+                    WorkerSupportsCancellation = true
+                };
+
+                workerThread.DoWork += RefilterData;
+                workerThread.RunWorkerCompleted += renderData;
+                workerThread.RunWorkerAsync();
+            }
+            catch
+            {
+                ((TextBox) sender).Text = "1";
             }
         }
     }

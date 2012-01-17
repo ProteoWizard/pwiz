@@ -189,6 +189,17 @@ namespace CustomDataSourceDialog
             //add Bread crumbs
             BreadCrumbs = new BreadCrumbControl { Parent = BreadCrumbPanel, Dock = DockStyle.Fill };
             BreadCrumbs.Navigate += NavigateToFolder;
+            BreadCrumbs.BoxCreated += (x, y) =>
+                                          {
+                                              this.AcceptButton = null;
+                                              this.CancelButton = null;
+                                          };
+            BreadCrumbs.BoxRemoved += (x, y) =>
+                                          {
+                                              this.AcceptButton = this.openButton;
+                                              this.CancelButton = this.cancelButton;
+                                              this.Focus();
+                                          };
         }
 
         private void IDPOpenDialog_Load(object sender, EventArgs e)
@@ -815,6 +826,8 @@ namespace CustomDataSourceDialog
 
         private void OpenDataSourceDialogue_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (SearchBox.Focused)
+                e.Cancel = true;
             if (DialogResult == DialogResult.OK && DataSources.Any())
             {
                 foreach (var item in DataSources)
@@ -936,7 +949,15 @@ namespace CustomDataSourceDialog
                             destructableName = destructableName.Remove(0, 1);
                         if (destructableName.Length == 0)
                             continue;
+                        if (_extensionList != null && 
+                            _extensionList.ContainsKey(sourceTypeComboBox.Text) &&
+                            !_extensionList[sourceTypeComboBox.Text].Contains(destructableName))
+                            continue;
                     }
+                    if (_extensionList != null &&
+                            _extensionList.ContainsKey(sourceTypeComboBox.Text) &&
+                            !_extensionList[sourceTypeComboBox.Text].Contains(file.Extension))
+                        continue;
 
                     HandleItemToAdd(ref newNode, file);
                 }
@@ -1098,6 +1119,7 @@ namespace CustomDataSourceDialog
         private TreeNode FindClosestRelative(TreeNode currentNode, string newPath)
         {
             var closestMatch = currentNode;
+            TreeNode oldSelf = null;
 
             var pathList = BreadCrumbControl.PathToDirectoryList(newPath);
             var buildingString = string.Empty;
@@ -1112,11 +1134,14 @@ namespace CustomDataSourceDialog
             foreach (TreeNode node in currentNode.Nodes)
                 if (possibleRelatives.Contains(node.ToolTipText))
                 {
-                    closestMatch = node.ToolTipText == newPath
-                                       ? null
-                                       : FindClosestRelative(node, newPath);
+                    if (node.ToolTipText == newPath)
+                        oldSelf = node;
+                    else
+                        FindClosestRelative(node, newPath);
                     break;
                 }
+            if (oldSelf != null)
+                oldSelf.Remove();
             return closestMatch;
         }
 

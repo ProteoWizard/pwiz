@@ -63,6 +63,10 @@ namespace IDPicker.Forms
             this.copySelectedCellsToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportSelectedCellsToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showSelectedCellsInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.MinRowLabel = new System.Windows.Forms.Label();
+            this.MinRowBox = new System.Windows.Forms.TextBox();
+            this.MinColumnBox = new System.Windows.Forms.TextBox();
+            this.MinColumnLabel = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
@@ -86,14 +90,14 @@ namespace IDPicker.Forms
             this.dataGridView.RowHeadersWidth = 80;
             this.dataGridView.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridView.Size = new System.Drawing.Size(284, 235);
+            this.dataGridView.Size = new System.Drawing.Size(350, 235);
             this.dataGridView.TabIndex = 0;
             // 
             // exportButton
             // 
             this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
-            this.exportButton.Location = new System.Drawing.Point(242, 2);
+            this.exportButton.Location = new System.Drawing.Point(308, 2);
             this.exportButton.Name = "exportButton";
             this.exportButton.Size = new System.Drawing.Size(30, 23);
             this.exportButton.TabIndex = 4;
@@ -111,7 +115,7 @@ namespace IDPicker.Forms
             this.exportSelectedCellsToFileToolStripMenuItem,
             this.showSelectedCellsInExcelToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
-            this.exportMenu.Size = new System.Drawing.Size(241, 164);
+            this.exportMenu.Size = new System.Drawing.Size(241, 142);
             // 
             // clipboardToolStripMenuItem
             // 
@@ -160,11 +164,57 @@ namespace IDPicker.Forms
             this.showSelectedCellsInExcelToolStripMenuItem.Text = "Show Selected Cells in Excel";
             this.showSelectedCellsInExcelToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
+            // MinRowLabel
+            // 
+            this.MinRowLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.MinRowLabel.AutoSize = true;
+            this.MinRowLabel.Location = new System.Drawing.Point(170, 7);
+            this.MinRowLabel.Name = "MinRowLabel";
+            this.MinRowLabel.Size = new System.Drawing.Size(79, 13);
+            this.MinRowLabel.TabIndex = 5;
+            this.MinRowLabel.Text = "Min Row Total:";
+            // 
+            // MinRowBox
+            // 
+            this.MinRowBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.MinRowBox.Location = new System.Drawing.Point(255, 4);
+            this.MinRowBox.Name = "MinRowBox";
+            this.MinRowBox.Size = new System.Drawing.Size(47, 20);
+            this.MinRowBox.TabIndex = 6;
+            this.MinRowBox.Text = "1";
+            this.MinRowBox.Leave += new System.EventHandler(this.MinCountFilter_Leave);
+            this.MinRowBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
+            // 
+            // MinColumnBox
+            // 
+            this.MinColumnBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.MinColumnBox.Location = new System.Drawing.Point(117, 5);
+            this.MinColumnBox.Name = "MinColumnBox";
+            this.MinColumnBox.Size = new System.Drawing.Size(47, 20);
+            this.MinColumnBox.TabIndex = 8;
+            this.MinColumnBox.Text = "1";
+            this.MinColumnBox.Leave += new System.EventHandler(this.MinCountFilter_Leave);
+            this.MinColumnBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
+            // 
+            // MinColumnLabel
+            // 
+            this.MinColumnLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.MinColumnLabel.AutoSize = true;
+            this.MinColumnLabel.Location = new System.Drawing.Point(19, 7);
+            this.MinColumnLabel.Name = "MinColumnLabel";
+            this.MinColumnLabel.Size = new System.Drawing.Size(92, 13);
+            this.MinColumnLabel.TabIndex = 7;
+            this.MinColumnLabel.Text = "Min Column Total:";
+            // 
             // ModificationTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 262);
+            this.ClientSize = new System.Drawing.Size(350, 262);
+            this.Controls.Add(this.MinColumnBox);
+            this.Controls.Add(this.MinColumnLabel);
+            this.Controls.Add(this.MinRowBox);
+            this.Controls.Add(this.MinRowLabel);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.dataGridView);
             this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
@@ -177,6 +227,7 @@ namespace IDPicker.Forms
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -192,6 +243,10 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem copySelectedCellsToClipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedCellsToFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showSelectedCellsInExcelToolStripMenuItem;
+        private System.Windows.Forms.Label MinRowLabel;
+        private System.Windows.Forms.TextBox MinRowBox;
+        private System.Windows.Forms.TextBox MinColumnBox;
+        private System.Windows.Forms.Label MinColumnLabel;
 
     }
 }
