@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using NHibernate;
@@ -152,11 +153,14 @@ namespace pwiz.Topograph.MsData
                                           PsmCount = (int)row[9],
                                           IntegrationNote = IntegrationNote.Parse((string)row[10]),
                                       };
-                    rowData.Accept = IsAcceptable(rowData);
+                    rowData.RejectReason = IsAcceptable(rowData);
                     ComputeAvgTurnover(rowData);
-                    if (rowData.Accept && MinTurnoverScore > 0)
+                    if (null == rowData.RejectReason && MinTurnoverScore > 0)
                     {
-                        rowData.Accept = rowData.AvgTurnoverScore >= MinTurnoverScore;
+                        if (rowData.AvgTurnoverScore < MinTurnoverScore)
+                        {
+                            rowData.RejectReason = RejectReason.LowTurnoverScore;
+                        }
                     }
                     result.Add(rowData);
                 }
@@ -168,33 +172,33 @@ namespace pwiz.Topograph.MsData
             return result;
         }
 
-        private bool IsAcceptable(RowData rowData)
+        private RejectReason? IsAcceptable(RowData rowData)
         {
             if (rowData.ValidationStatus == ValidationStatus.accept)
             {
-                return true;
+                return null;
             }
             if (rowData.ValidationStatus == ValidationStatus.reject)
             {
-                return false;
+                return RejectReason.UserRejected;
             }
             if (rowData.DeconvolutionScore < MinScore)
             {
-                return false;
+                return RejectReason.LowDeconvolutionScore;
             }
             if (MinAuc > 0 && rowData.PeakAreas.Values.Sum() < MinAuc)
             {
-                return false;
+                return RejectReason.LowAreaUnderCurve;
             }
             if (!AcceptMissingMs2Id && rowData.PsmCount == 0)
             {
-                return false;
+                return RejectReason.NoMs2Id;
             }
             if (rowData.IntegrationNote != null && !AcceptIntegrationNotes.Contains(rowData.IntegrationNote))
             {
-                return false;
+                return RejectReason.RejectIntegrationNote;
             }
-            return true;
+            return null;
         }
 
         private void ComputeAvgTurnover(RowData rowData)
@@ -361,7 +365,7 @@ namespace pwiz.Topograph.MsData
                 var values = new Dictionary<double, List<double>>();
                 foreach (var rowData in rowDatas)
                 {
-                    if (!rowData.Accept)
+                    if (null != rowData.RejectReason)
                     {
                         continue;
                     }
@@ -437,6 +441,8 @@ namespace pwiz.Topograph.MsData
                     var value = GetValue(rowData, out score);
                     if (value.Value < cutoff.Key || value.Value > cutoff.Value)
                     {
+                        Debug.Assert(null == rowData.RejectReason);
+                        rowData.RejectReason = RejectReason.EvviesFilter;
                         continue;
                     }
                     filteredRowDataList.Add(rowData);
@@ -451,18 +457,20 @@ namespace pwiz.Topograph.MsData
             var logValues = new List<double>();
             foreach (var rowData in filteredRowDatas)
             {
-                if (!rowData.Accept)
+                if (null != rowData.RejectReason)
                 {
                     continue;
                 }
                 double? logValue = GetLogValue(rowData);
                 if (!logValue.HasValue || double.IsNaN(logValue.Value) || double.IsInfinity(logValue.Value))
                 {
+                    rowData.RejectReason = RejectReason.ValueOutOfRange; 
                     continue;
                 }
                 double? timePoint = GetTimePoint(rowData);
                 if (!timePoint.HasValue || ExcludedTimePoints.Contains(timePoint.Value))
                 {
+                    rowData.RejectReason = RejectReason.NoTimePoint;
                     continue;
                 }
                 logValues.Add(logValue.Value);
@@ -589,8 +597,12 @@ namespace pwiz.Topograph.MsData
                                   PsmCount = peptideFileAnalysis.PsmCount,
                                   IntegrationNote = peptideFileAnalysis.Peaks.IntegrationNote,
                        };
-            rowData.Accept = IsAcceptable(rowData);
+            rowData.RejectReason = IsAcceptable(rowData);
             ComputeAvgTurnover(rowData);
+            if (null == rowData.RejectReason && MinTurnoverScore > 0 && rowData.AvgTurnoverScore < MinTurnoverScore)
+            {
+                rowData.RejectReason = RejectReason.LowTurnoverScore;
+            }
             return rowData;
         }
 
@@ -669,7 +681,7 @@ namespace pwiz.Topograph.MsData
         public IList<RowData> RowDatas { get; private set; }
         public class RowData
         {
-            public bool Accept { get; set; }
+            public RejectReason? RejectReason { get; set; }
             public double TracerPercent { get; set; }
             public double DeconvolutionScore { get; set; }
             public double? IndPrecursorEnrichment { get; set; }
@@ -873,5 +885,18 @@ namespace pwiz.Topograph.MsData
         Jun2011,
         Oct2011,
         TwoStdDev,
+    }
+
+    public enum RejectReason
+    {
+        UserRejected,
+        LowDeconvolutionScore,
+        LowAreaUnderCurve,
+        NoMs2Id,
+        RejectIntegrationNote,
+        LowTurnoverScore,
+        EvviesFilter,
+        ValueOutOfRange,
+        NoTimePoint,
     }
 }

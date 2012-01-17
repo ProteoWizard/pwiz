@@ -17,17 +17,12 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.Data.SQLite;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using NHibernate;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
 using NHibernate.Driver;
-using NHibernate.Mapping;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.Data

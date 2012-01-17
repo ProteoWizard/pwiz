@@ -164,7 +164,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 _rowData = rowData;
             }
-            public bool Accept { get { return _rowData.Accept; } }
+            public bool Accept { get { return null == _rowData.RejectReason; } }
             public LinkValue<Peptide> Peptide {get
             {
                 return new LinkValue<Peptide>(_rowData.Peptide, (o, e) => PeptideFileAnalysisFrame

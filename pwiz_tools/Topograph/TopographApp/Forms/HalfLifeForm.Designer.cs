@@ -30,12 +30,12 @@ namespace pwiz.Topograph.ui.Forms
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle7 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle8 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle9 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle10 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle11 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle12 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
@@ -71,7 +71,11 @@ namespace pwiz.Topograph.ui.Forms
             this.comboEvviesFilter = new System.Windows.Forms.ComboBox();
             this.tbxMinAuc = new System.Windows.Forms.TextBox();
             this.label12 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.tbxMinTurnoverScore = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.validationStatusColumn1 = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -87,10 +91,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colPrecursorPoolAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnoverAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnoverScoreAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.validationStatusColumn1 = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
-            this.label13 = new System.Windows.Forms.Label();
-            this.tbxMinTurnoverScore = new System.Windows.Forms.TextBox();
+            this.colRejectReason = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -395,14 +396,14 @@ namespace pwiz.Topograph.ui.Forms
             this.gridViewStats.AllowUserToAddRows = false;
             this.gridViewStats.AllowUserToDeleteRows = false;
             this.gridViewStats.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle7.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle7.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle7.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle7.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle7.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle7.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle7.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridViewStats.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle7;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridViewStats.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.gridViewStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridViewStats.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colStatsTime,
@@ -411,25 +412,25 @@ namespace pwiz.Topograph.ui.Forms
             this.colStatsMedian,
             this.colStatsStdDev});
             this.tableLayoutPanel1.SetColumnSpan(this.gridViewStats, 2);
-            dataGridViewCellStyle8.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle8.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle8.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle8.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle8.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle8.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle8.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.gridViewStats.DefaultCellStyle = dataGridViewCellStyle8;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.gridViewStats.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridViewStats.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gridViewStats.Location = new System.Drawing.Point(3, 378);
             this.gridViewStats.Name = "gridViewStats";
-            dataGridViewCellStyle9.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle9.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle9.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle9.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle9.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.gridViewStats.RowHeadersDefaultCellStyle = dataGridViewCellStyle9;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.gridViewStats.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.gridViewStats.Size = new System.Drawing.Size(449, 14);
             this.gridViewStats.TabIndex = 22;
             this.gridViewStats.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewStats_CellValueChanged);
@@ -539,19 +540,39 @@ namespace pwiz.Topograph.ui.Forms
             this.label12.Text = "Minimum Area Under Curve";
             this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label13.Location = new System.Drawing.Point(3, 175);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(144, 25);
+            this.label13.TabIndex = 29;
+            this.label13.Text = "Minimum Turnover Score";
+            this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // tbxMinTurnoverScore
+            // 
+            this.tbxMinTurnoverScore.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxMinTurnoverScore.Location = new System.Drawing.Point(153, 178);
+            this.tbxMinTurnoverScore.Name = "tbxMinTurnoverScore";
+            this.tbxMinTurnoverScore.Size = new System.Drawing.Size(299, 20);
+            this.tbxMinTurnoverScore.TabIndex = 30;
+            this.tbxMinTurnoverScore.TextChanged += new System.EventHandler(this.tbxMinTurnoverScore_TextChanged);
+            // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle10.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle10.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle10.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle10.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle10.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle10.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle10.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle10;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colPeptide,
@@ -568,30 +589,58 @@ namespace pwiz.Topograph.ui.Forms
             this.colTurnoverScore,
             this.colPrecursorPoolAvg,
             this.colTurnoverAvg,
-            this.colTurnoverScoreAvg});
-            dataGridViewCellStyle11.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle11.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle11.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle11.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle11.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle11.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle11.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle11;
+            this.colTurnoverScoreAvg,
+            this.colRejectReason});
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
-            dataGridViewCellStyle12.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle12.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle12.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle12.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle12.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle12.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle12.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle12;
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.dataGridView1.Size = new System.Drawing.Size(948, 123);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Name = "splitContainer2";
+            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.dataGridView1);
+            this.splitContainer2.Size = new System.Drawing.Size(948, 522);
+            this.splitContainer2.SplitterDistance = 395;
+            this.splitContainer2.TabIndex = 1;
+            // 
+            // validationStatusColumn1
+            // 
+            this.validationStatusColumn1.DisplayMember = "Display";
+            this.validationStatusColumn1.HeaderText = "Status";
+            this.validationStatusColumn1.Name = "validationStatusColumn1";
+            this.validationStatusColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.validationStatusColumn1.ValueMember = "Value";
             // 
             // colPeptide
             // 
@@ -691,52 +740,11 @@ namespace pwiz.Topograph.ui.Forms
             this.colTurnoverScoreAvg.Name = "colTurnoverScoreAvg";
             this.colTurnoverScoreAvg.ReadOnly = true;
             // 
-            // splitContainer2
+            // colRejectReason
             // 
-            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.dataGridView1);
-            this.splitContainer2.Size = new System.Drawing.Size(948, 522);
-            this.splitContainer2.SplitterDistance = 395;
-            this.splitContainer2.TabIndex = 1;
-            // 
-            // validationStatusColumn1
-            // 
-            this.validationStatusColumn1.DisplayMember = "Display";
-            this.validationStatusColumn1.HeaderText = "Status";
-            this.validationStatusColumn1.Name = "validationStatusColumn1";
-            this.validationStatusColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.validationStatusColumn1.ValueMember = "Value";
-            // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label13.Location = new System.Drawing.Point(3, 175);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(144, 25);
-            this.label13.TabIndex = 29;
-            this.label13.Text = "Minimum Turnover Score";
-            this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // tbxMinTurnoverScore
-            // 
-            this.tbxMinTurnoverScore.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxMinTurnoverScore.Location = new System.Drawing.Point(153, 178);
-            this.tbxMinTurnoverScore.Name = "tbxMinTurnoverScore";
-            this.tbxMinTurnoverScore.Size = new System.Drawing.Size(299, 20);
-            this.tbxMinTurnoverScore.TabIndex = 30;
-            this.tbxMinTurnoverScore.TextChanged += new System.EventHandler(this.tbxMinTurnoverScore_TextChanged);
+            this.colRejectReason.HeaderText = "Reject Reason";
+            this.colRejectReason.Name = "colRejectReason";
+            this.colRejectReason.ReadOnly = true;
             // 
             // HalfLifeForm
             // 
@@ -798,6 +806,10 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.ComboBox comboEvviesFilter;
         private ValidationStatusColumn validationStatusColumn1;
+        private System.Windows.Forms.TextBox tbxMinAuc;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.TextBox tbxMinTurnoverScore;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
@@ -813,9 +825,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorPoolAvg;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverAvg;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverScoreAvg;
-        private System.Windows.Forms.TextBox tbxMinAuc;
-        private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.TextBox tbxMinTurnoverScore;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colRejectReason;
     }
 }
