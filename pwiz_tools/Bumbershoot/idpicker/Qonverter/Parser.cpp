@@ -701,7 +701,7 @@ struct ParserImpl
                       "CREATE INDEX IF NOT EXISTS PeptideInstance_Peptide ON PeptideInstance (Peptide);"
                       "CREATE INDEX IF NOT EXISTS PeptideInstance_Protein ON PeptideInstance (Protein);"
                       "CREATE INDEX IF NOT EXISTS PeptideInstance_PeptideProtein ON PeptideInstance (Peptide, Protein);"
-                      "CREATE INDEX IF NOT EXISTS PeptideInstance_ProteinOffsetLength ON PeptideInstance (Protein, Offset, Length);"
+                      "CREATE UNIQUE INDEX IF NOT EXISTS PeptideInstance_ProteinOffsetLength ON PeptideInstance (Protein, Offset, Length);"
                       "CREATE UNIQUE INDEX IF NOT EXISTS SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);"
                       "CREATE INDEX IF NOT EXISTS Spectrum_SourceIndex ON Spectrum (Source, Index_);"
                       "CREATE UNIQUE INDEX IF NOT EXISTS Spectrum_SourceNativeID ON Spectrum (Source, NativeID);"
@@ -1001,7 +1001,6 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
     {
         const proteome::ProteomeData& pd = *proteinReaderTask->proteomeDataPtr;
         const proteome::ProteinList& pl = *pd.proteinListPtr;
-        const string& decoyPrefix = proteinReaderTask->decoyPrefix;
 
         const size_t batchSize = 50;
         vector<proteome::ProteinPtr> proteinBatch(batchSize);
@@ -1022,13 +1021,7 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
                 proteinBatch.clear();
 
                 for (int j=0; j < batchSize && i+j < pl.size(); ++j)
-                {
-                    proteome::ProteinPtr p = pl.protein(i+j);
-
-                    // skip decoy proteins
-                    if (!bal::istarts_with(p->id, decoyPrefix))
-                        proteinBatch.push_back(p);
-                }
+                    proteinBatch.push_back(pl.protein(i+j));
                 i += batchSize - 1;
 
                 while (true)
@@ -1189,7 +1182,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                 proteinQueue.erase(proteinQueue.begin(), proteinQueue.begin() + batchSize);
                 lock.unlock();
 
-                // move to next peptide batch
+                // move to the next peptide batch
                 if (proteinBatch.empty())
                     break;
 
@@ -1204,6 +1197,10 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
 
                 BOOST_FOREACH(proteome::ProteinPtr& protein, proteinBatch)
                 {
+                    // skip decoy proteins
+                    if (bal::istarts_with(protein->id, decoyPrefix))
+                        continue;
+
                     typedef boost::shared_ptr<proteome::Digestion> DigestionPtr;
                     proteome::Digestion::Config digestionConfig(100000, 0, 100000, proteome::Digestion::NonSpecific);
                     vector<DigestionPtr> digestions;
@@ -1217,7 +1214,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                         digestions.push_back(DigestionPtr(new proteome::Digestion(*protein, cleavageAgentRegexes, digestionConfig)));
 
                     vector<PeptideTrie::SearchResult> peptideInstances = peptideTrie.find_all(protein->sequence());
-                        
+
                     if (peptideInstances.empty())
                         continue;
 
@@ -1273,6 +1270,13 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                     }
                 }
             }
+        }
+
+        if (ilr && ilr->broadcastUpdateMessage(UpdateMessage(proteinReaderTask.proteinCount-1, proteinReaderTask.proteinCount, parserTask.inputFilepath + "*finding peptides in proteins")) == IterationListener::Status_Cancel)
+        {
+            proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
+            status = IterationListener::Status_Cancel;
+            return;
         }
 
         // the protein reader task stops when done == proteinReaderTask.peptideFinderTasks.size()

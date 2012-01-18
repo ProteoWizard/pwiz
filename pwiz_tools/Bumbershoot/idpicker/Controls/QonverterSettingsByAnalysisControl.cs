@@ -63,43 +63,41 @@ namespace IDPicker.Controls
 
             foreach (var kvp in qonverterSettingsByAnalysis)
             {
+                Analysis a = kvp.Key;
                 var row = new DataGridViewRow();
                 row.CreateCells(dataGridView);
 
                 ISet<AnalysisParameter> diffParameters = new SortedSet<AnalysisParameter>();
                 foreach (var a2 in qonverterSettingsByAnalysis.Keys)
                 {
-                    if (kvp.Key.Software.Name != a2.Software.Name)
+                    if (a.Software.Name != a2.Software.Name)
                         continue;
 
-                    diffParameters = diffParameters.Union(kvp.Key.Parameters.Minus(a2.Parameters));
+                    diffParameters = diffParameters.Union(a.Parameters.Minus(a2.Parameters));
                 }
 
-                string key = kvp.Key.Id + ": " + kvp.Key.Name;
+                string key = a.Id + ": " + a.Name;
                 foreach (var p in diffParameters)
                     key += String.Format("; {0}={1}", p.Name, p.Value);
 
+                string defaultDecoyPrefix = a.Parameters.Where(o => o.Name == "Config: DecoyPrefix").Select(o => o.Value).FirstOrDefault() ??
+                                            Properties.Settings.Default.DecoyPrefix;
 
-                row.Tag = kvp.Key;
+                row.Tag = a;
                 row.Cells[0].Value = key;
-                row.Cells[1].Value = kvp.Value == null ? Properties.Settings.Default.DecoyPrefix : kvp.Value.DecoyPrefix;
-                var comboBox = (DataGridViewComboBoxCell)row.Cells[2];
+                row.Cells[1].Value = a.QonverterSettings != null ? a.QonverterSettings.DecoyPrefix : defaultDecoyPrefix;
+                var comboBox = row.Cells[2] as DataGridViewComboBoxCell;
+                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault( o => o.ToLower().Contains(kvp.Key.Software.Name.ToLower()));
                 if (kvp.Value == null)
                 {
-                    var firstSoftwarePreset =
-                        qonverterSettingsByName.Keys.FirstOrDefault(
-                            o => o.ToLower().Contains(kvp.Key.Software.Name.ToLower()));
                     comboBox.Value = firstSoftwarePreset ?? qonverterSettingsByName.Keys.FirstOrDefault();
                 }
                 else
                 {
-                    //load default if nothing found
-                    var firstSoftwarePreset =
-                        qonverterSettingsByName.Keys.FirstOrDefault(
-                            o => o.ToLower().Contains(kvp.Key.Software.Name.ToLower()));
+                    // load default if nothing found
                     string settingsMatch = firstSoftwarePreset ?? qonverterSettingsByName.Keys.FirstOrDefault();
 
-                    //see if database recognizes settings
+                    // see if database recognizes settings
                     foreach (var item in qonverterSettingsByName)
                     {
                         if (item.Value.ChargeStateHandling == kvp.Value.ChargeStateHandling &&
@@ -108,27 +106,16 @@ namespace IDPicker.Controls
                             item.Value.MissedCleavagesHandling == kvp.Value.MissedCleavagesHandling &&
                             item.Value.QonverterMethod == kvp.Value.QonverterMethod &&
                             item.Value.RerankMatches == kvp.Value.RerankMatches &&
-                            item.Value.TerminalSpecificityHandling == kvp.Value.TerminalSpecificityHandling)
+                            item.Value.TerminalSpecificityHandling == kvp.Value.TerminalSpecificityHandling &&
+                            item.Value.ScoreInfoByName.SequenceEqual(kvp.Value.ScoreInfoByName))
                         {
-                            var valid = true;
-                            if (item.Value.ScoreInfoByName.Count != kvp.Value.ScoreInfoByName.Count)
-                                continue;
-                            foreach (var scoreInfo in item.Value.ScoreInfoByName)
-                                if (!kvp.Value.ScoreInfoByName.ContainsKey(scoreInfo.Key))
-                                {
-                                    valid = false;
-                                    break;
-                                }
-                            if (valid)
-                            {
-                                settingsMatch = item.Key;
-                                break;
-                            }
+                            settingsMatch = item.Key;
+                            break;
                         }
                     }
 
-                    //initilize combo box value
-                    if (!string.IsNullOrEmpty(settingsMatch))
+                    // initialize combo box value
+                    if (!String.IsNullOrEmpty(settingsMatch))
                         comboBox.Value = settingsMatch;
                 }
 

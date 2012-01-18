@@ -952,7 +952,17 @@ namespace IDPicker
 
                         viewFilter = basicFilter;
 
-                        setData();
+                        try
+                        {
+                            // check that the unfiltered tables exist
+                            session.CreateSQLQuery("SELECT COUNT(*) FROM UnfilteredProtein").UniqueResult();
+
+                            setData();
+                        }
+                        catch
+                        {
+                            ApplyBasicFilter();
+                        }
                     }
 
                     toolStripStatusLabel.Text = "Ready";
