@@ -244,7 +244,7 @@ namespace IDPicker.Forms
                                                     "COUNT(DISTINCT pro.Cluster), " +
                                                     "COUNT(DISTINCT pro.ProteinGroup), " +
                                                     "COUNT(DISTINCT pro.id), " +
-                                                    "SUM(pro.IsDecoy) " +
+                                                    "SUM(CASE WHEN pro.IsDecoy = 1 THEN 1 ELSE 0 END) " +
                                                     dataFilter.GetFilteredQueryString(DataFilter.FromProtein))
                         .UniqueResult<object[]>();
 
@@ -252,7 +252,6 @@ namespace IDPicker.Forms
                     ProteinGroups = Convert.ToInt32(total[1]);
                     Proteins = Convert.ToInt32(total[2]);
                     float decoyProteins = Convert.ToSingle(total[3]);
-
                     // TODO: use correct target/decoy ratio
                     ProteinFDR = 2 * decoyProteins / Proteins;
                 }
@@ -899,7 +898,7 @@ namespace IDPicker.Forms
 
             // show total counts in the form title
             Text = TabText = String.Format("Protein View: {0} clusters, {1} protein groups, {2} proteins, {3:0.##%} protein FDR",
-                                           totalCounts.Clusters, totalCounts.ProteinGroups, totalCounts.Proteins, totalCounts.ProteinFDR * 100);
+                                           totalCounts.Clusters, totalCounts.ProteinGroups, totalCounts.Proteins, totalCounts.ProteinFDR);
 
             addPivotColumns();
 

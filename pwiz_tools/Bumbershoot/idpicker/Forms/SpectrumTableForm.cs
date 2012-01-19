@@ -241,7 +241,15 @@ namespace IDPicker.Forms
                     dataFilter.Peptide != null && dataFilter.Peptide.Count == 1 ||
                     dataFilter.DistinctMatchKey != null && dataFilter.DistinctMatchKey.Count == 1)
                 {
-                    string sql = String.Format(SqlQueryFormat, dataFilter.GetFilteredSqlWhereClause());
+                    var basicFilter = new DataFilter(dataFilter)
+                    {
+                        AminoAcidOffset = null,
+                        Modifications = null,
+                        ModifiedSite = null,
+                        Cluster = null,
+                        Protein = null
+                    };
+                    string sql = String.Format(SqlQueryFormat, basicFilter.GetFilteredSqlWhereClause());
                     return session.CreateSQLQuery(sql)
                         .AddEntity("s", typeof (Spectrum))
                         .AddEntity("ss", typeof (SpectrumSource))

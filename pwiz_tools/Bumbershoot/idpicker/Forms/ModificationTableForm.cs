@@ -113,29 +113,13 @@ namespace IDPicker.Forms
 
                 rowSortColumnIndex = e.ColumnIndex;
 
-                var column = e.ColumnIndex < 0 ? dataGridView.Columns[0] : dataGridView.Columns[e.ColumnIndex];
-                dataGridView.Sort(column, rowSortOrder == SortOrder.Ascending ? ListSortDirection.Ascending
-                                                                              : ListSortDirection.Descending);
-
-                foreach (DataGridViewRow row in dataGridView.Rows)
-                    row.HeaderCell.Value = (row.DataBoundItem as DataRowView).Row[deltaMassColumnName].ToString();
+                applySort();
 
                 e.Handled = true;
             }
             // clicking on row header sorts by count for the delta mass
             else if (e.ColumnIndex < 0)
             {
-                var row = dataGridView.Rows[e.RowIndex];
-
-                // build a map of columns by spectrum count (skip mass and total columns)
-                var columnsBySiteAndSpectrumCount = new Map<int, Map<string, DataGridViewColumn>>();
-                for (int i = 2; i < dataGridView.Columns.Count; ++i)
-                {
-                    var site = dataGridView.Columns[i].Name;
-                    var spectrumCount = row.Cells[i].Value is int ? (int) row.Cells[i].Value : 0;
-                    columnsBySiteAndSpectrumCount[spectrumCount][site] = dataGridView.Columns[i];
-                }
-
                 // initial sort is descending
                 if (columnSortRowIndex != e.RowIndex ||
                     columnSortOrder == SortOrder.None ||
@@ -146,6 +130,38 @@ namespace IDPicker.Forms
 
                 columnSortRowIndex = e.RowIndex;
 
+                applySort();
+
+                e.Handled = true;
+            }
+        }
+
+        void applySort ()
+        {
+            //if (rowSortColumnIndex > -1)
+            {
+                var column = rowSortColumnIndex < 0 ? dataGridView.Columns[0] : dataGridView.Columns[rowSortColumnIndex];
+                dataGridView.Sort(column, rowSortOrder == SortOrder.Ascending
+                                              ? ListSortDirection.Ascending
+                                              : ListSortDirection.Descending);
+
+                foreach (DataGridViewRow row in dataGridView.Rows)
+                    row.HeaderCell.Value = (row.DataBoundItem as DataRowView).Row[deltaMassColumnName].ToString();
+            }
+
+            if (columnSortRowIndex > -1)
+            {
+                var row = dataGridView.Rows[columnSortRowIndex];
+
+                // build a map of columns by spectrum count (skip mass and total columns)
+                var columnsBySiteAndSpectrumCount = new Map<int, Map<string, DataGridViewColumn>>();
+                for (int i = 2; i < dataGridView.Columns.Count; ++i)
+                {
+                    var site = dataGridView.Columns[i].Name;
+                    var spectrumCount = row.Cells[i].Value is int ? (int) row.Cells[i].Value : 0;
+                    columnsBySiteAndSpectrumCount[spectrumCount][site] = dataGridView.Columns[i];
+                }
+
                 var columns = columnSortOrder == SortOrder.Descending ? columnsBySiteAndSpectrumCount.Values.Reverse()
                                                                       : columnsBySiteAndSpectrumCount.Values;
 
@@ -154,7 +170,6 @@ namespace IDPicker.Forms
                 foreach (var itr in columns)
                     foreach (var itr2 in itr)
                         itr2.Value.DisplayIndex = ++displayIndex;
-                e.Handled = true;
             }
         }
 
@@ -532,6 +547,8 @@ namespace IDPicker.Forms
             dataGridView.DataSource = deltaMassTable;
             dataGridView.Columns[deltaMassColumnName].Visible = false;
 
+            applySort();
+
             try
             {
                 if (deltaMassTable.Rows.Count > 0)
@@ -554,9 +571,6 @@ namespace IDPicker.Forms
             }
 
             dataGridView.Refresh();
-
-            foreach (DataGridViewRow row in dataGridView.Rows)
-                row.HeaderCell.Value = (row.DataBoundItem as DataRowView).Row[deltaMassColumnName].ToString();
         }
 
         private void dataGridView_DefaultCellStyleChanged (object sender, EventArgs e)
