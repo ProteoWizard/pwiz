@@ -144,14 +144,17 @@ class PWIZ_API_DECL Digestion
         int minimumLength;
         int maximumLength;
 
-        Specificity minimumSpecificity; 
+        Specificity minimumSpecificity;
+
+        bool clipNTerminalMethionine;
 
         Config(int maximumMissedCleavages = 100000,
                //double minimumMass = 0,
                //double maximumMass = 100000,
                int minimumLength = 0,
                int maximumLength = 100000,
-               Specificity minimumSpecificity = FullySpecific);
+               Specificity minimumSpecificity = FullySpecific,
+               bool clipNTerminalMethionine = true);
     };
 
     struct Motif;

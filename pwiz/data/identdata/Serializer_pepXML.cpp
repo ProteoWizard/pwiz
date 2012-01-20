@@ -717,9 +717,6 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const IdentData& mzid, const s
         ++spectrumIndex;
         lastChargeState = 0;
 
-        if (!sir.spectrumIdentificationItem.empty())
-          ++queryIndex;
-
         BOOST_FOREACH(const SpectrumIdentificationItemPtr& siiPtr, sir.spectrumIdentificationItem)
         {
             const SpectrumIdentificationItem& sii = *siiPtr;
@@ -1821,6 +1818,15 @@ PWIZ_API_DECL void Serializer_pepXML::read(boost::shared_ptr<std::istream> is, I
     Handler_pepXML handler(mzid, config_.readSpectrumQueries,
                            iterationListenerRegistry, strict);
     SAXParser::parse(*is, handler);
+
+    // final iteration update
+    if (iterationListenerRegistry &&
+        !mzid.dataCollection.analysisData.spectrumIdentificationList.empty() &&
+        iterationListenerRegistry->broadcastUpdateMessage(
+            IterationListener::UpdateMessage(mzid.dataCollection.analysisData.spectrumIdentificationList[0]->spectrumIdentificationResult.size()-1,
+                                             mzid.dataCollection.analysisData.spectrumIdentificationList[0]->spectrumIdentificationResult.size(),
+                                             "reading spectrum queries")) == IterationListener::Status_Cancel)
+        return;
 
     // there can be only one
     snapModificationsToUnimod(*mzid.analysisCollection.spectrumIdentification[0]);

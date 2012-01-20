@@ -340,9 +340,9 @@ int main(int argc, char** argv)
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        testSerialize();
         testPepXMLSpecificity();
         testStripChargeFromConventionalSpectrumId();
+        testSerialize();
         return 0;
     }
     catch (exception& e)
