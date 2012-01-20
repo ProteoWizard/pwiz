@@ -1169,8 +1169,13 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var namedResults = dlg.NamedPathSets;
+                    // No idea how this could happen, but it has caused unexpected errors
+                    // so just return and do nothing if it does.
                     if (namedResults == null)
-                        throw new NullReferenceException("Unexpected null path sets in ImportResults.");
+                    {
+//                        throw new NullReferenceException("Unexpected null path sets in ImportResults.");
+                        return;
+                    }
                     string description = "Import results";
                     if (namedResults.Length == 1)
                         description = string.Format("Import {0}", namedResults[0].Key);
