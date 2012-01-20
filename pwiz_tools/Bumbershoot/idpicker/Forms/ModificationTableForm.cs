@@ -35,6 +35,7 @@ using System.Threading;
 using DigitalRune.Windows.Docking;
 using IDPicker.DataModel;
 using IDPicker.Controls;
+using PopupControl;
 using pwiz.CLI.data;
 using proteome = pwiz.CLI.proteome;
 
@@ -72,6 +73,8 @@ namespace IDPicker.Forms
             // TODO: add display settings dialog like other forms have
             var style = dataGridView.DefaultCellStyle;
             filteredOutColor = style.ForeColor.Interpolate(style.BackColor, 0.5f);
+
+            CreateUnimodInterface();
         }
 
         const string deltaMassColumnName = "ΔMass";
@@ -457,6 +460,7 @@ namespace IDPicker.Forms
                         basicDataFilter = new DataFilter(dataFilter);
                         IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
                         _unfilteredQueryRows = queryRows;
+                        SetUnimodDefaults(queryRows);
                         TrimModificationTable(ref queryRows);
                         basicDeltaMassTable = createDeltaMassTableFromQuery(queryRows, out basicTotalModifications, out siteColumnNameToSite);
                         findDeltaMassAnnotations();
@@ -470,6 +474,7 @@ namespace IDPicker.Forms
                     Map<string, char> dummy;
                     IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
                     _unfilteredQueryRows = queryRows;
+                    SetUnimodDefaults(queryRows);
                     TrimModificationTable(ref queryRows);
                     deltaMassTable = createDeltaMassTableFromQuery(queryRows, out totalModifications, out dummy);
                 }
@@ -499,10 +504,21 @@ namespace IDPicker.Forms
                 !int.TryParse(MinRowBox.Text, out minRows))
                 return;
 
-            var columnsToRemove = new List<char>();
-            var rowsToRemove = new List<double>();
+            var unimodControl = _subItemPopup.Content as UnimodControl;
+            var columnsToRemove = new HashSet<char>();
+            var rowsToRemove = new HashSet<double>();
             var columnSums = new Dictionary<char, int>();
             var rowSums = new Dictionary<double, int>();
+            bool unimodFilter = false;
+            List<int> unimodMasses = null;
+            List<char> unimodSites = null;
+            if (unimodControl != null)
+            {
+                unimodMasses = unimodControl.GetUnimodMasses();
+                unimodSites = unimodControl.GetUnimodSites();
+                if (unimodMasses.Count > 0 && unimodSites.Count > 0)
+                    unimodFilter = true;
+            }
 
             foreach (var item in queryRows)
             {
@@ -519,14 +535,21 @@ namespace IDPicker.Forms
                     rowSums.Add(mass, spectra);
                 else
                     rowSums[mass] += spectra;
+
+                if (unimodFilter)
+                {
+                    var intMass = Convert.ToInt32(mass);
+                    if (!unimodSites.Contains(residue))
+                        columnsToRemove.Add(residue);
+                    if (!unimodMasses.Contains(intMass))
+                        rowsToRemove.Add(mass);
+                }
             }
 
-            columnsToRemove.AddRange(from kvp in columnSums
-                                     where kvp.Value < minColumns
-                                     select kvp.Key);
-            rowsToRemove.AddRange(from kvp in rowSums
-                                  where kvp.Value < minRows
-                                  select kvp.Key);
+            foreach (var kvp in columnSums.Where(kvp => kvp.Value < minColumns))
+                columnsToRemove.Add(kvp.Key);
+            foreach (var kvp in rowSums.Where(kvp => kvp.Value < minRows))
+                rowsToRemove.Add(kvp.Key);
 
             for (var x = queryRows.Count - 1; x >= 0; x--)
             {
@@ -534,6 +557,26 @@ namespace IDPicker.Forms
                     rowsToRemove.Contains(Math.Round(((Modification) queryRows[x][1]).MonoMassDelta)))
                     queryRows.RemoveAt(x);
             }
+        }
+
+        private void SetUnimodDefaults(IList<object[]> queryRows)
+        {
+            var unimodControl = _subItemPopup.Content as UnimodControl;
+            if (unimodControl == null)
+                return;
+
+            var siteSet = new HashSet<char>();
+            var massSet = new HashSet<int>();
+            foreach (var item in queryRows)
+                siteSet.Add((char)item[0]);
+            foreach (var item in queryRows)
+                massSet.Add(Convert.ToInt32(Math.Round(((Modification)item[1]).MonoMassDelta)));
+
+            if (unimodControl.InvokeRequired)
+                unimodControl.Invoke(new Action<HashSet<char>, HashSet<int>>(unimodControl.SetUnimodDefaults), siteSet,
+                                     massSet);
+            else
+                unimodControl.SetUnimodDefaults(siteSet, massSet);
         }
 
         void renderData (object sender, RunWorkerCompletedEventArgs e)
@@ -850,7 +893,7 @@ namespace IDPicker.Forms
         }
 
         private bool _loading;
-        private void MinCountFilter_Leave(object sender, EventArgs e)
+        private void ModFilter_Leave(object sender, EventArgs e)
         {
             if (_loading)
                 return;
@@ -858,8 +901,8 @@ namespace IDPicker.Forms
             try
             {
                 int value;
-                if (!int.TryParse(((TextBox)sender).Text, out value) ||
-                    value < 1)
+                if (sender is TextBox &&
+                    (!int.TryParse(((TextBox)sender).Text, out value) || value < 1))
                     ((TextBox) sender).Text = "1";
 
                 var workerThread = new BackgroundWorker()
@@ -876,6 +919,38 @@ namespace IDPicker.Forms
             {
                 ((TextBox) sender).Text = "1";
             }
+        }
+
+        private void UnimodButton_Click(object sender, EventArgs e)
+        {
+            var showOnLeft = (dataGridView.Width / 2) < UnimodButton.Location.X;
+            var location = showOnLeft
+                               ? new Point(10, UnimodButton.Location.Y + UnimodButton.Size.Height+1)
+                               : new Point(UnimodButton.Location.X,
+                                           UnimodButton.Location.Y + UnimodButton.Size.Height+1);
+            _subItemPopup.Size = new Size(showOnLeft
+                                              ? UnimodButton.Location.X + UnimodButton.Width - 10
+                                              : dataGridView.Width - UnimodButton.Location.X - 10,
+                                          dataGridView.Height - 10);
+            _subItemPopup.Show(PointToScreen(location));
+        }
+
+        private Popup _subItemPopup;
+        private void CreateUnimodInterface()
+        {
+            var SubItemControl = new UnimodControl();
+
+            //set up popup
+            _subItemPopup = new Popup(SubItemControl);
+            _subItemPopup.AutoClose = true;
+            _subItemPopup.FocusOnOpen = true;
+            _subItemPopup.SizeChanged += (x, y) => { SubItemControl.Size = _subItemPopup.Size; };
+            _subItemPopup.Closed += delegate
+            {
+                if (!SubItemControl.ChangesMade(true))
+                    return;
+                ModFilter_Leave(SubItemControl,null);
+            };
         }
     }
 

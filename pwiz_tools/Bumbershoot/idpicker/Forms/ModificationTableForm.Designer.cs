@@ -53,7 +53,6 @@ namespace IDPicker.Forms
         private void InitializeComponent ()
         {
             this.components = new System.ComponentModel.Container();
-            this.dataGridView = new IDPicker.Controls.PreviewDataGridView();
             this.exportButton = new System.Windows.Forms.Button();
             this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -67,37 +66,17 @@ namespace IDPicker.Forms
             this.MinRowBox = new System.Windows.Forms.TextBox();
             this.MinColumnBox = new System.Windows.Forms.TextBox();
             this.MinColumnLabel = new System.Windows.Forms.Label();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
+            this.UnimodButton = new System.Windows.Forms.Button();
+            this.dataGridView = new IDPicker.Controls.PreviewDataGridView();
             this.exportMenu.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
-            // 
-            // dataGridView
-            // 
-            this.dataGridView.AllowUserToAddRows = false;
-            this.dataGridView.AllowUserToDeleteRows = false;
-            this.dataGridView.AllowUserToResizeColumns = false;
-            this.dataGridView.AllowUserToResizeRows = false;
-            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
-            this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
-            this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView.GridColor = System.Drawing.SystemColors.Control;
-            this.dataGridView.Location = new System.Drawing.Point(0, 27);
-            this.dataGridView.Name = "dataGridView";
-            this.dataGridView.ReadOnly = true;
-            this.dataGridView.RowHeadersWidth = 80;
-            this.dataGridView.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
-            this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.dataGridView.Size = new System.Drawing.Size(350, 235);
-            this.dataGridView.TabIndex = 0;
             // 
             // exportButton
             // 
             this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
-            this.exportButton.Location = new System.Drawing.Point(308, 2);
+            this.exportButton.Location = new System.Drawing.Point(433, 2);
             this.exportButton.Name = "exportButton";
             this.exportButton.Size = new System.Drawing.Size(30, 23);
             this.exportButton.TabIndex = 4;
@@ -168,7 +147,7 @@ namespace IDPicker.Forms
             // 
             this.MinRowLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.MinRowLabel.AutoSize = true;
-            this.MinRowLabel.Location = new System.Drawing.Point(170, 7);
+            this.MinRowLabel.Location = new System.Drawing.Point(295, 7);
             this.MinRowLabel.Name = "MinRowLabel";
             this.MinRowLabel.Size = new System.Drawing.Size(79, 13);
             this.MinRowLabel.TabIndex = 5;
@@ -177,40 +156,74 @@ namespace IDPicker.Forms
             // MinRowBox
             // 
             this.MinRowBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.MinRowBox.Location = new System.Drawing.Point(255, 4);
+            this.MinRowBox.Location = new System.Drawing.Point(380, 4);
             this.MinRowBox.Name = "MinRowBox";
             this.MinRowBox.Size = new System.Drawing.Size(47, 20);
             this.MinRowBox.TabIndex = 6;
             this.MinRowBox.Text = "1";
-            this.MinRowBox.Leave += new System.EventHandler(this.MinCountFilter_Leave);
+            this.MinRowBox.Leave += new System.EventHandler(this.ModFilter_Leave);
             this.MinRowBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
             // 
             // MinColumnBox
             // 
             this.MinColumnBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.MinColumnBox.Location = new System.Drawing.Point(117, 5);
+            this.MinColumnBox.Location = new System.Drawing.Point(242, 5);
             this.MinColumnBox.Name = "MinColumnBox";
             this.MinColumnBox.Size = new System.Drawing.Size(47, 20);
             this.MinColumnBox.TabIndex = 8;
             this.MinColumnBox.Text = "1";
-            this.MinColumnBox.Leave += new System.EventHandler(this.MinCountFilter_Leave);
+            this.MinColumnBox.Leave += new System.EventHandler(this.ModFilter_Leave);
             this.MinColumnBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
             // 
             // MinColumnLabel
             // 
             this.MinColumnLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.MinColumnLabel.AutoSize = true;
-            this.MinColumnLabel.Location = new System.Drawing.Point(19, 7);
+            this.MinColumnLabel.Location = new System.Drawing.Point(144, 7);
             this.MinColumnLabel.Name = "MinColumnLabel";
             this.MinColumnLabel.Size = new System.Drawing.Size(92, 13);
             this.MinColumnLabel.TabIndex = 7;
             this.MinColumnLabel.Text = "Min Column Total:";
             // 
+            // UnimodButton
+            // 
+            this.UnimodButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.UnimodButton.Location = new System.Drawing.Point(87, 3);
+            this.UnimodButton.Name = "UnimodButton";
+            this.UnimodButton.Size = new System.Drawing.Size(51, 23);
+            this.UnimodButton.TabIndex = 9;
+            this.UnimodButton.Text = "Unimod";
+            this.UnimodButton.UseVisualStyleBackColor = true;
+            this.UnimodButton.Click += new System.EventHandler(this.UnimodButton_Click);
+            // 
+            // dataGridView
+            // 
+            this.dataGridView.AllowUserToAddRows = false;
+            this.dataGridView.AllowUserToDeleteRows = false;
+            this.dataGridView.AllowUserToResizeColumns = false;
+            this.dataGridView.AllowUserToResizeRows = false;
+            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
+            this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
+            this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView.GridColor = System.Drawing.SystemColors.Control;
+            this.dataGridView.Location = new System.Drawing.Point(0, 27);
+            this.dataGridView.Name = "dataGridView";
+            this.dataGridView.ReadOnly = true;
+            this.dataGridView.RowHeadersWidth = 80;
+            this.dataGridView.RowHeadersWidthSizeMode = System.Windows.Forms.DataGridViewRowHeadersWidthSizeMode.DisableResizing;
+            this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dataGridView.Size = new System.Drawing.Size(475, 235);
+            this.dataGridView.TabIndex = 0;
+            // 
             // ModificationTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(350, 262);
+            this.ClientSize = new System.Drawing.Size(475, 262);
+            this.Controls.Add(this.UnimodButton);
             this.Controls.Add(this.MinColumnBox);
             this.Controls.Add(this.MinColumnLabel);
             this.Controls.Add(this.MinRowBox);
@@ -224,8 +237,8 @@ namespace IDPicker.Forms
             this.Name = "ModificationTableForm";
             this.TabText = "ModificationTableForm";
             this.Text = "ModificationTableForm";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.exportMenu.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -247,6 +260,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.TextBox MinRowBox;
         private System.Windows.Forms.TextBox MinColumnBox;
         private System.Windows.Forms.Label MinColumnLabel;
+        private System.Windows.Forms.Button UnimodButton;
 
     }
 }

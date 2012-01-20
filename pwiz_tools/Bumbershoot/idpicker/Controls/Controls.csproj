@@ -118,6 +118,12 @@
     <Compile Include="QonverterSettingsControl.Designer.cs">
       <DependentUpon>QonverterSettingsControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="UnimodControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UnimodControl.Designer.cs">
+      <DependentUpon>UnimodControl.cs</DependentUpon>
+    </Compile>
     <Service Include="{94E38DFF-614B-4cbd-B67C-F211BB35CE8B}" />
   </ItemGroup>
   <ItemGroup>
@@ -141,6 +147,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="QonverterSettingsControl.resx">
       <DependentUpon>QonverterSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UnimodControl.resx">
+      <DependentUpon>UnimodControl.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
