@@ -485,6 +485,49 @@ namespace pwiz.SkylineTestA
 
             return count;
         }
+        
+        [TestMethod]
+        public void ConsoleBadRawFileImportTest()
+        {
+            // Run this test only if we can read Thermo's raw files
+            if(ExtensionTestContext.CanImportThermoRaw)
+            {
+                const string testZipPath = @"TestA\ImportAllCmdLineTest.zip";
+
+                var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+                var docPath = testFilesDir.GetTestPath("test.sky");
+
+                var rawPath = testFilesDir.GetTestPath("bad_file.raw");
+
+                var msg = RunCommand("--in=" + docPath,
+                                     "--import-file=" + rawPath,
+                                     "--save");
+
+                Assert.IsTrue(msg.Contains("WARN: Cannot read file"));
+
+                // the document should not have changed
+                SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+                Assert.IsFalse(doc.Settings.HasResults);
+
+                msg = RunCommand("--in=" + docPath,
+                                 "--import-all=" + testFilesDir.FullPath,
+                                 "--save");
+
+                Assert.IsTrue(msg.Contains("WARN: Cannot read file"));
+                doc = ResultsUtil.DeserializeDocument(docPath);
+                Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_071"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_074"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_070"));
+                Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_073"));
+                // We should not have a replicate named "bad_file"
+                Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file"));
+                // Or a replicate named
+                Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file_folder"));
+            }
+        }
 
         [TestMethod]
         public void ConsoleMultiReplicateImportTest()
@@ -672,7 +715,7 @@ namespace pwiz.SkylineTestA
             // Import 160109_Mix1_calcurve_074.raw;
             // Use replicate name "REP01"
             var rawPath3 = testFilesDir.GetTestPath("160109_Mix1_calcurve_074.raw");
-            RunCommand("--in=" + docPath,
+            msg = RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath3,
                        "--import-replicate-name=REP01",
                        "--out=" + outPath3);

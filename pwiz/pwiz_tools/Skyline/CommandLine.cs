@@ -27,6 +27,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
@@ -882,6 +883,14 @@ namespace pwiz.Skyline
         {
             _out.WriteLine("Adding results...");
 
+            // Hack for un-readable RAW files from Thermo instruments.
+            if(!CanReadFile(replicateFile))
+            {
+                _out.WriteLine("WARN: Cannot read file {0}.", replicateFile);
+                _out.WriteLine("      Ignoring...");
+                return true;
+            }
+
             //This function will also detect whether the replicate exists in the document
             ProgressStatus status;
             SrmDocument newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile, out status);
@@ -903,6 +912,50 @@ namespace pwiz.Skyline
 
             _out.WriteLine("Results added from {0} to replicate {1}.", Path.GetFileName(replicateFile), replicateName);
             //the file was imported successfully
+            return true;
+        }
+
+        
+		// This is a hack for un-readable RAW files from Thermo instruments.
+        // These files are usually 78KB.  Presumably they are
+        // temporary files that, for some reason, do not get deleted.
+        private bool CanReadFile(string replicatePath)
+        {
+            if (!File.Exists(replicatePath) && !Directory.Exists(replicatePath))
+            {
+                _out.WriteLine("Error: File does not exist: {0}.",replicatePath);
+                return false;
+            }
+
+            // Make sure this is a Thermo RAW file
+            FileInfo fileInfo = new FileInfo(replicatePath);
+            // We will not do this check for a directory source
+            if(!fileInfo.Exists)
+            {
+                return true;
+            }
+            if(DataSourceUtil.GetSourceType(fileInfo) != DataSourceUtil.TYPE_THERMO_RAW)
+            {
+                return true;
+            }
+
+            // We will not do this chech for files over 100KB
+            if(fileInfo.Length > (100 * 1024))
+            {
+                return true;
+            }
+
+            // Try to read the file
+            try
+            {
+                new MsDataFileImpl(replicatePath);  
+            }
+            catch(Exception e)
+            {
+                _out.WriteLine(e.Message);
+                return false;
+            }
+            
             return true;
         }
 
