@@ -671,10 +671,13 @@ namespace IDPicker.Forms
             return groups.Count();
         }
 
+        private static HashSet<string> _processedSources;
         public static List<SpectrumSourceGroup> SetStructure(TreeNode node, List<SpectrumSourceGroup> groupList, ISession session)
         {
             if (node == null)
                 return groupList ?? new List<SpectrumSourceGroup>();
+            if (!groupList.Any())
+                _processedSources = new HashSet<string>();
 
             var ssg = session.QueryOver<SpectrumSourceGroup>().Where(x => x.Name == node.Text).SingleOrDefault();
             if (ssg == null)
@@ -688,32 +691,35 @@ namespace IDPicker.Forms
 
             foreach (TreeNode childNode in node.Nodes)
             {
-                if (childNode.Tag.ToString() == "Source")
-                {
-                    var node1 = childNode;
-                    var sources = session.QueryOver<SpectrumSource>().Where(x => x.Name == node1.Text).List();
-                    foreach (var item in sources)
+                    if (childNode.Tag.ToString() == "Source")
                     {
-                        foreach (var link in item.Groups)
-                            session.Delete(link);
-                        session.Flush();
-                        item.Group = ssg;
-                        session.SaveOrUpdate(item);
-                        foreach (var groupItem in groupList)
+                        var node1 = childNode;
+                        var sources = session.QueryOver<SpectrumSource>().Where(x => x.Name == node1.Text).List();
+                        foreach (var item in sources)
                         {
-                            var ssgl = new SpectrumSourceGroupLink {Group = groupItem, Source = item};
-                            session.SaveOrUpdate(ssgl);
+                            if (_processedSources.Contains(item.Name))
+                                continue;
+                            _processedSources.Add(item.Name);
+                            foreach (var link in item.Groups)
+                                session.Delete(link);
+                            session.Flush();
+                            item.Group = ssg;
+                            session.Update(item);
+                            foreach (var groupItem in groupList)
+                            {
+                                var ssgl = new SpectrumSourceGroupLink {Group = groupItem, Source = item};
+                                session.SaveOrUpdate(ssgl);
+                            }
+                            session.Flush();
                         }
-                        session.Flush();
                     }
-                }
-                else
-                {
-                    var newGroups = SetStructure(childNode, groupList, session);
-                    foreach (var item in newGroups)
-                        if (!allGroups.Contains(item))
-                            allGroups.Add(item);
-                }
+                    else
+                    {
+                        var newGroups = SetStructure(childNode, groupList, session);
+                        foreach (var item in newGroups)
+                            if (!allGroups.Contains(item))
+                                allGroups.Add(item);
+                    }
             }
             return allGroups;
         }

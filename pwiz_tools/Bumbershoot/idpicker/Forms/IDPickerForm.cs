@@ -247,6 +247,10 @@ namespace IDPicker
                                   Multiselect = true,
                                   SupportMultiDottedExtensions = true
                               };
+                var folderHistory = FolderHistoryInterface.GetRecentFolders();
+                if (folderHistory.Any() && Directory.Exists(folderHistory.Last()))
+                    ofd.InitialDirectory = folderHistory.First();
+
                 if (ofd.ShowDialog() == DialogResult.OK)
                 {
                     fileNames = ofd.FileNames.ToList();
