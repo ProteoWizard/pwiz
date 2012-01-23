@@ -372,6 +372,7 @@ namespace seems
                 stick.Location.CoordinateFrame = CoordType.XScaleYChartFraction;
                 stick.Line.Width = 2;
                 stick.Line.Style = System.Drawing.Drawing2D.DashStyle.Dot;
+                stick.IsClippedToChartRect = true;
                 list.Add( stick );
 
                 if( showLabels )
@@ -387,25 +388,44 @@ namespace seems
             } else
             // matching point found: present the point as the fragment
             {
+                // try to find a closer point
+                double minError = Math.Abs(points.ScaledList[index].X - mz);
+                for (int i = index; i < points.ScaledCount; ++i)
+                {
+                    double curError = Math.Abs(points.ScaledList[i].X - mz);
+                    if (curError < minError)
+                    {
+                        minError = curError;
+                        index = i;
+                    }
+                    else if (points.ScaledList[i].X > mz)
+                        break;
+                }
+
                 LineObj stick = new LineObj( color, mz, points.ScaledList[index].Y, mz, 0 );
                 stick.Location.CoordinateFrame = CoordType.AxisXYScale;
                 stick.Line.Width = 2;
+                stick.IsClippedToChartRect = true;
                 list.Add( stick );
 
                 if( showLabels )
                 {
                     // use an existing text point annotation if possible
                     TextObj text = null;
+                    minError = Double.MaxValue;
                     foreach( GraphObj obj in list )
                     {
                         if( obj is TextObj &&
                             ( obj.Location.CoordinateFrame == CoordType.AxisXYScale ||
-                              obj.Location.CoordinateFrame == CoordType.XScaleYChartFraction ) &&
-                            Math.Abs( obj.Location.X - mz ) < 0.5 )
+                              obj.Location.CoordinateFrame == CoordType.XScaleYChartFraction ))
                         {
-                            text = obj as TextObj;
-                            text.Text = String.Format( "{0}\n{1}", label, text.Text );
-                            break;
+                            double curError = Math.Abs(obj.Location.X - points.ScaledList[index].X);
+                            if (curError < 1e-4 && curError < minError)
+                            {
+                                minError = curError;
+                                text = obj as TextObj;
+                                text.Text = String.Format("{0}\n{1}", label, text.Text);
+                            }
                         }
                     }
 

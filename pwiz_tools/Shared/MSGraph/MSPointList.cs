@@ -35,10 +35,6 @@ namespace pwiz.MSGraph
         private double _scaledMax;
         private double _scaleRange;
         private double _scaleFactor;
-// ReSharper disable NotAccessedField.Local
-        private int _scaledMinIndex;
-        private int _scaledMaxIndex;
-// ReSharper restore NotAccessedField.Local
 
         public MSPointList( IPointList sourcePointList )
         {
@@ -65,8 +61,8 @@ namespace pwiz.MSGraph
             if( _fullPointList.Count == 0 )
                 return;
 
-            min = Math.Max( min, _fullPointList[0].X );
-            max = Math.Min( max, _fullPointList[_fullPointList.Count - 1].X );
+            min = Math.Max( min - 1, _fullPointList[0].X );
+            max = Math.Min( max + 1, _fullPointList[_fullPointList.Count - 1].X );
 
             if( _scaledWidth == width && _scaledMin == min && _scaledMax == max )
                 return;
@@ -109,13 +105,30 @@ namespace pwiz.MSGraph
                 {
                     if( lastBin > -1 )
                     {
-                        _scaledMinIndex = curBinMinIndex;
                         _scaledPointList.Add( _fullPointList[curBinEntryIndex] );
-                        if( curBinEntryIndex != curBinMinIndex )
-                            _scaledPointList.Add( _fullPointList[curBinMinIndex] );
-                        if( curBinEntryIndex != curBinMaxIndex &&
-                            curBinMinIndex != curBinMaxIndex )
-                            _scaledPointList.Add( _fullPointList[curBinMaxIndex] );
+                        if( curBinEntryIndex != curBinMinIndex ||
+                            curBinEntryIndex != curBinMaxIndex )
+                        {
+                            if( curBinMinIndex != curBinMaxIndex )
+                            {
+                                if( _fullPointList[curBinMinIndex].X < _fullPointList[curBinMaxIndex].X )
+                                {
+                                    if( curBinMinIndex != curBinEntryIndex )
+                                        _scaledPointList.Add( _fullPointList[curBinMinIndex] );
+                                    if (curBinMaxIndex != curBinEntryIndex)
+                                        _scaledPointList.Add( _fullPointList[curBinMaxIndex] );
+                                }
+                                else
+                                {
+                                    if (curBinMaxIndex != curBinEntryIndex)
+                                        _scaledPointList.Add( _fullPointList[curBinMaxIndex] );
+                                    if (curBinMinIndex != curBinEntryIndex)
+                                        _scaledPointList.Add( _fullPointList[curBinMinIndex] );
+                                }
+                            }
+                            else if( curBinMinIndex != curBinEntryIndex )
+                                _scaledPointList.Add( _fullPointList[curBinMinIndex] );
+                        }
                         if( curBinEntryIndex != curBinMaxIndex &&
                             curBinMinIndex != curBinMaxIndex &&
                             curBinMaxIndex != curBinExitIndex )
@@ -131,7 +144,7 @@ namespace pwiz.MSGraph
                 {
                     curBinExitIndex = i;
                     if( point.Y > _fullPointList[curBinMaxIndex].Y )
-                        _scaledMaxIndex = curBinMaxIndex = i;
+                        curBinMaxIndex = i;
                     else if( point.Y < _fullPointList[curBinMinIndex].Y )
                         curBinMinIndex = i;
                 }
@@ -139,7 +152,6 @@ namespace pwiz.MSGraph
 
             if( lastBin > -1 )
             {
-                _scaledMinIndex = curBinMinIndex;
                 _scaledPointList.Add( _fullPointList[curBinEntryIndex] );
                 if( curBinEntryIndex != curBinMinIndex )
                     _scaledPointList.Add( _fullPointList[curBinMinIndex] );
