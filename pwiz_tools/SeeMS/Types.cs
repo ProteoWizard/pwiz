@@ -89,7 +89,7 @@ namespace seems
 				return null; // no peaks
 
 			MutableKeyValuePair<double, T> best = min.Current;
-            Enumerator bestEnum = min;
+            Enumerator bestEnum = (Enumerator) min.Clone();
 
 			// find the peak closest to the desired mz
 			double minDiff = Math.Abs( x - best.Key );
@@ -450,7 +450,10 @@ namespace seems
             {
                 using( Spectrum element = spectrumList.spectrum( index, true ) )
                 {
-                    return new ZedGraph.PointPairList( element.getMZArray().data, element.getIntensityArray().data );
+                    if (element.defaultArrayLength == 0)
+                        return new ZedGraph.PointPairList();
+
+                    return new ZedGraph.PointPairList(element.getMZArray().data, element.getIntensityArray().data);
                 }
             }
 		}
