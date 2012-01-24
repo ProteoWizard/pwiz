@@ -48,15 +48,17 @@ constant READER_NAME : "Reader_Thermo" ;
 
 
 import common path ;
-if [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ] ||
-   [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ]
+if ( $(MSFILEREADER_INSTALL_DIR) )	# only on Windows
 {
-    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
-    {
-        .hasDLLs = true ;
-    }
+	if [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ] ||
+	   [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ]
+	{
+		if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+		{
+			.hasDLLs = true ;
+		}
+	}
 }
-
 
 rule vendor-api-requirements ( properties * )
 {
