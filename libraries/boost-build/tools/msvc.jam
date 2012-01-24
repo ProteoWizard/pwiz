@@ -1004,10 +1004,20 @@ local rule configure-really ( version ? : options * )
             # used, and 'AMD64' on 64-bit windows on x86 (either AMD64 or EM64T)
             # Windows.
             #
-            if [ MATCH ^(AMD64) : [ os.environ PROCESSOR_ARCHITECTURE ] ]
+			# THIS DOESN'T APPEAR TO WORK BECAUSE bjam IS RUNNING IN 32-BIT MODE
+			local PROCESSOR_ARCHITECTURE = [ os.environ PROCESSOR_ARCHITECTURE ] ;
+			# HACK TO GET THE RIGHT ARCHITECTURE:
+			local ProgramFiles = [ os.environ ProgramFiles ] ;
+			if ( [ MATCH (x86) : $(ProgramFiles) ] )	# infer 64-bit machine from (x86) appended to ProgramFiles
+			{
+				PROCESSOR_ARCHITECTURE = "AMD64" ;
+			}
+
+            if [ MATCH ^(AMD64) : $(PROCESSOR_ARCHITECTURE) ]
             {
                 default-global-setup-options-amd64 = amd64 ;
             }
+			
             # TODO: The same 'native compiler usage' should be implemented for
             # the Itanium platform by using the "ia64" parameter. For this
             # though we need someone with access to this platform who can find

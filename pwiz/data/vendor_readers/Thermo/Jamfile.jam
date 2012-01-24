@@ -47,12 +47,9 @@ constant READER_PATH : "pwiz/data/vendor_readers/Thermo" ;
 constant READER_NAME : "Reader_Thermo" ;
 
 
-import os common path ;
-local ProgramFiles = [ os.environ ProgramFiles ] ;
-ProgramFiles ?= "C:\\Program Files" ;
-local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
-if [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ] ||
-   [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+import common path ;
+if [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ] ||
+   [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ]
 {
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
     {
@@ -76,7 +73,6 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       ! ( <address-model>64 in $(properties) ) &&
        [ project-exists $(API_PATH) ]  && ! [ without-binary-msdata ]
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_thermo ;
@@ -92,10 +88,6 @@ rule vendor-api-usage-requirements ( properties * )
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
-        }
-        else if ! <address-model>32 in $(properties)
-        {
-            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
@@ -147,11 +139,6 @@ rule test-requirements ( properties * )
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-            result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
-        }
-        else if <address-model>64 in $(properties)
-        {
-            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
             result += <define>PWIZ_READER_THERMO_TEST_ACCEPT_ONLY ;
         }
         else if ! [ project-exists $(API_PATH) ]
