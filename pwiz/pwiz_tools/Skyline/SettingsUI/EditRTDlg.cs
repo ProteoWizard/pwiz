@@ -93,11 +93,16 @@ namespace pwiz.Skyline.SettingsUI
                     /*
                     textSlope.Text = string.Format("{0:F04}", _regression.Conversion.Slope);
                     textIntercept.Text = string.Format("{0:F04}", _regression.Conversion.Intercept);
-                    textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow);
                      */
-                    textSlope.Text = _regression.Conversion.Slope.ToString(CultureInfo.CurrentCulture);
-                    textIntercept.Text = _regression.Conversion.Intercept.ToString(CultureInfo.CurrentCulture);
-                    textTimeWindow.Text = _regression.TimeWindow.ToString(CultureInfo.CurrentCulture);
+                    if (_regression.Conversion == null)
+                        cbAutoCalc.Checked = true;
+                    else
+                    {
+                        cbAutoCalc.Checked = false;
+                        textSlope.Text = _regression.Conversion.Slope.ToString(CultureInfo.CurrentCulture);
+                        textIntercept.Text = _regression.Conversion.Intercept.ToString(CultureInfo.CurrentCulture);
+                    }
+                    textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow);
                 }
             }
         }
@@ -119,13 +124,21 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
-            double slope;
-            if (!helper.ValidateDecimalTextBox(e, textSlope, out slope))
-                return;
+            double? slope = null;
+            double? intercept = null;
 
-            double intercept;
-            if (!helper.ValidateDecimalTextBox(e, textIntercept, out intercept))
-                return;
+            if (!cbAutoCalc.Checked)
+            {
+                double slopeTmp;
+                if (!helper.ValidateDecimalTextBox(e, textSlope, out slopeTmp))
+                    return;
+                slope = slopeTmp;
+
+                double interceptTmp;
+                if (!helper.ValidateDecimalTextBox(e, textIntercept, out interceptTmp))
+                    return;
+                intercept = interceptTmp;
+            }
 
             double window;
             if (!helper.ValidateDecimalTextBox(e, textTimeWindow, out window))
@@ -215,6 +228,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             var calc = _driverCalculators.SelectedItem;
             btnShowGraph.Enabled = (calc != null);
+            cbAutoCalc.Enabled = (calc is RCalcIrt);
+            if (!cbAutoCalc.Enabled)
+                cbAutoCalc.Checked = false;
             if (calc != null)
             {
                 try
@@ -294,7 +310,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddResults()
         {
-            SetTablePeptides(GetDocumentPeptides());
+            SetTablePeptides(GetDocumentPeptides().ToArray());
             var regressionPeps = UpdateCalculator(null);
             if (regressionPeps != null)
                 SetTablePeptides(regressionPeps);
@@ -390,15 +406,14 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public List<MeasuredRetentionTime> GetDocumentPeptides()
+        public IEnumerable<MeasuredRetentionTime> GetDocumentPeptides()
         {
             var document = Program.ActiveDocumentUI;
             if (!document.Settings.HasResults)
-                return null; // This shouldn't be possible, but just to be safe.
+                yield break; // This shouldn't be possible, but just to be safe.
             if (!document.Settings.MeasuredResults.IsLoaded)
-                return null;
+                yield break;
 
-            var peps = new List<MeasuredRetentionTime>();
             var setPeps = new HashSet<string>();
             foreach(var nodePep in document.Peptides)
             {
@@ -416,10 +431,8 @@ namespace pwiz.Skyline.SettingsUI
                 if (!retentionTime.HasValue)
                     continue;
 
-                peps.Add(new MeasuredRetentionTime(modSeq, retentionTime.Value));
+                yield return new MeasuredRetentionTime(modSeq, retentionTime.Value);
             }
-
-            return peps;
         }
 
         /// <summary>
@@ -551,6 +564,20 @@ namespace pwiz.Skyline.SettingsUI
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void cbAutoCalc_CheckedChanged(object sender, EventArgs e)
+        {
+            textSlope.Enabled = textIntercept.Enabled = btnCalculate.Enabled = !cbAutoCalc.Checked;
+            if (cbAutoCalc.Checked)
+            {
+                if (gridPeptides.Visible)
+                {
+                    ShowPeptides(false);
+                }
+                textSlope.Text = textIntercept.Text = "";
+                Peptides.Clear();
+            }
         }
 
         private void labelRValue_Click(object sender, EventArgs e)

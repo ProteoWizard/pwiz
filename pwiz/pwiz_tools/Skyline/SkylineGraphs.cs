@@ -2045,12 +2045,13 @@ namespace pwiz.Skyline
                     {
                         placeholderToolStripMenuItem1,
                         toolStripSeparatorCalculators,
+                        addCalculatorContextMenuItem,
                         updateCalculatorContextMenuItem
                     });
                 }
                 var regressionRT = RTGraphController.RegressionRefined;
                 createRTRegressionContextMenuItem.Enabled = (regressionRT != null);
-                updateCalculatorContextMenuItem.Enabled = (regressionRT != null &&
+                updateCalculatorContextMenuItem.Visible = (regressionRT != null &&
                     Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator));
                 bool showDelete = controller.ShowDelete(mousePt);
                 bool showDeleteOutliers = controller.ShowDeleteOutliers;
@@ -2362,6 +2363,14 @@ namespace pwiz.Skyline
         {
             Settings.Default.RTCalculatorName = calculatorName;
             UpdateRetentionTimeGraph();
+        }
+
+        private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)
+        {
+            var list = Settings.Default.RTScoreCalculatorList;
+            var calcNew = list.EditItem(this, null, list, null);
+            if (calcNew != null)
+                list.SetValue(calcNew);
         }
 
         private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)

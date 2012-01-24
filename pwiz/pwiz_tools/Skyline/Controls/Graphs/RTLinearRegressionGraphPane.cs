@@ -798,7 +798,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 _regressionAll, _statisticsAll, COLOR_LINE_ALL);
                 }
 
-                if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
+                if (_regressionPredict != null &&
+                    _regressionPredict.Conversion != null &&
+                    Settings.Default.RTPredictorVisible)
                 {
                     timeTop = yAxis.Scale.ReverseTransform(yNext);
                     AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
@@ -810,7 +812,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                     RetentionTimeRegression regression, RetentionTimeStatistics statistics, Color color)
             {
                 string label;
-                if (regression == null || statistics == null)
+                if (regression == null || regression.Conversion == null || statistics == null)
                 {
                     label = "slope = ?, intercept = ?\n" +
                             "window = ?\n" +

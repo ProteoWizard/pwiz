@@ -557,7 +557,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (listChromGraphs.Count > 0)
                     {
-                        SetRetentionTimeIndicators(listChromGraphs[0], settings, nodeGroups, mods);
+                        SetRetentionTimeIndicators(listChromGraphs[0], settings, chromatograms, nodeGroups, mods);
                     }
                 }
                 GraphPane.Legend.IsVisible = Settings.Default.ShowChromatogramLegend;
@@ -1196,17 +1196,21 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary, SrmSettings settings,
-            TransitionGroupDocNode[] nodeGroups, ExplicitMods mods)
+        private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary,
+                                                SrmSettings settings,
+                                                ChromatogramSet chromatograms,
+                                                TransitionGroupDocNode[] nodeGroups,
+                                                ExplicitMods mods)
         {
             // Set predicted retention time on the first graph item to make
-            // line, label and shading to show.
+            // line, label and shading show.
             var regression = settings.PeptideSettings.Prediction.RetentionTime;
             if (regression != null && Settings.Default.ShowRetentionTimePred)
             {
                 string sequence = nodeGroups[0].TransitionGroup.Peptide.Sequence;
                 string modSeq = settings.GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-                double? predictedRT = regression.GetRetentionTime(modSeq);
+                var fileId = chromatograms.FindFile(chromGraphPrimary.Chromatogram);
+                double? predictedRT = regression.GetRetentionTime(modSeq, fileId);
                 double window = regression.TimeWindow;
 
                 chromGraphPrimary.RetentionPrediction = predictedRT;

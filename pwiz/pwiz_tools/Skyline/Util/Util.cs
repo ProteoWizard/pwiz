@@ -799,13 +799,18 @@ namespace pwiz.Skyline.Util
         /// <returns>A hash-code value constructed from all items in the array</returns>
         public static int GetHashCodeDeep<TItem>(this IList<TItem> values)
         {
+            return values.GetHashCodeDeep(v => v.GetHashCode());
+        }
+
+        public static int GetHashCodeDeep<TItem>(this IList<TItem> values, Func<TItem, int> getHashCode)
+        {
             unchecked
             {
                 int result = 0;
                 foreach (TItem value in values)
-                    result = (result * 397) ^ (!Equals(value, default(TItem)) ? value.GetHashCode() : 0);
+                    result = (result * 397) ^ (!Equals(value, default(TItem)) ? getHashCode(value) : 0);
                 return result;
-            }            
+            }
         }
 
         /// <summary>

@@ -24,8 +24,10 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -51,15 +53,23 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private RetentionScoreCalculatorSpec _calculator;
 
+        // Support for auto-calculate regression
+        private ImmutableSortedList<int, RegressionLine> _listFileIdToConversion;
+        // Peptide standards used to derive the above conversions
+        private ImmutableDictionary<int, PeptideDocNode> _dictStandardPeptides;
+
         private ReadOnlyCollection<MeasuredRetentionTime> _peptidesTimes;
        
         public RetentionTimeRegression(string name, RetentionScoreCalculatorSpec calculator,
-                                       double slope, double intercept, double window,
+                                       double? slope, double? intercept, double window,
                                        IList<MeasuredRetentionTime> peptidesTimes)
             : base(name)
         {
             TimeWindow = window;
-            Conversion = new RegressionLineElement(slope, intercept);
+            if (slope.HasValue && intercept.HasValue)
+                Conversion = new RegressionLineElement(slope.Value, intercept.Value);
+            else if (slope.HasValue || intercept.HasValue)
+                throw new InvalidDataException("Slope and intercept must both have values or both not have values");
             PeptideTimes = peptidesTimes;
 
             _calculator = calculator;
@@ -77,6 +87,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public RegressionLineElement Conversion { get; private set; }
 
+        public bool IsUsable { get { return Conversion != null && Calculator.IsUsable; } }
+
+        public bool IsAutoCalculated { get { return Conversion == null || _listFileIdToConversion != null; } }
+
         public IList<MeasuredRetentionTime> PeptideTimes
         {
             get { return _peptidesTimes; }
@@ -90,25 +104,128 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.Calculator = prop);
         }
 
-        public RetentionTimeRegression ChangeTimeWindoow(double prop)
+        public RetentionTimeRegression ChangeTimeWindow(double prop)
         {
             return ChangeProp(ImClone(this), im => im.TimeWindow = prop);
+        }
+
+        public RetentionTimeRegression ChangeEquations(RegressionLineElement conversion,
+                                                       IEnumerable<KeyValuePair<int, RegressionLine>> fileIdToConversions,
+                                                       IDictionary<int, PeptideDocNode> dictStandardPeptides)
+        {
+            return ChangeProp(ImClone(this), im =>
+                    {
+                        im.Conversion = conversion;
+                        im._listFileIdToConversion = ImmutableSortedList.FromValues(fileIdToConversions);
+                        im._dictStandardPeptides = MakeReadOnly(dictStandardPeptides);
+                    });
+        }
+
+        public RetentionTimeRegression ClearEquations()
+        {
+            if (Conversion == null)
+                return this;
+
+            return ChangeProp(ImClone(this), im =>
+                    {
+                        im.Conversion = null;
+                        im._listFileIdToConversion = null;
+                        im._dictStandardPeptides = null;
+                    });
         }
 
         #endregion
 
         public double? GetRetentionTime(string seq)
         {
+            return GetRetentionTime(seq, Conversion);
+        }
+
+        public double? GetRetentionTime(string seq, ChromFileInfoId fileId)
+        {
+            RegressionLine conversion = null;
+            if (fileId != null && _listFileIdToConversion != null)
+            {
+                int iConversion = _listFileIdToConversion.BinarySearch(fileId.GlobalIndex, true);
+                if (iConversion >= 0)
+                    conversion = _listFileIdToConversion[iConversion].Value;
+            }
+            return GetRetentionTime(seq, conversion);
+        }
+
+        private double? GetRetentionTime(string seq, IRegressionFunction conversion)
+        {
             double? score = Calculator.ScoreSequence(seq);
             if (score.HasValue)
-                return GetRetentionTime(score.Value);
+                return GetRetentionTime(score.Value, conversion);
             return null;
         }
 
         private double GetRetentionTime(double score)
         {
+            return GetRetentionTime(score, Conversion);
+        }
+
+        private static double GetRetentionTime(double score, IRegressionFunction conversion)
+        {
             // CONSIDER: Return the full value?
-            return GetRetentionTimeDisplay(Conversion.GetY(score)) ?? 0;
+            if (conversion != null)
+                return GetRetentionTimeDisplay(conversion.GetY(score)) ?? 0;
+            return 0;
+        }
+
+        public bool IsAutoCalcRequired(SrmDocument document, SrmDocument previous)
+        {
+            // Any time there is no regression information, an auto-calc is required
+            // unless the document has no results
+            if (Conversion == null)
+            {
+                if (!document.Settings.HasResults)
+                    return false;
+
+                // If prediction settings have change, then do auto-recalc
+                if (previous == null || !ReferenceEquals(this,
+                        previous.Settings.PeptideSettings.Prediction.RetentionTime))
+                    return true;
+
+                // Otherwise, only if any of the transition groups or their results
+                // have changed.  This is important to avoid an infinite loop when
+                // not enough information is present to actually calculate the Conversion
+                // parameter.
+                var enumPrevious = previous.TransitionGroups.GetEnumerator();
+                foreach (var nodeGroup in document.TransitionGroups)
+                {
+                    if (!enumPrevious.MoveNext())
+                        return true;
+                    var nodeGroupPrevious = enumPrevious.Current;
+                    if (nodeGroupPrevious == null)
+                        return true;
+                    if (!ReferenceEquals(nodeGroup.Id, nodeGroupPrevious.Id) ||
+                        !ReferenceEquals(nodeGroup.Results, nodeGroupPrevious.Results))
+                        return true;
+                }
+                return enumPrevious.MoveNext();
+            }
+
+            // If there is a documentwide regression, but no per-file information
+            // then no auto-calc is required.
+            if (_listFileIdToConversion == null || _dictStandardPeptides == null)
+                return false;
+
+            // If any of the standard peptides do not match exactly, then auto-calc
+            // is required.
+            int countMatching = 0;
+            foreach (var nodePep in document.Peptides)
+            {
+                PeptideDocNode nodePepStandard;
+                if (!_dictStandardPeptides.TryGetValue(nodePep.Peptide.GlobalIndex, out nodePepStandard))
+                    continue;
+                if (!ReferenceEquals(nodePep, nodePepStandard))
+                    return true;
+                countMatching++;
+            }
+            // Or any are missing.
+            return countMatching != _dictStandardPeptides.Count;
         }
 
         /// <summary>
@@ -180,7 +297,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             // TODO: Fix this hacky way of dealing with the default value.
-            if (TimeWindow + Conversion.Slope + Conversion.Intercept != 0 || Calculator != null)
+            if (Conversion == null || TimeWindow + Conversion.Slope + Conversion.Intercept != 0 || Calculator != null)
             {
                 if (Calculator == null)
                     throw new InvalidDataException("Retention time regression must specify a sequence to score calculator.");
@@ -237,8 +354,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     writer.WriteAttributeString(ATTR.calculator, _calculator.Name);
             }
 
-            // Write conversion inner-tag
-            writer.WriteElement(EL.regression_rt, Conversion);
+            // Write conversion inner-tag, if not auto-convert
+            if (!IsAutoCalculated)
+                writer.WriteElement(EL.regression_rt, Conversion);
 
             // Write all measured retention times
             writer.WriteElements(PeptideTimes);
@@ -256,6 +374,7 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Calculator, Calculator) &&
                    Equals(obj.Conversion, Conversion) &&
                    obj.TimeWindow == TimeWindow &&
+                   ArrayUtil.EqualsDeep(_listFileIdToConversion, _listFileIdToConversion) &&
                    ArrayUtil.EqualsDeep(obj.PeptideTimes, PeptideTimes);
         }
 
@@ -272,9 +391,13 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = base.GetHashCode();
                 result = (result*397) ^ Calculator.GetHashCode();
-                result = (result*397) ^ Conversion.GetHashCode();
+                result = (result*397) ^ (Conversion != null ? Conversion.GetHashCode() : 0);
                 result = (result*397) ^ TimeWindow.GetHashCode();
                 result = (result*397) ^ PeptideTimes.GetHashCodeDeep();
+                result = (result*397) ^ (_listFileIdToConversion != null
+                                             ? _listFileIdToConversion.GetHashCodeDeep(
+                                                 p => (p.Key.GetHashCode()*397) ^ p.Value.GetHashCode())
+                                             : 0);
                 return result;
             }
         }
@@ -650,6 +773,25 @@ namespace pwiz.Skyline.Model.DocSettings
                     return new SSRCalc3(SSRCALC_100_A, SSRCalc3.Column.A100);
             }
             return null;
+        }
+
+        public bool SamePeptides(RetentionTimeRegression rtRegressionNew)
+        {
+            if (_dictStandardPeptides == null && rtRegressionNew._dictStandardPeptides == null)
+                return true;
+            if (_dictStandardPeptides == null || rtRegressionNew._dictStandardPeptides == null)
+                return false;
+            if (_dictStandardPeptides.Count != rtRegressionNew._dictStandardPeptides.Count)
+                return false;
+            foreach (var idPeptide in _dictStandardPeptides)
+            {
+                PeptideDocNode nodePep;
+                if (!rtRegressionNew._dictStandardPeptides.TryGetValue(idPeptide.Key, out nodePep))
+                    return false;
+                if (!ReferenceEquals(nodePep, idPeptide.Value))
+                    return false;
+            }
+            return true;
         }
     }
 
@@ -1544,6 +1686,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public RegressionLineElement(double slope, double intercept)
         {
             _regressionLine = new RegressionLine(slope, intercept);
+        }
+
+        public RegressionLineElement(RegressionLine regressionLine)
+        {
+            _regressionLine = regressionLine;
         }
 
         public double Slope { get { return _regressionLine.Slope; } }

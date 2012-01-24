@@ -658,7 +658,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     foreach (var nodePep in document.Peptides)
                     {
                         string modSeq = document.Settings.GetModifiedSequence(nodePep, IsotopeLabelType.light);
-                        float? centerTime = nodePep.GetPeakCenterTime(fileInfo);
+                        float? centerTime = nodePep.GetPeakCenterTime(fileInfo.FileId);
                         if (centerTime.HasValue)
                             _dictPeptideRetentionTime.Add(modSeq, centerTime.Value);
                     }

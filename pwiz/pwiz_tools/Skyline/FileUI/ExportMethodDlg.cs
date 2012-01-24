@@ -881,15 +881,21 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (prediction.UseMeasuredRTs)
                         MessageDlg.Show(this, "To export a scheduled list, you must first choose " +
-                                        "a retention time regression in Peptide Settings / Prediction, or " +
+                                        "a retention time predictor in Peptide Settings / Prediction, or " +
                                         "import results for all peptides in the document.");
                     else
                         MessageDlg.Show(this, "To export a scheduled list, you must first choose " +
-                                        "a retention time regression in Peptide Settings / Prediction.");                    
+                                        "a retention time predictor in Peptide Settings / Prediction.");                    
                 }
                 else if (!prediction.RetentionTime.Calculator.IsUsable)
                 {
-                    MessageDlg.Show(this, "Retention time prediction calculator is unable to score.\nCheck the calculator settings.");
+                    MessageDlg.Show(this, "Retention time prediction calculator is unable to score.\n" +
+                        "Check the calculator settings.");
+                }
+                else if (!prediction.RetentionTime.IsUsable)
+                {
+                    MessageDlg.Show(this, "Retention time predictor is unable to auto-calculate a regression.\n" +
+                        "Check to make sure the document contains times for all of the required standard peptides.");
                 }
                 else
                 {

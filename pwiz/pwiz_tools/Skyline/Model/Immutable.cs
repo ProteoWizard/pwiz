@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using pwiz.Common.Collections;
 
 namespace pwiz.Skyline.Model
 {
@@ -56,6 +57,21 @@ namespace pwiz.Skyline.Model
             // If not already read-only, make readonly, and if not already an array
             // convert to an array for minimum allocation overhead.
             return list as ReadOnlyCollection<TItem> ?? new ReadOnlyCollection<TItem>(list is Array ? list : list.ToArray());
+        }
+
+        /// <summary>
+        /// Wraps a <see cref="IDictionary{TKey,TValue}"/> in a <see cref="ImmutableDictionary{TKey,TValue}"/>
+        /// if it is not already one.  All <see cref="Immutable"/> objects returning
+        /// <see cref="IDictionary{TKey,TValue}"/> properties, should use this to ensure the dictionaries
+        /// are also immutable.
+        /// </summary>
+        /// <typeparam name="TKey">Type of the dictionary keys</typeparam>
+        /// <typeparam name="TValue">Type of the dictionary values</typeparam>
+        /// <param name="dict">The original dictionary</param>
+        /// <returns>A read-only dictionary</returns>
+        protected static ImmutableDictionary<TKey,TValue> MakeReadOnly<TKey,TValue>(IDictionary<TKey, TValue> dict)
+        {
+            return dict as ImmutableDictionary<TKey, TValue> ?? new ImmutableDictionary<TKey, TValue>(dict);
         }
 
         /// <summary>

@@ -161,6 +161,11 @@ namespace pwiz.Skyline.Model
             get { return AveragePeakCenterTime; }
         }
 
+        public float? GetSchedulingTime(ChromFileInfoId fileId)
+        {
+            return GetPeakCenterTime(fileId);
+        }
+
         public float? AveragePeakCenterTime
         {
             get
@@ -182,7 +187,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public float? GetPeakCenterTime(ChromFileInfo fileInfo)
+        public float? GetPeakCenterTime(ChromFileInfoId fileId)
         {
             double totalTime = 0;
             int countTime = 0;
@@ -193,7 +198,7 @@ namespace pwiz.Skyline.Model
 
                 foreach (var chromInfo in nodeGroup.ChromInfos)
                 {
-                    if (fileInfo != null && !ReferenceEquals(fileInfo.Id, chromInfo.FileId))
+                    if (fileId != null && !ReferenceEquals(fileId, chromInfo.FileId))
                         continue;
                     if (!chromInfo.StartRetentionTime.HasValue || !chromInfo.EndRetentionTime.HasValue)
                         continue;

@@ -69,10 +69,9 @@ namespace pwiz.Skyline.Model.Irt
         {
             RequireUsable();
 
-            var dbStandard = new HashSet<string>(_database.StandardPeptides);
-            var returnStandard = peptides.Where(dbStandard.Contains).ToArray();
+            var returnStandard = peptides.Where(_database.IsStandard).ToArray();
 
-            if(returnStandard.Length != dbStandard.Count)
+            if(returnStandard.Length != _database.StandardPeptideCount)
                 throw new IncompleteStandardException(this);
 
             return returnStandard;
@@ -80,8 +79,6 @@ namespace pwiz.Skyline.Model.Irt
 
         public override IEnumerable<string> GetStandardPeptides(IEnumerable<string> peptides)
         {
-            RequireUsable();
-
             return ChooseRegressionPeptides(peptides);
         }
 

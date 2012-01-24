@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (settings.PeptideSettings.Prediction.RetentionTime != null)
                     {
                         settings = settings.ChangePeptidePrediction(p =>
-                            p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindoow(window)));
+                            p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindow(window)));
                     }
                 }
                 var docWindow = document.ChangeSettings(settings);
