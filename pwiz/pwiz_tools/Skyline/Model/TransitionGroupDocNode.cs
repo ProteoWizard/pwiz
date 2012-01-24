@@ -1804,7 +1804,11 @@ namespace pwiz.Skyline.Model
                 foreach (TransitionDocNode nodeTran in nodeGroupSynch.Children)
                 {
                     var tranMatch = nodeTran.Transition;
-                    var tran = new Transition(TransitionGroup, tranMatch.IonType, tranMatch.CleavageOffset, 0, tranMatch.Charge);
+                    var tran = new Transition(TransitionGroup,
+                                              tranMatch.IonType,
+                                              tranMatch.CleavageOffset,
+                                              tranMatch.MassIndex,
+                                              tranMatch.Charge);
                     var losses = nodeTran.Losses;
                     // m/z, isotope distribution and library info calculated later
                     childrenNew.Add(new TransitionDocNode(tran, losses, 0, null, null));
