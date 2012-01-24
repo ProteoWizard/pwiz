@@ -1331,8 +1331,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // If the library loded state has changed, make sure the library properties are up to date,
             // but avoid changing the chosen transitions.
-            if (!DiffTransitionGroupProps && libraryChange && newLib.IsLoaded && !oldLib.IsLoaded)
-                DiffTransitionGroupProps = true;
+            // CONSIDER: The way library transition ranking is currently implemented makes this too slow
+//            if (!DiffTransitionGroupProps && libraryChange && newLib.IsLoaded && !oldLib.IsLoaded)
+//                DiffTransitionGroupProps = true;
 
             // Any change in modifications or fragment mass-type forces a recalc
             // of transition m/z values, as
