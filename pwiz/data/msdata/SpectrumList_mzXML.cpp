@@ -307,7 +307,7 @@ class HandlerScan : public SAXParser::Handler
                 // we're in a nested scan declaration, we can quit
                 return Status::Done;
             }
-            string scanEvent, msLevel, polarity,
+            string /*scanEvent,*/ msLevel, polarity,
                 retentionTime, lowMz, highMz, basePeakMz, basePeakIntensity, totIonCurrent,
                 msInstrumentID, centroided, deisotoped, chargeDeconvoluted, scanType,
                 ionisationEnergy, cidGasPressure;
@@ -316,7 +316,7 @@ class HandlerScan : public SAXParser::Handler
             double startMz, endMz;
 
             getAttribute(attributes, "num", scanNumber_);
-            getAttribute(attributes, "scanEvent", scanEvent);
+            //getAttribute(attributes, "scanEvent", scanEvent);
             getAttribute(attributes, "msLevel", msLevel);
             getAttribute(attributes, "peaksCount", peaksCount);
             getAttribute(attributes, "polarity", polarity);
@@ -354,7 +354,7 @@ class HandlerScan : public SAXParser::Handler
             spectrum_.scanList.scans.push_back(Scan());
             Scan& scan = spectrum_.scanList.scans.back();
 
-            scan.set(MS_preset_scan_configuration, scanEvent);
+            //scan.set(MS_preset_scan_configuration, scanEvent);
 
             if (polarity == "+")
                 spectrum_.set(MS_positive_scan);

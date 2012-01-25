@@ -245,8 +245,10 @@ PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile)
     if (sourceFile.hasCVParam(MS_SHA_1)) return;
 
     const string uriPrefix = "file://";
-    if (sourceFile.location.find(uriPrefix) != 0) return;
-    bfs::path p(sourceFile.location.substr(uriPrefix.size()));
+    if (!bal::istarts_with(sourceFile.location, uriPrefix)) return;
+    string location = sourceFile.location.substr(uriPrefix.size());
+    bal::trim_if(location, bal::is_any_of("/"));
+    bfs::path p(location);
     p /= sourceFile.name;
 
     try

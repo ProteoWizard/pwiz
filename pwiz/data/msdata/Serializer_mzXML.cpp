@@ -74,12 +74,9 @@ namespace {
 void start_mzXML(XMLWriter& xmlWriter)
 {
     XMLWriter::Attributes attributes; 
-    attributes.push_back(make_pair("xmlns", 
-        "http://sashimi.sourceforge.net/schema_revision/mzXML_3.2"));
-    attributes.push_back(make_pair("xmlns:xsi", 
-        "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("xsi:schemaLocation", 
-        "http://sashimi.sourceforge.net/schema_revision/mzXML_3.2 http://sashimi.sourceforge.net/schema_revision/mzXML_3.2/mzXML_idx_3.2.xsd"));
+    attributes.add("xmlns", "http://sashimi.sourceforge.net/schema_revision/mzXML_3.2");
+    attributes.add("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+    attributes.add("xsi:schemaLocation", "http://sashimi.sourceforge.net/schema_revision/mzXML_3.2 http://sashimi.sourceforge.net/schema_revision/mzXML_3.2/mzXML_idx_3.2.xsd");
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
     xmlWriter.startElement("mzXML", attributes);
@@ -288,32 +285,37 @@ void writeSoftware(XMLWriter& xmlWriter, SoftwarePtr software,
 }
 
 
-void write_msInstrument(XMLWriter& xmlWriter, const InstrumentConfiguration& instrumentConfiguration, 
-                        const MSData& msd, const CVTranslator& cvTranslator)
+void write_msInstrument(XMLWriter& xmlWriter, const InstrumentConfigurationPtr& instrumentConfiguration, 
+                        const MSData& msd, const CVTranslator& cvTranslator,
+                        map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr)
 {
     const LegacyAdapter_Instrument adapter(
-        const_cast<InstrumentConfiguration&>(instrumentConfiguration), cvTranslator);
+        const_cast<InstrumentConfiguration&>(*instrumentConfiguration), cvTranslator);
     
-    XMLWriter::Attributes attributes; 
-    attributes.add("id", instrumentConfiguration.id);
+    int index = (int) instrumentIndexByPtr.size() + 1;
+    instrumentIndexByPtr[instrumentConfiguration] = index;
+
+    XMLWriter::Attributes attributes;
+    attributes.add("msInstrumentID", index);
     xmlWriter.startElement("msInstrument", attributes);
-        writeCategoryValue(xmlWriter, "msManufacturer", adapter.manufacturer());
-        writeCategoryValue(xmlWriter, "msModel", adapter.model());
-        try { writeCategoryValue(xmlWriter, "msIonisation", adapter.ionisation()); } catch (std::out_of_range&) {}
-        try { writeCategoryValue(xmlWriter, "msMassAnalyzer", adapter.analyzer()); } catch (std::out_of_range&) {}
-        try { writeCategoryValue(xmlWriter, "msDetector", adapter.detector()); } catch (std::out_of_range&) {}
-    if (instrumentConfiguration.softwarePtr.get())
-        writeSoftware(xmlWriter, instrumentConfiguration.softwarePtr,
+    writeCategoryValue(xmlWriter, "msManufacturer", adapter.manufacturer());
+    writeCategoryValue(xmlWriter, "msModel", adapter.model());
+    try { writeCategoryValue(xmlWriter, "msIonisation", adapter.ionisation()); } catch (std::out_of_range&) {}
+    try { writeCategoryValue(xmlWriter, "msMassAnalyzer", adapter.analyzer()); } catch (std::out_of_range&) {}
+    try { writeCategoryValue(xmlWriter, "msDetector", adapter.detector()); } catch (std::out_of_range&) {}
+    if (instrumentConfiguration->softwarePtr.get())
+        writeSoftware(xmlWriter, instrumentConfiguration->softwarePtr,
                       msd, cvTranslator, "acquisition");
     xmlWriter.endElement(); // msInstrument
 }
 
 
 void write_msInstruments(XMLWriter& xmlWriter, const MSData& msd,
-                        const CVTranslator& cvTranslator)
+                        const CVTranslator& cvTranslator,
+                        map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr)
 {
     BOOST_FOREACH(const InstrumentConfigurationPtr& icPtr, msd.instrumentConfigurationPtrs)
-        if (icPtr.get()) write_msInstrument(xmlWriter, *icPtr, msd, cvTranslator);
+        if (icPtr.get()) write_msInstrument(xmlWriter, icPtr, msd, cvTranslator, instrumentIndexByPtr);
 }
 
 
@@ -519,11 +521,14 @@ void write_peaks(XMLWriter& xmlWriter, const vector<MZIntensityPair>& mzIntensit
         attributes.add("compressedLen", binaryByteCount);
     }
     else
+    {
+        attributes.add("compressionType", "none");
         attributes.add("compressedLen", "0");
+    }
 
     attributes.add("precision", precision);
     attributes.add("byteOrder", "network");
-    attributes.add("pairOrder", "m/z-int");
+    attributes.add("contentType", "m/z-int");
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner |
                         XMLWriter::StyleFlag_AttributesOnMultipleLines);
@@ -538,7 +543,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
                       CVID nativeIdFormat,
                       const Spectrum& spectrum,
                       const SpectrumListPtr spectrumListPtr,
-                      const Serializer_mzXML::Config& config)
+                      const Serializer_mzXML::Config& config,
+                      map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr)
 {
     IndexEntry result;
     result.offset = xmlWriter.positionNext();
@@ -562,7 +568,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     {
         case MS_MSn_spectrum:
         case MS_MS1_spectrum:
-            scanType = "FULL";
+            scanType = "Full";
             break;
 
         case MS_CRM_spectrum: scanType = "CRM"; break;
@@ -572,7 +578,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
         default: break;
     }
 
-    string scanEvent = scan.cvParam(MS_preset_scan_configuration).value;
+    //string scanEvent = scan.cvParam(MS_preset_scan_configuration).value;
     string msLevel = spectrum.cvParam(MS_ms_level).value;
     string polarity = getPolarity(spectrum);
     string retentionTime = getRetentionTime(scan);
@@ -595,8 +601,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
 
     XMLWriter::Attributes attributes;
     attributes.add("num", result.scanNumber);
-    if (!scanEvent.empty())
-        attributes.add("scanEvent", scanEvent);
+    //if (!scanEvent.empty())
+    //    attributes.add("scanEvent", scanEvent);
     if (!scanType.empty())
         attributes.add("scanType", scanType);
 
@@ -627,7 +633,7 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
         attributes.add("compensationVoltage", compensationVoltage);
 
     if (scan.instrumentConfigurationPtr.get())
-        attributes.add("msInstrumentID", scan.instrumentConfigurationPtr->id);
+        attributes.add("msInstrumentID", instrumentIndexByPtr[scan.instrumentConfigurationPtr]);
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
     xmlWriter.startElement("scan", attributes);
@@ -653,7 +659,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
 
 void write_scans(XMLWriter& xmlWriter, const MSData& msd, 
                  const Serializer_mzXML::Config& config, vector<IndexEntry>& index,
-                 const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
+                 const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+                 map<InstrumentConfigurationPtr, int>& instrumentIndexByPtr)
 {
     SpectrumListPtr sl = msd.run.spectrumListPtr;
     if (!sl.get()) return;
@@ -688,7 +695,7 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
             continue;
 
         // write the spectrum
-        index.push_back(write_scan(xmlWriter, defaultNativeIdFormat, *spectrum, msd.run.spectrumListPtr, config));
+        index.push_back(write_scan(xmlWriter, defaultNativeIdFormat, *spectrum, msd.run.spectrumListPtr, config, instrumentIndexByPtr));
 
     }
 }
@@ -731,12 +738,14 @@ void Serializer_mzXML::Impl::write(ostream& os, const MSData& msd,
 
     start_mzXML(xmlWriter);
 
+    map<InstrumentConfigurationPtr, int> instrumentIndexByPtr;
+
     start_msRun(xmlWriter, msd);
     write_parentFile(xmlWriter, msd);  
-    write_msInstruments(xmlWriter, msd, cvTranslator_);
+    write_msInstruments(xmlWriter, msd, cvTranslator_, instrumentIndexByPtr);
     write_dataProcessing(xmlWriter, msd, cvTranslator_);
     vector<IndexEntry> index;
-    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry);
+    write_scans(xmlWriter, msd, config_, index, iterationListenerRegistry, instrumentIndexByPtr);
     xmlWriter.endElement(); // msRun 
 
     stream_offset indexOffset = xmlWriter.positionNext();

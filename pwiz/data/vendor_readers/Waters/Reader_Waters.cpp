@@ -88,7 +88,7 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = sourcePath.leaf();
         sourceFile->name = sourcePath.leaf();
-        sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
+        sourceFile->location = "file:///" + bfs::complete(sourcePath.branch_path()).string();
         sourceFile->set(MS_Waters_nativeID_format);
         sourceFile->set(MS_Waters_raw_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);

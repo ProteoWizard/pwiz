@@ -25,6 +25,7 @@
 #include "VendorReaderTestHarness.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/msdata/Serializer_mz5.hpp"
 #include "pwiz/data/msdata/Serializer_mzXML.hpp"
 #include "pwiz/data/msdata/Serializer_MGF.hpp"
 #include "pwiz/data/msdata/Diff.hpp"
@@ -113,11 +114,13 @@ void manglePwizSoftware(MSData& msd)
 
 void calculateSourceFileChecksums(vector<SourceFilePtr>& sourceFiles)
 {
+    const string uriPrefix = "file://";
     BOOST_FOREACH(SourceFilePtr sourceFile, sourceFiles)
     {
-        const string uriPrefix = "file://";
-        if (sourceFile->location.substr(0, uriPrefix.size()) != uriPrefix) return;
-        bfs::path p(sourceFile->location.substr(uriPrefix.size()));
+        if (!bal::istarts_with(sourceFile->location, uriPrefix)) return;
+        string location = sourceFile->location.substr(uriPrefix.size());
+        bal::trim_if(location, bal::is_any_of("/"));
+        bfs::path p(location);
         p /= sourceFile->name;
 
         string sha1 = SHA1Calculator::hashFile(p.string());
@@ -249,7 +252,21 @@ void testRead(const Reader& reader, const string& rawpath)
         // test serialization of this vendor format in and out of pwiz's supported open formats
         stringstream* stringstreamPtr = new stringstream;
         boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
-        
+
+        // mzML <-> mz5
+        string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
+        {
+            MSData msd_mz5;
+            Serializer_mz5 serializer_mz5;
+            serializer_mz5.write(targetResultFilename_mz5, msd);
+            serializer_mz5.read(targetResultFilename_mz5, msd_mz5);
+
+            Diff<MSData, DiffConfig> diff_mz5(msd, msd_mz5);
+            if (diff_mz5) cerr << headDiff(diff_mz5, 5000) << endl;
+            unit_assert(!diff_mz5);
+        }
+        bfs::remove(targetResultFilename_mz5);
+
         DiffConfig diffConfig_non_mzML;
         diffConfig_non_mzML.ignoreMetadata = true;
         diffConfig_non_mzML.ignoreChromatograms = true;

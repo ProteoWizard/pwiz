@@ -363,7 +363,7 @@ void addSource(MSData& msd, const bfs::path& sourcePath, const bfs::path& rootPa
     bfs::path location = rootPath.has_branch_path() ?
                          bfs::complete(rootPath.branch_path() / sourcePath) :
                          bfs::complete(sourcePath); // uses initial path
-    sourceFile->location = "file://" + location.branch_path().string();
+    sourceFile->location = "file:///" + location.branch_path().string();
 
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
 }

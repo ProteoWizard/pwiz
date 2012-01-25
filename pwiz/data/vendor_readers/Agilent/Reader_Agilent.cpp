@@ -155,7 +155,7 @@ void fillInMetadata(const string& rawpath, MassHunterDataPtr rawfile, MSData& ms
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = sourcePath.leaf();
         sourceFile->name = sourcePath.leaf();
-        sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
+        sourceFile->location = "file:///" + bfs::complete(sourcePath.branch_path()).string();
         sourceFile->set(MS_Agilent_MassHunter_nativeID_format);
         sourceFile->set(MS_Agilent_MassHunter_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
