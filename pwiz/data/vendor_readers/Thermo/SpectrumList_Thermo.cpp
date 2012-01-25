@@ -556,6 +556,10 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
     {
         throw runtime_error("[SpectrumList_Thermo::spectrum()] Error retrieving spectrum \"" + result->id + "\": " + e.what());
     }
+    catch (...)
+    {
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] Unknown exception retrieving spectrum \"" + result->id + "\"");
+    }
 }
 
 PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfScanType(ScanType scanType) const
