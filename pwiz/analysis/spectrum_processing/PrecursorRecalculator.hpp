@@ -40,7 +40,7 @@ class PWIZ_API_DECL PrecursorRecalculator
     {
         double mz;
         double intensity;
-        double charge;
+        int charge;
         double score;
 
         PrecursorInfo() : mz(0), intensity(0), charge(0), score(0) {}

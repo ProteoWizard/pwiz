@@ -163,7 +163,7 @@ void encodePrecursorInfo(Spectrum& spectrum,
         SelectedIon& selectedIon = precursor.selectedIons.back();
         selectedIon.set(MS_selected_ion_m_z, it->mz);
         selectedIon.set(MS_peak_intensity, it->intensity);
-        selectedIon.set(MS_charge_state, (int)it->charge);
+        selectedIon.set(MS_charge_state, it->charge);
         selectedIon.userParams.push_back(UserParam("msprefix score", 
                                                    lexical_cast<string>(it->score), 
                                                    "xsd:float")); 
