@@ -708,10 +708,6 @@
       <Link>EULA.MSFileReader</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest">
-      <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <None Include="..\..\Shared\BiblioSpec\binaries\unimod_2.xsd">
       <Link>unimod_2.xsd</Link>
     </None>
@@ -795,19 +791,11 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\mfc90.dll">
-      <Link>Microsoft.VC90.MFC\mfc90.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\mfc90u.dll">
+    <Content Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\x86\mfc90u.dll">
       <Link>Microsoft.VC90.MFC\mfc90u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\mfcm90.dll">
-      <Link>Microsoft.VC90.MFC\mfcm90.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\mfcm90u.dll">
+    <Content Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\x86\mfcm90u.dll">
       <Link>Microsoft.VC90.MFC\mfcm90u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -825,6 +813,10 @@
     </Content>
     <Content Include="..\..\Shared\BiblioSpec\binaries\msparser.dll">
       <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\x86\Microsoft.VC90.MFC.manifest">
+      <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\Collapse.png" />
