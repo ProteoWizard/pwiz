@@ -185,7 +185,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test
         : # requirements
-			<address-model>64,<toolset>msvc-9.0:<build>no
+            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
@@ -197,7 +197,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test_a
         : # requirements
-			<address-model>64,<toolset>msvc-9.0:<build>no
+            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
@@ -209,7 +209,7 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test_functional
         : # requirements
-			<address-model>64,<toolset>msvc-9.0:<build>no
+            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
@@ -222,6 +222,7 @@ if [ modules.peek : NT ]
             @do_skyline_test_passed
         : # requirements
             <link>shared:<build>no
+            <address-model>64,<toolset>msvc-9.0:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Skyline.exe

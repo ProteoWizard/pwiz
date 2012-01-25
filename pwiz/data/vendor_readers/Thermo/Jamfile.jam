@@ -48,16 +48,16 @@ constant READER_NAME : "Reader_Thermo" ;
 
 
 import common path ;
-if ( $(MSFILEREADER_INSTALL_DIR) )	# only on Windows
+if ( $(MSFILEREADER_INSTALL_DIR) )    # only on Windows
 {
-	if [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ] ||
-	   [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ]
-	{
-		if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
-		{
-			.hasDLLs = true ;
-		}
-	}
+    if [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ] ||
+       [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ]
+    {
+        if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+        {
+            .hasDLLs = true ;
+        }
+    }
 }
 
 rule vendor-api-requirements ( properties * )
@@ -84,9 +84,9 @@ rule vendor-api-usage-requirements ( properties * )
     {
         .warn-once = true ;
         if  [ without-binary-msdata ] 
-		{
+        {
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
-		}
+        }
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
@@ -135,9 +135,9 @@ rule test-requirements ( properties * )
             result += <build>no ;
         }
         else if  [ without-binary-msdata ] 
-		{
+        {
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-		}
+        }
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
