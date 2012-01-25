@@ -50,5 +50,6 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? LibraryScore2 { get; set; }
         public virtual double? LibraryScore3 { get; set; }
         public virtual bool IsDecoy { get; set; }
+        public virtual int? DecoyMassShift { get; set; }
     }
 }

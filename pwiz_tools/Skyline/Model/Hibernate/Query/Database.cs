@@ -416,7 +416,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                             NeutralMass = SequenceMassCalc.PersistentNeutral(SequenceMassCalc.GetMH(nodeGroup.PrecursorMz, tranGroup.PrecursorCharge)),
                                             Mz = SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz),
                                             Note = nodeGroup.Note,
-                                            IsDecoy = nodeGroup.IsDecoy
+                                            IsDecoy = nodeGroup.IsDecoy,
+                                            DecoyMassShift = tranGroup.DecoyMassShift
                                         };
             AddAnnotations(docInfo, dbPrecursor, nodeGroup.Annotations);
             double regressionMz = docInfo.Settings.GetRegressionMz(nodePeptide, nodeGroup);
@@ -591,7 +592,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                               CleavageAa = transition.AA.ToString(CultureInfo.InvariantCulture),
                                               LossNeutralMass = nodeTran.LostMass,
                                               Note = nodeTran.Note,
-                                              IsotopeDistIndex = transition.MassIndex
+                                              IsotopeDistIndex = transition.MassIndex,
+                                              IsDecoy = nodeTran.IsDecoy,
+                                              DecoyMassShift = transition.DecoyMassShift
                                           };
 
             if (nodeTran.HasLoss)

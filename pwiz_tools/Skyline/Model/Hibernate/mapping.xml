@@ -87,6 +87,7 @@
     <property name="LibraryScore2" />
     <property name="LibraryScore3" />
     <property name="IsDecoy" />
+    <property name="DecoyMassShift" />
   </class>
   <class name="DbPrecursorResult">
     <id name="Id">
@@ -161,6 +162,8 @@
     <property name="IsotopeDistIndex" />
     <property name="IsotopeDistRank" />
     <property name="IsotopeDistProportion" />
+    <property name="IsDecoy" />
+    <property name="DecoyMassShift" />
   </class>
   <class name="DbTransitionResult">
     <id name="Id">

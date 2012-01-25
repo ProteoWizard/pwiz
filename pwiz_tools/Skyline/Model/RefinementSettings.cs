@@ -38,12 +38,12 @@ namespace pwiz.Skyline.Model
     public static class DecoyGeneration
     {
         public const string ADD_RANDOM = "Random Mass Shift";
-        public const string RANDOM_SEQUENCE = "Random Sequence";
+        public const string SHUFFLE_SEQUENCE = "Shuffle Sequence";
         public const string REVERSE_SEQUENCE = "Reverse Sequence";
 
         public static IEnumerable<string> Methods
         {
-            get { return new[] {ADD_RANDOM, RANDOM_SEQUENCE, REVERSE_SEQUENCE}; }
+            get { return new[] { ADD_RANDOM, SHUFFLE_SEQUENCE, REVERSE_SEQUENCE }; }
         }
     }
 
@@ -483,8 +483,8 @@ namespace pwiz.Skyline.Model
             // Remove the existing decoys
             document = RemoveDecoys(document);
 
-            if (decoysMethod == DecoyGeneration.RANDOM_SEQUENCE)
-                return GenerateDecoysRandomSequence(document, numDecoys, DecoysLabelUsed);
+            if (decoysMethod == DecoyGeneration.SHUFFLE_SEQUENCE)
+                return GenerateDecoysShuffleSequence(document, numDecoys, DecoysLabelUsed);
             
             if (decoysMethod == DecoyGeneration.REVERSE_SEQUENCE)
                 return GenerateDecoysReverseSequence(document, numDecoys, DecoysLabelUsed);
@@ -617,16 +617,18 @@ namespace pwiz.Skyline.Model
             return massShift;
         }
 
-        public SrmDocument GenerateDecoysRandomSequence(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
+        public SrmDocument GenerateDecoysShuffleSequence(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
         {
             // Loop throug the existing tree and "copy" transitions as decoys
             var decoyNodePepList = new List<PeptideDocNode>();
 
-            for (int i=0; i<document.PeptideCount; i++)
+            foreach (var nodePep in document.Peptides)
             {
-                var decoyPeptide = new Peptide(null, GetRandomPeptideSequence(null), null, null, 0, true);
-                var decoyNodeTranGroupList = GetRandomDecoyGroups(decoyPeptide, useLabel, document);   
-                decoyNodePepList.Add(new PeptideDocNode(decoyPeptide, null, decoyNodeTranGroupList.ToArray(), false));
+                var peptide = nodePep.Peptide;
+                var decoyPeptide = new Peptide(null, GetShuffledPeptideSequence(peptide.Sequence), null, null, 0, true);
+                var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, useLabel, document, false);
+                decoyNodePepList.Add(new PeptideDocNode(decoyPeptide, nodePep.ExplicitMods, nodePep.Rank, nodePep.Annotations,
+                                                         nodePep.Results, decoyNodeTranGroupList.ToArray(), false));
             }
             var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys",
                                                             null, decoyNodePepList.ToArray(), false);
@@ -636,35 +638,6 @@ namespace pwiz.Skyline.Model
                 decoyNodePepGroup = DeleteRandomDecoyGroups(decoyNodePepGroup, decoyNodePepGroup.TransitionGroupCount - numDecoys, document.Settings);
 
             return (SrmDocument)document.Add(decoyNodePepGroup);
-        }
-
-        private static List<TransitionGroupDocNode> GetRandomDecoyGroups(Peptide decoyPeptide, IsotopeLabelType useLabel, SrmDocument document)
-        {
-            var decoyNodeTranGroupList = new List<TransitionGroupDocNode>();
-
-            for (int i = 0; i <= 3; i++)
-            {
-                var decoyGroup = new TransitionGroup(decoyPeptide, RANDOM.Next(1,4),
-                                                         useLabel, false, 0);
-
-                var decoyNodeTranList = GetRandomDecoyTransitions(decoyGroup, decoyPeptide.Sequence);
-
-                decoyNodeTranGroupList.Add(new TransitionGroupDocNode(decoyGroup, Annotations.EMPTY, document.Settings,
-                                                                          null, null, null, decoyNodeTranList.ToArray(), false));
-            }
-            return decoyNodeTranGroupList;
-        }
-
-        private static List<TransitionDocNode> GetRandomDecoyTransitions(TransitionGroup decoyGroup, string sequence)
-        {
-            var decoyNodeTranList = new List<TransitionDocNode>();
-            for (int i = 0; i < 3; i++)
-            {
-                 var decoyTransition = new Transition(decoyGroup, (RANDOM.Next(0, 2) > 0 ? IonType.b : IonType.y), RANDOM.Next(2, sequence.Length-2),
-                                                     0, RANDOM.Next(1, 3), 0);
-                decoyNodeTranList.Add(new TransitionDocNode(decoyTransition, null, 0,null, null));
-            }
-            return decoyNodeTranList;
         }
 
         public SrmDocument GenerateDecoysReverseSequence(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
@@ -690,30 +663,29 @@ namespace pwiz.Skyline.Model
             return (SrmDocument)document.Add(decoyNodePepGroup);
         }
 
-        private static string GetRandomPeptideSequence(int? seqLen)
-        {
-            const string aminoacids = "ACDEFGHILMNOPQSTUVWY";
-            const string endaminoacids = "RK";
-            var newRandomSeq = "";
-
-            if ((seqLen == 0) || (seqLen == null)) seqLen = RANDOM.Next(6, 21);
-
-            for (int i = 0; i < seqLen; i++)
-            {
-                newRandomSeq += aminoacids.ToCharArray()[RANDOM.Next(0, aminoacids.Length)];
-            }
-            newRandomSeq += endaminoacids.ToCharArray()[RANDOM.Next(0, endaminoacids.Length)];
-
-            return newRandomSeq;
-        }
-
-        private static string GetReversedPeptideSequence(string sequence)
+         private static string GetReversedPeptideSequence(string sequence)
         {
             char finalA = sequence.Last();
             sequence = sequence.Substring(0, sequence.Length - 1);
             char[] reversedArray = sequence.ToCharArray();
             Array.Reverse(reversedArray);
             return new string(reversedArray) + finalA;
+        }
+
+        private static string GetShuffledPeptideSequence(string sequence)
+        {
+            char finalA = sequence.Last();
+            sequence = sequence.Substring(0, sequence.Length - 1);
+            char[] shuffledArray = new char[sequence.Length];
+            string aminoacids = (string) sequence.Clone();
+            for (int i = 0; i < shuffledArray.Length; i++)
+            {
+                int pos = RANDOM.Next(0, aminoacids.Length);
+                char aminoacid = aminoacids[pos];
+                shuffledArray[i] += aminoacid;
+                aminoacids = aminoacids.Substring(0,pos) + aminoacids.Substring(pos+1);
+            }
+            return new string(shuffledArray) + finalA;
         }
 
         private sealed class AreaSortInfo
