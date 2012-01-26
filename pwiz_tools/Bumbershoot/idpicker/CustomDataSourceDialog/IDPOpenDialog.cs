@@ -1137,7 +1137,7 @@ namespace CustomDataSourceDialog
                     if (node.ToolTipText == newPath)
                         oldSelf = node;
                     else
-                        FindClosestRelative(node, newPath);
+                        closestMatch = FindClosestRelative(node, newPath);
                     break;
                 }
             if (oldSelf != null)

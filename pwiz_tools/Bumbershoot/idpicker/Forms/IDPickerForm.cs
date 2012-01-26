@@ -919,7 +919,7 @@ namespace IDPicker
                     _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
 
                     toolStripStatusLabel.Text = "Refreshing group structure...";
-                    var usedGroups = GroupingControlForm.SetStructure(rootNode, new List<SpectrumSourceGroup>(), session);
+                    var usedGroups = GroupingControlForm.SetInitialStructure(rootNode, session);
                     if (usedGroups != null && usedGroups.Any())
                     {
                         var unusedGroups = session.QueryOver<SpectrumSourceGroup>().List();

@@ -55,7 +55,10 @@ namespace CustomDataSourceDialog
             {
                 var currentlevel = Path.GetFileName(path) ?? string.Empty;
                 path = path.Remove(path.Length - currentlevel.Length);
-                namestack.Add(currentlevel);
+                if (!string.IsNullOrEmpty(path))
+                    namestack.Add(currentlevel);
+                if (!Path.IsPathRooted(path))
+                    break;
                 if (path == Path.GetPathRoot(path))
                 {
                     namestack.Add(path);

@@ -45,7 +45,7 @@ namespace IDPicker.Forms
             public string Text;
             public object Data;
             public tlvBranch Parent;
-            public List<object> Children;
+            public List<tlvBranch> Children;
             public ContextMenuStrip cms;
         }
 
@@ -133,7 +133,7 @@ namespace IDPicker.Forms
                 var newNode = new tlvBranch
                                   {
                                       Text = Path.GetFileName(ssg.Name),
-                                      Children = new List<object>(),
+                                      Children = new List<tlvBranch>(),
                                       Data = ssg,
                                       Parent = groupNode,
                                       cms = cmRightClickGroupNode
@@ -151,35 +151,53 @@ namespace IDPicker.Forms
 
         private void saveButton_Click(object sender, EventArgs e)
         {
+            var currentSession = session;
+            var currentRoot = _rootNode;
+
+            var transaction = currentSession.BeginTransaction();
+
+            SetGroupingHierarchy(currentRoot, currentSession);
+
+            // save ungrouped spectrum sources
+            foreach (ListViewItem lvi in lvNonGroupedFiles.Items)
+            {
+                var ss = (SpectrumSource)lvi.Tag;
+                ss.Group = null;
+                currentSession.Update(ss);
+            }
+
+            transaction.Commit();
+        }
+
+        private static List<SpectrumSourceGroup> SetGroupingHierarchy(tlvBranch currentRoot, ISession currentSession)
+        {
             var spectraLocations = new List<tlvBranch>();
             var groupsToSave = new List<tlvBranch>();
 
-            var transaction = session.BeginTransaction();
-
             // find all groups still present
-            getSprectrumSourceGroupsRecursively(_rootNode, groupsToSave,string.Empty);
+            getSprectrumSourceGroupsRecursively(currentRoot, groupsToSave,string.Empty);
 
             // remove old groups and links
-            session.CreateQuery("DELETE SpectrumSourceGroupLink").ExecuteUpdate();
-            var unusedGroups = session.Query<SpectrumSourceGroup>().ToList();
+            currentSession.CreateQuery("DELETE SpectrumSourceGroupLink").ExecuteUpdate();
+            var unusedGroups = currentSession.Query<SpectrumSourceGroup>().ToList();
 
             foreach (tlvBranch tn in groupsToSave)
                 unusedGroups.Remove((tn.Data as SpectrumSourceGroup));
             foreach (SpectrumSourceGroup ssg in unusedGroups)
-                session.Delete(ssg);
+                currentSession.Delete(ssg);
                
             // save group layout
             foreach (tlvBranch treeNode in groupsToSave)
-                session.SaveOrUpdate(treeNode.Data as SpectrumSourceGroup);
+                currentSession.SaveOrUpdate(treeNode.Data as SpectrumSourceGroup);
 
             // get new spectra locations
-            getListOfSprectrumSourcesRecursively(_rootNode, ref spectraLocations);
+            getListOfSprectrumSourcesRecursively(currentRoot, ref spectraLocations);
 
             // update SpectrumSource.Group_ and insert new SpectrumSourceGroupLinks;
             // using prepared SQL commands for speed
 
-            var cmd1 = session.Connection.CreateCommand();
-            var cmd2 = session.Connection.CreateCommand();
+            var cmd1 = currentSession.Connection.CreateCommand();
+            var cmd2 = currentSession.Connection.CreateCommand();
             cmd1.CommandText = "UPDATE SpectrumSource SET Group_ = ? WHERE Id = ?";
             cmd2.CommandText = "INSERT INTO SpectrumSourceGroupLink (Group_, Source) VALUES (?,?)";
             var parameters1 = new List<IDbDataParameter>();
@@ -209,16 +227,7 @@ namespace IDPicker.Forms
                     cmd2.ExecuteNonQuery();
                 }
             }
-
-            // save ungrouped spectrum sources
-            foreach (ListViewItem lvi in lvNonGroupedFiles.Items)
-            {
-                var ss = (SpectrumSource)lvi.Tag;
-                ss.Group = null;
-                session.Update(ss);
-            }
-
-            transaction.Commit();
+            return groupsToSave.Select(treeNode => treeNode.Data as SpectrumSourceGroup).ToList();
         }
 
         /// <summary>
@@ -291,7 +300,7 @@ namespace IDPicker.Forms
 
         }
 
-        private void getListOfSprectrumSourcesRecursively(tlvBranch treeNode, ref List<tlvBranch> spectraNodes)
+        private static void getListOfSprectrumSourcesRecursively(tlvBranch treeNode, ref List<tlvBranch> spectraNodes)
         {
             try
             {
@@ -308,7 +317,7 @@ namespace IDPicker.Forms
 
         }
 
-        private void getSprectrumSourceGroupsRecursively(tlvBranch treeNode, List<tlvBranch> nodeList, string rootname)
+        private static void getSprectrumSourceGroupsRecursively(tlvBranch treeNode, List<tlvBranch> nodeList, string rootname)
         {
             if (treeNode.Data is SpectrumSourceGroup)
             {
@@ -337,7 +346,7 @@ namespace IDPicker.Forms
                                   Text = Path.GetFileName(ssg.Name),
                                   cms = cmRightClickGroupNode,
                                   Parent = selNode,
-                                  Children = new List<object>(),
+                                  Children = new List<tlvBranch>(),
                                   Data = ssg
                               };
 
@@ -626,7 +635,7 @@ namespace IDPicker.Forms
             {
                 Text = "/",
                 Parent = new tlvBranch { Text = null },
-                Children = new List<object>(),
+                Children = new List<tlvBranch>(),
                 Data = (from g in groups where g.Name == "/" select g).Single()
             };
 
@@ -662,7 +671,7 @@ namespace IDPicker.Forms
             if (!sources.Any() && !groups.Any())
                 return -1;
             
-            target.Children = new List<object>();
+            target.Children = new List<tlvBranch>();
             foreach (var item in groups)
                 target.Children.Add(item);
             foreach (var item in sources)
@@ -672,56 +681,53 @@ namespace IDPicker.Forms
         }
 
         private static HashSet<string> _processedSources;
-        public static List<SpectrumSourceGroup> SetStructure(TreeNode node, List<SpectrumSourceGroup> groupList, ISession session)
+        public static List<SpectrumSourceGroup> SetInitialStructure(TreeNode node, ISession session)
         {
             if (node == null)
-                return groupList ?? new List<SpectrumSourceGroup>();
-            if (!groupList.Any())
-                _processedSources = new HashSet<string>();
+                return new List<SpectrumSourceGroup>();
+            
+            _processedSources = new HashSet<string>();
+            tlvBranch convertedNode = GenericNodeToBranch(node, session, null);
+            var transaction = session.BeginTransaction();
+            var returnValue = SetGroupingHierarchy(convertedNode, session);
+            transaction.Commit();
+            return returnValue;
+        }
 
-            var ssg = session.QueryOver<SpectrumSourceGroup>().Where(x => x.Name == node.Text).SingleOrDefault();
-            if (ssg == null)
+        private static tlvBranch GenericNodeToBranch(TreeNode node, ISession session, tlvBranch parent)
+        {
+            var thisBranch = new tlvBranch
+                                 {
+                                     Text = node.Text,
+                                     Parent = parent ?? new tlvBranch()
+                                 };
+            if (node.Tag.ToString() == "Source")
             {
-                ssg = new SpectrumSourceGroup {Name = node.Text};
-                session.SaveOrUpdate(ssg);
-                session.Flush();
+                var source = session.QueryOver<SpectrumSource>().Where(x => x.Name == node.Text).List().FirstOrDefault();
+                if (source == null || _processedSources.Contains(source.Name))
+                    return null;
+                _processedSources.Add(source.Name);
+                thisBranch.Data = source;
+                thisBranch.Children = null;
             }
-            groupList.Add(ssg);
-            var allGroups = groupList;
-
-            foreach (TreeNode childNode in node.Nodes)
+            else
             {
-                    if (childNode.Tag.ToString() == "Source")
-                    {
-                        var node1 = childNode;
-                        var sources = session.QueryOver<SpectrumSource>().Where(x => x.Name == node1.Text).List();
-                        foreach (var item in sources)
-                        {
-                            if (_processedSources.Contains(item.Name))
-                                continue;
-                            _processedSources.Add(item.Name);
-                            foreach (var link in item.Groups)
-                                session.Delete(link);
-                            session.Flush();
-                            item.Group = ssg;
-                            session.Update(item);
-                            foreach (var groupItem in groupList)
-                            {
-                                var ssgl = new SpectrumSourceGroupLink {Group = groupItem, Source = item};
-                                session.SaveOrUpdate(ssgl);
-                            }
-                            session.Flush();
-                        }
-                    }
-                    else
-                    {
-                        var newGroups = SetStructure(childNode, groupList, session);
-                        foreach (var item in newGroups)
-                            if (!allGroups.Contains(item))
-                                allGroups.Add(item);
-                    }
+                var trimmedName = node.Text == "/" ? "/" : Path.GetFileName(node.Text);
+                var ssg = session.QueryOver<SpectrumSourceGroup>().Where(x => x.Name == trimmedName).SingleOrDefault() ??
+                          new SpectrumSourceGroup { Name = trimmedName };
+                thisBranch.Text = trimmedName;
+                thisBranch.Data = ssg;
+                thisBranch.Children = new List<tlvBranch>();
+                foreach (TreeNode childNode in node.Nodes)
+                {
+                    var newChild = GenericNodeToBranch(childNode, session, thisBranch);
+                    if (newChild != null)
+                        thisBranch.Children.Add(newChild);
+                }
+                if (!thisBranch.Children.Any())
+                    return null;
             }
-            return allGroups;
+            return thisBranch;
         }
     }
 }
