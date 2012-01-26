@@ -98,7 +98,7 @@ using namespace pwiz;
 	RTCONFIG_VARIABLE( bool,			UseSmartPlusThreeModel,		true			) \
 	RTCONFIG_VARIABLE( bool,			UseChargeStateFromMS,		false			) \
 	RTCONFIG_VARIABLE( bool,			SearchUntaggedSpectra,		true			) \
-    RTCONFIG_VARIABLE( MZTolerance,     UntaggedSpectraPrecMZTol,   string("100 mz")) \
+    RTCONFIG_VARIABLE( MZTolerance,     UntaggedSpectraPrecMZTol,   string("100 mz")) 
 
 
 namespace freicore
