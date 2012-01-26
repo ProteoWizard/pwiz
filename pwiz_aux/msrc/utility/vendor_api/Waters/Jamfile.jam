@@ -94,6 +94,8 @@ searched-lib pwiz_vendor_api_waters
         <conditional>@vendor-api-usage-requirements
     ;
 
+explicit pwiz_vendor_api_waters ;
+
 
 # a test utility, not a unit test
 exe RawDataTest
