@@ -190,6 +190,7 @@ struct Qonverter
         double nu;
         int degree;
         double maxFDR;
+        int minPartitionSize;
 
         /// what score names are expected and how should they be weighted and normalized?
         map<string, ScoreInfo> scoreInfoByName;
@@ -211,6 +212,7 @@ struct Qonverter
             nu = 0.5;
             degree = 3;
             maxFDR = 0.02;
+            minPartitionSize = 10;
         }
     };
 

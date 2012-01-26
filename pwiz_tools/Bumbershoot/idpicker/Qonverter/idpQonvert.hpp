@@ -43,6 +43,7 @@
 	RTCONFIG_VARIABLE( double,			MaxImportFDR,				0.25			) \
 	RTCONFIG_VARIABLE( int,				MaxResultRank,				3				) \
     RTCONFIG_VARIABLE( bool,            RerankMatches,              false           ) \
+    RTCONFIG_VARIABLE( int,             MinPartitionSize,           10              ) \
     RTCONFIG_VARIABLE( double,          TruePositiveThreshold,      0.01            ) \
     RTCONFIG_VARIABLE( int,             MaxTrainingRank,            1               ) \
     RTCONFIG_VARIABLE( bool,            PredictProbability,         true            ) \
@@ -114,6 +115,7 @@ public:
         settings.nu = Nu;
         settings.degree = PolynomialDegree;
         settings.maxFDR = MaxFDR;
+        settings.minPartitionSize = MinPartitionSize;
         return settings;
     }
 

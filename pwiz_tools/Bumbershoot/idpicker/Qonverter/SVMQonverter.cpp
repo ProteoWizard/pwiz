@@ -643,39 +643,6 @@ void SVMQonverter::Qonvert(const string& sourceName,
         bool chargePartition = settings.chargeStateHandling[Qonverter::ChargeStateHandling::Partition];
         bool specificityPartition = settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Partition];
 
-        // mark PSMs in small partitions with 1, else 0
-        BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
-        {
-            /*if (range.size() < 10)
-            {
-                if (chargePartition && specificityPartition)
-                    cout << "Partition charge=" << range.front().chargeState
-                         << " specificity=" << range.front().bestSpecificity
-                         << ": " << range.size() << " spectra (too sparse, ignoring)" << endl;
-                else if (chargePartition)
-                    cout << "Partition charge=" << range.front().chargeState
-                         << ": " << range.size() << " spectra (too sparse, ignoring)" << endl;
-                else if (specificityPartition)
-                    cout << "Partition specificity=" << range.front().bestSpecificity
-                         << ": " << range.size() << " spectra (too sparse, ignoring)" << endl;
-            }*/
-
-            BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-                psm.totalScore = range.size() < 10 ? 1 : 0;
-        }
-
-        // remove sparsely populated partitions marked above
-        boost::sort(fullRange, TotalScoreBetterThanIgnoringRank());
-        for (PSMIterator itr = fullRange.begin(); itr != fullRange.end(); ++itr)
-            if (itr->totalScore == 0)
-            {
-                fullRange = PSMIteratorRange(itr, fullRange.end());
-                break;
-            }
-
-        // refresh the partitions
-        psmPartitionedRows = partition(settings, fullRange);
-
         // across all partitions, scale the non-score features linearly between -1 and 1
         NonScoreFeatureInfo nonScoreFeatureInfo = scaleNonScoreFeatures(settings, fullRange);
 

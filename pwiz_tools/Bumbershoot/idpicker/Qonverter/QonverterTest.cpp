@@ -142,6 +142,7 @@ void testPartition()
     unit_assert_operator_equal(18, testPSMs.size());
 
     Qonverter::Settings settings;
+    settings.minPartitionSize = 1;
     vector<PSMIteratorRange> psmPartitionedRows;
 
     // test no partitions
@@ -362,6 +363,7 @@ void testStaticWeightQonverter(const TestPSM* testPSMs, size_t testPSMsSize,
 void testStaticWeightQonverter()
 {
     Qonverter::Settings settings;
+    settings.minPartitionSize = 1;
     vector<double> scoreWeights(2);
 
     // a simple example

@@ -30,6 +30,7 @@
 #include "SVMQonverter.hpp"
 #include "MonteCarloQonverter.hpp"
 #include "boost/foreach_field.hpp"
+#include "boost/assert.hpp"
 
 
 #define CHECK_SQLITE_RESULT(x) \
@@ -166,8 +167,6 @@ void validateSettings(const Qonverter::Settings& settings)
 
 void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMList& psmRows)
 {
-    sqlite::transaction transaction(db);
-
 #ifdef QONVERTER_HAS_NATIVEID
 #define SPECTRUM_ID nativeID
 #define SPECTRUM_ID_STR "NativeID"
@@ -178,6 +177,7 @@ void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMLis
 
     if (logQonversionDetails)
     {
+        sqlite::transaction transaction(db);
         sqlite::command(db, "DROP TABLE IF EXISTS QonversionDetails").execute();
         sqlite::command(db, "CREATE TABLE QonversionDetails (PsmId, "SPECTRUM_ID_STR", OriginalRank, NewRank, Charge, BestSpecificity, TotalScore, QValue, FDRScore, DecoyState)").execute();
         sqlite::command insertQonversionDetails(db, "INSERT INTO QonversionDetails VALUES (?,?,?,?,?,?,?,?,?,?)");
@@ -196,12 +196,18 @@ void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMLis
             insertQonversionDetails.execute();
             insertQonversionDetails.reset();
         }
+        transaction.commit();
     }
+
+    sqlite::transaction transaction(db);
 
     // update QValue column for each top-ranked PSM (non-top-ranked PSMs keep the default QValue)
     sqlite::command updatePSM(db, "UPDATE PeptideSpectrumMatch SET QValue = ? WHERE Id = ?");
     BOOST_FOREACH(const PeptideSpectrumMatch& row, psmRows)
     {
+        if (row.fdrScore < 0 || row.fdrScore > 2)
+            throw runtime_error("FDR score is out of range: " + lexical_cast<string>(row.fdrScore));
+
         updatePSM.binder() << row.fdrScore << row.id;
         updatePSM.execute();
         updatePSM.reset();
@@ -525,7 +531,12 @@ vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PS
                 cur->chargeState != lastCharge ||
                 cur->bestSpecificity != lastSpecificity)
             {
-                psmPartitionedRows.push_back(PSMIteratorRange(begin, cur));
+                PSMIteratorRange newPartition(begin, cur);
+                if (newPartition.size() >= settings.minPartitionSize)
+                    psmPartitionedRows.push_back(newPartition);
+                else
+                    BOOST_FOREACH(PeptideSpectrumMatch& psm, newPartition)
+                        psm.qValue = psm.fdrScore = 2;
                 begin = cur;
             }
         }
@@ -542,7 +553,12 @@ vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PS
             ++cur;
             if (cur == psmRows.end() || cur->chargeState != lastCharge)
             {
-                psmPartitionedRows.push_back(PSMIteratorRange(begin, cur));
+                PSMIteratorRange newPartition(begin, cur);
+                if (newPartition.size() >= settings.minPartitionSize)
+                    psmPartitionedRows.push_back(newPartition);
+                else
+                    BOOST_FOREACH(PeptideSpectrumMatch& psm, newPartition)
+                        psm.qValue = psm.fdrScore = 2;
                 begin = cur;
             }
         }
@@ -559,7 +575,12 @@ vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PS
             ++cur;
             if (cur == psmRows.end() || cur->bestSpecificity != lastSpecificity)
             {
-                psmPartitionedRows.push_back(PSMIteratorRange(begin, cur));
+                PSMIteratorRange newPartition(begin, cur);
+                if (newPartition.size() >= settings.minPartitionSize)
+                    psmPartitionedRows.push_back(newPartition);
+                else
+                    BOOST_FOREACH(PeptideSpectrumMatch& psm, newPartition)
+                        psm.qValue = psm.fdrScore = 2;
                 begin = cur;
             }
         }
@@ -750,7 +771,10 @@ void discriminate(const PSMIteratorRange& psmRows)
                 }*/
                 double intercept = currentPSM.qValue - slope * currentPSM.totalScore;
                 for (size_t j=stepStart; j <= stepEnd; ++j)
-                    psmRows[j].fdrScore = slope * psmRows[j].totalScore + intercept;
+                {
+                    psmRows[j].fdrScore = max(0.0, slope * psmRows[j].totalScore + intercept);
+                    BOOST_ASSERT(psmRows[j].fdrScore >= 0 && psmRows[j].fdrScore <= 2);
+                }
             }
             else if (qvalueDelta == 0)
             {

@@ -374,20 +374,21 @@ pair<int, int> summarizeQonversion(const string& filepath)
 
     sqlite::database idpDb(filepath);
 
-    string sql = "SELECT Name, COUNT(DISTINCT Spectrum), COUNT(DISTINCT Peptide)"
+    string sql = "SELECT ss.Name, a.Name, COUNT(DISTINCT Spectrum), COUNT(DISTINCT Peptide)"
                  "  FROM PeptideSpectrumMatch"
                  "  JOIN Spectrum s ON Spectrum=s.Id"
                  "  JOIN SpectrumSource ss ON Source=ss.Id"
+                 "  JOIN Analysis a ON Analysis=a.Id"
                  " WHERE QValue < " + lexical_cast<string>(g_rtConfig->MaxFDR) +
-                 " GROUP BY Source";
+                 " GROUP BY Source, Analysis";
 
     sqlite::query summaryQuery(idpDb, sql.c_str());
 
     BOOST_FOREACH(sqlite::query::rows row, summaryQuery)
     {
-        string source;
+        string source, analysis;
         int spectra, peptides;
-        boost::tie(source, spectra, peptides) = row.get_columns<string, int, int>(0, 1, 2);
+        boost::tie(source, analysis, spectra, peptides) = row.get_columns<string, string, int, int>(0, 1, 2, 3);
 
         string sourceTitle;
         if (bfs::path(filepath).replace_extension("").filename() == source)
@@ -397,7 +398,7 @@ pair<int, int> summarizeQonversion(const string& filepath)
 
         cout << left << setw(8) << spectra
              << left << setw(9) << peptides
-             << sourceTitle << endl;
+             << analysis << " / " << sourceTitle << endl;
         result.first += spectra;
         result.second += peptides;
     }
@@ -462,8 +463,8 @@ int main( int argc, char* argv[] )
         parser.parse(parserFilepaths, g_numWorkers, &ilr);
 
         // output summary statistics for each input file
-        cout << "\nSpectra Peptides Filepath\n"
-                "-------------------------\n";
+        cout << "\nSpectra Peptides Analysis/Source\n"
+                "--------------------------------\n";
 
         int totalSpectra = 0, totalPeptides = 0;
         BOOST_FOREACH(const string& filepath, parserFilepaths)
@@ -489,7 +490,7 @@ int main( int argc, char* argv[] )
         }
 
         if (parserFilepaths.size() + idpDbFilepaths.size() > 1)
-            cout << "-------------------------\n"
+            cout << "--------------------------------\n"
                  << left << setw(8) << totalSpectra
                  << left << setw(9) << totalPeptides
                  << "Total\n" << endl;
