@@ -16,11 +16,11 @@ set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 set ERROR_TEXT=Error performing clean & goto error
 
 REM # the -p1 argument overrides bjam's default behavior of merging stderr into stdout
-REM # the --hash argument causes bjam to use hashes for paths instead of .../feature1-value/feature2-value/...
+REM # the --abbreviate-paths argument abbreviates paths like .../ftr1-value/ftr2-value/...
 
 REM # call quickbuild to build and run tests
 echo ##teamcity[progressMessage 'Running quickbuild...']
-call quickbuild.bat -p1 --hash --teamcity-test-decoration %*
+call quickbuild.bat -p1 --abbreviate-paths --teamcity-test-decoration %*
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 set ERROR_TEXT=Error running quickbuild & goto error
 
