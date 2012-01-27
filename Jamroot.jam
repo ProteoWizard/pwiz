@@ -72,50 +72,6 @@ ECHO
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
-#
-# set up for 32-bit (default) or 64-bit build
-#
-if ( "address-model=64" in [ modules.peek : ARGV ] )
-{
-    echo "\n*** Building 64-bit ***\n" ;
-    constant PROCESSOR_ARCHITECTURE : "AMD64" ;
-    constant PLATFORM : "x64" ;
-}
-else
-{
-    echo "\n*** Building 32-bit ***\n" ;
-    constant PROCESSOR_ARCHITECTURE : "x86" ;
-    constant PLATFORM : "x86" ;
-}
-
-# special support for MSFileReader on Windows
-if ( [ MATCH (NT) : $(.os) ] )
-{
-    # can't build or run 64-bit version on Windows 32-bit OS
-    import os ;
-    local ProgramFiles = [ os.environ ProgramFiles ] ;
-
-    if ( [ MATCH (x64) : $(PLATFORM) ] )
-    {
-        # HACK: we can't just look at the PROCESSOR_ARCHITECTURE environment variable, because it is
-        #       set to "x86" even on a 64-bit machine, probably because bjam is running in 32-bit mode
-        if ( ! [ MATCH (x86) : $(ProgramFiles) ] )    # infer 64-bit machine from (x86) appended to ProgramFiles
-        {
-            EXIT "\n*** ERROR: It is not possible to build or run a 64-bit build on 32-bit Windows." ;
-        }
-        
-        # MSFileReader install directory
-        constant MSFILEREADER_INSTALL_DIR : "C:\\Program Files\\Thermo\\MSFileReader" ;
-        constant MSFILEREADER_SUFFIX : "_x64" ;
-    }
-    else
-    {
-        # MSFileReader install directory
-        constant MSFILEREADER_INSTALL_DIR : "$(ProgramFiles)\\Thermo\\MSFileReader" ;
-        constant MSFILEREADER_SUFFIX : "" ;
-    }
-}
-
 constant BOOST_VERSION : 1 43 0 ;
 
 local default_libraries_path = "./libraries" ;

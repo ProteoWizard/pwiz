@@ -58,15 +58,15 @@ if [ modules.peek : NT ]
     actions do_skyline_build
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Building Skyline in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
         echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal        
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal        
     }
 
     rule do_skyline_test ( targets + : sources * : properties * )
@@ -77,11 +77,11 @@ if [ modules.peek : NT ]
     actions do_skyline_test
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test"
         $(TEST_PRECOMMAND)
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
@@ -94,11 +94,11 @@ if [ modules.peek : NT ]
     actions do_skyline_test_a
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test A"
         $(TEST_PRECOMMAND)
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TestA /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=TestA /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
@@ -111,11 +111,11 @@ if [ modules.peek : NT ]
     actions do_skyline_test_functional
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline functional test"
         $(TEST_PRECOMMAND)
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TestFunctional /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=TestFunctional /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
@@ -128,9 +128,9 @@ if [ modules.peek : NT ]
     actions do_skyline_test_passed
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Copying Skyline test output in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:Clean /nologo /verbosity:minimal
+        msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:Clean /nologo /verbosity:minimal
     }
     
     rule build-location ( properties * )
@@ -142,11 +142,11 @@ if [ modules.peek : NT ]
             if <variant>debug in $(properties) ||
                <debug-symbols>on in $(properties)
             {
-                result = <location>$(SKYLINE_PATH)/bin/$(PLATFORM)/Debug ;
+                result = <location>$(SKYLINE_PATH)/bin/x86/Debug ;
             }
             else
             {
-                result = <location>$(SKYLINE_PATH)/bin/$(PLATFORM)/Release ;
+                result = <location>$(SKYLINE_PATH)/bin/x86/Release ;
             }
             return $(result) ;
         }
@@ -172,12 +172,13 @@ if [ modules.peek : NT ]
             @do_skyline_build
         : # requirements
             <link>shared:<build>no
+            <address-model>64:<build>no
             <conditional>@no-msvc-express
             <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
             <conditional>@build-location
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
     ;
         
     make Test.dll
@@ -185,8 +186,8 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test
         : # requirements
-            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
+            <address-model>64:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Skyline.exe
@@ -197,8 +198,8 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test_a
         : # requirements
-            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
+            <address-model>64:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Skyline.exe
@@ -209,8 +210,8 @@ if [ modules.peek : NT ]
         : # actions
             @do_skyline_test_functional
         : # requirements
-            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
+            <address-model>64:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Skyline.exe
@@ -222,7 +223,7 @@ if [ modules.peek : NT ]
             @do_skyline_test_passed
         : # requirements
             <link>shared:<build>no
-            <address-model>64,<toolset>msvc-9.0:<build>no
+            <address-model>64:<build>no
             <conditional>@no-msvc-express
             <conditional>@build-location
             <dependency>Skyline.exe

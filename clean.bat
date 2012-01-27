@@ -39,10 +39,6 @@ del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Thermo\x86\*.dll > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Thermo\x86\*.manifest > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Thermo\x64\*.dll > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Thermo\x64\*.manifest > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\EULA.* > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\Microsoft.VC90.MFC > nul 2>&1
 del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1

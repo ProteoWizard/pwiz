@@ -31,6 +31,7 @@ project
         <conditional>@msvc-requirement
         <define>UNICODE
         <define>_UNICODE
+        <address-model>64:<build>no
     : usage-requirements
         <define>UNICODE
         <define>_UNICODE
@@ -113,8 +114,7 @@ build-project-if-exists proteome ;
 # build XDC documentation from source files
 path-constant DOC_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc ;
 SHELL "if not exist \"$(DOC_PATH)\\\" mkdir \"$(DOC_PATH)\"" ;
-
-path-constant DOC_DATA_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc/data ;
+path-constant DOC_DATA_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc/data ;
 SHELL "if not exist \"$(DOC_DATA_PATH)\\\" mkdir \"$(DOC_DATA_PATH)\"" ;
 
 
@@ -174,7 +174,7 @@ lib pwiz_bindings_cli
     : # requirements
         $(bound_libs)
         <link>shared
-        <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+        <linkflags>"/MACHINE:X86 /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
     : # default-build
     : # usage-requirements
         $(bound_libs)
@@ -192,7 +192,7 @@ lib pwiz_data_cli
     : # requirements
         $(data_libs)
         <link>shared
-        <linkflags>"/MACHINE:$(PLATFORM) /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
+        <linkflags>"/MACHINE:X86 /FIXED:No" # /KEYFILE:$(CLI_ROOT)/signature.snk"
     : # default-build
     : # usage-requirements
         $(data_libs)
@@ -210,8 +210,8 @@ actions merge_xdc_files
 {
     REM support both MSVC 8 and 9
     IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE)  >nul
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
     xdcmake.exe /nologo $(DOC_DATA_PATH)/*.xdc $(DOC_PATH)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
 }
 
@@ -235,8 +235,8 @@ actions merge_xdc_data_files
 {
     REM support both MSVC 8 and 9
     IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE)  >nul
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
     xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
 }
 
