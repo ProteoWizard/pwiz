@@ -931,6 +931,8 @@ namespace pepitome
 
         void loadIndexedLibrary()
         {
+            // Clear the library spectra if they exist
+            clear();
             cout << "Reading \"" << libraryName << "\"" << endl;
             Timer libReadTime(true);
             size_t spectrumIndex = 0;

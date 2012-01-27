@@ -911,43 +911,41 @@ namespace freicore
                     }
                     cout << "Read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
 
-                    // Read the associated spectral library
-                    try
-                    {
-                        librarySpectra.loadLibrary(g_spectralLibName);
-                        //librarySpectra.readSpectra(true, g_rtConfig->LibTicCutoffPercentage, g_rtConfig->LibMaxPeakCount, g_rtConfig->CleanLibSpectra);
-                        //librarySpectra.printSpectra();
-                        //exit(1);
-                    } catch( std::exception& e)
-                    {
-                        cout << "Encountered an error: " << e.what() << endl;
-                        return 1;
-                    }
-
-                    if(g_rtConfig->RecalculateLibPepMasses)
-                    {
-                        // Recalcuate the precusor masses for all spectra in the library
-                        cout << "Recalculating precursor masses for library spectra." << endl;
-                        Timer recalTime(true);
-                        try
-                        {
-                            librarySpectra.recalculatePrecursorMasses();
-                        } catch( std::exception& e)
-                        {
-                            cout << g_hostString << "Encountered an error: " << e.what() << endl;
-                            return 1;
-                        }
-                        cout << "Finished recalcuation; " <<  recalTime.End() << " seconds elapsed." << endl;
-                    }
-                    // randomize order of the spectra to optimize work 
-                    // distribution in the multi-threading mode.
-                    //librarySpectra.random_shuffle();
-
                     fileList_t finishedFiles;
                     fileList_t::iterator fItr;
                     // For each input spectra file
                     for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
                     {
+                        // Read the associated spectral library. Repetitive reading is necessary to keep
+                        // the memory bounds in check.
+                        try
+                        {
+                            librarySpectra.loadLibrary(g_spectralLibName);
+                        } catch( std::exception& e)
+                        {
+                            cout << "Encountered an error: " << e.what() << endl;
+                            return 1;
+                        }
+
+                        if(g_rtConfig->RecalculateLibPepMasses)
+                        {
+                            // Recalcuate the precusor masses for all spectra in the library
+                            cout << "Recalculating precursor masses for library spectra." << endl;
+                            Timer recalTime(true);
+                            try
+                            {
+                                librarySpectra.recalculatePrecursorMasses();
+                            } catch( std::exception& e)
+                            {
+                                cout << g_hostString << "Encountered an error: " << e.what() << endl;
+                                return 1;
+                            }
+                            cout << "Finished recalcuation; " <<  recalTime.End() << " seconds elapsed." << endl;
+                        }
+                        // randomize order of the spectra to optimize work 
+                        // distribution in the multi-threading mode.
+                        //librarySpectra.random_shuffle();
+
                         Timer fileTime(true);
 
                         // Hold the spectra objects
