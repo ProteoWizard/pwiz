@@ -906,9 +906,24 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Failing an exact path match, look for a basename match
                 string baseName = Path.GetFileNameWithoutExtension(filePath);
-                i = _librarySourceFiles.IndexOf(info => Equals(baseName, info.BaseName));
+                i = _librarySourceFiles.IndexOf(info => IsBaseNameMatch(baseName, info.BaseName));
             }
             return i;
+        }
+
+        private bool IsBaseNameMatch(string baseName1, string baseName2)
+        {
+            return IsPrefixToExtension(baseName1, baseName2) ||
+                   IsPrefixToExtension(baseName2, baseName1);
+        }
+
+        private bool IsPrefixToExtension(string name, string prefix)
+        {
+            // Do this complex check, because ETH has a pipeline that produces
+            // data files with the extension <basename>.c.mzXML.  So, this needs
+            // to be able to match <basename> with <basename>.c
+            return name.StartsWith(prefix) &&
+                (name.Length == prefix.Length || name[prefix.Length] == '.');
         }
 
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
