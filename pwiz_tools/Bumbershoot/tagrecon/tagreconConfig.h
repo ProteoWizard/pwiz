@@ -345,7 +345,7 @@ namespace tagrecon
             {
                 // Check if the user has set the tolerance.
                 bool unsetPrecTol = false;
-                if(UntaggedSpectraPrecMZTol.value == 100.0 and UntaggedSpectraPrecMZTol.units == MZTolerance::MZ)
+                if(UntaggedSpectraPrecMZTol.value == 100.0 && UntaggedSpectraPrecMZTol.units == MZTolerance::MZ)
                     unsetPrecTol = true;
                 // Set the precursor tolerance to match the tagging precursor tolerance
                 if(unsetPrecTol)
