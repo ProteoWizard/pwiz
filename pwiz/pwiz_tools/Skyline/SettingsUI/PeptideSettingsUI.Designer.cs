@@ -548,9 +548,9 @@ namespace pwiz.Skyline.SettingsUI
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(134, 136);
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(27, 13);
+            this.label14.Size = new System.Drawing.Size(23, 13);
             this.label14.TabIndex = 6;
-            this.label14.Text = "Min.";
+            this.label14.Text = "min";
             // 
             // label13
             // 

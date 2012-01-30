@@ -1,4 +1,4 @@
-﻿<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='utf-8'?>
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="pwiz.Skyline.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
@@ -177,7 +177,7 @@
       <Value Profile="(Default)">30</Value>
     </Setting>
     <Setting Name="RTScheduleWindows" Type="System.String" Scope="User">
-      <Value Profile="(Default)">5,10</Value>
+      <Value Profile="(Default)">2,5,10</Value>
     </Setting>
     <Setting Name="RTGraphType" Type="System.String" Scope="User">
       <Value Profile="(Default)">regression</Value>

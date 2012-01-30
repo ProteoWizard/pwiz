@@ -38,16 +38,16 @@
             this.label2 = new System.Windows.Forms.Label();
             this.labelTimeUnits = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.cbRelative = new System.Windows.Forms.CheckBox();
             this.textMaxIntensity = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.cbRelative = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(250, 39);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
@@ -141,6 +141,17 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "&Graph area dimensions:";
             // 
+            // cbRelative
+            // 
+            this.cbRelative.AutoSize = true;
+            this.cbRelative.Location = new System.Drawing.Point(26, 72);
+            this.cbRelative.Name = "cbRelative";
+            this.cbRelative.Size = new System.Drawing.Size(116, 17);
+            this.cbRelative.TabIndex = 5;
+            this.cbRelative.Text = "&Peak width relative";
+            this.cbRelative.UseVisualStyleBackColor = true;
+            this.cbRelative.CheckedChanged += new System.EventHandler(this.cbRelative_CheckedChanged);
+            // 
             // textMaxIntensity
             // 
             this.textMaxIntensity.Location = new System.Drawing.Point(26, 143);
@@ -156,17 +167,6 @@
             this.label5.Size = new System.Drawing.Size(96, 13);
             this.label5.TabIndex = 3;
             this.label5.Text = "&Maximum Intensity:";
-            // 
-            // cbRelative
-            // 
-            this.cbRelative.AutoSize = true;
-            this.cbRelative.Location = new System.Drawing.Point(26, 72);
-            this.cbRelative.Name = "cbRelative";
-            this.cbRelative.Size = new System.Drawing.Size(116, 17);
-            this.cbRelative.TabIndex = 5;
-            this.cbRelative.Text = "&Peak width relative";
-            this.cbRelative.UseVisualStyleBackColor = true;
-            this.cbRelative.CheckedChanged += new System.EventHandler(this.cbRelative_CheckedChanged);
             // 
             // ChromChartPropertyDlg
             // 

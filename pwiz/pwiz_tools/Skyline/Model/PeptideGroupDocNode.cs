@@ -74,6 +74,8 @@ namespace pwiz.Skyline.Model
         public int TransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
+        public IEnumerable<PeptideDocNode> Peptides { get { return Children.Cast<PeptideDocNode>(); } }
+
         public PeptideGroupDocNode ChangeName(string name)
         {
             // Only allow set, if the id object has no name

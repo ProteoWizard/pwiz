@@ -104,6 +104,32 @@ namespace pwiz.Skyline.Controls
             return valid;
         }
 
+        public bool ValidateDecimalListTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
+                                              TextBox control, double? min, double? max, out double[] val)
+        {
+            bool valid = ValidateDecimalListTextBox(e, control, min, max, out val);
+            if (!valid && tabControl.SelectedIndex != tabIndex)
+            {
+                tabControl.SelectedIndex = tabIndex;
+                control.Focus();
+            }
+            return valid;
+        }
+
+        public bool ValidateDecimalListTextBox(CancelEventArgs e, TextBox control,
+                                              double? min, double? max, out double[] val)
+        {
+            val = ArrayUtil.Parse(control.Text, Convert.ToDouble, ',', new double[0]);
+            if (val.Length > 0 && !val.Contains(i => (min.HasValue && min.Value > i) || (max.HasValue && i > max.Value)))
+                return true;
+
+            ShowTextBoxError(control,
+                             "{0} must contain a comma separated list of decimal values from {1} to {2}.",
+                             null, min, max);
+            e.Cancel = true;
+            return false;
+        }
+
         public void ShowTextBoxError(Control control, string message)
         {
             ShowTextBoxError(control, message, new object[] { null });

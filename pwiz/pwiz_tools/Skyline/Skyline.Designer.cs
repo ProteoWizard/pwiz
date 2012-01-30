@@ -314,6 +314,7 @@ namespace pwiz.Skyline
             this.chooseCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorCalculators = new System.Windows.Forms.ToolStripSeparator();
+            this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator23 = new System.Windows.Forms.ToolStripSeparator();
             this.removeRTOutliersContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -349,7 +350,6 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -2576,7 +2576,7 @@ namespace pwiz.Skyline
             this.zoomOutRTContextMenuItem,
             this.toolStripSeparator25});
             this.contextMenuRetentionTimes.Name = "contextMenuRetentionTimes";
-            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 364);
+            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 342);
             // 
             // timeGraphContextMenuItem
             // 
@@ -2764,6 +2764,13 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparatorCalculators.Name = "toolStripSeparatorCalculators";
             this.toolStripSeparatorCalculators.Size = new System.Drawing.Size(149, 6);
+            // 
+            // addCalculatorContextMenuItem
+            // 
+            this.addCalculatorContextMenuItem.Name = "addCalculatorContextMenuItem";
+            this.addCalculatorContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.addCalculatorContextMenuItem.Text = "Add...";
+            this.addCalculatorContextMenuItem.Click += new System.EventHandler(this.addCalculatorContextMenuItem_Click);
             // 
             // updateCalculatorContextMenuItem
             // 
@@ -3028,13 +3035,6 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Size = new System.Drawing.Size(170, 22);
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
-            // 
-            // addCalculatorContextMenuItem
-            // 
-            this.addCalculatorContextMenuItem.Name = "addCalculatorContextMenuItem";
-            this.addCalculatorContextMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.addCalculatorContextMenuItem.Text = "Add...";
-            this.addCalculatorContextMenuItem.Click += new System.EventHandler(this.addCalculatorContextMenuItem_Click);
             // 
             // SkylineWindow
             // 

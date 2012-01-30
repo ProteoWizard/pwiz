@@ -308,6 +308,11 @@ namespace pwiz.Skyline.Model
         public int TransitionGroupCount { get { return GetCount((int)Level.TransitionGroups); } }
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
+        public IEnumerable<TransitionGroupDocNode> TransitionGroups
+        {
+            get { return Children.Cast<TransitionGroupDocNode>(); }
+        }
+
         public bool HasHeavyTransitionGroups
         {
             get

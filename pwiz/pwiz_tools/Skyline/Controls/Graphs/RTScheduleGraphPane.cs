@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
+using System.Linq;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
@@ -39,10 +41,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (string value in values)
                 {
                     double window;
-                    if (double.TryParse(value, out window))
+                    if (double.TryParse(value.Trim(), NumberStyles.Float|NumberStyles.AllowThousands, NumberFormatInfo.InvariantInfo, out window))
                         windows.Add(window);
                 }
                 return windows.ToArray();
+            }
+
+            set
+            {
+                Settings.Default.RTScheduleWindows = string.Join(",",
+                    value.Select(v => v.ToString(CultureInfo.InvariantCulture)).ToArray());
             }
         }
 
@@ -75,13 +83,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     continue;
 
                 var settings = document.Settings.ChangePeptidePrediction(p => p.ChangeMeasuredRTWindow(window));
-                if (!settings.HasResults || !settings.PeptideSettings.Prediction.UseMeasuredRTs)
+                if (settings.PeptideSettings.Prediction.RetentionTime != null)
                 {
-                    if (settings.PeptideSettings.Prediction.RetentionTime != null)
-                    {
-                        settings = settings.ChangePeptidePrediction(p =>
-                            p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindow(window)));
-                    }
+                    settings = settings.ChangePeptidePrediction(p =>
+                        p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindow(window)));
                 }
                 var docWindow = document.ChangeSettings(settings);
 

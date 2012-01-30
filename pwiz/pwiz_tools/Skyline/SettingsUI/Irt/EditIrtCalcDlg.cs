@@ -1167,7 +1167,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
             btnCalibrate.Text = (hasLibraryPeptides ? "Recali&brate..." : "Cali&brate...");
             btnPeptides.Visible = hasLibraryPeptides;
 
-            labelNumPeptides.Text = string.Format("{0} Peptides", LibraryPeptideList.Count);
+            labelNumPeptides.Text = string.Format(LibraryPeptideList.Count == 1
+                                                      ? "{0} Peptide"
+                                                      : "{0} Peptides", LibraryPeptideList.Count);
         }
 
         #region Functional Test Support

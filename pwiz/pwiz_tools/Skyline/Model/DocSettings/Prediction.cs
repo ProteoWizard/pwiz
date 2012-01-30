@@ -143,12 +143,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? GetRetentionTime(string seq, ChromFileInfoId fileId)
         {
-            RegressionLine conversion = null;
+            IRegressionFunction conversion = Conversion;
             if (fileId != null && _listFileIdToConversion != null)
             {
                 int iConversion = _listFileIdToConversion.BinarySearch(fileId.GlobalIndex, true);
-                if (iConversion >= 0)
-                    conversion = _listFileIdToConversion[iConversion].Value;
+                conversion = iConversion >= 0
+                    ? _listFileIdToConversion[iConversion].Value
+                    : null;
             }
             return GetRetentionTime(seq, conversion);
         }
@@ -161,17 +162,17 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        private double GetRetentionTime(double score)
+        private double? GetRetentionTime(double score)
         {
             return GetRetentionTime(score, Conversion);
         }
 
-        private static double GetRetentionTime(double score, IRegressionFunction conversion)
+        private static double? GetRetentionTime(double score, IRegressionFunction conversion)
         {
             // CONSIDER: Return the full value?
-            if (conversion != null)
-                return GetRetentionTimeDisplay(conversion.GetY(score)) ?? 0;
-            return 0;
+            return conversion != null
+                       ? GetRetentionTimeDisplay(conversion.GetY(score))
+                       : null;
         }
 
         public bool IsAutoCalcRequired(SrmDocument document, SrmDocument previous)
@@ -250,7 +251,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 double score = usableCalc ? ScoreSequence(Calculator, scoreCache, seq) : 0;
                 listPeptides.Add(seq);
                 listHydroScores.Add(score);
-                listPredictions.Add(GetRetentionTime(score));
+                listPredictions.Add(GetRetentionTime(score) ?? 0);
                 listRetentionTimes.Add(peptideTime.RetentionTime);
             }
 
@@ -716,9 +717,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     // the current regression.
                     var peptideTime = variablePeptides[i];
                     double score = scoreCache.CalcScore(Calculator, peptideTime.PeptideSequence);
-                    delta = score != unknownScore
-                                ? Math.Abs(GetRetentionTime(score) - peptideTime.RetentionTime)
-                                : double.MaxValue;
+                    delta = double.MaxValue;
+                    if (score != unknownScore)
+                    {
+                        double? predictedTime = GetRetentionTime(score);
+                        if (predictedTime.HasValue)
+                            delta = Math.Abs(predictedTime.Value - peptideTime.RetentionTime);
+                    }
                 }
                 listDeltas.Add(new KeyValuePair<int, double>(i, delta));
             }

@@ -349,6 +349,12 @@
     <Compile Include="EditUI\RTChartPropertyDlg.Designer.cs">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="EditUI\SchedulingGraphPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\SchedulingGraphPropertyDlg.Designer.cs">
+      <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\ManageResultsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -1240,6 +1246,9 @@
     <EmbeddedResource Include="EditUI\RTChartPropertyDlg.resx">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SchedulingGraphPropertyDlg.resx">
+      <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ShowRTThresholdDlg.resx">
       <DependentUpon>ShowRTThresholdDlg.cs</DependentUpon>

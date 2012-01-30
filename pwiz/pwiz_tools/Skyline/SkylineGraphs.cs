@@ -2064,7 +2064,12 @@ namespace pwiz.Skyline
                         menuStrip.Items.Insert(iInsert++, removeRTOutliersContextMenuItem);
                 }
             }
-            else if (graphType != GraphTypeRT.schedule)
+            else if (graphType == GraphTypeRT.schedule)
+            {
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
+                menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);                
+            }
+            else
             {
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
                 if (graphType == GraphTypeRT.peptide)
@@ -2452,11 +2457,25 @@ namespace pwiz.Skyline
 
         private void timePropsContextMenuItem_Click(object sender, EventArgs e)
         {
-            using (var dlg = new RTChartPropertyDlg())
+            GraphTypeRT graphType = RTGraphController.GraphType;
+            if (graphType == GraphTypeRT.schedule)
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                using (var dlg = new SchedulingGraphPropertyDlg())
                 {
-                    UpdateSummaryGraphs();
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        UpdateRetentionTimeGraph();
+                    }
+                }
+            }
+            else
+            {
+                using (var dlg = new RTChartPropertyDlg())
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        UpdateSummaryGraphs();
+                    }
                 }
             }
         }

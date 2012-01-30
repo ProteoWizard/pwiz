@@ -32,7 +32,7 @@ namespace pwiz.Skyline.Model.Find
 
         public override string DisplayName
         {
-            get { return "Truncated Peaks"; }
+            get { return "Truncated peaks"; }
         }
 
         protected override FindMatch MatchTransition(TransitionChromInfo transitionChromInfo)
