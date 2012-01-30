@@ -101,6 +101,7 @@ import common ;
 import package ;
 import errors : error ;
 import feature ;
+import path ;
 import mpi ;
 
 
