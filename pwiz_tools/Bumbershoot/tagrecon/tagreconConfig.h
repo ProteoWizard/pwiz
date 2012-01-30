@@ -97,8 +97,8 @@ using namespace pwiz;
 	RTCONFIG_VARIABLE( bool,			DuplicateSpectra,			true			) \
 	RTCONFIG_VARIABLE( bool,			UseSmartPlusThreeModel,		true			) \
 	RTCONFIG_VARIABLE( bool,			UseChargeStateFromMS,		false			) \
-	RTCONFIG_VARIABLE( bool,			SearchUntaggedSpectra,		true			) \
-    RTCONFIG_VARIABLE( MZTolerance,     UntaggedSpectraPrecMZTol,   string("100 mz")) 
+	RTCONFIG_VARIABLE( bool,			SearchUntaggedSpectra,		false			) \
+    RTCONFIG_VARIABLE( MZTolerance,     UntaggedSpectraPrecMZTol,   string("1.25 mz")) 
 
 
 namespace freicore
@@ -339,21 +339,6 @@ namespace tagrecon
             maxFragmentChargeState = ( MaxFragmentChargeState > 0 ? MaxFragmentChargeState+1 : NumChargeStates );
 
             PrecursorMassTolerance.push_back(PrecursorMzTolerance);
-            // Check to see if the user wants to search untagged spectra. 
-            // If so, adjust the precursor tolerances.
-            if(SearchUntaggedSpectra)
-            {
-                // Check if the user has set the tolerance.
-                bool unsetPrecTol = false;
-                if(UntaggedSpectraPrecMZTol.value == 100.0 && UntaggedSpectraPrecMZTol.units == MZTolerance::MZ)
-                    unsetPrecTol = true;
-                // Set the precursor tolerance to match the tagging precursor tolerance
-                if(unsetPrecTol)
-                {
-                    MZTolerance newTol(PrecursorMzTolerance, MZTolerance::MZ);
-                    UntaggedSpectraPrecMZTol = newTol;
-                }
-            }
 
             if( ClassSizeMultiplier > 1 )
             {
