@@ -22,7 +22,7 @@
 
 
 import modules ;
-if [ modules.peek : NT ]
+if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
     import path feature ;
     path-constant TOPOGRAPH_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Topograph ;

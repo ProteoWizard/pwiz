@@ -31,32 +31,32 @@ path-constant API_PATH : . ;
 if [ modules.peek : NT ]
 {
 
-import os common ;
-local ProgramFiles = [ os.environ ProgramFiles ] ;
-ProgramFiles ?= "C:\\Program Files" ;
-local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
 if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
     # ignore vendor DLLs even if they're available
-    SHELL "copy \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest.dummy\" \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
+    local destination = [ path.native $(API_PATH) ] ;
+    SHELL "mkdir \"$(destination)\\$(PLATFORM)\" >nul 2>&1" ;
+    SHELL "copy \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest.dummy\" \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
     RESCAN ;
 }
 else
 {
-    if [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ]
+    if [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ]
     {
         .hasDLLs = true ;
     }
 
-    if ! $(.hasDLLs) && [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+    if ! $(.hasDLLs) && [ path.exists $(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll ]
     {
         .hasDLLs = true ;
         local destination = [ path.native $(API_PATH) ] ;
-        echo "Copying MSFileReader DLLs from \"$(MSFileReader)\" to \"$(destination)\"." ;
-        echo [ SHELL "copy \"$(MSFileReader)\\XRawfile2.dll \" \"$(destination)\\MSFileReader.XRawfile2.dll" ] ;
-        echo [ SHELL "copy \"$(MSFileReader)\\fileio.dll\" \"$(destination)\"" ] ;
-        echo [ SHELL "copy \"$(MSFileReader)\\fregistry.dll\" \"$(destination)\"" ] ;
-        SHELL "copy \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest.real\" \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
+        SHELL "mkdir \"$(destination)\\$(PLATFORM)\" >nul 2>&1" ;
+        echo "Copying MSFileReader DLLs from \"$(MSFILEREADER_INSTALL_DIR)\" to \"$(destination)\\$(PLATFORM)\"." ;
+        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll\"" ] ;
+        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fileio$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
+        echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fregistry$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
+        echo "Copying MSFileReader manifest to \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
+        echo [ SHELL "copy \"$(API_PATH)\\MSFileReader.XRawfile2$(MSFILEREADER_SUFFIX).SxS.manifest.real\" \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ] ;
         RESCAN ;
     }
 }
@@ -83,11 +83,11 @@ rule vendor-api-usage-requirements ( properties * )
         result += <define>PWIZ_READER_THERMO ;
         if $(.hasDLLs)
         {
-            result += <manifest-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
-            result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.dll ;
-            result += <assembly-dependency>$(API_PATH)/MSFileReader.XRawfile2.SxS.manifest ;
-            result += <assembly-dependency>$(API_PATH)/fregistry.dll ;
-            result += <assembly-dependency>$(API_PATH)/fileio.dll ;
+            result += <manifest-dependency>$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll ;
+            result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll ;
+            result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.SxS.manifest ;
+            result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/fregistry$(MSFILEREADER_SUFFIX).dll ;
+            result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/fileio$(MSFILEREADER_SUFFIX).dll ;
             result += <assembly-dependency>$(API_PATH)/EULA.MSFileReader ;
             result += <library>shlwapi ;
         }
@@ -104,7 +104,6 @@ lib pwiz_vendor_api_thermo
         <library>/ext/boost//thread
         <conditional>@vendor-api-requirements
         <conditional>@msvc-requirement
-        <address-model>64:<build>no
     : # default-build
     : # usage-requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
@@ -116,7 +115,6 @@ unit-test-if-exists ScanFilterTest
     : ScanFilterTest.cpp
       pwiz_vendor_api_thermo
     : <conditional>@msvc-requirement
-      <address-model>64:<build>no
     ;
 
 # a test utility, not a unit test
@@ -128,20 +126,33 @@ exe RawFileTest
 explicit RawFileTest ;
 
 
+if $(.hasDLLs)
+{
 install install_pwiz_vendor_api_thermo
-    : [ path.glob $(API_PATH) : *.dll *.manifest EULA.* ]
-    ;
+   : $(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll
+     $(API_PATH)/$(PLATFORM)/fregistry$(MSFILEREADER_SUFFIX).dll
+     $(API_PATH)/$(PLATFORM)/fileio$(MSFILEREADER_SUFFIX).dll
+     $(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.SxS.manifest
+     $(API_PATH)/EULA.MSFileReader
+   ;
+}
+else
+{
+install install_pwiz_vendor_api_thermo ;
+}
 
 explicit install_pwiz_vendor_api_thermo ;
 
 install install_pwiz_vendor_api_thermo_eula
-    : [ path.glob $(API_PATH) : EULA.* ]
+    : $(API_PATH)/EULA.MSFileReader
     ;
 
 explicit install_pwiz_vendor_api_thermo_eula ;
 
 install install_pwiz_vendor_api_thermo_mfc
-    : [ path.glob $(API_PATH)/Microsoft.VC90.MFC : *.dll *.manifest ]
+    : $(API_PATH)/Microsoft.VC90.MFC/$(PLATFORM)/mfc90u.dll
+      $(API_PATH)/Microsoft.VC90.MFC/$(PLATFORM)/mfcm90u.dll
+      $(API_PATH)/Microsoft.VC90.MFC/$(PLATFORM)/Microsoft.VC90.MFC.manifest
     ;
 
 explicit install_pwiz_vendor_api_thermo_mfc ;
