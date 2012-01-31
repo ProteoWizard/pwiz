@@ -740,7 +740,6 @@ namespace quameter
             if (missingPrecursorIntensities)
                 cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity." << endl;
 
-
             accs::accumulator_set<double, accs::stats<accs::tag::percentile> > firstScanTimeOfDistinctModifiedPeptides;
             BOOST_FOREACH_FIELD((size_t id)(double firstScanTime), firstScanTimeOfDistinctModifiedPeptide)
                 firstScanTimeOfDistinctModifiedPeptides(firstScanTime);
@@ -1378,7 +1377,7 @@ namespace quameter
                 // Tab delimited output header
                 qout << "Filename\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
                 qout << "\tDS-1A\tDS-1B\tDS-2A\tDS-2B\tDS-3A\tDS-3B";
-                qout << "\tIS-1A\tIS1-B\tIS-2\tIS-3A\tIS-3B\tIS-3C";
+                qout << "\tIS-1A\tIS-1B\tIS-2\tIS-3A\tIS-3B\tIS-3C";
                 qout << "\tMS1-1\tMS1-2A\tMS1-2B\tMS1-3A\tMS1-3B\tMS1-5A\tMS1-5B\tMS1-5C\tMS1-5D";
                 qout << "\tMS2-1\tMS2-2\tMS2-3\tMS2-4A\tMS2-4B\tMS2-4C\tMS2-4D";
                 qout << "\tP-1\tP-2A\tP-2B\tP-2C\tP-3" << endl;
