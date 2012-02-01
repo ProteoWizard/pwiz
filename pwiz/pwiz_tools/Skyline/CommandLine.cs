@@ -886,8 +886,8 @@ namespace pwiz.Skyline
             // Hack for un-readable RAW files from Thermo instruments.
             if(!CanReadFile(replicateFile))
             {
-                _out.WriteLine("WARN: Cannot read file {0}.", replicateFile);
-                _out.WriteLine("      Ignoring...");
+                _out.WriteLine("Warning: Cannot read file {0}.", replicateFile);
+                _out.WriteLine("         Ignoring...");
                 return true;
             }
 
@@ -898,6 +898,16 @@ namespace pwiz.Skyline
 
             if (status.IsError && status.ErrorException != null)
             {
+                if (status.ErrorException is InvalidDataException)
+                {
+                    if (status.ErrorException.Message.Contains("No SRM/MRM data found"))
+                    {
+                        _out.WriteLine("Warning: Failed importing the results file {0}.", replicateFile);
+                        _out.WriteLine(status.ErrorException.Message);
+                        _out.WriteLine("         Ignoring...");
+                        return true;
+                    }
+                }
                 _out.WriteLine("Error: Failed importing the results file {0}.", replicateFile);
                 _out.WriteLine(status.ErrorException.Message);
                 return false;

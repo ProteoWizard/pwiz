@@ -495,6 +495,26 @@ namespace pwiz.SkylineTestA
                 const string testZipPath = @"TestA\ImportAllCmdLineTest.zip";
 
                 var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+                // Contents:
+                // ImportAllCmdLineTest
+                //   -- REP01
+                //       -- CE_Vantage_15mTorr_0001_REP1_01.raw|mzML
+                //       -- CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
+                //   -- REP02
+                //       -- CE_Vantage_15mTorr_0001_REP2_01.raw|mzML
+                //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
+                //   -- 160109_Mix1_calcurve_070.mzML
+                //   -- 160109_Mix1_calcurve_073.mzML
+                //   -- 160109_Mix1_calcurve_071.raw
+                //   -- 160109_Mix1_calcurve_074.raw
+                //   -- bad_file.raw (should not be imported)
+                //   -- bad_file_folder
+                //       -- bad_file.raw (should not be imported)
+                //   -- FullScan.RAW|mzML (should not be imported)
+                //   -- FullScan_folder
+                //       -- FullScan.RAW|mzML (should not be imported)
+
                 var docPath = testFilesDir.GetTestPath("test.sky");
 
                 var rawPath = testFilesDir.GetTestPath("bad_file.raw");
@@ -503,7 +523,7 @@ namespace pwiz.SkylineTestA
                                      "--import-file=" + rawPath,
                                      "--save");
 
-                Assert.IsTrue(msg.Contains("WARN: Cannot read file"));
+                Assert.IsTrue(msg.Contains("Warning: Cannot read file"));
 
                 // the document should not have changed
                 SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
@@ -513,7 +533,7 @@ namespace pwiz.SkylineTestA
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--save");
 
-                Assert.IsTrue(msg.Contains("WARN: Cannot read file"));
+                Assert.IsTrue(msg.Contains("Warning: Cannot read file"));
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
                 Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01"));
@@ -524,9 +544,72 @@ namespace pwiz.SkylineTestA
                 Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_073"));
                 // We should not have a replicate named "bad_file"
                 Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file"));
-                // Or a replicate named
+                // Or a replicate named "bad_file_folder"
                 Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("bad_file_folder"));
             }
+        }
+
+        [TestMethod]
+        public void ConsoleImportNonSRMFile()
+        {
+            string testZipPath = ExtensionTestContext.CanImportThermoRaw
+                                    ? @"TestA\ImportAllCmdLineTest.zip"
+                                    : @"TestA\ImportAllCmdLineTestMzml.zip";
+            var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
+            // Contents:
+            // ImportAllCmdLineTest
+            //   -- REP01
+            //       -- CE_Vantage_15mTorr_0001_REP1_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP1_02.raw|mzML
+            //   -- REP02
+            //       -- CE_Vantage_15mTorr_0001_REP2_01.raw|mzML
+            //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
+            //   -- 160109_Mix1_calcurve_070.mzML
+            //   -- 160109_Mix1_calcurve_073.mzML
+            //   -- 160109_Mix1_calcurve_071.raw
+            //   -- 160109_Mix1_calcurve_074.raw
+            //   -- bad_file.raw (should not be imported)
+            //   -- bad_file_folder
+            //       -- bad_file.raw (should not be imported)
+            //   -- FullScan.RAW|mzML (should not be imported)
+            //   -- FullScan_folder
+            //       -- FullScan.RAW|mzML (should not be imported)
+
+            
+            var docPath = testFilesDir.GetTestPath("test.sky");
+            var outPath = testFilesDir.GetTestPath("import_nonSRM_file.sky");
+
+            var rawPath = testFilesDir.GetTestPath("FullScan"+ExtensionTestContext.ExtThermoRaw);
+
+            // Try to import FullScan.RAW|mzML
+            var msg = RunCommand("--in=" + docPath,
+                       "--import-file=" + rawPath,
+                       "--out=" + outPath);
+
+            Assert.IsTrue(msg.Contains("Warning: Failed importing the results file"), msg);
+            // Read the saved document. FullScan.RAW|mzML should not have been imported
+            SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.IsFalse(doc.Settings.HasResults);
+
+            // Import all files in the directory. FullScan.RAW|mzML should not be imported
+            msg = RunCommand("--in=" + outPath,
+                             "--import-all=" + testFilesDir.FullPath,
+                             "--save");
+            Assert.IsTrue(msg.Contains("Warning: Failed importing the results file"), msg);
+
+            doc = ResultsUtil.DeserializeDocument(outPath);
+            Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_071"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_074"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_070"));
+            Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_073"));
+            // We should not have a replicate named "FullScan"
+            Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("FullScan"));
+            // Or a replicate named "FullScan_folder"
+            Assert.IsFalse(doc.Settings.MeasuredResults.ContainsChromatogram("FullScan_folder"));
         }
 
         [TestMethod]
@@ -550,6 +633,13 @@ namespace pwiz.SkylineTestA
             //   -- 160109_Mix1_calcurve_073.mzML
             //   -- 160109_Mix1_calcurve_071.raw
             //   -- 160109_Mix1_calcurve_074.raw
+            //   -- bad_file.raw (should not be imported)
+            //   -- bad_file_folder
+            //       -- bad_file.raw (should not be imported)
+            //   -- FullScan.RAW|mzML (should not be imported)
+            //   -- FullScan_folder
+            //       -- FullScan.RAW|mzML (should not be imported)
+
 
 
             var docPath = testFilesDir.GetTestPath("test.sky");
