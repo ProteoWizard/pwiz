@@ -31,7 +31,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
         public override bool IsCurrent
         {
-            get { return Workspace != null && Workspace.PeptideAnalyses.ChildCount == 0; }
+            get { return Workspace != null && Workspace.PeptideAnalyses.ChildCount == 0 && Workspace.Peptides.ChildCount > 0; }
         }
 
         private void btnEditModifications_Click(object sender, EventArgs e)
@@ -85,9 +85,11 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 if (tracerDefs.Count == 0)
                 {
                     lblLabels.Text = "There are no heavy isotope labels specified in this workspace.";
+                    btnDefineLabels.Text = "Define New Isotope Label...";
                 }
                 else
                 {
+                    btnDefineLabels.Text = "Manage Isotope Labels...";
                     if (tracerDefs.Count == 1)
                     {
                         var tracerDef = tracerDefs.First();

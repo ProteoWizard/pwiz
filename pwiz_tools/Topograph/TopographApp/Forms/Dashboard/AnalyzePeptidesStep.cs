@@ -46,13 +46,16 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             if (Workspace == null)
             {
                 lblStatus.Text = "No workspace is open.";
+                Enabled = false;
                 return;
             }
             if (!Workspace.IsLoaded)
             {
                 lblStatus.Text = "Workspace is in the process of being opened.";
+                Enabled = false;
                 return;
             }
+            Enabled = true;
             if (Workspace.PeptideAnalyses.ChildCount > 0)
             {
                 if (Workspace.PeptideAnalyses.ChildCount == 1)

@@ -119,6 +119,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
 
         protected virtual void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs entitiesChangedEventArgs)
         {
+            UpdateStepStatus();
         }
 
         protected virtual void UpdateStepStatus()

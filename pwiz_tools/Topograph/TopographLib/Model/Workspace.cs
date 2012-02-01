@@ -359,6 +359,7 @@ namespace pwiz.Topograph.Model
         {
             return _settings.GetSetting(SettingEnum.accept_min_turnover_score, 0.0);
         }
+
         public void SetAcceptMinTurnoverScore(double value)
         {
             _settings.SetSetting(SettingEnum.accept_min_turnover_score, value);
@@ -411,6 +412,26 @@ namespace pwiz.Topograph.Model
             }
             _settings.SetSetting(SettingEnum.mass_accuracy, massAccuracy);
             SetWorkspaceVersion(WorkspaceVersion.IncChromatogramPeakVersion());
+        }
+
+        public double GetChromTimeAroundMs2Id()
+        {
+            return _settings.GetSetting(SettingEnum.chrom_time_around_ms2_id, 5.0);
+        }
+
+        public void SetChromTimeAroundMs2Id(double value)
+        {
+            _settings.SetSetting(SettingEnum.chrom_time_around_ms2_id, value);
+        }
+
+        public double GetExtraChromTimeWithoutMs2Id()
+        {
+            return _settings.GetSetting(SettingEnum.extra_chrom_time_without_ms2_id, 0.0);
+        }
+
+        public void SetExtraChromTimeWithoutMs2Id(double value)
+        {
+            _settings.SetSetting(SettingEnum.extra_chrom_time_without_ms2_id, value);
         }
 
         public bool GetErrOnSideOfLowerAbundance()

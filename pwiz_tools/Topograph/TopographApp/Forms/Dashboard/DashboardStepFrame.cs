@@ -76,13 +76,13 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 if (IsExpanded)
                 {
                     panel1.AutoSize = true;
-                    btnExpandCollapse.Image = Resources.Collapse;
+                    imgExpandCollapse.Image = Resources.Collapse;
                 }
                 else
                 {
                     panel1.AutoSize = false;
                     panel1.Height = 0;
-                    btnExpandCollapse.Image = Resources.Expand;
+                    imgExpandCollapse.Image = Resources.Expand;
                 }
             }
         }

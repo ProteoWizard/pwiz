@@ -31,50 +31,39 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(DashboardStepFrame));
             this.panelTitle = new System.Windows.Forms.Panel();
-            this.btnExpandCollapse = new System.Windows.Forms.Button();
             this.lblTitle = new System.Windows.Forms.Label();
             this.imageList = new System.Windows.Forms.ImageList(this.components);
             this.panel1 = new System.Windows.Forms.Panel();
             this.label1 = new System.Windows.Forms.Label();
+            this.imgExpandCollapse = new System.Windows.Forms.PictureBox();
             this.panelTitle.SuspendLayout();
             this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.imgExpandCollapse)).BeginInit();
             this.SuspendLayout();
             // 
             // panelTitle
             // 
             this.panelTitle.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.panelTitle.Controls.Add(this.btnExpandCollapse);
+            this.panelTitle.Controls.Add(this.imgExpandCollapse);
             this.panelTitle.Controls.Add(this.lblTitle);
             this.panelTitle.Dock = System.Windows.Forms.DockStyle.Top;
             this.panelTitle.Location = new System.Drawing.Point(0, 0);
             this.panelTitle.Name = "panelTitle";
             this.panelTitle.Size = new System.Drawing.Size(472, 20);
             this.panelTitle.TabIndex = 0;
-            // 
-            // btnExpandCollapse
-            // 
-            this.btnExpandCollapse.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.btnExpandCollapse.FlatAppearance.BorderSize = 0;
-            this.btnExpandCollapse.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnExpandCollapse.ForeColor = System.Drawing.Color.Transparent;
-            this.btnExpandCollapse.Image = global::pwiz.Topograph.ui.Properties.Resources.Expand;
-            this.btnExpandCollapse.Location = new System.Drawing.Point(2, 2);
-            this.btnExpandCollapse.Name = "btnExpandCollapse";
-            this.btnExpandCollapse.Size = new System.Drawing.Size(13, 13);
-            this.btnExpandCollapse.TabIndex = 1;
-            this.btnExpandCollapse.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
-            this.btnExpandCollapse.UseVisualStyleBackColor = true;
-            this.btnExpandCollapse.Click += new System.EventHandler(this.btnExpandCollapse_Click);
+            this.panelTitle.Click += new System.EventHandler(this.btnExpandCollapse_Click);
             // 
             // lblTitle
             // 
             this.lblTitle.AutoSize = true;
+            this.lblTitle.Cursor = System.Windows.Forms.Cursors.Hand;
             this.lblTitle.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblTitle.Location = new System.Drawing.Point(23, 4);
             this.lblTitle.Name = "lblTitle";
             this.lblTitle.Size = new System.Drawing.Size(78, 13);
             this.lblTitle.TabIndex = 0;
             this.lblTitle.Text = "Step #: Title";
+            this.lblTitle.Click += new System.EventHandler(this.btnExpandCollapse_Click);
             // 
             // imageList
             // 
@@ -104,6 +93,18 @@
             this.label1.TabIndex = 0;
             this.label1.Text = "Step content goes here";
             // 
+            // imgExpandCollapse
+            // 
+            this.imgExpandCollapse.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.imgExpandCollapse.Image = global::pwiz.Topograph.ui.Properties.Resources.Expand;
+            this.imgExpandCollapse.Location = new System.Drawing.Point(3, 3);
+            this.imgExpandCollapse.Name = "imgExpandCollapse";
+            this.imgExpandCollapse.Size = new System.Drawing.Size(13, 13);
+            this.imgExpandCollapse.SizeMode = System.Windows.Forms.PictureBoxSizeMode.CenterImage;
+            this.imgExpandCollapse.TabIndex = 1;
+            this.imgExpandCollapse.TabStop = false;
+            this.imgExpandCollapse.Click += new System.EventHandler(this.btnExpandCollapse_Click);
+            // 
             // DashboardStepFrame
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -117,6 +118,7 @@
             this.panelTitle.PerformLayout();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.imgExpandCollapse)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -129,7 +131,7 @@
         private System.Windows.Forms.ImageList imageList;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Button btnExpandCollapse;
+        private System.Windows.Forms.PictureBox imgExpandCollapse;
 
     }
 }

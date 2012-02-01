@@ -69,10 +69,5 @@ namespace pwiz.Topograph.ui.Forms
         protected virtual void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
         }
-
-        protected virtual void OnWorkspaceDbEntitiesChanged(ICollection<Type> types)
-        {
-            
-        }
     }
 }

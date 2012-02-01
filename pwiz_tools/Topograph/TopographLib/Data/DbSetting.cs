@@ -47,5 +47,7 @@ namespace pwiz.Topograph.Data
         accept_integration_notes,
         accept_min_auc,
         accept_min_turnover_score,
+        chrom_time_around_ms2_id,
+        extra_chrom_time_without_ms2_id,
     }
 }

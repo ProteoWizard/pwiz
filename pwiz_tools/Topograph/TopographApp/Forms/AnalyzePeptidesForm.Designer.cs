@@ -43,6 +43,12 @@
             this.label5 = new System.Windows.Forms.Label();
             this.label6 = new System.Windows.Forms.Label();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label8 = new System.Windows.Forms.Label();
+            this.tbxChromTimeAroundMs2 = new System.Windows.Forms.TextBox();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label10 = new System.Windows.Forms.Label();
+            this.tbxExtraChromTimeWithoutMs2Id = new System.Windows.Forms.TextBox();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -88,7 +94,7 @@
             // btnCreateAnalyses
             // 
             this.btnCreateAnalyses.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCreateAnalyses.Location = new System.Drawing.Point(327, 394);
+            this.btnCreateAnalyses.Location = new System.Drawing.Point(327, 512);
             this.btnCreateAnalyses.Name = "btnCreateAnalyses";
             this.btnCreateAnalyses.Size = new System.Drawing.Size(98, 25);
             this.btnCreateAnalyses.TabIndex = 4;
@@ -100,7 +106,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(431, 394);
+            this.btnCancel.Location = new System.Drawing.Point(431, 512);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 5;
@@ -112,7 +118,7 @@
             // 
             this.tbxStatus.AcceptsReturn = true;
             this.tbxStatus.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tbxStatus.Location = new System.Drawing.Point(0, 309);
+            this.tbxStatus.Location = new System.Drawing.Point(0, 439);
             this.tbxStatus.Multiline = true;
             this.tbxStatus.Name = "tbxStatus";
             this.tbxStatus.ReadOnly = true;
@@ -123,7 +129,7 @@
             // progressBar
             // 
             this.progressBar.Dock = System.Windows.Forms.DockStyle.Top;
-            this.progressBar.Location = new System.Drawing.Point(0, 358);
+            this.progressBar.Location = new System.Drawing.Point(0, 488);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(518, 23);
             this.progressBar.TabIndex = 7;
@@ -185,6 +191,7 @@
             this.label6.Size = new System.Drawing.Size(512, 50);
             this.label6.TabIndex = 12;
             this.label6.Text = resources.GetString("label6.Text");
+            this.label6.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
             // 
             // tableLayoutPanel1
             // 
@@ -200,10 +207,16 @@
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.tbxExcludeAas, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.label7, 0, 7);
+            this.tableLayoutPanel1.Controls.Add(this.label8, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.tbxChromTimeAroundMs2, 1, 8);
+            this.tableLayoutPanel1.Controls.Add(this.label9, 0, 9);
+            this.tableLayoutPanel1.Controls.Add(this.label10, 0, 10);
+            this.tableLayoutPanel1.Controls.Add(this.tbxExtraChromTimeWithoutMs2Id, 1, 10);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 7;
+            this.tableLayoutPanel1.RowCount = 11;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 80F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -211,8 +224,75 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 50F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(518, 309);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 40F));
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(518, 439);
             this.tableLayoutPanel1.TabIndex = 13;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.label7, 2);
+            this.label7.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label7.Location = new System.Drawing.Point(3, 305);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(512, 40);
+            this.label7.TabIndex = 13;
+            this.label7.Text = "Topograph generates chromatograms beginning a certain time before the peptide was" +
+                " detected by MS2, and continuing until a certain time after.  How long should th" +
+                "at time be?";
+            this.label7.TextAlign = System.Drawing.ContentAlignment.BottomLeft;
+            // 
+            // label8
+            // 
+            this.label8.AutoEllipsis = true;
+            this.label8.AutoSize = true;
+            this.label8.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label8.Location = new System.Drawing.Point(3, 345);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(253, 25);
+            this.label8.TabIndex = 14;
+            this.label8.Text = "# minutes around MS2 id to extend chromatogram";
+            this.label8.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // tbxChromTimeAroundMs2
+            // 
+            this.tbxChromTimeAroundMs2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxChromTimeAroundMs2.Location = new System.Drawing.Point(262, 348);
+            this.tbxChromTimeAroundMs2.Name = "tbxChromTimeAroundMs2";
+            this.tbxChromTimeAroundMs2.Size = new System.Drawing.Size(253, 20);
+            this.tbxChromTimeAroundMs2.TabIndex = 15;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.tableLayoutPanel1.SetColumnSpan(this.label9, 2);
+            this.label9.Location = new System.Drawing.Point(3, 370);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(502, 39);
+            this.label9.TabIndex = 16;
+            this.label9.Text = resources.GetString("label9.Text");
+            // 
+            // label10
+            // 
+            this.label10.AutoSize = true;
+            this.label10.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label10.Location = new System.Drawing.Point(3, 410);
+            this.label10.Name = "label10";
+            this.label10.Size = new System.Drawing.Size(253, 29);
+            this.label10.TabIndex = 17;
+            this.label10.Text = "Extra length for chromatograms without MS2 id";
+            this.label10.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            // 
+            // tbxExtraChromTimeWithoutMs2Id
+            // 
+            this.tbxExtraChromTimeWithoutMs2Id.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxExtraChromTimeWithoutMs2Id.Location = new System.Drawing.Point(262, 413);
+            this.tbxExtraChromTimeWithoutMs2Id.Name = "tbxExtraChromTimeWithoutMs2Id";
+            this.tbxExtraChromTimeWithoutMs2Id.Size = new System.Drawing.Size(253, 20);
+            this.tbxExtraChromTimeWithoutMs2Id.TabIndex = 18;
             // 
             // AnalyzePeptidesForm
             // 
@@ -220,7 +300,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(518, 429);
+            this.ClientSize = new System.Drawing.Size(518, 547);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnCreateAnalyses);
             this.Controls.Add(this.progressBar);
@@ -254,6 +334,12 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox tbxChromTimeAroundMs2;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.TextBox tbxExtraChromTimeWithoutMs2Id;
 
     }
 }

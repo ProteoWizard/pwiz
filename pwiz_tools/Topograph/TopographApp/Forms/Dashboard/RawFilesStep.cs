@@ -98,6 +98,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             {
                 DirectoryValidator = new DataDirectoryValidator(this);
             }
+            lblStatus.Text = DirectoryValidator.GetStatusText();
             Enabled = true;
         }
 
@@ -184,7 +185,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 try
                 {
                     CheckDisposed();
-                    _dataDirectoryExists = File.Exists(_dataDirectory);
+                    _dataDirectoryExists = Directory.Exists(_dataDirectory);
                     _anyDataFiles = false;
                     _allDataFiles = true;
                     if (_dataDirectoryExists)

@@ -34,12 +34,6 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             get { return Workspace != null && (Workspace.Peptides.ChildCount == 0 || Workspace.MsDataFiles.ChildCount == 0); }
         }
 
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs entitiesChangedEventArgs)
-        {
-            base.OnWorkspaceEntitiesChanged(entitiesChangedEventArgs);
-            UpdateStepStatus();
-        }
-
         private String Description
         {
             get { return lblStatus.Text; }

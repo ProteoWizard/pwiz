@@ -495,15 +495,19 @@ namespace pwiz.Topograph.ui.Forms
 
         public void EditIsotopeLabels()
         {
-            var dialog = Program.FindOpenForm<EnrichmentDialog>();
-            if (dialog != null)
+            if (Workspace.GetTracerDefs().Count == 0)
             {
-                dialog.Activate();
+                using (var dialog = new DefineLabelDialog(Workspace, null))
+                {
+                    dialog.ShowDialog(this);
+                }
             }
             else
             {
-                dialog = new EnrichmentDialog(Workspace);
-                    dialog.Show(this);
+                using (var dialog = new ManageLabelsDialog(Workspace))
+                {
+                    dialog.ShowDialog(this);
+                }
             }
         }
 

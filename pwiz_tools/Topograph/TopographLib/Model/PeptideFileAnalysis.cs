@@ -137,14 +137,17 @@ namespace pwiz.Topograph.Model
         
         public static DbPeptideFileAnalysis CreatePeptideFileAnalysis(ISession session, MsDataFile msDataFile, DbPeptideAnalysis dbPeptideAnalysis, DbPeptideSearchResult peptideSearchResult, bool queryStartEndTime)
         {
+            var workspace = msDataFile.Workspace;
+            double timeAroundMs2Id = workspace.GetChromTimeAroundMs2Id();
+            double extraTimeWithoutMs2id = workspace.GetExtraChromTimeWithoutMs2Id();
             var dbMsDataFile = session.Load<DbMsDataFile>(msDataFile.Id);
             double chromatogramStartTime, chromatogramEndTime;
             int? firstDetectedScan, lastDetectedScan;
             int psmCount;
             if (peptideSearchResult != null)
             {
-                chromatogramStartTime = msDataFile.GetTime(peptideSearchResult.FirstDetectedScan - 1800);
-                chromatogramEndTime = msDataFile.GetTime(peptideSearchResult.LastDetectedScan + 1800);
+                chromatogramStartTime = msDataFile.GetTime(peptideSearchResult.FirstDetectedScan) - timeAroundMs2Id;
+                chromatogramEndTime = msDataFile.GetTime(peptideSearchResult.LastDetectedScan) + timeAroundMs2Id;
                 firstDetectedScan = peptideSearchResult.FirstDetectedScan;
                 lastDetectedScan = peptideSearchResult.LastDetectedScan;
                 psmCount = peptideSearchResult.PsmCount;
@@ -155,15 +158,15 @@ namespace pwiz.Topograph.Model
                 {
                     var query = session.CreateQuery(
                         "SELECT MIN(T.ChromatogramStartTime),MAX(T.ChromatogramEndTime) FROM " +
-                        typeof (DbPeptideFileAnalysis) + " T WHERE T.PeptideAnalysis = :peptideAnalysis")
+                        typeof (DbPeptideFileAnalysis) + " T WHERE T.PeptideAnalysis = :peptideAnalysis AND T.FirstDetectedScan IS NOT NULL AND T.LastDetectedScan IS NOT NULL")
                         .SetParameter("peptideAnalysis", dbPeptideAnalysis);
                     var result = (object[]) query.UniqueResult();
                     if (result[0] == null)
                     {
                         return null;
                     }
-                    chromatogramStartTime = Convert.ToDouble(result[0]);
-                    chromatogramEndTime = Convert.ToDouble(result[1]);
+                    chromatogramStartTime = Convert.ToDouble(result[0]) - extraTimeWithoutMs2id;
+                    chromatogramEndTime = Convert.ToDouble(result[1]) + extraTimeWithoutMs2id;
                 }
                 else
                 {

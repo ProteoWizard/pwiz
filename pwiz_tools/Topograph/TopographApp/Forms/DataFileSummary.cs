@@ -18,11 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.Topograph.Data;
@@ -102,7 +97,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 var row = new DataGridViewRow
                               {
-                                  Tag = rowData.PeptideFileAnalysisId,
+                                  Tag = rowData,
                               };
                 _rows.Add(rowData.PeptideFileAnalysisId, row);
                 newRows.Add(row);
@@ -162,12 +157,24 @@ namespace pwiz.Topograph.ui.Forms
         private void dataGridView_CellEndEdit(object sender, DataGridViewCellEventArgs e)
         {
             var row = dataGridView.Rows[e.RowIndex];
-            var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
+            var rowData = (RowData) row.Tag;
             var column = dataGridView.Columns[e.ColumnIndex];
             var cell = row.Cells[e.ColumnIndex];
             if (column == colStatus)
             {
-                peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
+                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(rowData.PeptideAnalysisId);
+                if (peptideAnalysis == null)
+                {
+                    return;
+                }
+                var peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(rowData.PeptideFileAnalysisId);
+                if (peptideFileAnalysis != null)
+                {
+                    using (Workspace.GetWriteLock())
+                    {
+                        peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
+                    }
+                }
             }
         }
         class RowData
@@ -188,10 +195,10 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            long peptideFileAnalysisId = (long)dataGridView.Rows[e.RowIndex].Tag;
+            RowData rowData = (RowData)dataGridView.Rows[e.RowIndex].Tag;
             if (e.ColumnIndex == colSequence.Index)
             {
-                ShowPeptideFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysisId);
+                ShowPeptideFileAnalysisForm<TracerChromatogramForm>(rowData.PeptideFileAnalysisId);
                 return;
             }
         }
