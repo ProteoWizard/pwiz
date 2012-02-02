@@ -1,593 +1,633 @@
-<html xmlns:v="urn:schemas-microsoft-com:vml"
-xmlns:o="urn:schemas-microsoft-com:office:office"
-xmlns:w="urn:schemas-microsoft-com:office:word"
-xmlns:m="http://schemas.microsoft.com/office/2004/12/omml"
-xmlns="http://www.w3.org/TR/REC-html40">
+<html>
 
 <head>
-<meta http-equiv=Content-Type content="text/html; charset=us-ascii">
-<meta name=ProgId content=Word.Document>
-<meta name=Generator content="Microsoft Word 12">
-<meta name=Originator content="Microsoft Word 12">
-<link rel=File-List href="GettingStarted_files/filelist.xml">
-<title>Getting Started with QuaMeter</title>
-<!--[if gte mso 9]><xml>
- <o:DocumentProperties>
-  <o:Author>Matt Chambers</o:Author>
-  <o:LastAuthor>Matt Chambers</o:LastAuthor>
-  <o:Revision>2</o:Revision>
-  <o:TotalTime>6</o:TotalTime>
-  <o:Created>2011-09-28T22:16:00Z</o:Created>
-  <o:LastSaved>2011-09-29T21:01:00Z</o:LastSaved>
-  <o:Pages>1</o:Pages>
-  <o:Words>310</o:Words>
-  <o:Characters>1768</o:Characters>
-  <o:Company>Vanderbilt University</o:Company>
-  <o:Lines>14</o:Lines>
-  <o:Paragraphs>4</o:Paragraphs>
-  <o:CharactersWithSpaces>2074</o:CharactersWithSpaces>
-  <o:Version>12.00</o:Version>
- </o:DocumentProperties>
-</xml><![endif]-->
-<link rel=themeData href="GettingStarted_files/themedata.thmx">
-<link rel=colorSchemeMapping href="GettingStarted_files/colorschememapping.xml">
-<!--[if gte mso 9]><xml>
- <w:WordDocument>
-  <w:SpellingState>Clean</w:SpellingState>
-  <w:GrammarState>Clean</w:GrammarState>
-  <w:TrackMoves>false</w:TrackMoves>
-  <w:TrackFormatting/>
-  <w:PunctuationKerning/>
-  <w:ValidateAgainstSchemas/>
-  <w:SaveIfXMLInvalid>false</w:SaveIfXMLInvalid>
-  <w:IgnoreMixedContent>false</w:IgnoreMixedContent>
-  <w:AlwaysShowPlaceholderText>false</w:AlwaysShowPlaceholderText>
-  <w:DoNotPromoteQF/>
-  <w:LidThemeOther>EN-US</w:LidThemeOther>
-  <w:LidThemeAsian>X-NONE</w:LidThemeAsian>
-  <w:LidThemeComplexScript>X-NONE</w:LidThemeComplexScript>
-  <w:Compatibility>
-   <w:BreakWrappedTables/>
-   <w:SnapToGridInCell/>
-   <w:WrapTextWithPunct/>
-   <w:UseAsianBreakRules/>
-   <w:DontGrowAutofit/>
-   <w:SplitPgBreakAndParaMark/>
-   <w:DontVertAlignCellWithSp/>
-   <w:DontBreakConstrainedForcedTables/>
-   <w:DontVertAlignInTxbx/>
-   <w:Word11KerningPairs/>
-   <w:CachedColBalance/>
-  </w:Compatibility>
-  <w:BrowserLevel>MicrosoftInternetExplorer4</w:BrowserLevel>
-  <m:mathPr>
-   <m:mathFont m:val="Cambria Math"/>
-   <m:brkBin m:val="before"/>
-   <m:brkBinSub m:val="&#45;-"/>
-   <m:smallFrac m:val="off"/>
-   <m:dispDef/>
-   <m:lMargin m:val="0"/>
-   <m:rMargin m:val="0"/>
-   <m:defJc m:val="centerGroup"/>
-   <m:wrapIndent m:val="1440"/>
-   <m:intLim m:val="subSup"/>
-   <m:naryLim m:val="undOvr"/>
-  </m:mathPr></w:WordDocument>
-</xml><![endif]--><!--[if gte mso 9]><xml>
- <w:LatentStyles DefLockedState="false" DefUnhideWhenUsed="true"
-  DefSemiHidden="true" DefQFormat="false" DefPriority="99"
-  LatentStyleCount="267">
-  <w:LsdException Locked="false" Priority="0" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Normal"/>
-  <w:LsdException Locked="false" Priority="9" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="heading 1"/>
-  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 2"/>
-  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 3"/>
-  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 4"/>
-  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 5"/>
-  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 6"/>
-  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 7"/>
-  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 8"/>
-  <w:LsdException Locked="false" Priority="9" QFormat="true" Name="heading 9"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 1"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 2"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 3"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 4"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 5"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 6"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 7"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 8"/>
-  <w:LsdException Locked="false" Priority="39" Name="toc 9"/>
-  <w:LsdException Locked="false" Priority="35" QFormat="true" Name="caption"/>
-  <w:LsdException Locked="false" Priority="10" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Title"/>
-  <w:LsdException Locked="false" Priority="1" Name="Default Paragraph Font"/>
-  <w:LsdException Locked="false" Priority="11" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Subtitle"/>
-  <w:LsdException Locked="false" Priority="22" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Strong"/>
-  <w:LsdException Locked="false" Priority="20" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Emphasis"/>
-  <w:LsdException Locked="false" Priority="59" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Table Grid"/>
-  <w:LsdException Locked="false" UnhideWhenUsed="false" Name="Placeholder Text"/>
-  <w:LsdException Locked="false" Priority="1" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="No Spacing"/>
-  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Shading"/>
-  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light List"/>
-  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Grid"/>
-  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 1"/>
-  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 2"/>
-  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 1"/>
-  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 2"/>
-  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 1"/>
-  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 2"/>
-  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 3"/>
-  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Dark List"/>
-  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Shading"/>
-  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful List"/>
-  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Grid"/>
-  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Shading Accent 1"/>
-  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light List Accent 1"/>
-  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Grid Accent 1"/>
-  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 1"/>
-  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 1"/>
-  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 1 Accent 1"/>
-  <w:LsdException Locked="false" UnhideWhenUsed="false" Name="Revision"/>
-  <w:LsdException Locked="false" Priority="34" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="List Paragraph"/>
-  <w:LsdException Locked="false" Priority="29" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Quote"/>
-  <w:LsdException Locked="false" Priority="30" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Intense Quote"/>
-  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 2 Accent 1"/>
-  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 1"/>
-  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 1"/>
-  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 1"/>
-  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Dark List Accent 1"/>
-  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Shading Accent 1"/>
-  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful List Accent 1"/>
-  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Grid Accent 1"/>
-  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Shading Accent 2"/>
-  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light List Accent 2"/>
-  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Grid Accent 2"/>
-  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 2"/>
-  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 2"/>
-  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 1 Accent 2"/>
-  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 2 Accent 2"/>
-  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 2"/>
-  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 2"/>
-  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 2"/>
-  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Dark List Accent 2"/>
-  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Shading Accent 2"/>
-  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful List Accent 2"/>
-  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Grid Accent 2"/>
-  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Shading Accent 3"/>
-  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light List Accent 3"/>
-  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Grid Accent 3"/>
-  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 3"/>
-  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 3"/>
-  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 1 Accent 3"/>
-  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 2 Accent 3"/>
-  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 3"/>
-  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 3"/>
-  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 3"/>
-  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Dark List Accent 3"/>
-  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Shading Accent 3"/>
-  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful List Accent 3"/>
-  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Grid Accent 3"/>
-  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Shading Accent 4"/>
-  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light List Accent 4"/>
-  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Grid Accent 4"/>
-  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 4"/>
-  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 4"/>
-  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 1 Accent 4"/>
-  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 2 Accent 4"/>
-  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 4"/>
-  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 4"/>
-  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 4"/>
-  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Dark List Accent 4"/>
-  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Shading Accent 4"/>
-  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful List Accent 4"/>
-  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Grid Accent 4"/>
-  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Shading Accent 5"/>
-  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light List Accent 5"/>
-  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Grid Accent 5"/>
-  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 5"/>
-  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 5"/>
-  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 1 Accent 5"/>
-  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 2 Accent 5"/>
-  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 5"/>
-  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 5"/>
-  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 5"/>
-  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Dark List Accent 5"/>
-  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Shading Accent 5"/>
-  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful List Accent 5"/>
-  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Grid Accent 5"/>
-  <w:LsdException Locked="false" Priority="60" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Shading Accent 6"/>
-  <w:LsdException Locked="false" Priority="61" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light List Accent 6"/>
-  <w:LsdException Locked="false" Priority="62" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Light Grid Accent 6"/>
-  <w:LsdException Locked="false" Priority="63" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 1 Accent 6"/>
-  <w:LsdException Locked="false" Priority="64" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Shading 2 Accent 6"/>
-  <w:LsdException Locked="false" Priority="65" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 1 Accent 6"/>
-  <w:LsdException Locked="false" Priority="66" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium List 2 Accent 6"/>
-  <w:LsdException Locked="false" Priority="67" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 1 Accent 6"/>
-  <w:LsdException Locked="false" Priority="68" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 2 Accent 6"/>
-  <w:LsdException Locked="false" Priority="69" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Medium Grid 3 Accent 6"/>
-  <w:LsdException Locked="false" Priority="70" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Dark List Accent 6"/>
-  <w:LsdException Locked="false" Priority="71" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Shading Accent 6"/>
-  <w:LsdException Locked="false" Priority="72" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful List Accent 6"/>
-  <w:LsdException Locked="false" Priority="73" SemiHidden="false"
-   UnhideWhenUsed="false" Name="Colorful Grid Accent 6"/>
-  <w:LsdException Locked="false" Priority="19" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Subtle Emphasis"/>
-  <w:LsdException Locked="false" Priority="21" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Intense Emphasis"/>
-  <w:LsdException Locked="false" Priority="31" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Subtle Reference"/>
-  <w:LsdException Locked="false" Priority="32" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Intense Reference"/>
-  <w:LsdException Locked="false" Priority="33" SemiHidden="false"
-   UnhideWhenUsed="false" QFormat="true" Name="Book Title"/>
-  <w:LsdException Locked="false" Priority="37" Name="Bibliography"/>
-  <w:LsdException Locked="false" Priority="39" QFormat="true" Name="TOC Heading"/>
- </w:LatentStyles>
-</xml><![endif]-->
+<meta http-equiv=Content-Type content="text/html; charset=windows-1252">
+<meta name=Generator content="Microsoft Word 12 (filtered)">
 <style>
 <!--
  /* Font Definitions */
  @font-face
+	{font-family:SimSun;
+	panose-1:2 1 6 0 3 1 1 1 1 1;}
+@font-face
 	{font-family:"Cambria Math";
-	panose-1:2 4 5 3 5 4 6 3 2 4;
-	mso-font-charset:1;
-	mso-generic-font-family:roman;
-	mso-font-format:other;
-	mso-font-pitch:variable;
-	mso-font-signature:0 0 0 0 0 0;}
+	panose-1:2 4 5 3 5 4 6 3 2 4;}
 @font-face
 	{font-family:Calibri;
-	panose-1:2 15 5 2 2 2 4 3 2 4;
-	mso-font-charset:0;
-	mso-generic-font-family:swiss;
-	mso-font-pitch:variable;
-	mso-font-signature:-520092929 1073786111 9 0 415 0;}
+	panose-1:2 15 5 2 2 2 4 3 2 4;}
+@font-face
+	{font-family:Tahoma;
+	panose-1:2 11 6 4 3 5 4 4 2 4;}
+@font-face
+	{font-family:"\@SimSun";
+	panose-1:2 1 6 0 3 1 1 1 1 1;}
  /* Style Definitions */
  p.MsoNormal, li.MsoNormal, div.MsoNormal
-	{mso-style-unhide:no;
-	mso-style-qformat:yes;
-	mso-style-parent:"";
-	margin-top:0in;
+	{margin-top:0in;
 	margin-right:0in;
 	margin-bottom:10.0pt;
 	margin-left:0in;
 	line-height:115%;
-	mso-pagination:widow-orphan;
 	font-size:11.0pt;
-	font-family:"Calibri","sans-serif";
-	mso-ascii-font-family:Calibri;
-	mso-ascii-theme-font:minor-latin;
-	mso-fareast-font-family:Calibri;
-	mso-fareast-theme-font:minor-latin;
-	mso-hansi-font-family:Calibri;
-	mso-hansi-theme-font:minor-latin;
-	mso-bidi-font-family:"Times New Roman";
-	mso-bidi-theme-font:minor-bidi;}
+	font-family:"Calibri","sans-serif";}
+h1
+	{mso-style-link:"Heading 1 Char";
+	margin-top:24.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	line-height:115%;
+	page-break-after:avoid;
+	font-size:14.0pt;
+	font-family:"Cambria","serif";
+	color:#365F91;}
+p.MsoToc1, li.MsoToc1, div.MsoToc1
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:5.0pt;
+	margin-left:0in;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoTitle, li.MsoTitle, div.MsoTitle
+	{mso-style-link:"Title Char";
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:15.0pt;
+	margin-left:0in;
+	border:none;
+	padding:0in;
+	font-size:26.0pt;
+	font-family:"Cambria","serif";
+	color:#17365D;
+	letter-spacing:.25pt;}
+p.MsoTitleCxSpFirst, li.MsoTitleCxSpFirst, div.MsoTitleCxSpFirst
+	{mso-style-link:"Title Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	border:none;
+	padding:0in;
+	font-size:26.0pt;
+	font-family:"Cambria","serif";
+	color:#17365D;
+	letter-spacing:.25pt;}
+p.MsoTitleCxSpMiddle, li.MsoTitleCxSpMiddle, div.MsoTitleCxSpMiddle
+	{mso-style-link:"Title Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	border:none;
+	padding:0in;
+	font-size:26.0pt;
+	font-family:"Cambria","serif";
+	color:#17365D;
+	letter-spacing:.25pt;}
+p.MsoTitleCxSpLast, li.MsoTitleCxSpLast, div.MsoTitleCxSpLast
+	{mso-style-link:"Title Char";
+	margin-top:0in;
+	margin-right:0in;
+	margin-bottom:15.0pt;
+	margin-left:0in;
+	border:none;
+	padding:0in;
+	font-size:26.0pt;
+	font-family:"Cambria","serif";
+	color:#17365D;
+	letter-spacing:.25pt;}
 a:link, span.MsoHyperlink
-	{mso-style-noshow:yes;
-	mso-style-priority:99;
-	color:blue;
-	mso-themecolor:hyperlink;
-	text-decoration:underline;
-	text-underline:single;}
+	{color:blue;
+	text-decoration:underline;}
 a:visited, span.MsoHyperlinkFollowed
-	{mso-style-noshow:yes;
-	mso-style-priority:99;
-	color:purple;
-	mso-themecolor:followedhyperlink;
-	text-decoration:underline;
-	text-underline:single;}
-span.SpellE
-	{mso-style-name:"";
-	mso-spl-e:yes;}
-span.GramE
-	{mso-style-name:"";
-	mso-gram-e:yes;}
-.MsoChpDefault
-	{mso-style-type:export-only;
-	mso-default-props:yes;
-	font-size:10.0pt;
-	mso-ansi-font-size:10.0pt;
-	mso-bidi-font-size:10.0pt;
-	mso-ascii-font-family:Calibri;
-	mso-ascii-theme-font:minor-latin;
-	mso-fareast-font-family:Calibri;
-	mso-fareast-theme-font:minor-latin;
-	mso-hansi-font-family:Calibri;
-	mso-hansi-theme-font:minor-latin;
-	mso-bidi-font-family:"Times New Roman";
-	mso-bidi-theme-font:minor-bidi;}
-@page Section1
+	{color:purple;
+	text-decoration:underline;}
+p.MsoAcetate, li.MsoAcetate, div.MsoAcetate
+	{mso-style-link:"Balloon Text Char";
+	margin:0in;
+	margin-bottom:.0001pt;
+	font-size:8.0pt;
+	font-family:"Tahoma","sans-serif";}
+p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:.5in;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:.5in;
+	margin-bottom:.0001pt;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast
+	{margin-top:0in;
+	margin-right:0in;
+	margin-bottom:10.0pt;
+	margin-left:.5in;
+	line-height:115%;
+	font-size:11.0pt;
+	font-family:"Calibri","sans-serif";}
+p.MsoTocHeading, li.MsoTocHeading, div.MsoTocHeading
+	{margin-top:24.0pt;
+	margin-right:0in;
+	margin-bottom:0in;
+	margin-left:0in;
+	margin-bottom:.0001pt;
+	line-height:115%;
+	page-break-after:avoid;
+	font-size:14.0pt;
+	font-family:"Cambria","serif";
+	color:#365F91;
+	font-weight:bold;}
+span.spelle
+	{mso-style-name:spelle;}
+span.grame
+	{mso-style-name:grame;}
+span.BalloonTextChar
+	{mso-style-name:"Balloon Text Char";
+	mso-style-link:"Balloon Text";
+	font-family:"Tahoma","sans-serif";}
+span.Heading1Char
+	{mso-style-name:"Heading 1 Char";
+	mso-style-link:"Heading 1";
+	font-family:"Cambria","serif";
+	color:#365F91;
+	font-weight:bold;}
+span.TitleChar
+	{mso-style-name:"Title Char";
+	mso-style-link:Title;
+	font-family:"Cambria","serif";
+	color:#17365D;
+	letter-spacing:.25pt;}
+.MsoPapDefault
+	{margin-bottom:10.0pt;
+	line-height:115%;}
+@page WordSection1
 	{size:8.5in 11.0in;
-	margin:1.0in 1.0in 1.0in 1.0in;
-	mso-header-margin:.5in;
-	mso-footer-margin:.5in;
-	mso-paper-source:0;}
-div.Section1
-	{page:Section1;}
+	margin:1.0in 1.0in 1.0in 1.0in;}
+div.WordSection1
+	{page:WordSection1;}
+ /* List Definitions */
+ ol
+	{margin-bottom:0in;}
+ul
+	{margin-bottom:0in;}
 -->
 </style>
-<!--[if gte mso 10]>
-<style>
- /* Style Definitions */
- table.MsoNormalTable
-	{mso-style-name:"Table Normal";
-	mso-tstyle-rowband-size:0;
-	mso-tstyle-colband-size:0;
-	mso-style-noshow:yes;
-	mso-style-priority:99;
-	mso-style-qformat:yes;
-	mso-style-parent:"";
-	mso-padding-alt:0in 5.4pt 0in 5.4pt;
-	mso-para-margin:0in;
-	mso-para-margin-bottom:.0001pt;
-	mso-pagination:widow-orphan;
-	font-size:10.0pt;
-	font-family:"Calibri","sans-serif";
-	mso-ascii-font-family:Calibri;
-	mso-ascii-theme-font:minor-latin;
-	mso-hansi-font-family:Calibri;
-	mso-hansi-theme-font:minor-latin;
-	mso-bidi-font-family:"Times New Roman";
-	mso-bidi-theme-font:minor-bidi;}
-</style>
-<![endif]--><!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext="edit" spidmax="3074"/>
-</xml><![endif]--><!--[if gte mso 9]><xml>
- <o:shapelayout v:ext="edit">
-  <o:idmap v:ext="edit" data="1"/>
- </o:shapelayout></xml><![endif]-->
+
 </head>
 
-<body lang=EN-US link=blue vlink=purple style='tab-interval:.5in'>
+<body lang=EN-US link=blue vlink=purple>
 
-<div class=Section1>
+<div class=WordSection1>
 
-<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:20.0pt'>Getting Started with <span class=SpellE>QuaMeter</span><o:p></o:p></span></p>
+<div style='border:none;border-bottom:solid #4F81BD 1.0pt;padding:0in 0in 4.0pt 0in'>
 
-<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><o:p>&nbsp;</o:p></p>
+<p class=MsoTitle><span style='font-family:"Calibri","sans-serif"'>QuaMeter</span></p>
 
-<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span class=SpellE><span style='font-size:12.0pt'>QuaMeter</span></span><span
-style='font-size:12.0pt'> is currently available as a command-line tool; it is
-primarily intended as a back-end for QC pipelines.<o:p></o:p></span></p>
+</div>
+
+<h1><span style='font-family:"Calibri","sans-serif"'>Overview</span></h1>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
+normal'><span style='font-size:12.0pt'>QuaMeter is an open-source tool that
+computes metrics to enable the QA/QC evaluation of proteomics instrumentation.
+It is a re-implementation of the NIST MSQC software with several important
+additions. QuaMeter can read files from most mass spectrometry vendors via
+ProteoWizard. It can be incorporated into any workflow in which search engine
+generates pepXML or mzIdentML files.  </span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'>1. <span class=SpellE>QuaMeter</span>
-has only been tested with Bumbershoot identification tools. Download the GUI for
-running these tools <a
-href="http://teamcity.fenchurch.mc.vanderbilt.edu/viewLog.html?buildTypeId=bt50&amp;buildId=lastSuccessful&amp;tab=artifacts&amp;guest=1">here</a>.</span><span
-style='font-size:12.0pt;font-family:"Courier New"'><o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt'> </span></p>
+
+<h1><span style='font-family:"Calibri","sans-serif"'>Usage</span></h1>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
+normal'><span style='font-size:12.0pt'>QuaMeter is currently available as a
+command-line tool; it is primarily intended as a back-end for QC pipelines.</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'>2. <span class=SpellE>QuaMeter</span>
-depends on confidence assessment by <span class=SpellE>IDPicker</span> 3 in the
-form of <span class=SpellE>idpDB</span> files. Download <span class=SpellE>IDPicker</span>
-3 <a
-href="http://teamcity.fenchurch.mc.vanderbilt.edu/viewLog.html?buildTypeId=bt31&amp;buildId=lastSuccessful&amp;tab=artifacts&amp;guest=1">here</a>.</span><span
-style='font-size:12.0pt;font-family:"Courier New"'><o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
+normal'><span style='font-size:12.0pt'>1. QuaMeter has only been tested with
+Bumbershoot identification tools such as MyriMatch, TagRecon and Pipetome.
+Download the GUI for running these tools </span><a
+href="http://teamcity.fenchurch.mc.vanderbilt.edu/viewLog.html?buildTypeId=bt50&amp;buildId=lastSuccessful&amp;tab=artifacts&amp;guest=1"><span
+style='font-size:12.0pt'>here</span></a><span style='font-size:12.0pt'>.</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'>3. Use <span class=SpellE>IDPicker</span>
-3's <span class=SpellE>idpQonvert</span> tool to create <span class=SpellE>idpDBs</span>
-from <span class=SpellE>pepXML</span>/<span class=SpellE>mzIdentML</span>
-files. A sample command-line:<o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt'>2. QuaMeter depends on confidence
+assessment by IDPicker 3 in the form of idpDB files. Download IDPicker 3 </span><a
+href="http://teamcity.fenchurch.mc.vanderbilt.edu/viewLog.html?buildTypeId=bt31&amp;buildId=lastSuccessful&amp;tab=artifacts&amp;guest=1"><span
+style='font-size:12.0pt'>here</span></a><span style='font-size:12.0pt'>.</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt;font-family:"Courier New";background:
-silver;mso-highlight:silver'>c:\path\to\idpqonvert.exe c:\path\to\*.pepXML -<span
-class=SpellE>ProteinDatabase</span> c:\path\to\proteins.fasta</span><span
-style='font-size:12.0pt;font-family:"Courier New"'><o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt'>3. Use IDPicker 3's idpQonvert tool to
+create idpDBs from pepXML/mzIdentML files. A sample command-line:</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>c:\path\to\idpqonvert.exe
+c:\path\to\*.pepXML -ProteinDatabase c:\path\to\proteins.fasta</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
 normal'><span style='font-size:12.0pt'>4. Create a quameter.cfg file using a
-text editor like Notepad; set the variables like this:<o:p></o:p></span></p>
+text editor like Notepad; set the variables like this:</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt;font-family:"Courier New";background:
-silver;mso-highlight:silver'>Instrument = <span class=SpellE>ltq</span><span
-style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span
-style='mso-spacerun:yes'>&nbsp;</span># if set to LTQ, average masses are used,
-else <span class=SpellE>monoisotopic</span> masses<o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>Instrument = ltq                   
+# if set to LTQ, average masses are used, else monoisotopic masses</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span class=SpellE><span style='font-size:12.0pt;font-family:"Courier New";
-background:silver;mso-highlight:silver'>RawDataPath</span></span><span
-style='font-size:12.0pt;font-family:"Courier New";background:silver;mso-highlight:
-silver'> = c:\path\to\raw-<span class=GramE>files <span
-style='mso-spacerun:yes'>&nbsp;</span>#</span> where to find the raw files for
-each <span class=SpellE>idpDB</span><o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>RawDataPath =
+c:\path\to\raw-files  # where to find the raw files for each idpDB</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span class=SpellE><span style='font-size:12.0pt;font-family:"Courier New";
-background:silver;mso-highlight:silver'>RawDataFormat</span></span><span
-style='font-size:12.0pt;font-family:"Courier New";background:silver;mso-highlight:
-silver'> = raw<span
-style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span style='mso-spacerun:yes'>&nbsp;</span># the file extension to
-expect for the raw files; e.g. <span class=SpellE>mzML</span>, <span
-class=SpellE>mzXML</span>, raw<o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>RawDataFormat = raw                 #
+the file extension to expect for the raw files; e.g. mzML, mzXML, raw</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span class=SpellE><span style='font-size:12.0pt;font-family:"Courier New";
-background:silver;mso-highlight:silver'>ScoreCutoff</span></span><span
-style='font-size:12.0pt;font-family:"Courier New";background:silver;mso-highlight:
-silver'> = 0.05<span
-style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-</span><span style='mso-spacerun:yes'>&nbsp;</span><span
-style='mso-spacerun:yes'>&nbsp;</span># <span class=SpellE>IDPicker</span> FDR
-cutoff<o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>ScoreCutoff =
+0.05                  # IDPicker FDR cutoff</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span class=SpellE><span style='font-size:12.0pt;font-family:"Courier New";
-background:silver;mso-highlight:silver'>ChromatogramMzLowerOffset</span></span><span
-style='font-size:12.0pt;font-family:"Courier New";background:silver;mso-highlight:
-silver'> = 1.0mz <span style='mso-spacerun:yes'>&nbsp;</span><span
-style='mso-spacerun:yes'>&nbsp;</span># the lower bound of the window for
-building chromatograms; can be in m/z or <span class=SpellE>ppm</span><o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>ChromatogramMzLowerOffset
+= 1.0mz   # the lower bound of the window for building chromatograms; can be in
+m/z or ppm</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span class=SpellE><span style='font-size:12.0pt;font-family:"Courier New";
-background:silver;mso-highlight:silver'>ChromatogramMzUpperOffset</span></span><span
-style='font-size:12.0pt;font-family:"Courier New";background:silver;mso-highlight:
-silver'> = 1.0mz <span style='mso-spacerun:yes'>&nbsp;</span><span
-style='mso-spacerun:yes'>&nbsp;</span># the upper bound of the window for
-building chromatograms; can be in m/z or <span class=SpellE>ppm</span><o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>ChromatogramMzUpperOffset
+= 1.0mz   # the upper bound of the window for building chromatograms; can be in
+m/z or ppm</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span class=SpellE><span style='font-size:12.0pt;font-family:"Courier New";
-background:silver;mso-highlight:silver'>ChromatogramOutput</span></span><span
-style='font-size:12.0pt;font-family:"Courier New";background:silver;mso-highlight:
-silver'> = false <span
-style='mso-spacerun:yes'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>#
-if true, creates an mz5 file with the chromatograms (best viewed with <span
-class=SpellE>SeeMS</span>)</span><span style='font-size:12.0pt;font-family:
-"Courier New"'><o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>ChromatogramOutput =
+false          # if true, creates an mz5 file with the chromatograms (best
+viewed with SeeMS)</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
+normal'><span style='font-size:12.0pt'>5. Run QuaMeter on the idpDBs you want
+metrics for. A sample command-line:</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'>5. Run <span class=SpellE>QuaMeter</span>
-on the <span class=SpellE>idpDBs</span> you want metrics for. A sample
-command-line:<o:p></o:p></span></p>
+normal'><span style='font-size:12.0pt;background:silver'>c:\path\to\quameter.exe
+c:\path\to\*.idpDB</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt;font-family:"Courier New";background:
-silver;mso-highlight:silver'>c:\path\to\quameter.exe c:\path\to\*.idpDB</span><span
-style='font-size:12.0pt;font-family:"Courier New"'><o:p></o:p></span></p>
-
-<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
-normal'><span style='font-size:12.0pt'><o:p>&nbsp;</o:p></span></p>
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
 
 <p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
 normal'><span style='font-size:12.0pt'>A tab-separated quality metrics file
-will be created for each <span class=SpellE>idpDB</span> (written to the
-current working directory). For example, for <span class=SpellE>data.idpDB</span>
-you will get data.qual.txt. Each file has the metric ids in the first row and
-the metric values in the second row. You can concatenate many of these files
-together to build a table.<o:p></o:p></span></p>
+will be created for each idpDB (written to the current working directory). For
+example, for data.idpDB you will get data.qual.txt. Each file has the metric
+ids in the first row and the metric values in the second row. You can
+concatenate many of these files together to build a table.</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<h1><span style='font-family:"Calibri","sans-serif"'>Demo</span></h1>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>Below is a step-by-step tutorial to
+process 10 BSA LC-MS/MS runs collected from a Thermo Fisher LTQ-XL mass
+spectrometer. All files are identified using the Pipetome spectral library
+search tool. Raw identifications are filtered by IDPicker 3 for peptide
+validation to produce idpDB files. QuaMeter reads spectral raw files and idpDB
+files to compute QC metrics. R scripts are provided to combine metrics files
+for initial instrument variability analysis.</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin:0in;margin-bottom:.0001pt;
+text-indent:0in;line-height:normal'><span style='font-size:12.0pt'>1.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt'>Run spectral library search by Pipetome through the </span><a
+href="http://teamcity.fenchurch.mc.vanderbilt.edu/viewLog.html?buildTypeId=bt50&amp;buildId=lastSuccessful&amp;tab=artifacts&amp;guest=1"><span
+style='font-size:12.0pt'>BumberDash</span></a><span style='font-size:12.0pt'>
+GUI. </span></p>
+
+<p class=MsoListParagraphCxSpLast style='margin-bottom:0in;margin-bottom:.0001pt;
+line-height:normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><img border=0 width=624 height=380
+src="GettingStarted_files/image001.png"></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>“BSA-Contams_decoy.fasta”,
+“BSA-Contams_decoy.sptxt.index” and “pepitome.cfg” files can be downloaded </span><a
+href="http://fenchurch.mc.vanderbilt.edu/misc/Pepitome-BSA-lib.zip"><span
+style='font-size:12.0pt'>here</span></a><span style='font-size:12.0pt'>.</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt'>            </span></p>
+
+<p class=MsoListParagraph style='margin:0in;margin-bottom:.0001pt;text-indent:
+0in;line-height:normal'><span style='font-size:12.0pt'>2.<span
+style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span><span
+style='font-size:12.0pt'>Download </span><a
+href="http://teamcity.fenchurch.mc.vanderbilt.edu/viewLog.html?buildTypeId=bt31&amp;buildId=lastSuccessful&amp;tab=artifacts&amp;guest=1"><span
+style='font-size:12.0pt'>IDPicker</span></a><span style='font-size:12.0pt'> 3
+and convert pepXML files to idpDB files by the idpQonvert tool. For example,
+type the following command in a terminal window.</span></p>
+
+<p class=MsoNormal style='margin-top:0in;margin-right:0in;margin-bottom:0in;
+margin-left:.25in;margin-bottom:.0001pt;line-height:normal'><span
+style='font-size:12.0pt'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>FOR /f %a IN ('dir /b
+*.pepXML') DO &quot;c:\Program Files (x86)\Bumbershoot\IDPicker
+3.0.352\idpQonvert.exe&quot; -ProteinDatabase
+&quot;C:\Data\QuaMeter-demo\BSA-Contams_decoy.fasta&quot; -DecoyPrefix
+&quot;DECOY_0_&quot; -ScoreInfo &quot;1 off hgt; 1 off mzfidelity; 1 off
+kendallpval&quot; -QonverterMethod &quot;MonteCarlo&quot; %a</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><img border=0 width=624 height=411 id="Picture 4"
+src="GettingStarted_files/image002.png"></p>
+
+<p class=MsoListParagraphCxSpFirst style='margin-bottom:0in;margin-bottom:.0001pt;
+line-height:normal'>&nbsp;</p>
+
+<p class=MsoListParagraphCxSpLast style='margin:0in;margin-bottom:.0001pt;
+text-indent:0in;line-height:normal'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>Create a quameter.cfg file as shown below in current working directory and
+run command:</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>C:\bin\quameter-bin-windows-x86-vc90-release-1_0_133\quameter.exe
+*.idpDB</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>quameter.cfg</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>RawDataPath = ./  #
+where to find the raw files for each idpDB</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>RawDataFormat =
+mzXML                 # the file extension to expect for the raw files; e.g.
+mzML, mzXML, raw</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>Instrument =
+LTQ                    # if set to LTQ, average masses are used, else
+monoisotopic masses</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>ScoreCutoff =
+0.02                  # IDPicker FDR cutoff</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>ChromatogramMzLowerOffset
+= 1.0mz   # the lower bound of the window for building chromatograms; can be in
+m/z or ppm</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>ChromatogramMzUpperOffset
+= 1.0mz   # the upper bound of the window for building chromatograms; can be in
+m/z or ppm</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>ChromatogramOutput =
+false          # if true, creates an mz5 file with the chromatograms (best
+viewed with SeeMS)</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><img border=0 width=624 height=411 id="Picture 1"
+src="GettingStarted_files/image003.png"></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoListParagraph style='margin:0in;margin-bottom:.0001pt;text-indent:
+0in;line-height:normal'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span>The following R scripts can be used to generate a boxplot for each
+metric as shown below.</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><img border=0 width=507 height=389 id="Picture 2"
+src="GettingStarted_files/image004.png" alt=demo-plot.png></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>R scripts</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>### read all qual.txt
+files and combine to one dataframe</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>readQualFiles &lt;-
+function(qualFilePath) {</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>            qualFiles
+&lt;- Sys.glob(paste(qualFilePath,&quot;/*.qual.txt&quot;, sep=''))</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>            allData
+&lt;- lapply(qualFiles, function(.file){</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>              
+dat&lt;-read.table(.file, header=TRUE)</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>               dat   
+# return the dataframe</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>            })</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>            mergedDF
+&lt;- do.call(rbind, allData)  # combine into a single dataframe</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>            colnames(mergedDF)
+&lt;-
+c(&quot;Filename&quot;,&quot;C.1A&quot;,&quot;C.1B&quot;,&quot;C.2A&quot;,&quot;C.2B&quot;,&quot;C.3A&quot;,&quot;C.3B&quot;,&quot;C.4A&quot;,&quot;C.4B&quot;,&quot;C.4C&quot;,&quot;DS.1A&quot;,&quot;DS.1B&quot;,&quot;DS.2A&quot;,&quot;DS.2B&quot;,&quot;DS.3A&quot;,&quot;DS.3B&quot;,&quot;IS.1A&quot;,&quot;IS.1B&quot;,&quot;IS.2&quot;,&quot;IS.3A&quot;,&quot;IS.3B&quot;,&quot;IS.3C&quot;,&quot;MS1.1&quot;,&quot;MS1.2A&quot;,&quot;MS1.2B&quot;,&quot;MS1.3A&quot;,&quot;MS1.3B&quot;,&quot;MS1.5A&quot;,&quot;MS1.5B&quot;,&quot;MS1.5C&quot;,&quot;MS1.5D&quot;,&quot;MS2.1&quot;,&quot;MS2.2&quot;,&quot;MS2.3&quot;,&quot;MS2.4A&quot;,&quot;MS2.4B&quot;,&quot;MS2.4C&quot;,&quot;MS2.4D&quot;,&quot;P.1&quot;,&quot;P.2A&quot;,&quot;P.2B&quot;,&quot;P.2C&quot;,&quot;P.3&quot;)
+</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>            return(mergedDF)</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>}</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>setwd(&quot;C:/Data/QuaMeter-demo&quot;)</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>qualdata &lt;-
+readQualFiles(&quot;C:/Data/QuaMeter-demo&quot;)  # path to the folder where
+QuaMeter metrics files stored</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>### scale some columns
+for plot</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>scaleColumns &lt;-
+function(datatable) {</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$C.1A
+&lt;- datatable$C.1A * 10</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$C.1B
+&lt;- datatable$C.1B * 10</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        #
+datatable$C.2A &lt;- datatable$C.2A / 10</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        #
+datatable$C.2B &lt;- datatable$C.2B / 10</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$IS.2
+&lt;- datatable$IS.2 / 1000</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$DS.2A
+&lt;- datatable$DS.2A / 100</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$DS.2B
+&lt;- datatable$DS.2B / 100</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$MS1.2B
+&lt;- datatable$MS1.2B / 10</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$MS1.3B
+&lt;- datatable$MS1.3B / 1000</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$MS2.3
+&lt;- datatable$MS2.3 / 1000</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$MS2.2
+&lt;- datatable$MS2.2 / 1000</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        datatable$P.3
+&lt;- datatable$P.3 * 10</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        </span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>                        return(datatable)</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>}</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>mains &lt;-
+c(&quot;Peptide Identification&quot;,&quot;Chromatography&quot;,&quot;Ion
+Source&quot;, &quot;Dynamic Sampling&quot;,&quot;MS1&quot;, &quot;MS2&quot;)</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>columns &lt;-
+list(c(&quot;P.1&quot;,&quot;P.2A&quot;,&quot;P.2B&quot;,&quot;P.2C&quot;,&quot;P.3&quot;),
+c(&quot;C.1A&quot;,&quot;C.1B&quot;,&quot;C.2A&quot;,&quot;C.2B&quot;,&quot;C.3A&quot;,&quot;C.3B&quot;,&quot;C.4A&quot;,&quot;C.4B&quot;,&quot;C.4C&quot;),
+c(&quot;IS.1A&quot;,&quot;IS.1B&quot;,&quot;IS.2&quot;,&quot;IS.3A&quot;,&quot;IS.3B&quot;,&quot;IS.3C&quot;),c(&quot;DS.1A&quot;,&quot;DS.1B&quot;,&quot;DS.2A&quot;,&quot;DS.2B&quot;,&quot;DS.3A&quot;,&quot;DS.3B&quot;),c(&quot;MS1.1&quot;,&quot;MS1.2A&quot;,&quot;MS1.2B&quot;,&quot;MS1.3A&quot;,&quot;MS1.3B&quot;,&quot;MS1.5A&quot;,&quot;MS1.5B&quot;,&quot;MS1.5C&quot;,&quot;MS1.5D&quot;),c(&quot;MS2.1&quot;,&quot;MS2.2&quot;,&quot;MS2.3&quot;,&quot;MS2.4A&quot;,&quot;MS2.4B&quot;,&quot;MS2.4C&quot;,&quot;MS2.4D&quot;))
+### removed filename column</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>boxnames &lt;-
+list(c(&quot;P.1&quot;,&quot;P.2A&quot;,&quot;P.2B&quot;,&quot;P.2C&quot;,&quot;P.3*10&quot;),
+c(&quot;C.1A*10&quot;,&quot;C.1B*10&quot;,&quot;C.2A&quot;,&quot;C.2B&quot;,&quot;C.3A&quot;,&quot;C.3B&quot;,&quot;C.4A&quot;,&quot;C.4B&quot;,&quot;C.4C&quot;),
+c(&quot;IS.1A&quot;,&quot;IS.1B&quot;,&quot;IS.2/1000&quot;,&quot;IS.3A&quot;,&quot;IS.3B&quot;,&quot;IS.3C&quot;),c(&quot;DS.1A&quot;,&quot;DS.1B&quot;,&quot;DS.2A/100&quot;,&quot;DS.2B/100&quot;,&quot;DS.3A&quot;,&quot;DS.3B&quot;),c(&quot;MS1.1&quot;,&quot;MS1.2A&quot;,&quot;MS1.2B/10&quot;,&quot;MS1.3A&quot;,&quot;MS1.3B/1000&quot;,&quot;MS1.5A&quot;,&quot;MS1.5B&quot;,&quot;MS1.5C&quot;,&quot;MS1.5D&quot;),c(&quot;MS2.1&quot;,&quot;MS2.2/1000&quot;,&quot;MS2.3/1000&quot;,&quot;MS2.4A&quot;,&quot;MS2.4B&quot;,&quot;MS2.4C&quot;,&quot;MS2.4D&quot;))
+### removed filename column</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>&nbsp;</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>par(mfrow=c(2,3),mar=c(2,4,3,1)
++ 0.1 )</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>qualdata &lt;-
+scaleColumns(qualdata) </span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>m &lt;- 1</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>for (j in
+1:length(columns)) </span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>{</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>            boxplot(qualdata[,columns[[j]]],horizontal=TRUE,
+las=1, main=mains[m], names=boxnames[[j]], cex.axis=0.65,outline=FALSE)</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>            m &lt;- m
++ 1</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'><span style='font-size:12.0pt;background:silver'>}</span></p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
+
+<p class=MsoNormal style='margin-bottom:0in;margin-bottom:.0001pt;line-height:
+normal'>&nbsp;</p>
 
 </div>
 
