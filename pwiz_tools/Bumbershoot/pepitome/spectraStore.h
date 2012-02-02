@@ -940,7 +940,7 @@ namespace pepitome
             library->execute("PRAGMA journal_mode=OFF;"
                                   "PRAGMA synchronous=OFF;"
                                   "PRAGMA automatic_indexing=OFF;"
-                                  "PRAGMA default_cache_size=500000;"
+                                  "PRAGMA cache_size=5000;"
                                   "PRAGMA temp_store=MEMORY"
                                  );
 
