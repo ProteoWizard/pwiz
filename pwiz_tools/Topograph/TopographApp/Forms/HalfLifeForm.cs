@@ -35,6 +35,7 @@ namespace pwiz.Topograph.ui.Forms
     public partial class HalfLifeForm : WorkspaceForm
     {
         private readonly List<PeptideAnalysis> _peptideAnalyses = new List<PeptideAnalysis>();
+        private HalfLifeSettings? _lastCalcedHalfLifeSettings;
         private WorkspaceVersion _workspaceVersion;
         private ZedGraphControl _zedGraphControl;
         private LineItem _pointsCurve;
@@ -54,9 +55,6 @@ namespace pwiz.Topograph.ui.Forms
             var tracerDef = Workspace.GetTracerDefs()[0];
             tbxInitialPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalPercent.Text = tracerDef.FinalApe.ToString();
-            tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
-            tbxMinAuc.Text = workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
-            tbxMinTurnoverScore.Text = workspace.GetAcceptMinTurnoverScore().ToString();
             colTurnover.DefaultCellStyle.Format = "#.##%";
             colPrecursorPool.DefaultCellStyle.Format = "#.##%";
             comboCalculationType.SelectedIndex = 0;
@@ -127,47 +125,30 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        public bool BySample
+        public HalfLifeSettings GetHalfLifeSettings()
         {
-            get
-            {
-                return cbxBySample.Checked;
-            }
-            set
-            {
-                cbxBySample.Checked = value;
-                UpdateRows();
-            }
+            return new HalfLifeSettings()
+                       {
+                           ByProtein = string.IsNullOrEmpty(Peptide),
+                           BySample = cbxBySample.Checked,
+                           EvviesFilter = (EvviesFilterEnum) comboEvviesFilter.SelectedIndex,
+                           HalfLifeCalculationType = (HalfLifeCalculationType) comboCalculationType.SelectedIndex,
+                           HoldInitialTracerPercentConstant = cbxFixedInitialPercent.Checked,
+                           MinimumAuc = HalfLifeSettings.TryParseDouble(tbxMinAuc.Text, 0),
+                           MinimumDeconvolutionScore = HalfLifeSettings.TryParseDouble(tbxMinScore.Text, 0),
+                           MinimumTurnoverScore = HalfLifeSettings.TryParseDouble(tbxMinTurnoverScore.Text, 0),
+                       };
         }
-        public double MinScore
+
+        public void SetHalfLifeSettings(HalfLifeSettings halfLifeSettings)
         {
-            get
-            {
-                return ParseDouble(tbxMinScore.Text);
-            }
-            set
-            {
-                tbxMinScore.Text = value.ToString();
-                Requery();
-            }
-        }
-        public double MinAuc
-        {
-            get { return ParseDouble(tbxMinAuc.Text); }
-            set 
-            { 
-                tbxMinAuc.Text = value.ToString();
-                Requery();
-            }
-        }
-        public double MinTurnoverScore
-        {
-            get { return ParseDouble(tbxMinTurnoverScore.Text); }
-            set 
-            { 
-                tbxMinTurnoverScore.Text = value.ToString();
-                Requery();
-            }
+            cbxBySample.Checked = halfLifeSettings.BySample;
+            comboEvviesFilter.SelectedIndex = (int) halfLifeSettings.EvviesFilter;
+            comboCalculationType.SelectedIndex = (int) halfLifeSettings.HalfLifeCalculationType;
+            cbxFixedInitialPercent.Checked = halfLifeSettings.HoldInitialTracerPercentConstant;
+            tbxMinAuc.Text = halfLifeSettings.MinimumAuc.ToString();
+            tbxMinScore.Text = halfLifeSettings.MinimumDeconvolutionScore.ToString();
+            tbxMinTurnoverScore.Text = halfLifeSettings.MinimumTurnoverScore.ToString();
         }
 
         public bool LogPlot
@@ -179,7 +160,7 @@ namespace pwiz.Topograph.ui.Forms
             set
             {
                 cbxLogPlot.Checked = value;
-                UpdateRows();
+                UpdateRows(true);
             }
         }
         public TracerDef TracerDef
@@ -211,18 +192,6 @@ namespace pwiz.Topograph.ui.Forms
                 tbxFinalPercent.Text = value.ToString();
             }
         }
-        public bool FixedInitialPercent
-        {
-            get
-            {
-                return cbxFixedInitialPercent.Checked;
-            }
-            set
-            {
-                cbxFixedInitialPercent.Checked = value;
-            }
-        }
-
         private static double ParseDouble(String value)
         {
             if (string.IsNullOrEmpty(value))
@@ -297,7 +266,7 @@ namespace pwiz.Topograph.ui.Forms
             var cohortSet = new HashSet<String> {""};
             foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
             {
-                cohortSet.Add(HalfLifeCalculator.GetCohort(msDataFile, BySample));
+                cohortSet.Add(HalfLifeCalculator.GetCohort(msDataFile, GetHalfLifeSettings().BySample));
             }
             var selectedCohort = (string) comboCohort.SelectedItem;
             var cohorts = new List<String>(cohortSet);
@@ -343,17 +312,23 @@ namespace pwiz.Topograph.ui.Forms
                         row.Tag = peptideFileAnalysis;
                     }
                 }
-                UpdateRows();
+                UpdateRows(true);
             }
         }
 
-        private void UpdateRows()
+        private void UpdateRows(bool force)
         {
             if (!IsHandleCreated)
             {
                 return;
             }
-            colSample.Visible = BySample;
+            var halfLifeSettings = GetHalfLifeSettings();
+            if (!force && null != _lastCalcedHalfLifeSettings && Equals(_lastCalcedHalfLifeSettings.Value, halfLifeSettings))
+            {
+                return;
+            }
+            colSample.Visible = halfLifeSettings.BySample;
+            colEvviesFilter.Visible = halfLifeSettings.EvviesFilter != EvviesFilterEnum.None;
             using (Workspace.GetReadLock())
             {
                 var peptideFileAnalyses = new List<PeptideFileAnalysis>();
@@ -361,7 +336,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     var row = dataGridView1.Rows[iRow];
                     var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
-                    bool included = IsIncluded(peptideFileAnalysis);
+                    bool included = IsIncluded(halfLifeSettings, peptideFileAnalysis);
                     SetIncluded(row, included);
                     if (included)
                     {
@@ -381,13 +356,13 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colAuc.Index].Value = peptideFileAnalysis.Peaks.AreaUnderCurve;
                 }
                 HalfLifeCalculator.ResultData resultData;
-                var halfLifeCalculator = UpdateGraph(peptideFileAnalyses, out resultData);
-                var allRowDatas = resultData.RowDatas.ToDictionary(rowData=>rowData.PeptideFileAnalysisId, rowData=>rowData);
-                if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool || HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool)
+                var halfLifeCalculator = UpdateGraph(peptideFileAnalyses, halfLifeSettings, out resultData);
+                var allRowDatas = resultData.RowDatas.ToDictionary(rowData=>rowData.RawRowData.PeptideFileAnalysisId, rowData=>rowData);
+                if (halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool || halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool)
                 {
                     colTurnoverAvg.Visible = true;
                     colPrecursorPoolAvg.Visible = true;
-                    colTurnoverScoreAvg.Visible = HalfLifeCalculationType !=
+                    colTurnoverScoreAvg.Visible = halfLifeSettings.HalfLifeCalculationType !=
                                                   HalfLifeCalculationType.OldGroupPrecursorPool;
                 }
                 else
@@ -401,7 +376,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     var row = dataGridView1.Rows[iRow];
                     var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
-                    HalfLifeCalculator.RowData rowData;
+                    HalfLifeCalculator.ProcessedRowData rowData;
                     if (allRowDatas.TryGetValue(peptideFileAnalysis.Id.Value, out rowData))
                     {
                         SetBackColor(row, rowData.RejectReason == null ? Color.White : Color.LightGray);
@@ -417,6 +392,10 @@ namespace pwiz.Topograph.ui.Forms
                             rowData.AvgPrecursorEnrichment;
                         row.Cells[colTurnoverScoreAvg.Index].Value = rowData.AvgTurnoverScore;
                         row.Cells[colRejectReason.Index].Value = rowData.RejectReason;
+                        if (rowData.EvviesFilterMin.HasValue || rowData.EvviesFilterMax.HasValue)
+                        {
+                            row.Cells[colEvviesFilter.Index].Value = "[" + rowData.EvviesFilterMin + "," + rowData.EvviesFilterMax + "]";
+                        }
                     }
                     else
                     {
@@ -424,22 +403,18 @@ namespace pwiz.Topograph.ui.Forms
                         row.Cells[colPrecursorPoolAvg.Index].Value = null;
                         row.Cells[colTurnoverScoreAvg.Index].Value = null;
                         row.Cells[colRejectReason.Index].Value = null;
+                        row.Cells[colEvviesFilter.Index].Value = null;
                     }
                 }
             }
+            _lastCalcedHalfLifeSettings = halfLifeSettings;
         }
-        private HalfLifeCalculator UpdateGraph(List<PeptideFileAnalysis> peptideFileAnalyses, out HalfLifeCalculator.ResultData resultData)
+        private HalfLifeCalculator UpdateGraph(List<PeptideFileAnalysis> peptideFileAnalyses, HalfLifeSettings halfLifeSettings, out HalfLifeCalculator.ResultData resultData)
         {
-            var halfLifeCalculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
+            var halfLifeCalculator = new HalfLifeCalculator(Workspace, halfLifeSettings)
                                          {
                                                  InitialPercent = InitialPercent,
                                                  FinalPercent = FinalPercent,
-                                                 FixedInitialPercent = FixedInitialPercent,
-                                                 EvviesFilter = EvviesFilter,
-                                                 BySample = BySample,
-                                                 MinScore = MinScore,
-                                                 MinTurnoverScore = MinTurnoverScore,
-                                                 MinAuc = MinAuc,
                                             };
             var halfLife = resultData = halfLifeCalculator.CalculateHalfLife(peptideFileAnalyses);
             _zedGraphControl.GraphPane.CurveList.Clear();
@@ -450,7 +425,7 @@ namespace pwiz.Topograph.ui.Forms
             var yValues = new List<double>();
             var fileAnalysisPoints = new List<PeptideFileAnalysis>();
             var filteredFileAnalysisIds =
-                new HashSet<long>(resultData.FilteredRowDatas.Select(rd => rd.PeptideFileAnalysisId));
+                new HashSet<long>(resultData.FilteredRowDatas.Select(rd => rd.RawRowData.PeptideFileAnalysisId));
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
             {
                 if (!filteredFileAnalysisIds.Contains(peptideFileAnalysis.Id.Value))
@@ -499,7 +474,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             if (LogPlot)
             {
-                if (HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
+                if (halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
                 {
                     _zedGraphControl.GraphPane.YAxis.Title.Text = "Log ((Tracer % - Final %)/(Initial % - Final %))";
                 }
@@ -510,7 +485,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             else
             {
-                if (HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
+                if (halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
                 {
                     _zedGraphControl.GraphPane.YAxis.Title.Text = "Tracer %";
                 }
@@ -566,6 +541,8 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colStatsMean.Index].Value = stats.Mean();
                     row.Cells[colStatsMedian.Index].Value = stats.Median();
                     row.Cells[colStatsStdDev.Index].Value = stats.StdDev();
+                    row.Cells[colStatsPointCount.Index].Value = stats.Length;
+
                 }
             }
         }
@@ -596,11 +573,11 @@ namespace pwiz.Topograph.ui.Forms
             return curve;
         }
 
-        private bool IsIncluded(PeptideFileAnalysis peptideFileAnalysis)
+        private bool IsIncluded(HalfLifeSettings halfLifeSettings, PeptideFileAnalysis peptideFileAnalysis)
         {
             if (!string.IsNullOrEmpty(Cohort))
             {
-                if (Cohort != HalfLifeCalculator.GetCohort(peptideFileAnalysis.MsDataFile, BySample))
+                if (Cohort != HalfLifeCalculator.GetCohort(peptideFileAnalysis.MsDataFile, GetHalfLifeSettings().BySample))
                 {
                     return false;
                 }
@@ -613,7 +590,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return false;
             }
-            if (HalfLifeCalculationType == HalfLifeCalculationType.IndividualPrecursorPool)
+            if (halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.IndividualPrecursorPool)
             {
                 if (!peptideFileAnalysis.Peaks.Turnover.HasValue)
                 {
@@ -639,27 +616,27 @@ namespace pwiz.Topograph.ui.Forms
 
         private void cbxLogPlot_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(true);
         }
 
         private void tbxMinScore_TextChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(false);
         }
 
         private void comboCohort_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(true);
         }
 
         private void tbxInitialPercent_TextChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(true);
         }
 
         private void tbxFinalPercent_TextChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(true);
         }
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -683,7 +660,7 @@ namespace pwiz.Topograph.ui.Forms
                 Requery();
                 return;
             }
-            UpdateRows();
+            UpdateRows(true);
         }
 
         private void dataGridView1_CellEndEdit(object sender, DataGridViewCellEventArgs e)
@@ -706,12 +683,12 @@ namespace pwiz.Topograph.ui.Forms
 
         private void cbxFixedInitialPercent_CheckedChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(false);
         }
 
         private void comboCalculationType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch (HalfLifeCalculationType)
+            switch (GetHalfLifeSettings().HalfLifeCalculationType)
             {
                 default:
                     tbxInitialPercent.Enabled = false;
@@ -722,31 +699,7 @@ namespace pwiz.Topograph.ui.Forms
                     tbxFinalPercent.Enabled = true;
                     break;
             }
-            UpdateRows();
-        }
-
-        public HalfLifeCalculationType HalfLifeCalculationType
-        {
-            get
-            {
-                return (HalfLifeCalculationType) comboCalculationType.SelectedIndex;
-            }
-            set
-            {
-                comboCalculationType.SelectedIndex = (int) value;
-            }
-        }
-
-        public EvviesFilterEnum EvviesFilter
-        {
-            get
-            {
-                return (EvviesFilterEnum) comboEvviesFilter.SelectedIndex;
-            }
-            set
-            {
-                comboEvviesFilter.SelectedIndex = (int) value;
-            }
+            UpdateRows(false);
         }
 
         private bool IsTimePointExcluded(double timePoint)
@@ -771,7 +724,7 @@ namespace pwiz.Topograph.ui.Forms
             _excludedTimePoints = excludedTimePoints;
             if (IsHandleCreated)
             {
-                BeginInvoke(new Action(UpdateRows));
+                BeginInvoke(new Action<bool>(UpdateRows), true);
             }
         }
 
@@ -799,17 +752,17 @@ namespace pwiz.Topograph.ui.Forms
 
         private void comboEvviesFilter_SelectedIndexChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(false);
         }
 
         private void tbxMinAuc_TextChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(false);
         }
 
         private void tbxMinTurnoverScore_TextChanged(object sender, EventArgs e)
         {
-            UpdateRows();
+            UpdateRows(false);
         }
     }
 }

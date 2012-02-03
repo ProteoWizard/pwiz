@@ -19,12 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using NHibernate.Criterion;
 using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Util;
+using pwiz.Topograph.ui.Properties;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -37,17 +39,14 @@ namespace pwiz.Topograph.ui.Forms
             var tracerDef = workspace.GetTracerDefs()[0];
             tbxInitialTracerPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalTracerPercent.Text = tracerDef.FinalApe.ToString();
-            tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
-            tbxMinTurnoverScore.Text = workspace.GetAcceptMinTurnoverScore().ToString();
-            tbxMinAuc.Text = workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
-            comboCalculationType.SelectedIndex = (int) HalfLifeCalculationType.GroupPrecursorPool;
-            UpdateTimePoints();
-            navBar1.ViewContext = _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
             foreach (var evviesFilter in Enum.GetValues(typeof(EvviesFilterEnum)))
             {
                 comboEvviesFilter.Items.Add(evviesFilter);
             }
-            comboEvviesFilter.SelectedIndex = 0;
+            Settings.Default.Reload();
+            HalfLifeSettings = Settings.Default.HalfLifeSettings;
+            UpdateTimePoints();
+            navBar1.ViewContext = _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
         }
 
         private ViewSpec GetDefaultViewSpec(bool byProtein)
@@ -79,6 +78,35 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     return 0;
                 }
+            }
+        }
+
+        public HalfLifeSettings HalfLifeSettings
+        {
+            get
+            {
+                return new HalfLifeSettings
+                           {
+                               ByProtein = cbxByProtein.Checked,
+                               BySample = cbxBySample.Checked,
+                               EvviesFilter = (EvviesFilterEnum) comboEvviesFilter.SelectedIndex,
+                               HalfLifeCalculationType = (HalfLifeCalculationType) comboCalculationType.SelectedIndex,
+                               HoldInitialTracerPercentConstant = cbxFixYIntercept.Checked,
+                               MinimumAuc = HalfLifeSettings.TryParseDouble(tbxMinAuc.Text, 0),
+                               MinimumDeconvolutionScore = HalfLifeSettings.TryParseDouble(tbxMinScore.Text, 0),
+                               MinimumTurnoverScore = HalfLifeSettings.TryParseDouble(tbxMinTurnoverScore.Text, 0),
+                           };
+            }
+            set 
+            { 
+                cbxByProtein.Checked = value.ByProtein;
+                cbxBySample.Checked = value.BySample;
+                comboEvviesFilter.SelectedIndex = (int) value.EvviesFilter;
+                comboCalculationType.SelectedIndex = (int) value.HalfLifeCalculationType;
+                cbxFixYIntercept.Checked = value.HoldInitialTracerPercentConstant;
+                tbxMinAuc.Text = value.MinimumAuc.ToString();
+                tbxMinScore.Text = value.MinimumDeconvolutionScore.ToString();
+                tbxMinTurnoverScore.Text = value.MinimumTurnoverScore.ToString();
             }
         }
 
@@ -118,22 +146,20 @@ namespace pwiz.Topograph.ui.Forms
                     return 0;
                 }
             }
+            set { tbxMinAuc.Text = value.ToString(); }
         }
 
         private void btnRequery_Click(object sender, EventArgs e)
         {
-            var calculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
+            var halfLifeSettings = HalfLifeSettings;
+            Settings.Default.Reload();
+            Settings.Default.HalfLifeSettings = halfLifeSettings;
+            Settings.Default.Save();
+            var calculator = new HalfLifeCalculator(Workspace, halfLifeSettings)
                                  {
-                                     ByProtein = cbxByProtein.Checked,
-                                     BySample = cbxBySample.Checked,
-                                     MinScore = MinScore,
-                                     MinAuc = MinAuc,
-                                     MinTurnoverScore = MinTurnoverScore,
                                      InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
                                      FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
-                                     FixedInitialPercent = cbxFixYIntercept.Checked,
                                      ExcludedTimePoints = UpdateTimePoints(),
-                                     EvviesFilter = EvviesFilter,
                                  };
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
@@ -206,6 +232,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return (HalfLifeCalculationType)comboCalculationType.SelectedIndex;
             }
+            set { comboCalculationType.SelectedIndex = (int) value; }
         }
 
         public EvviesFilterEnum EvviesFilter
@@ -308,24 +335,35 @@ namespace pwiz.Topograph.ui.Forms
             {
                 ShowHalfLifeForm(null, _halfLifeResultRow.ProteinName, "");
             }
+            [DllImport("user32.dll")]
+            static extern short GetKeyState(int nVirtKey);
 
             private void ShowHalfLifeForm(Peptide peptide, string proteinName, string cohort)
             {
+                if (0 != (GetKeyState(0x10) & 0x8000))
+                {
+                    var halfLifeRowDataForm = new HalfLifeRowDataForm(_form.Workspace)
+                                                  {
+                                                      Protein = proteinName,
+                                                  };
+                    if (peptide != null)
+                    {
+                        halfLifeRowDataForm.Peptide = peptide.ToString();
+                    }
+                    var resultData = HalfLives[cohort].Value;
+                    halfLifeRowDataForm.RowDatas = resultData.RowDatas;
+                    halfLifeRowDataForm.Show(_form.DockPanel, _form.DockState);
+                    return;
+                }
                 var halfLifeForm = new HalfLifeForm(_form.Workspace)
                                        {
                                            Peptide = peptide == null ? "" : peptide.Sequence,
                                            ProteinName = proteinName,
-                                           BySample = _form.cbxBySample.Checked,
                                            Cohort = cohort,
-                                           MinScore = _form.MinScore,
-                                           MinAuc = _form.MinAuc,
-                                           MinTurnoverScore = _form.MinTurnoverScore,
                                            InitialPercent = double.Parse(_form.tbxInitialTracerPercent.Text),
                                            FinalPercent = double.Parse(_form.tbxFinalTracerPercent.Text),
-                                           FixedInitialPercent = _form.cbxFixYIntercept.Checked,
-                                           HalfLifeCalculationType = _form.HalfLifeCalculationType,
-                                           EvviesFilter = _form.EvviesFilter,
                                        };
+                halfLifeForm.SetHalfLifeSettings(_form.HalfLifeSettings);
                 for (int i = 0; i < _form.checkedListBoxTimePoints.Items.Count; i++)
                 {
                     halfLifeForm.SetTimePointExcluded((double)_form.checkedListBoxTimePoints.Items[i],

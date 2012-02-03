@@ -204,6 +204,7 @@
     <Compile Include="Enrichment\ChargedPeptide.cs" />
     <Compile Include="Enrichment\PeakFinder.cs" />
     <Compile Include="Enrichment\TurnoverCalculator.cs" />
+    <Compile Include="MsData\HalfLifeSettings.cs" />
     <Compile Include="MsData\MsDataFiles.cs" />
     <Compile Include="MsData\HalfLifeCalculator.cs" />
     <Compile Include="MsData\Reconciler.cs" />

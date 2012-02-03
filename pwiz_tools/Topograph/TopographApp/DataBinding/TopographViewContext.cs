@@ -36,12 +36,16 @@ namespace pwiz.Topograph.ui
 {
     public class TopographViewContext : AbstractViewContext
     {
-        public TopographViewContext(Workspace workspace, Type rowType, IEnumerable<ViewSpec> builtInViews) 
-            : base(new ColumnDescriptor(new TopographDataSchema(workspace), rowType))
+        public TopographViewContext(Workspace workspace, Type rowType, IEnumerable<ViewSpec> builtInViews) : this(workspace, rowType)
         {
             Workspace = workspace;
             BuiltInViewSpecs = builtInViews;
-            ApplicationIcon = Resources.TopographIcon;
+        }
+
+        public TopographViewContext(Workspace workspace, Type rowType) : base(new ColumnDescriptor(new TopographDataSchema(workspace), rowType))
+        {
+            var childColumns = ParentColumn.GetChildColumns().Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name)));
+            BuiltInViewSpecs = Array.AsReadOnly(new[] { new ViewSpec().SetName("default").SetColumns(childColumns)});
         }
 
         public Type RowType { get { return ParentColumn.PropertyType; } }
@@ -168,14 +172,7 @@ namespace pwiz.Topograph.ui
 
         public override IViewContext GetViewContext(ColumnDescriptor column)
         {
-            var childColumns =
-                column.GetChildColumns().Select(c => new ColumnSpec(new IdentifierPath(IdentifierPath.Root, c.Name)));
-            return new TopographViewContext(Workspace, column.PropertyType, new[]
-                                                                                {
-                                                                                    new ViewSpec()
-                                                                                        .SetName("default").SetColumns(
-                                                                                            childColumns)
-                                                                                });
+            return new TopographViewContext(Workspace, column.PropertyType);
         }
     }
 }

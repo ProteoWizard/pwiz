@@ -7,6 +7,7 @@ using pwiz.Common.DataBinding;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.Util;
+using pwiz.Topograph.ui.Properties;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -23,16 +24,35 @@ namespace pwiz.Topograph.ui.Forms
             comboEvviesFilter.SelectedIndex = 0;
             _viewContext = new TopographViewContext(Workspace, typeof(DisplayRow), new[]{GetDefaultViewSpec(cbxByProtein.Checked)});
             navBar1.ViewContext = _viewContext;
-            tbxMinAuc.Text = Workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
-            tbxMinScore.Text = Workspace.GetAcceptMinDeconvolutionScore().ToString();
-            tbxMinTurnoverScore.Text = Workspace.GetAcceptMinTurnoverScore().ToString();
+            HalfLifeSettings = Settings.Default.HalfLifeSettings;
         }
 
-        public EvviesFilterEnum EvviesFilter
+        public HalfLifeSettings HalfLifeSettings
         {
-            get { return (EvviesFilterEnum) comboEvviesFilter.SelectedIndex; }
-            set { comboEvviesFilter.SelectedIndex = (int) value; }
+            get
+            {
+                return new HalfLifeSettings()
+                           {
+                               ByProtein = cbxByProtein.Checked,
+                               BySample = cbxGroupBySample.Checked,
+                               EvviesFilter = (EvviesFilterEnum) comboEvviesFilter.SelectedIndex,
+                               HalfLifeCalculationType = HalfLifeCalculationType.GroupPrecursorPool,
+                               HoldInitialTracerPercentConstant = false,
+                               MinimumAuc = HalfLifeSettings.TryParseDouble(tbxMinAuc.Text, 0),
+                               MinimumDeconvolutionScore = HalfLifeSettings.TryParseDouble(tbxMinScore.Text, 0),
+                               MinimumTurnoverScore = HalfLifeSettings.TryParseDouble(tbxMinTurnoverScore.Text, 0),
+                           };
+            }
+            set { 
+                cbxByProtein.Checked = value.ByProtein;
+                cbxGroupBySample.Checked = value.BySample;
+                comboEvviesFilter.SelectedIndex = (int) value.EvviesFilter;
+                tbxMinAuc.Text = value.MinimumAuc.ToString();
+                tbxMinScore.Text = value.MinimumDeconvolutionScore.ToString();
+                tbxMinTurnoverScore.Text = value.MinimumTurnoverScore.ToString();
+            }
         }
+        
 
         public struct GroupKey
         {
@@ -80,14 +100,14 @@ namespace pwiz.Topograph.ui.Forms
 
         public class ResultData
         {
-            public ResultData(IList<HalfLifeCalculator.RowData> rowDatas)
+            public ResultData(IList<HalfLifeCalculator.ProcessedRowData> rowDatas)
             {
-                TracerPercentByArea = ToStatistics(rowDatas.Select(rd=>rd.TracerPercent));
-                IndTurnover = ToStatistics(rowDatas.Select(rd=>rd.IndTurnover));
-                IndPrecursorEnrichment = ToStatistics(rowDatas.Select(rd => rd.IndPrecursorEnrichment));
+                TracerPercentByArea = ToStatistics(rowDatas.Select(rd=>rd.RawRowData.TracerPercent));
+                IndTurnover = ToStatistics(rowDatas.Select(rd=>rd.RawRowData.IndTurnover));
+                IndPrecursorEnrichment = ToStatistics(rowDatas.Select(rd => rd.RawRowData.IndPrecursorEnrichment));
                 AvgTurnover = ToStatistics(rowDatas.Select(rd => rd.AvgTurnover));
                 AvgPrecursorEnrichment = ToStatistics(rowDatas.Select(rd => rd.AvgPrecursorEnrichment));
-                AreaUnderCurve = ToStatistics(rowDatas.Select(rd => rd.AreaUnderCurve));
+                AreaUnderCurve = ToStatistics(rowDatas.Select(rd => rd.RawRowData.AreaUnderCurve));
             }
             public Statistics TracerPercentByArea { get; private set; }
             public Statistics IndTurnover { get; private set; }
@@ -193,14 +213,9 @@ namespace pwiz.Topograph.ui.Forms
                                        {
                                            Peptide = _displayRow.Peptide == null ? "" : _displayRow.Peptide.Sequence,
                                            ProteinName = _displayRow.ProteinName,
-                                           BySample = _displayRow.GetHalfLifeCalculator().BySample,
                                            Cohort = cohortBuilder.ToString(),
-                                           MinScore = double.Parse(_form.tbxMinScore.Text),
-                                           MinAuc = double.Parse(_form.tbxMinAuc.Text),
-                                           MinTurnoverScore = double.Parse(_form.tbxMinTurnoverScore.Text),
-                                           HalfLifeCalculationType = halfLifeCalculationType,
-                                           EvviesFilter = _displayRow.GetHalfLifeCalculator().EvviesFilter,
                                        };
+                               halfLifeForm.SetHalfLifeSettings(_displayRow.GetHalfLifeCalculator().HalfLifeSettings);
                                 halfLifeForm.Show(_form.DockPanel, _form.DockState);
                            };
             }
@@ -241,14 +256,8 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnRequery_Click(object sender, EventArgs e)
         {
-            var halfLifeCalculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType.GroupPrecursorPool)
+            var halfLifeCalculator = new HalfLifeCalculator(Workspace, HalfLifeSettings)
                                          {
-                                             EvviesFilter = EvviesFilter,
-                                             MinScore = double.Parse(tbxMinScore.Text),
-                                             MinAuc =  double.Parse(tbxMinAuc.Text),
-                                             MinTurnoverScore = double.Parse(tbxMinTurnoverScore.Text),
-                                             ByProtein = cbxByProtein.Checked, 
-                                             BySample = cbxGroupBySample.Checked,
                                              ByFile = cbxGroupByFile.Checked,
                                          };
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
@@ -267,7 +276,7 @@ namespace pwiz.Topograph.ui.Forms
             foreach (var resultRow in halfLifeCalculator.ResultRows)
             {
                 var displayRow = new DisplayRow(halfLifeCalculator, resultRow);
-                var rowDatasByCohort = new Dictionary<GroupKey, List<HalfLifeCalculator.RowData>>();
+                var rowDatasByCohort = new Dictionary<GroupKey, List<HalfLifeCalculator.ProcessedRowData>>();
                 foreach (var halfLife in resultRow.HalfLives)
                 {
                     if (resultRow.HalfLives.Count > 1 && string.IsNullOrEmpty(halfLife.Key) != byCohort)
@@ -277,14 +286,14 @@ namespace pwiz.Topograph.ui.Forms
                     foreach (var rowData in halfLife.Value.FilteredRowDatas)
                     {
                         GroupKey cohortKey = new GroupKey(
-                            byCohort ? rowData.MsDataFile.Cohort : null,
-                            byTimePoint ? rowData.MsDataFile.TimePoint : null,
-                            bySample ? rowData.MsDataFile.Sample : null,
-                            byFile ? rowData.MsDataFile.Name : null);
-                        List<HalfLifeCalculator.RowData> list;
+                            byCohort ? rowData.RawRowData.MsDataFile.Cohort : null,
+                            byTimePoint ? rowData.RawRowData.MsDataFile.TimePoint : null,
+                            bySample ? rowData.RawRowData.MsDataFile.Sample : null,
+                            byFile ? rowData.RawRowData.MsDataFile.Name : null);
+                        List<HalfLifeCalculator.ProcessedRowData> list;
                         if (!rowDatasByCohort.TryGetValue(cohortKey, out list))
                         {
-                            list = new List<HalfLifeCalculator.RowData>();
+                            list = new List<HalfLifeCalculator.ProcessedRowData>();
                             rowDatasByCohort.Add(cohortKey, list);
                         }
                         list.Add(rowData);

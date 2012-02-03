@@ -54,7 +54,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>226</ApplicationRevision>
+    <ApplicationRevision>227</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -130,6 +130,12 @@
     </Compile>
     <Compile Include="Controls\ExcludedMzsGrid.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\HalfLifeSettingsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Controls\HalfLifeSettingsControl.Designer.cs">
+      <DependentUpon>HalfLifeSettingsControl.cs</DependentUpon>
     </Compile>
     <Compile Include="Controls\MsGraphControlEx.cs">
       <SubType>UserControl</SubType>
@@ -319,6 +325,12 @@
     <Compile Include="Forms\HalfLifeForm.Designer.cs">
       <DependentUpon>HalfLifeForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\HalfLifeRowDataForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\HalfLifeRowDataForm.Designer.cs">
+      <DependentUpon>HalfLifeRowDataForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\LocksForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -492,6 +504,9 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="Controls\HalfLifeSettingsControl.resx">
+      <DependentUpon>HalfLifeSettingsControl.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\AbstractChromatogramForm.resx">
       <DependentUpon>AbstractChromatogramForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -583,6 +598,9 @@
     <EmbeddedResource Include="Forms\HalfLifeForm.resx">
       <DependentUpon>HalfLifeForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\HalfLifeRowDataForm.resx">
+      <DependentUpon>HalfLifeRowDataForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\LocksForm.resx">
       <DependentUpon>LocksForm.cs</DependentUpon>

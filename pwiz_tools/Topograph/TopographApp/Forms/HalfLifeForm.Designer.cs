@@ -65,6 +65,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colStatsMean = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatsMedian = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatsStdDev = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStatsPointCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbxFixedInitialPercent = new System.Windows.Forms.CheckBox();
             this.cbxBySample = new System.Windows.Forms.CheckBox();
             this.label11 = new System.Windows.Forms.Label();
@@ -74,8 +75,6 @@ namespace pwiz.Topograph.ui.Forms
             this.label13 = new System.Windows.Forms.Label();
             this.tbxMinTurnoverScore = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.validationStatusColumn1 = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -92,6 +91,9 @@ namespace pwiz.Topograph.ui.Forms
             this.colTurnoverAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnoverScoreAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colRejectReason = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colEvviesFilter = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.validationStatusColumn1 = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -112,7 +114,7 @@ namespace pwiz.Topograph.ui.Forms
             // splitContainer1.Panel1
             // 
             this.splitContainer1.Panel1.Controls.Add(this.tableLayoutPanel1);
-            this.splitContainer1.Size = new System.Drawing.Size(948, 395);
+            this.splitContainer1.Size = new System.Drawing.Size(948, 469);
             this.splitContainer1.SplitterDistance = 455;
             this.splitContainer1.TabIndex = 0;
             // 
@@ -171,7 +173,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(455, 395);
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(455, 469);
             this.tableLayoutPanel1.TabIndex = 0;
             // 
             // label1
@@ -410,7 +412,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colStatsInclude,
             this.colStatsMean,
             this.colStatsMedian,
-            this.colStatsStdDev});
+            this.colStatsStdDev,
+            this.colStatsPointCount});
             this.tableLayoutPanel1.SetColumnSpan(this.gridViewStats, 2);
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
@@ -431,7 +434,7 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridViewStats.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.gridViewStats.Size = new System.Drawing.Size(449, 14);
+            this.gridViewStats.Size = new System.Drawing.Size(449, 88);
             this.gridViewStats.TabIndex = 22;
             this.gridViewStats.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewStats_CellValueChanged);
             this.gridViewStats.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewStats_CellBeginEdit);
@@ -475,6 +478,12 @@ namespace pwiz.Topograph.ui.Forms
             this.colStatsStdDev.ReadOnly = true;
             this.colStatsStdDev.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.colStatsStdDev.Width = 90;
+            // 
+            // colStatsPointCount
+            // 
+            this.colStatsPointCount.HeaderText = "# Points";
+            this.colStatsPointCount.Name = "colStatsPointCount";
+            this.colStatsPointCount.ReadOnly = true;
             // 
             // cbxFixedInitialPercent
             // 
@@ -590,7 +599,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colPrecursorPoolAvg,
             this.colTurnoverAvg,
             this.colTurnoverScoreAvg,
-            this.colRejectReason});
+            this.colRejectReason,
+            this.colEvviesFilter});
             dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -610,37 +620,10 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
-            this.dataGridView1.Size = new System.Drawing.Size(948, 123);
+            this.dataGridView1.Size = new System.Drawing.Size(948, 147);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
-            // 
-            // splitContainer2
-            // 
-            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.IBeam;
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.dataGridView1);
-            this.splitContainer2.Size = new System.Drawing.Size(948, 522);
-            this.splitContainer2.SplitterDistance = 395;
-            this.splitContainer2.TabIndex = 1;
-            // 
-            // validationStatusColumn1
-            // 
-            this.validationStatusColumn1.DisplayMember = "Display";
-            this.validationStatusColumn1.HeaderText = "Status";
-            this.validationStatusColumn1.Name = "validationStatusColumn1";
-            this.validationStatusColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.validationStatusColumn1.ValueMember = "Value";
             // 
             // colPeptide
             // 
@@ -746,11 +729,44 @@ namespace pwiz.Topograph.ui.Forms
             this.colRejectReason.Name = "colRejectReason";
             this.colRejectReason.ReadOnly = true;
             // 
+            // colEvviesFilter
+            // 
+            this.colEvviesFilter.HeaderText = "Evvies Filter";
+            this.colEvviesFilter.Name = "colEvviesFilter";
+            this.colEvviesFilter.ReadOnly = true;
+            // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.IBeam;
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Name = "splitContainer2";
+            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.dataGridView1);
+            this.splitContainer2.Size = new System.Drawing.Size(948, 620);
+            this.splitContainer2.SplitterDistance = 469;
+            this.splitContainer2.TabIndex = 1;
+            // 
+            // validationStatusColumn1
+            // 
+            this.validationStatusColumn1.DisplayMember = "Display";
+            this.validationStatusColumn1.HeaderText = "Status";
+            this.validationStatusColumn1.Name = "validationStatusColumn1";
+            this.validationStatusColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.validationStatusColumn1.ValueMember = "Value";
+            // 
             // HalfLifeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(948, 522);
+            this.ClientSize = new System.Drawing.Size(948, 620);
             this.Controls.Add(this.splitContainer2);
             this.Name = "HalfLifeForm";
             this.TabText = "HalfLifeForm";
@@ -797,11 +813,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.ComboBox comboCalculationType;
         private System.Windows.Forms.Label label10;
         private System.Windows.Forms.DataGridView gridViewStats;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsTime;
-        private System.Windows.Forms.DataGridViewCheckBoxColumn colStatsInclude;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsMean;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsMedian;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsStdDev;
         private System.Windows.Forms.CheckBox cbxBySample;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.ComboBox comboEvviesFilter;
@@ -810,6 +821,12 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label12;
         private System.Windows.Forms.Label label13;
         private System.Windows.Forms.TextBox tbxMinTurnoverScore;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsTime;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn colStatsInclude;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsMean;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsMedian;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsStdDev;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colStatsPointCount;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
@@ -826,5 +843,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverAvg;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverScoreAvg;
         private System.Windows.Forms.DataGridViewTextBoxColumn colRejectReason;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colEvviesFilter;
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using pwiz.Common.DataBinding;
+using pwiz.Topograph.MsData;
 
 namespace pwiz.Topograph.ui.Properties {
     
@@ -57,6 +58,19 @@ namespace pwiz.Topograph.ui.Properties {
             {
                 this["ViewSpecLists"] = value;
             }
+        }
+        [System.Configuration.UserScopedSettingAttribute]
+        public HalfLifeSettings HalfLifeSettings
+        {
+            get
+            {
+                if (this["HalfLifeSettings"] == null)
+                {
+                    HalfLifeSettings = HalfLifeSettings.Default;
+                }
+                return (HalfLifeSettings)this["HalfLifeSettings"];
+            }
+            set { this["HalfLifeSettings"] = value; }
         }
     }
 }
