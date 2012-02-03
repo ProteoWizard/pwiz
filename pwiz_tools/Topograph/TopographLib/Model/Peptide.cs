@@ -179,6 +179,11 @@ namespace pwiz.Topograph.Model
             }
         }
 
+        public double MonoisotopicMass
+        {
+            get { return Workspace.GetAminoAcidFormulas().GetMonoisotopicMass(Sequence); }
+        }
+
         public override string ToString()
         {
             return FullSequence;
