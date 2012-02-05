@@ -224,7 +224,7 @@ namespace pwiz.Topograph.MsData
             }
             if (null == result.RejectReason && ValidationStatus.accept != result.RawRowData.ValidationStatus)
             {
-                if (0 > MinTurnoverScore && result.AvgTurnoverScore < MinTurnoverScore)
+                if (0 < MinTurnoverScore && result.AvgTurnoverScore < MinTurnoverScore)
                 {
                     result.RejectReason = RejectReason.LowTurnoverScore;
                 }
