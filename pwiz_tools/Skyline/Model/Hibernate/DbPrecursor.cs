@@ -49,7 +49,9 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual double? LibraryScore1 { get; set; }
         public virtual double? LibraryScore2 { get; set; }
         public virtual double? LibraryScore3 { get; set; }
+        [QueryColumn(FullName = "PrecursorIsDecoy")]
         public virtual bool IsDecoy { get; set; }
-        public virtual int? DecoyMassShift { get; set; }
+        [QueryColumn(FullName = "PrecursorDecoyMzShift")]
+        public virtual int? DecoyMzShift { get; set; }
     }
 }

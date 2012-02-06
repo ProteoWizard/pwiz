@@ -87,20 +87,35 @@ namespace pwiz.Skyline.EditUI
         {
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
-            if (!helper.ValidateNumberTextBox(e, textNumberOfDecoys, 0, _document.TransitionGroupCount, out _numDecoys))
+
+            int numDecoys;
+            if (!helper.ValidateNumberTextBox(e, textNumberOfDecoys, 0, null, out numDecoys))
                 return;
 
-            _refineLabelType = null;
+            var refineLabelType = IsotopeLabelType.light;
             string refineTypeName = comboDecoysLabelType.SelectedItem.ToString();
             if (refineTypeName != IsotopeLabelType.LIGHT_NAME)
             {
                 var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(refineTypeName);
                 if (typedMods != null)
-                    _refineLabelType = typedMods.LabelType;
+                    refineLabelType = typedMods.LabelType;
             }
-            else
-                _refineLabelType = IsotopeLabelType.light;
 
+            int precursorsTyped = _document.TransitionGroups.Count(nodeGroup =>
+                Equals(refineLabelType, nodeGroup.TransitionGroup.LabelType));
+            if (precursorsTyped == 0)
+            {
+                helper.ShowTextBoxError(textNumberOfDecoys, "No precursors of type '{1}' were found.", null, refineLabelType);
+                return;
+            }
+            if (!Equals(DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE) && precursorsTyped < numDecoys)
+            {
+                helper.ShowTextBoxError(textNumberOfDecoys, "{0} must be less than the number of precursors of type '{1}', or use the '{2}' decoy generation method.", null, refineLabelType, DecoyGeneration.SHUFFLE_SEQUENCE);
+                return;
+            }
+
+            _numDecoys = numDecoys;
+            _refineLabelType = refineLabelType;
             DialogResult = DialogResult.OK;
         }
 

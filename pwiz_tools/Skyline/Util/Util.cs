@@ -691,9 +691,9 @@ namespace pwiz.Skyline.Util
             var indexOrder = new int[count];
             for (int i = 0; i < count; i++)
                 indexOrder[i] = i;
-            Random r = new Random(DateTime.Now.Millisecond);    // TODO: fix
+            Random r = new Random();
             for (int i = 0; i < count; i++)
-                Helpers.Swap(ref indexOrder[0], ref indexOrder[r.Next(count - 1)]);
+                Helpers.Swap(ref indexOrder[0], ref indexOrder[r.Next(count)]);
             foreach (int i in indexOrder)
             {
                 yield return list[i];

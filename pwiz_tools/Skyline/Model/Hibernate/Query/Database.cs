@@ -417,7 +417,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                             Mz = SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz),
                                             Note = nodeGroup.Note,
                                             IsDecoy = nodeGroup.IsDecoy,
-                                            DecoyMassShift = tranGroup.DecoyMassShift
+                                            DecoyMzShift = tranGroup.DecoyMassShift
                                         };
             AddAnnotations(docInfo, dbPrecursor, nodeGroup.Annotations);
             double regressionMz = docInfo.Settings.GetRegressionMz(nodePeptide, nodeGroup);
@@ -594,7 +594,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                               Note = nodeTran.Note,
                                               IsotopeDistIndex = transition.MassIndex,
                                               IsDecoy = nodeTran.IsDecoy,
-                                              DecoyMassShift = transition.DecoyMassShift
+                                              ProductDecoyMzShift = transition.DecoyMassShift
                                           };
 
             if (nodeTran.HasLoss)

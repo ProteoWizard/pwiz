@@ -112,8 +112,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private static int GetTypeImageIndex(PeptideDocNode nodePep)
         {
-            return (int)(nodePep.HasLibInfo ? SequenceTree.ImageId.peptide_lib :
-                nodePep.IsDecoy ? SequenceTree.ImageId.peptide_decoy : SequenceTree.ImageId.peptide);            
+            if (nodePep.IsDecoy)
+                return (int) SequenceTree.ImageId.peptide_decoy;
+            return (int)(nodePep.HasLibInfo ? SequenceTree.ImageId.peptide_lib : SequenceTree.ImageId.peptide);            
         }
 
         public int PeakImageIndex

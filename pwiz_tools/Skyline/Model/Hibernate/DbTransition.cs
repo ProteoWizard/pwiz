@@ -45,7 +45,8 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual int? IsotopeDistRank { get; set; }
         [QueryColumn(Format = Formats.STANDARD_RATIO)]
         public virtual double? IsotopeDistProportion { get; set; }
+        [QueryColumn(FullName = "TransitionIsDecoy")]
         public virtual bool IsDecoy { get; set; }
-        public virtual int? DecoyMassShift { get; set; }
+        public virtual int? ProductDecoyMzShift { get; set; }
     }
 }

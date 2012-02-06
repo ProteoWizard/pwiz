@@ -105,9 +105,10 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         private static int GetTypeImageIndex(TransitionGroupDocNode nodeGroup)
         {
+            if (nodeGroup.IsDecoy)
+                return (int) SequenceTree.ImageId.tran_group_decoy;
             return (int)(nodeGroup.HasLibInfo ?
-                SequenceTree.ImageId.tran_group_lib : (nodeGroup.IsDecoy ? 
-                    SequenceTree.ImageId.tran_group_decoy : SequenceTree.ImageId.tran_group));
+                SequenceTree.ImageId.tran_group_lib : SequenceTree.ImageId.tran_group);
         }
 
         public int PeakImageIndex

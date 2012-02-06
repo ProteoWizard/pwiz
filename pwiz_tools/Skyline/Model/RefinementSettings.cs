@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -484,73 +485,71 @@ namespace pwiz.Skyline.Model
             document = RemoveDecoys(document);
 
             if (decoysMethod == DecoyGeneration.SHUFFLE_SEQUENCE)
-                return GenerateDecoysShuffleSequence(document, numDecoys, DecoysLabelUsed);
+                return GenerateDecoysFunc(document, numDecoys, DecoysLabelUsed, true, GetShuffledPeptideSequence);
             
             if (decoysMethod == DecoyGeneration.REVERSE_SEQUENCE)
-                return GenerateDecoysReverseSequence(document, numDecoys, DecoysLabelUsed);
+                return GenerateDecoysFunc(document, numDecoys, DecoysLabelUsed, false, GetReversedPeptideSequence);
 
-            return GenerateDecoysAddRandom(document, numDecoys, DecoysLabelUsed);
+            return GenerateDecoysFunc(document, numDecoys, DecoysLabelUsed, false, null);
         }
 
-        public SrmDocument GenerateDecoysAddRandom(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
+        private struct SequenceMods
         {
-            // Loop through the existing tree and "copy" transitions as decoys
-            var decoyNodePepList = new List<PeptideDocNode>();
-
-            foreach (var nodePep in document.Peptides)
+            public SequenceMods(PeptideDocNode nodePep) : this()
             {
-                var peptide = nodePep.Peptide;
-                var decoyPeptide = new Peptide(null, peptide.Sequence, null, null, peptide.MissedCleavages, true);
-                var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, useLabel, document, true);
-                decoyNodePepList.Add(new PeptideDocNode(decoyPeptide, nodePep.ExplicitMods,
-                                                        decoyNodeTranGroupList.ToArray(), false));
+                Peptide = nodePep.Peptide;
+                Sequence = Peptide.Sequence;
+                Mods = nodePep.ExplicitMods;
+            }
+
+            public Peptide Peptide { get; private set; }
+            public string Sequence { get; set; }
+            public ExplicitMods Mods { get; set; }
+        }
+
+        private static SrmDocument GenerateDecoysFunc(SrmDocument document, int numDecoys, IsotopeLabelType useLabel,
+                                              bool multiCycle, Func<SequenceMods, SequenceMods> genDecoySequence)
+        {
+            // Loop through the existing tree in random order creating decoys
+            var decoyNodePepList = new List<PeptideDocNode>();
+            var setDecoyKeys = new HashSet<PeptideModKey>();
+            while (numDecoys > 0)
+            {
+                int startDecoys = numDecoys;
+                foreach (var nodePep in document.Peptides.ToArray().RandomOrder())
+                {
+                    if (numDecoys == 0)
+                        break;
+
+                    var seqMods = new SequenceMods(nodePep);
+                    if (genDecoySequence != null)
+                        seqMods = genDecoySequence(seqMods);
+                    var peptide = nodePep.Peptide;
+                    var decoyPeptide = new Peptide(null, seqMods.Sequence, null, null, peptide.MissedCleavages, true);
+                    var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, useLabel, document,
+                        Equals(seqMods.Sequence, peptide.Sequence));
+                    if (decoyNodeTranGroupList.Count == 0)
+                        continue;
+                    var nodePepNew = new PeptideDocNode(decoyPeptide, seqMods.Mods,
+                        decoyNodeTranGroupList.ToArray(), false);
+
+                    // Avoid adding duplicate peptides
+                    if (setDecoyKeys.Contains(nodePepNew.Key))
+                        continue;
+                    setDecoyKeys.Add(nodePepNew.Key);
+
+                    decoyNodePepList.Add(nodePepNew);
+                    numDecoys--;
+                }
+                // Stop if not multi-cycle or the number of decoys has not changed.
+                if (!multiCycle || startDecoys == numDecoys)
+                    break;
             }
             var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys",
                                                             null, decoyNodePepList.ToArray(), false);
             decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
 
-            if (decoyNodePepGroup.TransitionGroupCount > numDecoys)
-            {
-                decoyNodePepGroup = DeleteRandomDecoyGroups(decoyNodePepGroup,
-                    decoyNodePepGroup.TransitionGroupCount - numDecoys, document.Settings);
-            }
-
             return (SrmDocument)document.Add(decoyNodePepGroup);
-        }
-
-        private static PeptideGroupDocNode DeleteRandomDecoyGroups(PeptideGroupDocNode nodePepGroup, int numGroups, SrmSettings settings)
-        {
-            PeptideGroupDocNode newNodePepGroup = nodePepGroup;
-
-            for (int i = 0; i < numGroups; i++)
-            {
-                int j = 0;
-                bool groupDeleted = false;
-                int index = RANDOM.Next(0, nodePepGroup.TransitionGroupCount);
-                foreach (var nodePep in nodePepGroup.GetPeptideNodes(settings, false))
-                {
-                    PeptideDocNode newNodePep = nodePep;
-                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
-                    {
-                        if (j == index)
-                        {
-                            newNodePep = (PeptideDocNode) nodePep.RemoveChild(nodeGroup);
-                            groupDeleted = true;
-                            break;
-                        }
-                        j++;
-                    }
-                    if (groupDeleted)
-                    {
-                        newNodePepGroup = (PeptideGroupDocNode) nodePepGroup.RemoveChild(nodePep);
-                        if (newNodePep.TransitionGroupCount > 0)
-                            newNodePepGroup = (PeptideGroupDocNode) newNodePepGroup.Add(newNodePep);
-                        break;
-                    }
-                }
-                nodePepGroup = newNodePepGroup;
-            }
-            return nodePepGroup;
         }
 
         private static List<TransitionGroupDocNode> GetDecoyGroups(PeptideDocNode nodePep, Peptide decoyPeptide, IsotopeLabelType useLabel, SrmDocument document, bool shiftMass)
@@ -617,75 +616,89 @@ namespace pwiz.Skyline.Model
             return massShift;
         }
 
-        public SrmDocument GenerateDecoysShuffleSequence(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
+        private static SequenceMods GetReversedPeptideSequence(SequenceMods seqMods)
         {
-            // Loop throug the existing tree and "copy" transitions as decoys
-            var decoyNodePepList = new List<PeptideDocNode>();
-
-            foreach (var nodePep in document.Peptides)
-            {
-                var peptide = nodePep.Peptide;
-                var decoyPeptide = new Peptide(null, GetShuffledPeptideSequence(peptide.Sequence), null, null, 0, true);
-                var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, useLabel, document, false);
-                decoyNodePepList.Add(new PeptideDocNode(decoyPeptide, nodePep.ExplicitMods, nodePep.Rank, nodePep.Annotations,
-                                                         nodePep.Results, decoyNodeTranGroupList.ToArray(), false));
-            }
-            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys",
-                                                            null, decoyNodePepList.ToArray(), false);
-            decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
-
-            if (decoyNodePepGroup.TransitionGroupCount > numDecoys)
-                decoyNodePepGroup = DeleteRandomDecoyGroups(decoyNodePepGroup, decoyNodePepGroup.TransitionGroupCount - numDecoys, document.Settings);
-
-            return (SrmDocument)document.Add(decoyNodePepGroup);
-        }
-
-        public SrmDocument GenerateDecoysReverseSequence(SrmDocument document, int numDecoys, IsotopeLabelType useLabel)
-        {
-            // Loop throug the existing tree and "copy" transitions as decoys
-            var decoyNodePepList = new List<PeptideDocNode>();
-
-            foreach (var nodePep in document.Peptides)
-            {
-                var peptide = nodePep.Peptide;
-                var decoyPeptide = new Peptide(null, GetReversedPeptideSequence(peptide.Sequence), null, null, 0, true);
-                var decoyNodeTranGroupList = GetDecoyGroups(nodePep, decoyPeptide, useLabel, document, false);
-                decoyNodePepList.Add(new PeptideDocNode(decoyPeptide, nodePep.ExplicitMods, nodePep.Rank, nodePep.Annotations,
-                                                         nodePep.Results, decoyNodeTranGroupList.ToArray(), false));
-            }
-            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys",
-                                                            null, decoyNodePepList.ToArray(), false);
-            decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
-
-            if (decoyNodePepGroup.TransitionGroupCount > numDecoys)
-                decoyNodePepGroup = DeleteRandomDecoyGroups(decoyNodePepGroup, decoyNodePepGroup.TransitionGroupCount - numDecoys, document.Settings);
-
-            return (SrmDocument)document.Add(decoyNodePepGroup);
-        }
-
-         private static string GetReversedPeptideSequence(string sequence)
-        {
+            string sequence = seqMods.Sequence;
             char finalA = sequence.Last();
             sequence = sequence.Substring(0, sequence.Length - 1);
+            int lenSeq = sequence.Length;
+
             char[] reversedArray = sequence.ToCharArray();
             Array.Reverse(reversedArray);
-            return new string(reversedArray) + finalA;
+            seqMods.Sequence = new string(reversedArray) + finalA;
+            seqMods.Mods = new ExplicitMods(seqMods.Peptide,
+                GetReversedMods(seqMods.Mods.StaticModifications, lenSeq),
+                GetReversedHeavyMods(seqMods, lenSeq),
+                seqMods.Mods.IsVariableStaticMods);
+
+            return seqMods;
         }
 
-        private static string GetShuffledPeptideSequence(string sequence)
+        private static IList<ExplicitMod> GetReversedMods(IEnumerable<ExplicitMod> mods, int lenSeq)
         {
+            return GetRearrangedMods(mods, lenSeq, i => lenSeq - i - 1);
+        }
+
+        private static IEnumerable<TypedExplicitModifications> GetReversedHeavyMods(SequenceMods seqMods, int lenSeq)
+        {
+            return seqMods.Mods.GetHeavyModifications().Select(typedMod =>
+                new TypedExplicitModifications(seqMods.Peptide, typedMod.LabelType,
+                                               GetReversedMods(typedMod.Modifications, lenSeq)));
+        }
+
+        private static SequenceMods GetShuffledPeptideSequence(SequenceMods seqMods)
+        {
+            string sequence = seqMods.Sequence;
             char finalA = sequence.Last();
             sequence = sequence.Substring(0, sequence.Length - 1);
-            char[] shuffledArray = new char[sequence.Length];
-            string aminoacids = (string) sequence.Clone();
-            for (int i = 0; i < shuffledArray.Length; i++)
+            int lenSeq = sequence.Length;
+
+            // Calculate a random shuffling of the current positions
+            int[] newIndices = new int[lenSeq];
+            for (int i = 0; i < lenSeq; i++)
+                newIndices[i] = i;
+            for (int i = 0; i < lenSeq; i++)
+                Helpers.Swap(ref newIndices[0], ref newIndices[RANDOM.Next(newIndices.Length)]);
+
+            // Move the amino acids to their new positions
+            char[] shuffledArray = new char[lenSeq];
+            for (int i = 0; i < lenSeq; i++)
+                shuffledArray[newIndices[i]] = sequence[i];
+
+            seqMods.Sequence = new string(shuffledArray) + finalA;
+            seqMods.Mods = new ExplicitMods(seqMods.Peptide,
+                GetShuffledMods(seqMods.Mods.StaticModifications, lenSeq, newIndices),
+                GetShuffledHeavyMods(seqMods, lenSeq, newIndices),
+                seqMods.Mods.IsVariableStaticMods);
+
+            return seqMods;
+        }
+
+        private static IList<ExplicitMod> GetShuffledMods(IEnumerable<ExplicitMod> mods, int lenSeq, int[] newIndices)
+        {
+            return GetRearrangedMods(mods, lenSeq, i => newIndices[i]);
+        }
+
+        private static IEnumerable<TypedExplicitModifications> GetShuffledHeavyMods(SequenceMods seqMods,
+            int lenSeq, int[] newIndices)
+        {
+            return seqMods.Mods.GetHeavyModifications().Select(typedMod =>
+                new TypedExplicitModifications(seqMods.Peptide, typedMod.LabelType,
+                                               GetShuffledMods(typedMod.Modifications, lenSeq, newIndices)));
+        }
+
+        private static IList<ExplicitMod> GetRearrangedMods(IEnumerable<ExplicitMod> mods, int lenSeq,
+                                                            Func<int, int> getNewIndex)
+        {
+            var arrayMods = mods.ToArray();
+            for (int i = 0; i < arrayMods.Length; i++)
             {
-                int pos = RANDOM.Next(0, aminoacids.Length);
-                char aminoacid = aminoacids[pos];
-                shuffledArray[i] += aminoacid;
-                aminoacids = aminoacids.Substring(0,pos) + aminoacids.Substring(pos+1);
+                var mod = arrayMods[i];
+                if (mod.IndexAA < lenSeq)
+                    arrayMods[i] = new ExplicitMod(getNewIndex(mod.IndexAA), mod.Modification);
             }
-            return new string(shuffledArray) + finalA;
+            Array.Sort(arrayMods, (mod1, mod2) => Comparer.Default.Compare(mod1.IndexAA, mod2.IndexAA));
+            return arrayMods;
         }
 
         private sealed class AreaSortInfo
