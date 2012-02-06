@@ -911,6 +911,13 @@ namespace pwiz.Skyline.Model.DocSettings
             return this;
         }
 
+        public virtual string PersistencePath { get { return null; } }
+
+        public virtual string PersistMinimized(string pathDestDir, SrmDocument document)
+        {
+            return null;
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>

@@ -79,6 +79,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasRTPrediction { get { return PeptideSettings.Prediction.RetentionTime != null; } }
 
+        public bool HasRTCalcPersisted
+        {
+            get
+            {
+                return HasRTPrediction && PeptideSettings.Prediction.RetentionTime.Calculator.PersistencePath != null;
+            }
+        }
+
         public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
 
         public bool IsLoaded

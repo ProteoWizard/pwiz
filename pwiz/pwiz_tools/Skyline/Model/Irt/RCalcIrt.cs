@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
@@ -63,6 +64,54 @@ namespace pwiz.Skyline.Model.Irt
                 return this;
 
             return ChangeDatabase(IrtDb.GetIrtDb(DatabasePath, loadMonitor));
+        }
+
+        public override string PersistencePath
+        {
+            get { return DatabasePath; }
+        }
+
+        /// <summary>
+        /// Saves the database to a new directory with only the standards and peptides used
+        /// in a given document.
+        /// </summary>
+        /// <param name="pathDestDir">The directory to save to</param>
+        /// <param name="document">The document for which peptides are to be kept</param>
+        /// <returns>The full path to the file saved</returns>
+        public override string PersistMinimized(string pathDestDir, SrmDocument document)
+        {
+            RequireUsable();
+
+            string persistPath = Path.Combine(pathDestDir, Path.GetFileName(PersistencePath) ?? "");  // ReSharper
+            using (var fs = new FileSaver(persistPath))
+            {
+                var irtDbMinimal = IrtDb.CreateIrtDb(fs.SafeName);
+
+                // Calculate the minimal set of peptides needed for this document
+                var dbPeptides = _database.GetPeptides().ToList();
+                var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(pep => NewPeptide(pep)).ToList();
+                var dictPeptides = dbPeptides.Where(pep => !pep.Standard).ToDictionary(pep => pep.PeptideModSeq);
+                foreach (var nodePep in document.Peptides)
+                {
+                    string modifiedSeq = document.Settings.GetModifiedSequence(nodePep, IsotopeLabelType.light);
+                    DbIrtPeptide dbPeptide;
+                    if (dictPeptides.TryGetValue(modifiedSeq, out dbPeptide))
+                        persistPeptides.Add(NewPeptide(dbPeptide));
+                }
+
+                irtDbMinimal.UpdatePeptides(persistPeptides, new DbIrtPeptide[0]);
+                fs.Commit();
+            }
+
+            return persistPath;
+        }
+
+        private DbIrtPeptide NewPeptide(DbIrtPeptide dbPeptide)
+        {
+            return new DbIrtPeptide(dbPeptide.PeptideModSeq,
+                                    dbPeptide.Irt,
+                                    dbPeptide.Standard,
+                                    dbPeptide.TimeSource);
         }
 
         public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)

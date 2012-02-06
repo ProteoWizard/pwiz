@@ -185,6 +185,8 @@ namespace pwiz.Skyline.Model
             var pepSettings = Document.Settings.PeptideSettings;
             if (Document.Settings.HasBackgroundProteome)
                 zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath, "");
+            if (Document.Settings.HasRTCalcPersisted)
+                zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath, "");
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
             {
                 zip.AddFile(librarySpec.FilePath, "");
@@ -214,10 +216,21 @@ namespace pwiz.Skyline.Model
                     Document = Document.ChangeSettings(Document.Settings.ChangePeptideSettings(
                         set => set.ChangeBackgroundProteome(BackgroundProteome.NONE)));
                 }
+                if (Document.Settings.HasRTCalcPersisted)
+                {
+                    // Minimize any persistable retention time calculator
+                    if (tempDir == null)
+                        tempDir = new TemporaryDirectory();
+                    string tempDbPath = Document.Settings.PeptideSettings.Prediction.RetentionTime
+                        .Calculator.PersistMinimized(tempDir.DirPath, Document);
+                    if (tempDbPath != null)
+                        zip.AddFile(tempDbPath, "");
+                }
                 if (Document.Settings.HasLibraries)
                 {
                     // Minimize all libraries in a temporary directory, and add them
-                    tempDir = new TemporaryDirectory();
+                    if (tempDir == null)
+                        tempDir = new TemporaryDirectory();
                     Document = BlibDb.MinimizeLibraries(Document, tempDir.DirPath, 
                                                         Path.GetFileNameWithoutExtension(DocumentPath),
                                                         WaitBroker);

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
@@ -49,6 +50,8 @@ namespace pwiz.Skyline.EditUI
             double[] timeWindows;
             if (!helper.ValidateDecimalListTextBox(e, textTimeWindows, 1, 200, out timeWindows))
                 return;
+
+            Array.Sort(timeWindows);
 
             RTScheduleGraphPane.ScheduleWindows = timeWindows;
             DialogResult = DialogResult.OK;

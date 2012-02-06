@@ -674,7 +674,9 @@ namespace pwiz.Skyline
             }
 
             bool completeSharing = true;
-            if (document.Settings.HasLibraries || document.Settings.HasBackgroundProteome)
+            if (document.Settings.HasLibraries ||
+                document.Settings.HasBackgroundProteome ||
+                document.Settings.HasRTCalcPersisted)
             {
                 using (var dlgType = new ShareTypeDlg(document))
                 {

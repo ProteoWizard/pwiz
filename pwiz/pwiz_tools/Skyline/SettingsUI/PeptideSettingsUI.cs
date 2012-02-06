@@ -183,7 +183,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 RetentionScoreCalculatorSpec retentionCalc =
                     Settings.Default.GetCalculatorByName(retentionTime.Calculator.Name);
-                if (!ReferenceEquals(retentionCalc, retentionTime.Calculator))
+                // Just in case the calculator in use in the current documet got removed,
+                // never set the calculator to null.  Just keep using the one we have.
+                if (retentionCalc != null && !ReferenceEquals(retentionCalc, retentionTime.Calculator))
                     retentionTime = retentionTime.ChangeCalculator(retentionCalc);
             }
             bool useMeasuredRT = cbUseMeasuredRT.Checked;
