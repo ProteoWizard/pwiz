@@ -253,6 +253,7 @@ namespace pwiz.Skyline
             this.thresholdRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.noneRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimePredContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peptideIDTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.transitionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2153,6 +2154,7 @@ namespace pwiz.Skyline
             this.peakBoundariesContextMenuItem,
             this.retentionTimesContextMenuItem,
             this.retentionTimePredContextMenuItem,
+            this.peptideIDTimesContextMenuItem,
             this.toolStripSeparator16,
             this.transitionsContextMenuItem,
             this.transformChromContextMenuItem,
@@ -2166,7 +2168,7 @@ namespace pwiz.Skyline
             this.zoomChromContextMenuItem,
             this.toolStripSeparator26});
             this.contextMenuChromatogram.Name = "contextMenuChromatogram";
-            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 326);
+            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 348);
             // 
             // removePeakGraphMenuItem
             // 
@@ -2259,6 +2261,14 @@ namespace pwiz.Skyline
             this.retentionTimePredContextMenuItem.Size = new System.Drawing.Size(212, 22);
             this.retentionTimePredContextMenuItem.Text = "Retention Time Prediction";
             this.retentionTimePredContextMenuItem.Click += new System.EventHandler(this.retentionTimePredContextMenuItem_Click);
+            // 
+            // peptideIDTimesContextMenuItem
+            // 
+            this.peptideIDTimesContextMenuItem.CheckOnClick = true;
+            this.peptideIDTimesContextMenuItem.Name = "peptideIDTimesContextMenuItem";
+            this.peptideIDTimesContextMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.peptideIDTimesContextMenuItem.Text = "Peptide ID Times";
+            this.peptideIDTimesContextMenuItem.Click += new System.EventHandler(this.peptideIDTimesContextMenuItem_Click);
             // 
             // toolStripSeparator16
             // 
@@ -3393,6 +3403,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorCalculators;
         private System.Windows.Forms.ToolStripMenuItem updateCalculatorContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addCalculatorContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem peptideIDTimesContextMenuItem;
     }
 }
 

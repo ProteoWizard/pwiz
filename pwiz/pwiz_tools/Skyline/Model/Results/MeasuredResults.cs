@@ -175,12 +175,28 @@ namespace pwiz.Skyline.Model.Results
                 string fileBasename = Path.GetFileNameWithoutExtension(filePathFind);
                 foreach (string filePath in chromSet.MSDataFilePaths)
                 {
-                    if (Equals(Path.GetFileNameWithoutExtension(filePath), fileBasename))
+                    if (IsBaseNameMatch(Path.GetFileNameWithoutExtension(filePath), fileBasename))
                         return new ChromSetFileMatch(chromSet, filePath, fileOrder);
                     fileOrder++;
                 }
             }
             return null;
+        }
+
+        public static bool IsBaseNameMatch(string baseName1, string baseName2)
+        {
+            return IsPrefixToExtension(baseName1, baseName2) ||
+                   IsPrefixToExtension(baseName2, baseName1);
+        }
+
+        private static bool IsPrefixToExtension(string name, string prefix)
+        {
+            // Do this complex check, because ETH has a pipeline that produces
+            // data files with the extension <basename>.c.mzXML.  So, this needs
+            // to be able to match <basename> with <basename>.c, and Vanderbilt
+            // has a pipeline that generates mzML files all uppercase
+            return name.ToLower().StartsWith(prefix.ToLower()) &&
+                   (name.Length == prefix.Length || name[prefix.Length] != '.');
         }
 
 // ReSharper disable MemberCanBeMadeStatic.Local

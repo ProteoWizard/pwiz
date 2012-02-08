@@ -1217,7 +1217,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 chromGraphPrimary.RetentionWindow = window;
             }
             // Set any MS/MS IDs on the first graph item also
-            if (settings.TransitionSettings.FullScan.IsEnabled && settings.PeptideSettings.Libraries.IsLoaded)
+            if (settings.TransitionSettings.FullScan.IsEnabled &&
+                    settings.PeptideSettings.Libraries.IsLoaded &&
+                    Settings.Default.ShowPeptideIdTimes)
             {
                 var listTimes = new List<double>();
                 foreach (var group in nodeGroups.Select(nodeGroup => nodeGroup.TransitionGroup))

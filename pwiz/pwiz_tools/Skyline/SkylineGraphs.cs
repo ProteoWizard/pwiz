@@ -1032,6 +1032,8 @@ namespace pwiz.Skyline
             // Insert skyline specific menus
             var settings = DocumentUI.Settings;
             bool retentionPredict = (settings.PeptideSettings.Prediction.RetentionTime != null);
+            bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
+                                   settings.TransitionSettings.FullScan.IsEnabled);
 
             var set = Settings.Default;
             int iInsert = 0;
@@ -1072,9 +1074,16 @@ namespace pwiz.Skyline
                         noneRTContextMenuItem     
                     });
             }
-            retentionTimePredContextMenuItem.Checked = set.ShowRetentionTimePred;
-            retentionTimePredContextMenuItem.Enabled = retentionPredict;
-            menuStrip.Items.Insert(iInsert++, retentionTimePredContextMenuItem);
+            if (retentionPredict)
+            {
+                retentionTimePredContextMenuItem.Checked = set.ShowRetentionTimePred;
+                menuStrip.Items.Insert(iInsert++, retentionTimePredContextMenuItem);
+            }
+            if (peptideIdTimes)
+            {
+                peptideIDTimesContextMenuItem.Checked = set.ShowPeptideIdTimes;
+                menuStrip.Items.Insert(iInsert++, peptideIDTimesContextMenuItem);
+            }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
             menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
             // Sometimes child menuitems are stripped from the parent
@@ -1215,6 +1224,12 @@ namespace pwiz.Skyline
         private void retentionTimePredContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRetentionTimePred = retentionTimePredContextMenuItem.Checked;
+            UpdateChromGraphs();
+        }
+
+        private void peptideIDTimesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowPeptideIdTimes = peptideIDTimesContextMenuItem.Checked;
             UpdateChromGraphs();
         }
 

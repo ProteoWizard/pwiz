@@ -143,15 +143,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? GetRetentionTime(string seq, ChromFileInfoId fileId)
         {
-            IRegressionFunction conversion = Conversion;
-            if (fileId != null && _listFileIdToConversion != null)
-            {
-                int iConversion = _listFileIdToConversion.BinarySearch(fileId.GlobalIndex, true);
-                conversion = iConversion >= 0
-                    ? _listFileIdToConversion[iConversion].Value
-                    : null;
-            }
-            return GetRetentionTime(seq, conversion);
+            return GetRetentionTime(seq, GetConversion(fileId));
         }
 
         private double? GetRetentionTime(string seq, IRegressionFunction conversion)
@@ -162,9 +154,14 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
-        private double? GetRetentionTime(double score)
+        public double? GetRetentionTime(double score)
         {
             return GetRetentionTime(score, Conversion);
+        }
+
+        public double? GetRetentionTime(double score, ChromFileInfoId fileId)
+        {
+            return GetRetentionTime(score, GetConversion(fileId));
         }
 
         private static double? GetRetentionTime(double score, IRegressionFunction conversion)
@@ -173,6 +170,19 @@ namespace pwiz.Skyline.Model.DocSettings
             return conversion != null
                        ? GetRetentionTimeDisplay(conversion.GetY(score))
                        : null;
+        }
+
+        private IRegressionFunction GetConversion(ChromFileInfoId fileId)
+        {
+            IRegressionFunction conversion = Conversion;
+            if (fileId != null && _listFileIdToConversion != null)
+            {
+                int iConversion = _listFileIdToConversion.BinarySearch(fileId.GlobalIndex, true);
+                conversion = iConversion >= 0
+                                 ? _listFileIdToConversion[iConversion].Value
+                                 : null;
+            }
+            return conversion;
         }
 
         public bool IsAutoCalcRequired(SrmDocument document, SrmDocument previous)
