@@ -256,6 +256,7 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             analysis.importSettings.maxQValue = g_rtConfig->MaxImportFDR;
             analysis.importSettings.maxResultRank = g_rtConfig->MaxResultRank;
             analysis.importSettings.qonverterSettings = g_rtConfig->getQonverterSettings();
+            analysis.importSettings.ignoreUnmappedPeptides = g_rtConfig->IgnoreUnmappedPeptides;
         }
     }
 };

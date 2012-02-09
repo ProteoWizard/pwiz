@@ -32,25 +32,26 @@
 #include <string>
 
 #define IDPQONVERT_RUNTIME_CONFIG \
-	RTCONFIG_VARIABLE( string,			OutputSuffix,				""				) \
-	RTCONFIG_VARIABLE( bool,			WriteQonversionDetails,		false			) \
-    RTCONFIG_VARIABLE( bool,			OverwriteExistingFiles,		false			) \
-	RTCONFIG_VARIABLE( string,			ProteinDatabase,			""				) \
-	RTCONFIG_VARIABLE( string,			DecoyPrefix,				"rev_"			) \
-    RTCONFIG_VARIABLE( string,			SourceSearchPath,			".;.."		    ) \
-    RTCONFIG_VARIABLE( bool,			EmbedSpectrumSources,		false		    ) \
-	RTCONFIG_VARIABLE( double,			MaxFDR,						0.05			) \
-	RTCONFIG_VARIABLE( double,			MaxImportFDR,				0.25			) \
-	RTCONFIG_VARIABLE( int,				MaxResultRank,				3				) \
-    RTCONFIG_VARIABLE( bool,            RerankMatches,              false           ) \
-    RTCONFIG_VARIABLE( int,             MinPartitionSize,           10              ) \
-    RTCONFIG_VARIABLE( double,          TruePositiveThreshold,      0.01            ) \
-    RTCONFIG_VARIABLE( int,             MaxTrainingRank,            1               ) \
-    RTCONFIG_VARIABLE( bool,            PredictProbability,         true            ) \
-    RTCONFIG_VARIABLE( double,          Gamma,                      5               ) \
-    RTCONFIG_VARIABLE( double,          Nu,                         0.5             ) \
-    RTCONFIG_VARIABLE( int,             PolynomialDegree,           3               ) \
-    RTCONFIG_VARIABLE( string,			ScoreInfo,                  "1 off myrimatch:mvh; 1 off xcorr; 1 off sequest:xcorr; 1 off sequest:deltacn; 1 off mascot:score; -1 off x!tandem:expect; 1 off x!tandem:hyperscore" ) \
+    RTCONFIG_VARIABLE( string,   OutputSuffix,               ""     ) \
+    RTCONFIG_VARIABLE( bool,     WriteQonversionDetails,     false  ) \
+    RTCONFIG_VARIABLE( bool,     OverwriteExistingFiles,     false  ) \
+    RTCONFIG_VARIABLE( bool,     IgnoreUnmappedPeptides,     false  ) \
+    RTCONFIG_VARIABLE( string,   ProteinDatabase,            ""     ) \
+    RTCONFIG_VARIABLE( string,   DecoyPrefix,                "rev_" ) \
+    RTCONFIG_VARIABLE( string,   SourceSearchPath,           ".;.." ) \
+    RTCONFIG_VARIABLE( bool,     EmbedSpectrumSources,       false  ) \
+    RTCONFIG_VARIABLE( double,   MaxFDR,                     0.05   ) \
+    RTCONFIG_VARIABLE( double,   MaxImportFDR,               0.25   ) \
+    RTCONFIG_VARIABLE( int,      MaxResultRank,              3      ) \
+    RTCONFIG_VARIABLE( bool,     RerankMatches,              false  ) \
+    RTCONFIG_VARIABLE( int,      MinPartitionSize,           10     ) \
+    RTCONFIG_VARIABLE( double,   TruePositiveThreshold,      0.01   ) \
+    RTCONFIG_VARIABLE( int,      MaxTrainingRank,            1      ) \
+    RTCONFIG_VARIABLE( bool,     PredictProbability,         true   ) \
+    RTCONFIG_VARIABLE( double,   Gamma,                      5      ) \
+    RTCONFIG_VARIABLE( double,   Nu,                         0.5    ) \
+    RTCONFIG_VARIABLE( int,      PolynomialDegree,           3      ) \
+    RTCONFIG_VARIABLE( string,   ScoreInfo,                  "1 off myrimatch:mvh; 1 off xcorr; 1 off sequest:xcorr; 1 off sequest:deltacn; 1 off mascot:score; -1 off x!tandem:expect; 1 off x!tandem:hyperscore" ) \
     RTCONFIG_VARIABLE( Qonverter::QonverterMethod, QonverterMethod, "MonteCarlo" ) \
     RTCONFIG_VARIABLE( Qonverter::SVMType, SVMType, "CSVC" ) \
     RTCONFIG_VARIABLE( Qonverter::Kernel, Kernel, "Linear" ) \
@@ -73,15 +74,15 @@ struct PWIZ_API_DECL Version
 
 enum QonvertErrorCode
 {
-	QONVERT_SUCCESS,
-	QONVERT_ERROR_UNHANDLED_EXCEPTION,
-	QONVERT_ERROR_FASTA_FILE_FAILURE,
-	QONVERT_ERROR_RUNTIME_CONFIG_FILE_FAILURE,
-	QONVERT_ERROR_RESIDUE_CONFIG_FILE_FAILURE,
-	QONVERT_ERROR_NOT_ENOUGH_ARGUMENTS,
-	QONVERT_ERROR_RUNTIME_CONFIG_OVERRIDE_FAILURE,
-	QONVERT_ERROR_NO_INPUT_FILES_FOUND,
-	QONVERT_ERROR_NO_TARGET_PROTEINS,
+    QONVERT_SUCCESS,
+    QONVERT_ERROR_UNHANDLED_EXCEPTION,
+    QONVERT_ERROR_FASTA_FILE_FAILURE,
+    QONVERT_ERROR_RUNTIME_CONFIG_FILE_FAILURE,
+    QONVERT_ERROR_RESIDUE_CONFIG_FILE_FAILURE,
+    QONVERT_ERROR_NOT_ENOUGH_ARGUMENTS,
+    QONVERT_ERROR_RUNTIME_CONFIG_OVERRIDE_FAILURE,
+    QONVERT_ERROR_NO_INPUT_FILES_FOUND,
+    QONVERT_ERROR_NO_TARGET_PROTEINS,
     QONVERT_ERROR_NO_DECOY_PROTEINS
 };
 
@@ -90,7 +91,7 @@ static float EPSILON = 0.0001f;
 struct RunTimeConfig : public freicore::BaseRunTimeConfig
 {
 public:
-	RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, IDPQONVERT_RUNTIME_CONFIG, "\r\n\t ", "idpQonvert.cfg", "\r\n#" )
+    RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, IDPQONVERT_RUNTIME_CONFIG, "\r\n\t ", "idpQonvert.cfg", "\r\n#" )
 
     fileList_t inputFilepaths;
     map<string, Qonverter::Settings::ScoreInfo> scoreInfoByName;
@@ -120,14 +121,14 @@ public:
     }
 
 private:
-	void finalize()
-	{
-		vector<string> tokens;
-		split(tokens, ScoreInfo, boost::is_any_of(";"));
+    void finalize()
+    {
+        vector<string> tokens;
+        split(tokens, ScoreInfo, boost::is_any_of(";"));
 
         scoreInfoByName.clear();
-		for (size_t i=0; i < tokens.size(); ++i)
-		{
+        for (size_t i=0; i < tokens.size(); ++i)
+        {
             to_lower(tokens[i]);
             trim(tokens[i]);
             vector<string> tokens2;
@@ -153,8 +154,8 @@ private:
                 scoreInfo.normalizationMethod = Qonverter::Settings::NormalizationMethod::Linear;
             else if (normalization != "off")
                 throw runtime_error("invalid NormalizationMethod (must be 'off', 'quantile', or 'linear')");
-		}
-	}
+        }
+    }
 };
 
 extern RunTimeConfig* g_rtConfig;

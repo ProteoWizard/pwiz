@@ -56,6 +56,7 @@ public ref struct Parser
             property Qonverter::Settings^ qonverterSettings;
             double maxQValue; /// filter the database on Q-value before writing to disk
             int maxResultRank; /// filter the database on PSM rank before writing to disk
+            bool ignoreUnmappedPeptides;
         };
 
         property ImportSettings^ importSettings;

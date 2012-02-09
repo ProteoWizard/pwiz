@@ -77,6 +77,7 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
             analysis->importSettings->proteinDatabaseFilepath = ToSystemString(nativeAnalysis->importSettings.proteinDatabaseFilepath);
             analysis->importSettings->maxQValue = 0.25;
             analysis->importSettings->maxResultRank = 2;
+            analysis->importSettings->ignoreUnmappedPeptides = false;
 
             args->DistinctAnalyses->Add(analysis);
         }
@@ -95,6 +96,7 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
             nativeAnalysis.importSettings.proteinDatabaseFilepath = ToStdString(analysis->importSettings->proteinDatabaseFilepath);
             nativeAnalysis.importSettings.maxQValue = analysis->importSettings->maxQValue;
             nativeAnalysis.importSettings.maxResultRank = analysis->importSettings->maxResultRank;
+            nativeAnalysis.importSettings.ignoreUnmappedPeptides = analysis->importSettings->ignoreUnmappedPeptides;
 
             NativeQonverter::Settings& nativeQonverterSettings = nativeAnalysis.importSettings.qonverterSettings;
             Qonverter::Settings^ qonverterSettings = analysis->importSettings->qonverterSettings;
