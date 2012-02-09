@@ -98,6 +98,13 @@ namespace IDPicker
 
             using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.choice))
             {
+                if (MainWindow.IsDisposed)
+                {
+                    if (reportForm.ShowDialog() == DialogResult.OK)
+                        SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email);
+                    System.Diagnostics.Process.GetCurrentProcess().Kill();
+                }
+
                 if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
                     SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email);
                 if (reportForm.ForceClose)
