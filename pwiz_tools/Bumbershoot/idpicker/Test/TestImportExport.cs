@@ -57,6 +57,7 @@ namespace Test
             TestModel.ClassInitialize(testContext);
         }
 
+        [Ignore]
         [TestMethod]
         public void TestImportExportIdpXml ()
         {
@@ -74,13 +75,13 @@ namespace Test
                                          Value = "testImportExport.fasta"
                                      });
 
-                IList<string> idpXmlPaths;
+                /*IList<string> idpXmlPaths;
                 using (var exporter = new Exporter(session))
                 {
                     idpXmlPaths = exporter.WriteIdpXml(true, true);
                     exporter.WriteSpectra();
                     exporter.WriteProteins("testImportExport.fasta", false);
-                }
+                }*/
                 session.Close();
 
                 /*using (var parser = new Parser(".", qonverterSettingsHandler, false, idpXmlPaths.ToArray()))
@@ -89,8 +90,8 @@ namespace Test
                     parser.Start();
                 }*/
 
-                var merger = new Merger("testImportExport.idpDB", idpXmlPaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
-                merger.Start();
+                //var merger = new Merger("testImportExport.idpDB", idpXmlPaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
+                //merger.Start();
             }
 
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB"))

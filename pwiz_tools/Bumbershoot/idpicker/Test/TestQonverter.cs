@@ -116,23 +116,12 @@ namespace Test
             // we test qonversion on this scenario:
             //
             // Scan Score DecoyState Targets Decoys Ambiguous -> Expected QValue
-            // 5    99    T          1       0      0            0
-            // 11   95    T          2       0      0            0
-            // 12   90    T          3       0      0            0
-            // 16   85    D          3       1      0            2/4
-            // 15   80    D          3       2      0            4/5
-            // 17   75    T          4       2      0            4/6
-            // 14   70    T          5       2      0            4/7
-            // 2    65    A          5       2      1            4/7
-            // 7    60    D          5       3      1            6/8
-            // 10   55    T          6       3      1            6/9
-            // 4    50    T          7       3      1            6/10
-            // 8    45    T          8       3      1            6/11
-            // 9    40    T          9       3      1            6/12
-            // 3    35    D          9       4      1            8/13
-            // 1    30    D          9       5      1            10/14
-            // 13   25    A          9       5      2            10/14
-            // 6    20    T          10      5      2            10/15
+            // 50   6     T          1       0      0            0
+            // 30   5     T          2       0      0            0
+            // 40   4     T          3       0      0            0
+            // 10   3     D          3       1      0            2/4
+            // 20   2     D          3       2      0            4/5
+            // 60   1     T          4       2      0            4/6
 
             double q = PeptideSpectrumMatch.DefaultQValue;
 
@@ -143,23 +132,12 @@ namespace Test
                 List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
                 {
                     //               Group Source Spectrum  Analysis    Score Q   List of Peptide@Charge/ScoreDivider
-                    new SpectrumTuple("/",  source,     5,  analysis,     99, q, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/8", charge)),
-                    new SpectrumTuple("/",  source,     11, analysis,     95, q, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  source,     12, analysis,     90, q, String.Format("PEPTIDEKPEP@{0}/1 THEQUICKBR@{0}/4", charge)),
-                    new SpectrumTuple("/",  source,     16, analysis,     85, q, String.Format("EDITPEP@{0}/1 PEPTIDEK@{0}/2", charge)),
-                    new SpectrumTuple("/",  source,     15, analysis,     80, q, String.Format("EDITPEPR@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  source,     17, analysis,     75, q, String.Format("TIDER@{0}/1 TIDERPEPTIDEK@{0}/3", charge)),
-                    new SpectrumTuple("/",  source,     14, analysis,     70, q, String.Format("TIDER@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  source,     2,  analysis,     65, q, String.Format("THEQUICKBR@{0}/1 BKCIUQEHT@{0}/1 PEPTIDER@{0}/2", charge)),
-                    new SpectrumTuple("/",  source,     7,  analysis,     60, q, String.Format("KEDITPEPR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
-                    new SpectrumTuple("/",  source,     10, analysis,     55, q, String.Format("DERPEPTIDEK@{0}/1 PEPTIDEK@{0}/5", charge)),
-                    new SpectrumTuple("/",  source,     4,  analysis,     50, q, String.Format("THELZYDG@{0}/1 PEPTI@{0}/3", charge)),
-                    new SpectrumTuple("/",  source,     8,  analysis,     45, q, String.Format("PEPTI@{0}/1 PEPTIDER@{0}/6", charge)),
-                    new SpectrumTuple("/",  source,     9,  analysis,     40, q, String.Format("PEPTIDEK@{0}/1 THEQUICKBR@{0}/2", charge)),
-                    new SpectrumTuple("/",  source,     3,  analysis,     35, q, String.Format("PEPKEDITPEPR@{0}/1 THELZYDG@{0}/2", charge)),
-                    new SpectrumTuple("/",  source,     1,  analysis,     30, q, String.Format("GDYZLEHT@{0}/1 THEQUICKBR@{0}/2", charge)),
-                    new SpectrumTuple("/",  source,     13, analysis,     25, q, String.Format("PEPTIDER@{0}/1 PEPKEDITPEPR@{0}/1 BKCIUQEHT@{0}/3", charge)),
-                    new SpectrumTuple("/",  source,     6,  analysis,     20, q, String.Format("THEQUICKBR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
+                    new SpectrumTuple("/",  source,     5, analysis,     6, q, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/8", charge)),
+                    new SpectrumTuple("/",  source,     3, analysis,     5, q, String.Format("TIDERPEPTIDEK@{0}/1 PEPTIDER@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     4, analysis,     4, q, String.Format("EDITPEP@{0}/1 THEQUICKBR@{0}/4", charge)),
+                    new SpectrumTuple("/",  source,     1, analysis,     3, q, String.Format("PEPTIDEKPEP@{0}/1 PEPTIDEK@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     2, analysis,     2, q, String.Format("TIDER@{0}/1 PEPTIDER@{0}/2", charge)),
+                    new SpectrumTuple("/",  source,     6, analysis,     1, q, String.Format("EDITPEPR@{0}/1 TIDERPEPTIDEK@{0}/3", charge))
                 };
 
                 TestModel.CreateTestData(session, testPsmSummary);
@@ -194,8 +172,8 @@ namespace Test
                 qonverter.SettingsByAnalysis[i] = new Qonverter.Settings()
                 {
                     QonverterMethod = Qonverter.QonverterMethod.StaticWeighted,
-                    ChargeStateHandling = Qonverter.ChargeStateHandling.Partition,
-                    TerminalSpecificityHandling = Qonverter.TerminalSpecificityHandling.Partition,
+                    ChargeStateHandling = Qonverter.ChargeStateHandling.Ignore,
+                    TerminalSpecificityHandling = Qonverter.TerminalSpecificityHandling.Ignore,
                     MassErrorHandling = Qonverter.MassErrorHandling.Ignore,
                     MissedCleavagesHandling = Qonverter.MissedCleavagesHandling.Ignore,
                     DecoyPrefix = decoyPrefix,
@@ -243,25 +221,15 @@ namespace Test
             Dictionary<long, double> expectedQValues = new Dictionary<long, double>()
             {
                 // with high scoring decoys, Q values can spike and gradually go down again;
-                // we squash these spikes such that Q value is monotonically increasing
-                //               targets  decoys  ambiguous  unadjusted-Q-value  adjusted-Q-value
-                { 4, 0 },        // 1        0       0              0                   0
-                { 10, 0 },       // 2        0       0              0                   0
-                { 11, 0 },       // 3        0       0              0                   0
-                { 15, 0.5 },     // 3        1       0              0.5                 0.5
-                { 14, 0.5 },     // 3        2       0              0.8                 0.5
-                { 16, 0.5 },     // 4        2       0              0.66                0.5
-                { 13, 0.5 },     // 5        2       0              0.57                0.5
-                { 1, 0.5 },      // 5        2       1              0.57                0.5
-                { 6, 0.5 },      // 5        3       1              0.75                0.5
-                { 9, 0.5 },      // 6        3       1              0.66                0.5
-                { 3, 0.5 },      // 7        3       1              0.6                 0.5
-                { 7, 0.5 },      // 8        3       1              0.55                0.5
-                { 8, 0.5 },      // 9        3       1              0.5                 0.5
-                { 2, 8/13.0 },   // 9        4       1              0.62                0.62
-                { 0, 2/3.0 },    // 9        5       1              0.71                0.66
-                { 12, 2/3.0 },   // 9        5       2              0.71                0.66
-                { 5, 2/3.0 },    // 10       5       2              0.66                0.66
+                // we squash these spikes such that Q value is monotonically increasing;
+                // then we convert Q values to FDR scores using linear interpolation
+                //               targets  decoys  ambiguous  unadjusted-Q-value  adjusted-Q-value  FDR-score
+                { 4, 0 },        // 1        0       0              0                   0             0
+                { 2, 0.2 },      // 2        0       0              0                   0             0.2
+                { 3, 0.4 },      // 2        1       0              0.666               0.4           0.4
+                { 0, 0.488 },    // 3        1       0              0.5                 0.4           0.488
+                { 1, 0.577 },    // 4        1       0              0.4                 0.4           0.577
+                { 5, 0.666 },    // 4        2       0              0.666               0.666         0.666
             };
 
             for (long engine = 1; engine <= 2; ++engine)
@@ -286,7 +254,7 @@ namespace Test
                     Assert.AreEqual(session.Get<Analysis>(engine), topRankedMatch.Analysis);
                     Assert.AreEqual(session.Get<SpectrumSource>(source), topRankedMatch.Spectrum.Source);
                     Assert.AreEqual(charge, topRankedMatch.Charge);
-                    Assert.AreEqual(itr.Value, topRankedMatch.QValue, 1e-12);
+                    Assert.AreEqual(itr.Value, topRankedMatch.QValue, 1e-3);
                 }
 
             var scorelessMatches = session.CreateQuery("SELECT psm " +
