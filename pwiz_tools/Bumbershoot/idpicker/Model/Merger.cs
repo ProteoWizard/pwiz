@@ -215,7 +215,7 @@ namespace IDPicker.DataModel
                     }
                     catch(Exception ex)
                     {
-                        if(OnMergingProgress(ex, mergedFiles))
+                        if(OnMergingProgress(new Exception("Error merging " + mergeSourceFilepath, ex), mergedFiles))
                             break;
                     }
                     finally
