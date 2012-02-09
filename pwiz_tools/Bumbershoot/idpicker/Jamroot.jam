@@ -352,7 +352,7 @@ generate-rc Resources\\Resources.rc :
                          #*.html
                          #*.vdproj
       : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
-    : warn-on-missing : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT)
+    : warn-on-missing : : "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT)
     : [ sequence.transform path.basename : [ path.glob Resources : *.ico ] ] ;
 
 # generate IDPicker version header
@@ -363,7 +363,7 @@ local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
                          #*.html
                          #*.vdproj
       : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
-    : : : "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT) ] ;
+    : : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
 
