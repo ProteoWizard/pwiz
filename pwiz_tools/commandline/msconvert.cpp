@@ -55,6 +55,7 @@ class user_error : public std::runtime_error
 };
 
 
+/// Holds the results of the parseCommandLine function. 
 struct Config
 {
     vector<string> filenames;
@@ -131,6 +132,9 @@ ostream& operator<<(ostream& os, const Config& config)
 }
 
 
+/// Parses command line arguments to setup execution parameters, and
+/// contructs help text. Inputs are the arguments to main. A filled
+/// Config object is returned.
 Config parseCommandLine(int argc, const char* argv[])
 {
     namespace po = boost::program_options;
@@ -539,11 +543,14 @@ void calculateSourceFilePtrSHA1(const SourceFilePtr& sourceFilePtr)
 }
 
 
+/// Combines multiple input files into a single MSData object. Called
+/// when the --merge argument is present on the command line.
 int mergeFiles(const vector<string>& filenames, const Config& config, const ReaderList& readers)
 {
     vector<MSDataPtr> msdList;
     int failedFileCount = 0;
 
+    // Each file is read in separately in MSData objects in the msdList list.
     BOOST_FOREACH(const string& filename, filenames)
     {
         try
@@ -566,6 +573,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
     IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0;
 
+    // MSDataMerger handles combining all files in msdList into a single MSDataFile object.
     try
     {
         MSDataMerger msd(msdList);
@@ -595,7 +603,8 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     return failedFileCount;
 }
 
-
+/// Handles the reading of a single input file. Called once for each
+/// input file when the --merge arguement is absent.
 void processFile(const string& filename, const Config& config, const ReaderList& readers)
 {
     // read in data file
@@ -646,6 +655,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 }
 
 
+/// Handles the high level logic of msconvert. Constructs the output
+/// directory, reads files into memory and writes them out consistent
+/// with the options in the supplied Config.
 int go(const Config& config)
 {
     *os_ << config;
