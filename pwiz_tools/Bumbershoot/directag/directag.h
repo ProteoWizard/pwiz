@@ -78,6 +78,14 @@ namespace directag
 			return tmp;
 		}
 
+        void reset()
+        {
+            numSpectraTagged = 0;
+            numResidueMassGaps = 0;
+            numTagsGenerated = 0;
+            numTagsRetained = 0;
+        }
+
 		operator string() const
 		{
 			stringstream s;

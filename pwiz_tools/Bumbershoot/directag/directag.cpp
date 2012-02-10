@@ -256,9 +256,9 @@ namespace directag
 						{
 							for( int z = 3; z <= g_rtConfig->NumChargeStates; ++z )
 							{
-								Spectrum* s2 = new Spectrum( *s );
-								s2->id.setCharge(z);
-								duplicates.push_back(s2);
+								Spectrum* s = new Spectrum( *s );
+								s->id.setCharge(z);
+								duplicates.push_back(s);
 							}
 						}
 					}
@@ -721,6 +721,7 @@ namespace directag
 								cout << "Finished receiving tag results for " << spectra.size() << " spectra; " << resultsTime.End() << " seconds elapsed." << endl;
 
     							cout << "Overall stats: " << (string) taggingStatistics << endl;
+                                taggingStatistics.reset();
 							}
 
 						#endif
@@ -760,6 +761,7 @@ namespace directag
 							cout << "Finished sequence tagging spectra; " << taggingTime.End() << " seconds elapsed." << endl;
 
 							cout << "Overall stats: " << (string) taggingStatistics << endl;
+                            taggingStatistics.reset();
 						}
 					}
 
@@ -830,20 +832,6 @@ namespace directag
 							exit(1);
 						}
 					}
-
-					//if( !skip )
-					//{
-					//	try
-					//	{
-					//		spectra.sort( spectraSortByID() );
-					//		WriteTagsToTagsFile( *fItr, startTime, startDate, taggingTime.End() );
-					//		cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
-					//	} catch( ... )
-					//	{
-					//		cerr << "Error while sorting and writing XML output." << endl;
-					//		exit(1);
-					//	}
-					//}
 				}
 			}
 

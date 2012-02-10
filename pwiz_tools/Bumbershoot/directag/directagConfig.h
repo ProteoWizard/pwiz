@@ -33,27 +33,27 @@ using namespace freicore;
 
 #define DIRECTAG_RUNTIME_CONFIG \
 	COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
-	RTCONFIG_VARIABLE( string,			OutputSuffix,				""			    ) \
-	RTCONFIG_VARIABLE( int,				MaxTagCount,				50				) \
-	RTCONFIG_VARIABLE( double,			MaxTagScore,				20.0			) \
-	RTCONFIG_VARIABLE( int,				NumIntensityClasses,		3				) \
-	RTCONFIG_VARIABLE( int,				NumMzFidelityClasses,		3				) \
-    RTCONFIG_VARIABLE( int,				NumBatches,					50				) \
-	RTCONFIG_VARIABLE( int,				TagLength,					3				) \
-	RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		1.0			) \
-	RTCONFIG_VARIABLE( size_t,			MaxPeakCount,				100				) \
-	RTCONFIG_VARIABLE( double,			ClassSizeMultiplier,		2.0			) \
-	RTCONFIG_VARIABLE( double,			MinPrecursorAdjustment,		-2.5			) \
-	RTCONFIG_VARIABLE( double,			MaxPrecursorAdjustment,		2.5			) \
-	RTCONFIG_VARIABLE( double,			PrecursorAdjustmentStep,	0.1			) \
-	RTCONFIG_VARIABLE( bool,			NormalizeOnMode,			true			) \
-	RTCONFIG_VARIABLE( bool,			AdjustPrecursorMass,		false			) \
-	RTCONFIG_VARIABLE( int,				DeisotopingMode,			1				) \
-	RTCONFIG_VARIABLE( bool,			MakeSpectrumGraphs,			false			) \
-	RTCONFIG_VARIABLE( int,				MzFidelityErrorBinsSize,	20				) \
-	RTCONFIG_VARIABLE( int,				MzFidelityErrorBinsSamples,	10000		) \
-	RTCONFIG_VARIABLE( double,			MzFidelityErrorBinsLogMin,	-5.0			) \
-	RTCONFIG_VARIABLE( double,			MzFidelityErrorBinsLogMax,	1.0			) \
+	RTCONFIG_VARIABLE( string,			OutputSuffix,				""			        ) \
+	RTCONFIG_VARIABLE( int,				MaxTagCount,				50				    ) \
+	RTCONFIG_VARIABLE( double,			MaxTagScore,				20.0			    ) \
+	RTCONFIG_VARIABLE( int,				NumIntensityClasses,		3				    ) \
+	RTCONFIG_VARIABLE( int,				NumMzFidelityClasses,		3				    ) \
+    RTCONFIG_VARIABLE( int,				NumBatches,					50				    ) \
+	RTCONFIG_VARIABLE( int,				TagLength,					3				    ) \
+	RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		1.0			        ) \
+	RTCONFIG_VARIABLE( size_t,			MaxPeakCount,				100				    ) \
+	RTCONFIG_VARIABLE( double,			ClassSizeMultiplier,		2.0			        ) \
+	RTCONFIG_VARIABLE( double,			MinPrecursorAdjustment,		-2.5			    ) \
+	RTCONFIG_VARIABLE( double,			MaxPrecursorAdjustment,		2.5			        ) \
+	RTCONFIG_VARIABLE( double,			PrecursorAdjustmentStep,	0.1			        ) \
+	RTCONFIG_VARIABLE( bool,			NormalizeOnMode,			true			    ) \
+	RTCONFIG_VARIABLE( bool,			AdjustPrecursorMass,		false			    ) \
+	RTCONFIG_VARIABLE( int,				DeisotopingMode,			0				    ) \
+	RTCONFIG_VARIABLE( bool,			MakeSpectrumGraphs,			false			    ) \
+	RTCONFIG_VARIABLE( int,				MzFidelityErrorBinsSize,	20				    ) \
+	RTCONFIG_VARIABLE( int,				MzFidelityErrorBinsSamples,	10000		        ) \
+	RTCONFIG_VARIABLE( double,			MzFidelityErrorBinsLogMin,	-5.0			    ) \
+	RTCONFIG_VARIABLE( double,			MzFidelityErrorBinsLogMax,	1.0			        ) \
 	RTCONFIG_VARIABLE( double,			PrecursorMzTolerance,		1.5					) \
 	RTCONFIG_VARIABLE( double,			FragmentMzTolerance,		0.5				    ) \
 	RTCONFIG_VARIABLE( double,			ComplementMzTolerance,		0.5				    ) \
@@ -64,19 +64,17 @@ using namespace freicore;
 	RTCONFIG_VARIABLE( int,				MaxDynamicMods,				2					) \
 	RTCONFIG_VARIABLE( string,			StaticMods,					""					) \
     RTCONFIG_VARIABLE( string,          SpectrumListFilters,        "peakPicking true 2-"   ) \
-	\
-	RTCONFIG_VARIABLE( double,			IntensityScoreWeight,		1.0			) \
-	RTCONFIG_VARIABLE( double,			MzFidelityScoreWeight,		1.0			) \
-	RTCONFIG_VARIABLE( double,			ComplementScoreWeight,		1.0			) \
-	RTCONFIG_VARIABLE( double,			RandomScoreWeight,			0.0			) \
-	\
-	RTCONFIG_VARIABLE( bool,			WriteOutTags,				true		) \
-	RTCONFIG_VARIABLE( bool,			WriteScanRankerMetrics,		false		) \
-	RTCONFIG_VARIABLE( string,			ScanRankerMetricsFileName,	""			) \
-	RTCONFIG_VARIABLE( bool,			WriteHighQualSpectra,		false		) \
-	RTCONFIG_VARIABLE( string,			HighQualSpecFileName,		""			) \
-	RTCONFIG_VARIABLE( double,			HighQualSpecCutoff,			0.6			) \
-	RTCONFIG_VARIABLE( string,			OutputFormat,				"mzML"		) \
+	RTCONFIG_VARIABLE( double,			IntensityScoreWeight,		1.0			        ) \
+	RTCONFIG_VARIABLE( double,			MzFidelityScoreWeight,		1.0			        ) \
+	RTCONFIG_VARIABLE( double,			ComplementScoreWeight,		1.0			        ) \
+	RTCONFIG_VARIABLE( double,			RandomScoreWeight,			0.0			        ) \
+	RTCONFIG_VARIABLE( bool,			WriteOutTags,				true		        ) \
+	RTCONFIG_VARIABLE( bool,			WriteScanRankerMetrics,		false		        ) \
+	RTCONFIG_VARIABLE( string,			ScanRankerMetricsFileName,	""			        ) \
+	RTCONFIG_VARIABLE( bool,			WriteHighQualSpectra,		false		        ) \
+	RTCONFIG_VARIABLE( string,			HighQualSpecFileName,		""			        ) \
+	RTCONFIG_VARIABLE( double,			HighQualSpecCutoff,			0.6			        ) \
+	RTCONFIG_VARIABLE( string,			OutputFormat,				"mzML"		        ) 
 
 
 namespace freicore
