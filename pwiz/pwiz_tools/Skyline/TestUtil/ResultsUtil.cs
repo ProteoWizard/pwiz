@@ -141,6 +141,7 @@ namespace pwiz.SkylineTestUtil
             int index;
             ChromatogramSet chromatogramSet;
             document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogramSet, out index);
+            Assert.AreNotEqual(-1, index, string.Format("Replicate {0} not found", replicateName));
             int peptidesActual = 0;
 
             foreach (var nodePep in document.Peptides.Where(nodePep => nodePep.Results[index] != null))

@@ -2271,11 +2271,21 @@ namespace pwiz.Skyline
 
         private void averageReplicatesContextMenuItem_Click(object sender, EventArgs e)
         {
+            ShowAverageReplicates();
+        }
+
+        public void ShowAverageReplicates()
+        {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.all.ToString();
             UpdateSummaryGraphs();
         }
 
         private void singleReplicateRTContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSingleReplicate();
+        }
+
+        public void ShowSingleReplicate()
         {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.single.ToString();
             // No CVs with single replicate data views

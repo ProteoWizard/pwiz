@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
             
             RunUI(() =>
                 {
-                    irtDlg1.SetCalcName(irtCalc);
+                    irtDlg1.CalcName = irtCalc;
                     irtDlg1.CreateDatabase(databasePath);
                 });
 
@@ -350,7 +350,7 @@ namespace pwiz.SkylineTestFunctional
             //Set calc name, database
             RunUI(() =>
                       {
-                          irtDlg2.SetCalcName("iRT Document Calculator");
+                          irtDlg2.CalcName = "iRT Document Calculator";
                           irtDlg2.CreateDatabase(testFilesDir.GetTestPath("irt-doc.irtdb"));
                       });
 
@@ -597,7 +597,7 @@ namespace pwiz.SkylineTestFunctional
                           Assert.AreEqual(0, dlg.StandardPeptideCount);
                           Assert.AreEqual(0, dlg.LibraryPeptideCount);
 
-                          dlg.SetCalcName("Testing");
+                          dlg.CalcName = "Testing";
                           dlg.OpenDatabase(path);
 
                           Assert.AreEqual(numStandardPeps, dlg.StandardPeptideCount);

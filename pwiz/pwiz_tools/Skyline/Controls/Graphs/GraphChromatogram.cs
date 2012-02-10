@@ -1695,7 +1695,7 @@ namespace pwiz.Skyline.Controls.Graphs
             return graphItem != null;
         }
 
-        private IEnumerable<ChromGraphItem> GraphItems
+        public IEnumerable<ChromGraphItem> GraphItems
         {
             get { return GraphPane.CurveList.Select(curve => (ChromGraphItem) curve.Tag); }
         }

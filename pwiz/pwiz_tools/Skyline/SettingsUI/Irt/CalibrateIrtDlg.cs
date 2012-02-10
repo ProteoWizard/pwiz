@@ -54,7 +54,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public IList<DbIrtPeptide> CalibrationPeptides { get; private set; }
 
-        private SortableBindingList<StandardPeptide> StandardPeptideList { get { return _gridViewDriver.Items; } }
+        public SortableBindingList<StandardPeptide> StandardPeptideList { get { return _gridViewDriver.Items; } }
 
         public int StandardPeptideCount { get { return StandardPeptideList.Count; } }
 

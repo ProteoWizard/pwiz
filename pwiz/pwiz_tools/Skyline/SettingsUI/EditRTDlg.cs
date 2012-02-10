@@ -660,6 +660,11 @@ namespace pwiz.Skyline.SettingsUI
             textIntercept.Text = s;
         }
 
+        public void SetAutoCalcRegression(bool autoCalc)
+        {
+            cbAutoCalc.Checked = autoCalc;
+        }
+
         #endregion
     }
 

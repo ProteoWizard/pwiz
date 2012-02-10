@@ -97,6 +97,20 @@ namespace pwiz.Skyline.EditUI
             set { textMinDotProduct.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public IsotopeLabelType RefineLabelType
+        {
+            get
+            {
+                string refineTypeName = comboRefineLabelType.SelectedItem.ToString();
+                if (string.IsNullOrEmpty(refineTypeName))
+                    return null;
+                var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(refineTypeName);
+                return typedMods.LabelType;
+            }
+
+            set { comboRefineLabelType.SelectedItem = value.ToString(); }
+        }
+
         public void OkDialog()
         {
             // TODO: Remove this
@@ -122,19 +136,13 @@ namespace pwiz.Skyline.EditUI
             bool removeDuplicatePeptides = cbRemoveDuplicatePeptides.Checked;
             bool removeRepeatedPeptides = cbRemoveRepeatedPeptides.Checked;
 
-            IsotopeLabelType refineLabelType = null;
-            string refineTypeName = comboRefineLabelType.SelectedItem.ToString();
-            if (!string.IsNullOrEmpty(refineTypeName))
-            {
-                var typedMods = _settings.PeptideSettings.Modifications.GetModificationsByName(refineTypeName);
-                refineLabelType = typedMods.LabelType;
-            }
+            IsotopeLabelType refineLabelType = RefineLabelType;
 
             bool addLabelType = cbAdd.Checked;
             // If adding, make sure there is something to add
             if (addLabelType && refineLabelType != null && !CanAddLabelType(refineLabelType))
             {
-                MessageDlg.Show(this, string.Format("The label type '{0}' cannot be added. There are no modifications for this type.", refineTypeName));
+                MessageDlg.Show(this, string.Format("The label type '{0}' cannot be added. There are no modifications for this type.", refineLabelType.Name));
                 tabControl1.SelectedIndex = 0;
                 comboRefineLabelType.Focus();
                 return;

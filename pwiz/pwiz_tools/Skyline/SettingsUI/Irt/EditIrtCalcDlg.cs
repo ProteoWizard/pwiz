@@ -1174,9 +1174,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         #region Functional Test Support
 
-        public void SetCalcName(string name)
+        public string CalcName
         {
-            textCalculatorName.Text = name;
+            get { return textCalculatorName.Text; }
+            set { textCalculatorName.Text = value; }
         }
 
         public void DoPasteStandard()

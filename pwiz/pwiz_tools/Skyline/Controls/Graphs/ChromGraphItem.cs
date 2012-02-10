@@ -29,7 +29,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal class ChromGraphItem : AbstractChromGraphItem
+    public class ChromGraphItem : AbstractChromGraphItem
     {
         private const string FONT_FACE = "Arial";
 
@@ -148,7 +148,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool HideBest { get; set; }
 
-        public PeakBoundsDragInfo DragInfo
+        public double BestPeakTime { get { return _bestPeakTimeIndex != -1 ? _times[_bestPeakTimeIndex] : 0; } }
+
+        internal PeakBoundsDragInfo DragInfo
         {
             get { return _dragInfo; }
             set

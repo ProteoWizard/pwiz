@@ -179,6 +179,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public RetentionTimeStatistics StatisticsRefined
+        {
+            get
+            {
+                GraphData data = Data;
+                return data == null ? null : data.StatisticsRefined;
+            }
+        }
+
         public bool IsValidFor(SrmDocument document)
         {
             var data = Data;
@@ -513,6 +522,11 @@ namespace pwiz.Skyline.Controls.Graphs
             public RetentionTimeRegression RegressionRefined
             {
                 get { return _regressionRefined ?? _regressionAll; }
+            }
+
+            public RetentionTimeStatistics StatisticsRefined
+            {
+                get { return _statisticsRefined ?? _statisticsAll; }
             }
 
             public bool IsRefined()
