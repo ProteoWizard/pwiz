@@ -161,6 +161,7 @@ namespace Test
 
             session.Flush();
             session.Close(); // close the connection
+            sessionFactory.Close();
             #endregion
 
             var qonverter = new IDPicker.Qonverter()
@@ -214,6 +215,7 @@ namespace Test
             progressTester.CancelAtCount = int.MaxValue;
             qonverter.Qonvert("testStaticQonversion.idpDB");
 
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory("testStaticQonversion.idpDB");
             session = sessionFactory.OpenSession();
             session.Clear();
 
