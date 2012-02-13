@@ -124,7 +124,7 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result == null)
                 return null;
-            return result[0].PeakCountRatio;
+            return result.GetAverageValue(chromInfo => chromInfo.PeakCountRatio);
         }
 
         public float? AveragePeakCountRatio
@@ -135,6 +135,24 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public float? GetSchedulingTime(int i)
+        {
+            return GetMeasuredRetentionTime(i);
+//            return GetPeakCenterTime(i);
+        }
+
+        public float? SchedulingTime
+        {
+            get { return AverageMeasuredRetentionTime; }
+//            get { return AveragePeakCenterTime; }
+        }
+
+        public float? GetSchedulingTime(ChromFileInfoId fileId)
+        {
+            return GetMeasuredRetentionTime(fileId);
+//            return GetPeakCenterTime(fileId);
+        }
+
         public float? GetMeasuredRetentionTime(int i)
         {
             if (i == -1)
@@ -143,73 +161,102 @@ namespace pwiz.Skyline.Model
             var result = GetSafeChromInfo(i);
             if (result == null)
                 return null;
-            return result[0].RetentionTime;
+            return result.GetAverageValue(chromInfo => chromInfo.RetentionTime.HasValue
+                                             ? chromInfo.RetentionTime.Value
+                                             : (float?)null);
         }
 
         public float? AverageMeasuredRetentionTime
         {
             get
             {
-                return GetAverageResultValue(chromInfo =>
-                                             !chromInfo.RetentionTime.HasValue ?
-                                                                                   (float?) null : chromInfo.RetentionTime.Value);
+                return GetAverageResultValue(chromInfo => chromInfo.RetentionTime.HasValue
+                                             ? chromInfo.RetentionTime.Value
+                                             : (float?)null);
             }
         }
 
-        public float? SchedulingTime
-        {
-            get { return AveragePeakCenterTime; }
-        }
-
-        public float? GetSchedulingTime(ChromFileInfoId fileId)
-        {
-            return GetPeakCenterTime(fileId);
-        }
-
-        public float? AveragePeakCenterTime
-        {
-            get
-            {
-                double totalTime = 0;
-                int countTime = 0;
-                foreach (TransitionGroupDocNode nodeGroup in Children)
-                {
-                    float? centerTime = nodeGroup.AveragePeakCenterTime;
-                    if (centerTime.HasValue)
-                    {
-                        totalTime += centerTime.Value;
-                        countTime++;
-                    }
-                }
-                if (countTime == 0)
-                    return null;
-                return (float) (totalTime/countTime);
-            }
-        }
-
-        public float? GetPeakCenterTime(ChromFileInfoId fileId)
+        public float? GetMeasuredRetentionTime(ChromFileInfoId fileId)
         {
             double totalTime = 0;
             int countTime = 0;
-            foreach (TransitionGroupDocNode nodeGroup in Children)
+            foreach (var chromInfo in TransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
+            {
+                if (fileId != null && !ReferenceEquals(fileId, chromInfo.FileId))
+                    continue;
+                float? retentionTime = chromInfo.RetentionTime;
+                if (!retentionTime.HasValue)
+                    continue;
+
+                totalTime += retentionTime.Value;
+                countTime++;
+            }
+            if (countTime == 0)
+                return null;
+            return (float)(totalTime / countTime);
+        }
+
+        public float? GetPeakCenterTime(int i)
+        {
+            if (i == -1)
+                return AveragePeakCenterTime;
+
+            double totalTime = 0;
+            int countTime = 0;
+            foreach (var nodeGroup in TransitionGroups)
             {
                 if (!nodeGroup.HasResults)
                     continue;
+                var result = nodeGroup.Results[i];
+                if (result == null)
+                    continue;
 
-                foreach (var chromInfo in nodeGroup.ChromInfos)
+                foreach (var chromInfo in result)
                 {
-                    if (fileId != null && !ReferenceEquals(fileId, chromInfo.FileId))
-                        continue;
-                    if (!chromInfo.StartRetentionTime.HasValue || !chromInfo.EndRetentionTime.HasValue)
+                    float? centerTime = GetPeakCenterTime(chromInfo);
+                    if (!centerTime.HasValue)
                         continue;
 
-                    totalTime += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value)/2;
+                    totalTime += centerTime.Value;
                     countTime++;
                 }
             }
             if (countTime == 0)
                 return null;
             return (float)(totalTime / countTime);
+        }
+
+        public float? AveragePeakCenterTime
+        {
+            get { return GetPeakCenterTime((ChromFileInfoId) null); }
+        }
+
+        public float? GetPeakCenterTime(ChromFileInfoId fileId)
+        {
+            double totalTime = 0;
+            int countTime = 0;
+            foreach (var chromInfo in TransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
+            {
+                if (fileId != null && !ReferenceEquals(fileId, chromInfo.FileId))
+                    continue;
+                float? centerTime = GetPeakCenterTime(chromInfo);
+                if (!centerTime.HasValue)
+                    continue;
+
+                totalTime += centerTime.Value;
+                countTime++;
+            }
+            if (countTime == 0)
+                return null;
+            return (float)(totalTime / countTime);
+        }
+
+        private float? GetPeakCenterTime(TransitionGroupChromInfo chromInfo)
+        {
+            if (!chromInfo.StartRetentionTime.HasValue || !chromInfo.EndRetentionTime.HasValue)
+                return null;
+
+            return (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2;
         }
 
         private float? GetAverageResultValue(Func<PeptideChromInfo, float?> getVal)

@@ -260,6 +260,17 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public HashSet<string> GetRetentionTimeStandards()
+        {
+            var rtRegression = Settings.PeptideSettings.Prediction.RetentionTime;
+            if (rtRegression == null || rtRegression.Calculator == null)
+                return new HashSet<string>();
+
+            var regressionPeps = rtRegression.Calculator.GetStandardPeptides(Peptides.Select(
+                nodePep => Settings.GetModifiedSequence(nodePep)));
+            return new HashSet<string>(regressionPeps);            
+        }
+
         public PeptideGroupDocNode FindPeptideGroup(PeptideGroup fastaSequence)
         {
             foreach (var peptideGroup in PeptideGroups)

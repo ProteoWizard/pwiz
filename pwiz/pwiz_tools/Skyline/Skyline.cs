@@ -1424,6 +1424,13 @@ namespace pwiz.Skyline
             }
         }
 
+        public void HideFindResults()
+        {
+            var findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+            if (findResultsForm != null)
+                findResultsForm.Close();            
+        }
+
         /// <summary>
         /// Navigates the UI to the appropriate spot to display to the user
         /// where text was found.

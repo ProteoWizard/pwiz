@@ -38,6 +38,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             Icon = Resources.Skyline;
 
+            PeptidesCount = peptideCount;
+            RunsConvertedCount = runsConvertedCount;
+            RunsFailedCount = runsFailedCount;
+
             if (peptideCount == 0)
                 labelPeptidesAdded.Text = "No new peptides will be added to the iRT database.";
             else if (peptideCount == 1)
@@ -94,6 +98,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             if (!panelOverwrite.Visible && !panelKeep.Visible && !panelExisting.Visible)
                 FormBorderStyle = FormBorderStyle.FixedDialog;
         }
+
+        public int PeptidesCount { get; private set; }
+        public int RunsConvertedCount { get; private set; }
+        public int RunsFailedCount { get; private set; }
+        public int KeepPeptidesCount { get { return listKeep.Items.Count; } }
+        public int OverwritePeptidesCount { get { return listOverwrite.Items.Count; } }
+        public int ExistingPeptidesCount { get { return listExisting.Items.Count; } }
 
         public AddIrtPeptidesAction Action
         {

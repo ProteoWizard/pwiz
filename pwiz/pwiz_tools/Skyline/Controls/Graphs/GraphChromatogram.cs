@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="nodeGroup">The transition group for which the peak was picked</param>
         /// <param name="nodeTran">The transition no which the time was chosen</param>
         /// <param name="peakTime">The retention time at which the peak was picked</param>
-        private void FirePickedPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, double peakTime)
+        public void FirePickedPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, double peakTime)
         {
             if (PickedPeak != null)
             {
@@ -401,6 +401,24 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 var graphItem = (ChromGraphItem) graphControl.GraphPane.CurveList.First().Tag;
                 return graphItem.SelectedRetentionMsMs;
+            }
+        }
+
+        public double? PredictedRT
+        {
+            get
+            {
+                var graphItem = (ChromGraphItem)graphControl.GraphPane.CurveList.First().Tag;
+                return graphItem.RetentionPrediction;
+            }
+        }
+
+        public double? BestPeakTime
+        {
+            get
+            {
+                var graphItem = (ChromGraphItem)graphControl.GraphPane.CurveList.First().Tag;
+                return graphItem.BestPeakTime;
             }
         }
 
@@ -1700,7 +1718,7 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return GraphPane.CurveList.Select(curve => (ChromGraphItem) curve.Tag); }
         }
 
-        private double[] RetentionTimes
+        public double[] RetentionMsMs
         {
             get
             {
@@ -1824,7 +1842,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             {
                                 double time, yTemp;
                                 GraphPane.ReverseTransform(pt, out time, out yTemp);
-                                _peakBoundDragInfos = new[] { StartDrag(graphItem, RetentionTimes, pt, time, false) };
+                                _peakBoundDragInfos = new[] { StartDrag(graphItem, RetentionMsMs, pt, time, false) };
                                 graphControl.Cursor = Cursors.VSplit;    // ZedGraph changes to crosshair without this
                                 return true;
                             }
@@ -1848,7 +1866,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 ChromGraphItem graphItem;
                                 double time = FindBestPeakTime(curveItem, pt, out graphItem);
                                 if (time > 0)
-                                    listDragInfos.Add(StartDrag(graphItem, RetentionTimes, pt, time, true));                                
+                                    listDragInfos.Add(StartDrag(graphItem, RetentionMsMs, pt, time, true));                                
                             }
                             _peakBoundDragInfos = listDragInfos.ToArray();
                             graphControl.Cursor = Cursors.VSplit;    // ZedGraph changes to crosshair without this

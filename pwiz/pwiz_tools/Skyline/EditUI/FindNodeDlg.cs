@@ -127,6 +127,11 @@ namespace pwiz.Skyline.EditUI
 
         private void btnFindAll_Click(object sender, EventArgs e)
         {
+            FindAll();
+        }
+
+        public void FindAll()
+        {
             WriteSettings();
             ((SkylineWindow) Owner).FindAll(this);
         }

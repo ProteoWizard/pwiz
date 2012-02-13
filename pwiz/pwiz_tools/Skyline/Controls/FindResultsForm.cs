@@ -108,6 +108,25 @@ namespace pwiz.Skyline.Controls
 
         private void listView_ItemActivate(object sender, EventArgs e)
         {
+            ActivateSelectedItem();
+        }
+
+        public int ItemCount
+        {
+            get { return listView.Items.Count; }
+        }
+
+        public void ActivateItem(int iItem)
+        {
+            for (int i = 0; i < listView.Items.Count; i++)
+                listView.Items[i].Selected = (i == iItem);
+            listView.Items[iItem].Focused = true;
+            listView.Select();
+            ActivateSelectedItem();
+        }
+
+        private void ActivateSelectedItem()
+        {
             var activeItem = listView.SelectedItems.Cast<ListViewItem>().FirstOrDefault();
             if (activeItem == null)
             {

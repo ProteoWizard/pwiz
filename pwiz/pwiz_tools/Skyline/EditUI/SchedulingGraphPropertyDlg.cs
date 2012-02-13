@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
@@ -33,11 +34,21 @@ namespace pwiz.Skyline.EditUI
         {
             InitializeComponent();
 
-            textTimeWindows.Text = string.Join(", ",
-                RTScheduleGraphPane.ScheduleWindows.Select(v => v.ToString(CultureInfo.CurrentCulture)).ToArray());
+            TimeWindows = RTScheduleGraphPane.ScheduleWindows;
         }
 
-        private void btnOk_Click(object sender, System.EventArgs e)
+        public double[] TimeWindows
+        {
+            get { return textTimeWindows.Text.Split(',').Select(t => double.Parse(t.Trim())).ToArray(); }
+            set { textTimeWindows.Text = WindowsToString(value); }
+        }
+
+        private static string WindowsToString(IEnumerable<double> windows)
+        {
+            return string.Join(", ", windows.Select(v => v.ToString(CultureInfo.CurrentCulture)).ToArray());
+        }
+
+        private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
         }

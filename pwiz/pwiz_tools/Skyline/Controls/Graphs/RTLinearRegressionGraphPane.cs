@@ -408,12 +408,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     index++;
                     float? rt = null;
                     if (!bestResult)
-                        rt = nodePeptide.GetMeasuredRetentionTime(resultIndex);
+                        rt = nodePeptide.GetSchedulingTime(resultIndex);
                     else
                     {
                         int iBest = nodePeptide.BestResult;
                         if (iBest != -1)
-                            rt = nodePeptide.GetMeasuredRetentionTime(iBest);
+                            rt = nodePeptide.GetSchedulingTime(iBest);
                     }
                     if (!rt.HasValue)
                         rt = 0;

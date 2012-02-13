@@ -471,7 +471,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             AddLibrary();
         }
 
-        private void AddLibrary()
+        public void AddLibrary()
         {
             _gridViewLibraryDriver.AddSpectralLibrary();
         }
@@ -658,7 +658,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     foreach (var nodePep in document.Peptides)
                     {
                         string modSeq = document.Settings.GetModifiedSequence(nodePep, IsotopeLabelType.light);
-                        float? centerTime = nodePep.GetPeakCenterTime(fileInfo.FileId);
+                        float? centerTime = nodePep.GetSchedulingTime(fileInfo.FileId);
                         if (centerTime.HasValue)
                             _dictPeptideRetentionTime.Add(modSeq, centerTime.Value);
                     }
@@ -704,42 +704,54 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private void AddSpectralLibrary(LibrarySpec librarySpec)
             {
                 var libraryManager = ((ILibraryBuildNotificationContainer)Program.MainWindow).LibraryManager;
-                var library = libraryManager.TryGetLibrary(librarySpec);
+                Library library = null;
                 ProcessedIrtAverages irtAverages = null;
-                using (var longWait = new LongWaitDlg
+                try
+                {
+                    library = libraryManager.TryGetLibrary(librarySpec);
+                    using (var longWait = new LongWaitDlg
                     {
                         Text = "Adding Spectral Library",
                         Message = string.Format("Adding retention times from {0}", librarySpec.FilePath),
                         FormBorderStyle = FormBorderStyle.Sizable
                     })
-                {
-                    try
                     {
-                        var status = longWait.PerformWork(MessageParent, 800, monitor =>
+                        try
                         {
-                            if (library == null)
-                                library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
-
-                            int fileCount = library.FileCount ?? 0;
-                            if (fileCount == 0)
+                            var status = longWait.PerformWork(MessageParent, 800, monitor =>
                             {
-                                string message = string.Format("The library {0} does not contain retention time information.", librarySpec.FilePath);
-                                monitor.UpdateProgress(new ProgressStatus("").ChangeErrorException(new IOException(message)));
+                                if (library == null)
+                                    library = librarySpec.LoadLibrary(new DefaultFileLoadMonitor(monitor));
+
+                                int fileCount = library.FileCount ?? 0;
+                                if (fileCount == 0)
+                                {
+                                    string message = string.Format("The library {0} does not contain retention time information.", librarySpec.FilePath);
+                                    monitor.UpdateProgress(new ProgressStatus("").ChangeErrorException(new IOException(message)));
+                                    return;
+                                }
+
+                                irtAverages = ProcessRetetionTimes(monitor, GetRetentionTimeProviders(library), fileCount);
+                            });
+                            if (status.IsError)
+                            {
+                                MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
                                 return;
                             }
-
-                            irtAverages = ProcessRetetionTimes(monitor, GetRetentionTimeProviders(library), fileCount);
-                        });
-                        if (status.IsError)
+                        }
+                        catch (Exception x)
                         {
-                            MessageBox.Show(MessageParent, status.ErrorException.Message, Program.Name);
+                            MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to load the library file {0}.\n{1}", librarySpec.FilePath, x.Message));
                             return;
                         }
                     }
-                    catch (Exception x)
+                }
+                finally
+                {
+                    if (library != null)
                     {
-                        MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to load the library file {0}.\n{1}", librarySpec.FilePath, x.Message));
-                        return;
+                        foreach (var pooledStream in library.ReadStreams)
+                            pooledStream.CloseStream();
                     }
                 }
 

@@ -2311,7 +2311,12 @@ namespace pwiz.Skyline
 
         private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)
         {
-            using (var dlg = new SetRTThresholdDlg { Threshold = Settings.Default.RTResidualRThreshold })
+            ShowSetRTThresholdDlg();
+        }
+
+        public void ShowSetRTThresholdDlg()
+        {
+            using (var dlg = new SetRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold})
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -2405,6 +2410,11 @@ namespace pwiz.Skyline
 
         private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)
         {
+            ShowEditCalculatorDlg();
+        }
+
+        public void ShowEditCalculatorDlg()
+        {
             var list = Settings.Default.RTScoreCalculatorList;
             var regressionRT = RTGraphController.RegressionRefined;
             if (regressionRT != null && list.CanEditItem(regressionRT.Calculator))
@@ -2428,6 +2438,11 @@ namespace pwiz.Skyline
 
         private void removeRTOutliersContextMenuItem_Click(object sender, EventArgs e)
         {
+            RemoveRTOutliers();
+        }
+
+        public void RemoveRTOutliers()
+        {
             if (_graphRetentionTime == null)
                 return;
 
@@ -2437,7 +2452,7 @@ namespace pwiz.Skyline
                 outlierIds.Add(outlier.Id.GlobalIndex);
 
             ModifyDocument("Remove retention time outliers",
-                doc => (SrmDocument) doc.RemoveAll(outlierIds));
+                           doc => (SrmDocument) doc.RemoveAll(outlierIds));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)
@@ -2481,6 +2496,11 @@ namespace pwiz.Skyline
         }
 
         private void timePropsContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRTPropertyDlg();
+        }
+
+        public void ShowRTPropertyDlg()
         {
             GraphTypeRT graphType = RTGraphController.GraphType;
             if (graphType == GraphTypeRT.schedule)
@@ -3334,15 +3354,6 @@ namespace pwiz.Skyline
                     listGraphs.Reverse();
             }
             return listGraphs;
-        }
-
-        #endregion
-
-        #region Testing
-
-        public GraphChromatogram GetGraphChromatogram(string text)
-        {
-            return _listGraphChrom.Find(graph => graph.TabText == "Unrefined");   
         }
 
         #endregion
