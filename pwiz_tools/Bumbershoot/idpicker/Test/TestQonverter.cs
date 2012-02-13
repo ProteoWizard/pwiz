@@ -198,6 +198,9 @@ namespace Test
 
             qonverter.QonversionProgress += new IDPicker.Qonverter.QonversionProgressEventHandler(progressTester.qonverter_QonversionProgress);
 
+            // HACK: I don't know why this is needed.
+            GC.WaitForPendingFinalizers();
+
             System.IO.File.Delete("testStaticQonversion.idpDB");
             System.IO.File.Copy("testStaticQonversion.idpDB-copy", "testStaticQonversion.idpDB");
 
