@@ -416,7 +416,18 @@ namespace IDPicker.DataModel
             this.tempFilepath = tempFilepath;
         }
 
-        public new void Dispose() { base.Dispose(); File.Delete(tempFilepath); }
+        public new void Dispose ()
+        {
+            try
+            {
+                base.Dispose();
+                File.Delete(tempFilepath);
+            }
+            catch (Exception)
+            {
+                // TODO: log
+            }
+        }
 
         private string tempFilepath;
     }
