@@ -645,7 +645,12 @@ namespace pwiz.Topograph.Enrichment
                                       initialVector.Scale(combination[0]).Add(
                                           newlySynthesizedVector.Scale(combination[1])));
             }
-         }
+        }
+
+        public double ExpectedUnlabeledFraction(double precursorPool)
+        {
+            return Math.Pow(1 - precursorPool/100, _maxTracerCount);
+        }
 
         static double Choose(int n, int c)
         {

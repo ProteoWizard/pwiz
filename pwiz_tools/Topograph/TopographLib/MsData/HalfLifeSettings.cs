@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Xml;
-using System.Xml.Schema;
-using System.Xml.Serialization;
+﻿using System.Xml.Serialization;
 
 namespace pwiz.Topograph.MsData
 {
@@ -13,48 +7,24 @@ namespace pwiz.Topograph.MsData
     {
         public static readonly HalfLifeSettings Default = new HalfLifeSettings
                                                      {
-                                                         HalfLifeCalculationType =
-                                                             HalfLifeCalculationType.GroupPrecursorPool,
+                                                         NewlySynthesizedTracerQuantity = TracerQuantity.PartialLabelDistribution,
+                                                         PrecursorPoolCalculation = PrecursorPoolCalculation.MedianPerSample,
+                                                         SimpleLinearRegression = true,
+                                                         CurrentPrecursorPool = 100,
                                                      };
-        public bool HoldInitialTracerPercentConstant { get; set; }
-        public HalfLifeCalculationType HalfLifeCalculationType { get; set; }
+
+        public bool ForceThroughOrigin { get; set; }
+        public PrecursorPoolCalculation PrecursorPoolCalculation { get; set; }
+        public TracerQuantity NewlySynthesizedTracerQuantity { get; set; }
         public EvviesFilterEnum EvviesFilter { get; set; }
         public double MinimumAuc { get; set; }
         public double MinimumDeconvolutionScore { get; set; }
         public double MinimumTurnoverScore { get; set; }
+        public double InitialPrecursorPool { get; set; }
+        public double CurrentPrecursorPool { get; set; }
         public bool ByProtein { get; set; }
         public bool BySample { get; set; }
-
-        public bool Equals(HalfLifeSettings other)
-        {
-            if (ReferenceEquals(null, other)) return false;
-            if (ReferenceEquals(this, other)) return true;
-            return other.HoldInitialTracerPercentConstant.Equals(HoldInitialTracerPercentConstant) && Equals(other.HalfLifeCalculationType, HalfLifeCalculationType) && Equals(other.EvviesFilter, EvviesFilter) && other.MinimumAuc.Equals(MinimumAuc) && other.MinimumDeconvolutionScore.Equals(MinimumDeconvolutionScore) && other.MinimumTurnoverScore.Equals(MinimumTurnoverScore) && other.ByProtein.Equals(ByProtein) && other.BySample.Equals(BySample);
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (HalfLifeSettings)) return false;
-            return Equals((HalfLifeSettings) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked
-            {
-                int result = HoldInitialTracerPercentConstant.GetHashCode();
-                result = (result*397) ^ HalfLifeCalculationType.GetHashCode();
-                result = (result*397) ^ EvviesFilter.GetHashCode();
-                result = (result*397) ^ MinimumAuc.GetHashCode();
-                result = (result*397) ^ MinimumDeconvolutionScore.GetHashCode();
-                result = (result*397) ^ MinimumTurnoverScore.GetHashCode();
-                result = (result*397) ^ ByProtein.GetHashCode();
-                result = (result*397) ^ BySample.GetHashCode();
-                return result;
-            }
-        }
+        public bool SimpleLinearRegression { get; set; }
 
         public static double TryParseDouble(string strValue, double defaultValue)
         {

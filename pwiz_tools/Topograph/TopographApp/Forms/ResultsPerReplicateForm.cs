@@ -194,14 +194,14 @@ namespace pwiz.Topograph.ui.Forms
             {
                 get
                 {
-                    if (!_rowData.AvgTurnover.HasValue || !_rowData.AvgPrecursorEnrichment.HasValue || !_rowData.AvgTurnoverScore.HasValue) {
+                    if (!_rowData.Turnover.HasValue || !_rowData.CurrentPrecursorPool.HasValue || !_rowData.TurnoverScore.HasValue) {
                         return null;
                     }
                     return new TurnoverResult
                                {
-                                   PrecursorEnrichment = _rowData.AvgPrecursorEnrichment.Value,
-                                   Turnover = _rowData.AvgTurnover.Value,
-                                   Score = _rowData.AvgTurnoverScore.Value,
+                                   PrecursorEnrichment = _rowData.CurrentPrecursorPool.Value,
+                                   Turnover = _rowData.Turnover.Value,
+                                   Score = _rowData.TurnoverScore.Value,
                                };
                 }
             }

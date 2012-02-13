@@ -1047,6 +1047,17 @@ namespace pwiz.Topograph.Model
         {
             get { return DatabasePath.EndsWith("tpglnk"); }
         }
+
+        public HalfLifeSettings GetHalfLifeSettings(HalfLifeSettings halfLifeSettings)
+        {
+            var tracerDef = GetTracerDefs().FirstOrDefault();
+            if (tracerDef != null)
+            {
+                halfLifeSettings.InitialPrecursorPool = tracerDef.InitialApe;
+                halfLifeSettings.CurrentPrecursorPool = tracerDef.FinalApe;
+            }
+            return halfLifeSettings;
+        }
     }
 
     public delegate void EntitiesChangeListener(EntitiesChangedEventArgs entitiesChangedEventArgs);

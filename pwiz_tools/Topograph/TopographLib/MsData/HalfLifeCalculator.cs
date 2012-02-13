@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using NHibernate;
+using pwiz.Common.DataAnalysis;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
@@ -30,11 +31,10 @@ namespace pwiz.Topograph.MsData
 
         public HalfLifeSettings HalfLifeSettings { get; private set; }
 
-        public HalfLifeCalculationType HalfLifeCalculationType
+        public TracerQuantity NewlySynthesizedTracerQuantity
         {
-            get { return HalfLifeSettings.HalfLifeCalculationType; }
+            get { return HalfLifeSettings.NewlySynthesizedTracerQuantity; }
         }
-
         public double InitialPercent
         {
             get; set;
@@ -47,7 +47,7 @@ namespace pwiz.Topograph.MsData
 
         public bool FixedInitialPercent
         {
-            get { return HalfLifeSettings.HoldInitialTracerPercentConstant; }
+            get { return HalfLifeSettings.ForceThroughOrigin; }
         }
         public bool AcceptMissingMs2Id { get; set; }
         public ICollection<IntegrationNote> AcceptIntegrationNotes { get; set; }
@@ -75,8 +75,7 @@ namespace pwiz.Topograph.MsData
         {
             get
             {
-                return HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool
-                       || HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool;
+                return HalfLifeSettings.PrecursorPoolCalculation == PrecursorPoolCalculation.MedianPerSample;
             }
         }
 
@@ -200,31 +199,71 @@ namespace pwiz.Topograph.MsData
                              {
                                  RejectReason = IsAcceptable(rowData),
                              };
-            if (!RequiresPrecursorPool)
+            result.InitialPrecursorPool = HalfLifeSettings.InitialPrecursorPool;
+            switch (HalfLifeSettings.PrecursorPoolCalculation)
             {
+                case PrecursorPoolCalculation.Fixed:
+                    result.CurrentPrecursorPool = HalfLifeSettings.CurrentPrecursorPool;
+                    break;
+                case PrecursorPoolCalculation.MedianPerSample:
+                    double precursorPool;
+                    if (_precursorPools.TryGetValue(rowData.MsDataFile.Id.Value, out precursorPool))
+                    {
+                        result.CurrentPrecursorPool = precursorPool;
+                    }
+                    break;
+                case PrecursorPoolCalculation.Individual:
+                    result.CurrentPrecursorPool = rowData.IndPrecursorEnrichment * 100;
+                    break;
+            }
+
+            switch (HalfLifeSettings.NewlySynthesizedTracerQuantity)
+            {
+                case TracerQuantity.LabeledAminoAcid:
+                    result.RawValue = rowData.TracerPercent/100;
+                    break;
+                case TracerQuantity.UnlabeledPeptide:
+                    PeakData peakData;
+                    if (rowData.Peaks.TryGetValue(TracerFormula.Empty, out peakData))
+                    {
+                        result.RawValue = peakData.TotalArea/rowData.AreaUnderCurve;
+                    }
+                    break;
+            }
+            if (!result.CurrentPrecursorPool.HasValue)
+            {
+                result.RejectReason = RejectReason.NoPrecursorPool;
                 return result;
             }
-            double precursorEnrichment;
-            if (_precursorPools.TryGetValue(rowData.MsDataFile.Id.Value, out precursorEnrichment))
+            switch (HalfLifeSettings.NewlySynthesizedTracerQuantity)
             {
-                result.AvgPrecursorEnrichment = precursorEnrichment;
-                if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool)
-                {
-                    var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
-                    double? turnover;
-                    double? turnoverScore;
-                    turnoverCalculator.ComputeTurnover(precursorEnrichment, rowData.PeakAreas, out turnover, out turnoverScore);
-                    result.AvgTurnover = turnover * 100;
-                    result.AvgTurnoverScore = turnoverScore;
-                }
-                else if (HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool)
-                {
-                    result.AvgTurnover = 100 * (rowData.TracerPercent - InitialPercent) / (precursorEnrichment - InitialPercent);
-                }
+                case TracerQuantity.PartialLabelDistribution:
+                    {
+                        var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
+                        double? turnover;
+                        double? turnoverScore;
+                        turnoverCalculator.ComputeTurnover(result.CurrentPrecursorPool.Value, rowData.PeakAreas, out turnover, out turnoverScore);
+                        result.Turnover = turnover;
+                        result.TurnoverScore = turnoverScore;
+                    }
+                    break;
+                case TracerQuantity.LabeledAminoAcid:
+                    result.Turnover = (100 * result.RawValue - result.InitialPrecursorPool)/
+                                      (result.CurrentPrecursorPool - result.InitialPrecursorPool);
+                    break;
+                case TracerQuantity.UnlabeledPeptide:
+                    {
+                        var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
+                        var initialRawValue = turnoverCalculator.ExpectedUnlabeledFraction(result.InitialPrecursorPool);
+                        var finalRawValue = turnoverCalculator.ExpectedUnlabeledFraction(result.CurrentPrecursorPool.Value);
+                        result.Turnover = (result.RawValue - initialRawValue)/(finalRawValue - initialRawValue);
+                    }
+                    break;
             }
+
             if (null == result.RejectReason && ValidationStatus.accept != result.RawRowData.ValidationStatus)
             {
-                if (0 < MinTurnoverScore && result.AvgTurnoverScore < MinTurnoverScore)
+                if (0 < MinTurnoverScore && result.TurnoverScore < MinTurnoverScore)
                 {
                     result.RejectReason = RejectReason.LowTurnoverScore;
                 }
@@ -375,8 +414,7 @@ namespace pwiz.Topograph.MsData
                     {
                         continue;
                     }
-                    double? score;
-                    var value = GetValue(rowData);
+                    var value = rowData.Turnover;
                     if (!value.HasValue || double.IsNaN(value.Value) || double.IsInfinity(value.Value))
                     {
                         continue;
@@ -402,10 +440,10 @@ namespace pwiz.Topograph.MsData
                         var statistics = new Statistics(entry.Value.ToArray());
                         var min = statistics.Median() - 3*statistics.StdDev();
                         var max = statistics.Median() + 3*statistics.StdDev();
-                        if (statistics.Median() + 2 * statistics.StdDev() >= 99)
+                        if (statistics.Median() + 2 * statistics.StdDev() >= .99)
                         {
                             // Throw away any values of 100% or 99% if they are more than 2 SD above the median.
-                            max = Math.Min(99, max);
+                            max = Math.Min(.99, max);
                         }
                         var newValues = entry.Value.Where(v => v >= min && v <= max).ToList();
                         if (newValues.Count != entry.Value.Count)
@@ -443,8 +481,7 @@ namespace pwiz.Topograph.MsData
                 foreach (var rowData in applicableRowDatas)
                 {
                     var cutoff = cutoffs[GetTimePoint(rowData.RawRowData).Value];
-                    double? score;
-                    var value = GetValue(rowData);
+                    var value = rowData.Turnover;
                     rowData.EvviesFilterMin = cutoff.Key;
                     rowData.EvviesFilterMax = cutoff.Value;
                     if (value.Value < cutoff.Key || value.Value > cutoff.Value)
@@ -461,49 +498,51 @@ namespace pwiz.Topograph.MsData
             {
                 filteredRowDatas = rowDatas.Where(rowData=>null == rowData.RejectReason).ToArray();
             }
-            var timePoints = new List<double>();
-            var logValues = new List<double>();
-            foreach (var rowData in filteredRowDatas)
+            if (HalfLifeSettings.SimpleLinearRegression)
             {
-                if (null != rowData.RejectReason)
+                var timePoints = new List<double>();
+                var logValues = new List<double>();
+                foreach (var rowData in filteredRowDatas)
                 {
-                    continue;
+                    if (null != rowData.RejectReason)
+                    {
+                        continue;
+                    }
+                    double? logValue = Math.Log(1-rowData.Turnover.Value);
+                    if (!logValue.HasValue || double.IsNaN(logValue.Value) || double.IsInfinity(logValue.Value))
+                    {
+                        rowData.RejectReason = RejectReason.ValueOutOfRange;
+                        continue;
+                    }
+                    double? timePoint = GetTimePoint(rowData.RawRowData);
+                    if (!timePoint.HasValue || ExcludedTimePoints.Contains(timePoint.Value))
+                    {
+                        rowData.RejectReason = RejectReason.NoTimePoint;
+                        continue;
+                    }
+                    logValues.Add(logValue.Value);
+                    timePoints.Add(timePoint.Value);
                 }
-                double? logValue = GetLogValue(rowData);
-                if (!logValue.HasValue || double.IsNaN(logValue.Value) || double.IsInfinity(logValue.Value))
+                var statsTimePoints = new Statistics(timePoints.ToArray());
+                var statsLogValues = new Statistics(logValues.ToArray());
+                double rateConstant, stDevRateConstant, rateConstantError, yIntercept;
+                double? rSquared = null;
+                if (FixedInitialPercent)
                 {
-                    rowData.RejectReason = RejectReason.ValueOutOfRange; 
-                    continue;
+                    rateConstant = statsLogValues.SlopeWithoutIntercept(statsTimePoints);
+                    stDevRateConstant = Statistics.StdDevSlopeWithoutIntercept(statsLogValues, statsTimePoints);
+                    rateConstantError = stDevRateConstant * GetErrorFactor(timePoints.Count - 1);
+                    yIntercept = 0;
                 }
-                double? timePoint = GetTimePoint(rowData.RawRowData);
-                if (!timePoint.HasValue || ExcludedTimePoints.Contains(timePoint.Value))
+                else
                 {
-                    rowData.RejectReason = RejectReason.NoTimePoint;
-                    continue;
+                    rateConstant = statsLogValues.Slope(statsTimePoints);
+                    stDevRateConstant = Statistics.StdDevB(statsLogValues, statsTimePoints);
+                    rateConstantError = stDevRateConstant * GetErrorFactor(timePoints.Count - 2);
+                    yIntercept = Statistics.Intercept(statsLogValues, statsTimePoints);
+                    rSquared = Math.Pow(Statistics.R(statsLogValues, statsTimePoints), 2);
                 }
-                logValues.Add(logValue.Value);
-                timePoints.Add(timePoint.Value);
-            }
-            var statsTimePoints = new Statistics(timePoints.ToArray());
-            var statsLogValues = new Statistics(logValues.ToArray());
-            double rateConstant, stDevRateConstant, rateConstantError, yIntercept;
-            double? rSquared = null;
-            if (FixedInitialPercent)
-            {
-                rateConstant = statsLogValues.SlopeWithoutIntercept(statsTimePoints);
-                stDevRateConstant = Statistics.StdDevSlopeWithoutIntercept(statsLogValues, statsTimePoints);
-                rateConstantError = stDevRateConstant * GetErrorFactor(timePoints.Count - 1);
-                yIntercept = 0;
-            }
-            else
-            {
-                rateConstant = statsLogValues.Slope(statsTimePoints);
-                stDevRateConstant = Statistics.StdDevB(statsLogValues, statsTimePoints);
-                rateConstantError = stDevRateConstant*GetErrorFactor(timePoints.Count - 2);
-                yIntercept = Statistics.Intercept(statsLogValues, statsTimePoints);
-                rSquared = Math.Pow(Statistics.R(statsLogValues, statsTimePoints), 2);
-            }
-            return new ResultData
+                return new ResultData
                 {
                     RateConstant = rateConstant,
                     RateConstantStdDev = stDevRateConstant,
@@ -514,35 +553,60 @@ namespace pwiz.Topograph.MsData
                     RowDatas = rowDatas.ToArray(),
                     FilteredRowDatas = filteredRowDatas.ToArray(),
                 };
-        }
-
-        public double InvertLogValue(double logValue)
-        {
-            if (HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
-            {
-                return Math.Exp(logValue)*(InitialPercent - FinalPercent) + FinalPercent;
             }
-            return 100*(1 - Math.Exp(logValue));
-        }
-
-        private double? GetValue(ProcessedRowData rowData)
-        {
-            if (rowData == null)
+            else
             {
-                return null;
-            }
-            switch (HalfLifeCalculationType)
-            {
-                case HalfLifeCalculationType.TracerPercent:
-                    return rowData.RawRowData.TracerPercent;
-                case HalfLifeCalculationType.IndividualPrecursorPool:
-                    return rowData.RawRowData.IndTurnover;
-                case HalfLifeCalculationType.OldGroupPrecursorPool:
-                case HalfLifeCalculationType.GroupPrecursorPool:
-                    return rowData.AvgTurnover;    
-                default:
-                    throw new ArgumentException();
-                
+                var dataPoints = new List<KeyValuePair<double, double>>();
+                foreach (var rowData in filteredRowDatas)
+                {
+                    double? time = rowData.RawRowData.MsDataFile.TimePoint.Value;
+                    double? y;
+                    y = 1-rowData.Turnover;
+                    if (!y.HasValue || !time.HasValue)
+                    {
+                        continue;
+                    }
+                    dataPoints.Add(new KeyValuePair<double, double>(time.Value, y.Value));
+                }
+                var timePoints =
+                    Workspace.MsDataFiles.ListChildren().Select(msDataFile => msDataFile.TimePoint)
+                    .Where(timePoint => timePoint.HasValue).ToList();
+                var resultData = new ResultData
+                                     {
+                                         PointCount = dataPoints.Count,
+                                         FilteredRowDatas = filteredRowDatas.ToArray(),
+                                         RowDatas = rowDatas.ToArray(),
+                                     };
+                NelderMeadSimplex.SimplexConstant[] initialParameters;
+                double convergenceTolerance = 0;
+                int maxEvaluations = 1000;
+                if (FixedInitialPercent)
+                {
+                    timePoints.Add(0);
+                    double timePointDifference = timePoints.Max().Value - timePoints.Min().Value;
+                    initialParameters = new[] {new NelderMeadSimplex.SimplexConstant(1/timePointDifference, 1.0/10/timePointDifference)};
+                    var regressionResult = NelderMeadSimplex.Regress(initialParameters, convergenceTolerance,
+                                                                     maxEvaluations,
+                                                                     constants =>
+                                                                     SumOfResidualsSquared(
+                                                                         x => Math.Exp(-constants[0]*x), dataPoints));
+                    resultData.RateConstant = -regressionResult.Constants[0];
+                }
+                else
+                {
+                    double timePointDifference = timePoints.Max().Value - timePoints.Min().Value;
+                    initialParameters = new[]
+                                            {
+                                                new NelderMeadSimplex.SimplexConstant(1/timePointDifference,
+                                                                                      1.0/10/timePointDifference),
+                                                new NelderMeadSimplex.SimplexConstant(0, .1),
+                                            };
+                    var regressionResult = NelderMeadSimplex.Regress(initialParameters, convergenceTolerance, maxEvaluations,
+                        constants=>SumOfResidualsSquared(x=>Math.Exp(-constants[0] * x + constants[1]), dataPoints));
+                    resultData.RateConstant = -regressionResult.Constants[0];
+                    resultData.YIntercept = regressionResult.Constants[1];
+                }
+                return resultData;
             }
         }
 
@@ -555,23 +619,6 @@ namespace pwiz.Topograph.MsData
             }
             return precursorPool;
         }
-
-        private double? GetLogValue(ProcessedRowData rowData)
-        {
-            double? value = GetValue(rowData);
-            if (!value.HasValue)
-            {
-                return null;
-            }
-            switch (HalfLifeCalculationType)
-            {
-                case HalfLifeCalculationType.TracerPercent:
-                    return Math.Log((value.Value - FinalPercent) / (InitialPercent - FinalPercent));
-                default:
-                    return Math.Log(1- (value.Value / 100));
-            }
-        }
-
 
         public ProcessedRowData ToRowData(PeptideFileAnalysis peptideFileAnalysis)
         {
@@ -606,17 +653,6 @@ namespace pwiz.Topograph.MsData
                        };
             return ComputeAvgTurnover(rowData);
         }
-
-        public double? GetValue(PeptideFileAnalysis peptideFileAnalysis)
-        {
-            return GetValue(ToRowData(peptideFileAnalysis));
-        }
-
-        public double? GetLogValue(PeptideFileAnalysis peptideFileAnalysis)
-        {
-            return GetLogValue(ToRowData(peptideFileAnalysis));
-        }
-
 
         public ResultData CalculateHalfLife(IEnumerable<PeptideFileAnalysis> peptideFileAnalyses)
         {
@@ -684,11 +720,13 @@ namespace pwiz.Topograph.MsData
 
             public RejectReason? RejectReason { get; set; }
             public RawRowData RawRowData { get; private set; }
-            public double? AvgPrecursorEnrichment { get; set; }
-            public double? AvgTurnover { get; set; }
-            public double? AvgTurnoverScore { get; set; }
             public double? EvviesFilterMin { get; set; }
             public double? EvviesFilterMax { get; set; }
+            public double? RawValue { get; set; }
+            public double? Turnover { get; set; }
+            public double? TurnoverScore { get; set; }
+            public double InitialPrecursorPool { get; set; }
+            public double? CurrentPrecursorPool { get; set; }
         }
         public class RawRowData
         {
@@ -887,6 +925,18 @@ namespace pwiz.Topograph.MsData
             _turnoverCalculators.Add(peptideSequence, turnoverCalculator);
             return turnoverCalculator;
         }
+
+        private double SumOfResidualsSquared(Func<double, double> func, IEnumerable<KeyValuePair<double,double>> points)
+        {
+            double result = 0.0;
+            foreach (var point in points)
+            {
+                double funcValue = func.Invoke(point.Key);
+                double difference = funcValue - point.Value;
+                result += difference * difference;
+            }
+            return result;
+        }
     }
     public enum HalfLifeCalculationType
     {
@@ -894,6 +944,19 @@ namespace pwiz.Topograph.MsData
         IndividualPrecursorPool,
         GroupPrecursorPool,
         OldGroupPrecursorPool,
+    }
+
+    public enum TracerQuantity
+    {
+        LabeledAminoAcid,
+        UnlabeledPeptide,
+        PartialLabelDistribution,
+    }
+    public enum PrecursorPoolCalculation
+    {
+        Fixed,
+        MedianPerSample,
+        Individual,
     }
 
     public enum EvviesFilterEnum
@@ -915,5 +978,6 @@ namespace pwiz.Topograph.MsData
         EvviesFilter,
         ValueOutOfRange,
         NoTimePoint,
+        NoPrecursorPool,
     }
 }

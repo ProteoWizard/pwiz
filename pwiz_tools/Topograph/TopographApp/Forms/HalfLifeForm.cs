@@ -29,6 +29,7 @@ using pwiz.Topograph.MsData;
 using pwiz.Topograph.ui.Controls;
 using pwiz.Topograph.Util;
 using ZedGraph;
+using pwiz.Topograph.ui.Properties;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -52,17 +53,9 @@ namespace pwiz.Topograph.ui.Forms
             _zedGraphControl.GraphPane.XAxis.Title.Text = "Time";
             _zedGraphControl.MouseDownEvent += _zedGraphControl_MouseDownEvent;
             splitContainer1.Panel2.Controls.Add(_zedGraphControl);
-            var tracerDef = Workspace.GetTracerDefs()[0];
-            tbxInitialPercent.Text = tracerDef.InitialApe.ToString();
-            tbxFinalPercent.Text = tracerDef.FinalApe.ToString();
             colTurnover.DefaultCellStyle.Format = "#.##%";
             colPrecursorPool.DefaultCellStyle.Format = "#.##%";
-            comboCalculationType.SelectedIndex = 0;
-            foreach (var evviesFilter in Enum.GetValues(typeof(EvviesFilterEnum)))
-            {
-                comboEvviesFilter.Items.Add(evviesFilter);
-            }
-            comboEvviesFilter.SelectedIndex = 0;
+            SetHalfLifeSettings(Workspace.GetHalfLifeSettings(Settings.Default.HalfLifeSettings));
         }
 
         bool _zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -89,6 +82,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             return false;
         }
+
         public String Peptide { 
             get
             {
@@ -127,28 +121,16 @@ namespace pwiz.Topograph.ui.Forms
 
         public HalfLifeSettings GetHalfLifeSettings()
         {
-            return new HalfLifeSettings()
-                       {
-                           ByProtein = string.IsNullOrEmpty(Peptide),
-                           BySample = cbxBySample.Checked,
-                           EvviesFilter = (EvviesFilterEnum) comboEvviesFilter.SelectedIndex,
-                           HalfLifeCalculationType = (HalfLifeCalculationType) comboCalculationType.SelectedIndex,
-                           HoldInitialTracerPercentConstant = cbxFixedInitialPercent.Checked,
-                           MinimumAuc = HalfLifeSettings.TryParseDouble(tbxMinAuc.Text, 0),
-                           MinimumDeconvolutionScore = HalfLifeSettings.TryParseDouble(tbxMinScore.Text, 0),
-                           MinimumTurnoverScore = HalfLifeSettings.TryParseDouble(tbxMinTurnoverScore.Text, 0),
-                       };
+            var result = halfLifeSettingsControl.HalfLifeSettings;
+            result.BySample = cbxBySample.Checked;
+            return result;
         }
 
         public void SetHalfLifeSettings(HalfLifeSettings halfLifeSettings)
         {
             cbxBySample.Checked = halfLifeSettings.BySample;
-            comboEvviesFilter.SelectedIndex = (int) halfLifeSettings.EvviesFilter;
-            comboCalculationType.SelectedIndex = (int) halfLifeSettings.HalfLifeCalculationType;
-            cbxFixedInitialPercent.Checked = halfLifeSettings.HoldInitialTracerPercentConstant;
-            tbxMinAuc.Text = halfLifeSettings.MinimumAuc.ToString();
-            tbxMinScore.Text = halfLifeSettings.MinimumDeconvolutionScore.ToString();
-            tbxMinTurnoverScore.Text = halfLifeSettings.MinimumTurnoverScore.ToString();
+            halfLifeSettingsControl.HalfLifeSettings = halfLifeSettings;
+            UpdateRows(true);
         }
 
         public bool LogPlot
@@ -170,44 +152,6 @@ namespace pwiz.Topograph.ui.Forms
                 return Workspace.GetTracerDefs()[0];
             }
         }
-        public double InitialPercent
-        {
-            get
-            {
-                return ParseDouble(tbxInitialPercent.Text);
-            }
-            set
-            {
-                tbxInitialPercent.Text = value.ToString();
-            }
-        }
-        public double FinalPercent
-        {
-            get
-            {
-                return ParseDouble(tbxFinalPercent.Text);
-            }
-            set
-            {
-                tbxFinalPercent.Text = value.ToString();
-            }
-        }
-        private static double ParseDouble(String value)
-        {
-            if (string.IsNullOrEmpty(value))
-            {
-                return 0;
-            }
-            try
-            {
-                return double.Parse(value);
-            }
-            catch
-            {
-                return 0;
-            }
-        }
-
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
@@ -358,19 +302,9 @@ namespace pwiz.Topograph.ui.Forms
                 HalfLifeCalculator.ResultData resultData;
                 var halfLifeCalculator = UpdateGraph(peptideFileAnalyses, halfLifeSettings, out resultData);
                 var allRowDatas = resultData.RowDatas.ToDictionary(rowData=>rowData.RawRowData.PeptideFileAnalysisId, rowData=>rowData);
-                if (halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool || halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool)
-                {
-                    colTurnoverAvg.Visible = true;
-                    colPrecursorPoolAvg.Visible = true;
-                    colTurnoverScoreAvg.Visible = halfLifeSettings.HalfLifeCalculationType !=
-                                                  HalfLifeCalculationType.OldGroupPrecursorPool;
-                }
-                else
-                {
-                    colTurnoverAvg.Visible = false;
-                    colPrecursorPoolAvg.Visible = false;
-                    colTurnoverScoreAvg.Visible = false;
-                }
+                colTurnoverAvg.Visible = true;
+                colPrecursorPoolAvg.Visible = true;
+                colTurnoverScoreAvg.Visible = true;
 
                 for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
                 {
@@ -387,10 +321,10 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     if (rowData != null)
                     {
-                        row.Cells[colTurnoverAvg.Index].Value = rowData.AvgTurnover;
+                        row.Cells[colTurnoverAvg.Index].Value = rowData.Turnover;
                         row.Cells[colPrecursorPoolAvg.Index].Value =
-                            rowData.AvgPrecursorEnrichment;
-                        row.Cells[colTurnoverScoreAvg.Index].Value = rowData.AvgTurnoverScore;
+                            rowData.CurrentPrecursorPool;
+                        row.Cells[colTurnoverScoreAvg.Index].Value = rowData.TurnoverScore;
                         row.Cells[colRejectReason.Index].Value = rowData.RejectReason;
                         if (rowData.EvviesFilterMin.HasValue || rowData.EvviesFilterMax.HasValue)
                         {
@@ -411,11 +345,7 @@ namespace pwiz.Topograph.ui.Forms
         }
         private HalfLifeCalculator UpdateGraph(List<PeptideFileAnalysis> peptideFileAnalyses, HalfLifeSettings halfLifeSettings, out HalfLifeCalculator.ResultData resultData)
         {
-            var halfLifeCalculator = new HalfLifeCalculator(Workspace, halfLifeSettings)
-                                         {
-                                                 InitialPercent = InitialPercent,
-                                                 FinalPercent = FinalPercent,
-                                            };
+            var halfLifeCalculator = new HalfLifeCalculator(Workspace, halfLifeSettings);
             var halfLife = resultData = halfLifeCalculator.CalculateHalfLife(peptideFileAnalyses);
             _zedGraphControl.GraphPane.CurveList.Clear();
             _zedGraphControl.GraphPane.GraphObjList.Clear();
@@ -433,17 +363,18 @@ namespace pwiz.Topograph.ui.Forms
                     continue;
                 }
                 double? value;
+                var processedRowData = halfLifeCalculator.ToRowData(peptideFileAnalysis);
+                if (!processedRowData.Turnover.HasValue)
+                {
+                    continue;
+                }
                 if (LogPlot)
                 {
-                    value = halfLifeCalculator.GetLogValue(peptideFileAnalysis);
+                    value = 2-Math.Log10(100 - processedRowData.Turnover.Value * 100);
                 } 
                 else
                 {
-                    value = halfLifeCalculator.GetValue(peptideFileAnalysis);
-                }
-                if (!value.HasValue)
-                {
-                    continue;
+                    value = processedRowData.Turnover.Value * 100;
                 }
                 if (double.IsInfinity(value.Value) || double.IsNaN(value.Value))
                 {
@@ -460,41 +391,20 @@ namespace pwiz.Topograph.ui.Forms
             Func<double, double> funcMiddle = x => halfLife.YIntercept + halfLife.RateConstant * x;
             Func<double, double> funcMin = x => halfLife.YIntercept + (halfLife.RateConstant - halfLife.RateConstantError) * x;
             Func<double, double> funcMax = x => halfLife.YIntercept + (halfLife.RateConstant + halfLife.RateConstantError) * x;
+            Func<double, double> funcConvertToDisplayedValue;
             if (LogPlot)
             {
-                AddFunction("Best Fit", funcMiddle, Color.Black);
-                AddFunction("Minimum Bound", funcMin, Color.LightBlue);
-                AddFunction("Maximum Bound", funcMax, Color.LightGreen);
+                _zedGraphControl.GraphPane.YAxis.Title.Text = "-Log(100% - % Newly Synthesized)";
+                funcConvertToDisplayedValue = x => -x / Math.Log(10);
             }
             else
             {
-                AddFunction("Best Fit", x => halfLifeCalculator.InvertLogValue(funcMiddle(x)), Color.Black);
-                AddFunction("Minimum Bound", x => halfLifeCalculator.InvertLogValue(funcMin(x)), Color.LightBlue);
-                AddFunction("Maximum Bound", x => halfLifeCalculator.InvertLogValue(funcMax(x)), Color.LightGreen);
+                _zedGraphControl.GraphPane.YAxis.Title.Text = "% Newly Synthesized";
+                funcConvertToDisplayedValue = x => (1 - Math.Exp(x)) * 100;
             }
-            if (LogPlot)
-            {
-                if (halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
-                {
-                    _zedGraphControl.GraphPane.YAxis.Title.Text = "Log ((Tracer % - Final %)/(Initial % - Final %))";
-                }
-                else
-                {
-                    _zedGraphControl.GraphPane.YAxis.Title.Text = "Log (100% - % newly synthesized)";
-                }
-            }
-            else
-            {
-                if (halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.TracerPercent)
-                {
-                    _zedGraphControl.GraphPane.YAxis.Title.Text = "Tracer %";
-                }
-                else
-                {
-                    _zedGraphControl.GraphPane.YAxis.Title.Text = "% newly synthesized";
-                }
-            }
-            _zedGraphControl.GraphPane.XAxis.IsAxisSegmentVisible = !LogPlot;
+            AddFunction("Best Fit", x=>funcConvertToDisplayedValue(funcMiddle(x)), Color.Black);
+            AddFunction("Minimum Bound", x=>funcConvertToDisplayedValue(funcMin(x)), Color.LightBlue);
+            AddFunction("Maximum Bound", x=>funcConvertToDisplayedValue(funcMax(x)), Color.LightGreen);
             _zedGraphControl.GraphPane.AxisChange();
             _zedGraphControl.Invalidate();
             _pointsCurve = pointsCurve;
@@ -504,6 +414,16 @@ namespace pwiz.Topograph.ui.Forms
             tbxHalfLife.Text = resultData.HalfLife.ToString("0.##") + "(" + resultData.MinHalfLife.ToString("0.##") + "-" +
                                resultData.MaxHalfLife.ToString("0.##") + ")";
             return halfLifeCalculator;
+        }
+
+        public static double InvertLogValue(double x)
+        {
+            return Math.Pow(10, -x);
+        }
+
+        public static double GetLogValue(double x)
+        {
+            return -Math.Log10(x);
         }
 
         private void UpdateStatsGrid(IList<double> xValues, IList<double> yValues)
@@ -590,7 +510,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return false;
             }
-            if (halfLifeSettings.HalfLifeCalculationType == HalfLifeCalculationType.IndividualPrecursorPool)
+            if (halfLifeSettings.PrecursorPoolCalculation == PrecursorPoolCalculation.Individual)
             {
                 if (!peptideFileAnalysis.Peaks.Turnover.HasValue)
                 {
@@ -619,22 +539,7 @@ namespace pwiz.Topograph.ui.Forms
             UpdateRows(true);
         }
 
-        private void tbxMinScore_TextChanged(object sender, EventArgs e)
-        {
-            UpdateRows(false);
-        }
-
         private void comboCohort_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateRows(true);
-        }
-
-        private void tbxInitialPercent_TextChanged(object sender, EventArgs e)
-        {
-            UpdateRows(true);
-        }
-
-        private void tbxFinalPercent_TextChanged(object sender, EventArgs e)
         {
             UpdateRows(true);
         }
@@ -679,27 +584,6 @@ namespace pwiz.Topograph.ui.Forms
                     peptideFileAnalysis.ValidationStatus = (ValidationStatus) cell.Value;
                 }
             }
-        }
-
-        private void cbxFixedInitialPercent_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateRows(false);
-        }
-
-        private void comboCalculationType_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            switch (GetHalfLifeSettings().HalfLifeCalculationType)
-            {
-                default:
-                    tbxInitialPercent.Enabled = false;
-                    tbxFinalPercent.Enabled = false;
-                    break;
-                case HalfLifeCalculationType.TracerPercent:
-                    tbxInitialPercent.Enabled = true;
-                    tbxFinalPercent.Enabled = true;
-                    break;
-            }
-            UpdateRows(false);
         }
 
         private bool IsTimePointExcluded(double timePoint)
@@ -750,17 +634,7 @@ namespace pwiz.Topograph.ui.Forms
             Requery();
         }
 
-        private void comboEvviesFilter_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            UpdateRows(false);
-        }
-
-        private void tbxMinAuc_TextChanged(object sender, EventArgs e)
-        {
-            UpdateRows(false);
-        }
-
-        private void tbxMinTurnoverScore_TextChanged(object sender, EventArgs e)
+        private void halfLifeSettingsControl_SettingsChange(object sender, EventArgs e)
         {
             UpdateRows(false);
         }

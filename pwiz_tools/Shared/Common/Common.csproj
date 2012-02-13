@@ -115,6 +115,7 @@
     <Compile Include="Controls\RecordNavBar.Designer.cs">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataAnalysis\NelderMeadSimplex.cs" />
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
     <Compile Include="DataBinding\AggregateFunction.cs" />

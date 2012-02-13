@@ -36,8 +36,8 @@ namespace pwiz.Topograph.ui.Forms
                                ByProtein = cbxByProtein.Checked,
                                BySample = cbxGroupBySample.Checked,
                                EvviesFilter = (EvviesFilterEnum) comboEvviesFilter.SelectedIndex,
-                               HalfLifeCalculationType = HalfLifeCalculationType.GroupPrecursorPool,
-                               HoldInitialTracerPercentConstant = false,
+                               NewlySynthesizedTracerQuantity = TracerQuantity.PartialLabelDistribution,
+                               PrecursorPoolCalculation = PrecursorPoolCalculation.MedianPerSample,
                                MinimumAuc = HalfLifeSettings.TryParseDouble(tbxMinAuc.Text, 0),
                                MinimumDeconvolutionScore = HalfLifeSettings.TryParseDouble(tbxMinScore.Text, 0),
                                MinimumTurnoverScore = HalfLifeSettings.TryParseDouble(tbxMinTurnoverScore.Text, 0),
@@ -105,8 +105,8 @@ namespace pwiz.Topograph.ui.Forms
                 TracerPercentByArea = ToStatistics(rowDatas.Select(rd=>rd.RawRowData.TracerPercent));
                 IndTurnover = ToStatistics(rowDatas.Select(rd=>rd.RawRowData.IndTurnover));
                 IndPrecursorEnrichment = ToStatistics(rowDatas.Select(rd => rd.RawRowData.IndPrecursorEnrichment));
-                AvgTurnover = ToStatistics(rowDatas.Select(rd => rd.AvgTurnover));
-                AvgPrecursorEnrichment = ToStatistics(rowDatas.Select(rd => rd.AvgPrecursorEnrichment));
+                AvgTurnover = ToStatistics(rowDatas.Select(rd => rd.Turnover));
+                AvgPrecursorEnrichment = ToStatistics(rowDatas.Select(rd => rd.CurrentPrecursorPool));
                 AreaUnderCurve = ToStatistics(rowDatas.Select(rd => rd.RawRowData.AreaUnderCurve));
             }
             public Statistics TracerPercentByArea { get; private set; }
