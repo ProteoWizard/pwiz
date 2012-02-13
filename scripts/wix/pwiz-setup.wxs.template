@@ -1,0 +1,141 @@
+<?xml version="1.0"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+   <Product Id="<ProductGuid>"
+            Name="ProteoWizard <version>"
+            Language="1033"
+            Version="<version>"
+            Manufacturer="ProteoWizard"
+            UpgradeCode="644795C6-012A-49B7-A47F-E46E164D3689">
+
+      <Package Description="ProteoWizard <version> Installer" Manufacturer="ProteoWizard" InstallerVersion="300" Compressed="yes" />
+      <Media Id="1" Cabinet="ProteoWizard.cab" EmbedCab="yes" />
+      <Icon Id="seems_Icon.exe" SourceFile="msvc-release\seems.exe" />
+      <Property Id="ARPPRODUCTICON" Value="seems_Icon.exe" />
+      <Property Id="ALLUSERS" Value="1" />
+      <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONROOTDIRECTORY" />
+      <!--<WixVariable Id="WixUIBannerBmp" Value="..\Resources\SetupBanner.bmp" />
+      <WixVariable Id="WixUIDialogBmp" Value="..\Resources\SetupBackground.bmp" />-->
+
+      <PropertyRef Id='NETFRAMEWORK35'/>
+      <PropertyRef Id='NETFRAMEWORK35_SP_LEVEL'/>
+      <Condition Message="Requires Microsoft .NET 3.5 Framework with Service Pack 1">NETFRAMEWORK35 AND (NETFRAMEWORK35_SP_LEVEL >= 1)</Condition>
+
+      <UI>
+         <UIRef Id="WixUI_InstallDir" />
+         <!-- skip license dialog -->
+         <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2">1</Publish>
+         <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">1</Publish>
+      </UI>
+
+      <Directory Id="TARGETDIR" Name="SourceDir">
+         <!-- We need these for Bruker support, but how do we get MSMs without having to install VS 2005?
+            <Merge Id="CRT" Language="0" SourceFile="C:\Users\chambem2\Downloads\Microsoft_VC80_CRT_x86.msm" DiskId="1" />
+            <Merge Id="MFC" Language="0" SourceFile="C:\Users\chambem2\Downloads\Microsoft_VC80_MFC_x86.msm" DiskId="1" />
+         -->
+         
+         <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+         <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+         <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+         <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+         
+         <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" />
+         <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x86.msm" DiskId="1" />
+         
+         <Directory Id="ProgramMenuFolder">
+            <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard <version>" />
+         </Directory>
+         <Directory Id="ProgramFilesFolder" Name="PFiles">
+            <Directory Id="ProteoWizardFolder" Name="ProteoWizard">
+                <Directory Id="APPLICATIONROOTDIRECTORY" Name="ProteoWizard <version>">
+                    <Component Feature="MainFeature">
+                        <File Id="_seems.exe" Name="seems.exe" Source="msvc-release\seems.exe" KeyPath="yes"/>
+                        <Shortcut Id="SeeMSShortcut" Directory="ProteoWizardStartMenuFolder" Name="SeeMS" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
+                        <RemoveFolder Id="RemoveSeeMS" Directory="ProteoWizardStartMenuFolder" On="uninstall" />
+                    </Component>
+                    <Component Feature="MainFeature">
+                        <File Id="_MSConvertGUI.exe" Name="MSConvertGUI.exe" Source="msvc-release\MSConvertGUI.exe" KeyPath="yes"/>
+                        <Shortcut Id="MSConvertShortcut" Directory="ProteoWizardStartMenuFolder" Name="MSConvert" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
+                        <RemoveFolder Id="RemoveMSConvert" Directory="ProteoWizardStartMenuFolder" On="uninstall" />
+                    </Component>
+<Component Feature="MainFeature"><File Id="_agtsampleinforw.dll" Name="agtsampleinforw.dll" Source="msvc-release\agtsampleinforw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseCommon.dll" Name="BaseCommon.dll" Source="msvc-release\BaseCommon.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseDataAccess.dll" Name="BaseDataAccess.dll" Source="msvc-release\BaseDataAccess.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseError.dll" Name="BaseError.dll" Source="msvc-release\BaseError.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseTof.dll" Name="BaseTof.dll" Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.dll" Name="BDal.CXt.Lc.dll" Source="msvc-release\BDal.CXt.Lc.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.Factory.dll" Name="BDal.CXt.Lc.Factory.dll" Source="msvc-release\BDal.CXt.Lc.Factory.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.Interfaces.dll" Name="BDal.CXt.Lc.Interfaces.dll" Source="msvc-release\BDal.CXt.Lc.Interfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.UntU2.dll" Name="BDal.CXt.Lc.UntU2.dll" Source="msvc-release\BDal.CXt.Lc.UntU2.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_boost_date_time_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_boost_regex_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_boost_thread_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.AnalystDataProvider.dll" Name="Clearcore2.Data.AnalystDataProvider.dll" Source="msvc-release\Clearcore2.Data.AnalystDataProvider.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.CommonInterfaces.dll" Name="Clearcore2.Data.CommonInterfaces.dll" Source="msvc-release\Clearcore2.Data.CommonInterfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.dll" Name="Clearcore2.Data.dll" Source="msvc-release\Clearcore2.Data.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.WiffReader.dll" Name="Clearcore2.Data.WiffReader.dll" Source="msvc-release\Clearcore2.Data.WiffReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.InternalRawXYProcessing.dll" Name="Clearcore2.InternalRawXYProcessing.dll" Source="msvc-release\Clearcore2.InternalRawXYProcessing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.ProjectUtilities.dll" Name="Clearcore2.ProjectUtilities.dll" Source="msvc-release\Clearcore2.ProjectUtilities.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.StructuredStorage.dll" Name="Clearcore2.StructuredStorage.dll" Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Utility.dll" Name="Clearcore2.Utility.dll" Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_chainsaw.exe" Name="chainsaw.exe" Source="msvc-release\chainsaw.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_CompassXtractMS.dll" Name="CompassXtractMS.dll" Source="msvc-release\CompassXtractMS.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll" Name="CustomDataSourceDialog.dll" Source="msvc-release\CustomDataSourceDialog.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll.config" Name="CustomDataSourceDialog.dll.config" Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_DataGridViewAutoFilter.dll" Name="DataGridViewAutoFilter.dll" Source="msvc-release\DataGridViewAutoFilter.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_DigitalRune.Windows.Docking.dll" Name="DigitalRune.Windows.Docking.dll" Source="msvc-release\DigitalRune.Windows.Docking.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_EULA.MHDAC" Name="EULA.MHDAC" Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_EULA.MSFileReader" Name="EULA.MSFileReader" Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_fileio.dll" Name="fileio.dll" Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_FlexVariableTable.xml" Name="FlexVariableTable.xml" Source="msvc-release\FlexVariableTable.xml" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_fregistry.dll" Name="fregistry.dll" Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_HSReadWrite.dll" Name="HSReadWrite.dll" Source="msvc-release\HSReadWrite.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_ICRVariableTable.xml" Name="ICRVariableTable.xml" Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_idcat.exe" Name="idcat.exe" Source="msvc-release\idcat.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_idconvert.exe" Name="idconvert.exe" Source="msvc-release\idconvert.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Interop.DataExplorer.dll" Name="Interop.DataExplorer.dll" Source="msvc-release\Interop.DataExplorer.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Interop.EDAL.dll" Name="Interop.EDAL.dll" Source="msvc-release\Interop.EDAL.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Interop.EDAL.SxS.manifest" Name="Interop.EDAL.SxS.manifest" Source="msvc-release\Interop.EDAL.SxS.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.dll" Name="Interop.HSREADWRITELib.dll" Source="msvc-release\Interop.HSREADWRITELib.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.SxS.manifest" Name="Interop.HSREADWRITELib.SxS.manifest" Source="msvc-release\Interop.HSREADWRITELib.SxS.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Interop.MSFileReaderLib.dll" Name="Interop.MSFileReaderLib.dll" Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_libfftw3_3.dll" Name="libfftw3-3.dll" Source="msvc-release\libfftw3-3.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_libfftw3f_3.dll" Name="libfftw3f-3.dll" Source="msvc-release\libfftw3f-3.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MassLynxRaw.dll" Name="MassLynxRaw.dll" Source="msvc-release\MassLynxRaw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MassSpecDataReader.dll" Name="MassSpecDataReader.dll" Source="msvc-release\MassSpecDataReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_msaccess.exe" Name="msaccess.exe" Source="msvc-release\msaccess.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_msbenchmark.exe" Name="msbenchmark.exe" Source="msvc-release\msbenchmark.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_mscat.exe" Name="mscat.exe" Source="msvc-release\mscat.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_msconvert.exe" Name="msconvert.exe" Source="msvc-release\msconvert.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSConvertGUI.exe.manifest" Name="MSConvertGUI.exe.manifest" Source="msvc-release\MSConvertGUI.exe.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_msistats.exe" Name="msistats.exe" Source="msvc-release\msistats.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_mspicture.exe" Name="mspicture.exe" Source="msvc-release\mspicture.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSFileReader.XRawfile2.dll" Name="MSFileReader.XRawfile2.dll" Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSFileReader.XRawfile2.SxS.manifest" Name="MSFileReader.XRawfile2.SxS.manifest" Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSGraph.dll" Name="MSGraph.dll" Source="msvc-release\MSGraph.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_NTB_vc80_mt_1_5_97.dll" Name="NTB-vc80-mt-1_5_97.dll" Source="msvc-release\NTB-vc80-mt-1_5_97.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_peakaboo.exe" Name="peakaboo.exe" Source="msvc-release\peakaboo.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_pepcat.exe" Name="pepcat.exe" Source="msvc-release\pepcat.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_pepsum.exe" Name="pepsum.exe" Source="msvc-release\pepsum.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_pwiz.Common.dll" Name="pwiz.Common.dll" Source="msvc-release\pwiz.Common.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_pwiz_bindings_cli.dll" Name="pwiz_bindings_cli.dll" Source="msvc-release\pwiz_bindings_cli.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_seems.exe.config" Name="seems.exe.config" Source="msvc-release\seems.exe.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_seems.exe.manifest" Name="seems.exe.manifest" Source="msvc-release\seems.exe.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_sldout.exe" Name="sldout.exe" Source="msvc-release\sldout.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_STL_Containers.dll" Name="STL_Containers.dll" Source="msvc-release\STL_Containers.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_txt2mzml.exe" Name="txt2mzml.exe" Source="msvc-release\txt2mzml.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_ZedGraph.dll" Name="ZedGraph.dll" Source="msvc-release\ZedGraph.dll" KeyPath="yes"/></Component>
+                </Directory>
+            </Directory>
+         </Directory>
+      </Directory>
+
+      <Feature Id="MainFeature" Title="ProteoWizard <version>" Level="1">
+         <MergeRef Id="CRT9" />
+         <MergeRef Id="MFC9" />
+         <MergeRef Id="CRT9_policy" />
+         <MergeRef Id="MFC9_policy" />
+         <MergeRef Id="CRT10" />
+         <MergeRef Id="MFC10" />
+      </Feature>
+   </Product>
+</Wix>

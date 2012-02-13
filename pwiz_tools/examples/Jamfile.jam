@@ -78,8 +78,8 @@ exe msbenchmark
 alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
 explicit hello_examples ;
 
-alias msdata_examples : hello_msdata hello_ramp msbenchmark ;
-explicit msdata_examples ;
+alias example_tools : mscat txt2mzml msbenchmark ;
+explicit example_tools ;
 
 
 #
@@ -128,6 +128,8 @@ install bin
       msbenchmark
       txt2mzml
       write_example_files
+      write_mzid_example_files
+      write_proteome_example_files
       write_traml_example_files
     : <location>bin ;
 
@@ -144,7 +146,7 @@ if [ modules.peek : NT ] {
 
 package.install install
     : $(install-requirements) release
-    : hello_examples
+    : hello_examples example_tools
     : # no libraries
     : # no headers
     ;
