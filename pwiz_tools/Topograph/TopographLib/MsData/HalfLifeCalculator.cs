@@ -601,6 +601,7 @@ namespace pwiz.Topograph.MsData
                                   Peaks = peaks,
                                   PeptideFileAnalysisId = peptideFileAnalysis.Id.Value,
                                   PsmCount = peptideFileAnalysis.PsmCount,
+                                  ValidationStatus = peptideFileAnalysis.ValidationStatus,
                                   IntegrationNote = peptideFileAnalysis.Peaks.IntegrationNote,
                        };
             return ComputeAvgTurnover(rowData);
