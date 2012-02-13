@@ -28,6 +28,7 @@ namespace pwiz.Topograph.ui.Forms
             PopulateDataFileCombo(comboDataFile2);
             comboDataFile1.SelectedIndexChanged += comboDataFile_SelectedIndexChanged;
             comboDataFile2.SelectedIndexChanged += comboDataFile_SelectedIndexChanged;
+            RefreshUI();
         }
 
         void comboDataFile_SelectedIndexChanged(object sender, EventArgs e)
@@ -43,6 +44,8 @@ namespace pwiz.Topograph.ui.Forms
             var listItem2 = comboDataFile2.SelectedItem as MsDataFileListItem;
             if (listItem1 == null || listItem2 == null)
             {
+                zedGraphControlEx1.GraphPane.Title.Text =
+                    "Choose two different samples to see the retention time alignment.";
                 return;
             }
 
@@ -65,7 +68,7 @@ namespace pwiz.Topograph.ui.Forms
                 xValues.Add(x);
                 yValues.Add(y);
             }
-            var curve = zedGraphControlEx1.GraphPane.AddCurve("Points", xValues.ToArray(), yValues.ToArray(), Color.Black);
+            var curve = zedGraphControlEx1.GraphPane.AddCurve("Common MS2 IDs", xValues.ToArray(), yValues.ToArray(), Color.Black);
             curve.Line.IsVisible = false;
             curve.Symbol.Type = SymbolType.Circle;
             curve.Symbol.Size = 1;
@@ -73,8 +76,12 @@ namespace pwiz.Topograph.ui.Forms
             var weights = Enumerable.Repeat(1.0, xValues.Count).ToArray();
             var smoothedPoints = loessInterpolator.Smooth(xValues.ToArray(), yValues.ToArray(), weights);
             var smoothedCurve = zedGraphControlEx1.GraphPane.AddCurve(
-                "Smoothed Curve", xValues.ToArray(), smoothedPoints.ToArray(), Color.Black);
+                "Smoothed Curve", xValues.ToArray(), smoothedPoints.ToArray(), Color.DarkGray);
             smoothedCurve.Symbol.IsVisible = false;
+            zedGraphControlEx1.GraphPane.XAxis.Title.Text = dataFile1.Label;
+            zedGraphControlEx1.GraphPane.YAxis.Title.Text = dataFile2.Label;
+            zedGraphControlEx1.GraphPane.Title.Text = string.Format(
+                "Alignment of {0} to {1} using MS2 identifications", dataFile1.Label, dataFile2.Label);
             zedGraphControlEx1.GraphPane.AxisChange();
             zedGraphControlEx1.Invalidate();
         }
