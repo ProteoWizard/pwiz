@@ -256,9 +256,9 @@ namespace directag
 						{
 							for( int z = 3; z <= g_rtConfig->NumChargeStates; ++z )
 							{
-								Spectrum* s = new Spectrum( *s );
-								s->id.setCharge(z);
-								duplicates.push_back(s);
+								Spectrum* s2 = new Spectrum( *s );
+								s2->id.setCharge(z);
+								duplicates.push_back(s2);
 							}
 						}
 					}
