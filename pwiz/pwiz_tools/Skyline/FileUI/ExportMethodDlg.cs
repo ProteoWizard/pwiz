@@ -136,8 +136,9 @@ namespace pwiz.Skyline.FileUI
             UpdateMaxTransitions();
 
             cbEnergyRamp.Checked = Settings.Default.ExportThermoEnergyRamp;
+            cbTriggerRefColumns.Checked = Settings.Default.ExportThermoTriggerRef;
             // Reposition from design layout
-            cbEnergyRamp.Top = textDwellTime.Top + (textDwellTime.Height - cbEnergyRamp.Height)/2;
+            panelThermoColumns.Top = labelDwellTime.Top;
 
             // Add optimizable regressions
             comboOptimizing.Items.Add(ExportOptimize.NONE);
@@ -326,10 +327,18 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void UpdateEnergyRamp(bool standard)
+        public bool AddTriggerReference
         {
-            cbEnergyRamp.Visible = !standard &&
-                InstrumentType == ExportInstrumentType.Thermo;            
+            get { return _exportProperties.AddTriggerReference; }
+            set
+            {
+                _exportProperties.AddTriggerReference = cbTriggerRefColumns.Checked = value;
+            }
+        }
+
+        private void UpdateThermoColumns(bool standard)
+        {
+            panelThermoColumns.Visible = !standard && InstrumentType == ExportInstrumentType.Thermo;
         }
 
         private void UpdateMaxTransitions()
@@ -562,8 +571,11 @@ namespace pwiz.Skyline.FileUI
                 Settings.Default.ExportMethodDwellTime = DwellTime;
             if (textRunLength.Visible)
                 Settings.Default.ExportMethodRunLength = RunLength;
-            if (cbEnergyRamp.Visible)
+            if (panelThermoColumns.Visible)
+            {
                 Settings.Default.ExportThermoEnergyRamp = AddEnergyRamp;
+                Settings.Default.ExportThermoTriggerRef = AddTriggerReference;
+            }
             if (_fileType == ExportFileType.Method)
                 Settings.Default.ExportMethodTemplateList.SetValue(new MethodTemplateFile(_instrumentType, templateName));
 
@@ -594,7 +606,8 @@ namespace pwiz.Skyline.FileUI
 
             _exportProperties.IgnoreProteins = cbIgnoreProteins.Checked;
             _exportProperties.FullScans = _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
-            _exportProperties.AddEnergyRamp = cbEnergyRamp.Visible && cbEnergyRamp.Checked;
+            _exportProperties.AddEnergyRamp = panelThermoColumns.Visible && cbEnergyRamp.Checked;
+            _exportProperties.AddTriggerReference = panelThermoColumns.Visible && cbTriggerRefColumns.Checked;
 
             _exportProperties.Ms1Scan = _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
                                         _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
@@ -849,7 +862,7 @@ namespace pwiz.Skyline.FileUI
             comboOptimizing.Enabled = !IsFullScanInstrument;
 
             UpdateDwellControls(standard);
-            UpdateEnergyRamp(standard);
+            UpdateThermoColumns(standard);
             UpdateMaxLabel(standard);
             if (wasFullScanInstrument != IsFullScanInstrument)
                 UpdateMaxTransitions();
@@ -907,7 +920,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             UpdateDwellControls(standard);
-            UpdateEnergyRamp(standard);
+            UpdateThermoColumns(standard);
             UpdateMaxLabel(standard);
 
             CalcMethodCount();

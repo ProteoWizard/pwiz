@@ -162,6 +162,7 @@ namespace pwiz.Skyline.Model
 
         public virtual int DwellTime { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
+        public virtual bool AddTriggerReference { get; set; }
         public virtual double RunLength { get; set; }
         public virtual bool FullScans { get; set; }
 
@@ -285,6 +286,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoMassListExporter(document));
             exporter.AddEnergyRamp = AddEnergyRamp;
+            exporter.AddTriggerReference = AddTriggerReference;
             exporter.Export(fileName);
 
             return exporter;
@@ -500,14 +502,11 @@ namespace pwiz.Skyline.Model
             public RequiredPeptideSet(SrmDocument document, bool isPrecursorLimited)
             {
                 var settings = document.Settings;
-                var rtRegression = settings.PeptideSettings.Prediction.RetentionTime;
-                if (rtRegression == null)
+                if (settings.PeptideSettings.Prediction.RetentionTime == null)
                     _peptides = new RequiredPeptide[0];
                 else
                 {
-                    var regressionPeps = rtRegression.Calculator.GetStandardPeptides(document.Peptides.Select(
-                        nodePep => settings.GetModifiedSequence(nodePep)));
-                    var setRegression = new HashSet<string>(regressionPeps);
+                    var setRegression = document.GetRetentionTimeStandards();
                     _peptides = (from nodePepGroup in document.PeptideGroups
                                  from nodePep in nodePepGroup.Peptides
                                  where setRegression.Contains(settings.GetModifiedSequence(nodePep))
@@ -1436,12 +1435,28 @@ namespace pwiz.Skyline.Model
 
     public class ThermoMassListExporter : MassListExporter
     {
+        private bool _addTriggerReference;
+        private HashSet<string> _setRTStandards;
+
         public ThermoMassListExporter(SrmDocument document)
             : base(document, null)
         {
+            _setRTStandards = new HashSet<string>();
         }
 
         public bool AddEnergyRamp { get; set; }
+        
+        public bool AddTriggerReference
+        {
+            get { return _addTriggerReference; }
+            set
+            {
+                _addTriggerReference = value;
+                if (_addTriggerReference)
+                    _setRTStandards = Document.GetRetentionTimeStandards();
+            }
+        }
+
         public double? RunLength { get; set; }
 
         protected override string InstrumentType
@@ -1475,21 +1490,38 @@ namespace pwiz.Skyline.Model
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
+                // Start Time and Stop Time
                 if (predictedRT.HasValue)
                 {
                     writer.Write(Math.Max(0, predictedRT.Value - windowRT / 2).ToString(CultureInfo));    // No negative retention times
                     writer.Write(FieldSeparator);
                     writer.Write((predictedRT.Value + windowRT / 2).ToString(CultureInfo));
                     writer.Write(FieldSeparator);
-                    writer.Write('1');  // Polarity
-                    writer.Write(FieldSeparator);                    
                 }
                 else
                 {
                     writer.Write(FieldSeparator);
                     writer.Write(FieldSeparator);
-                    writer.Write('1');  // Polarity
-                    writer.Write(FieldSeparator);
+                }
+                writer.Write('1');  // Polarity
+                writer.Write(FieldSeparator);                    
+
+                if (AddTriggerReference)
+                {
+                    if (_setRTStandards.Contains(Document.Settings.GetModifiedSequence(nodePep)))
+                    {
+                        writer.Write("1000");  // Trigger
+                        writer.Write(FieldSeparator);
+                        writer.Write("1");  // Reference
+                        writer.Write(FieldSeparator);
+                    }
+                    else
+                    {
+                        writer.Write("1.0E+10");  // Trigger
+                        writer.Write(FieldSeparator);
+                        writer.Write("0");  // Reference
+                        writer.Write(FieldSeparator);
+                    }
                 }
             }
             else if (RunLength.HasValue)
