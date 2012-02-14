@@ -678,7 +678,7 @@ namespace pwiz.Skyline.Model.Lib
                     int seqKeyHash = GetInt32(specHeader, (int) SpectrumHeaders.seq_key_hash);
                     int seqKeyLength = GetInt32(specHeader, (int) SpectrumHeaders.seq_key_length);
                     int charge = GetInt32(specHeader, (int)SpectrumHeaders.charge);
-                    if (charge == 0 || charge > 10)
+                    if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                         throw new InvalidDataException("Invalid precursor charge found. File may be corrupted.");
 
                     float tfRatio = BitConverter.ToSingle(specHeader, ((int) SpectrumHeaders.tf_ratio)*4);

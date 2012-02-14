@@ -253,6 +253,7 @@ namespace pwiz.Skyline
             this.thresholdRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.noneRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimePredContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peptideIDTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.transitionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -314,6 +315,7 @@ namespace pwiz.Skyline
             this.chooseCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparatorCalculators = new System.Windows.Forms.ToolStripSeparator();
+            this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.updateCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator23 = new System.Windows.Forms.ToolStripSeparator();
             this.removeRTOutliersContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2134,6 +2136,7 @@ namespace pwiz.Skyline
             this.peakBoundariesContextMenuItem,
             this.retentionTimesContextMenuItem,
             this.retentionTimePredContextMenuItem,
+            this.peptideIDTimesContextMenuItem,
             this.toolStripSeparator16,
             this.transitionsContextMenuItem,
             this.transformChromContextMenuItem,
@@ -2147,7 +2150,7 @@ namespace pwiz.Skyline
             this.zoomChromContextMenuItem,
             this.toolStripSeparator26});
             this.contextMenuChromatogram.Name = "contextMenuChromatogram";
-            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 326);
+            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 348);
             // 
             // removePeakGraphMenuItem
             // 
@@ -2240,6 +2243,14 @@ namespace pwiz.Skyline
             this.retentionTimePredContextMenuItem.Size = new System.Drawing.Size(212, 22);
             this.retentionTimePredContextMenuItem.Text = "Retention Time Prediction";
             this.retentionTimePredContextMenuItem.Click += new System.EventHandler(this.retentionTimePredContextMenuItem_Click);
+            // 
+            // peptideIDTimesContextMenuItem
+            // 
+            this.peptideIDTimesContextMenuItem.CheckOnClick = true;
+            this.peptideIDTimesContextMenuItem.Name = "peptideIDTimesContextMenuItem";
+            this.peptideIDTimesContextMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.peptideIDTimesContextMenuItem.Text = "Peptide ID Times";
+            this.peptideIDTimesContextMenuItem.Click += new System.EventHandler(this.peptideIDTimesContextMenuItem_Click);
             // 
             // toolStripSeparator16
             // 
@@ -2728,6 +2739,7 @@ namespace pwiz.Skyline
             this.chooseCalculatorContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.placeholderToolStripMenuItem1,
             this.toolStripSeparatorCalculators,
+            this.addCalculatorContextMenuItem,
             this.updateCalculatorContextMenuItem});
             this.chooseCalculatorContextMenuItem.Name = "chooseCalculatorContextMenuItem";
             this.chooseCalculatorContextMenuItem.Size = new System.Drawing.Size(177, 22);
@@ -2745,11 +2757,18 @@ namespace pwiz.Skyline
             this.toolStripSeparatorCalculators.Name = "toolStripSeparatorCalculators";
             this.toolStripSeparatorCalculators.Size = new System.Drawing.Size(149, 6);
             // 
+            // addCalculatorContextMenuItem
+            // 
+            this.addCalculatorContextMenuItem.Name = "addCalculatorContextMenuItem";
+            this.addCalculatorContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.addCalculatorContextMenuItem.Text = "Add...";
+            this.addCalculatorContextMenuItem.Click += new System.EventHandler(this.addCalculatorContextMenuItem_Click);
+            // 
             // updateCalculatorContextMenuItem
             // 
             this.updateCalculatorContextMenuItem.Name = "updateCalculatorContextMenuItem";
             this.updateCalculatorContextMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.updateCalculatorContextMenuItem.Text = "Edit...";
+            this.updateCalculatorContextMenuItem.Text = "Edit Current...";
             this.updateCalculatorContextMenuItem.Click += new System.EventHandler(this.updateCalculatorContextMenuItem_Click);
             // 
             // toolStripSeparator23
@@ -3393,6 +3412,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem placeholderToolStripMenuItem1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorCalculators;
         private System.Windows.Forms.ToolStripMenuItem updateCalculatorContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem addCalculatorContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem peptideIDTimesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generateDecoysMenuItem;
     }
 }

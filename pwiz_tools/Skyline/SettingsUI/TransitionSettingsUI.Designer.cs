@@ -694,18 +694,18 @@
             this.label30.AutoSize = true;
             this.label30.Location = new System.Drawing.Point(264, 215);
             this.label30.Name = "label30";
-            this.label30.Size = new System.Drawing.Size(27, 13);
+            this.label30.Size = new System.Drawing.Size(23, 13);
             this.label30.TabIndex = 18;
-            this.label30.Text = "Min.";
+            this.label30.Text = "min";
             // 
             // label31
             // 
             this.label31.AutoSize = true;
             this.label31.Location = new System.Drawing.Point(101, 215);
             this.label31.Name = "label31";
-            this.label31.Size = new System.Drawing.Size(27, 13);
+            this.label31.Size = new System.Drawing.Size(23, 13);
             this.label31.TabIndex = 14;
-            this.label31.Text = "Min.";
+            this.label31.Text = "min";
             // 
             // label33
             // 

@@ -202,7 +202,7 @@
             this.Name = "CalibrateIrtDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Calibrate iRT";
+            this.Text = "Calibrate iRT Calculator";
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewCalibrate)).EndInit();
             this.ResumeLayout(false);

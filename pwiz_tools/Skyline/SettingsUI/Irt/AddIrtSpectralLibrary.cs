@@ -64,7 +64,13 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
         }
 
-        private void OkDialog()
+        public string FilePath
+        {
+            get { return textFilePath.Text; }
+            set { textFilePath.Text = value; }
+        }
+
+        public void OkDialog()
         {
             if (Source == SpectralLibrarySource.file)
             {

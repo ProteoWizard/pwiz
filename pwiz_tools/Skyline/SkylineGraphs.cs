@@ -1032,6 +1032,8 @@ namespace pwiz.Skyline
             // Insert skyline specific menus
             var settings = DocumentUI.Settings;
             bool retentionPredict = (settings.PeptideSettings.Prediction.RetentionTime != null);
+            bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
+                                   settings.TransitionSettings.FullScan.IsEnabled);
 
             var set = Settings.Default;
             int iInsert = 0;
@@ -1072,9 +1074,16 @@ namespace pwiz.Skyline
                         noneRTContextMenuItem     
                     });
             }
-            retentionTimePredContextMenuItem.Checked = set.ShowRetentionTimePred;
-            retentionTimePredContextMenuItem.Enabled = retentionPredict;
-            menuStrip.Items.Insert(iInsert++, retentionTimePredContextMenuItem);
+            if (retentionPredict)
+            {
+                retentionTimePredContextMenuItem.Checked = set.ShowRetentionTimePred;
+                menuStrip.Items.Insert(iInsert++, retentionTimePredContextMenuItem);
+            }
+            if (peptideIdTimes)
+            {
+                peptideIDTimesContextMenuItem.Checked = set.ShowPeptideIdTimes;
+                menuStrip.Items.Insert(iInsert++, peptideIDTimesContextMenuItem);
+            }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
             menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
             // Sometimes child menuitems are stripped from the parent
@@ -1215,6 +1224,12 @@ namespace pwiz.Skyline
         private void retentionTimePredContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRetentionTimePred = retentionTimePredContextMenuItem.Checked;
+            UpdateChromGraphs();
+        }
+
+        private void peptideIDTimesContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowPeptideIdTimes = peptideIDTimesContextMenuItem.Checked;
             UpdateChromGraphs();
         }
 
@@ -2045,12 +2060,13 @@ namespace pwiz.Skyline
                     {
                         placeholderToolStripMenuItem1,
                         toolStripSeparatorCalculators,
+                        addCalculatorContextMenuItem,
                         updateCalculatorContextMenuItem
                     });
                 }
                 var regressionRT = RTGraphController.RegressionRefined;
                 createRTRegressionContextMenuItem.Enabled = (regressionRT != null);
-                updateCalculatorContextMenuItem.Enabled = (regressionRT != null &&
+                updateCalculatorContextMenuItem.Visible = (regressionRT != null &&
                     Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator));
                 bool showDelete = controller.ShowDelete(mousePt);
                 bool showDeleteOutliers = controller.ShowDeleteOutliers;
@@ -2063,7 +2079,12 @@ namespace pwiz.Skyline
                         menuStrip.Items.Insert(iInsert++, removeRTOutliersContextMenuItem);
                 }
             }
-            else if (graphType != GraphTypeRT.schedule)
+            else if (graphType == GraphTypeRT.schedule)
+            {
+                menuStrip.Items.Insert(iInsert++, toolStripSeparator38);
+                menuStrip.Items.Insert(iInsert++, timePropsContextMenuItem);                
+            }
+            else
             {
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
                 if (graphType == GraphTypeRT.peptide)
@@ -2250,11 +2271,21 @@ namespace pwiz.Skyline
 
         private void averageReplicatesContextMenuItem_Click(object sender, EventArgs e)
         {
+            ShowAverageReplicates();
+        }
+
+        public void ShowAverageReplicates()
+        {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.all.ToString();
             UpdateSummaryGraphs();
         }
 
         private void singleReplicateRTContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowSingleReplicate();
+        }
+
+        public void ShowSingleReplicate()
         {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.single.ToString();
             // No CVs with single replicate data views
@@ -2280,7 +2311,12 @@ namespace pwiz.Skyline
 
         private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)
         {
-            using (var dlg = new SetRTThresholdDlg { Threshold = Settings.Default.RTResidualRThreshold })
+            ShowSetRTThresholdDlg();
+        }
+
+        public void ShowSetRTThresholdDlg()
+        {
+            using (var dlg = new SetRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold})
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -2364,7 +2400,20 @@ namespace pwiz.Skyline
             UpdateRetentionTimeGraph();
         }
 
+        private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)
+        {
+            var list = Settings.Default.RTScoreCalculatorList;
+            var calcNew = list.EditItem(this, null, list, null);
+            if (calcNew != null)
+                list.SetValue(calcNew);
+        }
+
         private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowEditCalculatorDlg();
+        }
+
+        public void ShowEditCalculatorDlg()
         {
             var list = Settings.Default.RTScoreCalculatorList;
             var regressionRT = RTGraphController.RegressionRefined;
@@ -2389,6 +2438,11 @@ namespace pwiz.Skyline
 
         private void removeRTOutliersContextMenuItem_Click(object sender, EventArgs e)
         {
+            RemoveRTOutliers();
+        }
+
+        public void RemoveRTOutliers()
+        {
             if (_graphRetentionTime == null)
                 return;
 
@@ -2398,7 +2452,7 @@ namespace pwiz.Skyline
                 outlierIds.Add(outlier.Id.GlobalIndex);
 
             ModifyDocument("Remove retention time outliers",
-                doc => (SrmDocument) doc.RemoveAll(outlierIds));
+                           doc => (SrmDocument) doc.RemoveAll(outlierIds));
         }
 
         private void removeRTContextMenuItem_Click(object sender, EventArgs e)
@@ -2443,11 +2497,30 @@ namespace pwiz.Skyline
 
         private void timePropsContextMenuItem_Click(object sender, EventArgs e)
         {
-            using (var dlg = new RTChartPropertyDlg())
+            ShowRTPropertyDlg();
+        }
+
+        public void ShowRTPropertyDlg()
+        {
+            GraphTypeRT graphType = RTGraphController.GraphType;
+            if (graphType == GraphTypeRT.schedule)
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                using (var dlg = new SchedulingGraphPropertyDlg())
                 {
-                    UpdateSummaryGraphs();
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        UpdateRetentionTimeGraph();
+                    }
+                }
+            }
+            else
+            {
+                using (var dlg = new RTChartPropertyDlg())
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        UpdateSummaryGraphs();
+                    }
                 }
             }
         }
@@ -3281,15 +3354,6 @@ namespace pwiz.Skyline
                     listGraphs.Reverse();
             }
             return listGraphs;
-        }
-
-        #endregion
-
-        #region Testing
-
-        public GraphChromatogram GetGraphChromatogram(string text)
-        {
-            return _listGraphChrom.Find(graph => graph.TabText == "Unrefined");   
         }
 
         #endregion

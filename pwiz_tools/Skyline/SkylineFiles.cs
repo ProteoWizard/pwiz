@@ -567,6 +567,10 @@ namespace pwiz.Skyline
                 }
                 SaveLayout(fileName);
             }
+            catch (UnauthorizedAccessException)
+            {
+                // Fail silently
+            }
             catch (IOException)
             {
                 // Fail silently
@@ -670,7 +674,9 @@ namespace pwiz.Skyline
             }
 
             bool completeSharing = true;
-            if (document.Settings.HasLibraries || document.Settings.HasBackgroundProteome)
+            if (document.Settings.HasLibraries ||
+                document.Settings.HasBackgroundProteome ||
+                document.Settings.HasRTCalcPersisted)
             {
                 using (var dlgType = new ShareTypeDlg(document))
                 {
@@ -1165,8 +1171,13 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     var namedResults = dlg.NamedPathSets;
+                    // No idea how this could happen, but it has caused unexpected errors
+                    // so just return and do nothing if it does.
                     if (namedResults == null)
-                        throw new NullReferenceException("Unexpected null path sets in ImportResults.");
+                    {
+//                        throw new NullReferenceException("Unexpected null path sets in ImportResults.");
+                        return;
+                    }
                     string description = "Import results";
                     if (namedResults.Length == 1)
                         description = string.Format("Import {0}", namedResults[0].Key);
@@ -1351,6 +1362,9 @@ namespace pwiz.Skyline
                 else
                 {
                     // Or remove the cache entirely, if everything is being reimported
+                    foreach (var readStream in results.ReadStreams)
+                        readStream.CloseStream();
+
                     string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
                     if (File.Exists(cachePath))
                         File.Delete(cachePath);                    

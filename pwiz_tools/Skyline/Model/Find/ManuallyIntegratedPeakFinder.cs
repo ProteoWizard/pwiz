@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Find
         }
         public override string DisplayName
         {
-            get { return "Manually Integrated Peaks"; }
+            get { return "Manually integrated peaks"; }
         }
 
         protected override FindMatch MatchTransition(TransitionChromInfo transitionChromInfo)

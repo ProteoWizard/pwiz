@@ -622,12 +622,13 @@ namespace pwiz.Skyline.Model.Results
 
         private const string PREFIX_TOTAL = "SRM TIC ";
         private const string PREFIX_SINGLE = "SRM SIC ";
+        private const string PREFIX_PRECURSOR = "SIM SIC ";
 
         private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) ");
 
         public static bool IsKeyId(string id)
         {
-            return id.StartsWith(PREFIX_SINGLE); // || id.StartsWith(PREFIX_TOTAL); Skip the TICs, since Skyline calculates these
+            return id.StartsWith(PREFIX_SINGLE) || id.StartsWith(PREFIX_PRECURSOR); // || id.StartsWith(PREFIX_TOTAL); Skip the TICs, since Skyline calculates these
         }
 
         public static ChromKey FromId(string id)
@@ -639,6 +640,11 @@ namespace pwiz.Skyline.Model.Results
                 {
                     precursor = (float)double.Parse(id.Substring(PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
                     product = 0;
+                }
+                else if (id.StartsWith(PREFIX_PRECURSOR))
+                {
+                    precursor = (float)double.Parse(id.Substring(PREFIX_TOTAL.Length), CultureInfo.InvariantCulture);
+                    product = precursor;
                 }
                 else if (id.StartsWith(PREFIX_SINGLE))
                 {

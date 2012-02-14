@@ -39,7 +39,7 @@
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(250, 39);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
@@ -91,7 +91,7 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "&Font size:";
             // 
-            // ChromChartPropertyDlg
+            // SpectrumChartPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -107,7 +107,7 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.Name = "ChromChartPropertyDlg";
+            this.Name = "SpectrumChartPropertyDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Spectrum Graph Properties";

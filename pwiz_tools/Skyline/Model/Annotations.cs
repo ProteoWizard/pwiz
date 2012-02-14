@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model
@@ -177,17 +178,34 @@ namespace pwiz.Skyline.Model
             if (string.IsNullOrEmpty(note))
                 note = annotations.Note;
             else if (!string.IsNullOrEmpty(annotations.Note))
-                note = note + "\n\n" + annotations.Note;
+            {
+                // Be careful not to creat repetitive notes during document merging
+                var newNoteBuilder = new StringBuilder();
+                foreach(var notePart in SplitNotes(note).Union(SplitNotes(annotations.Note)))
+                {
+                    if (newNoteBuilder.Length > 0)
+                        newNoteBuilder.AppendLine().AppendLine();
+                    newNoteBuilder.Append(notePart);
+                }
+                note = newNoteBuilder.ToString();
+            }
             var annotationsNew = _annotations;
             if (annotationsNew == null)
                 annotationsNew = annotations._annotations;
             else if (annotations._annotations != null)
             {
+                // With annotations implemented as only a set of name, value pairs
+                // there is no way to know in this code which annotations are full-text,
+                // an so no way to do annotation merging as above.
                 annotationsNew = new Dictionary<string, string>(annotationsNew);
                 foreach (var annotation in annotations._annotations)
                 {
                     if (annotationsNew.ContainsKey(annotation.Key))
+                    {
+                        if (Equals(annotation.Value, annotationsNew[annotation.Key]))
+                            continue;
                         throw new InvalidDataException(string.Format("Annotation conflict for '{0}' found attempting to merge annotations.", annotation.Key));
+                    }
                     annotationsNew.Add(annotation);
                 }
             }
@@ -198,6 +216,11 @@ namespace pwiz.Skyline.Model
             if (Equals(merged, annotations))
                 return annotations;
             return merged;
+        }
+
+        private static IEnumerable<string> SplitNotes(string note)
+        {
+            return note.Split(new[] {"\r\n\r\n"}, StringSplitOptions.RemoveEmptyEntries);
         }
 
         public bool Equals(Annotations other)

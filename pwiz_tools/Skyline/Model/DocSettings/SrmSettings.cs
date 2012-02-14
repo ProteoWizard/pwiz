@@ -79,6 +79,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasRTPrediction { get { return PeptideSettings.Prediction.RetentionTime != null; } }
 
+        public bool HasRTCalcPersisted
+        {
+            get
+            {
+                return HasRTPrediction && PeptideSettings.Prediction.RetentionTime.Calculator.PersistencePath != null;
+            }
+        }
+
         public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
 
         public bool IsLoaded
@@ -1331,8 +1339,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // If the library loded state has changed, make sure the library properties are up to date,
             // but avoid changing the chosen transitions.
-            if (!DiffTransitionGroupProps && libraryChange && newLib.IsLoaded && !oldLib.IsLoaded)
-                DiffTransitionGroupProps = true;
+            // CONSIDER: The way library transition ranking is currently implemented makes this too slow
+//            if (!DiffTransitionGroupProps && libraryChange && newLib.IsLoaded && !oldLib.IsLoaded)
+//                DiffTransitionGroupProps = true;
 
             // Any change in modifications or fragment mass-type forces a recalc
             // of transition m/z values, as

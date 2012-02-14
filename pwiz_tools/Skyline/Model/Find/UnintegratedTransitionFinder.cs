@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Find
         {
             get
             {
-                return "Unintegrated Transitions";
+                return "Unintegrated transitions";
             }
         }
 

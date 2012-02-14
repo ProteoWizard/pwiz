@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using pwiz.MSGraph;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -28,7 +29,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal class ChromGraphItem : AbstractChromGraphItem
+    public class ChromGraphItem : AbstractChromGraphItem
     {
         private const string FONT_FACE = "Arial";
 
@@ -147,7 +148,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool HideBest { get; set; }
 
-        public PeakBoundsDragInfo DragInfo
+        public double BestPeakTime { get { return _bestPeakTimeIndex != -1 ? _times[_bestPeakTimeIndex] : 0; } }
+
+        internal PeakBoundsDragInfo DragInfo
         {
             get { return _dragInfo; }
             set
@@ -500,15 +503,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double FindSpectrumRetentionTime(TextObj label)
         {
-            if (label.FontSpec.FontColor == COLOR_MSMSID_TIME ||
-                (SelectedRetentionMsMs.HasValue && label.FontSpec.FontColor == ColorSelected))
+            if (RetentionMsMs != null)
             {
-                double time = label.Location.X;
-                // Search for a time that corresponds with the label
-                foreach (double timeMsMs in RetentionMsMs)
+                if (label.FontSpec.FontColor == COLOR_MSMSID_TIME ||
+                    (SelectedRetentionMsMs.HasValue && label.FontSpec.FontColor == ColorSelected))
                 {
-                    if (time == timeMsMs)
-                        return timeMsMs;
+                    // Search for a time that corresponds with the label
+                    return RetentionMsMs.FirstOrDefault(time => time == label.Location.X);
                 }
             }
             return 0;
@@ -516,15 +517,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double FindSpectrumRetentionTime(LineObj line)
         {
-            if (line.Line.Color == COLOR_MSMSID_TIME ||
-                (SelectedRetentionMsMs.HasValue && line.Line.Color == ColorSelected))
+            if (RetentionMsMs != null)
             {
-                double time = line.Location.X;
-                // Search for a time that corresponds with the label
-                foreach (double timeMsMs in RetentionMsMs)
+                if (line.Line.Color == COLOR_MSMSID_TIME ||
+                    (SelectedRetentionMsMs.HasValue && line.Line.Color == ColorSelected))
                 {
-                    if (time == timeMsMs)
-                        return timeMsMs;
+                    // Search for a time that corresponds with the label
+                    return RetentionMsMs.FirstOrDefault(time => time == line.Location.X);
                 }
             }
             return 0;
@@ -552,7 +551,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (iTime == _times.Length || (iTime > 0 && _times[iTime] - time > time - _times[iTime - 1]))
                     iTime--;
             }
-            return _times[iTime];
+            return iTime >= 0 ? _times[iTime] : 0;
         }
     }
 

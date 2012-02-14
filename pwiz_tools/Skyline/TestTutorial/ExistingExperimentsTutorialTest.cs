@@ -16,10 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Data;
-using System.Data.OleDb;
+
 using System.Globalization;
-using System.Text;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -98,23 +96,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var filePath = TestFilesDir.GetTestPath(@"ExistingQuant\MRMer\silac_1_to_4.xls");
-                var connectionString =
-                    string.Format("Provider=Microsoft.Jet.OLEDB.4.0; data source={0}; Extended Properties=\"Excel 8.0;HDR=NO\"",
-                    filePath);
-                var adapter = new OleDbDataAdapter("SELECT * FROM [Fixed$]", connectionString);
-                var ds = new DataSet();
-                adapter.Fill(ds, "TransitionListTable");
-                DataTable data = ds.Tables["TransitionListTable"];
-                var sb = new StringBuilder();
-                foreach (DataRow row in data.Rows)
-                {
-                    for (int i = 0; i < 3; i++)
-                    {
-                        sb.Append(row[i] ?? string.Empty).Append("\t");
-                    }
-                    sb.AppendLine();
-                }
-                SetClipboardText(sb.ToString());
+                SetExcelFileClipboardText(filePath, "Fixed", 3, false);
             });
             RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
             {
@@ -215,23 +197,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var filePath = TestFilesDir.GetTestPath(@"ExistingQuant\Study 7\Study7 transition list.xls");
-                var connectionString =
-                    string.Format("Provider=Microsoft.Jet.OLEDB.4.0; data source={0}; Extended Properties=\"Excel 8.0;HDR=NO\"",
-                    filePath);
-                var adapter = new OleDbDataAdapter("SELECT * FROM [Simple$]", connectionString);
-                var ds = new DataSet();
-                adapter.Fill(ds, "TransitionListTable");
-                DataTable data = ds.Tables["TransitionListTable"];
-                var sb = new StringBuilder();
-                foreach (DataRow row in data.Rows)
-                {
-                    for (int i = 0; i < 6; i++)
-                    {
-                        sb.Append(row[i] ?? string.Empty).Append("\t");
-                    }
-                    sb.AppendLine();
-                }
-                SetClipboardText(sb.ToString());
+                SetExcelFileClipboardText(filePath, "Simple", 6, false);
             });
             
             RunDlg<MessageDlg>(SkylineWindow.Paste, messageDlg => messageDlg.OkDialog());

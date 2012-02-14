@@ -718,7 +718,7 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("5,10")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2,5,10")]
         public string RTScheduleWindows {
             get {
                 return ((string)(this["RTScheduleWindows"]));
@@ -1528,6 +1528,30 @@ namespace pwiz.Skyline.Properties {
             }
             set {
                 this["TextZoom"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowPeptideIdTimes {
+            get {
+                return ((bool)(this["ShowPeptideIdTimes"]));
+            }
+            set {
+                this["ShowPeptideIdTimes"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ExportThermoTriggerRef {
+            get {
+                return ((bool)(this["ExportThermoTriggerRef"]));
+            }
+            set {
+                this["ExportThermoTriggerRef"] = value;
             }
         }
     }

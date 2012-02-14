@@ -33,19 +33,21 @@ namespace pwiz.Skyline.EditUI
             this.textMaxTime = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.textMinTime = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
             this.cbDecimalCvs = new System.Windows.Forms.CheckBox();
             this.labelCvPercent = new System.Windows.Forms.Label();
             this.textMaxCv = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.textMinTime = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(250, 39);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
@@ -82,6 +84,8 @@ namespace pwiz.Skyline.EditUI
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.label4);
+            this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.textMinTime);
             this.groupBox1.Controls.Add(this.label1);
             this.groupBox1.Controls.Add(this.cbDecimalCvs);
@@ -97,13 +101,29 @@ namespace pwiz.Skyline.EditUI
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "&Graph time dimensions:";
             // 
+            // textMinTime
+            // 
+            this.textMinTime.Location = new System.Drawing.Point(26, 115);
+            this.textMinTime.Name = "textMinTime";
+            this.textMinTime.Size = new System.Drawing.Size(107, 20);
+            this.textMinTime.TabIndex = 4;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(23, 99);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(73, 13);
+            this.label1.TabIndex = 3;
+            this.label1.Text = "Minimum &time:";
+            // 
             // cbDecimalCvs
             // 
             this.cbDecimalCvs.AutoSize = true;
             this.cbDecimalCvs.Location = new System.Drawing.Point(26, 218);
             this.cbDecimalCvs.Name = "cbDecimalCvs";
             this.cbDecimalCvs.Size = new System.Drawing.Size(150, 17);
-            this.cbDecimalCvs.TabIndex = 7;
+            this.cbDecimalCvs.TabIndex = 9;
             this.cbDecimalCvs.Text = "&Display decimal CV values";
             this.cbDecimalCvs.UseVisualStyleBackColor = true;
             this.cbDecimalCvs.CheckedChanged += new System.EventHandler(this.cbDecimalCvs_CheckedChanged);
@@ -114,7 +134,7 @@ namespace pwiz.Skyline.EditUI
             this.labelCvPercent.Location = new System.Drawing.Point(137, 187);
             this.labelCvPercent.Name = "labelCvPercent";
             this.labelCvPercent.Size = new System.Drawing.Size(15, 13);
-            this.labelCvPercent.TabIndex = 6;
+            this.labelCvPercent.TabIndex = 8;
             this.labelCvPercent.Text = "%";
             // 
             // textMaxCv
@@ -122,7 +142,7 @@ namespace pwiz.Skyline.EditUI
             this.textMaxCv.Location = new System.Drawing.Point(26, 181);
             this.textMaxCv.Name = "textMaxCv";
             this.textMaxCv.Size = new System.Drawing.Size(104, 20);
-            this.textMaxCv.TabIndex = 5;
+            this.textMaxCv.TabIndex = 7;
             // 
             // label5
             // 
@@ -130,24 +150,26 @@ namespace pwiz.Skyline.EditUI
             this.label5.Location = new System.Drawing.Point(23, 165);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(71, 13);
-            this.label5.TabIndex = 4;
+            this.label5.TabIndex = 6;
             this.label5.Text = "Maximum &CV:";
             // 
-            // textMinTime
+            // label3
             // 
-            this.textMinTime.Location = new System.Drawing.Point(26, 115);
-            this.textMinTime.Name = "textMinTime";
-            this.textMinTime.Size = new System.Drawing.Size(107, 20);
-            this.textMinTime.TabIndex = 3;
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(137, 52);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(23, 13);
+            this.label3.TabIndex = 2;
+            this.label3.Text = "min";
             // 
-            // label1
+            // label4
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(23, 99);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(73, 13);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "Minimum &time:";
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(139, 118);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(23, 13);
+            this.label4.TabIndex = 5;
+            this.label4.Text = "min";
             // 
             // RTChartPropertyDlg
             // 
@@ -185,5 +207,7 @@ namespace pwiz.Skyline.EditUI
         private System.Windows.Forms.CheckBox cbDecimalCvs;
         private System.Windows.Forms.TextBox textMinTime;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.Label label3;
     }
 }

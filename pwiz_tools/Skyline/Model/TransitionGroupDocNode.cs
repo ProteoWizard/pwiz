@@ -202,10 +202,12 @@ namespace pwiz.Skyline.Model
                 return AveragePeakCountRatio;
 
             // CONSIDER: Also specify the file index?
-            var chromInfo = GetChromInfoEntry(i);
-            if (chromInfo == null)
+            var result = GetSafeChromInfo(i);
+            if (result == null)
                 return null;
-            return chromInfo.PeakCountRatio;
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
+                                                              ? chromInfo.PeakCountRatio
+                                                              : (float?)null);
         }
 
         public float? AveragePeakCountRatio
@@ -224,10 +226,12 @@ namespace pwiz.Skyline.Model
                 return AverageIsotopeDotProduct;
 
             // CONSIDER: Also specify the file index?
-            var result = GetChromInfoEntry(i);
+            var result = GetSafeChromInfo(i);
             if (result == null)
                 return null;
-            return result.IsotopeDotProduct;
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
+                                                              ? chromInfo.IsotopeDotProduct
+                                                              : (float?)null);
         }
 
         public float? AverageIsotopeDotProduct
@@ -246,10 +250,12 @@ namespace pwiz.Skyline.Model
                 return AverageLibraryDotProduct;
 
             // CONSIDER: Also specify the file index?
-            var result = GetChromInfoEntry(i);
+            var result = GetSafeChromInfo(i);
             if (result == null)
                 return null;
-            return result.LibraryDotProduct;
+            return result.GetAverageValue(chromInfo => chromInfo.OptimizationStep == 0
+                                                              ? chromInfo.LibraryDotProduct
+                                                              : (float?)null);
         }
 
         public float? AverageLibraryDotProduct
@@ -382,9 +388,9 @@ namespace pwiz.Skyline.Model
                 {
                     var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
                     if (chromatogramSet.OptimizationFunction == null)
-                        AddCenterTimes(i, ref valCount, ref valTotal);
+                        AddSchedulingTimes(i, ref valCount, ref valTotal);
                     else
-                        AddCenterTimes(i, ref valCountOpt, ref valTotalOpt);
+                        AddSchedulingTimes(i, ref valCountOpt, ref valTotalOpt);
                 }
             }
             else if (algorithm == ExportSchedulingAlgorithm.Single)
@@ -392,7 +398,7 @@ namespace pwiz.Skyline.Model
                 // Try using the specified index
                 if (replicateNum.Value < Results.Count)
                 {
-                    AddCenterTimes(replicateNum.Value, ref valCount, ref valTotal);
+                    AddSchedulingTimes(replicateNum.Value, ref valCount, ref valTotal);
                 }
 
                 // If no usable peak found for the specified replicate, try to find a
@@ -416,7 +422,7 @@ namespace pwiz.Skyline.Model
 
                         int valCountTmp = 0;
                         double valTotalTmp = 0;
-                        AddCenterTimes(i, ref valCountTmp, ref valTotalTmp);
+                        AddSchedulingTimes(i, ref valCountTmp, ref valTotalTmp);
                         if (valCountTmp == 0)
                             continue;
 
@@ -444,7 +450,7 @@ namespace pwiz.Skyline.Model
             // If possible return the scheduling time based on non-optimization data.
             if (valCount != 0)
             {
-                scheduleTimes.CenterTime = (float)(valTotal / valCount);
+                scheduleTimes.CenterTime = (float)(valTotal/valCount);
                 return scheduleTimes;
             }
             // If only optimization was found, then use it.
@@ -457,7 +463,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        private void AddCenterTimes(int replicateIndex, ref int valCount, ref double valTotal)
+        private void AddSchedulingTimes(int replicateIndex, ref int valCount, ref double valTotal)
         {
             var result = Results[replicateIndex];
             if (result == null)
@@ -465,11 +471,12 @@ namespace pwiz.Skyline.Model
 
             foreach (var chromInfo in Results[replicateIndex])
             {
-                double? centerTime = GetCenterTime(chromInfo);
-                if (!centerTime.HasValue)
+//                double? schedulingTime = GetCenterTime(chromInfo);
+                double? schedulingTime = GetRetentionTime(chromInfo);
+                if (!schedulingTime.HasValue)
                     continue;
 
-                valTotal += centerTime.Value;
+                valTotal += schedulingTime.Value;
                 valCount++;
             }            
         }
@@ -484,9 +491,9 @@ namespace pwiz.Skyline.Model
             return (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2.0;            
         }
 
-        public float? AveragePeakCenterTime
+        public static double? GetRetentionTime(TransitionGroupChromInfo chromInfo)
         {
-            get { return GetAverageResultValue(info => (float?) GetCenterTime(info)); }
+            return chromInfo != null ? chromInfo.RetentionTime : null;
         }
 
         private float? GetAverageResultValue(Func<TransitionGroupChromInfo, float?> getVal)
@@ -509,7 +516,9 @@ namespace pwiz.Skyline.Model
             {
                 if (!Annotations.IsEmpty)
                     return true;
-                if (HasResults && Results.SelectMany(l => l).Contains(chromInfo => chromInfo.IsUserModified))
+                if (HasResults && Results.Where(l => l != null)
+                                            .SelectMany(l => l)
+                                            .Contains(chromInfo => chromInfo.IsUserModified))
                     return true;
                 return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
             }
@@ -1806,7 +1815,11 @@ namespace pwiz.Skyline.Model
                 foreach (TransitionDocNode nodeTran in nodeGroupSynch.Children)
                 {
                     var tranMatch = nodeTran.Transition;
-                    var tran = new Transition(TransitionGroup, tranMatch.IonType, tranMatch.CleavageOffset, 0, tranMatch.Charge);
+                    var tran = new Transition(TransitionGroup,
+                                              tranMatch.IonType,
+                                              tranMatch.CleavageOffset,
+                                              tranMatch.MassIndex,
+                                              tranMatch.Charge);
                     var losses = nodeTran.Losses;
                     // m/z, isotope distribution and library info calculated later
                     childrenNew.Add(new TransitionDocNode(tran, losses, 0, null, null));

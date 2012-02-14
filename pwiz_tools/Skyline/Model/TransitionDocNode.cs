@@ -230,9 +230,9 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo =>
-                                             chromInfo.OptimizationStep != 0 ?
-                                                                                 (float?)null : chromInfo.Area);
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
+                                                              ? (float?) null
+                                                              : chromInfo.Area);
             }
         }
 
@@ -242,7 +242,9 @@ namespace pwiz.Skyline.Model
             {
                 if (!Annotations.IsEmpty)
                     return true;
-                return HasResults && Results.SelectMany(r => r).Contains(chromInfo => chromInfo.IsUserModified);
+                return HasResults && Results.Where(l => l != null)
+                                         .SelectMany(l => l)
+                                         .Contains(chromInfo => chromInfo.IsUserModified);
             }
         }
 

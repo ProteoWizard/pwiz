@@ -50,10 +50,13 @@
             this.cbIgnoreProteins = new System.Windows.Forms.CheckBox();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.cbEnergyRamp = new System.Windows.Forms.CheckBox();
+            this.cbTriggerRefColumns = new System.Windows.Forms.CheckBox();
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.labelMethods = new System.Windows.Forms.Label();
             this.labelMethodNum = new System.Windows.Forms.Label();
+            this.panelThermoColumns = new System.Windows.Forms.Panel();
+            this.panelThermoColumns.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -123,7 +126,7 @@
             this.btnCancel.Location = new System.Drawing.Point(200, 41);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 19;
+            this.btnCancel.TabIndex = 21;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -133,7 +136,7 @@
             this.btnOk.Location = new System.Drawing.Point(200, 11);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 18;
+            this.btnOk.TabIndex = 20;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -144,7 +147,7 @@
             this.label2.Location = new System.Drawing.Point(13, 303);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 13);
-            this.label2.TabIndex = 10;
+            this.label2.TabIndex = 12;
             this.label2.Text = "Method &type:";
             // 
             // comboTargetType
@@ -157,32 +160,32 @@
             this.comboTargetType.Location = new System.Drawing.Point(16, 319);
             this.comboTargetType.Name = "comboTargetType";
             this.comboTargetType.Size = new System.Drawing.Size(124, 21);
-            this.comboTargetType.TabIndex = 11;
+            this.comboTargetType.TabIndex = 13;
             this.comboTargetType.SelectedIndexChanged += new System.EventHandler(this.comboTargetType_SelectedIndexChanged);
             // 
             // textRunLength
             // 
-            this.textRunLength.Location = new System.Drawing.Point(164, 319);
+            this.textRunLength.Location = new System.Drawing.Point(174, 322);
             this.textRunLength.Name = "textRunLength";
             this.textRunLength.Size = new System.Drawing.Size(100, 20);
-            this.textRunLength.TabIndex = 10;
+            this.textRunLength.TabIndex = 15;
             this.textRunLength.Visible = false;
             // 
             // textDwellTime
             // 
-            this.textDwellTime.Location = new System.Drawing.Point(164, 319);
+            this.textDwellTime.Location = new System.Drawing.Point(174, 322);
             this.textDwellTime.Name = "textDwellTime";
             this.textDwellTime.Size = new System.Drawing.Size(100, 20);
-            this.textDwellTime.TabIndex = 13;
+            this.textDwellTime.TabIndex = 15;
             this.textDwellTime.Visible = false;
             // 
             // labelDwellTime
             // 
             this.labelDwellTime.AutoSize = true;
-            this.labelDwellTime.Location = new System.Drawing.Point(164, 300);
+            this.labelDwellTime.Location = new System.Drawing.Point(174, 303);
             this.labelDwellTime.Name = "labelDwellTime";
             this.labelDwellTime.Size = new System.Drawing.Size(80, 13);
-            this.labelDwellTime.TabIndex = 12;
+            this.labelDwellTime.TabIndex = 14;
             this.labelDwellTime.Text = "&Dwell time (ms):";
             this.labelDwellTime.Visible = false;
             // 
@@ -217,7 +220,7 @@
             this.labelTemplateFile.Location = new System.Drawing.Point(13, 370);
             this.labelTemplateFile.Name = "labelTemplateFile";
             this.labelTemplateFile.Size = new System.Drawing.Size(70, 13);
-            this.labelTemplateFile.TabIndex = 15;
+            this.labelTemplateFile.TabIndex = 17;
             this.labelTemplateFile.Text = "T&emplate file:";
             // 
             // textTemplateFile
@@ -225,14 +228,14 @@
             this.textTemplateFile.Location = new System.Drawing.Point(16, 388);
             this.textTemplateFile.Name = "textTemplateFile";
             this.textTemplateFile.Size = new System.Drawing.Size(175, 20);
-            this.textTemplateFile.TabIndex = 16;
+            this.textTemplateFile.TabIndex = 18;
             // 
             // btnBrowseTemplate
             // 
             this.btnBrowseTemplate.Location = new System.Drawing.Point(197, 386);
             this.btnBrowseTemplate.Name = "btnBrowseTemplate";
             this.btnBrowseTemplate.Size = new System.Drawing.Size(75, 23);
-            this.btnBrowseTemplate.TabIndex = 17;
+            this.btnBrowseTemplate.TabIndex = 19;
             this.btnBrowseTemplate.Text = "&Browse...";
             this.btnBrowseTemplate.UseVisualStyleBackColor = true;
             this.btnBrowseTemplate.Click += new System.EventHandler(this.btnBrowseTemplate_Click);
@@ -241,7 +244,7 @@
             // 
             this.cbIgnoreProteins.AutoSize = true;
             this.cbIgnoreProteins.Enabled = false;
-            this.cbIgnoreProteins.Location = new System.Drawing.Point(167, 118);
+            this.cbIgnoreProteins.Location = new System.Drawing.Point(179, 117);
             this.cbIgnoreProteins.Name = "cbIgnoreProteins";
             this.cbIgnoreProteins.Size = new System.Drawing.Size(96, 17);
             this.cbIgnoreProteins.TabIndex = 5;
@@ -258,13 +261,25 @@
             // cbEnergyRamp
             // 
             this.cbEnergyRamp.AutoSize = true;
-            this.cbEnergyRamp.Location = new System.Drawing.Point(164, 345);
+            this.cbEnergyRamp.Location = new System.Drawing.Point(5, 7);
             this.cbEnergyRamp.Name = "cbEnergyRamp";
             this.cbEnergyRamp.Size = new System.Drawing.Size(106, 17);
-            this.cbEnergyRamp.TabIndex = 14;
+            this.cbEnergyRamp.TabIndex = 0;
             this.cbEnergyRamp.Text = "&Add energy ramp";
+            this.helpTip.SetToolTip(this.cbEnergyRamp, "Add Energy Ramp column required by some version of\r\nThermo TSQ software");
             this.cbEnergyRamp.UseVisualStyleBackColor = true;
-            this.cbEnergyRamp.Visible = false;
+            // 
+            // cbTriggerRefColumns
+            // 
+            this.cbTriggerRefColumns.AutoSize = true;
+            this.cbTriggerRefColumns.Location = new System.Drawing.Point(5, 30);
+            this.cbTriggerRefColumns.Name = "cbTriggerRefColumns";
+            this.cbTriggerRefColumns.Size = new System.Drawing.Size(134, 17);
+            this.cbTriggerRefColumns.TabIndex = 1;
+            this.cbTriggerRefColumns.Text = "Add trigger && refere&nce";
+            this.helpTip.SetToolTip(this.cbTriggerRefColumns, "Add Trigger and Reference columns required by some version of\r\nThermo TSQ softwar" +
+                    "e");
+            this.cbTriggerRefColumns.UseVisualStyleBackColor = true;
             // 
             // comboOptimizing
             // 
@@ -273,7 +288,7 @@
             this.comboOptimizing.Location = new System.Drawing.Point(16, 250);
             this.comboOptimizing.Name = "comboOptimizing";
             this.comboOptimizing.Size = new System.Drawing.Size(121, 21);
-            this.comboOptimizing.TabIndex = 9;
+            this.comboOptimizing.TabIndex = 11;
             this.comboOptimizing.SelectedIndexChanged += new System.EventHandler(this.comboOptimizing_SelectedIndexChanged);
             // 
             // label1
@@ -282,7 +297,7 @@
             this.label1.Location = new System.Drawing.Point(13, 236);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(58, 13);
-            this.label1.TabIndex = 8;
+            this.label1.TabIndex = 10;
             this.label1.Text = "Optimi&zing:";
             // 
             // labelMethods
@@ -291,7 +306,7 @@
             this.labelMethods.Location = new System.Drawing.Point(13, 201);
             this.labelMethods.Name = "labelMethods";
             this.labelMethods.Size = new System.Drawing.Size(51, 13);
-            this.labelMethods.TabIndex = 21;
+            this.labelMethods.TabIndex = 8;
             this.labelMethods.Text = "Methods:";
             // 
             // labelMethodNum
@@ -300,8 +315,18 @@
             this.labelMethodNum.Location = new System.Drawing.Point(70, 201);
             this.labelMethodNum.Name = "labelMethodNum";
             this.labelMethodNum.Size = new System.Drawing.Size(21, 13);
-            this.labelMethodNum.TabIndex = 22;
+            this.labelMethodNum.TabIndex = 9;
             this.labelMethodNum.Text = "##";
+            // 
+            // panelThermoColumns
+            // 
+            this.panelThermoColumns.Controls.Add(this.cbEnergyRamp);
+            this.panelThermoColumns.Controls.Add(this.cbTriggerRefColumns);
+            this.panelThermoColumns.Location = new System.Drawing.Point(148, 337);
+            this.panelThermoColumns.Name = "panelThermoColumns";
+            this.panelThermoColumns.Size = new System.Drawing.Size(138, 54);
+            this.panelThermoColumns.TabIndex = 16;
+            this.panelThermoColumns.Visible = false;
             // 
             // ExportMethodDlg
             // 
@@ -314,7 +339,6 @@
             this.Controls.Add(this.labelMethods);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboOptimizing);
-            this.Controls.Add(this.cbEnergyRamp);
             this.Controls.Add(this.cbIgnoreProteins);
             this.Controls.Add(this.btnBrowseTemplate);
             this.Controls.Add(this.textTemplateFile);
@@ -333,6 +357,7 @@
             this.Controls.Add(this.radioBuckets);
             this.Controls.Add(this.radioProtein);
             this.Controls.Add(this.radioSingle);
+            this.Controls.Add(this.panelThermoColumns);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -341,6 +366,8 @@
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Export Method";
+            this.panelThermoColumns.ResumeLayout(false);
+            this.panelThermoColumns.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -372,5 +399,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelMethods;
         private System.Windows.Forms.Label labelMethodNum;
+        private System.Windows.Forms.CheckBox cbTriggerRefColumns;
+        private System.Windows.Forms.Panel panelThermoColumns;
     }
 }

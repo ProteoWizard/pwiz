@@ -18,10 +18,13 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.OleDb;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -159,6 +162,59 @@ namespace pwiz.SkylineTestUtil
             {
                 Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failed to set text to the clipboard."));
             }
+        }
+
+
+        protected static void SetExcelFileClipboardText(string filePath, string page, int columns, bool hasHeader)
+        {
+            SetClipboardText(GetExcelFileText(filePath, page, columns, hasHeader));            
+        }
+
+        protected static string GetExcelFileText(string filePath, string page, int columns, bool hasHeader)
+        {
+            bool legacyFile = filePath.EndsWith(".xls");
+            try
+            {
+                string connectionString = GetExcelConnectionString(filePath, hasHeader, legacyFile);
+                return GetExcelFileText(connectionString, page, columns);
+            }
+            catch (Exception)
+            {
+                if (!legacyFile)
+                    throw;
+
+                // In case the system running this does not have the legacy adapter
+                string connectionString = GetExcelConnectionString(filePath, hasHeader, false);
+                return GetExcelFileText(connectionString, page, columns);
+            }
+        }
+
+        private static string GetExcelFileText(string connectionString, string page, int columns)
+        {
+            var adapter = new OleDbDataAdapter(string.Format("SELECT * FROM [{0}$]", page), connectionString);
+            var ds = new DataSet();
+            adapter.Fill(ds, "TransitionListTable");
+            DataTable data = ds.Tables["TransitionListTable"];
+            var sb = new StringBuilder();
+            foreach (DataRow row in data.Rows)
+            {
+                for (int i = 0; i < columns; i++)
+                {
+                    if (i > 0)
+                        sb.Append('\t');
+                    sb.Append(row[i] ?? string.Empty);
+                }
+                sb.AppendLine();
+            }
+            return sb.ToString();
+        }
+
+        private static string GetExcelConnectionString(string filePath, bool hasHeader, bool legacyFile)
+        {
+            string connectionFormat = legacyFile
+                ? "Provider=Microsoft.Jet.OLEDB.4.0; data source={0}; Extended Properties=\"Excel 8.0;HDR={1}\""
+                : "Provider=Microsoft.ACE.OLEDB.12.0;Password=\"\";User ID=Admin;Data Source={0};Mode=Share Deny Write;Extended Properties=\"HDR={1};\";Jet OLEDB:Engine Type=37";
+            return string.Format(connectionFormat, filePath, hasHeader ? "YES" : "NO");
         }
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form

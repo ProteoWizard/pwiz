@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="nodeGroup">The transition group for which the peak was picked</param>
         /// <param name="nodeTran">The transition no which the time was chosen</param>
         /// <param name="peakTime">The retention time at which the peak was picked</param>
-        private void FirePickedPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, double peakTime)
+        public void FirePickedPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, double peakTime)
         {
             if (PickedPeak != null)
             {
@@ -404,6 +404,24 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public double? PredictedRT
+        {
+            get
+            {
+                var graphItem = (ChromGraphItem)graphControl.GraphPane.CurveList.First().Tag;
+                return graphItem.RetentionPrediction;
+            }
+        }
+
+        public double? BestPeakTime
+        {
+            get
+            {
+                var graphItem = (ChromGraphItem)graphControl.GraphPane.CurveList.First().Tag;
+                return graphItem.BestPeakTime;
+            }
+        }
+
         /// <summary>
         /// Returns the file path for the selected file of the groups.
         /// </summary>
@@ -557,7 +575,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (listChromGraphs.Count > 0)
                     {
-                        SetRetentionTimeIndicators(listChromGraphs[0], settings, nodeGroups, mods);
+                        SetRetentionTimeIndicators(listChromGraphs[0], settings, chromatograms, nodeGroups, mods);
                     }
                 }
                 GraphPane.Legend.IsVisible = Settings.Default.ShowChromatogramLegend;
@@ -768,11 +786,16 @@ namespace pwiz.Skyline.Controls.Graphs
             if (peakAreas != null)
             {
                 var tranGroupChromInfo = GetTransitionGroupChromInfo(nodeGroup, fileId, _chromIndex);
+                double? dotProduct = null;
                 if (tranGroupChromInfo != null)
                 {
-                    bestProduct = (isFullScanMs
-                        ? tranGroupChromInfo.IsotopeDotProduct
-                        : tranGroupChromInfo.LibraryDotProduct) ?? 0;
+                    dotProduct = isFullScanMs
+                                     ? tranGroupChromInfo.IsotopeDotProduct
+                                     : tranGroupChromInfo.LibraryDotProduct;
+                }
+                if (dotProduct.HasValue)
+                {
+                    bestProduct = dotProduct.Value;
 
                     var statExpectedIntensities = new Statistics(expectedIntensities);
                     for (int i = 0; i < peakAreas.Length; i++)
@@ -1191,24 +1214,30 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary, SrmSettings settings,
-            TransitionGroupDocNode[] nodeGroups, ExplicitMods mods)
+        private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary,
+                                                SrmSettings settings,
+                                                ChromatogramSet chromatograms,
+                                                TransitionGroupDocNode[] nodeGroups,
+                                                ExplicitMods mods)
         {
             // Set predicted retention time on the first graph item to make
-            // line, label and shading to show.
+            // line, label and shading show.
             var regression = settings.PeptideSettings.Prediction.RetentionTime;
             if (regression != null && Settings.Default.ShowRetentionTimePred)
             {
                 string sequence = nodeGroups[0].TransitionGroup.Peptide.Sequence;
                 string modSeq = settings.GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-                double? predictedRT = regression.GetRetentionTime(modSeq);
+                var fileId = chromatograms.FindFile(chromGraphPrimary.Chromatogram);
+                double? predictedRT = regression.GetRetentionTime(modSeq, fileId);
                 double window = regression.TimeWindow;
 
                 chromGraphPrimary.RetentionPrediction = predictedRT;
                 chromGraphPrimary.RetentionWindow = window;
             }
             // Set any MS/MS IDs on the first graph item also
-            if (settings.TransitionSettings.FullScan.IsEnabled && settings.PeptideSettings.Libraries.IsLoaded)
+            if (settings.TransitionSettings.FullScan.IsEnabled &&
+                    settings.PeptideSettings.Libraries.IsLoaded &&
+                    Settings.Default.ShowPeptideIdTimes)
             {
                 var listTimes = new List<double>();
                 foreach (var group in nodeGroups.Select(nodeGroup => nodeGroup.TransitionGroup))
@@ -1684,12 +1713,12 @@ namespace pwiz.Skyline.Controls.Graphs
             return graphItem != null;
         }
 
-        private IEnumerable<ChromGraphItem> GraphItems
+        public IEnumerable<ChromGraphItem> GraphItems
         {
             get { return GraphPane.CurveList.Select(curve => (ChromGraphItem) curve.Tag); }
         }
 
-        private double[] RetentionTimes
+        public double[] RetentionMsMs
         {
             get
             {
@@ -1813,7 +1842,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             {
                                 double time, yTemp;
                                 GraphPane.ReverseTransform(pt, out time, out yTemp);
-                                _peakBoundDragInfos = new[] { StartDrag(graphItem, RetentionTimes, pt, time, false) };
+                                _peakBoundDragInfos = new[] { StartDrag(graphItem, RetentionMsMs, pt, time, false) };
                                 graphControl.Cursor = Cursors.VSplit;    // ZedGraph changes to crosshair without this
                                 return true;
                             }
@@ -1837,7 +1866,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 ChromGraphItem graphItem;
                                 double time = FindBestPeakTime(curveItem, pt, out graphItem);
                                 if (time > 0)
-                                    listDragInfos.Add(StartDrag(graphItem, RetentionTimes, pt, time, true));                                
+                                    listDragInfos.Add(StartDrag(graphItem, RetentionMsMs, pt, time, true));                                
                             }
                             _peakBoundDragInfos = listDragInfos.ToArray();
                             graphControl.Cursor = Cursors.VSplit;    // ZedGraph changes to crosshair without this

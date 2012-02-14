@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.Text;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 
@@ -32,16 +34,30 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            labelMessage.Text = "The document can be shared either in its complete form, or in a minimal form intended for read-only use with ";
-            if (document.Settings.HasLibraries && document.Settings.HasBackgroundProteome)
-                labelMessage.Text += "its background proteome disconnected, and all libraries minimized to contain only precursors used in the document.";
-            else if (document.Settings.HasBackgroundProteome)
-                labelMessage.Text += "its background proteome disconnected.";
-            else if (document.Settings.HasLibraries)
-                labelMessage.Text += "all libraries minimized to contain only precursors used in the document.";
-            else
-                throw new InvalidOperationException("Invalide use of " + typeof(ShareTypeDlg).Name + " for document without background proteome or libraries.");
-            labelMessage.Text += "\nChoose the appropriate sharing option below.";
+            int lineHeight = labelMessage.Height;
+
+            var sbLabel = new StringBuilder("The document can be shared either in its complete form, or in a minimal form intended for read-only use with ");
+            var listMinimizations = new List<string>();
+            if (document.Settings.HasBackgroundProteome)
+                listMinimizations.Add("its background proteome disconnected");
+            if (document.Settings.HasRTCalcPersisted)
+                listMinimizations.Add("its retention time calculator minimized to contain only standard peptides and library peptides used in the document");
+            if (document.Settings.HasLibraries)
+                listMinimizations.Add("all libraries minimized to contain only precursors used in the document");
+            int lastIndex = listMinimizations.Count - 1;
+            if (lastIndex < 0)
+                throw new InvalidOperationException(string.Format("Invalide use of {0} for document without background proteome, retention time calculator or libraries.", typeof(ShareTypeDlg).Name));
+            string lastMin = listMinimizations[lastIndex];
+            listMinimizations.RemoveAt(lastIndex);
+            if (listMinimizations.Count > 0)
+            {
+                sbLabel.Append(string.Join(", ", listMinimizations.ToArray()));
+                sbLabel.Append(", and ");
+            }
+            sbLabel.Append(lastMin).Append(".");
+            sbLabel.Append("\nChoose the appropriate sharing option below.");
+            labelMessage.Text = sbLabel.ToString();
+            Height += Math.Max(0, labelMessage.Height - lineHeight * 3);
         }
 
         public bool IsCompleteSharing { get; set; }

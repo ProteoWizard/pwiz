@@ -179,6 +179,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public RetentionTimeStatistics StatisticsRefined
+        {
+            get
+            {
+                GraphData data = Data;
+                return data == null ? null : data.StatisticsRefined;
+            }
+        }
+
         public bool IsValidFor(SrmDocument document)
         {
             var data = Data;
@@ -399,12 +408,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     index++;
                     float? rt = null;
                     if (!bestResult)
-                        rt = nodePeptide.GetMeasuredRetentionTime(resultIndex);
+                        rt = nodePeptide.GetSchedulingTime(resultIndex);
                     else
                     {
                         int iBest = nodePeptide.BestResult;
                         if (iBest != -1)
-                            rt = nodePeptide.GetMeasuredRetentionTime(iBest);
+                            rt = nodePeptide.GetSchedulingTime(iBest);
                     }
                     if (!rt.HasValue)
                         rt = 0;
@@ -513,6 +522,11 @@ namespace pwiz.Skyline.Controls.Graphs
             public RetentionTimeRegression RegressionRefined
             {
                 get { return _regressionRefined ?? _regressionAll; }
+            }
+
+            public RetentionTimeStatistics StatisticsRefined
+            {
+                get { return _statisticsRefined ?? _statisticsAll; }
             }
 
             public bool IsRefined()
@@ -798,7 +812,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 _regressionAll, _statisticsAll, COLOR_LINE_ALL);
                 }
 
-                if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
+                if (_regressionPredict != null &&
+                    _regressionPredict.Conversion != null &&
+                    Settings.Default.RTPredictorVisible)
                 {
                     timeTop = yAxis.Scale.ReverseTransform(yNext);
                     AddRegressionLabel(graphPane, g, scoreLeft, timeTop,
@@ -810,7 +826,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                     RetentionTimeRegression regression, RetentionTimeStatistics statistics, Color color)
             {
                 string label;
-                if (regression == null || statistics == null)
+                if (regression == null || regression.Conversion == null || statistics == null)
                 {
                     label = "slope = ?, intercept = ?\n" +
                             "window = ?\n" +

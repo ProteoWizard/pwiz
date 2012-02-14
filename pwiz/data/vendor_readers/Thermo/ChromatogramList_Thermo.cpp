@@ -184,8 +184,8 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                              ).str();
 
             ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_BasePeak, Operator_None, Type_MassRange,
-                "SIM ms", q1Range, "", 0,
+                Type_MassRange, Operator_None, Type_MassRange,
+                "SIM ms [" + q1Range + "]", q1Range, "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
             pwiz::msdata::TimeIntensityPair* data = reinterpret_cast<pwiz::msdata::TimeIntensityPair*>(cd->data());

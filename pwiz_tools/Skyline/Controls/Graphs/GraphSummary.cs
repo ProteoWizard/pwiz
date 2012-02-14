@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -197,6 +198,11 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override string GetPersistentString()
         {
             return base.GetPersistentString() + '|' + _controller.GetType().Name;
+        }
+
+        public IEnumerable<string> Categories
+        {
+            get { return GraphPane.XAxis.Scale.TextLabels; }
         }
 
         public void UpdateUI()

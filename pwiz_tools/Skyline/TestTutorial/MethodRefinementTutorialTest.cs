@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestTutorial
 //            Console.WriteLine("---------------------------------");
             RunUI(() =>
             {
-                var graphChrom = SkylineWindow.GetGraphChromatogram("Unrefined");
+                var graphChrom = SkylineWindow.GetGraphChrom("Unrefined");
                 Assert.AreEqual(2, graphChrom.Files.Count);
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 SkylineWindow.RTGraphController.GraphSummary.Close();

@@ -445,9 +445,16 @@ namespace pwiz.Skyline.SettingsUI
             string path = textPath.Text;
             if (!string.IsNullOrEmpty(path) && path.EndsWith(BiblioSpecLiteSpec.EXT))
             {
-                string baseName = Path.GetFileNameWithoutExtension(textPath.Text);
-                string redundantName = baseName + BiblioSpecLiteSpec.EXT_REDUNDANT;
-                existsRedundant = File.Exists(Path.Combine(Path.GetDirectoryName(textPath.Text) ?? "", redundantName));
+                try
+                {
+                    string baseName = Path.GetFileNameWithoutExtension(textPath.Text);
+                    string redundantName = baseName + BiblioSpecLiteSpec.EXT_REDUNDANT;
+                    existsRedundant = File.Exists(Path.Combine(Path.GetDirectoryName(textPath.Text) ?? "", redundantName));
+                }
+                catch (IOException)
+                {
+                    // May happen if path is too long.
+                }
             }
 
             if (existsRedundant)

@@ -162,6 +162,7 @@ namespace pwiz.Skyline.Model
 
         public virtual int DwellTime { get; set; }
         public virtual bool AddEnergyRamp { get; set; }
+        public virtual bool AddTriggerReference { get; set; }
         public virtual double RunLength { get; set; }
         public virtual bool FullScans { get; set; }
 
@@ -285,6 +286,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoMassListExporter(document));
             exporter.AddEnergyRamp = AddEnergyRamp;
+            exporter.AddTriggerReference = AddTriggerReference;
             exporter.Export(fileName);
 
             return exporter;
@@ -362,7 +364,6 @@ namespace pwiz.Skyline.Model
 // ReSharper restore InconsistentNaming
     public abstract class MassListExporter
     {
-
         public const int DWELL_TIME_MIN = 1;
         public const int DWELL_TIME_MAX = 1000;
         public const int DWELL_TIME_DEFAULT = 20;
@@ -381,8 +382,9 @@ namespace pwiz.Skyline.Model
             Document = document;
             DocNode = node;
             CultureInfo = CultureInfo.InvariantCulture;
-        }        
+        }
 
+        protected RequiredPeptideSet RequiredPeptides { get; private set; }
         public SrmDocument Document { get; private set; }
         public DocNode DocNode { get; private set; }
 
@@ -454,6 +456,10 @@ namespace pwiz.Skyline.Model
         public void Export(string fileName)
         {
             bool single = (Strategy == ExportStrategy.Single);
+            RequiredPeptides = GetRequiredPeptides(single);
+            if (MaxTransitions.HasValue && RequiredPeptides.TransitionCount > MaxTransitions)
+                throw new IOException(string.Format("The number of required transitions {0} exceeds the maximum {1}", RequiredPeptides.TransitionCount, MaxTransitions));
+
             using (var fileIterator = new FileIterator(fileName, single, IsPrecursorLimited, WriteHeaders))
             {
                 MemoryOutput = fileIterator.MemoryOutput;
@@ -466,6 +472,74 @@ namespace pwiz.Skyline.Model
                     ExportNormal(fileIterator, single);
                 fileIterator.Commit();
             }
+        }
+
+        private void NextFile(FileIterator fileIterator)
+        {
+            if (fileIterator.HasFile)
+                fileIterator.WriteRequiredTransitions(this, RequiredPeptides);
+            fileIterator.NextFile();
+        }
+
+        private RequiredPeptideSet GetRequiredPeptides(bool single)
+        {
+            return single
+                       ? new RequiredPeptideSet()
+                       : new RequiredPeptideSet(Document, IsPrecursorLimited);
+        }
+
+        protected sealed class RequiredPeptideSet
+        {
+            private readonly RequiredPeptide[] _peptides;
+            private readonly HashSet<int> _setPepIndexes;
+
+            public RequiredPeptideSet()
+            {
+                _setPepIndexes = new HashSet<int>();
+                _peptides = new RequiredPeptide[0];
+            }
+
+            public RequiredPeptideSet(SrmDocument document, bool isPrecursorLimited)
+            {
+                var settings = document.Settings;
+                if (settings.PeptideSettings.Prediction.RetentionTime == null)
+                    _peptides = new RequiredPeptide[0];
+                else
+                {
+                    var setRegression = document.GetRetentionTimeStandards();
+                    _peptides = (from nodePepGroup in document.PeptideGroups
+                                 from nodePep in nodePepGroup.Peptides
+                                 where setRegression.Contains(settings.GetModifiedSequence(nodePep))
+                                 select new RequiredPeptide(nodePepGroup, nodePep))
+                        .ToArray();
+                }
+                _setPepIndexes = new HashSet<int>(_peptides.Select(pep => pep.PeptideNode.Peptide.GlobalIndex));
+                TransitionCount = _peptides.Sum(pep => isPrecursorLimited
+                                                           ? pep.PeptideNode.TransitionGroupCount
+                                                           : pep.PeptideNode.TransitionCount);
+            }
+
+            public int TransitionCount { get; private set; }
+
+            public IEnumerable<RequiredPeptide> Peptides { get { return _peptides; } }
+
+            public bool IsRequired(PeptideDocNode nodePep)
+            {
+                return _setPepIndexes.Contains(nodePep.Id.GlobalIndex);
+            }
+        }
+
+        protected struct RequiredPeptide
+        {
+            public RequiredPeptide(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
+                : this()
+            {
+                PeptideGroupNode = peptideGroup;
+                PeptideNode = peptide;
+            }
+
+            public PeptideGroupDocNode PeptideGroupNode { get; private set; }
+            public PeptideDocNode PeptideNode { get; private set; }
         }
 
         private void ExportNormal(FileIterator fileIterator, bool single)
@@ -481,17 +555,20 @@ namespace pwiz.Skyline.Model
                 if (Strategy == ExportStrategy.Protein)
                 {
                     fileIterator.Suffix = FileEscape(seq.Name);
-                    fileIterator.NextFile();
+                    NextFile(fileIterator);
                 }
                 else if (!single && (!fileIterator.HasFile ||
                     (!IgnoreProteins && ExceedsMax(fileIterator.TransitionCount + CalcTransitionCount(seq)))))
                 {
-                    fileIterator.NextFile();
+                    NextFile(fileIterator);
                 }
 
                 foreach (PeptideDocNode peptide in seq.Children)
                 {
                     if (DocNode is PeptideDocNode && !ReferenceEquals(peptide, DocNode))
+                        continue;
+                    // Required peptides will be written by the NextFile method
+                    if (RequiredPeptides.IsRequired(peptide))
                         continue;
 
                     // Make sure we can write out all the transitions for this peptide.
@@ -500,7 +577,7 @@ namespace pwiz.Skyline.Model
                     if (!single && fileIterator.TransitionCount > 0 &&
                             ExceedsMax(fileIterator.TransitionCount + CalcTransitionCount(peptide)))
                     {
-                        fileIterator.NextFile();
+                        NextFile(fileIterator);
                     }
 
                     foreach (TransitionGroupDocNode group in peptide.Children)
@@ -527,6 +604,8 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+            // Add the required transitions to the last file
+            fileIterator.WriteRequiredTransitions(this, RequiredPeptides);
         }
 
         private int CalcTransitionCount(PeptideGroupDocNode nodePepGroup)
@@ -558,6 +637,7 @@ namespace pwiz.Skyline.Model
             if (!IsPrecursorLimited)
                 maxInstrumentTrans = Document.Settings.TransitionSettings.Instrument.MaxTransitions;
             var listSchedules = new List<PeptideSchedule>();
+            var listRequired = new List<PeptideSchedule>();
             var listUnscheduled = new List<PeptideSchedule>();
             foreach (PeptideGroupDocNode nodePepGroup in Document.PeptideGroups)
             {
@@ -580,7 +660,13 @@ namespace pwiz.Skyline.Model
                                 0, 0, IsPrecursorLimited, OptimizeStepCount));
                         }
                     }
-                    if (peptideSchedule.CanSchedule)
+                    if (RequiredPeptides.IsRequired(nodePep))
+                    {
+                        if (!peptideSchedule.CanSchedule)
+                            throw new IOException(string.Format("The required peptide {0} cannot be scheduled", Document.Settings.GetModifiedSequence(nodePep)));
+                        listRequired.Add(peptideSchedule);
+                    }
+                    else if (peptideSchedule.CanSchedule)
                         listSchedules.Add(peptideSchedule);
                     else
                         listUnscheduled.Add(peptideSchedule);
@@ -592,10 +678,14 @@ namespace pwiz.Skyline.Model
             while (!PeptideSchedule.IsListScheduled(listSchedules))
             {
                 var listScheduleNext = new PeptideScheduleBucket();
+                // First add all required transitions
+                foreach (var schedule in listRequired)
+                    schedule.Schedule(listScheduleNext, MaxTransitions.Value);
+                // Then try to add from the scheduling list
                 foreach (var schedule in listSchedules)
                     schedule.Schedule(listScheduleNext, MaxTransitions.Value);
-                listScheduleBuckets.Add(listScheduleNext);
-                if (listScheduleNext.TransitionCount == 0)
+                // Throw an error if nothing beyond the required transitions could be added
+                if (listScheduleNext.TransitionCount == RequiredPeptides.TransitionCount)
                 {
                     string itemName = IsPrecursorLimited ? "precursors" : "transitions";
                     var sb = new StringBuilder();
@@ -614,6 +704,7 @@ namespace pwiz.Skyline.Model
                     else
                         throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\nCheck max concurrent {1} count and optimization step count.", sb, itemName));
                 }
+                listScheduleBuckets.Add(listScheduleNext);
                 totalScheduled += listScheduleNext.TransitionCount;
             }
 
@@ -660,6 +751,10 @@ namespace pwiz.Skyline.Model
 
             foreach (var schedule in bucketOver.ToArray().RandomOrder())
             {
+                // Required peptides may not be removed
+                if (RequiredPeptides.IsRequired(schedule.Peptide))
+                    continue;
+
                 int newOverCount = bucketOver.TransitionCount - schedule.TransitionCount;
                 int newUnderCount = bucketUnder.TransitionCount + schedule.TransitionCount;
                 // If borrowing would not change the balance
@@ -694,6 +789,9 @@ namespace pwiz.Skyline.Model
                 var nodePepGroup = schedule.PeptideGroup;
                 var nodePep = schedule.Peptide;
                 var nodeGroup = schedule.TransitionGroup;
+                // Write required peptides at the end, like unscheduled methods
+                if (RequiredPeptides.IsRequired(nodePep))
+                    continue;
 
                 // Skip percursors with too few transitions.
                 int groupTransitions = nodeGroup.Children.Count;
@@ -712,6 +810,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+            fileIterator.WriteRequiredTransitions(this, RequiredPeptides);
         }
 
         private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
@@ -1082,6 +1181,9 @@ namespace pwiz.Skyline.Model
 
         private bool ExceedsMax(int count)
         {
+            // Leave room for the required peptides
+            count += RequiredPeptides.TransitionCount;
+
             return (MaxTransitions != null && count > 0 && count > MaxTransitions);
         }
 
@@ -1243,6 +1345,23 @@ namespace pwiz.Skyline.Model
                     _nodeGroupLast = group;
                 }
             }
+
+            public void WriteRequiredTransitions(MassListExporter exporter, RequiredPeptideSet requiredPeptides)
+            {
+                foreach (var requiredPeptide in requiredPeptides.Peptides)
+                {
+                    var seq = requiredPeptide.PeptideGroupNode;
+                    var peptide = requiredPeptide.PeptideNode;
+
+                    foreach (var group in peptide.TransitionGroups)
+                    {
+                        foreach (var transition in group.Transitions)
+                        {
+                            WriteTransition(exporter, seq, peptide, group, transition, 0);
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -1316,12 +1435,28 @@ namespace pwiz.Skyline.Model
 
     public class ThermoMassListExporter : MassListExporter
     {
+        private bool _addTriggerReference;
+        private HashSet<string> _setRTStandards;
+
         public ThermoMassListExporter(SrmDocument document)
             : base(document, null)
         {
+            _setRTStandards = new HashSet<string>();
         }
 
         public bool AddEnergyRamp { get; set; }
+        
+        public bool AddTriggerReference
+        {
+            get { return _addTriggerReference; }
+            set
+            {
+                _addTriggerReference = value;
+                if (_addTriggerReference)
+                    _setRTStandards = Document.GetRetentionTimeStandards();
+            }
+        }
+
         public double? RunLength { get; set; }
 
         protected override string InstrumentType
@@ -1355,21 +1490,38 @@ namespace pwiz.Skyline.Model
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
                     SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
+                // Start Time and Stop Time
                 if (predictedRT.HasValue)
                 {
                     writer.Write(Math.Max(0, predictedRT.Value - windowRT / 2).ToString(CultureInfo));    // No negative retention times
                     writer.Write(FieldSeparator);
                     writer.Write((predictedRT.Value + windowRT / 2).ToString(CultureInfo));
                     writer.Write(FieldSeparator);
-                    writer.Write('1');  // Polarity
-                    writer.Write(FieldSeparator);                    
                 }
                 else
                 {
                     writer.Write(FieldSeparator);
                     writer.Write(FieldSeparator);
-                    writer.Write('1');  // Polarity
-                    writer.Write(FieldSeparator);
+                }
+                writer.Write('1');  // Polarity
+                writer.Write(FieldSeparator);                    
+
+                if (AddTriggerReference)
+                {
+                    if (_setRTStandards.Contains(Document.Settings.GetModifiedSequence(nodePep)))
+                    {
+                        writer.Write("1000");  // Trigger
+                        writer.Write(FieldSeparator);
+                        writer.Write("1");  // Reference
+                        writer.Write(FieldSeparator);
+                    }
+                    else
+                    {
+                        writer.Write("1.0E+10");  // Trigger
+                        writer.Write(FieldSeparator);
+                        writer.Write("0");  // Reference
+                        writer.Write(FieldSeparator);
+                    }
                 }
             }
             else if (RunLength.HasValue)

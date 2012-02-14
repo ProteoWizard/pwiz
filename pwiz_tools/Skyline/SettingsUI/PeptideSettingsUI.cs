@@ -183,7 +183,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 RetentionScoreCalculatorSpec retentionCalc =
                     Settings.Default.GetCalculatorByName(retentionTime.Calculator.Name);
-                if (!ReferenceEquals(retentionCalc, retentionTime.Calculator))
+                // Just in case the calculator in use in the current documet got removed,
+                // never set the calculator to null.  Just keep using the one we have.
+                if (retentionCalc != null && !ReferenceEquals(retentionCalc, retentionTime.Calculator))
                     retentionTime = retentionTime.ChangeCalculator(retentionCalc);
             }
             bool useMeasuredRT = cbUseMeasuredRT.Checked;
@@ -351,6 +353,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)
         {
+            AddCalculator();
+        }
+
+        public void AddCalculator()
+        {
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(this, null, list, null);
             if (calcNew != null)
@@ -359,6 +366,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void editCalculatorCurrentContextMenuItem_Click(object sender, EventArgs e)
         {
+            EditCalculator();
+        }
+
+        public void EditCalculator()
+        {
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(this, _driverRT.SelectedItem.Calculator, list, null);
             if (calcNew != null)
@@ -366,6 +378,11 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private void editCalculatorListContextMenuItem_Click(object sender, EventArgs e)
+        {
+            EditCalculatorList();
+        }
+
+        public void EditCalculatorList()
         {
             var list = Settings.Default.RTScoreCalculatorList;
             var listNew = list.EditList(this, null);

@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Irt
         {            
         }
 
-        private DbIrtPeptide(string seq, double irt, bool standard, int? timeSource)
+        public DbIrtPeptide(string seq, double irt, bool standard, int? timeSource)
         {
             PeptideModSeq = seq;
             Irt = irt;

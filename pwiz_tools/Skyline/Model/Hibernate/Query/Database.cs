@@ -301,11 +301,17 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 Note = nodePeptide.Note,
                 AverageMeasuredRetentionTime = nodePeptide.AverageMeasuredRetentionTime,
             };
+            double? scoreCalc = null;
             if (docInfo.PeptidePrediction.RetentionTime != null)
             {
                 string modSeq = docInfo.Settings.GetModifiedSequence(nodePeptide);
-                double? rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(modSeq);                
-                dbPeptide.PredictedRetentionTime = rt;
+                scoreCalc = docInfo.PeptidePrediction.RetentionTime.Calculator.ScoreSequence(modSeq);
+                dbPeptide.RetentionTimeCalculatorScore = scoreCalc;
+                if (scoreCalc.HasValue)
+                {
+                    double? rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(scoreCalc.Value);
+                    dbPeptide.PredictedRetentionTime = rt;
+                }
             }
             AddAnnotations(docInfo, dbPeptide, nodePeptide.Annotations);
             session.Save(dbPeptide);
@@ -337,6 +343,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             BestReplicate = (i == iBest),
                             ProteinResult = docInfo.ProteinResults[dbProtein][resultFile],
                         };
+                        if (scoreCalc.HasValue)
+                        {
+                            double? rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(scoreCalc.Value,
+                                                                                                  chromInfo.FileId);
+                            dbPeptideResult.PredictedResultRetentionTime = rt;
+                        }
                         AddRatios(dbPeptideResult, docInfo, chromInfo);
                         session.Save(dbPeptideResult);
                         peptideResults.Add(resultFile, dbPeptideResult);

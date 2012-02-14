@@ -77,16 +77,26 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public void Dispose()
         {
+            string guidName = Guid.NewGuid().ToString();
             try
             {
-                string guidName = Guid.NewGuid().ToString();
                 Directory.Move(FullPath, guidName);
-                Directory.Move(guidName, FullPath);
             }
             catch (IOException)
             {
                 // Useful for debugging. Exception names file that is locked.
                 Directory.Delete(FullPath, true);
+            }
+
+            // Move the file back to where it was, and fail if this throws
+            try
+            {
+                Directory.Move(guidName, FullPath);
+            }
+            catch (IOException)
+            {
+                // Useful for debugging. Exception names file that is locked.
+                Directory.Delete(guidName, true);
             }
         }
     }

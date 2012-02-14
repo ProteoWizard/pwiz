@@ -38,8 +38,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3175</ApplicationRevision>
-    <ApplicationVersion>1.1.1.3175</ApplicationVersion>
+    <ApplicationRevision>3269</ApplicationRevision>
+    <ApplicationVersion>1.1.9.3269</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -351,6 +351,12 @@
     </Compile>
     <Compile Include="EditUI\RTChartPropertyDlg.Designer.cs">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="EditUI\SchedulingGraphPropertyDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\SchedulingGraphPropertyDlg.Designer.cs">
+      <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\ManageResultsDlg.cs">
       <SubType>Form</SubType>
@@ -1250,6 +1256,9 @@
     <EmbeddedResource Include="EditUI\RTChartPropertyDlg.resx">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\SchedulingGraphPropertyDlg.resx">
+      <DependentUpon>SchedulingGraphPropertyDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\ShowRTThresholdDlg.resx">
       <DependentUpon>ShowRTThresholdDlg.cs</DependentUpon>

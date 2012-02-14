@@ -127,6 +127,11 @@ namespace pwiz.Skyline.Model.Irt
             get { return DictStandards.Keys; }
         }
 
+        public bool IsStandard(string seq)
+        {
+            return DictStandards.ContainsKey(seq);
+        }
+
         public int StandardPeptideCount
         {
             get { return DictStandards.Count; }
