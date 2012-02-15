@@ -22,7 +22,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <SignManifests>false</SignManifests>
     <SignAssembly>false</SignAssembly>
-    <PublishUrl>S:\webapps\ROOT\software\Skyline-daily\</PublishUrl>
+    <PublishUrl>S:\webapps\ROOT\software\Skyline-release_1_2\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -32,14 +32,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily/</InstallUrl>
+    <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-release_1_2/</InstallUrl>
     <SupportUrl>https://brendanx-uw1.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3269</ApplicationRevision>
-    <ApplicationVersion>1.1.9.3269</ApplicationVersion>
+    <ApplicationRevision>3294</ApplicationRevision>
+    <ApplicationVersion>1.2.0.3294</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>

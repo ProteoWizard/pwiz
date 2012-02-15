@@ -77,7 +77,7 @@ namespace pwiz.SkylineTestFunctional
                     graphChrom.NameSet, out chromSet, out index));
                 dictChromPositions.Add(ptLeftTop, index);
             }
-            WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);
+            WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.IsLoaded);
 
             var docOrig = SkylineWindow.Document;   // 70, 73, 75, 78
 

@@ -133,7 +133,7 @@ namespace pwiz.Skyline.Alerts
             this.linkProteoWizard.TabIndex = 8;
             this.linkProteoWizard.TabStop = true;
             this.linkProteoWizard.Text = "proteowizard.sourceforge.net";
-            this.linkProteoWizard.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(linkProteoWizard_LinkClicked);
+            this.linkProteoWizard.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkProteoWizard_LinkClicked);
             // 
             // label3
             // 

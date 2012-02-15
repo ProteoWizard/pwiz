@@ -35,14 +35,16 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        private static void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+// ReSharper disable MemberCanBeMadeStatic.Local
+        private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu");
         }
 
-        private static void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("http://proteowizard.sourceforge.net/");
         }
+// ReSharper restore MemberCanBeMadeStatic.Local
     }
 }

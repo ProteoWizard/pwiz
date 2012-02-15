@@ -23,23 +23,18 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class UpgradeDlg : Form
     {
+// ReSharper disable UnusedParameter.Local
         public UpgradeDlg(int licenseVersion)
         {
             InitializeComponent();
-
-            if (licenseVersion == 2)
-            {
-                labelABSciex.Visible = false;
-                labelAnd.Visible = false;
-                int delta = labelWaters.Top - labelABSciex.Top;
-                labelWaters.Top -= delta;
-                Height -= delta;
-            }
         }
+// ReSharper restore UnusedParameter.Local
 
-        private static void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+// ReSharper disable MemberCanBeMadeStatic.Local
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             Process.Start("https://brendanx-uw1.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement");
         }
+// ReSharper restore MemberCanBeMadeStatic.Local
     }
 }
