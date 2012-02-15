@@ -28,7 +28,7 @@ namespace SkylineRunner
 {
     class Program
     {
-        public static readonly object SERVER_CONNECTION_LOCK = new object();
+        private static readonly object SERVER_CONNECTION_LOCK = new object();
         private bool _connected;
 
         static void Main(string[] args)
@@ -38,7 +38,7 @@ namespace SkylineRunner
 
         public Program(IEnumerable<string> args)
         {
-            const string skylineAppName = "Skyline-daily";
+            const string skylineAppName = "Skyline";
             string skylinePath = "\"" + Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
             skylinePath += "\\Programs\\MacCoss Lab, UW\\" + skylineAppName + ".appref-ms" + "\"";
 
@@ -60,7 +60,7 @@ namespace SkylineRunner
                     return;
                 }
 
-                using (StreamWriter sw = new StreamWriter(serverStream))
+                using (var sw = new StreamWriter(serverStream))
                 {
                     foreach (string arg in args)
                     {
@@ -84,7 +84,7 @@ namespace SkylineRunner
                     return;
                 }
 
-                using (StreamReader sr = new StreamReader(pipeStream))
+                using (var sr = new StreamReader(pipeStream))
                 {
                     string line;
                     //While (!done reading)
@@ -98,7 +98,7 @@ namespace SkylineRunner
 
         private bool WaitForConnection(NamedPipeServerStream serverStream)
         {
-            Thread connector = new Thread(() =>
+            var connector = new Thread(() =>
             {
                 serverStream.WaitForConnection();
                 lock (SERVER_CONNECTION_LOCK)
