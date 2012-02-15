@@ -1761,10 +1761,64 @@ namespace IDPicker
             var clusterList = new List<string[]>();
             if (session != null)
             {
+                //try to pre-cache data if possible
+                //report scales horribly with cluster count (655 clusters took 40 minutes)
+                //limiting calls to the database should speed this up considerably
                 var clusterIDList = session.CreateSQLQuery("select distinct cluster from protein").List().Cast<int>().ToList();
+                var tempFilter = new DataFilter(viewFilter) {Cluster = new List<int>(), Protein = new List<Protein>()};
+                var clusterToProteinList = new Dictionary<int, List<ProteinTableForm.ProteinGroupRow>>();
+                var proteinAccessionToPeptideList = new Dictionary<string, HashSet<int>>();
+                List<PeptideTableForm.DistinctPeptideRow> peptideList;
+                try
+                {
+                    //seperating proteinList namespace in order to try to conserve memory
+                    {
+                        var proteinList = ProteinTableForm.ProteinGroupRow.GetRows(session, tempFilter).ToList();
+                        foreach (var protein in proteinList)
+                        {
+                            if (!clusterToProteinList.ContainsKey(protein.FirstProtein.Cluster))
+                                clusterToProteinList.Add(protein.FirstProtein.Cluster,
+                                                         new List<ProteinTableForm.ProteinGroupRow> {protein});
+                            else
+                                clusterToProteinList[protein.FirstProtein.Cluster].Add(protein);
+                        }
+                    }
+                    
+                    peptideList = PeptideTableForm.DistinctPeptideRow.GetRows(session, tempFilter).ToList();
+                    for (var x = 0; x < peptideList.Count; x++)
+                    {
+                        var peptide = peptideList[x].Peptide;
+                        foreach (var instance in peptide.Instances)
+                        {
+                            var proteinAccession = instance.Protein.Accession;
+                            if (!proteinAccessionToPeptideList.ContainsKey(proteinAccession))
+                                proteinAccessionToPeptideList.Add(proteinAccession, new HashSet<int> { x });
+                            else
+                                proteinAccessionToPeptideList[proteinAccession].Add(x);
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    peptideList = null;
+                    var errorMessage =
+                        "[ClusterInfo] Error when precaching data. " +
+                        "Results may be processed slower than expected - " +
+                        Environment.NewLine + e.Message;
+                    if (InvokeRequired)
+                        Invoke(new Action(() => MessageBox.Show(errorMessage)));
+                    else
+                        MessageBox.Show(errorMessage);
+                }
+
                 foreach (var clusterID in clusterIDList)
                 {
-                    var cluster = getClusterInfo(clusterID);
+                    ClusterInfo cluster;
+                    if (peptideList == null)
+                        cluster = getClusterInfo(clusterID);
+                    else
+                        cluster = getClusterInfo(clusterID, clusterToProteinList[clusterID],
+                                                 proteinAccessionToPeptideList, peptideList);
                     if (cluster.proteinGroupCount > 0)
                         TableExporter.CreateHTMLTablePage(cluster.clusterTables,
                                                           Path.Combine(outFolder,
@@ -1856,6 +1910,48 @@ namespace IDPicker
 
         private ClusterInfo getClusterInfo(int cluster)
         {
+            var tempFilter = new DataFilter(viewFilter) { Cluster = new List<int> {cluster}, Protein = new List<Protein>() };
+            var proteinAccessionToPeptideList = new Dictionary<string, HashSet<int>>();
+            var peptideList = new List<PeptideTableForm.DistinctPeptideRow>();
+            var peptideFound = new HashSet<long?>();
+
+            var proteinList = ProteinTableForm.ProteinGroupRow.GetRows(session, tempFilter).ToList();
+            foreach (var proteinGroup in proteinList)
+            {
+                //get peptides in protein
+                var allGroupedProteins = session.CreateQuery(String.Format(
+                    "SELECT pro FROM Protein pro WHERE pro.Accession IN ('{0}')",
+                    proteinGroup.Proteins.Replace(",", "','")))
+                    .List<Protein>();
+                var proteinFilter = new DataFilter(tempFilter) { Protein = allGroupedProteins };
+                var peptides = PeptideTableForm.DistinctPeptideRow.GetRows(session, proteinFilter);
+                foreach (var peptide in peptides)
+                {
+                    if (peptideFound.Add(peptide.Peptide.Id))
+                        peptideList.Add(peptide);
+                }
+                for (var x = 0; x < peptideList.Count; x++)
+                {
+                    var peptide = peptideList[x].Peptide;
+                    foreach (var instance in peptide.Instances)
+                    {
+                        var proteinAccession = instance.Protein.Accession;
+                        if (!proteinAccessionToPeptideList.ContainsKey(proteinAccession))
+                            proteinAccessionToPeptideList.Add(proteinAccession, new HashSet<int> { x });
+                        else
+                            proteinAccessionToPeptideList[proteinAccession].Add(x);
+                    }
+                }
+
+            }
+
+            return getClusterInfo(cluster, proteinList, proteinAccessionToPeptideList, peptideList);
+        }
+
+        private ClusterInfo getClusterInfo(int cluster, List<ProteinTableForm.ProteinGroupRow> proteinList,
+            Dictionary<string, HashSet<int>> proteinAccessionToPeptideList,
+            List<PeptideTableForm.DistinctPeptideRow> peptideList)
+        {
             var ci = new ClusterInfo {peptideCount = 0, spectraCount = 0, clusterID = cluster};
             var allTables = new List<List<List<string>>>();
 
@@ -1875,34 +1971,14 @@ namespace IDPicker
                                                "Description"
                                            }
                                    };
-            var clusterFilter = new DataFilter(viewFilter) {Cluster = new List<int> {cluster}};
-            //var proteinGroupQuery = session.CreateQuery(
-            //        ProteinTableForm.AggregateRow.Selection + ", " +
-            //        "       DISTINCT_GROUP_CONCAT(pro.Accession), " +
-            //        "       pro.ProteinGroup, " +
-            //        "       MIN(pro.Id), " +
-            //        "       MIN(pro.Length), " +
-            //        "       MIN(pro.Description), " +
-            //        "       COUNT(DISTINCT pro.Id), " +
-            //        "       pro.Cluster, " +
-            //        "       AVG(pro.Coverage) " +
-            //        clusterFilter.GetFilteredQueryString(DataFilter.FromProtein,
-            //                                          DataFilter.ProteinToPeptideSpectrumMatch) +
-            //        "GROUP BY pro.ProteinGroup " +
-            //        "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC");//, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
+            ci.proteinGroupCount = proteinList.Count;
 
-            //proteinGroupQuery.SetReadOnly(true);
-            //var proteinGroupList = proteinGroupQuery.List<object[]>().Select(o => new ProteinTableForm.ProteinGroupRow(o, viewFilter)).ToList();
-            var proteinGroupList = ProteinTableForm.ProteinGroupRow.GetRows(session, clusterFilter);
-            //var proteinGroupList = genericProteinGroupList.Cast<ProteinTableForm.ProteinGroupRow>().ToList();
-            ci.proteinGroupCount = proteinGroupList.Count;
-
-            for (int x = 0; x < proteinGroupList.Count ;x++ )
+            for (int x = 0; x < proteinList.Count; x++)
             {
-                var proteinGroup = proteinGroupList[x];
+                var proteinGroup = proteinList[x];
                 proteinTable.Add(new List<string>
                                      {
-                                         TableExporter.IntToColumn(x+1),
+                                         TableExporter.IntToColumn(x + 1),
                                          proteinGroup.Proteins,
                                          proteinGroup.DistinctPeptides.ToString(),
                                          proteinGroup.Spectra.ToString(),
@@ -1910,14 +1986,16 @@ namespace IDPicker
                                      });
 
                 //get peptides in protein
+                var usedPeptides = new HashSet<PeptideTableForm.DistinctPeptideRow>();
                 var allGroupedProteins = session.CreateQuery(String.Format(
-                "SELECT pro FROM Protein pro WHERE pro.Accession IN ('{0}')",
-                proteinGroup.Proteins.Replace(",", "','")))
-                .List<Protein>();
-                var proteinFilter = new DataFilter(clusterFilter) { Protein = allGroupedProteins };
-                var peptides = PeptideTableForm.DistinctPeptideRow.GetRows(session, proteinFilter);
+                    "SELECT pro FROM Protein pro WHERE pro.Accession IN ('{0}')",
+                    proteinGroup.Proteins.Replace(",", "','")))
+                    .List<Protein>();
+                foreach (var protein in allGroupedProteins)
+                    foreach (var peptideIndex in proteinAccessionToPeptideList[protein.Accession])
+                        usedPeptides.Add(peptideList[peptideIndex]);
 
-                foreach (var peptide in peptides)
+                foreach (var peptide in usedPeptides)
                 {
                     if (sequence2Data.ContainsKey(peptide.Peptide.Sequence))
                         sequence2Group[peptide.Peptide.Sequence].Add(x);
@@ -1927,8 +2005,8 @@ namespace IDPicker
                                           new List<string>
                                               {
                                                   peptide.Spectra.ToString(),
-                                                  Math.Round(peptide.Peptide.MonoisotopicMass,4).ToString(),
-                                                  Math.Round(peptide.Peptide.Matches.Min(n => n.QValue),4).ToString()
+                                                  Math.Round(peptide.Peptide.MonoisotopicMass, 4).ToString(),
+                                                  Math.Round(peptide.Peptide.Matches.Min(n => n.QValue), 4).ToString()
                                               });
                         sequence2Group.Add(peptide.Peptide.Sequence, new List<int> {x});
                         ci.spectraCount += peptide.Spectra;
@@ -1950,7 +2028,7 @@ namespace IDPicker
                     group2Sequences[groupName].Add(kvp.Key);
                 else
                 {
-                    group2Sequences.Add(groupName,new List<string>{kvp.Key});
+                    group2Sequences.Add(groupName, new List<string> {kvp.Key});
                     peptideGroupList.Add(groupName);
                 }
             }
@@ -1976,7 +2054,7 @@ namespace IDPicker
                 {
                     peptideTable.Add(new List<string>
                                          {
-                                             first ? (x+1).ToString() : string.Empty,
+                                             first ? (x + 1).ToString() : string.Empty,
                                              unique ? "*" : string.Empty,
                                              peptide,
                                              sequence2Data[peptide][0],
@@ -1992,18 +2070,18 @@ namespace IDPicker
 
             //first row
             var tempList = new List<string> {string.Empty};
-            for (var x = 1; x <= peptideGroupList.Count;x++)
+            for (var x = 1; x <= peptideGroupList.Count; x++)
                 tempList.Add(x.ToString());
             associationTable.Add(tempList);
 
             //second row
-            tempList = new List<string>(){"Peptides"};
+            tempList = new List<string>() {"Peptides"};
             for (var x = 0; x < peptideGroupList.Count; x++)
                 tempList.Add(group2Sequences[peptideGroupList[x]].Count.ToString());
             associationTable.Add(tempList);
 
             //third row
-            tempList = new List<string>() { "Spectra" };
+            tempList = new List<string>() {"Spectra"};
             for (var x = 0; x < peptideGroupList.Count; x++)
             {
                 var spectraCount = 0;
@@ -2018,9 +2096,9 @@ namespace IDPicker
             associationTable.Add(tempList);
 
             //protein rows
-            for (var x = 0; x < proteinGroupList.Count; x++)
+            for (var x = 0; x < proteinList.Count; x++)
             {
-                tempList = new List<string>{TableExporter.IntToColumn(x+1)};
+                tempList = new List<string> {TableExporter.IntToColumn(x + 1)};
                 for (var y = 0; y < peptideGroupList.Count; y++)
                 {
                     var containedProGroups = peptideGroupList[y].Split(",".ToCharArray());

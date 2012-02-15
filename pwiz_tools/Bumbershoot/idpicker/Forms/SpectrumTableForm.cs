@@ -1415,11 +1415,53 @@ namespace IDPicker.Forms
         {
             const int decimalPlaces = 4;
             var allContents = new Dictionary<string[], List<TreeNode>>();
+
+            //get score info
+            //score gathering is one of the most time-intensive processes in item retreaval
+            //loading everything to memory if possible should speed things up significantly
+            //low speed system should stay in place in case memory cant handle the load
+            var rawScoreList = session.CreateSQLQuery("select name, id from PeptideSpectrumMatchScoreName").List<object[]>();
+            var scoreList = new List<string>();
+            var scoreNameToId = new Dictionary<string, string>();
+            foreach (var item in rawScoreList)
+            {
+                scoreList.Add(item[0].ToString());
+                if (!scoreNameToId.ContainsKey(item[0].ToString()))
+                    scoreNameToId.Add(item[0].ToString(), item[1].ToString());
+            }
+            var scoresCaptured = true;
+            var scoreCache = new Dictionary<string, Dictionary<string, string>>();
+            try
+            {
+                var allScores = session.CreateSQLQuery("Select PsmID, ScoreNameId, CAST(Value AS TEXT) from PeptideSpectrumMatchScore").List();
+                foreach (var row in allScores)
+                {
+                    var rowContents = (object[]) row;
+                    if (!scoreCache.ContainsKey(rowContents[0].ToString()))
+                        scoreCache.Add(rowContents[0].ToString(), new Dictionary<string, string>());
+                    if (!scoreCache[rowContents[0].ToString()].ContainsKey(rowContents[1].ToString()))
+                        scoreCache[rowContents[0].ToString()].Add(rowContents[1].ToString(), rowContents[2].ToString());
+                }
+            }
+            catch (Exception e)
+            {
+                scoresCaptured = false;
+                var errorMessage =
+                        "[SpectrumTableForm] Error when precaching data. " +
+                        "Results may be processed slower than expected - " +
+                        Environment.NewLine + e.Message;
+                if (InvokeRequired)
+                    Invoke(new Action(() => MessageBox.Show(errorMessage)));
+                else
+                    MessageBox.Show(errorMessage);
+            }
+
+
+            //get source info
             var sources = session.QueryOver<SpectrumSource>().List();
             foreach (var source in sources)
             {
                 var exportTable = new List<TreeNode>();
-                var scoreList = new HashSet<string>();
                 var sourceFilter = new DataFilter(dataFilter) { SpectrumSource = new List<SpectrumSource> { source } };
                 var spectraRows = getSpectrumRows(sourceFilter);
 
@@ -1459,13 +1501,24 @@ namespace IDPicker.Forms
                                           Math.Round(match.QValue,decimalPlaces).ToString(),
                                           "'" + match.Peptide.Sequence + "'"
                                       };
-                        foreach (var score in match.Scores)
-                            scoreList.Add("'" + score.Key + "'");
                         foreach (var score in scoreList)
                         {
-                            tag.Add(match.Scores.ContainsKey(score.Trim("'".ToCharArray()))
-                                        ? Math.Round(match.Scores[score.Trim("'".ToCharArray())], decimalPlaces).ToString()
-                                        : string.Empty);
+                            if (scoresCaptured)
+                            {
+                                var scoreValue = scoreCache[match.Id.ToString()][scoreNameToId[score]];
+                                tag.Add(Math.Round(double.Parse(scoreValue), decimalPlaces).ToString());
+                            }
+                            else
+                            {
+                                try
+                                {
+                                    tag.Add(Math.Round(match.Scores[score.Trim("'".ToCharArray())], decimalPlaces).ToString());
+                                }
+                                catch
+                                {
+                                    tag.Add(string.Empty);
+                                }
+                            }
                         }
                         matchNode.Tag = tag.ToArray();
                         newBranch.Nodes.Add(matchNode);
@@ -1482,7 +1535,7 @@ namespace IDPicker.Forms
                                       "'Q Value'",
                                       "'Sequence'"
                                   };
-                headers.AddRange(scoreList);
+                headers.AddRange(scoreList.Select(item => string.Format("'{0}'", item)));
                 allContents.Add(
                     new[]
                         {
