@@ -324,7 +324,7 @@ namespace pwiz.Topograph.ui.Forms
             EnsureDataDirectory(_workspace);
         }
 
-        void InitWorkspace(ISessionFactory sessionFactory)
+        public static void InitWorkspace(ISessionFactory sessionFactory)
         {
             using (var session = sessionFactory.OpenSession())
             {
@@ -798,44 +798,11 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            using (var dialog = new TpgLinkForm
+            using (var dialog = new NewOnlineWorkspaceForm())
             {
-                ShowReadOnlyCheckbox = false,
-                BrowseOnOk = true,
-            })
-            {
-                while (true)
+                if (dialog.ShowDialog(TopLevelControl) == DialogResult.Cancel)
                 {
-                    if (dialog.ShowDialog(TopLevelControl) == DialogResult.Cancel)
-                    {
-                        return;
-                    }
-                    var tpgLinkDef = dialog.GetTpgLinkDef();
-                    try
-                    {
-                        tpgLinkDef.CreateDatabase();
-                    }
-                    catch (Exception exception)
-                    {
-                        var result = MessageBox.Show(this,
-                                                     "There was an error creating the database.  Do you want to try again?\n" +
-                                                     exception, Program.AppName, MessageBoxButtons.OKCancel);
-                        if (result == DialogResult.Cancel)
-                        {
-                            return;
-                        }
-                        continue;
-                    }
-                    using (
-                        var sessionFactory = SessionFactoryFactory.CreateSessionFactory(tpgLinkDef,
-                                                                                        SessionFactoryFlags.
-                                                                                            create_schema))
-                    {
-                        InitWorkspace(sessionFactory);
-                    }
-
-                    tpgLinkDef.Save(dialog.Filename);
-                    break;
+                    return;
                 }
                 Workspace = OpenWorkspace(dialog.Filename);
             }
@@ -843,15 +810,16 @@ namespace pwiz.Topograph.ui.Forms
 
         private void openOnlineWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ConnectToOnlineWorkspace();
+        }
+
+        public void ConnectToOnlineWorkspace()
+        {
             if (!PromptToSaveWorkspace())
             {
                 return;
             }
-            using (var dialog = new TpgLinkForm
-                {
-                    ShowReadOnlyCheckbox = false,
-                    BrowseOnOk = true,
-                })
+            using (var dialog = new ConnectToOnlineWorkspaceForm())
             {
                 while (true)
                 {
@@ -859,8 +827,6 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         return;
                     }
-                    var tpgLinkDef = dialog.GetTpgLinkDef();
-                    tpgLinkDef.Save(dialog.Filename);
                     try
                     {
                         Workspace = OpenWorkspace(dialog.Filename);
@@ -880,7 +846,6 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
         }
-
 
         public void BrowseForDataDirectory()
         {

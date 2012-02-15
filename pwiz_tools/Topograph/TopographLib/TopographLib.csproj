@@ -142,6 +142,7 @@
     <Compile Include="Enrichment\TracerFormulaEnumerator.cs" />
     <Compile Include="Enrichment\TracerPercentEnumerator.cs" />
     <Compile Include="Model\Chromatograms.cs" />
+    <Compile Include="Model\ConnectionSettings.cs" />
     <Compile Include="Model\DbLock.cs" />
     <Compile Include="Model\EntityModelCollection.cs" />
     <Compile Include="Model\ModelProperty.cs" />

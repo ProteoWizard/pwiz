@@ -1,15 +1,30 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml.Serialization;
 using MySql.Data.MySqlClient;
 using NHibernate;
-using NHibernate.Dialect;
-using NHibernate.Driver;
 using Npgsql;
 using pwiz.Topograph.Data;
 
@@ -144,6 +159,10 @@ namespace pwiz.Topograph.Model
             connection.Open();
             return connection;
         }
+        public IDbConnection OpenConnectionNoDatabase()
+        {
+            return OpenConnection(GetConnectionStringNoDatabase());
+        }
 
         public ISessionFactory CreateDatabase()
         {
@@ -168,6 +187,59 @@ namespace pwiz.Topograph.Model
             {
                 return (TpgLinkDef) serializer.Deserialize(stream);
             }
+        }
+        public IList<string> ListDatabaseNames()
+        {
+            using (var connection = OpenConnection(GetConnectionStringNoDatabase()))
+            {
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = "SHOW DATABASES";
+                var reader = cmd.ExecuteReader();
+                var result = new List<string>();
+                while (reader.Read())
+                {
+                    var value = reader[0] as string;
+                    if (null == value)
+                    {
+                        continue;
+                    }
+                    result.Add(value);
+                }
+                return result;
+            }
+        }
+        private static readonly Regex regexDatabasePrefix = new Regex("ON `([^`%]*)%`");
+        /// <summary>
+        /// Checks whether the user has permissions on databases with a wildcard name
+        /// beginning with a particular prefix.  If so, returns that prefix, otherwise null.
+        /// </summary>
+        public string GetDatabaseNamePrefixForUser()
+        {
+            using (var connection = OpenConnection(GetConnectionStringNoDatabase()))
+            {
+                if (DatabaseTypeEnum != DatabaseTypeEnum.mysql)
+                {
+                    return null;
+                }
+                var cmd = connection.CreateCommand();
+                cmd.CommandText = "SHOW GRANTS FOR CURRENT_USER()";
+                var reader = cmd.ExecuteReader();
+                while (reader.Read())
+                {
+                    var value = reader[0] as string;
+                    if (value == null)
+                    {
+                        continue;
+                    }
+                    var match = regexDatabasePrefix.Match(value);
+                    if (!match.Success)
+                    {
+                        continue;
+                    }
+                    return match.Groups[1].Value;
+                }
+            }
+            return null;
         }
     }
     public enum DatabaseTypeEnum

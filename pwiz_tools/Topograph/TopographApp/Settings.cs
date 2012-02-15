@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using pwiz.Common.DataBinding;
+using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 
 namespace pwiz.Topograph.ui.Properties {
@@ -71,6 +72,19 @@ namespace pwiz.Topograph.ui.Properties {
                 return (HalfLifeSettings)this["HalfLifeSettings"];
             }
             set { this["HalfLifeSettings"] = value; }
+        }
+        [System.Configuration.UserScopedSettingAttribute]
+        public ConnectionSettings ConnectionSettings
+        {
+            get
+            {
+                if (this["ConnectionSettings"] == null)
+                {
+                    ConnectionSettings = new ConnectionSettings();
+                }
+                return (ConnectionSettings) this["ConnectionSettings"];
+            }
+            set { this["ConnectionSettings"] = value; }
         }
     }
 }

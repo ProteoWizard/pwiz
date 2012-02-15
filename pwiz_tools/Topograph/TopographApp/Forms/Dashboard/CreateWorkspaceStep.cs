@@ -97,5 +97,15 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         {
             TurnoverForm.NewWorkspace();
         }
+
+        private void btnConnectToOnlineWorkspace_Click(object sender, EventArgs e)
+        {
+            TurnoverForm.ConnectToOnlineWorkspace();
+        }
+
+        private void btnBrowse_Click(object sender, EventArgs e)
+        {
+            TurnoverForm.DisplayOpenWorkspaceDialog();
+        }
     }
 }

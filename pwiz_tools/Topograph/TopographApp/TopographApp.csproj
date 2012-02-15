@@ -54,7 +54,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>232</ApplicationRevision>
+    <ApplicationRevision>233</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -189,6 +189,12 @@
     </Compile>
     <Compile Include="Forms\ChromatogramForm.Designer.cs">
       <DependentUpon>ChromatogramForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\ConnectToOnlineWorkspaceForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ConnectToOnlineWorkspaceForm.Designer.cs">
+      <DependentUpon>ConnectToOnlineWorkspaceForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\CreateFileAnalysesForm.cs">
       <SubType>Form</SubType>
@@ -445,11 +451,11 @@
     <Compile Include="Forms\StatusForm.Designer.cs">
       <DependentUpon>StatusForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\TpgLinkForm.cs">
+    <Compile Include="Forms\NewOnlineWorkspaceForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\TpgLinkForm.Designer.cs">
-      <DependentUpon>TpgLinkForm.cs</DependentUpon>
+    <Compile Include="Forms\NewOnlineWorkspaceForm.Designer.cs">
+      <DependentUpon>NewOnlineWorkspaceForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\ResultsPerGroupForm.cs">
       <SubType>Form</SubType>
@@ -532,6 +538,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ChromatogramForm.resx">
       <DependentUpon>ChromatogramForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ConnectToOnlineWorkspaceForm.resx">
+      <DependentUpon>ConnectToOnlineWorkspaceForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\CreateFileAnalysesForm.resx">
@@ -689,8 +699,8 @@
       <DependentUpon>StatusForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TpgLinkForm.resx">
-      <DependentUpon>TpgLinkForm.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\NewOnlineWorkspaceForm.resx">
+      <DependentUpon>NewOnlineWorkspaceForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ResultsPerGroupForm.resx">
