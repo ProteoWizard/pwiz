@@ -10,7 +10,7 @@ set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
 set PWIZ_BJAM=%BOOST_BUILD_PATH%\engine\bin.ntx86\bjam.exe
 
 REM # msvc.jam assumes it will find "ShowVer.exe" in %PATH%
-set PATH=%PATH%;%PWIZ_ROOT%\libraries
+set PATH=%PWIZ_ROOT%\libraries;%PATH%
 
 REM # Build local copy of bjam
 IF EXIST %PWIZ_BJAM% GOTO SKIP_BJAM
