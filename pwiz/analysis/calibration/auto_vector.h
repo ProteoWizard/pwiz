@@ -1,5 +1,6 @@
 #if !defined AUTO_VECTOR_H
 #define AUTO_VECTOR_H
+// $Id$
 //------------------------------------
 // Reliable Software (c) 2003
 // www.relisoft.com

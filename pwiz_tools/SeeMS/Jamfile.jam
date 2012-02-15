@@ -102,6 +102,7 @@ using System.Runtime.InteropServices;
 
         local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
         OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
         JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
     }
 
@@ -109,10 +110,9 @@ using System.Runtime.InteropServices;
     {
         REM support both MSVC 8 and 9
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Building SeeMS in $(CONFIGURATION:L) configuration...
-        msbuild $(SEEMS_PATH)/seems.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+        msbuild $(SEEMS_PATH)/seems.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     }
 
 
