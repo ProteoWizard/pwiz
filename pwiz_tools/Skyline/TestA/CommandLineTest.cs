@@ -535,7 +535,10 @@ namespace pwiz.SkylineTestA
 
                 Assert.IsTrue(msg.Contains("Warning: Cannot read file"));
                 doc = ResultsUtil.DeserializeDocument(docPath);
-                Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
+                Assert.IsTrue(doc.Settings.HasResults);
+                Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
+                    string.Format("Expected 6 replicates, found: {0}",
+                                  string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
                 Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01"));
                 Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02"));
                 Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_071"));
@@ -599,7 +602,10 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(msg.Contains("Warning: Failed importing the results file"), msg);
 
             doc = ResultsUtil.DeserializeDocument(outPath);
-            Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.HasResults);
+            Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
+                string.Format("Expected 6 replicates, found: {0}",
+                              string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP01"));
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("REP02"));
             Assert.IsTrue(doc.Settings.MeasuredResults.ContainsChromatogram("160109_Mix1_calcurve_071"));
@@ -775,7 +781,10 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(msg.Contains("Note: The file has already been imported. Ignoring..."), msg);
             Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg);
             doc = ResultsUtil.DeserializeDocument(outPath2);
-            Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count);
+            Assert.IsTrue(doc.Settings.HasResults);
+            Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
+                string.Format("Expected 6 replicates, found: {0}",
+                              string.Join(", ", doc.Settings.MeasuredResults.Chromatograms.Select(chromSet => chromSet.Name).ToArray())));
             // count the number of files imported into the document
             int totalImportedFiles = 0;
             foreach (var chromatogram in doc.Settings.MeasuredResults.Chromatograms)
