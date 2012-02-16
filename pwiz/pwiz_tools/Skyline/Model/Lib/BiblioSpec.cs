@@ -543,8 +543,9 @@ namespace pwiz.Skyline.Model.Lib
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
             // This base class only handles best match spectra
-            if (bestMatch && _dictLibrary.ContainsKey(key))
-                yield return new SpectrumInfo(this, labelType, key);
+            SpectrumHeaderInfo libInfo;
+            if (bestMatch && TryGetLibInfo(key, out libInfo))
+                yield return new SpectrumInfo(this, labelType, key) { SpectrumHeaderInfo = libInfo };
         }
 
         public override int? FileCount

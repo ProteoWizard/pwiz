@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Model.Results
             // to be able to match <basename> with <basename>.c, and Vanderbilt
             // has a pipeline that generates mzML files all uppercase
             return name.ToLower().StartsWith(prefix.ToLower()) &&
-                   (name.Length == prefix.Length || name[prefix.Length] != '.');
+                   (name.Length == prefix.Length || name[prefix.Length] == '.');
         }
 
 // ReSharper disable MemberCanBeMadeStatic.Local
