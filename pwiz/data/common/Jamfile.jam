@@ -69,7 +69,7 @@ lib pwiz_data_common
 #
 # cvgen is a program that generates cv.hpp/cpp from .obo files (passed as args)
 # usage:
-#  bjam cv.hpp (creates cv.hpp and cv.cpp in the source directory)
+#  bjam <full_path_to_this_directory>/cv.hpp (creates cv.hpp and cv.cpp in the source directory)
 #
 
 exe cvgen

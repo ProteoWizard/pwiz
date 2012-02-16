@@ -227,6 +227,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid);\n\n\n";
 
     os << "/// returns CV term info for the specified id (accession number)\n"
+          "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char *id);\n"
           "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id);\n\n\n";
 
     os << "/// returns true iff child IsA parent in the CV\n"
@@ -596,25 +597,28 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return value;\n"
           "}\n\n\n";
 
-    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const string& id)\n"
+    // this is a very obtuse way to write code that doesn't actually need to change - what's wrong with include files?   
+    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id) {\n"
+          "    return cvTermInfo(id.c_str());\n"
+          "}\n\n\n";
+
+    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char *id)\n"
           "{\n"
-          "    CVID cvid = CVID_Unknown;\n"
-          "\n"
-          "    vector<string> tokens;\n"
-          "    tokens.reserve(2);\n"
-          "    bal::split(tokens, id, bal::is_any_of(\":\"));\n"
-          "    if (tokens.size() != 2)\n"
-          "        throw invalid_argument(\"[cvTermInfo()] Error splitting id \\\"\" + id + \"\\\" into prefix and numeric components\");\n"
-          "    const string& prefix = tokens[0];\n"
-          "    const string& cvidStr = tokens[1];\n"
-          "\n"
-          "    const char** it = find_if(oboPrefixes_, oboPrefixes_+oboPrefixesSize_,\n"
-          "                              StringEquals(prefix.c_str()));\n"
-          "\n"
-          "    if (it != oboPrefixes_+oboPrefixesSize_)\n"
-          "       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + stringToCVID(cvidStr));\n"
-          "\n"
-          "    return CVTermData::instance->infoMap().find(cvid)->second;\n"
+          "    // called a LOT - rewritten as zero-copy for speed\n"
+          "    if (id) {\n"
+          "        for (int o=0;o<oboPrefixesSize_;o++) {\n"
+          "            const char *ip = id;\n"
+          "            const char *op = oboPrefixes_[o];\n"
+          "            while (*op==*ip) {\n"
+          "                op++; ip++;\n"
+          "            }\n"
+          "            if ( (!*op) && (*ip++==':') ) {\n"
+          "                CVID cvid = (CVID)(o*enumBlockSize_ + strtoul(ip,NULL,10));\n"
+          "                return CVTermData::instance->infoMap().find(cvid)->second;\n"
+          "            }\n"
+          "        }\n"
+          "    }\n"
+          "    return CVTermData::instance->infoMap().find(CVID_Unknown)->second;\n"
           "}\n\n\n";
 
     os << "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent)\n"
