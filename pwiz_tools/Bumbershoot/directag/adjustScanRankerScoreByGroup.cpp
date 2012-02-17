@@ -137,10 +137,13 @@ void adjustScore(	const string& filename,
 			// metrics file format:
 			// H	Index NativeID	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore
 			// S	5387	controllerType=0 controllerNumber=1 scan=5388	54.3165	12.459	1533.74	2.00768
-			float bestTagScore = lexical_cast<float>( v[3] );
-			float bestTagTIC = lexical_cast<float>( v[4] );
-			float tagMzRange = lexical_cast<float>( v[5] );
-			float originalScore = lexical_cast<float>( v[6] );
+			// new format:
+			//H	Index	NativeID	PrecursorMZ	Charge	PrecursorMass	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore
+			
+			float bestTagScore = lexical_cast<float>( v[6] );
+			float bestTagTIC = lexical_cast<float>( v[7] );
+			float tagMzRange = lexical_cast<float>( v[8] );
+			float originalScore = lexical_cast<float>( v[9] );
 			float bestTagScoreNorm = ( bestTagScore - gbBestTagScoreMean ) / gbBestTagScoreIQRMean;
 			float bestTagTICNorm = ( bestTagTIC - gbBestTagTICMean ) / gbBestTagTICIQRMean;
 			float tagMzRangeNorm = ( tagMzRange - gbTagMzRangeMean ) / gbTagMzRangeIQRMean;
@@ -176,12 +179,12 @@ int main( int argc, char* argv[] )
         }
 
 		// iterate scoreInforVector, compute global mean and IQR for normalization
-		float	gbBestTagScoreSum = 0;
-		float	gbBestTagTICSum = 0;
-		float	gbTagMzRangeSum = 0;
-		float	gbBestTagScoreIQRSum = 0;
-		float	gbBestTagTICIQRSum = 0;
-		float	gbTagMzRangeIQRSum = 0;
+		float	gbBestTagScoreSum = 0.0;
+		float	gbBestTagTICSum = 0.0;
+		float	gbTagMzRangeSum = 0.0;
+		float	gbBestTagScoreIQRSum = 0.0;
+		float	gbBestTagTICIQRSum = 0.0;
+		float	gbTagMzRangeIQRSum = 0.0;
 		int		totalSpectra = 0;		
 
 		for( vector<ScoreInfo>::iterator itr = scoreInfoVector.begin(); itr != scoreInfoVector.end(); ++itr )
@@ -196,12 +199,12 @@ int main( int argc, char* argv[] )
 		}
 
 		int numFiles = (int) scoreInfoVector.size();
-		float gbBestTagScoreMean = gbBestTagScoreSum / totalSpectra;
-		float gbBestTagTICMean = gbBestTagTICSum / totalSpectra;
-		float gbTagMzRangeMean = gbTagMzRangeSum / totalSpectra;
-		float gbBestTagScoreIQRMean = gbBestTagScoreIQRSum / numFiles;
-		float gbBestTagTICIQRMean = gbBestTagTICIQRSum / numFiles;
-		float gbTagMzRangeIQRMean = gbTagMzRangeIQRSum / numFiles;
+		float gbBestTagScoreMean = gbBestTagScoreSum / (float) totalSpectra;
+		float gbBestTagTICMean = gbBestTagTICSum / (float) totalSpectra;
+		float gbTagMzRangeMean = gbTagMzRangeSum / (float) totalSpectra;
+		float gbBestTagScoreIQRMean = gbBestTagScoreIQRSum / (float) numFiles;
+		float gbBestTagTICIQRMean = gbBestTagTICIQRSum / (float) numFiles;
+		float gbTagMzRangeIQRMean = gbTagMzRangeIQRSum / (float) numFiles;
         
 		lineStream.clear(); // reset lineStream for getline()
 		lineStream.seekg(0,std::ios::beg);
