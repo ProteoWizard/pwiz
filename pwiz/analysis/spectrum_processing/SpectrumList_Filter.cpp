@@ -421,15 +421,11 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_AnalyzerType::a
         return boost::logic::indeterminate;
 
     BOOST_FOREACH(const CVID cvid, cvFilterItems)
-    {
-        CVTermInfo info = cvTermInfo(massAnalyzerType); 
-        if (std::find(info.parentsIsA.begin(), info.parentsIsA.end(), cvid) != info.parentsIsA.end() ||
-            massAnalyzerType == cvid)
+        if (cvIsA(massAnalyzerType, cvid))
         {
             res = true;
             break;
         }
-    }
 
     return res;
 }

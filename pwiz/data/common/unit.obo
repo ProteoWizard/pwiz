@@ -1,7 +1,7 @@
 format-version: 1.2
-date: 18:03:2011 15:34
+date: 12:10:2011 11:21
 saved-by: George Gkoutos
-auto-generated-by: OBO-Edit 2.1-beta6
+auto-generated-by: OBO-Edit 2.1-beta13
 subsetdef: unit_group_slim "unit group slim"
 subsetdef: unit_slim "unit slim"
 default-namespace: unit.ontology
@@ -9,9 +9,9 @@ namespace-id-rule: * UO:$sequence(7,0,9999999)$
 import: http://purl.obolibrary.org/obo/pato.obo
 
 [Term]
-id: UO:0000000
-name: unit
-def: "A unit of measurement is a standardized quantity of a physical quality." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
+id: UO:0000000		
+name: unit		
+def: "A unit of measurement is a standardized quantity of a physical quality." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]		
 created_by: george gkoutos
 
 [Term]
@@ -20,7 +20,7 @@ name: length unit
 def: "A unit which is a standard measure of the distance between two points." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001708 ! 1-D extent
+relationship: unit_of PATO:0001708
 created_by: george gkoutos
 
 [Term]
@@ -29,8 +29,8 @@ name: mass unit
 def: "A unit which is a standard measure of the amount of matter/energy of a physical object." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0000125 ! mass
-relationship: unit_of PATO:0000128 ! weight
+relationship: unit_of PATO:0000125
+relationship: unit_of PATO:0000128
 created_by: george gkoutos
 
 [Term]
@@ -41,8 +41,8 @@ def: "A unit which is a standard measure of the dimension in which events occur 
 subset: unit_group_slim
 synonym: "time derived unit" EXACT []
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0000165 ! time
-relationship: unit_of PATO:0001309 ! duration quality of a process
+relationship: unit_of PATO:0000165
+relationship: unit_of PATO:0001309
 created_by: george gkoutos
 
 [Term]
@@ -61,7 +61,7 @@ def: "A unit which is a standard measure of the average kinetic energy of the pa
 subset: unit_group_slim
 synonym: "temperature derived unit" EXACT []
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0000146 ! temperature
+relationship: unit_of PATO:0000146
 created_by: george gkoutos
 
 [Term]
@@ -426,9 +426,9 @@ is_a: UO:0000000 ! unit
 created_by: george gkoutos
 
 [Term]
-id: UO:0000046
-name: derived unit
-def: "A unit which is derived from base units." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
+id: UO:0000046		
+name: derived unit		
+def: "A unit which is derived from base units." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]		
 is_obsolete: true
 
 [Term]
@@ -437,7 +437,7 @@ name: area unit
 def: "A unit which is a standard measure of the amount of a 2-dimensional flat surface." [UOC:GVG]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001709 ! 2-D extent
+relationship: unit_of PATO:0001709
 created_by: george gkoutos
 
 [Term]
@@ -446,7 +446,7 @@ name: acceleration unit
 def: "A unit which is a standard measure of the rate of change of velocity in either speed or direction." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001028 ! acceleration
+relationship: unit_of PATO:0001028
 created_by: george gkoutos
 
 [Term]
@@ -455,7 +455,7 @@ name: angular velocity unit
 def: "A unit which is a standard measure of the rate of angular movement about an axis; the angle rotated in a given time." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001413 ! angular velocity
+relationship: unit_of PATO:0001413
 created_by: george gkoutos
 
 [Term]
@@ -464,7 +464,7 @@ name: angular acceleration unit
 def: "A unit which is a standard measure of the rate of change of angular velocity." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001350 ! angular acceleration
+relationship: unit_of PATO:0001350
 created_by: george gkoutos
 
 [Term]
@@ -473,7 +473,7 @@ name: concentration unit
 def: "A unit which represents a standard measurement of how much of a given substance there is mixed with another substance." [UOC:GVG]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0000033 ! concentration of
+relationship: unit_of PATO:0000033
 created_by: george gkoutos
 
 [Term]
@@ -483,7 +483,7 @@ def: "A density unit which is a standard measure of the mass of a substance in a
 subset: unit_group_slim
 synonym: "mass per unit volume" EXACT []
 is_a: UO:0000182 ! density unit
-relationship: unit_of PATO:0001353 ! volumetric density
+relationship: unit_of PATO:0001353
 created_by: george gkoutos
 
 [Term]
@@ -492,7 +492,7 @@ name: luminance unit
 def: "A unit which is a standard measure of the luminous intensity impinging on a given area." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000157 ! light unit
-relationship: unit_of PATO:0001718 ! luminance
+relationship: unit_of PATO:0001718
 created_by: george gkoutos
 
 [Term]
@@ -502,7 +502,7 @@ def: "A density unit which is a standard measure of the mass exerting an influen
 subset: unit_group_slim
 synonym: "mass per unit area unit" EXACT []
 is_a: UO:0000182 ! density unit
-relationship: unit_of PATO:0001351 ! area density
+relationship: unit_of PATO:0001351
 created_by: george gkoutos
 
 [Term]
@@ -511,7 +511,7 @@ name: molar mass unit
 def: "A unit which is a standard measure of the mass of a homogeneous substance containing 6.02 x 1023 atoms or molecules." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000002 ! mass unit
-relationship: unit_of PATO:0001681 ! molar mass
+relationship: unit_of PATO:0001681
 created_by: george gkoutos
 
 [Term]
@@ -520,7 +520,7 @@ name: molar volume unit
 def: "A unit which is a standard measure of the volume of a homogeneous substance containing 6.02 x 1023 atoms or molecules." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000095 ! volume unit
-relationship: unit_of PATO:0001680 ! molar volume
+relationship: unit_of PATO:0001680
 created_by: george gkoutos
 
 [Term]
@@ -529,8 +529,8 @@ name: momentum unit
 def: "A unit which is a standard measure of the quantity of motion measured by the product of mass and velocity." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001022 ! impulse
-relationship: unit_of PATO:0001023 ! momentum
+relationship: unit_of PATO:0001022
+relationship: unit_of PATO:0001023
 created_by: george gkoutos
 
 [Term]
@@ -555,7 +555,7 @@ name: speed/velocity unit
 def: "A unit which is a standard measure of the rate of movement. Speed is measured in the same physical units of measurement as velocity, but does not contain the element of direction that velocity has. Speed is thus the magnitude component of velocity." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0000008 ! speed
+relationship: unit_of PATO:0000008
 created_by: george gkoutos
 
 [Term]
@@ -872,7 +872,7 @@ name: volume unit
 def: "A unit which is a standard measure of the amount of space occupied by any substance, whether solid, liquid, or gas." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001710 ! 3-D extent
+relationship: unit_of PATO:0001710
 created_by: george gkoutos
 
 [Term]
@@ -964,7 +964,7 @@ name: frequency unit
 def: "A unit which is a standard measure of the number of repetitive actions in a particular time." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0000044 ! frequency
+relationship: unit_of PATO:0000044
 created_by: george gkoutos
 
 [Term]
@@ -983,7 +983,7 @@ name: force unit
 def: "A unit which is a standard measure of the force is applied when a mass is accelerated." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001035 ! force
+relationship: unit_of PATO:0001035
 created_by: george gkoutos
 
 [Term]
@@ -1001,7 +1001,7 @@ name: pressure unit
 def: "A unit which is a standard measure of the force applied to a given area." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001025 ! pressure
+relationship: unit_of PATO:0001025
 created_by: george gkoutos
 
 [Term]
@@ -1019,8 +1019,8 @@ name: energy unit
 def: "A unit which is a standard measure of the work done by a certain force (gravitational, electric, magnetic, force of inertia, etc)." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001021 ! energy
-relationship: unit_of PATO:0001026 ! work
+relationship: unit_of PATO:0001021
+relationship: unit_of PATO:0001026
 created_by: george gkoutos
 
 [Term]
@@ -1038,7 +1038,7 @@ name: power unit
 def: "A unit which is a standard measure power or the rate of doing work." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001024 ! power
+relationship: unit_of PATO:0001024
 created_by: george gkoutos
 
 [Term]
@@ -1073,7 +1073,7 @@ name: luminous flux unit
 def: "A unit which is a standard measure of the flow of radiant energy." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000157 ! light unit
-relationship: unit_of PATO:0001296 ! luminous flux
+relationship: unit_of PATO:0001296
 created_by: george gkoutos
 
 [Term]
@@ -1091,7 +1091,7 @@ name: catalytic activity unit
 def: "A unit which is a standard measure of the amount of the action of a catalyst." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001414 ! catalytic activity
+relationship: unit_of PATO:0001414
 created_by: george gkoutos
 
 [Term]
@@ -1109,7 +1109,7 @@ name: angle unit
 def: "A unit which is a standard measure of the figure or space formed by the junction of two lines or planes." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0000133 ! orientation
+relationship: unit_of PATO:0000133
 created_by: george gkoutos
 
 [Term]
@@ -1160,7 +1160,7 @@ name: activity (of a radionuclide) unit
 def: "A unit which is a standard measure of the transformation (disintegration) rate of a radioactive substance." [DEFRA:DEFRA "http://www.defra.gov.uk/"]
 subset: unit_group_slim
 is_a: UO:0000127 ! radiation unit
-relationship: unit_of PATO:0001740 ! activity (of a radionuclide)
+relationship: unit_of PATO:0001740
 created_by: george gkoutos
 
 [Term]
@@ -1169,7 +1169,7 @@ name: absorbed dose unit
 def: "A unit which is a standard measure of the energy imparted by ionizing radiation to unit mass of matter such as tissue." [DEFRA:DEFRA "http://www.defra.gov.uk/"]
 subset: unit_group_slim
 is_a: UO:0000127 ! radiation unit
-relationship: unit_of PATO:0001745 ! radiation absorbed dose
+relationship: unit_of PATO:0001745
 created_by: george gkoutos
 
 [Term]
@@ -1178,7 +1178,7 @@ name: dose equivalent unit
 def: "A unit which is a standard measure of the expression of dose in terms of its biological effect." [ORCBS:ORCBS "http://www.orcbs.msu.edu/"]
 subset: unit_group_slim
 is_a: UO:0000127 ! radiation unit
-relationship: unit_of PATO:0001746 ! radiation equivalent dose
+relationship: unit_of PATO:0001746
 created_by: george gkoutos
 
 [Term]
@@ -1187,7 +1187,7 @@ name: exposure unit
 def: "A unit which is a standard measure of the quantity that expresses the ability of radiation to ionize air and thereby create electric charges which can be collected and measured." [ORCBS:ORCBS "http://www.orcbs.msu.edu/"]
 subset: unit_group_slim
 is_a: UO:0000127 ! radiation unit
-relationship: unit_of PATO:0001744 ! radiation exposure
+relationship: unit_of PATO:0001744
 created_by: george gkoutos
 
 [Term]
@@ -1428,7 +1428,7 @@ name: radiant intensity unit
 def: "A unit which is a standard measure of the intensity of electromagnetic radiation." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000157 ! light unit
-relationship: unit_of PATO:0001717 ! radiation emitting intensity quality
+relationship: unit_of PATO:0001717
 created_by: george gkoutos
 
 [Term]
@@ -1447,7 +1447,7 @@ name: radiance unit
 def: "A unit which is a standard measure of the power of electromagnetic radiation through space or through a material medium in the form of electromagnetic waves." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000157 ! light unit
-relationship: unit_of PATO:0001299 ! radiation emitting quality
+relationship: unit_of PATO:0001299
 created_by: george gkoutos
 
 [Term]
@@ -1645,7 +1645,7 @@ name: density unit
 def: "A unit which is a standard measure of the influence exerted by some mass." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001019 ! mass density
+relationship: unit_of PATO:0001019
 created_by: george gkoutos
 
 [Term]
@@ -1654,7 +1654,7 @@ name: linear density unit
 def: "A density unit which is a standard measure of the mass exerting an influence on a one-dimensional object." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000182 ! density unit
-relationship: unit_of PATO:0001352 ! linear density
+relationship: unit_of PATO:0001352
 created_by: george gkoutos
 
 [Term]
@@ -1766,7 +1766,7 @@ def: "A dimensionless concentration notation which denotes the acidity of a solu
 subset: unit_slim
 is_a: UO:0000051 ! concentration unit
 is_a: UO:0000186 ! dimensionless unit
-relationship: unit_of PATO:0001428 ! medium acidity
+relationship: unit_of PATO:0001428
 created_by: george gkoutos
 
 [Term]
@@ -1819,7 +1819,7 @@ name: catalytic (activity) concentration unit
 def: "A concentration unit which is a standard measure of the amount of the action of a catalyst in a given volume." [UOC:GVG]
 subset: unit_group_slim
 is_a: UO:0000051 ! concentration unit
-relationship: unit_of PATO:0001674 ! catalytic (activity) concentration
+relationship: unit_of PATO:0001674
 created_by: george gkoutos
 
 [Term]
@@ -1951,7 +1951,7 @@ name: electric potential difference unit
 def: "A unit which is a standard measure of the work done per unit charge as a charge is moved between two points in an electric field." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001464 ! electric potential
+relationship: unit_of PATO:0001464
 created_by: george gkoutos
 
 [Term]
@@ -2023,7 +2023,7 @@ name: magnetic flux unit
 def: "A unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001682 ! magnetism
+relationship: unit_of PATO:0001682
 created_by: george gkoutos
 
 [Term]
@@ -2271,7 +2271,7 @@ name: surface tension unit
 def: "A unit which is a standard measure of the ability of a liguid to attraction of molecules at its surface as a result of unbalanced molecular cohesive forces." [NIST:NIST "http://physics.nist.gov/cuu/Units/"]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0001461 ! surface tension
+relationship: unit_of PATO:0001461
 created_by: george gkoutos
 
 [Term]
@@ -2298,7 +2298,7 @@ name: viscosity unit
 def: "A unit which is a standard measure of the internal resistance of fluids to flow." [UOC:GVG]
 subset: unit_group_slim
 is_a: UO:0000000 ! unit
-relationship: unit_of PATO:0000992 ! viscosity
+relationship: unit_of PATO:0000992
 created_by: george gkoutos
 
 [Term]
@@ -2327,7 +2327,7 @@ def: "An ratio unit which is an indicator of sound power per unit area." [techta
 subset: unit_slim
 synonym: "dB" EXACT []
 is_a: UO:0000190 ! ratio
-relationship: unit_of PATO:0001521 ! sound amplitude
+relationship: unit_of PATO:0001521
 created_by: george gkoutos
 
 [Term]
@@ -2336,7 +2336,7 @@ name: effective dose unit
 def: "A unit which is a standard measure of the estimate of the stochastic effect that a non-uniform radiation dose has on a human." [Wikipedia:Wikipedia "http://www.wikipedia.org"]
 subset: unit_slim
 is_a: UO:0000127 ! radiation unit
-relationship: unit_of PATO:0001747 ! radiation effective dose
+relationship: unit_of PATO:0001747
 created_by: george gkoutos
 
 [Term]
@@ -2353,7 +2353,7 @@ name: electrical conduction unit
 def: "A unit which represents a standard measurement of the movement of electrically charged particles through a transmission medium (electrical conductor)." [UOC:GVG]
 subset: unit_group_slim
 is_a: UO:0000261 ! conduction unit
-relationship: unit_of PATO:0001757 ! electrical conductivity
+relationship: unit_of PATO:0001757
 created_by: george gkoutos
 
 [Term]
@@ -2362,7 +2362,7 @@ name: heat conduction unit
 def: "A unit which represents a standard measurement of the spontaneous transfer of thermal energy through matter, from a region of higher temperature to a region of lower temperature." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_group_slim
 is_a: UO:0000261 ! conduction unit
-relationship: unit_of PATO:0001756 ! heat conductivity
+relationship: unit_of PATO:0001756
 created_by: george gkoutos
 
 [Term]
@@ -2440,7 +2440,7 @@ def: "A volumetric flow rate unit which is equal to one microliter volume throug
 subset: unit_slim
 synonym: "uL/min" EXACT []
 is_a: UO:0000270 ! volumetric flow rate unit
-relationship: unit_of PATO:0001574 ! flow rate
+relationship: unit_of PATO:0001574
 created_by: george gkoutos
 
 [Term]
@@ -2497,7 +2497,7 @@ created_by: george gkoutos
 
 [Term]
 id: UO:0000278
-name: ug/disk
+name: nmole/disk
 def: "A unit which is equal to one nanomole per disk, where a disk is some physical surface/container upon which the substance is deposited." [UOC:MD]
 subset: unit_group_slim
 is_a: UO:0000276 ! amount per container
@@ -2539,6 +2539,33 @@ is_a: UO:0000280 ! rate unit
 created_by: george gkoutos
 
 [Term]
+id: UO:0000283
+name: kilogram per hectare
+def: "An area density unit which is equal to the mass of an object in kilograms divided by the surface area in hectares.." [UO:GVG]
+is_a: UO:0000054 ! area density unit
+created_by: George Gkoutos
+creation_date: 2011-10-12T11:17:08Z
+
+[Term]
+id: UO:0000284
+name: count per nanomolar
+def: "A rate unit which is equal to one over one nanomolar." [UO:GVG]
+subset: unit_slim
+synonym: "nM^-1" EXACT []
+synonym: "1/nM" EXACT []
+is_a: UO:0000280 ! rate unit
+
+[Term]
+id: UO:0000285
+name: count per molar
+def: "A rate unit which is equal to one over one molar." [UO:GVG]
+subset: unit_slim
+synonym: "M^-1" EXACT []
+synonym: "1/M" EXACT []
+is_a: UO:0000280 ! rate unit
+
+
+[Term]
 id: UO:0000301
 name: microgram per liter
 def: "A mass unit density which is equal to mass of an object in micrograms divided by the volume in liters." [UOC:GVG]
@@ -2556,4 +2583,3 @@ namespace: pato.ontology
 id: unit_of
 name: unit_of
 namespace: pato.ontology
-

@@ -338,7 +338,7 @@ struct EnzymePtr_name
     result_type operator()(const EnzymePtr& x) const
     {
         CVParam enzymeName = x->enzymeName.cvParamChild(MS_cleavage_agent_name);
-        if (!enzymeName.empty() && enzymeName.cvid != MS_NoEnzyme)
+        if (!enzymeName.empty() && enzymeName.cvid != MS_NoEnzyme_OBSOLETE)
             return enzymeName.name();
         if (!x->enzymeName.userParams.empty())
             return x->enzymeName.userParams[0].name;

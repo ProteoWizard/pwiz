@@ -82,10 +82,7 @@ string unescape_copy(const string& str)
 istream& getcleanline(istream& is, string& buffer)
 {
     if (getline(is, buffer))
-    {
-        if (buffer.size() > 0 && buffer.at(buffer.size()-1) == '\r')
-            buffer.erase(buffer.size()-1);
-    }
+        bal::trim(buffer);
 
     return is;
 }
@@ -93,7 +90,7 @@ istream& getcleanline(istream& is, string& buffer)
 
 void parse_id(const string& line, Term& term)
 {
-    static const boost::regex e("id: (\\w+):(\\d+)");
+    static const boost::regex e("id: (\\w+):(\\d+)\\s*");
 
     boost::smatch what; 
     if (!regex_match(line, what, e))
@@ -111,7 +108,7 @@ void parse_id(const string& line, Term& term)
 
 void parse_name(const string& line, Term& term)
 {
-    static const boost::regex e("name: (.*)");
+    static const boost::regex e("name: (.*?)\\s*");
 
     boost::smatch what; 
     if (!regex_match(line, what, e))
@@ -157,7 +154,7 @@ void parse_relationship(const string& line, Term& term)
 
 void parse_is_obsolete(const string& line, Term& term)
 {
-    static const boost::regex e("is_obsolete: (\\w+)");
+    static const boost::regex e("is_obsolete: (\\w+)\\s*");
 
     boost::smatch what; 
     if (!regex_match(line, what, e))

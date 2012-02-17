@@ -133,7 +133,7 @@ xref: delta_composition "H(3) C(2) N O"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2006-10-16 10:18:27"
+xref: date_time_modified "2011-11-21 13:05:07"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -165,13 +165,28 @@ xref: spec_6_hidden "1"
 xref: spec_6_site "E"
 xref: spec_6_position "Anywhere"
 xref: spec_6_classification "Artefact"
+xref: spec_7_group "7"
+xref: spec_7_hidden "1"
+xref: spec_7_site "S"
+xref: spec_7_position "Anywhere"
+xref: spec_7_classification "Artefact"
+xref: spec_8_group "8"
+xref: spec_8_hidden "1"
+xref: spec_8_site "T"
+xref: spec_8_position "Anywhere"
+xref: spec_8_classification "Artefact"
+xref: spec_9_group "9"
+xref: spec_9_hidden "1"
+xref: spec_9_site "Y"
+xref: spec_9_position "Anywhere"
+xref: spec_9_classification "Artefact"
 is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
 id: UNIMOD:5
 name: Carbamyl
-def: "Carbamylation." [PMID:10978403, RESID:AA0332, RESID:AA0343, PMID:12203680, URL:http\://www.ionsource.com/Card/carbam/carbam.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=5]
+def: "Carbamylation." [PMID:12203680, RESID:AA0343, PMID:10978403, RESID:AA0332, URL:http\://www.ionsource.com/Card/carbam/carbam.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=5]
 comment: Carbamylation is an irreversible process of non-enzymatic modification of proteins by the breakdown products of urea isocyanic acid reacts with the N-term of a proteine or side chains of lysine and arginine residues.
 xref: record_id "5"
 xref: delta_mono_mass "43.005814"
@@ -180,7 +195,7 @@ xref: delta_composition "H C N O"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2010-03-03 15:36:53"
+xref: date_time_modified "2011-11-21 13:06:47"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -222,6 +237,11 @@ xref: spec_8_hidden "1"
 xref: spec_8_site "Y"
 xref: spec_8_position "Anywhere"
 xref: spec_8_classification "Chemical derivative"
+xref: spec_9_group "9"
+xref: spec_9_hidden "1"
+xref: spec_9_site "N-term"
+xref: spec_9_position "Protein N-term"
+xref: spec_9_classification "Post-translational"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -477,7 +497,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:21
 name: Phospho
-def: "Phosphorylation." [URL:http\://www.ionsource.com/Card/phos/phos.htm, RESID:AA0037, RESID:AA0033, RESID:AA0038, RESID:AA0039, RESID:AA0222, FindMod:PHOS, RESID:AA0034, RESID:AA0036, RESID:AA0035, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=21]
+def: "Phosphorylation." [FindMod:PHOS, RESID:AA0034, RESID:AA0222, RESID:AA0039, RESID:AA0038, RESID:AA0033, RESID:AA0037, URL:http\://www.ionsource.com/Card/phos/phos.htm, RESID:AA0036, RESID:AA0035, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=21]
 comment: Protein which is posttranslationally modified by the attachment of at least one phosphate group usually on serine, threonine or tyrosine residues, but also on aspartic acid or histidine residues.
 xref: record_id "21"
 xref: delta_mono_mass "79.966331"
@@ -486,7 +506,7 @@ xref: delta_composition "H O(3) P"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2006-10-16 12:11:24"
+xref: date_time_modified "2011-11-25 10:55:54"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -543,6 +563,12 @@ xref: spec_6_hidden "1"
 xref: spec_6_site "R"
 xref: spec_6_position "Anywhere"
 xref: spec_6_classification "Post-translational"
+xref: spec_7_group "7"
+xref: spec_7_hidden "1"
+xref: spec_7_site "K"
+xref: spec_7_position "Anywhere"
+xref: spec_7_classification "Other"
+xref: spec_7_misc_notes "from ProteinPilot"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -1065,7 +1091,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:39
 name: Methylthio
-def: "Beta-methylthiolation." [RESID:AA0232, URL:http\://www.trc-canada.com/white_papers.lasso, URL:http\://docs.appliedbiosystems.com/pebiodocs/04351918.pdf, RESID:AA0320, PMID:8844851, RESID:AA0101, FindMod:BMTH, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=39]
+def: "Beta-methylthiolation." [RESID:AA0320, PMID:8844851, URL:http\://www.trc-canada.com/white_papers.lasso, RESID:AA0232, URL:http\://docs.appliedbiosystems.com/pebiodocs/04351918.pdf, RESID:AA0101, FindMod:BMTH, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=39]
 synonym: "Methyl methanethiosulfonate MMTS" []
 xref: record_id "39"
 xref: delta_mono_mass "45.987721"
@@ -1074,7 +1100,7 @@ xref: delta_composition "H(2) C S"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2006-11-14 11:17:13"
+xref: date_time_modified "2011-11-24 16:48:21"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -1091,13 +1117,23 @@ xref: spec_3_hidden "0"
 xref: spec_3_site "C"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Multiple"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "N-term"
+xref: spec_4_position "Any N-term"
+xref: spec_4_classification "Artefact"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "K"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Artefact"
 is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
 id: UNIMOD:40
 name: Sulfo
-def: "O-Sulfonation." [RESID:AA0362, RESID:AA0361, FindMod:SULF, RESID:AA0171, PMID:14752058, RESID:AA0172, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=40]
+def: "O-Sulfonation." [RESID:AA0172, PMID:14752058, RESID:AA0362, FindMod:SULF, RESID:AA0171, RESID:AA0361, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=40]
 xref: record_id "40"
 xref: delta_mono_mass "79.956815"
 xref: delta_avge_mass "80.0632"
@@ -1105,37 +1141,52 @@ xref: delta_composition "O(3) S"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2006-10-16 11:16:55"
+xref: date_time_modified "2012-02-14 17:50:32"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
 xref: spec_1_site "S"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Post-translational"
+xref: spec_1_misc_notes "Because the modification is quantitatively lost on CID, site assigment is not possible when there is a choice of sites"
+xref: spec_1_neutral_loss_80_mono_mass "79.956815"
+xref: spec_1_neutral_loss_80_avge_mass "80.0632"
+xref: spec_1_neutral_loss_80_flag "false"
+xref: spec_1_neutral_loss_80_composition "O(3) S"
+xref: spec_1_group "1"
+xref: spec_1_hidden "0"
+xref: spec_1_site "T"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_1_misc_notes "Because the modification is quantitatively lost on CID, site assigment is not possible when there is a choice of sites"
+xref: spec_1_neutral_loss_80_mono_mass "79.956815"
+xref: spec_1_neutral_loss_80_avge_mass "80.0632"
+xref: spec_1_neutral_loss_80_flag "false"
+xref: spec_1_neutral_loss_80_composition "O(3) S"
+xref: spec_1_group "1"
+xref: spec_1_hidden "0"
+xref: spec_1_site "Y"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_1_misc_notes "Because the modification is quantitatively lost on CID, site assigment is not possible when there is a choice of sites"
+xref: spec_1_neutral_loss_80_mono_mass "79.956815"
+xref: spec_1_neutral_loss_80_avge_mass "80.0632"
+xref: spec_1_neutral_loss_80_flag "false"
+xref: spec_1_neutral_loss_80_composition "O(3) S"
 xref: spec_2_group "2"
-xref: spec_2_hidden "0"
-xref: spec_2_site "T"
+xref: spec_2_hidden "1"
+xref: spec_2_site "C"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "Post-translational"
-xref: spec_3_group "3"
-xref: spec_3_hidden "0"
-xref: spec_3_site "Y"
-xref: spec_3_position "Anywhere"
-xref: spec_3_classification "Post-translational"
-xref: spec_4_group "4"
-xref: spec_4_hidden "1"
-xref: spec_4_site "C"
-xref: spec_4_position "Anywhere"
-xref: spec_4_classification "Post-translational"
-xref: spec_4_misc_notes "Sulfitolysis"
+xref: spec_2_misc_notes "Sulfitolysis"
 is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
 id: UNIMOD:41
 name: Hex
-def: "Hexose." [FindMod:GLUC, PMID:15279557, RESID:AA0152, RESID:AA0157, RESID:AA0327, RESID:AA0217, FindMod:CMAN, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=41]
-synonym: "Fructose Glucose Galactose Mannose" []
+def: "Hexose." [FindMod:CMAN, RESID:AA0217, RESID:AA0327, RESID:AA0157, RESID:AA0152, PMID:15279557, FindMod:GLUC, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=41]
+synonym: "Galactose Glucose Fructose Mannose" []
 xref: record_id "41"
 xref: delta_mono_mass "162.052824"
 xref: delta_avge_mass "162.1406"
@@ -1143,7 +1194,7 @@ xref: delta_composition "Hex"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2006-10-16 14:11:32"
+xref: date_time_modified "2011-11-21 13:57:35"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -1187,6 +1238,11 @@ xref: spec_8_hidden "1"
 xref: spec_8_site "Y"
 xref: spec_8_position "Anywhere"
 xref: spec_8_classification "Other glycosylation"
+xref: spec_9_group "9"
+xref: spec_9_hidden "1"
+xref: spec_9_site "S"
+xref: spec_9_position "Anywhere"
+xref: spec_9_classification "O-linked glycosylation"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -1458,7 +1514,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:52
 name: Guanidinyl
-def: "Guanidination." [PMID:11078590, URL:http\://www.indiana.edu/~reillyjp/ASMS2001posters/beardsley_poster.pdf, PMID:11821862, PMID:11085420, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=52]
+def: "Guanidination." [PMID:11821862, URL:http\://www.indiana.edu/~reillyjp/ASMS2001posters/beardsley_poster.pdf, PMID:11078590, PMID:11085420, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=52]
 comment: Specific for sidechain of lysine. Does not modify the N-termini except for glycine at a slower rate than the side chain of lysine.
 synonym: "homoarginine" []
 xref: record_id "52"
@@ -1468,13 +1524,18 @@ xref: delta_composition "H(2) C N(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2006-10-15 19:58:44"
+xref: date_time_modified "2011-11-21 13:56:40"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
 xref: spec_1_site "K"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -1571,7 +1632,7 @@ xref: delta_composition "H(-1) 2H(3) C(2) O"
 xref: username_of_poster "penner"
 xref: group_of_poster "users"
 xref: date_time_posted "2002-10-16 16:41:56"
-xref: date_time_modified "2006-10-16 10:02:50"
+xref: date_time_modified "2011-11-21 10:07:03"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -1583,6 +1644,31 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "H"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "S"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "T"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "Y"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
+xref: spec_7_group "7"
+xref: spec_7_hidden "1"
+xref: spec_7_site "N-term"
+xref: spec_7_position "Protein N-term"
+xref: spec_7_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -1597,7 +1683,7 @@ xref: delta_composition "H(4) C(3) O"
 xref: username_of_poster "penner"
 xref: group_of_poster "users"
 xref: date_time_posted "2002-10-16 16:52:38"
-xref: date_time_modified "2009-07-17 17:54:09"
+xref: date_time_modified "2011-11-25 11:01:23"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -1614,6 +1700,16 @@ xref: spec_3_hidden "1"
 xref: spec_3_site "S"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "T"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "N-term"
+xref: spec_5_position "Protein N-term"
+xref: spec_5_classification "Multiple"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -2561,13 +2657,18 @@ xref: delta_composition "H(-2) I(2)"
 xref: username_of_poster "brettsp"
 xref: group_of_poster "users"
 xref: date_time_posted "2003-07-10 15:49:42"
-xref: date_time_modified "2006-10-16 15:45:24"
+xref: date_time_modified "2011-11-21 13:23:20"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "Y"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -3863,7 +3964,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:213
 name: ADP-Ribosyl
-def: "ADP Ribose addition." [RESID:AA0237, RESID:AA0169, URL:http\://betelgeuse.u-strasbg.fr/DocPARP/DocPARG/images/Structure-pADPR.jpg, RESID:AA0168, RESID:AA0231, PMID:15842200, RESID:AA0295, FindMod:ADP, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=213]
+def: "ADP Ribose addition." [RESID:AA0231, RESID:AA0168, URL:http\://betelgeuse.u-strasbg.fr/DocPARP/DocPARG/images/Structure-pADPR.jpg, RESID:AA0169, RESID:AA0237, PMID:15842200, RESID:AA0295, FindMod:ADP, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=213]
 xref: record_id "213"
 xref: delta_mono_mass "541.061110"
 xref: delta_avge_mass "541.3005"
@@ -3871,7 +3972,7 @@ xref: delta_composition "H(21) C(15) N(5) O(13) P(2)"
 xref: username_of_poster "ionjockey"
 xref: group_of_poster "users"
 xref: date_time_posted "2004-05-27 20:53:37"
-xref: date_time_modified "2006-10-16 17:03:46"
+xref: date_time_modified "2011-10-20 13:50:11"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -3898,6 +3999,11 @@ xref: spec_5_hidden "1"
 xref: spec_5_site "E"
 xref: spec_5_position "Anywhere"
 xref: spec_5_classification "Other glycosylation"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "K"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Other glycosylation"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -3914,7 +4020,7 @@ xref: delta_composition "H(12) C(4) 13C(3) N 15N O"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2004-06-08 14:04:07"
-xref: date_time_modified "2008-12-05 09:27:51"
+xref: date_time_modified "2011-11-21 14:08:42"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -3932,6 +4038,29 @@ xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Isotopic label"
 xref: spec_3_misc_notes "Low abundance"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Very low abundance"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_5_misc_notes "Very low abundance"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
+xref: spec_6_misc_notes "Very low abundance"
+xref: spec_7_group "7"
+xref: spec_7_hidden "1"
+xref: spec_7_site "N-term"
+xref: spec_7_position "Protein N-term"
+xref: spec_7_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -3999,7 +4128,7 @@ xref: delta_composition "H(2) C(2)"
 xref: username_of_poster "fatcat"
 xref: group_of_poster "users"
 xref: date_time_posted "2004-08-12 20:01:03"
-xref: date_time_modified "2010-02-25 10:49:11"
+xref: date_time_modified "2011-11-21 13:14:17"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -4016,6 +4145,11 @@ xref: spec_3_hidden "1"
 xref: spec_3_site "N-term"
 xref: spec_3_position "Protein N-term"
 xref: spec_3_classification "Other"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "N-term"
+xref: spec_4_position "Any N-term"
+xref: spec_4_classification "Other"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -4031,7 +4165,7 @@ xref: delta_composition "H(4) C(2)"
 xref: username_of_poster "fatcat"
 xref: group_of_poster "users"
 xref: date_time_posted "2004-08-12 20:02:38"
-xref: date_time_modified "2006-10-15 17:55:18"
+xref: date_time_modified "2011-11-21 13:14:58"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -4043,6 +4177,11 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "K"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "Other"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Any N-term"
+xref: spec_3_classification "Other"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -4130,7 +4269,7 @@ xref: delta_composition "C(-6) 13C(6) N(-2) 15N(2)"
 xref: username_of_poster "hs01"
 xref: group_of_poster "users"
 xref: date_time_posted "2004-08-30 16:23:02"
-xref: date_time_modified "2006-10-19 10:30:33"
+xref: date_time_modified "2011-11-21 14:49:27"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -4138,6 +4277,11 @@ xref: spec_1_site "K"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Isotopic label"
 xref: spec_1_misc_notes "Used in SILAC experiment"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "L"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -4283,7 +4427,7 @@ xref: delta_composition "C(-5) 13C(5) N(-1) 15N"
 xref: username_of_poster "Deepa"
 xref: group_of_poster "users"
 xref: date_time_posted "2004-11-05 18:49:37"
-xref: date_time_modified "2009-02-11 17:44:37"
+xref: date_time_modified "2011-11-21 14:48:39"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -4303,6 +4447,11 @@ xref: spec_3_site "M"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Isotopic label"
 xref: spec_3_misc_notes "SILAC label used in COFRADIC"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "E"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -4914,7 +5063,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:295
 name: dHex
-def: "Fucose." [PMID:15189151, PMID:11344537, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=295]
+def: "Fucose." [PMID:11344537, PMID:15189151, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=295]
 synonym: "deoxyhexose" []
 xref: record_id "295"
 xref: delta_mono_mass "146.057909"
@@ -4923,7 +5072,7 @@ xref: delta_composition "dHex"
 xref: username_of_poster "rsack"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-03-22 16:57:00"
-xref: date_time_modified "2006-10-16 14:02:33"
+xref: date_time_modified "2011-11-21 13:16:16"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -4935,6 +5084,11 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "T"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "O-linked glycosylation"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "O-linked glycosylation"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -5690,7 +5844,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:340
 name: Bromo
-def: "Bromination." [FindMod:BROM, RESID:AA0179, RESID:AA0180, RESID:AA0173, RESID:AA0176, RESID:AA0175, RESID:AA0174, PMID:9033387, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=340]
+def: "Bromination." [PMID:9033387, RESID:AA0174, RESID:AA0175, RESID:AA0176, RESID:AA0173, RESID:AA0180, RESID:AA0179, FindMod:BROM, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=340]
 xref: record_id "340"
 xref: delta_mono_mass "77.910511"
 xref: delta_avge_mass "78.8961"
@@ -5698,7 +5852,7 @@ xref: delta_composition "H(-1) Br"
 xref: username_of_poster "gerribe"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-09-06 08:31:51"
-xref: date_time_modified "2006-10-16 11:10:31"
+xref: date_time_modified "2011-11-21 12:07:51"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -5715,6 +5869,11 @@ xref: spec_3_hidden "1"
 xref: spec_3_site "F"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Post-translational"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "Y"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Artefact"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -5785,7 +5944,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:345
 name: Trioxidation
-def: "Cysteine oxidation to cysteic acid." [PMID:14678012, PMID:9252331, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=345]
+def: "Cysteine oxidation to cysteic acid." [PMID:9252331, PMID:14678012, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=345]
 xref: record_id "345"
 xref: delta_mono_mass "47.984744"
 xref: delta_avge_mass "47.9982"
@@ -5793,13 +5952,23 @@ xref: delta_composition "O(3)"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2005-09-10 22:39:38"
-xref: date_time_modified "2006-10-16 10:12:44"
+xref: date_time_modified "2011-11-25 11:17:41"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "C"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "W"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -6055,7 +6224,7 @@ xref: delta_composition "H(13) C(6) O(3) P"
 xref: username_of_poster "lmschopfer"
 xref: group_of_poster "users"
 xref: date_time_posted "2005-09-14 18:05:04"
-xref: date_time_modified "2010-02-24 20:53:53"
+xref: date_time_modified "2011-12-05 16:14:23"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -6077,6 +6246,11 @@ xref: spec_4_hidden "1"
 xref: spec_4_site "K"
 xref: spec_4_position "Anywhere"
 xref: spec_4_classification "Chemical derivative"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "N-term"
+xref: spec_5_position "Any N-term"
+xref: spec_5_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -12502,7 +12676,7 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:725
-name: O-Diethylphosphate
+name: Diethylphosphate
 def: "O-Diethylphosphorylation." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=725]
 xref: record_id "725"
 xref: delta_mono_mass "136.028931"
@@ -12511,7 +12685,7 @@ xref: delta_composition "H(9) C(4) O(3) P"
 xref: username_of_poster "lmschopfer"
 xref: group_of_poster ""
 xref: date_time_posted "2007-01-09 21:44:04"
-xref: date_time_modified "2010-04-05 21:32:59"
+xref: date_time_modified "2011-12-05 16:15:16"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -12543,12 +12717,17 @@ xref: spec_6_hidden "1"
 xref: spec_6_site "H"
 xref: spec_6_position "Anywhere"
 xref: spec_6_classification "Chemical derivative"
+xref: spec_7_group "7"
+xref: spec_7_hidden "1"
+xref: spec_7_site "N-term"
+xref: spec_7_position "Any N-term"
+xref: spec_7_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
 id: UNIMOD:726
-name: O-Ethylphosphate
+name: Ethylphosphate
 def: "O-Ethylphosphorylation." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=726]
 comment: Created by auto-catalytic dealkylation of the O-Diethylphosphate adduct.
 xref: record_id "726"
@@ -12558,7 +12737,7 @@ xref: delta_composition "H(5) C(2) O(3) P"
 xref: username_of_poster "lmschopfer"
 xref: group_of_poster ""
 xref: date_time_posted "2007-01-09 21:46:17"
-xref: date_time_modified "2007-01-21 18:12:23"
+xref: date_time_modified "2011-12-05 16:15:47"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -12575,6 +12754,16 @@ xref: spec_3_hidden "1"
 xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "K"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "N-term"
+xref: spec_5_position "Any N-term"
+xref: spec_5_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -12687,7 +12876,7 @@ id: UNIMOD:730
 name: iTRAQ8plex
 def: "Representative mass and accurate mass for 113, 114, 116 & 117." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=730]
 comment: Other 4 channels have the same nominal mass but slightly different exact mass. For quantitation purposes, use this entry for all channels.
-synonym: "AKA iTRAQ8plex:13C(7)15N(1) Applied Biosystems iTRAQ(TM) multiplexed quantitation chemistry" []
+synonym: "Applied Biosystems iTRAQ(TM) multiplexed quantitation chemistry AKA iTRAQ8plex:13C(7)15N(1)" []
 xref: record_id "730"
 xref: delta_mono_mass "304.205360"
 xref: delta_avge_mass "304.3074"
@@ -12695,7 +12884,7 @@ xref: delta_composition "H(24) C(7) 13C(7) N(3) 15N O(3)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2007-01-11 09:53:13"
-xref: date_time_modified "2007-01-13 21:00:08"
+xref: date_time_modified "2011-11-21 14:10:21"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -12713,6 +12902,29 @@ xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Isotopic label"
 xref: spec_3_misc_notes "Low abundance"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Very low abundance"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_5_misc_notes "Very low abundance"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
+xref: spec_6_misc_notes "Very low abundance"
+xref: spec_7_group "7"
+xref: spec_7_hidden "1"
+xref: spec_7_site "N-term"
+xref: spec_7_position "Protein N-term"
+xref: spec_7_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -12840,7 +13052,7 @@ id: UNIMOD:737
 name: TMT6plex
 def: "Sixplex Tandem Mass Tag®." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=737]
 comment: Sixplex-TMT® reagents 6TMT-126, 6TMT-127, 6TMT-128, 6TMT-129, 6TMT-130, 6TMT-131 Masses of the TMT® fragment ions to be quantified:126.1283 127.1316 128.1350 129.1383 130.1417 131.1387.
-synonym: "Tandem Mass Tag sixplex labelling kit Proteome Sciences Tandem Mass Tag® and TMT® are registered Trademarks of Proteome Sciences plc." []
+synonym: "Tandem Mass Tag® and TMT® are registered Trademarks of Proteome Sciences plc. Tandem Mass Tag sixplex labelling kit Proteome Sciences" []
 xref: record_id "737"
 xref: delta_mono_mass "229.162932"
 xref: delta_avge_mass "229.2634"
@@ -12848,7 +13060,7 @@ xref: delta_composition "H(20) C(8) 13C(4) N 15N O(2)"
 xref: username_of_poster "JUergen.schaefer"
 xref: group_of_poster ""
 xref: date_time_posted "2007-03-01 13:44:23"
-xref: date_time_modified "2007-03-03 18:24:35"
+xref: date_time_modified "2011-11-25 11:11:19"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -12860,6 +13072,26 @@ xref: spec_2_hidden "0"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -12868,7 +13100,7 @@ id: UNIMOD:738
 name: TMT2plex
 def: "Duplex Tandem Mass Tag®." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=738]
 comment: Duplex-TMT® reagents 2TMT-126, 2TMT-127 Masses of the TMT® fragment ions to be quantified: 126.1283 127.1316.
-synonym: "Tandem Mass Tag® and TMT® are registered Trademarks of Proteome Sciences plc. Tandem Mass Tag Duplex labelling kit Proteome Sciences" []
+synonym: "Tandem Mass Tag Duplex labelling kit Proteome Sciences Tandem Mass Tag® and TMT® are registered Trademarks of Proteome Sciences plc." []
 xref: record_id "738"
 xref: delta_mono_mass "225.155833"
 xref: delta_avge_mass "225.2921"
@@ -12876,7 +13108,7 @@ xref: delta_composition "H(20) C(11) 13C N(2) O(2)"
 xref: username_of_poster "JUergen.schaefer"
 xref: group_of_poster ""
 xref: date_time_posted "2007-03-01 13:53:36"
-xref: date_time_modified "2007-03-03 18:23:19"
+xref: date_time_modified "2011-11-25 11:12:57"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -12888,6 +13120,26 @@ xref: spec_2_hidden "0"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Isotopic label"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -12904,18 +13156,38 @@ xref: delta_composition "H(20) C(12) N(2) O(2)"
 xref: username_of_poster "JUergen.schaefer"
 xref: group_of_poster ""
 xref: date_time_posted "2007-03-02 09:29:50"
-xref: date_time_modified "2010-02-17 19:57:34"
+xref: date_time_modified "2011-11-25 11:15:14"
 xref: approved "0"
 xref: spec_1_group "1"
-xref: spec_1_hidden "0"
+xref: spec_1_hidden "1"
 xref: spec_1_site "K"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Chemical derivative"
 xref: spec_2_group "2"
-xref: spec_2_hidden "0"
+xref: spec_2_hidden "1"
 xref: spec_2_site "N-term"
 xref: spec_2_position "Any N-term"
 xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N-term"
+xref: spec_3_position "Protein N-term"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -13505,7 +13777,7 @@ xref: delta_composition "Hex HexNAc"
 xref: username_of_poster "julienjardin"
 xref: group_of_poster ""
 xref: date_time_posted "2007-10-12 13:16:23"
-xref: date_time_modified "2007-10-20 19:28:06"
+xref: date_time_modified "2011-11-21 14:03:42"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -13517,6 +13789,11 @@ xref: spec_2_hidden "1"
 xref: spec_2_site "T"
 xref: spec_2_position "Anywhere"
 xref: spec_2_classification "O-linked glycosylation"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "N"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "N-linked glycosylation"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -14142,7 +14419,7 @@ xref: delta_composition "H(36) C(23) N(8) O(11)"
 xref: username_of_poster "oosula"
 xref: group_of_poster ""
 xref: date_time_posted "2008-09-09 17:02:45"
-xref: date_time_modified "2008-09-19 19:07:12"
+xref: date_time_modified "2011-11-25 13:05:17"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -14299,7 +14576,7 @@ xref: delta_composition "H(12) C(7) N(2) O"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2008-12-04 13:50:02"
-xref: date_time_modified "2008-12-05 09:28:44"
+xref: date_time_modified "2011-11-25 10:30:51"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -14317,14 +14594,32 @@ xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Isotopic label"
 xref: spec_3_misc_notes "Low abundance"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Very low abundance"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_5_misc_notes "Very low abundance"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
+xref: spec_6_misc_notes "Very low abundance"
 is_a: UNIMOD:0 ! unimod root node
 
 
 [Term]
 id: UNIMOD:889
 name: mTRAQ:13C(3)15N(1)
-def: "MTRAQ heavy." [URL:http\://www3.appliedbiosystems.com/cms/groups/psm_support/documents/generaldocuments/cms_054141.pdf, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=889]
-synonym: "Applied Biosystems mTRAQ(TM) reagent mTRAQ heavy is identical to iTRAQ4plex 117" []
+def: "MTRAQ medium." [URL:http\://www3.appliedbiosystems.com/cms/groups/psm_support/documents/generaldocuments/cms_054141.pdf, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=889]
+synonym: "mTRAQ medium is identical to iTRAQ4plex 117 Applied Biosystems mTRAQ(TM) reagent" []
 xref: record_id "889"
 xref: delta_mono_mass "144.102063"
 xref: delta_avge_mass "144.1544"
@@ -14332,7 +14627,7 @@ xref: delta_composition "H(12) C(4) 13C(3) N 15N O"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2008-12-05 09:26:02"
-xref: date_time_modified "2008-12-05 09:26:02"
+xref: date_time_modified "2011-11-25 10:34:05"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "0"
@@ -14350,6 +14645,24 @@ xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Isotopic label"
 xref: spec_3_misc_notes "Low abundance"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Very low abundance"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_5_misc_notes "Very low abundance"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
+xref: spec_6_misc_notes "Very low abundance"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -14484,6 +14797,7 @@ is_a: UNIMOD:0 ! unimod root node
 id: UNIMOD:897
 name: Label:15N(4)
 def: "SILAC 15N(4)." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=897]
+synonym: "Metabolic labeling with ammonium sulfate (15N)" []
 xref: record_id "897"
 xref: delta_mono_mass "3.988140"
 xref: delta_avge_mass "3.9736"
@@ -14491,7 +14805,7 @@ xref: delta_composition "N(-4) 15N(4)"
 xref: username_of_poster "unimod"
 xref: group_of_poster ""
 xref: date_time_posted "2009-02-06 15:29:55"
-xref: date_time_modified "2009-02-06 15:29:55"
+xref: date_time_modified "2011-11-21 14:26:52"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -16094,7 +16408,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:994
 name: Label:15N(1)
-def: "SILAS 15N(1)." [PMID:19664813, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=994]
+def: "15N(1)." [PMID:19664813, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=994]
 synonym: "Metabolic labeling with ammonium sulfate (15N)" []
 xref: record_id "994"
 xref: delta_mono_mass "0.997035"
@@ -16103,7 +16417,7 @@ xref: delta_composition "N(-1) 15N"
 xref: username_of_poster "ppicotti"
 xref: group_of_poster ""
 xref: date_time_posted "2010-06-22 14:52:08"
-xref: date_time_modified "2010-06-28 10:44:16"
+xref: date_time_modified "2011-11-21 14:26:07"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -16181,7 +16495,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:995
 name: Label:15N(2)
-def: "SILAS 15N(2)." [PMID:19664813, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=995]
+def: "15N(2)." [PMID:19664813, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=995]
 synonym: "Metabolic labeling with ammonium sulfate (15N)" []
 xref: record_id "995"
 xref: delta_mono_mass "1.994070"
@@ -16190,7 +16504,7 @@ xref: delta_composition "N(-2) 15N(2)"
 xref: username_of_poster "ppicotti"
 xref: group_of_poster ""
 xref: date_time_posted "2010-06-22 15:29:02"
-xref: date_time_modified "2010-06-28 10:41:43"
+xref: date_time_modified "2011-11-21 14:26:18"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -16218,7 +16532,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:996
 name: Label:15N(3)
-def: "SILAS 15N(3)." [PMID:19664813, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=996]
+def: "15N(3)." [PMID:19664813, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=996]
 synonym: "Metabolic labeling with ammonium sulfate (15N)" []
 xref: record_id "996"
 xref: delta_mono_mass "2.991105"
@@ -16227,7 +16541,7 @@ xref: delta_composition "N(-3) 15N(3)"
 xref: username_of_poster "ppicotti"
 xref: group_of_poster ""
 xref: date_time_posted "2010-06-22 15:30:28"
-xref: date_time_modified "2010-06-28 10:36:50"
+xref: date_time_modified "2011-11-21 14:26:28"
 xref: approved "0"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -22015,6 +22329,1154 @@ xref: spec_1_hidden "1"
 xref: spec_1_site "K"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1266
+name: Label:13C(4)
+def: "13C4 Methionine label." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1266]
+synonym: "SILAC" []
+xref: record_id "1266"
+xref: delta_mono_mass "4.013419"
+xref: delta_avge_mass "3.9706"
+xref: delta_composition "C(-4) 13C(4)"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2011-07-27 09:55:40"
+xref: date_time_modified "2011-12-07 10:49:13"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "M"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1267
+name: Label:13C(4)+Oxidation
+def: "Oxidised 13C4 labelled Methionine." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1267]
+synonym: "SILAC" []
+xref: record_id "1267"
+xref: delta_mono_mass "20.008334"
+xref: delta_avge_mass "19.9700"
+xref: delta_composition "C(-4) 13C(4) O"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2011-07-27 10:10:30"
+xref: date_time_modified "2011-08-05 14:17:17"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "M"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1270
+name: HCysThiolactone
+def: "N-Homocysteine thiolactone." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1270]
+xref: record_id "1270"
+xref: delta_mono_mass "117.024835"
+xref: delta_avge_mass "117.1695"
+xref: delta_composition "H(7) C(4) N O S"
+xref: username_of_poster "alejandro"
+xref: group_of_poster ""
+xref: date_time_posted "2011-09-15 19:31:10"
+xref: date_time_modified "2011-09-23 16:33:45"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_1_misc_notes "N-Homocysteine thiolactone is an acylating agent and can react with the E amino group of lysine residues"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1271
+name: HCysteinyl
+def: "S-homocysteinylation." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1271]
+xref: record_id "1271"
+xref: delta_mono_mass "133.019749"
+xref: delta_avge_mass "133.1689"
+xref: delta_composition "H(7) C(4) N O(2) S"
+xref: username_of_poster "alejandro"
+xref: group_of_poster ""
+xref: date_time_posted "2011-09-15 19:36:44"
+xref: date_time_modified "2011-09-23 16:33:31"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+xref: spec_1_misc_notes "Homocysteine can take part in disulfide exchange reactions with S-S bonds in proteins, thus forming S-homocysteinylated proteins"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1276
+name: UgiJoullie
+def: "Side reaction of HisTag." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1276]
+comment: Side product of the three component Ugi-Joullie reaction. Pirrolidine is reacted with a isocianide modificated peptide (CNGGHHHHHH) to get a Pro-Gly-GGHHHHHH. The main product is the C-terminal modified protein. Unlikely Asp and Glu can react.
+xref: record_id "1276"
+xref: delta_mono_mass "1106.489350"
+xref: delta_avge_mass "1107.1274"
+xref: delta_composition "H(60) C(47) N(23) O(10)"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2011-09-26 12:42:53"
+xref: date_time_modified "2011-09-30 12:38:05"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "D"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "E"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1277
+name: Dipyridyl
+def: "Cys modified with dipy ligand." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1277]
+comment: Cysteine residue reacts with a chlorinated dipyridyl ligand to get a monoalkylated Cys-L1. The only product is this single cys mutant modified on that position.
+xref: record_id "1277"
+xref: delta_mono_mass "225.090212"
+xref: delta_avge_mass "225.2459"
+xref: delta_composition "H(11) C(13) N(3) O"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2011-09-27 18:33:34"
+xref: date_time_modified "2012-01-20 14:46:34"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1278
+name: Furan
+def: "Chemical modification of the iodinated sites of thyroglobulin by Suzuki reaction." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1278]
+xref: record_id "1278"
+xref: delta_mono_mass "66.010565"
+xref: delta_avge_mass "66.0581"
+xref: delta_composition "H(2) C(4) O"
+xref: username_of_poster "chem0303"
+xref: group_of_poster ""
+xref: date_time_posted "2011-09-28 13:31:35"
+xref: date_time_modified "2011-09-30 12:39:48"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "Y"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1279
+name: Difuran
+def: "Chemical modification of the diiodinated sites of thyroglobulin by Suzuki reaction." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1279]
+xref: record_id "1279"
+xref: delta_mono_mass "132.021129"
+xref: delta_avge_mass "132.1162"
+xref: delta_composition "H(4) C(8) O(2)"
+xref: username_of_poster "chem0303"
+xref: group_of_poster ""
+xref: date_time_posted "2011-09-28 13:34:45"
+xref: date_time_modified "2011-09-30 12:40:21"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "Y"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1281
+name: BMP-piperidinol
+def: "1-methyl-3-benzoyl-4-hydroxy-4-phenylpiperidine." [PMID:http://www.ncbi.nlm.nih.gov/pubmed/11869872, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1281]
+synonym: "(4-hydroxy-1-methyl-4-phenylpiperidin-3-yl)(phenyl)methanone 3-benzoyl-1-methyl-4-phenyl-4-piperidinol" []
+xref: record_id "1281"
+xref: delta_mono_mass "263.131014"
+xref: delta_avge_mass "263.3337"
+xref: delta_composition "H(17) C(18) N O"
+xref: username_of_poster "Areej"
+xref: group_of_poster ""
+xref: date_time_posted "2011-10-12 12:22:26"
+xref: date_time_modified "2012-01-13 15:44:30"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "M"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "C"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1282
+name: UgiJoullieProGly
+def: "Side reaction of PG with Side chain of aspartic or glutamic acid." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1282]
+comment: Side product of the three component Ugi-Joullie reaction. Pirrolidine is reacted with a isocianide modificated glycine to get Protein-Pro-Gly. The main product is the C-terminal modified protein. Unlikely Asp and Glu can react.
+xref: record_id "1282"
+xref: delta_mono_mass "154.074228"
+xref: delta_avge_mass "154.1665"
+xref: delta_composition "H(10) C(7) N(2) O(2)"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2011-10-14 18:11:28"
+xref: date_time_modified "2011-10-21 16:41:11"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "D"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "E"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1283
+name: UgiJoullieProGlyProGly
+def: "Side reaction of PGPG with Side chain of aspartic or glutamic acid." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1283]
+comment: Side product of the three component Ugi-Joullie reaction. Pirrolidine is reacted with a isocianide modificated glycine to get Protein-Pro-Gly-Pro-Gly. The main product is the C-terminal modified protein. Unlikely Asp and Glu can react.
+xref: record_id "1283"
+xref: delta_mono_mass "308.148455"
+xref: delta_avge_mass "308.3330"
+xref: delta_composition "H(20) C(14) N(4) O(4)"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2011-10-14 18:14:19"
+xref: date_time_modified "2011-10-21 16:40:54"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "D"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "E"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1286
+name: IMEHex(2)NeuAc
+def: "Glycosylation with IME linked Hex(2) NeuAc." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1286]
+comment: Modification by Hex(2) NeuAc using IME coupling to get glycosylated proteins.
+synonym: "(2-Imino-2-methoxyethyl 1-thioglycoside)" []
+xref: record_id "1286"
+xref: delta_mono_mass "688.199683"
+xref: delta_avge_mass "688.6527"
+xref: delta_composition "H(3) C(2) N S Hex(2) NeuAc"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-11 12:06:36"
+xref: date_time_modified "2011-11-21 09:58:45"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1287
+name: Arg-loss
+def: "Loss of arginine due to transpeptidation." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1287]
+xref: record_id "1287"
+xref: delta_mono_mass "-156.101111"
+xref: delta_avge_mass "-156.1857"
+xref: delta_composition "H(-12) C(-6) N(-4) O(-1)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 10:12:18"
+xref: date_time_modified "2011-11-24 16:39:25"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "R"
+xref: spec_1_position "Any C-term"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1288
+name: Arg
+def: "Addition of arginine due to transpeptidation." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1288]
+xref: record_id "1288"
+xref: delta_mono_mass "156.101111"
+xref: delta_avge_mass "156.1857"
+xref: delta_composition "H(12) C(6) N(4) O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 10:15:00"
+xref: date_time_modified "2011-11-21 10:17:19"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1289
+name: Butyryl
+def: "Butyryl." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1289]
+xref: record_id "1289"
+xref: delta_mono_mass "70.041865"
+xref: delta_avge_mass "70.0898"
+xref: delta_composition "H(6) C(4) O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 12:06:20"
+xref: date_time_modified "2011-11-21 12:06:20"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1290
+name: Dicarbamidomethyl
+def: "Double Carbamidomethylation." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1290]
+comment: Mentioned by Marshall Bern.
+xref: record_id "1290"
+xref: delta_mono_mass "114.042927"
+xref: delta_avge_mass "114.1026"
+xref: delta_composition "H(6) C(4) N(2) O(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 13:21:06"
+xref: date_time_modified "2011-11-21 13:21:36"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "D"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1291
+name: Dimethyl:2H(6)
+def: "Dimethyl-Medium." [PMID:15782174, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1291]
+xref: record_id "1291"
+xref: delta_mono_mass "34.068961"
+xref: delta_avge_mass "34.0901"
+xref: delta_composition "H(-2) 2H(6) C(2)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 13:27:00"
+xref: date_time_modified "2011-11-22 14:34:18"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1292
+name: GGQ
+def: "SUMOylation leaving GlyGlyGln." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1292]
+xref: record_id "1292"
+xref: delta_mono_mass "242.101505"
+xref: delta_avge_mass "242.2319"
+xref: delta_composition "H(14) C(9) N(4) O(4)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 13:37:45"
+xref: date_time_modified "2011-11-21 13:53:21"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Other"
+xref: spec_1_misc_notes "This peptide is generated from a trypsin/chymotrypsin dual digest."
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1293
+name: QTGG
+def: "SUMOylation leaving GlnThrGlyGly." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1293]
+xref: record_id "1293"
+xref: delta_mono_mass "343.149184"
+xref: delta_avge_mass "343.3357"
+xref: delta_composition "H(21) C(13) N(5) O(6)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 13:41:32"
+xref: date_time_modified "2011-11-25 13:05:55"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Other"
+xref: spec_1_misc_notes "This peptide is generated from a trypsin/chymotrypsin dual digest."
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1296
+name: Label:13C(3)
+def: "13C3 label for SILAC." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1296]
+xref: record_id "1296"
+xref: delta_mono_mass "3.010064"
+xref: delta_avge_mass "2.9780"
+xref: delta_composition "C(-3) 13C(3)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 14:36:18"
+xref: date_time_modified "2011-11-21 14:37:03"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "A"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1297
+name: Label:13C(3)15N(1)
+def: "13C3 15N1 label for SILAC." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1297]
+xref: record_id "1297"
+xref: delta_mono_mass "4.007099"
+xref: delta_avge_mass "3.9714"
+xref: delta_composition "C(-3) 13C(3) N(-1) 15N"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 14:37:53"
+xref: date_time_modified "2011-11-21 14:37:53"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "A"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1298
+name: Label:13C(4)15N(1)
+def: "13C4 15N1 label for SILAC." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1298]
+xref: record_id "1298"
+xref: delta_mono_mass "5.010454"
+xref: delta_avge_mass "4.9640"
+xref: delta_composition "C(-4) 13C(4) N(-1) 15N"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 14:40:56"
+xref: date_time_modified "2011-11-21 14:40:56"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "D"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1299
+name: Label:2H(10)
+def: "2H(10) label." [URL:http\://www.pil.sdu.dk/silac_intro.htm, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1299]
+xref: record_id "1299"
+xref: delta_mono_mass "10.062767"
+xref: delta_avge_mass "10.0616"
+xref: delta_composition "H(-10) 2H(10)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 14:51:01"
+xref: date_time_modified "2011-11-21 14:51:01"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "L"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1300
+name: Label:2H(4)13C(1)
+def: "Label:2H(4)13C(1)." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1300]
+comment: For SILAC experiments.
+xref: record_id "1300"
+xref: delta_mono_mass "5.028462"
+xref: delta_avge_mass "5.0173"
+xref: delta_composition "H(-4) 2H(4) C(-1) 13C"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 14:52:54"
+xref: date_time_modified "2011-11-21 14:52:54"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "R"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1301
+name: Lys
+def: "Addition of lysine due to transpeptidation." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1301]
+xref: record_id "1301"
+xref: delta_mono_mass "128.094963"
+xref: delta_avge_mass "128.1723"
+xref: delta_composition "H(12) C(6) N(2) O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-21 14:56:07"
+xref: date_time_modified "2011-11-21 14:56:07"
+xref: approved "1"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Other"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1302
+name: mTRAQ:13C(6)15N(2)
+def: "MTRAQ heavy." [URL:http\://www3.appliedbiosystems.com/cms/groups/psm_support/documents/generaldocuments/cms_054141.pdf, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1302]
+synonym: "Applied Biosystems mTRAQ(TM) reagent" []
+xref: record_id "1302"
+xref: delta_mono_mass "148.109162"
+xref: delta_avge_mass "148.1257"
+xref: delta_composition "H(12) C 13C(6) 15N(2) O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-25 10:35:32"
+xref: date_time_modified "2011-11-25 10:35:32"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "0"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "0"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "0"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Isotopic label"
+xref: spec_3_misc_notes "Low abundance"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "H"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Isotopic label"
+xref: spec_4_misc_notes "Very low abundance"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "S"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Isotopic label"
+xref: spec_5_misc_notes "Very low abundance"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "T"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Isotopic label"
+xref: spec_6_misc_notes "Very low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1303
+name: NeuAc
+def: "N-acetyl neuraminic acid." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1303]
+xref: record_id "1303"
+xref: delta_mono_mass "291.095417"
+xref: delta_avge_mass "291.2546"
+xref: delta_composition "NeuAc"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-25 10:40:54"
+xref: date_time_modified "2011-11-25 10:40:54"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "N-linked glycosylation"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "S"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "O-linked glycosylation"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "O-linked glycosylation"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1304
+name: NeuGc
+def: "N-glycoyl neuraminic acid." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1304]
+xref: record_id "1304"
+xref: delta_mono_mass "307.090331"
+xref: delta_avge_mass "307.2540"
+xref: delta_composition "NeuGc"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-25 10:41:35"
+xref: date_time_modified "2011-11-25 10:41:35"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "N-linked glycosylation"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "S"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "O-linked glycosylation"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "T"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "O-linked glycosylation"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1305
+name: Propyl
+def: "Propyl." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1305]
+xref: record_id "1305"
+xref: delta_mono_mass "42.046950"
+xref: delta_avge_mass "42.0797"
+xref: delta_composition "H(6) C(3)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-25 11:06:09"
+xref: date_time_modified "2011-11-25 11:06:09"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "K"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1306
+name: Propyl:2H(6)
+def: "Propyl:2H(6)." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1306]
+xref: record_id "1306"
+xref: delta_mono_mass "48.084611"
+xref: delta_avge_mass "48.1167"
+xref: delta_composition "2H(6) C(3)"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2011-11-25 11:06:56"
+xref: date_time_modified "2011-11-25 11:06:56"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "N-term"
+xref: spec_1_position "Any N-term"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "K"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1310
+name: Propiophenone
+def: "Propiophenone." [PMID:http://www.ncbi.nlm.nih.gov/pubmed/11869872, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1310]
+xref: record_id "1310"
+xref: delta_mono_mass "132.057515"
+xref: delta_avge_mass "132.1592"
+xref: delta_composition "H(8) C(9) O"
+xref: username_of_poster "Areej"
+xref: group_of_poster ""
+xref: date_time_posted "2011-12-07 23:43:34"
+xref: date_time_modified "2011-12-09 13:50:44"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "H"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "K"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "R"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "S"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Chemical derivative"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "T"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Chemical derivative"
+xref: spec_6_group "6"
+xref: spec_6_hidden "1"
+xref: spec_6_site "W"
+xref: spec_6_position "Anywhere"
+xref: spec_6_classification "Chemical derivative"
+xref: spec_7_group "7"
+xref: spec_7_hidden "1"
+xref: spec_7_site "C"
+xref: spec_7_position "Anywhere"
+xref: spec_7_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1311
+name: AhaEthynylUridine
+def: "1,3 dipolar cycloaddition of ethynyluridine to azidohomoalanine." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1311]
+comment: Derivative obtained after 1,3 dipolar cycloaddition of ethynyluridine to azidohomoalanine.
+xref: record_id "1311"
+xref: delta_mono_mass "263.083212"
+xref: delta_avge_mass "263.1434"
+xref: delta_composition "H(9) C(10) N(5) O(6) S(-1)"
+xref: username_of_poster "macarena"
+xref: group_of_poster ""
+xref: date_time_posted "2011-12-13 12:09:39"
+xref: date_time_modified "2011-12-16 11:01:56"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "M"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1312
+name: Delta:H(6)C(3)O(1)
+def: "Reduced acrolein addition +58." [PMID:21778411, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1312]
+xref: record_id "1312"
+xref: delta_mono_mass "58.041865"
+xref: delta_avge_mass "58.0791"
+xref: delta_composition "H(6) C(3) O"
+xref: username_of_poster "yiyingzhu"
+xref: group_of_poster ""
+xref: date_time_posted "2011-12-15 19:38:31"
+xref: date_time_modified "2011-12-16 15:11:34"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "N-term"
+xref: spec_4_position "Protein N-term"
+xref: spec_4_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1313
+name: Delta:H(8)C(6)O(1)
+def: "Reduced acrolein addition +96." [PMID:9632657, PMID:21778411, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1313]
+xref: record_id "1313"
+xref: delta_mono_mass "96.057515"
+xref: delta_avge_mass "96.1271"
+xref: delta_composition "H(8) C(6) O"
+xref: username_of_poster "yiyingzhu"
+xref: group_of_poster ""
+xref: date_time_posted "2011-12-15 19:48:15"
+xref: date_time_modified "2011-12-16 15:18:16"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "L"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Protein N-term"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1314
+name: biotinAcrolein298
+def: "Biotin hydrazide labeled acrolein addition +298." [PMID:21704744, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1314]
+xref: record_id "1314"
+xref: delta_mono_mass "298.146347"
+xref: delta_avge_mass "298.4044"
+xref: delta_composition "H(22) C(13) N(4) O(2) S"
+xref: username_of_poster "yiyingzhu"
+xref: group_of_poster ""
+xref: date_time_posted "2011-12-15 19:54:52"
+xref: date_time_modified "2011-12-16 15:19:54"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Chemical derivative"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "N-term"
+xref: spec_4_position "Protein N-term"
+xref: spec_4_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1315
+name: MM-diphenylpentanone
+def: "3-methyl-5-(methylamino)-1,3-diphenylpentan-1-one." [PMID:http://www.ncbi.nlm.nih.gov/pubmed/11869872, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1315]
+xref: record_id "1315"
+xref: delta_mono_mass "265.146664"
+xref: delta_avge_mass "265.3496"
+xref: delta_composition "H(19) C(18) N O"
+xref: username_of_poster "Areej"
+xref: group_of_poster ""
+xref: date_time_posted "2011-12-21 21:29:00"
+xref: date_time_modified "2011-12-21 21:29:00"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1317
+name: EHD-diphenylpentanone
+def: "2-ethyl-3-hydroxy-1,3-diphenylpentan-1-one." [PMID:http://www.ncbi.nlm.nih.gov/pubmed/11869872, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1317]
+synonym: "3-benzoyl-1-methyl-4-phenyl-4-piperidinol demethyl damino" []
+xref: record_id "1317"
+xref: delta_mono_mass "266.130680"
+xref: delta_avge_mass "266.3343"
+xref: delta_composition "H(18) C(18) O(2)"
+xref: username_of_poster "Areej"
+xref: group_of_poster ""
+xref: date_time_posted "2012-01-08 15:22:49"
+xref: date_time_modified "2012-01-13 15:41:26"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "M"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1318
+name: Bipyridine
+def: "Cys modified with bipy ligand." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1318]
+comment: Cysteine residue reacts with a brominated bipyridine ligand to get a monoalkylated Cys-L2. The only product is this single Cys mutant modified on that position.
+xref: record_id "1318"
+xref: delta_mono_mass "182.084398"
+xref: delta_avge_mass "182.2212"
+xref: delta_composition "H(10) C(12) N(2)"
+xref: username_of_poster "macarena"
+xref: group_of_poster ""
+xref: date_time_posted "2012-01-20 14:50:54"
+xref: date_time_modified "2012-01-20 16:36:27"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1319
+name: VinylPMS
+def: "Serine modified with p-vinylphenylmethylsulfonyl group." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1319]
+comment: Serine residue reacts with a p-vinylphenylmethylsulfonyl fluoride ligand to get a monoalkylated Ser-vinylPMS.
+xref: record_id "1319"
+xref: delta_mono_mass "164.047344"
+xref: delta_avge_mass "164.1580"
+xref: delta_composition "H(8) C(9) O(3)"
+xref: username_of_poster "macarena"
+xref: group_of_poster ""
+xref: date_time_posted "2012-01-20 15:01:26"
+xref: date_time_modified "2012-01-20 16:36:48"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "S"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1320
+name: Biotin:Thermo-21901+2H2O
+def: "Maleimide-Biotin + 2Water." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1320]
+synonym: "Maleimide-PEG2-Biotin + 2Water" []
+xref: record_id "1320"
+xref: delta_mono_mass "561.246849"
+xref: delta_avge_mass "561.6489"
+xref: delta_composition "H(39) C(23) N(5) O(9) S"
+xref: username_of_poster "BThomas"
+xref: group_of_poster ""
+xref: date_time_posted "2012-01-23 14:20:11"
+xref: date_time_modified "2012-01-27 12:51:55"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1321
+name: DiLeu4plex115
+def: "Accurate mass for DiLeu 115 isobaric tag." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1321]
+comment: Different channels have the same nominal mass but slightly different exact masses.
+xref: record_id "1321"
+xref: delta_mono_mass "145.120000"
+xref: delta_avge_mass "145.1966"
+xref: delta_composition "H(15) C(7) 13C 15N 18O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2012-02-15 12:05:08"
+xref: date_time_modified "2012-02-15 12:05:08"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Isotopic label"
+xref: spec_3_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1322
+name: DiLeu4plex
+def: "Accurate mass for DiLeu 116 isobaric tag." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1322]
+comment: Different channels have the same nominal mass but slightly different exact masses.
+synonym: "Representative, nominal mass for all four tags" []
+xref: record_id "1322"
+xref: delta_mono_mass "145.132163"
+xref: delta_avge_mass "145.2229"
+xref: delta_composition "H(13) 2H(2) C(8) N 18O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2012-02-15 12:05:48"
+xref: date_time_modified "2012-02-15 12:08:24"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "0"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "0"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "0"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Isotopic label"
+xref: spec_3_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1323
+name: DiLeu4plex117
+def: "Accurate mass for DiLeu 117 isobaric tag." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1323]
+comment: Different channels have the same nominal mass but slightly different exact masses.
+xref: record_id "1323"
+xref: delta_mono_mass "145.128307"
+xref: delta_avge_mass "145.2092"
+xref: delta_composition "H(13) 2H(2) C(7) 13C 15N O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2012-02-15 12:06:10"
+xref: date_time_modified "2012-02-15 12:06:10"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Isotopic label"
+xref: spec_3_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1324
+name: DiLeu4plex118
+def: "Accurate mass for DiLeu 118 isobaric tag." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1324]
+comment: Different channels have the same nominal mass but slightly different exact masses.
+xref: record_id "1324"
+xref: delta_mono_mass "145.140471"
+xref: delta_avge_mass "145.2354"
+xref: delta_composition "H(11) 2H(4) C(8) N O"
+xref: username_of_poster "unimod"
+xref: group_of_poster ""
+xref: date_time_posted "2012-02-15 12:06:30"
+xref: date_time_modified "2012-02-15 12:06:30"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "K"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Isotopic label"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "N-term"
+xref: spec_2_position "Any N-term"
+xref: spec_2_classification "Isotopic label"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "Y"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Isotopic label"
+xref: spec_3_misc_notes "Low abundance"
 is_a: UNIMOD:0 ! unimod root node
 
 

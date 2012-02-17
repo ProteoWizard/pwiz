@@ -1954,7 +1954,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
         writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
         writer.startElement("EnzymeName");
         writer.pushStyle(XMLWriter::StyleFlag_Inline);
-        write(writer, CVParam(MS_NoEnzyme));
+        write(writer, CVParam(MS_unspecific_cleavage));
         writer.popStyle();
         writer.endElement();
         writer.popStyle();
@@ -2031,7 +2031,7 @@ struct HandlerEnzyme : public HandlerIdentifiable
             inSiteRegexp = false;
         else if (name == "Enzyme")
         {
-            if (ez->enzymeName.hasCVParam(MS_NoEnzyme))
+            if (ez->enzymeName.hasCVParam(MS_unspecific_cleavage))
             {
                 ez->enzymeName.clear();
                 CVID cleavageAgent = proteome::Digestion::getCleavageAgentByRegex(ez->siteRegexp);

@@ -1167,7 +1167,7 @@ PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si)
         BOOST_FOREACH(char residue, residues)
         {
             vector<unimod::Modification> possibleMods = unimod::modifications(mod.massDelta,
-                                                                              0.5,
+                                                                              0.0001,
                                                                               boost::logic::indeterminate,
                                                                               boost::logic::indeterminate,
                                                                               unimod::site(residue),

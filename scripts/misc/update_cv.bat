@@ -12,6 +12,7 @@ REM ##
 REM # Get the location of update_cv.bat and drop trailing slash
 set PWIZ_ROOT=%~dp0..\..
 REM set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
+set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
 
 REM # download latest OBO files
 pushd %~dp0
@@ -21,7 +22,7 @@ popd
 
 @echo off
 
-set PWIZ_BJAM=%PWIZ_ROOT%\libraries\boost-build\jam_src\bin.ntx86\bjam.exe
+set PWIZ_BJAM=%BOOST_BUILD_PATH%\engine\bin.ntx86\bjam.exe
 
 REM # msvc.jam assumes it will find "ShowVer.exe" in %PATH%
 set PATH=%PATH%;%PWIZ_ROOT%\libraries
@@ -29,7 +30,7 @@ set PATH=%PATH%;%PWIZ_ROOT%\libraries
 REM # Build local copy of bjam
 IF EXIST %PWIZ_BJAM% GOTO SKIP_BJAM
 echo Building bjam...
-pushd %PWIZ_ROOT%\libraries\boost-build\jam_src
+pushd %BOOST_BUILD_PATH%\engine
 call build.bat
 @echo off
 setlocal

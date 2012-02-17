@@ -62,10 +62,9 @@ void testCleavageAgents()
         }
     }
 
-    unit_assert(cleavageAgents.size() == 14);
+    unit_assert(cleavageAgents.size() >= 14);
     unit_assert(*cleavageAgents.begin() == MS_Trypsin);
-    unit_assert(*cleavageAgents.rbegin() == MS_V8_E);
-    unit_assert(!cleavageAgents.count(MS_NoEnzyme));
+    unit_assert(!cleavageAgents.count(MS_NoEnzyme_OBSOLETE));
 
     unit_assert(Digestion::getCleavageAgentByName("TRYPSIN") == MS_Trypsin);
     unit_assert(Digestion::getCleavageAgentByName("trypsin") == MS_Trypsin);

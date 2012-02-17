@@ -36,17 +36,15 @@
 // [psi-ms.obo]
 #define _PSI_MS_OBO_
 //   format-version: 1.2
-//   date: 13:07:2011 14:32
-//   saved-by: david ovelleiro
-//   auto-generated-by: OBO-Edit 2.1-beta 13
+//   data-version: 3.18.0
+//   date: 10:02:2012 17:09
+//   saved-by: Gerhard Mayer
+//   auto-generated-by: OBO-Edit 2.1
+//   import: http://unit-ontology.googlecode.com/svn/trunk/unit.obo
 //   default-namespace: MS
 //   remark: namespace: MS
-//   data-version: 3.7.3
-//   remark: version: 3.7.3
-//   remark: release date: 2011-07-13
-//   remark: increment 'x' when a first level term is renamed, added, deleted, or rearranged in the structure.
-//   remark: increment 'y' when any other term is added or obsoleted.
-//   remark: increment 'z' when a term name, definition, or relationship is edited.
+//   remark: version: 3.18.0
+//   remark: release date: 2012-02-10
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -54,9 +52,8 @@
 //   remark: creator: Eric Deutsch <edeutsch <-at-> systemsbiology.org>
 //   remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
 //   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
-//   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
+//   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 //
 // [unimod.obo]
 #define _UNIMOD_OBO_
@@ -68,9 +65,9 @@
 // [unit.obo]
 #define _UNIT_OBO_
 //   format-version: 1.2
-//   date: 18:03:2011 15:34
+//   date: 12:10:2011 11:21
 //   saved-by: George Gkoutos
-//   auto-generated-by: OBO-Edit 2.1-beta6
+//   auto-generated-by: OBO-Edit 2.1-beta13
 //   subsetdef: unit_group_slim "unit group slim"
 //   subsetdef: unit_slim "unit slim"
 //   default-namespace: unit.ontology
@@ -181,7 +178,7 @@ enum PWIZ_API_DECL CVID
     /// sampling frequency: The rate of signal sampling (measurement) with respect to time.
     MS_sampling_frequency = 1000029,
 
-    /// vendor: Name of instrument vendor
+    /// vendor: Name of instrument vendor.
     MS_vendor_OBSOLETE = 1000030,
 
     /// instrument model: Instrument model name not including the vendor's name.
@@ -199,7 +196,7 @@ enum PWIZ_API_DECL CVID
     /// peak picking: Spectral peak processing conducted on the acquired data to convert profile data to centroided data.
     MS_peak_picking = 1000035,
 
-    /// scan mode: OBSOLETE
+    /// scan mode: OBSOLETE.
     MS_scan_mode_OBSOLETE = 1000036,
 
     /// polarity: Terms to describe the polarity setting of the instrument.
@@ -352,10 +349,10 @@ enum PWIZ_API_DECL CVID
     /// MALDI (matrix-assisted laser desorption ionization): The formation of gas-phase ions from molecules that are present in a solid or solvent matrix that is irradiated with a pulsed laser. See also laser desorption/ionization.
     MS_MALDI = MS_matrix_assisted_laser_desorption_ionization,
 
-    /// negative ion mode: OBSOLETE
+    /// negative ion mode: OBSOLETE.
     MS_negative_ion_mode_OBSOLETE = 1000076,
 
-    /// positive ion mode: OBSOLETE
+    /// positive ion mode: OBSOLETE.
     MS_positive_ion_mode_OBSOLETE = 1000077,
 
     /// axial ejection linear ion trap: A linear ion trap mass spectrometer where ions are ejected along the axis of the analyzer.
@@ -607,8 +604,8 @@ enum PWIZ_API_DECL CVID
     /// percent collision energy: Collision energy required to fragment an ion represented as a percent value.
     MS_percent_collision_energy = 1000138,
 
-    /// 4000 Q TRAP: Applied Biosystems/MDS SCIEX Q 4000 TRAP MS.
-    MS_4000_Q_TRAP = 1000139,
+    /// 4000 QTRAP: Applied Biosystems/MDS SCIEX Q 4000 TRAP MS.
+    MS_4000_QTRAP = 1000139,
 
     /// 4700 Proteomics Analyzer: Applied Biosystems/MDS SCIEX 4700 Proteomics Analyzer MS.
     MS_4700_Proteomics_Analyzer = 1000140,
@@ -1283,7 +1280,7 @@ enum PWIZ_API_DECL CVID
     MS_nier_johnson_geometry = 1000296,
 
     /// paul ion trap: A device that permits the trapping of ions by means of an alternating current voltage. The ejection of ions with a m/z less than a prescribed value and retention of those with higher mass depends on the application of radio frequency voltages between a ring electrode and two end-cap electrodes to confine the ions in a circular path. The choice of these voltages determines the m/z below which ions are ejected.
-    MS_paul_ion_trap = 1000297,
+    MS_paul_ion_trap_OBSOLETE = 1000297,
 
     /// prolate traochoidal mass spectrometer: A mass spectrometer in which the ions of different m/z are separated by means of crossed electric and magnetic fields in such a way that the selected ions follow a prolate trochoidal path.
     MS_prolate_traochoidal_mass_spectrometer = 1000298,
@@ -1423,7 +1420,7 @@ enum PWIZ_API_DECL CVID
     /// precursor ion: An ion that reacts to form particular product ions. The reaction can be unimolecular dissociation, ion/molecule reaction, isomerization, or change in charge state. The term parent ion is not recommended.
     MS_precursor_ion = 1000340,
 
-    /// precursor ion spectrum: Spectrum generated by scanning precursor m/z while monitoring a fixed product m/z
+    /// precursor ion spectrum: Spectrum generated by scanning precursor m/z while monitoring a fixed product m/z.
     MS_precursor_ion_spectrum = 1000341,
 
     /// product ion: An ion formed as the product of a reaction involving a particular precursor ion. The reaction can be unimolecular dissociation to form fragment ions, an ion/molecule reaction, or simply involve a change in the number of charges. The term fragment ion is deprecated. The term daughter ion is deprecated.
@@ -1738,11 +1735,11 @@ enum PWIZ_API_DECL CVID
     /// mass analyzer type: Mass analyzer separates the ions according to their mass-to-charge ratio.
     MS_mass_analyzer_type = 1000443,
 
-    /// m/z Separation Method: TODO: Add definition.
+    /// m/z Separation Method: m/z Separation Method.
     MS_m_z_Separation_Method = 1000444,
 
-    /// sequential m/z separation method ?: TODO: Add definition.
-    MS_sequential_m_z_separation_method__ = 1000445,
+    /// sequential m/z separation method: Sequential m/z separation method.
+    MS_sequential_m_z_separation_method = 1000445,
 
     /// fast ion bombardment: The ionization of any species by the interaction of a focused beam of ions having a translational energy of several thousand eV with a solid sample.
     MS_fast_ion_bombardment = 1000446,
@@ -2398,52 +2395,52 @@ enum PWIZ_API_DECL CVID
     /// possible charge state: A possible charge state of the ion in a situation where the charge of an ion is known to be one of several possible values rather than a completely unknown value or determined to be a specific charge with reasonable certainty.
     MS_possible_charge_state = 1000633,
 
-    /// DSQ: ThermoFinnigan DSQ GC-MS
+    /// DSQ: ThermoFinnigan DSQ GC-MS.
     MS_DSQ = 1000634,
 
-    /// ITQ 700: Thermo Scientific ITQ 700 GC-MS
+    /// ITQ 700: Thermo Scientific ITQ 700 GC-MS.
     MS_ITQ_700 = 1000635,
 
-    /// ITQ 900: Thermo Scientific ITQ 900 GC-MS
+    /// ITQ 900: Thermo Scientific ITQ 900 GC-MS.
     MS_ITQ_900 = 1000636,
 
-    /// ITQ 1100: Thermo Scientific ITQ 1100 GC-MS
+    /// ITQ 1100: Thermo Scientific ITQ 1100 GC-MS.
     MS_ITQ_1100 = 1000637,
 
-    /// LTQ XL ETD: Thermo Scientific LTQ XL MS with ETD
+    /// LTQ XL ETD: Thermo Scientific LTQ XL MS with ETD.
     MS_LTQ_XL_ETD = 1000638,
 
-    /// LTQ Orbitrap XL ETD: Thermo Scientific LTQ Orbitrap XL MS with ETD
+    /// LTQ Orbitrap XL ETD: Thermo Scientific LTQ Orbitrap XL MS with ETD.
     MS_LTQ_Orbitrap_XL_ETD = 1000639,
 
-    /// DFS: Thermo Scientific DFS HR GC-MS
+    /// DFS: Thermo Scientific DFS HR GC-MS.
     MS_DFS = 1000640,
 
-    /// DSQ II: Thermo Scientific DSQ II GC-MS
+    /// DSQ II: Thermo Scientific DSQ II GC-MS.
     MS_DSQ_II = 1000641,
 
-    /// MALDI LTQ XL: Thermo Scientific MALDI LTQ XL MS
+    /// MALDI LTQ XL: Thermo Scientific MALDI LTQ XL MS.
     MS_MALDI_LTQ_XL = 1000642,
 
-    /// MALDI LTQ Orbitrap: Thermo Scientific MALDI LTQ Orbitrap MS
+    /// MALDI LTQ Orbitrap: Thermo Scientific MALDI LTQ Orbitrap MS.
     MS_MALDI_LTQ_Orbitrap = 1000643,
 
     /// TSQ Quantum Access: Thermo Scientific TSQ Quantum Access MS.
     MS_TSQ_Quantum_Access = 1000644,
 
-    /// Element XR: Thermo Scientific Element XR HR-ICP-MS
+    /// Element XR: Thermo Scientific Element XR HR-ICP-MS.
     MS_Element_XR = 1000645,
 
-    /// Element 2: Thermo Scientific Element 2 HR-ICP-MS
+    /// Element 2: Thermo Scientific Element 2 HR-ICP-MS.
     MS_Element_2 = 1000646,
 
-    /// Element GD: Thermo Scientific Element GD Glow Discharge MS
+    /// Element GD: Thermo Scientific Element GD Glow Discharge MS.
     MS_Element_GD = 1000647,
 
-    /// GC IsoLink: Thermo Scientific GC IsoLink Isotope Ratio MS
+    /// GC IsoLink: Thermo Scientific GC IsoLink Isotope Ratio MS.
     MS_GC_IsoLink = 1000648,
 
-    /// Exactive: Thermo Scientific Exactive MS
+    /// Exactive: Thermo Scientific Exactive MS.
     MS_Exactive = 1000649,
 
     /// Proteome Discoverer: Thermo Scientific software for data analysis of peptides and proteins.
@@ -2452,8 +2449,8 @@ enum PWIZ_API_DECL CVID
     /// 3200 QTRAP: AB SCIEX or Applied Biosystems|MDS SCIEX QTRAP 3200.
     MS_3200_QTRAP = 1000651,
 
-    /// 4800 Plus MALDI TOF-TOF Analyzer: AB SCIEX or Applied Biosystems|MDS SCIEX 4800 Plus MALDI TOF-TOF Analyzer.
-    MS_4800_Plus_MALDI_TOF_TOF_Analyzer = 1000652,
+    /// 4800 Plus MALDI TOF/TOF: AB SCIEX or Applied Biosystems|MDS SCIEX 4800 Plus MALDI TOF-TOF Analyzer.
+    MS_4800_Plus_MALDI_TOF_TOF = 1000652,
 
     /// API 3200: AB SCIEX or Applied Biosystems|MDS SCIEX API 3200 MS.
     MS_API_3200 = 1000653,
@@ -2461,13 +2458,13 @@ enum PWIZ_API_DECL CVID
     /// API 5000: AB SCIEX or Applied Biosystems|MDS SCIEX API 5000 MS.
     MS_API_5000 = 1000654,
 
-    /// QSTAR Elite: AB SCIEX or Applied Biosystems|MDS SCIEX QSTAR Elite
+    /// QSTAR Elite: AB SCIEX or Applied Biosystems|MDS SCIEX QSTAR Elite.
     MS_QSTAR_Elite = 1000655,
 
-    /// QSTAR Pulsar: Applied Biosystems|MDS SCIEX QSTAR Pulsar
+    /// QSTAR Pulsar: Applied Biosystems|MDS SCIEX QSTAR Pulsar.
     MS_QSTAR_Pulsar = 1000656,
 
-    /// QSTAR XL: Applied Biosystems|MDS SCIEX QSTAR XL
+    /// QSTAR XL: Applied Biosystems|MDS SCIEX QSTAR XL.
     MS_QSTAR_XL = 1000657,
 
     /// 4800 Proteomics Analyzer: Applied Biosystems|MDS SCIEX 4800 Proteomics Analyzer.
@@ -2509,8 +2506,8 @@ enum PWIZ_API_DECL CVID
     /// Pro BLAST: Applied Biosystems|MDS SCIEX software for MS-BLAST identification.
     MS_Pro_BLAST = 1000671,
 
-    /// Cliquid?: AB SCIEX or Applied Biosystems software.
-    MS_Cliquid_ = 1000672,
+    /// Cliquid: AB SCIEX Cliquid software for data analysis and quantitation.
+    MS_Cliquid = 1000672,
 
     /// MIDAS Workflow Designer: Applied Biosystems|MDS SCIEX software for MRM assay development.
     MS_MIDAS_Workflow_Designer = 1000673,
@@ -2584,16 +2581,16 @@ enum PWIZ_API_DECL CVID
     /// autoflex III smartbeam: Bruker Daltonics' autoflex III smartbeam: MALDI TOF.
     MS_autoflex_III_smartbeam = 1000696,
 
-    /// Bruker Daltonics HCT Series: Bruker Daltonics HCT Series
+    /// Bruker Daltonics HCT Series: Bruker Daltonics HCT Series.
     MS_Bruker_Daltonics_HCT_Series = 1000697,
 
     /// HCTultra: Bruker Daltonics' HCTultra: ESI TOF, Nanospray, APCI, APPI.
     MS_HCTultra = 1000698,
 
-    /// HCTultra PTM: Bruker Daltonics' HCTultra PTM: ESI TOF, Nanospray, APCI, APPI, PTR
+    /// HCTultra PTM: Bruker Daltonics' HCTultra PTM: ESI TOF, Nanospray, APCI, APPI, PTR.
     MS_HCTultra_PTM = 1000699,
 
-    /// HCTultra ETD II: Bruker Daltonics' HCTultra ETD II: ESI Q-TOF, Nanospray, APCI, APPI, ETD
+    /// HCTultra ETD II: Bruker Daltonics' HCTultra ETD II: ESI Q-TOF, Nanospray, APCI, APPI, ETD.
     MS_HCTultra_ETD_II = 1000700,
 
     /// microflex LT: Bruker Daltonics' microflex LT: MALDI TOF.
@@ -2608,7 +2605,7 @@ enum PWIZ_API_DECL CVID
     /// micrOTOF-Q II: Bruker Daltonics' micrOTOF-Q II: ESI Q-TOF, Nanospray, APCI, APPI.
     MS_micrOTOF_Q_II = 1000704,
 
-    /// ultraflex III TOF/TOF: Bruker Daltonics' ultraflex III TOF/TOF: MALDI TOF
+    /// ultraflex III TOF/TOF: Bruker Daltonics' ultraflex III TOF/TOF: MALDI TOF.
     MS_ultraflex_III_TOF_TOF = 1000705,
 
     /// apexControl: Bruker software for data acquisition.
@@ -2632,7 +2629,7 @@ enum PWIZ_API_DECL CVID
     /// Compass: Bruker Compass software.
     MS_Compass = 1000712,
 
-    /// Compass for HCT/esquire: Bruker Compass for HCT/esquire software
+    /// Compass for HCT/esquire: Bruker Compass for HCT/esquire software.
     MS_Compass_for_HCT_esquire = 1000713,
 
     /// Compass for micrOTOF: Bruker Compass for micrOTOF software.
@@ -2725,7 +2722,7 @@ enum PWIZ_API_DECL CVID
     /// TSQ Quantum Ultra AM: Thermo Scientific TSQ Quantum Ultra AM.
     MS_TSQ_Quantum_Ultra_AM = 1000743,
 
-    /// selected ion m/z: Mass-to-charge ratio of the ion selected for fragmentation
+    /// selected ion m/z: Mass-to-charge ratio of the ion selected for fragmentation.
     MS_selected_ion_m_z = 1000744,
 
     /// retention time alignment: The correction of the spectrum scan times, as used e.g. in label-free proteomics.
@@ -2815,19 +2812,19 @@ enum PWIZ_API_DECL CVID
     /// Bruker BAF nativeID format: scan=xsd:nonNegativeInteger.
     MS_Bruker_BAF_nativeID_format = 1000772,
 
-    /// Bruker FID nativeID format: file=xsd:IDREF
+    /// Bruker FID nativeID format: file=xsd:IDREF.
     MS_Bruker_FID_nativeID_format = 1000773,
 
-    /// multiple peak list nativeID format: index=xsd:nonNegativeInteger
+    /// multiple peak list nativeID format: index=xsd:nonNegativeInteger.
     MS_multiple_peak_list_nativeID_format = 1000774,
 
-    /// single peak list nativeID format: file=xsd:IDREF
+    /// single peak list nativeID format: file=xsd:IDREF.
     MS_single_peak_list_nativeID_format = 1000775,
 
-    /// scan number only nativeID format: scan=xsd:nonNegativeInteger
+    /// scan number only nativeID format: scan=xsd:nonNegativeInteger.
     MS_scan_number_only_nativeID_format = 1000776,
 
-    /// spectrum identifier nativeID format: spectrum=xsd:nonNegativeInteger
+    /// spectrum identifier nativeID format: spectrum=xsd:nonNegativeInteger.
     MS_spectrum_identifier_nativeID_format = 1000777,
 
     /// charge state calculation: A process that infers the charge state of an MSn spectrum's precursor(s) by the application of some algorithm.
@@ -2878,10 +2875,10 @@ enum PWIZ_API_DECL CVID
     /// inclusive high intensity threshold: Threshold at or above which some action is taken.
     MS_inclusive_high_intensity_threshold = 1000788,
 
-    /// enhanced multiply charged spectrum: MS1 spectrum that is enriched in multiply-charged ions compared to singly-charged ions
+    /// enhanced multiply charged spectrum: MS1 spectrum that is enriched in multiply-charged ions compared to singly-charged ions.
     MS_enhanced_multiply_charged_spectrum = 1000789,
 
-    /// time-delayed fragmentation spectrum: MSn spectrum in which the product ions are collected after a time delay, which allows the observation of lower energy fragmentation processes after precursor ion activation
+    /// time-delayed fragmentation spectrum: MSn spectrum in which the product ions are collected after a time delay, which allows the observation of lower energy fragmentation processes after precursor ion activation.
     MS_time_delayed_fragmentation_spectrum = 1000790,
 
     /// enhanced resolution scan: Scan with enhanced resolution.
@@ -3028,17 +3025,17 @@ enum PWIZ_API_DECL CVID
     /// matrix solution concentration: Concentration of the chemical solution used as matrix.
     MS_matrix_solution_concentration = 1000835,
 
-    /// dried dropplet: Def.
-    MS_dried_dropplet = 1000836,
+    /// dried droplet MALDI matrix preparation: Dried droplet in MALDI matrix preparation.
+    MS_dried_droplet_MALDI_matrix_preparation = 1000836,
 
-    /// printed: Def.
-    MS_printed = 1000837,
+    /// printed MALDI matrix preparation: Printed MALDI matrix preparation.
+    MS_printed_MALDI_matrix_preparation = 1000837,
 
-    /// sprayed: Def.
-    MS_sprayed = 1000838,
+    /// sprayed MALDI matrix preparation: Sprayed MALDI matrix preparation.
+    MS_sprayed_MALDI_matrix_preparation = 1000838,
 
-    /// precoated plate: Def.
-    MS_precoated_plate = 1000839,
+    /// precoated MALDI sample plate: Precoated MALDI sample plate.
+    MS_precoated_MALDI_sample_plate = 1000839,
 
     /// laser: Device that emits light (electromagnetic radiation) through a process called stimulated emission. The term is an acronym for Light Amplification by Stimulated Emission of Radiation.
     MS_laser = 1000840,
@@ -3137,7 +3134,7 @@ enum PWIZ_API_DECL CVID
     MS_collision_gas_pressure = 1000869,
 
     /// 4000 QTRAP: AB SCIEX or Applied Biosystems|MDS SCIEX QTRAP 4000.
-    MS_4000_QTRAP = 1000870,
+    MS_4000_QTRAP_OBSOLETE = 1000870,
 
     /// SRM software: Software used to predict, select, or optimize transitions or analyze the results of selected reaction monitoring runs.
     MS_SRM_software = 1000871,
@@ -3157,8 +3154,8 @@ enum PWIZ_API_DECL CVID
     /// cone voltage: Potential difference between the sampling cone/orifice in volts.
     MS_cone_voltage = 1000876,
 
-    /// tube lens: Potential difference setting of the tube lens in volts.
-    MS_tube_lens = 1000877,
+    /// tube lens voltage: Potential difference setting of the tube lens in volts.
+    MS_tube_lens_voltage = 1000877,
 
     /// external reference identifier: An identifier/accession number to an external reference database.
     MS_external_reference_identifier = 1000878,
@@ -3325,11 +3322,11 @@ enum PWIZ_API_DECL CVID
     /// Shimadzu Biotech database entity: Shimadzu Biotech format.
     MS_Shimadzu_Biotech_database_entity = 1000930,
 
-    /// AB SCIEX QTRAP 5500: Applied Biosystems|MDS SCIEX QTRAP 5500.
-    MS_AB_SCIEX_QTRAP_5500 = 1000931,
+    /// QTRAP 5500: Applied Biosystems|MDS SCIEX QTRAP 5500.
+    MS_QTRAP_5500 = 1000931,
 
-    /// AB SCIEX TripleTOF 5600: Applied Biosystems|MDS SCIEX TripleTOF 5500, a quadrupole - quadrupole - time-of-flight mass spectrometer.
-    MS_AB_SCIEX_TripleTOF_5600 = 1000932,
+    /// TripleTOF 5600: AB SCIEX TripleTOF 5600, a quadrupole - quadrupole - time-of-flight mass spectrometer.
+    MS_TripleTOF_5600 = 1000932,
 
     /// protein modifications: Encoding of modifications of the protein sequence from the specified accession, written in PEFF notation.
     MS_protein_modifications = 1000933,
@@ -3557,10 +3554,10 @@ enum PWIZ_API_DECL CVID
     MS_taxonomy_nomenclature_OBSOLETE = 1001090,
 
     /// NoEnzyme: 
-    MS_NoEnzyme = 1001091,
+    MS_NoEnzyme_OBSOLETE = 1001091,
 
-    /// peptide quality estimation measure: 
-    MS_peptide_quality_estimation_measure = 1001092,
+    /// peptide identification confidence metric: Peptide identification confidence metric for a peptide (p-value, Expect value, confidence, local FDR).
+    MS_peptide_identification_confidence_metric = 1001092,
 
     /// sequence coverage: The percent coverage for the protein based upon the matched peptide sequences (can be calculated).
     MS_sequence_coverage = 1001093,
@@ -3586,7 +3583,7 @@ enum PWIZ_API_DECL CVID
     /// confident peptide: This counts the number of peptide sequences without regard to whether they are distinct. Multiple charges states and multiple modification states DO count as multiple peptides. The definition of 'confident' must be qualified elsewhere.
     MS_confident_peptide = 1001100,
 
-    /// protein group/subset relationship: Branch containing protein group/subset relationships. TODO: add child terms.
+    /// protein group/subset relationship: Branch containing protein group/subset relationships.
     MS_protein_group_subset_relationship = 1001101,
 
     /// Sequest:Chromatogram: 
@@ -3625,7 +3622,7 @@ enum PWIZ_API_DECL CVID
     /// c-terminal flanking residue: The residue following the last amino acid in the peptide sequence as it occurs in the protein. Use 'C-term' to denote if the peptide ends at the C terminus of the protein.
     MS_c_terminal_flanking_residue = 1001113,
 
-    /// retention time(s): Retention time of the spectrum from the source file
+    /// retention time(s): Retention time of the spectrum from the source file.
     MS_retention_time_s_ = 1001114,
 
     /// scan number(s): OBSOLETE: use spectrumID attribute of SpectrumIdentificationResult. Take from mzData.
@@ -3673,29 +3670,29 @@ enum PWIZ_API_DECL CVID
     /// quantification information: Quantification information.
     MS_quantification_information = 1001129,
 
-    /// peptide raw areas: Peptide raw areas.
-    MS_peptide_raw_areas = 1001130,
+    /// peptide raw area: Peptide raw area.
+    MS_peptide_raw_area = 1001130,
 
-    /// errors on peptide areas: Errors on peptide areas.
-    MS_errors_on_peptide_areas = 1001131,
+    /// error on peptide area: Error on peptide area.
+    MS_error_on_peptide_area = 1001131,
 
-    /// peptide ratios: Peptide ratios.
-    MS_peptide_ratios = 1001132,
+    /// peptide ratio: Peptide ratio.
+    MS_peptide_ratio = 1001132,
 
-    /// errors on peptide ratios: Errors on peptide ratios.
-    MS_errors_on_peptide_ratios = 1001133,
+    /// error on peptide ratio: Error on peptide ratio.
+    MS_error_on_peptide_ratio = 1001133,
 
-    /// protein ratios: Protein ratios.
-    MS_protein_ratios = 1001134,
+    /// protein ratio: Protein ratio.
+    MS_protein_ratio = 1001134,
 
-    /// errors on protein ratios: Errors on protein ratios.
-    MS_errors_on_protein_ratios = 1001135,
+    /// error on protein ratio: Error on protein ratio.
+    MS_error_on_protein_ratio = 1001135,
 
     /// p-value (protein diff from 1 randomly): P-value (protein diff from 1 randomly).
     MS_p_value__protein_diff_from_1_randomly_ = 1001136,
 
-    /// absolute quantities: Absolute quantities.
-    MS_absolute_quantities = 1001137,
+    /// absolute quantity: Absolute quantity in terms of real concentration or molecule copy number in sample.
+    MS_absolute_quantity = 1001137,
 
     /// error on absolute quantity: Error on absolute quantity.
     MS_error_on_absolute_quantity = 1001138,
@@ -3704,7 +3701,7 @@ enum PWIZ_API_DECL CVID
     MS_quantitation_software_name = 1001139,
 
     /// quantitation software version: Quantitation software version.
-    MS_quantitation_software_version = 1001140,
+    MS_quantitation_software_version_OBSOLETE = 1001140,
 
     /// intensity of precursor ion: The intensity of the precursor ion.
     MS_intensity_of_precursor_ion = 1001141,
@@ -3718,8 +3715,8 @@ enum PWIZ_API_DECL CVID
     /// Sequest:SelectDefault: 
     MS_Sequest_SelectDefault = 1001144,
 
-    /// TODOSequest:SelectAdvancedCV: Branch containing the CV terms for Sequest Select Advanced Input Parameters.
-    MS_TODOSequest_SelectAdvancedCV = 1001145,
+    /// Sequest:SelectAdvancedCV: Branch containing the CV terms for Sequest Select Advanced Input Parameters.
+    MS_Sequest_SelectAdvancedCV = 1001145,
 
     /// param: a ion-NH3: 
     MS_param__a_ion_NH3 = 1001146,
@@ -3833,7 +3830,7 @@ enum PWIZ_API_DECL CVID
     MS_modification_specificity_C_term = 1001190,
 
     /// p-value: Quality estimation by p-value.
-    MS_p_value = 1001191,
+    MS_p_value_OBSOLETE = 1001191,
 
     /// Expect value: Result of quality estimation: Expect value.
     MS_Expect_value = 1001192,
@@ -3853,8 +3850,8 @@ enum PWIZ_API_DECL CVID
     /// DB composition target+decoy: Decoy database composition: database contains original (target) and decoy entries.
     MS_DB_composition_target_decoy = 1001197,
 
-    /// protein quality estimation measure: Quality estimation score for a protein (p-value, Expect value, confidence, local FDR).
-    MS_protein_quality_estimation_measure = 1001198,
+    /// protein identification confidence metric: Protein identification confidence metric (p-value, Expect value, confidence, local FDR).
+    MS_protein_identification_confidence_metric = 1001198,
 
     /// Mascot DAT file: Source file for this mzIdentML was a Mascot DAT file.
     MS_Mascot_DAT_file = 1001199,
@@ -4135,8 +4132,11 @@ enum PWIZ_API_DECL CVID
     /// search engine specific input parameter: This branch contains search engine specific input parameters (e.g. Mascot Sig Threshold).
     MS_search_engine_specific_input_parameter = 1001302,
 
-    /// Arg-C: 
+    /// Arg-C: Endoproteinase Arg-C.
     MS_Arg_C = 1001303,
+
+    /// Clostripain (Arg-C): Endoproteinase Arg-C.
+    MS_Clostripain = MS_Arg_C,
 
     /// Asp-N: 
     MS_Asp_N = 1001304,
@@ -4147,7 +4147,7 @@ enum PWIZ_API_DECL CVID
     /// Chymotrypsin: 
     MS_Chymotrypsin = 1001306,
 
-    /// CNBr: 
+    /// CNBr: Cyanogen bromide.
     MS_CNBr = 1001307,
 
     /// Formic_acid: 
@@ -4204,8 +4204,8 @@ enum PWIZ_API_DECL CVID
     /// Mascot:ShowDecoyMatches: 
     MS_Mascot_ShowDecoyMatches = 1001325,
 
-    /// TODO_add_others: 
-    MS_TODO_add_others_OBSOLETE = 1001326,
+    /// add_others: 
+    MS_add_others_OBSOLETE = 1001326,
 
     /// OMSSA:evalue: OMSSA E-value.
     MS_OMSSA_evalue = 1001328,
@@ -4270,7 +4270,7 @@ enum PWIZ_API_DECL CVID
     /// FASTA format: The sequence database was stored in the FASTA format.
     MS_FASTA_format = 1001348,
 
-    /// ASN.1: The sequence database was storen in the ASN.1 format.
+    /// ASN.1: The sequence database was stored in the ASN.1 format.
     MS_ASN_1 = 1001349,
 
     /// NCBI *.p*: The sequence database was stored in the NCBI formatdb (*.p*) format.
@@ -4288,10 +4288,10 @@ enum PWIZ_API_DECL CVID
     /// mass table options: Root node for options for the mass table used.
     MS_mass_table_options = 1001354,
 
-    /// peptide descriptions: Descriptions of peptides. TODO: What does this mean?
+    /// peptide descriptions: Descriptions of peptides.
     MS_peptide_descriptions = 1001355,
 
-    /// spectrum descriptions: Descriptions of the input spectra. TODO: really needed?
+    /// spectrum descriptions: Descriptions of the input spectra.
     MS_spectrum_descriptions = 1001356,
 
     /// spectrum quality descriptions: Description of the quality of the input spectrum.
@@ -4597,7 +4597,7 @@ enum PWIZ_API_DECL CVID
     /// unknown modification: This term should be given if the modification was unknown.
     MS_unknown_modification = 1001460,
 
-    /// greylag: greylag identification software, wee greylag.org.
+    /// greylag: Greylag identification software, see greylag.org.
     MS_greylag = 1001461,
 
     /// PEFF format: The sequence database was stored in the PEFF (PSI enhanced FastA file) format.
@@ -4666,8 +4666,8 @@ enum PWIZ_API_DECL CVID
     /// AB SCIEX TOF/TOF database: Applied Biosystems/MDS Analytical Technologies TOF/TOF instrument database.
     MS_AB_SCIEX_TOF_TOF_database = 1001481,
 
-    /// AB SCIEX TOF/TOF 5800: AB SCIEX or Applied Biosystems|MDS Analytical Technologies AB SCIEX TOF/TOF 5800 Analyzer.
-    MS_AB_SCIEX_TOF_TOF_5800 = 1001482,
+    /// TOF/TOF 5800: AB SCIEX or Applied Biosystems|MDS Analytical Technologies AB SCIEX TOF/TOF 5800 Analyzer.
+    MS_TOF_TOF_5800 = 1001482,
 
     /// AB SCIEX TOF/TOF Series Explorer Software: AB SCIEX or Applied Biosystems software for TOF/TOF data acquisition and analysis.
     MS_AB_SCIEX_TOF_TOF_Series_Explorer_Software = 1001483,
@@ -4693,10 +4693,10 @@ enum PWIZ_API_DECL CVID
     /// Percolator: Percolator.
     MS_Percolator = 1001490,
 
-    /// percolator:Q value: percolator:Q value.
+    /// percolator:Q value: Percolator:Q value.
     MS_percolator_Q_value = 1001491,
 
-    /// percolator:score: percolator:score.
+    /// percolator:score: Percolator:score.
     MS_percolator_score = 1001492,
 
     /// percolaror:PEP: Posterior error probability.
@@ -4798,26 +4798,26 @@ enum PWIZ_API_DECL CVID
     /// precursor neutral loss: This term can describe a neutral loss m/z value that is lost from an ion.
     MS_precursor_neutral_loss = 1001525,
 
-    /// spectrum from database nativeID format: databasekey=xsd:Long
-    MS_spectrum_from_database_nativeID_format_1001526 = 1001526,
+    /// spectrum from database integer nativeID format: databasekey=xsd:long.
+    MS_spectrum_from_database_integer_nativeID_format = 1001526,
 
     /// Proteinscape spectra: Spectra from Bruker/Protagen Proteinscape database.
     MS_Proteinscape_spectra = 1001527,
 
-    /// Mascot query number: query=xsd:nonNegativeInteger
+    /// Mascot query number: query=xsd:nonNegativeInteger.
     MS_Mascot_query_number = 1001528,
 
     /// spectra data details: Child-terms contain information to map the results back to spectra.
     MS_spectra_data_details = 1001529,
 
-    /// mzML unique identifier: mzMLid=xsd:IDREF
+    /// mzML unique identifier: mzMLid=xsd:IDREF.
     MS_mzML_unique_identifier = 1001530,
 
-    /// spectrum from ProteinScape database nativeID format: databasekey=xsd:long
+    /// spectrum from ProteinScape database nativeID format: databasekey=xsd:long.
     MS_spectrum_from_ProteinScape_database_nativeID_format = 1001531,
 
-    /// spectrum from database nativeID format: databasekey=xsd:string
-    MS_spectrum_from_database_nativeID_format_1001532 = 1001532,
+    /// spectrum from database string nativeID format: databasekey=xsd:string.
+    MS_spectrum_from_database_string_nativeID_format = 1001532,
 
     /// Bruker Daltonics esquire series: 
     MS_Bruker_Daltonics_esquire_series = 1001533,
@@ -4831,10 +4831,10 @@ enum PWIZ_API_DECL CVID
     /// Bruker Daltonics micrOTOF series: 
     MS_Bruker_Daltonics_micrOTOF_series = 1001536,
 
-    /// BioTOF: Bruker Daltonics' BioTOF: ESI TOF
+    /// BioTOF: Bruker Daltonics' BioTOF: ESI TOF.
     MS_BioTOF = 1001537,
 
-    /// BioTOF III: Bruker Daltonics' BioTOF III: ESI TOF
+    /// BioTOF III: Bruker Daltonics' BioTOF III: ESI TOF.
     MS_BioTOF_III = 1001538,
 
     /// UltroTOF-Q: Bruker Daltonics' UltroTOF-Q: ESI Q-TOF (MALDI optional).
@@ -5038,7 +5038,7 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:SRF File Selector:SRF File Path: Path and name of the .srf (Sequest Result Format) file.
     MS_ProteomeDiscoverer_SRF_File_Selector_SRF_File_Path = 1001602,
 
-    /// ProteomeDiscoverer:Spectrum Selector:Ionization Source: Ionization source (electro-, nano-, thermospray, electron impact, APCI, MALDI, FAB, ...).
+    /// ProteomeDiscoverer:Spectrum Selector:Ionization Source: Ionization source (electro-, nano-, thermospray, electron impact, APCI, MALDI, FAB etc).
     MS_ProteomeDiscoverer_Spectrum_Selector_Ionization_Source = 1001603,
 
     /// ProteomeDiscoverer:Activation Type: Fragmentation method used (CID, MPD, ECD, PQD, ETD, HCD, Any).
@@ -5218,10 +5218,10 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:Mascot:Protein Relevance Factor: Specifies a factor that is used in calculating a threshold that determines whether a protein appears in the results report.
     MS_ProteomeDiscoverer_Mascot_Protein_Relevance_Factor = 1001662,
 
-    /// ProteomeDiscoverer:Target FDR Relaxed: Specifies the relaxed target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with moderate confidence.
+    /// ProteomeDiscoverer:Target FDR Relaxed: Specifies the relaxed target false discovery rate (FDR, 0.0 - 1.0) for peptide hits with moderate confidence.
     MS_ProteomeDiscoverer_Target_FDR_Relaxed = 1001663,
 
-    /// ProteomeDiscoverer:Target FDR Strict: Specifies the strict target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with high confidence.
+    /// ProteomeDiscoverer:Target FDR Strict: Specifies the strict target false discovery rate (FDR, 0.0 - 1.0) for peptide hits with high confidence.
     MS_ProteomeDiscoverer_Target_FDR_Strict = 1001664,
 
     /// ProteomeDiscoverer:Mascot:Taxonomy: Limits searches to entries from a particular species or group of species.
@@ -5332,7 +5332,7 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:Reporter Ions Quantizer:Quantitation Method: Quantitation method for isobarically labeled quantitation.
     MS_ProteomeDiscoverer_Reporter_Ions_Quantizer_Quantitation_Method = 1001700,
 
-    /// ProteomeDiscoverer:Spectrum Exporter:Export Format: Format of the exported spectra (*.dta, *.mgf or *.mzData.)
+    /// ProteomeDiscoverer:Spectrum Exporter:Export Format: Format of the exported spectra (*.dta, *.mgf or *.mzData).
     MS_ProteomeDiscoverer_Spectrum_Exporter_Export_Format = 1001701,
 
     /// ProteomeDiscoverer:Spectrum Exporter:File name: Name of the output file that contains the exported data.
@@ -5622,6 +5622,501 @@ enum PWIZ_API_DECL CVID
 
     /// TWIMS (travelling wave ion mobility mass spectrometer): An ion mobility mass spectrometry technique based on the superimposition of travelling voltage waves on a radially-confining RF voltage in a gas-filled, stacked-ring ion guide.
     MS_TWIMS = MS_travelling_wave_ion_mobility_mass_spectrometer,
+
+    /// LECO software: LECO software for data acquisition and analysis.
+    MS_LECO_software = 1001798,
+
+    /// ChromaTOF software: Software for acquisition, processing and analysis of data for LECO instruments.
+    MS_ChromaTOF_software = 1001799,
+
+    /// LECO instrument model: LECO instrument model.
+    MS_LECO_instrument_model = 1001800,
+
+    /// Pegasus HRT: LECO high resolution time-of-flight GC mass spectrometer.
+    MS_Pegasus_HRT = 1001801,
+
+    /// Citius HRT: LECO high resolution time-of-flight LC mass spectrometer.
+    MS_Citius_HRT = 1001802,
+
+    /// Pegasus: LECO GC time-of-flight mass spectrometer.
+    MS_Pegasus = 1001803,
+
+    /// TruTOF: LECO bench-top GC time-of-flight mass spectrometer.
+    MS_TruTOF = 1001804,
+
+    /// quantification datatype: The data type of the value reported in a QuantLayer for a feature, matchedfeature, peptide, protein, protein group.
+    MS_quantification_datatype = 1001805,
+
+    /// quantification object attribute: Attributes describing the details of an object relevant for reporting quantification workflows or values.
+    MS_quantification_object_attribute = 1001806,
+
+    /// StudyVariable attribute: Attribute describing a study variable.
+    MS_StudyVariable_attribute = 1001807,
+
+    /// technical replicate: The study variable is 'technical replicate'. The string value denotes the category of technical replicate, e.g. 'run generated from same sample'.
+    MS_technical_replicate = 1001808,
+
+    /// biological replicate: The study variable is 'biological replicate'. This means, the run was generated from another individuum or sample.
+    MS_biological_replicate = 1001809,
+
+    /// experimental condition 'case': The experimental condition is 'case' in contrast to 'control'.
+    MS_experimental_condition__case_ = 1001810,
+
+    /// experimental condition 'control': The experimental condition is 'control' in contrast to 'case'.
+    MS_experimental_condition__control_ = 1001811,
+
+    /// experimental condition 'disease': The experimental condition is 'disease' in contrast to 'healthy'.
+    MS_experimental_condition__disease_ = 1001812,
+
+    /// experimental condition 'healthy': The experimental condition is 'healthy' in contrast to 'disease'.
+    MS_experimental_condition__healthy_ = 1001813,
+
+    /// generic experimental condition: The experimental condition is given in the value of this term.
+    MS_generic_experimental_condition = 1001814,
+
+    /// time series, time point X: The experimental design followed a time series design. The time point of this run is given in the value of this term.
+    MS_time_series__time_point_X = 1001815,
+
+    /// dilution series, concentration X: The experimental design followed a dilution series design. The concentration of this run is given in the value of this term.
+    MS_dilution_series__concentration_X = 1001816,
+
+    /// RawFile attribute: Attribute describing a raw file.
+    MS_RawFile_attribute = 1001817,
+
+    /// one sample run: The raw file contains the run of one sample (e.g. spectral counting, LC-MS label-free).
+    MS_one_sample_run = 1001818,
+
+    /// two sample run: The raw file contains the run of two samples (e.g. SILAC, metabolic labeling).
+    MS_two_sample_run = 1001819,
+
+    /// three sample run: The raw file contains the run of three samples (e.g. 3-plex SILAC).
+    MS_three_sample_run = 1001820,
+
+    /// four sample run: The raw file contains the run of four samples (e.g. 4-plex iTraq).
+    MS_four_sample_run = 1001821,
+
+    /// eight sample run: The raw file contains the run of eight samples (e.g. 8-plex iTraq).
+    MS_eight_sample_run = 1001822,
+
+    /// RawFilesGroup attribute: Attribute describing, how raw files build a raw file group.
+    MS_RawFilesGroup_attribute = 1001823,
+
+    /// merge of runs of 1D gel bands: Attribute describing, how raw files build a raw file group.
+    MS_merge_of_runs_of_1D_gel_bands = 1001824,
+
+    /// FeatureList attribute: Attribute describing a FeatureList.
+    MS_FeatureList_attribute = 1001825,
+
+    /// mass trace reporting: rectangles: The mass trace of the features of this feature list specifies rectangles. Each mass trace has the syntax (RT_start,MZ_start,RT_end,MZ_end), i.e. opposite corners are given.
+    MS_mass_trace_reporting__rectangles = 1001826,
+
+    /// mass trace reporting: polygons: The mass trace of the features of this feature list specifies polygons. Each mass trace has the syntax (RT_1,MZ_1,RT_2,MZ_2,...,RT_i,MZ_i,...,RT_n,MZ_n), where the line (RT_n,MZ_n)->(RT_1,MZ_1) is implicite.
+    MS_mass_trace_reporting__polygons = 1001827,
+
+    /// Feature attribute: Attribute describing a Feature.
+    MS_Feature_attribute = 1001828,
+
+    /// SRM transition ID: SRM transition ID.
+    MS_SRM_transition_ID = 1001829,
+
+    /// Progenesis LC-MS: Software from Nonlinear Dynamics for LC-MS label-free workflow.
+    MS_Progenesis_LC_MS = 1001830,
+
+    /// SILACAnalyzer: Software for SILAC workflow.
+    MS_SILACAnalyzer = 1001831,
+
+    /// quantitation software comment / customizations: Quantitation software comment or any customizations to the default setup of the software.
+    MS_quantitation_software_comment___customizations = 1001832,
+
+    /// quantitation analysis summary: The overall workflow of this quantitation report.
+    MS_quantitation_analysis_summary = 1001833,
+
+    /// LC-MS label-free quantitation analysis: LC-MS label-free workflow (RT m/z map).
+    MS_LC_MS_label_free_quantitation_analysis = 1001834,
+
+    /// SILAC quantitation analysis: SILAC workflow (heavy, light, and sometimes medium peak).
+    MS_SILAC_quantitation_analysis = 1001835,
+
+    /// spectral counting quantitation analysis: Spectral counting workflow (number of identified MS/MS spectra as approximation of peptide / protein quant).
+    MS_spectral_counting_quantitation_analysis = 1001836,
+
+    /// iTraq quantitation analysis: iTraq workflow (reporter ions on MS/MS level).
+    MS_iTraq_quantitation_analysis = 1001837,
+
+    /// SRM quantitation analysis: Selected Reaction Monitoring workflow (XIC quant. of precursor / fragment mass pair).
+    MS_SRM_quantitation_analysis = 1001838,
+
+    /// metabolic labeling 14N / 15N quantitation analysis: Metabolic labeling workflow (heavy and light versions of peptides, depending on number of nitrogens).
+    MS_metabolic_labeling_14N___15N_quantitation_analysis = 1001839,
+
+    /// LC-MS feature intensity: Maximum peak intensity of the LC-MS feature.
+    MS_LC_MS_feature_intensity = 1001840,
+
+    /// LC-MS feature volume: Real (intensity times area) volume of the LC-MS feature.
+    MS_LC_MS_feature_volume = 1001841,
+
+    /// peptide PSM count: The number of MS/MS spectra identified for this peptide in spectral counting.
+    MS_peptide_PSM_count = 1001842,
+
+    /// MS1 feature maximum intensity: Maximum intensity of MS1 feature.
+    MS_MS1_feature_maximum_intensity = 1001843,
+
+    /// MS1 feature area: Area of MS1 feature.
+    MS_MS1_feature_area = 1001844,
+
+    /// peak area: Area of MS1 peak (e.g. SILAC, 15N).
+    MS_peak_area_OBSOLETE = 1001845,
+
+    /// isotopic pattern area: Area of all peaks belonging to the isotopic pattern of light or heavy peak (e.g. 15N).
+    MS_isotopic_pattern_area = 1001846,
+
+    /// reporter ion intensity: Intensity of MS/MS reporter ion (e.g. iTraq).
+    MS_reporter_ion_intensity = 1001847,
+
+    /// simple ratio of two value: Simple ratio of two values (enumerator and denominator).
+    MS_simple_ratio_of_two_value = 1001848,
+
+    /// sum of MatchedFeature values: Peptide quantification value calculated as sum of MatchedFeature quantification values.
+    MS_sum_of_MatchedFeature_values = 1001849,
+
+    /// normalized peptide value: Normalized peptide value.
+    MS_normalized_peptide_value = 1001850,
+
+    /// protein value: sum of peptide values: Protein quantification value calculated as sum of peptide values.
+    MS_protein_value__sum_of_peptide_values = 1001851,
+
+    /// normalized protein value: Normalized protein value.
+    MS_normalized_protein_value = 1001852,
+
+    /// max fold change: Global datatype: Maximum of all pair-wise fold changes of group means (e.g. Progenesis).
+    MS_max_fold_change = 1001853,
+
+    /// ANOVA p-value: Global datatype: p-value of ANOVA of group means (e.g. Progenesis).
+    MS_ANOVA_p_value = 1001854,
+
+    /// t-test p-value: P-value of t-Test of two groups.
+    MS_t_test_p_value = 1001855,
+
+    /// reporter ion raw value: Intensity (or area) of MS/MS reporter ion (e.g. iTraq).
+    MS_reporter_ion_raw_value = 1001856,
+
+    /// reporter ion normalized value: Normalized value of MS/MS reporter ion (e.g. iTraq).
+    MS_reporter_ion_normalized_value = 1001857,
+
+    /// XIC area: Area of the extracted ion chromatogram (e.g. of a transition in SRM).
+    MS_XIC_area = 1001858,
+
+    /// normalized XIC area: Normalized area of the extracted ion chromatogram (e.g. of a transition in SRM).
+    MS_normalized_XIC_area = 1001859,
+
+    /// protein value: mean of peptide ratios: Protein quantification value calculated as mean of peptide ratios.
+    MS_protein_value__mean_of_peptide_ratios = 1001860,
+
+    /// quantification data processing: Terms used to describe types of quantification data processing.
+    MS_quantification_data_processing = 1001861,
+
+    /// normalization to mean of sum of all proteins: Normalization of protein values to the mean of the sum of all protein PSM counts (e.g. spectral counting).
+    MS_normalization_to_mean_of_sum_of_all_proteins = 1001862,
+
+    /// quantile normalization, proteins: Normalization of protein values to approach the same distribution.
+    MS_quantile_normalization__proteins = 1001863,
+
+    /// quantile normalization, peptides: Normalization of peptide values to approach the same distribution.
+    MS_quantile_normalization__peptides = 1001864,
+
+    /// Progenesis automatic alignment: Automatic RT alignment of Progenesis software.
+    MS_Progenesis_automatic_alignment = 1001865,
+
+    /// Progenesis manual alignment: RT alignment of Progenesis software using automatic and manual vectors.
+    MS_Progenesis_manual_alignment = 1001866,
+
+    /// Progenesis normalization: Normalization as performed by Progenesis LC-MS.
+    MS_Progenesis_normalization = 1001867,
+
+    /// q-value for peptides: Peptide identification confidence metric q-value.
+    MS_q_value_for_peptides = 1001868,
+
+    /// q-value for proteins: Protein identification confidence metric q-value.
+    MS_q_value_for_proteins = 1001869,
+
+    /// p-value for peptides: Peptide identification confidence metric p-value.
+    MS_p_value_for_peptides = 1001870,
+
+    /// p-value for proteins: Protein identification confidence metric p-value.
+    MS_p_value_for_proteins = 1001871,
+
+    /// E-value for peptides: Peptide identification confidence metric E-value.
+    MS_E_value_for_peptides = 1001872,
+
+    /// E-value for proteins: Protein identification confidence metric E-value.
+    MS_E_value_for_proteins = 1001873,
+
+    /// FDRScore: Quality measurement score.
+    MS_FDRScore = 1001874,
+
+    /// modification motif: The regular expression describing the sequence motif for a modification.
+    MS_modification_motif = 1001875,
+
+    /// modification probability: The a priori probability of a modification.
+    MS_modification_probability = 1001876,
+
+    /// ChromaTOF HRT software: Software for acquisition, processing and analysis of data for LECO instruments.
+    MS_ChromaTOF_HRT_software = 1001877,
+
+    /// MALDI Solutions Microbial Identification: Shimadzu Biotech software for data acquisition, processing, and analysis.
+    MS_MALDI_Solutions_Microbial_Identification = 1001878,
+
+    /// offset voltage: The potential difference between two adjacent interface voltages affecting in-source collision induced dissociation.
+    MS_offset_voltage = 1001879,
+
+    /// in-source collision-induced dissociation: The dissociation of an ion as a result of collisional excitation during ion transfer from an atmospheric pressure ion source and the mass spectrometer vacuum.
+    MS_in_source_collision_induced_dissociation = 1001880,
+
+    /// mz5 file: mz5 file format, modeled after mzML.
+    MS_mz5_file = 1001881,
+
+    /// transition validation attribute: Attributes of the quality of a transition that affect its selection as appropriate.
+    MS_transition_validation_attribute = 1001882,
+
+    /// coefficient of variation: Variation of a set of signal measurements calculated as the standard deviation relative to the mean.
+    MS_coefficient_of_variation = 1001883,
+
+    /// signal-to-noise ratio: Unitless number providing the ratio of the total measured intensity of a signal relative to the estimated noise level for that signal.
+    MS_signal_to_noise_ratio = 1001884,
+
+    /// command-line parameters: Parameters string passed to a command-line interface software application, omitting the executable name.
+    MS_command_line_parameters = 1001885,
+
+    /// SQID: Software for data analysis of peptides and proteins.
+    MS_SQID = 1001886,
+
+    /// SQID:score: The SQID result 'Score'.
+    MS_SQID_score = 1001887,
+
+    /// SQID:deltaScore: The SQID result 'deltaScore'.
+    MS_SQID_deltaScore = 1001888,
+
+    /// SQID:protein score: The SQID result 'protein score'.
+    MS_SQID_protein_score = 1001889,
+
+    /// Progenesis:protein normalised abundance: The data type normalised abundance for proteins produced by Progenesis LC-MS.
+    MS_Progenesis_protein_normalised_abundance = 1001890,
+
+    /// Progenesis:peptide normalised abundance: The data type normalised abundance for peptides produced by Progenesis LC-MS.
+    MS_Progenesis_peptide_normalised_abundance = 1001891,
+
+    /// Progenesis:protein raw abundance: The data type raw abundance for proteins produced by Progenesis LC-MS.
+    MS_Progenesis_protein_raw_abundance = 1001892,
+
+    /// Progenesis:peptide raw abundance: The data type raw abundance for peptide produced by Progenesis LC-MS.
+    MS_Progenesis_peptide_raw_abundance = 1001893,
+
+    /// Progenesis:confidence score: The data type confidence score  produced by Progenesis LC-MS.
+    MS_Progenesis_confidence_score = 1001894,
+
+    /// Progenesis:peptide count: The data type peptide count produced by Progenesis LC-MS.
+    MS_Progenesis_peptide_count = 1001895,
+
+    /// Progenesis:feature intensity: The data type feature intensity produced by Progenesis LC-MS.
+    MS_Progenesis_feature_intensity = 1001896,
+
+    /// MaxQuant:peptide counts (unique): The data type peptide counts (unique) produced by MaxQuant.
+    MS_MaxQuant_peptide_counts__unique_ = 1001897,
+
+    /// MaxQuant:peptide counts (all): The data type peptide counts (all) produced by MaxQuant.
+    MS_MaxQuant_peptide_counts__all_ = 1001898,
+
+    /// MaxQuant:peptide counts (razor+unique): The data type peptide counts (razor+unique)  produced by MaxQuant.
+    MS_MaxQuant_peptide_counts__razor_unique_ = 1001899,
+
+    /// MaxQuant:sequence length: The data type sequence length produced by MaxQuant.
+    MS_MaxQuant_sequence_length = 1001900,
+
+    /// MaxQuant:PEP: The data type PEP (posterior error probability) produced by MaxQuant.
+    MS_MaxQuant_PEP = 1001901,
+
+    /// MaxQuant:LFQ intensity: The data type LFQ intensity produced by MaxQuant.
+    MS_MaxQuant_LFQ_intensity = 1001902,
+
+    /// MaxQuant:feature intensity: The data type feature intensity produced by MaxQuant.
+    MS_MaxQuant_feature_intensity = 1001903,
+
+    /// MaxQuant:MS/MS count: The data type MS/MS count produced by MaxQuant.
+    MS_MaxQuant_MS_MS_count = 1001904,
+
+    /// emPAI value: The emPAI value of protein abundance, produced from the emPAI algorithm.
+    MS_emPAI_value = 1001905,
+
+    /// APEX value: The APEX value of protein abundance, produced from the APEX software.
+    MS_APEX_value = 1001906,
+
+    /// retention time window width: The full width of a retention time window for a chromatographic peak.
+    MS_retention_time_window_width = 1001907,
+
+    /// ISQ: Thermo Scientific ISQ single quadrupole MS with the ExtractraBrite source.
+    MS_ISQ = 1001908,
+
+    /// Velos Plus: Thermo Scientific second generation Velos.
+    MS_Velos_Plus = 1001909,
+
+    /// LTQ Orbitrap Elite: Thermo Scientific second generation Velos and Orbitrap.
+    MS_LTQ_Orbitrap_Elite = 1001910,
+
+    /// Q Exactive: Thermo Scientific Q Exactive.
+    MS_Q_Exactive = 1001911,
+
+    /// PinPoint: Thermo Scientific PinPoint SRM analysis software.
+    MS_PinPoint = 1001912,
+
+    /// S-lens voltage: Potential difference setting of the Thermo Scientific S-lens stacked-ring ion guide in volts.
+    MS_S_lens_voltage = 1001913,
+
+    /// pymzML: Python module to interface mzML Data.
+    MS_pymzML = 1001914,
+
+    /// leukocyte elastase: Enzyme leukocyte elastase (EC 3.4.21.37).
+    MS_leukocyte_elastase = 1001915,
+
+    /// proline endopeptidase: Enzyme proline endopeptidase (EC 3.4.21.26).
+    MS_proline_endopeptidase = 1001916,
+
+    /// glutamyl endopeptidase: Enzyme glutamyl endopeptidase (EC 3.4.21.19).
+    MS_glutamyl_endopeptidase = 1001917,
+
+    /// staphylococcal protease (glutamyl endopeptidase): Enzyme glutamyl endopeptidase (EC 3.4.21.19).
+    MS_staphylococcal_protease = MS_glutamyl_endopeptidase,
+
+    /// Glu-C (glutamyl endopeptidase): Enzyme glutamyl endopeptidase (EC 3.4.21.19).
+    MS_Glu_C = MS_glutamyl_endopeptidase,
+
+    /// 2-iodobenzoate: Chemical iodobenzoate. Cleaves after W.
+    MS_2_iodobenzoate = 1001918,
+
+    /// ProteomeXchange accession number: Main identifier of a ProteomeXchange dataset.
+    MS_ProteomeXchange_accession_number = 1001919,
+
+    /// ProteomeXchange accession number version number: Version number of a ProteomeXchange accession number.
+    MS_ProteomeXchange_accession_number_version_number = 1001921,
+
+    /// Digital Object Identifier (DOI): DOI unique identifier.
+    MS_Digital_Object_Identifier__DOI_ = 1001922,
+
+    /// external reference keyword: Free text attribute that can enrich the information about an entity.
+    MS_external_reference_keyword = 1001923,
+
+    /// journal article keyword: Keyword present in a scientific publication.
+    MS_journal_article_keyword = 1001924,
+
+    /// submitter keyword: Keyword assigned by the data submitter.
+    MS_submitter_keyword = 1001925,
+
+    /// curator keyword: Keyword assigned by a data curator.
+    MS_curator_keyword = 1001926,
+
+    /// Tranche file hash: Hash assigned by the Tranche resource to an individual file.
+    MS_Tranche_file_hash = 1001927,
+
+    /// Tranche project hash: Hash assigned by the Tranche resource to a whole project.
+    MS_Tranche_project_hash = 1001928,
+
+    /// PRIDE experiment URI: URI that allows the access to one experiment in the PRIDE database.
+    MS_PRIDE_experiment_URI = 1001929,
+
+    /// PRIDE project URI: URI that allows the access to one project in the PRIDE database.
+    MS_PRIDE_project_URI = 1001930,
+
+    /// source interface: The source interface.
+    MS_source_interface = 1001931,
+
+    /// source interface model: The source interface model.
+    MS_source_interface_model = 1001932,
+
+    /// source sprayer: The source sprayer.
+    MS_source_sprayer = 1001933,
+
+    /// source sprayer type: The source sprayer type.
+    MS_source_sprayer_type = 1001934,
+
+    /// source sprayer manufacturer: The source sprayer manufacturer.
+    MS_source_sprayer_manufacturer = 1001935,
+
+    /// source sprayer model: The source sprayer model.
+    MS_source_sprayer_model = 1001936,
+
+    /// sample plate: Plate where the sample solution is spotted in a MALDI or similar instrument.
+    MS_sample_plate = 1001937,
+
+    /// sample plate type: The sample plate type.
+    MS_sample_plate_type = 1001938,
+
+    /// stainless steel plate: Stainless steel plate.
+    MS_stainless_steel_plate = 1001939,
+
+    /// coated glass plate: Coated glass plate.
+    MS_coated_glass_plate = 1001940,
+
+    /// electrospray supply type: Whether the sprayer is fed or is loaded with sample once.
+    MS_electrospray_supply_type = 1001941,
+
+    /// static supply electrospray: The sprayer is loaded with sample once.
+    MS_static_supply_electrospray = 1001942,
+
+    /// fed supply electrospray: The sprayer is continuously fed with sample.
+    MS_fed_supply_electrospray = 1001943,
+
+    /// Collision cell exit potential: Potential difference between Q2 and Q3 in a triple quadrupole instrument in volts.
+    MS_Collision_cell_exit_potential = 1001944,
+
+    /// CXP (Collision cell exit potential): Potential difference between Q2 and Q3 in a triple quadrupole instrument in volts.
+    MS_CXP = MS_Collision_cell_exit_potential,
+
+    /// Pegasus 4D: LECO nominal mass resolution time-of-flight GCxGC mass spectrometer.
+    MS_Pegasus_4D = 1001945,
+
+    /// PEAKS Studio: PEAKS Studio software for data analysis.
+    MS_PEAKS_Studio = 1001946,
+
+    /// PEAKS Online: PEAKS Online software for high throughput data analysis.
+    MS_PEAKS_Online = 1001947,
+
+    /// : PEAKS Node software for high throughput data analysis.
+    MS_ = 1001948,
+
+    /// BSI software: Bioinformatics Solutions Inc. Software for data processing and analysis.
+    MS_BSI_software = 1001949,
+
+    /// PEAKS:peptideScore: The PEAKS peptide '-10lgP Score'.
+    MS_PEAKS_peptideScore = 1001950,
+
+    /// PEAKS:proteinScore: The PEAKS protein '-10lgP Score'.
+    MS_PEAKS_proteinScore = 1001951,
+
+    /// ZCore:probScore: The ZCore probability score.
+    MS_ZCore_probScore = 1001952,
+
+    /// source interface manufacturer: The source interface manufacturer.
+    MS_source_interface_manufacturer = 1001953,
+
+    /// acquisition parameter: Parameters used in the mass spectrometry acquisition.
+    MS_acquisition_parameter = 1001954,
+
+    /// no cleavage: No cleavage.
+    MS_no_cleavage = 1001955,
+
+    /// unspecific cleavage: Unspecific cleavage.
+    MS_unspecific_cleavage = 1001956,
+
+    /// (?<=[ALIV])(?!P): 
+    MS______ALIV_____P_ = 1001957,
+
+    /// (?<=[HKR]P)(?!P): 
+    MS______HKR_P____P_ = 1001958,
+
+    /// (?<=[^E]E): 
+    MS_______E_E_ = 1001959,
+
+    /// (?<=W): 
+    MS_____W_ = 1001960,
 
     /// unimod root node: The root node of the unimod modifications ontology.
     UNIMOD_unimod_root_node = 100000000,
@@ -7102,11 +7597,11 @@ enum PWIZ_API_DECL CVID
     /// O-Methylphosphate: O-Methylphosphorylation.
     UNIMOD_O_Methylphosphate = 100000724,
 
-    /// O-Diethylphosphate: O-Diethylphosphorylation.
-    UNIMOD_O_Diethylphosphate = 100000725,
+    /// Diethylphosphate: O-Diethylphosphorylation.
+    UNIMOD_Diethylphosphate = 100000725,
 
-    /// O-Ethylphosphate: O-Ethylphosphorylation.
-    UNIMOD_O_Ethylphosphate = 100000726,
+    /// Ethylphosphate: O-Ethylphosphorylation.
+    UNIMOD_Ethylphosphate = 100000726,
 
     /// O-pinacolylmethylphosphonate: O-pinacolylmethylphosphonylation.
     UNIMOD_O_pinacolylmethylphosphonate = 100000727,
@@ -7318,7 +7813,7 @@ enum PWIZ_API_DECL CVID
     /// mTRAQ: MTRAQ light.
     UNIMOD_mTRAQ = 100000888,
 
-    /// mTRAQ:13C(3)15N(1): MTRAQ heavy.
+    /// mTRAQ:13C(3)15N(1): MTRAQ medium.
     UNIMOD_mTRAQ_13C_3_15N_1_ = 100000889,
 
     /// DyLight-maleimide: Thiol-reactive dye for fluorescence labelling of proteins.
@@ -7534,13 +8029,13 @@ enum PWIZ_API_DECL CVID
     /// Biotin:Sigma-B1267: Was Biotin-maleimide.
     UNIMOD_Biotin_Sigma_B1267 = 100000993,
 
-    /// Label:15N(1): SILAS 15N(1).
+    /// Label:15N(1): 15N(1).
     UNIMOD_Label_15N_1_ = 100000994,
 
-    /// Label:15N(2): SILAS 15N(2).
+    /// Label:15N(2): 15N(2).
     UNIMOD_Label_15N_2_ = 100000995,
 
-    /// Label:15N(3): SILAS 15N(3).
+    /// Label:15N(3): 15N(3).
     UNIMOD_Label_15N_3_ = 100000996,
 
     /// sulfo+amino: Aminotyrosine with sulfation.
@@ -8313,6 +8808,138 @@ enum PWIZ_API_DECL CVID
 
     /// pupylation: Addition of GGE.
     UNIMOD_pupylation = 100001264,
+
+    /// Label:13C(4): 13C4 Methionine label.
+    UNIMOD_Label_13C_4_ = 100001266,
+
+    /// Label:13C(4)+Oxidation: Oxidised 13C4 labelled Methionine.
+    UNIMOD_Label_13C_4__Oxidation = 100001267,
+
+    /// HCysThiolactone: N-Homocysteine thiolactone.
+    UNIMOD_HCysThiolactone = 100001270,
+
+    /// HCysteinyl: S-homocysteinylation.
+    UNIMOD_HCysteinyl = 100001271,
+
+    /// UgiJoullie: Side reaction of HisTag.
+    UNIMOD_UgiJoullie = 100001276,
+
+    /// Dipyridyl: Cys modified with dipy ligand.
+    UNIMOD_Dipyridyl = 100001277,
+
+    /// Furan: Chemical modification of the iodinated sites of thyroglobulin by Suzuki reaction.
+    UNIMOD_Furan = 100001278,
+
+    /// Difuran: Chemical modification of the diiodinated sites of thyroglobulin by Suzuki reaction.
+    UNIMOD_Difuran = 100001279,
+
+    /// BMP-piperidinol: 1-methyl-3-benzoyl-4-hydroxy-4-phenylpiperidine.
+    UNIMOD_BMP_piperidinol = 100001281,
+
+    /// UgiJoullieProGly: Side reaction of PG with Side chain of aspartic or glutamic acid.
+    UNIMOD_UgiJoullieProGly = 100001282,
+
+    /// UgiJoullieProGlyProGly: Side reaction of PGPG with Side chain of aspartic or glutamic acid.
+    UNIMOD_UgiJoullieProGlyProGly = 100001283,
+
+    /// IMEHex(2)NeuAc: Glycosylation with IME linked Hex(2) NeuAc.
+    UNIMOD_IMEHex_2_NeuAc = 100001286,
+
+    /// Arg-loss: Loss of arginine due to transpeptidation.
+    UNIMOD_Arg_loss = 100001287,
+
+    /// Arg: Addition of arginine due to transpeptidation.
+    UNIMOD_Arg = 100001288,
+
+    /// Butyryl: Butyryl.
+    UNIMOD_Butyryl = 100001289,
+
+    /// Dicarbamidomethyl: Double Carbamidomethylation.
+    UNIMOD_Dicarbamidomethyl = 100001290,
+
+    /// Dimethyl:2H(6): Dimethyl-Medium.
+    UNIMOD_Dimethyl_2H_6_ = 100001291,
+
+    /// GGQ: SUMOylation leaving GlyGlyGln.
+    UNIMOD_GGQ = 100001292,
+
+    /// QTGG: SUMOylation leaving GlnThrGlyGly.
+    UNIMOD_QTGG = 100001293,
+
+    /// Label:13C(3): 13C3 label for SILAC.
+    UNIMOD_Label_13C_3_ = 100001296,
+
+    /// Label:13C(3)15N(1): 13C3 15N1 label for SILAC.
+    UNIMOD_Label_13C_3_15N_1_ = 100001297,
+
+    /// Label:13C(4)15N(1): 13C4 15N1 label for SILAC.
+    UNIMOD_Label_13C_4_15N_1_ = 100001298,
+
+    /// Label:2H(10): 2H(10) label.
+    UNIMOD_Label_2H_10_ = 100001299,
+
+    /// Label:2H(4)13C(1): Label:2H(4)13C(1).
+    UNIMOD_Label_2H_4_13C_1_ = 100001300,
+
+    /// Lys: Addition of lysine due to transpeptidation.
+    UNIMOD_Lys = 100001301,
+
+    /// mTRAQ:13C(6)15N(2): MTRAQ heavy.
+    UNIMOD_mTRAQ_13C_6_15N_2_ = 100001302,
+
+    /// NeuAc: N-acetyl neuraminic acid.
+    UNIMOD_NeuAc = 100001303,
+
+    /// NeuGc: N-glycoyl neuraminic acid.
+    UNIMOD_NeuGc = 100001304,
+
+    /// Propyl: Propyl.
+    UNIMOD_Propyl = 100001305,
+
+    /// Propyl:2H(6): Propyl:2H(6).
+    UNIMOD_Propyl_2H_6_ = 100001306,
+
+    /// Propiophenone: Propiophenone.
+    UNIMOD_Propiophenone = 100001310,
+
+    /// AhaEthynylUridine: 1,3 dipolar cycloaddition of ethynyluridine to azidohomoalanine.
+    UNIMOD_AhaEthynylUridine = 100001311,
+
+    /// Delta:H(6)C(3)O(1): Reduced acrolein addition +58.
+    UNIMOD_Delta_H_6_C_3_O_1_ = 100001312,
+
+    /// Delta:H(8)C(6)O(1): Reduced acrolein addition +96.
+    UNIMOD_Delta_H_8_C_6_O_1_ = 100001313,
+
+    /// biotinAcrolein298: Biotin hydrazide labeled acrolein addition +298.
+    UNIMOD_biotinAcrolein298 = 100001314,
+
+    /// MM-diphenylpentanone: 3-methyl-5-(methylamino)-1,3-diphenylpentan-1-one.
+    UNIMOD_MM_diphenylpentanone = 100001315,
+
+    /// EHD-diphenylpentanone: 2-ethyl-3-hydroxy-1,3-diphenylpentan-1-one.
+    UNIMOD_EHD_diphenylpentanone = 100001317,
+
+    /// Bipyridine: Cys modified with bipy ligand.
+    UNIMOD_Bipyridine = 100001318,
+
+    /// VinylPMS: Serine modified with p-vinylphenylmethylsulfonyl group.
+    UNIMOD_VinylPMS = 100001319,
+
+    /// Biotin:Thermo-21901+2H2O: Maleimide-Biotin + 2Water.
+    UNIMOD_Biotin_Thermo_21901_2H2O = 100001320,
+
+    /// DiLeu4plex115: Accurate mass for DiLeu 115 isobaric tag.
+    UNIMOD_DiLeu4plex115 = 100001321,
+
+    /// DiLeu4plex: Accurate mass for DiLeu 116 isobaric tag.
+    UNIMOD_DiLeu4plex = 100001322,
+
+    /// DiLeu4plex117: Accurate mass for DiLeu 117 isobaric tag.
+    UNIMOD_DiLeu4plex117 = 100001323,
+
+    /// DiLeu4plex118: Accurate mass for DiLeu 118 isobaric tag.
+    UNIMOD_DiLeu4plex118 = 100001324,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 200000000,
@@ -9140,10 +9767,10 @@ enum PWIZ_API_DECL CVID
     UO_amount_per_container = 200000276,
 
     /// ug/disk: A unit which is equal to one microgram per disk, where a disk is some physical surface/container upon which the substance is deposited.
-    UO_ug_disk_200000277 = 200000277,
+    UO_ug_disk = 200000277,
 
-    /// ug/disk: A unit which is equal to one nanomole per disk, where a disk is some physical surface/container upon which the substance is deposited.
-    UO_ug_disk_200000278 = 200000278,
+    /// nmole/disk: A unit which is equal to one nanomole per disk, where a disk is some physical surface/container upon which the substance is deposited.
+    UO_nmole_disk = 200000278,
 
     /// milliunits per milliliter: A unit per milliliter unit which is equal to one thousandth of a unit of an agreed arbitrary amount per one milliliter.
     UO_milliunits_per_milliliter = 200000279,
@@ -9156,6 +9783,15 @@ enum PWIZ_API_DECL CVID
 
     /// count per molar second: A rate unit which is equal to one over one molar second.
     UO_count_per_molar_second = 200000282,
+
+    /// kilogram per hectare: An area density unit which is equal to the mass of an object in kilograms divided by the surface area in hectares..
+    UO_kilogram_per_hectare = 200000283,
+
+    /// count per nanomolar: A rate unit which is equal to one over one nanomolar.
+    UO_count_per_nanomolar = 200000284,
+
+    /// count per molar: A rate unit which is equal to one over one molar.
+    UO_count_per_molar = 200000285,
 
     /// microgram per liter: A mass unit density which is equal to mass of an object in micrograms divided by the volume in liters.
     UO_microgram_per_liter = 200000301
@@ -9217,7 +9853,6 @@ PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid);
 
 
 /// returns CV term info for the specified id (accession number)
-PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char *id);
 PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id);
 
 

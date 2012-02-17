@@ -87,7 +87,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     td.instrumentPtrs.push_back(lcqInstrumentPtr);
 
     InstrumentPtr qtrapInstrumentPtr(new Instrument("QTRAP"));
-    qtrapInstrumentPtr->set(MS_4000_Q_TRAP);
+    qtrapInstrumentPtr->set(MS_4000_QTRAP);
     td.instrumentPtrs.push_back(qtrapInstrumentPtr);
 
 
@@ -152,7 +152,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
 
     Validation qtrapValidation;
     qtrapValidation.set(MS_transition_optimized_on_specified_instrument);
-    qtrapValidation.set(MS_4000_Q_TRAP);
+    qtrapValidation.set(MS_4000_QTRAP);
     qtrapValidation.set(MS_peak_intensity, 4072, MS_percent_of_base_peak_times_100);
     qtrapValidation.set(MS_peak_intensity_rank, 2);
     qtrapValidation.set(MS_peak_targeting_suitability_rank, 1);
@@ -167,7 +167,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     qtrapConfiguration.set(MS_collision_energy, 26, UO_electronvolt);
     qtrapConfiguration.set(MS_cone_voltage, 1200, UO_volt);
     qtrapConfiguration.set(MS_interchannel_delay, 0.1, UO_second);
-    qtrapConfiguration.set(MS_tube_lens, 23, UO_volt);
+    qtrapConfiguration.set(MS_tube_lens_voltage, 23, UO_volt);
     qtrapConfiguration.validations.push_back(qtrapValidation);
 
 

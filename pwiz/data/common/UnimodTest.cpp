@@ -94,7 +94,7 @@ void test()
     unit_assert_operator_equal(UNIMOD_Acetyl, modifications(acetyl.deltaAverageMass(), 0, false)[0].cvid);
 
     // test a position-only filter
-    unit_assert_operator_equal(1, modifications(acetyl.deltaMonoisotopicMass(), 0.5,
+    unit_assert_operator_equal(1, modifications(acetyl.deltaMonoisotopicMass(), 0.0001,
                                                 indeterminate, indeterminate,
                                                 Site::Any, Position::AnyNTerminus).size());
     unit_assert_operator_equal(UNIMOD_Acetyl, modifications(acetyl.deltaMonoisotopicMass(), 0.5,

@@ -70,6 +70,12 @@ void testIsA()
     unit_assert(!cvIsA(UO_dalton, UO_energy_unit));
     unit_assert(cvIsA(MS_m_z, MS_m_z));
     unit_assert(cvIsA(MS_FT_ICR, MS_mass_analyzer_type));
+    unit_assert(cvIsA(MS_ion_trap, MS_mass_analyzer_type));
+    unit_assert(cvIsA(MS_linear_ion_trap, MS_mass_analyzer_type));
+    unit_assert(cvIsA(MS_linear_ion_trap, MS_ion_trap));
+    unit_assert(cvIsA(MS_radial_ejection_linear_ion_trap, MS_mass_analyzer_type));
+    unit_assert(cvIsA(MS_radial_ejection_linear_ion_trap, MS_ion_trap));
+    unit_assert(cvIsA(MS_radial_ejection_linear_ion_trap, MS_linear_ion_trap));
 }
 
 

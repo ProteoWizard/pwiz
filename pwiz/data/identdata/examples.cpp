@@ -286,14 +286,12 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(IdentData& mzid)
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = phosphorylation.monoisotopicMass();
     sm->residues.push_back('S');
-    sm->set(UNIMOD_Sulfo);
     sm->set(UNIMOD_Phospho);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = phosphorylation.monoisotopicMass();
     sm->residues.push_back('T');
-    sm->set(UNIMOD_Sulfo);
     sm->set(UNIMOD_Phospho);
     sip->modificationParams.push_back(sm);
 

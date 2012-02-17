@@ -118,10 +118,10 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel)
         case API3200:           return MS_API_3200;
         case API3200QTrap:      return MS_3200_QTRAP;
         case API4000:           return MS_API_4000;
-        case API4000QTrap:      return MS_4000_Q_TRAP;
+        case API4000QTrap:      return MS_4000_QTRAP;
         case API5000:           return MS_API_5000;
-        case API5600TripleTOF:  return MS_AB_SCIEX_TripleTOF_5600;
-        case API5500QTrap:      return MS_AB_SCIEX_QTRAP_5500;
+        case API5600TripleTOF:  return MS_TripleTOF_5600;
+        case API5500QTrap:      return MS_QTRAP_5500;
         case QStar:             return MS_QSTAR;
         case QStarPulsarI:      return MS_QSTAR_Pulsar;
         case QStarXL:           return MS_QSTAR_XL;
