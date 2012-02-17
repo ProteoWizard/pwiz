@@ -45,7 +45,14 @@ namespace IDPicker
             {
                 if (_currentLayout == value) return;
                 _currentLayout = value;
-                mainForm.LoadLayout(value);
+                foreach(var form in dockPanel.Contents.OfType<DockableForm>())
+                    if (!_currentLayout.PaneLocations.Contains(form.Name))
+                    {
+                        MessageBox.Show("No entry in layout for form \"" + form.Name + "\"");
+                        _currentLayout.PaneLocations = getPaneLocationXML();
+                        break;
+                    }
+                mainForm.LoadLayout(_currentLayout);
             }
         }
 

@@ -47,6 +47,8 @@ namespace IDPicker.Forms
         {
             InitializeComponent();
 
+            Icon = Properties.Resources.BlankIcon;
+
             HideOnClose = true;
 
             logStart = DateTime.UtcNow;

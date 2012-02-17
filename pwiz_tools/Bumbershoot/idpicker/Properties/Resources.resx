@@ -178,4 +178,16 @@
   <data name="IDPickerInputFile" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\IDPickerInputFile.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="BlankIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\BlankIcon.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PeptideViewIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PeptideViewIcon.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ProteinViewIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ProteinViewIcon.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="SpectrumViewIcon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\SpectrumViewIcon.ico;System.Drawing.Icon, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

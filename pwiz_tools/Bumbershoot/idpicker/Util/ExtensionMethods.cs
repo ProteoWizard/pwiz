@@ -85,6 +85,19 @@ namespace IDPicker
                 return conn.ConnectionString.Substring(dataSourceIndex);
             return conn.ConnectionString.Substring(dataSourceIndex, delimiterIndex - dataSourceIndex);
         }
+
+        public static DataTable ApplySort (this DataTable table, Comparison<DataRow> comparison)
+        {
+            DataTable clone = table.Clone();
+            var rows = new List<DataRow>(table.Rows.Cast<DataRow>());
+
+            rows.Sort(comparison);
+
+            foreach (DataRow row in rows)
+                clone.Rows.Add(row.ItemArray);
+
+            return clone;
+        }
     }
 
     public static class BitfieldExtensionMethods

@@ -60,6 +60,13 @@ namespace IDPicker.Properties {
             }
         }
         
+        internal static System.Drawing.Icon BlankIcon {
+            get {
+                object obj = ResourceManager.GetObject("BlankIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap Cluster {
             get {
                 object obj = ResourceManager.GetObject("Cluster", resourceCulture);
@@ -206,6 +213,13 @@ namespace IDPicker.Properties {
             }
         }
         
+        internal static System.Drawing.Icon PeptideViewIcon {
+            get {
+                object obj = ResourceManager.GetObject("PeptideViewIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap Protein {
             get {
                 object obj = ResourceManager.GetObject("Protein", resourceCulture);
@@ -220,6 +234,13 @@ namespace IDPicker.Properties {
             }
         }
         
+        internal static System.Drawing.Icon ProteinViewIcon {
+            get {
+                object obj = ResourceManager.GetObject("ProteinViewIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap PSMIcon {
             get {
                 object obj = ResourceManager.GetObject("PSMIcon", resourceCulture);
@@ -231,6 +252,13 @@ namespace IDPicker.Properties {
             get {
                 object obj = ResourceManager.GetObject("SpectrumIcon", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Icon SpectrumViewIcon {
+            get {
+                object obj = ResourceManager.GetObject("SpectrumViewIcon", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
             }
         }
         

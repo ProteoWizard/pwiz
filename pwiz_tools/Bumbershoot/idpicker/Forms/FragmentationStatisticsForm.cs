@@ -81,7 +81,7 @@ namespace IDPicker.Forms
                     }
                 }
 
-                string format = String.Format("[{{0:f{0}}}]", 0);
+                string format = "[{0}]";// String.Format("[{{0:f{0}}}]", 0);
                 StringBuilder sb = new StringBuilder((string) queryRow[4]);
                 foreach (var mod in (from m in mods orderby m.Key descending select m))
                     foreach (var massDelta in mod.Value)
@@ -123,9 +123,10 @@ namespace IDPicker.Forms
             };
 
             Text = TabText = "Fragmentation Statistics";
+            Icon = Properties.Resources.BlankIcon;
 
             zedGraphControl.MasterPane.PaneList.Clear();
-            zedGraphControl.MasterPane.SetLayout(zedGraphControl.CreateGraphics(), 2, (int) IonSeries.Count + 1);
+            zedGraphControl.MasterPane.SetLayout(zedGraphControl.CreateGraphics(), 3, (int) IonSeries.Count + 1);
             zedGraphControl.MasterPane.InnerPaneGap = 0;
             zedGraphControl.MasterPane.Border.IsVisible = true;
 
@@ -200,76 +201,153 @@ namespace IDPicker.Forms
                 scatter.Symbol.Size = 3f;
             }
 
-            var axisPane2 = new GraphPane();
-            axisPane2.Legend.IsVisible = false;
-            axisPane2.IsFontsScaled = false;
-            axisPane2.XAxis.IsVisible = false;
-            axisPane2.YAxis.Scale.Min = 0;
-            axisPane2.YAxis.Scale.Max = 100;
-            axisPane2.YAxis.Title.Text = "%Peaks";
-            axisPane2.YAxis.Title.Gap = 0.05f;
-            axisPane2.YAxis.MajorTic.IsOpposite = false;
-            axisPane2.YAxis.MinorTic.IsOpposite = false;
-            axisPane2.Chart.Border.IsVisible = false;
-            axisPane2.Border.IsVisible = false;
-            axisPane2.Margin.Left = 1;
-            axisPane2.Margin.Right = 0;
-            axisPane2.Title.Text = "";
-            zedGraphControl.MasterPane.Add(axisPane2);
-
-            csr = new ColorSymbolRotator();
-            for (int i = 0; i < (int) IonSeries.Count; ++i)
             {
-                var graphPane = new GraphPane();
-                graphPane.Title.IsVisible = false;
-                graphPane.Legend.IsVisible = false;
-                graphPane.IsFontsScaled = false;
-                graphPane.Chart.Border.IsVisible = false;
-                graphPane.Border.IsVisible = false;
-                graphPane.XAxis.Scale.Min = -1;
-                graphPane.XAxis.Scale.Max = 1;
-                graphPane.XAxis.IsVisible = false;
-                graphPane.YAxis.Scale.Min = 0;
-                graphPane.YAxis.Scale.Max = 100;
-                graphPane.YAxis.IsVisible = false;
-                zedGraphControl.MasterPane.Add(graphPane);
+                var axisPane2 = new GraphPane();
+                axisPane2.Legend.IsVisible = false;
+                axisPane2.IsFontsScaled = false;
+                axisPane2.XAxis.IsVisible = false;
+                axisPane2.YAxis.Scale.Min = 0;
+                axisPane2.YAxis.Scale.Max = 100;
+                axisPane2.YAxis.Title.Text = "%Peaks";
+                axisPane2.YAxis.Title.Gap = 0.05f;
+                axisPane2.YAxis.MajorTic.IsOpposite = false;
+                axisPane2.YAxis.MinorTic.IsOpposite = false;
+                axisPane2.Chart.Border.IsVisible = false;
+                axisPane2.Border.IsVisible = false;
+                axisPane2.Margin.Left = 1;
+                axisPane2.Margin.Right = 0;
+                axisPane2.Title.Text = "";
+                zedGraphControl.MasterPane.Add(axisPane2);
 
-                graphPane.BarSettings.Type = BarType.Overlay;
-                graphPane.BarSettings.ClusterScaleWidth = 1;
+                csr = new ColorSymbolRotator();
+                for (int i = 0; i < (int) IonSeries.Count; ++i)
+                {
+                    var graphPane = new GraphPane();
+                    graphPane.Title.IsVisible = false;
+                    graphPane.Legend.IsVisible = false;
+                    graphPane.IsFontsScaled = false;
+                    graphPane.Chart.Border.IsVisible = false;
+                    graphPane.Border.IsVisible = false;
+                    graphPane.XAxis.Scale.Min = -1;
+                    graphPane.XAxis.Scale.Max = 1;
+                    graphPane.XAxis.IsVisible = false;
+                    graphPane.YAxis.Scale.Min = 0;
+                    graphPane.YAxis.Scale.Max = 100;
+                    graphPane.YAxis.IsVisible = false;
+                    zedGraphControl.MasterPane.Add(graphPane);
 
-                var mean = graphPane.AddCurve(IonSeriesLabels[i],
-                                              new PointPairList(),
-                                              Color.Black,
-                                              SymbolType.Circle);
-                mean.Line.IsVisible = false;
-                mean.Symbol.Border.IsVisible = false;
-                mean.Symbol.Fill.Type = FillType.Solid;
-                mean.Symbol.Fill.Color = Color.Black;
+                    graphPane.BarSettings.Type = BarType.Overlay;
+                    graphPane.BarSettings.ClusterScaleWidth = 1;
 
-                var errorBar = graphPane.AddErrorBar(IonSeriesLabels[i],
+                    var mean = graphPane.AddCurve(IonSeriesLabels[i],
+                                                  new PointPairList(),
+                                                  Color.Black,
+                                                  SymbolType.Circle);
+                    mean.Line.IsVisible = false;
+                    mean.Symbol.Border.IsVisible = false;
+                    mean.Symbol.Fill.Type = FillType.Solid;
+                    mean.Symbol.Fill.Color = Color.Black;
+
+                    var errorBar = graphPane.AddErrorBar(IonSeriesLabels[i],
+                                                         new PointPairList(),
+                                                         Color.Black);
+                    errorBar.Bar.IsVisible = true;
+                    errorBar.Bar.PenWidth = .1f;
+                    errorBar.Bar.Symbol.IsVisible = true;
+                    errorBar.Bar.Symbol.Type = SymbolType.HDash;
+                    errorBar.Bar.Symbol.Border.Width = .1f;
+                    errorBar.Bar.Symbol.Size = 4;
+
+                    var hiLowBar = graphPane.AddHiLowBar(IonSeriesLabels[i],
+                                                         new PointPairList(),
+                                                         Color.Black);
+                    hiLowBar.Bar.Fill.Type = FillType.None;
+
+                    var scatter = graphPane.AddCurve(IonSeriesLabels[i],
                                                      new PointPairList(),
-                                                     Color.Black);
-                errorBar.Bar.IsVisible = true;
-                errorBar.Bar.PenWidth = .1f;
-                errorBar.Bar.Symbol.IsVisible = true;
-                errorBar.Bar.Symbol.Type = SymbolType.HDash;
-                errorBar.Bar.Symbol.Border.Width = .1f;
-                errorBar.Bar.Symbol.Size = 4;
+                                                     csr.NextColor,
+                                                     SymbolType.Circle);
+                    scatter.Line.IsVisible = false;
+                    scatter.Symbol.IsAntiAlias = true;
+                    scatter.Symbol.Border.IsVisible = false;
+                    scatter.Symbol.Fill.Type = FillType.Solid;
+                    scatter.Symbol.Size = 3f;
+                }
+            }
 
-                var hiLowBar = graphPane.AddHiLowBar(IonSeriesLabels[i],
+            // add fragment m/z error statistics
+            {
+                var axisPane2 = new GraphPane();
+                axisPane2.Legend.IsVisible = false;
+                axisPane2.IsFontsScaled = false;
+                axisPane2.XAxis.IsVisible = false;
+                axisPane2.YAxis.Scale.Min = 0;
+                axisPane2.YAxis.Scale.Max = 100;
+                axisPane2.YAxis.Title.Text = "Mean m/z error";
+                axisPane2.YAxis.Title.Gap = 0.05f;
+                axisPane2.YAxis.MajorTic.IsOpposite = false;
+                axisPane2.YAxis.MinorTic.IsOpposite = false;
+                axisPane2.Chart.Border.IsVisible = false;
+                axisPane2.Border.IsVisible = false;
+                axisPane2.Margin.Left = 1;
+                axisPane2.Margin.Right = 0;
+                axisPane2.Title.Text = "";
+                zedGraphControl.MasterPane.Add(axisPane2);
+
+                csr = new ColorSymbolRotator();
+                for (int i = 0; i < (int) IonSeries.Count; ++i)
+                {
+                    var graphPane = new GraphPane();
+                    graphPane.Title.IsVisible = false;
+                    graphPane.Legend.IsVisible = false;
+                    graphPane.IsFontsScaled = false;
+                    graphPane.Chart.Border.IsVisible = false;
+                    graphPane.Border.IsVisible = false;
+                    graphPane.XAxis.Scale.Min = -1;
+                    graphPane.XAxis.Scale.Max = 1;
+                    graphPane.XAxis.IsVisible = false;
+                    graphPane.YAxis.Scale.Min = 0;
+                    graphPane.YAxis.Scale.Max = 100;
+                    graphPane.YAxis.IsVisible = false;
+                    zedGraphControl.MasterPane.Add(graphPane);
+
+                    graphPane.BarSettings.Type = BarType.Overlay;
+                    graphPane.BarSettings.ClusterScaleWidth = 1;
+
+                    var mean = graphPane.AddCurve(IonSeriesLabels[i],
+                                                  new PointPairList(),
+                                                  Color.Black,
+                                                  SymbolType.Circle);
+                    mean.Line.IsVisible = false;
+                    mean.Symbol.Border.IsVisible = false;
+                    mean.Symbol.Fill.Type = FillType.Solid;
+                    mean.Symbol.Fill.Color = Color.Black;
+
+                    var errorBar = graphPane.AddErrorBar(IonSeriesLabels[i],
+                                                         new PointPairList(),
+                                                         Color.Black);
+                    errorBar.Bar.IsVisible = true;
+                    errorBar.Bar.PenWidth = .1f;
+                    errorBar.Bar.Symbol.IsVisible = true;
+                    errorBar.Bar.Symbol.Type = SymbolType.HDash;
+                    errorBar.Bar.Symbol.Border.Width = .1f;
+                    errorBar.Bar.Symbol.Size = 4;
+
+                    var hiLowBar = graphPane.AddHiLowBar(IonSeriesLabels[i],
+                                                         new PointPairList(),
+                                                         Color.Black);
+                    hiLowBar.Bar.Fill.Type = FillType.None;
+
+                    var scatter = graphPane.AddCurve(IonSeriesLabels[i],
                                                      new PointPairList(),
-                                                     Color.Black);
-                hiLowBar.Bar.Fill.Type = FillType.None;
-
-                var scatter = graphPane.AddCurve(IonSeriesLabels[i],
-                                                 new PointPairList(),
-                                                 csr.NextColor,
-                                                 SymbolType.Circle);
-                scatter.Line.IsVisible = false;
-                scatter.Symbol.IsAntiAlias = true;
-                scatter.Symbol.Border.IsVisible = false;
-                scatter.Symbol.Fill.Type = FillType.Solid;
-                scatter.Symbol.Size = 3f;
+                                                     csr.NextColor,
+                                                     SymbolType.Circle);
+                    scatter.Line.IsVisible = false;
+                    scatter.Symbol.IsAntiAlias = true;
+                    scatter.Symbol.Border.IsVisible = false;
+                    scatter.Symbol.Fill.Type = FillType.Solid;
+                    scatter.Symbol.Size = 3f;
+                }
             }
 
             zedGraphControl.MasterPane.AxisChange();
@@ -314,8 +392,10 @@ namespace IDPicker.Forms
 
             var percentTicBySpectrumByFragmentType = new List<PointPairList>();
             var percentPeakCountBySpectrumByFragmentType = new List<PointPairList>();
+            var meanMzErrorBySpectrumByFragmentType = new List<PointPairList>();
             var percentTicListByFragmentType = new List<List<double>>();
             var percentPeakCountListByFragmentType = new List<List<double>>();
+            var meanMzErrorListByFragmentType = new List<List<double>>();
 
             foreach (var pane in zedGraphControl.MasterPane.PaneList)
                 foreach (var curve in pane.CurveList)
@@ -325,13 +405,16 @@ namespace IDPicker.Forms
             {
                 percentTicBySpectrumByFragmentType.Add(zedGraphControl.MasterPane.PaneList[i + 1].CurveList[3].Points as PointPairList);
                 percentPeakCountBySpectrumByFragmentType.Add(zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 2].CurveList[3].Points as PointPairList);
+                meanMzErrorBySpectrumByFragmentType.Add(zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 3].CurveList[3].Points as PointPairList);
                 percentTicListByFragmentType.Add(new List<double>());
                 percentPeakCountListByFragmentType.Add(new List<double>());
+                meanMzErrorListByFragmentType.Add(new List<double>());
             }
 
             int spectraCount = 0;
             double maxPercentTic = 10;
             double maxPercentPeakCount = 10;
+            double maxMeanMzError = 0.5;
 
             string spectrumListFilters = String.Empty;
             Invoke(new MethodInvoker(() =>
@@ -342,6 +425,7 @@ namespace IDPicker.Forms
                     {
                         zedGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxPercentTic;
                         zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 1].YAxis.Scale.Max = maxPercentPeakCount;
+                        zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 2].YAxis.Scale.Max = maxMeanMzError;
                     }
                 zedGraphControl.MasterPane.AxisChange();
                 zedGraphControl.Refresh();
@@ -383,36 +467,44 @@ namespace IDPicker.Forms
 
                 var percentTicByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
                 var percentPeakCountByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
+                var meanMzErrorByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
 
                 for (int z = 1; z <= 1; ++z)
                 for (int length = 1, end = pwizPeptide.sequence.Length; length <= end; ++length)
                 {
                     seems.PointMap.Enumerator itr;
+                    double expected;
 
                     // a
-                    itr = pointMap.FindNear(fragmentation.a(length, z), 0.5);
+                    expected = fragmentation.a(length, z);
+                    itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[0] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[0];
+                        meanMzErrorByFragmentType[0] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     // b
-                    itr = pointMap.FindNear(fragmentation.b(length, z), 0.5);
+                    expected = fragmentation.b(length, z);
+                    itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[1] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[1];
+                        meanMzErrorByFragmentType[1] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     if (length != pwizPeptide.sequence.Length)
                     {
                         // c
-                        itr = pointMap.FindNear(fragmentation.c(length, z), 0.5);
+                        expected = fragmentation.c(length, z);
+                        itr = pointMap.FindNear(expected, 0.5);
                         if (itr != null && itr.IsValid)
                         {
                             percentTicByFragmentType[2] += itr.Current.Value;
                             ++percentPeakCountByFragmentType[2];
+                            meanMzErrorByFragmentType[2] += (itr.Current.Key - expected) / expected * 1e6;
                         }
 
                         // c-1
@@ -421,39 +513,48 @@ namespace IDPicker.Forms
                         {
                             percentTicByFragmentType[3] += itr.Current.Value;
                             ++percentPeakCountByFragmentType[3];
+                            meanMzErrorByFragmentType[3] += itr.Current.Key - fragmentation.c(length, z) - Proton.Mass / z;
                         }
 
                         // x
-                        itr = pointMap.FindNear(fragmentation.x(length, z), 0.5);
+                        expected = fragmentation.x(length, z);
+                        itr = pointMap.FindNear(expected, 0.5);
                         if (itr != null && itr.IsValid)
                         {
                             percentTicByFragmentType[4] += itr.Current.Value;
                             ++percentPeakCountByFragmentType[4];
+                            meanMzErrorByFragmentType[4] += (itr.Current.Key - expected) / expected * 1e6;
                         }
                     }
 
                     // y
-                    itr = pointMap.FindNear(fragmentation.y(length, z), 0.5);
+                    expected = fragmentation.y(length, z);
+                    itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[5] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[5];
+                        meanMzErrorByFragmentType[5] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     // z
-                    itr = pointMap.FindNear(fragmentation.z(length, z), 0.5);
+                    expected = fragmentation.z(length, z);
+                    itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[6] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[6];
+                        meanMzErrorByFragmentType[6] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     // z+1
-                    itr = pointMap.FindNear(fragmentation.zRadical(length, z), 0.5);
+                    expected = fragmentation.zRadical(length, z);
+                    itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[7] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[7];
+                        meanMzErrorByFragmentType[7] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     // z+2
@@ -462,6 +563,7 @@ namespace IDPicker.Forms
                     {
                         percentTicByFragmentType[8] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[8];
+                        meanMzErrorByFragmentType[8] += itr.Current.Key - fragmentation.zRadical(length, z) + Proton.Mass / z;
                     }
                 }
 
@@ -469,19 +571,25 @@ namespace IDPicker.Forms
 
                 for (int i = 0; i < percentTicBySpectrumByFragmentType.Count; ++i)
                 {
+                    // convert sum to mean
+                    meanMzErrorByFragmentType[i] /= percentPeakCountByFragmentType[i];
+
                     // convert to percentages
                     percentTicByFragmentType[i] /= tic / 100;
                     percentPeakCountByFragmentType[i] /= pointMap.Count / 100.0;
 
                     maxPercentTic = Math.Max(maxPercentTic, percentTicByFragmentType[i]);
                     maxPercentPeakCount = Math.Max(maxPercentPeakCount, percentPeakCountByFragmentType[i]);
+                    maxMeanMzError = Math.Max(maxMeanMzError, meanMzErrorByFragmentType[i]);
 
                     double jitter = (rng.NextDouble() - 0.5);
                     percentTicBySpectrumByFragmentType[i].Add(jitter, percentTicByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, percentTicByFragmentType[i]));
                     percentPeakCountBySpectrumByFragmentType[i].Add(jitter, percentPeakCountByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, percentPeakCountByFragmentType[i]));
+                    meanMzErrorBySpectrumByFragmentType[i].Add(jitter, meanMzErrorByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, meanMzErrorByFragmentType[i]));
 
                     percentTicListByFragmentType[i].Add(percentTicByFragmentType[i]);
                     percentPeakCountListByFragmentType[i].Add(percentPeakCountByFragmentType[i]);
+                    meanMzErrorListByFragmentType[i].Add(meanMzErrorByFragmentType[i]);
                 }
 
                 if ((spectraCount % 100) == 0)
@@ -493,6 +601,7 @@ namespace IDPicker.Forms
                             {
                                 zedGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
                                 zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 1].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
+                                zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 2].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError * 0.05;
                             }
                         zedGraphControl.MasterPane.AxisChange();
                         zedGraphControl.Refresh();
@@ -509,9 +618,11 @@ namespace IDPicker.Forms
 
                     percentTicListByFragmentType[i].Sort();
                     percentPeakCountListByFragmentType[i].Sort();
+                    meanMzErrorListByFragmentType[i].Sort();
 
                     addSixNumberSummary(zedGraphControl.MasterPane.PaneList[i + 1], percentTicListByFragmentType[i]);
                     addSixNumberSummary(zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 2], percentPeakCountListByFragmentType[i]);
+                    addSixNumberSummary(zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 3], meanMzErrorListByFragmentType[i]);
                 }
 
                 if (!lockZoomCheckBox.Checked)
@@ -520,6 +631,7 @@ namespace IDPicker.Forms
                     {
                         zedGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
                         zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 1].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
+                        zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 2].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError * 0.05;
                     }
                     zedGraphControl.ZoomOutAll(zedGraphControl.GraphPane);
                 }

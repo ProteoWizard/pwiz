@@ -349,6 +349,7 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             Text = TabText = "Peptide View";
+            Icon = Properties.Resources.PeptideViewIcon;
 
             SetDefaults();
 

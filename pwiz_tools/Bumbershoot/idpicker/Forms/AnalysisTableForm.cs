@@ -100,6 +100,7 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             Text = TabText = "Analysis View";
+            Icon = Properties.Resources.BlankIcon;
 
             SetDefaults();
 

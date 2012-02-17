@@ -229,6 +229,19 @@ namespace IDPicker.Forms
                 "GROUP BY psm.Id " +
                 "ORDER BY Rank, QValue";
 
+            private static string SqlQueryCount =
+                "SELECT COUNT(DISTINCT psm.Id) " +
+                "FROM UnfilteredPeptideSpectrumMatch psm " +
+                "JOIN UnfilteredPeptide pep ON psm.Peptide=pep.Id " +
+                "JOIN UnfilteredPeptideInstance pi ON pep.Id=pi.Peptide " +
+                "LEFT JOIN PeptideModification pm ON psm.Id=pm.PeptideSpectrumMatch " +
+                "LEFT JOIN Modification mod ON pm.Modification=mod.Id " +
+                "LEFT JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
+                "JOIN Spectrum s ON psm.Spectrum=s.Id " +
+                "JOIN SpectrumSource ss ON s.Source=ss.Id " +
+                "JOIN SpectrumSourceGroup ssg ON ss.Group_=ssg.Id " +
+                "JOIN Analysis a ON psm.Analysis=a.Id ";
+
             private static string HqlQueryFormat =
                 "SELECT s, ss, ssg, a," +
                 "       psm.Id, psm.Rank, psm.Charge, psm.QValue, psm.MonoisotopicMass," +
@@ -244,11 +257,16 @@ namespace IDPicker.Forms
                     var basicFilter = new DataFilter(dataFilter)
                     {
                         AminoAcidOffset = null,
-                        Modifications = null,
-                        ModifiedSite = null,
                         Cluster = null,
                         Protein = null
                     };
+
+                    if (dataFilter.Spectrum != null)
+                    {
+                        basicFilter.Modifications = null;
+                        basicFilter.ModifiedSite = null;
+                    }
+
                     string sql = String.Format(SqlQueryFormat, basicFilter.GetFilteredSqlWhereClause());
                     return session.CreateSQLQuery(sql)
                         .AddEntity("s", typeof (Spectrum))
@@ -272,6 +290,25 @@ namespace IDPicker.Forms
                                                                DataFilter.PeptideSpectrumMatchToAnalysis) +
                              "GROUP BY psm.Id";
                 return session.CreateQuery(hql);
+            }
+
+            public static int GetQueryCount(NHibernate.ISession session, DataFilter dataFilter)
+            {
+                if (dataFilter.Spectrum != null && dataFilter.Spectrum.Count == 1)
+                {
+                    dataFilter = new DataFilter(dataFilter)
+                    {
+                        AminoAcidOffset = null,
+                        Modifications = null,
+                        ModifiedSite = null,
+                        Cluster = null,
+                        Protein = null
+                    };
+                }
+
+                string sql = SqlQueryCount + dataFilter.GetFilteredSqlWhereClause();
+                lock (session)
+                    return Convert.ToInt32(session.CreateSQLQuery(sql).UniqueResult());
             }
 
             #region Constructor
@@ -641,6 +678,7 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             Text = TabText = "Spectrum View";
+            Icon = Properties.Resources.SpectrumViewIcon;
 
             aggregateColumns = new DataGridViewColumn[]
             {
@@ -717,21 +755,7 @@ namespace IDPicker.Forms
             }
 
             var childFilter = getChildFilter(parentRow);
-            string sql = "SELECT COUNT(DISTINCT psm.Id) " +
-                         "FROM UnfilteredPeptideSpectrumMatch psm " +
-                         "JOIN UnfilteredPeptide pep ON psm.Peptide=pep.Id " +
-                         "JOIN UnfilteredPeptideInstance pi ON pep.Id=pi.Peptide " +
-                         //"LEFT JOIN ProteinData pd ON pi.Protein=pd.Id " +
-                         "LEFT JOIN PeptideModification pm ON psm.Id=pm.PeptideSpectrumMatch " +
-                         "LEFT JOIN Modification mod ON pm.Modification=mod.Id " +
-                         "LEFT JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
-                         "JOIN Spectrum s ON psm.Spectrum=s.Id " +
-                         "JOIN SpectrumSource ss ON s.Source=ss.Id " +
-                         "JOIN SpectrumSourceGroup ssg ON ss.Group_=ssg.Id " +
-                         "JOIN Analysis a ON psm.Analysis=a.Id " +
-                         childFilter.GetFilteredSqlWhereClause();
-            lock (session)
-                e.ChildRowCount = Convert.ToInt32(session.CreateSQLQuery(sql).UniqueResult());
+            e.ChildRowCount = PeptideSpectrumMatchRow.GetQueryCount(session, childFilter);
         }
 
         private void getChildRowCount (AggregateRow row, Grouping<GroupBy> childGrouping, TreeDataGridViewCellValueEventArgs e)

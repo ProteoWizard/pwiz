@@ -672,8 +672,8 @@ namespace IDPicker.DataModel
         long MaxSpectrumId = 0;
         long MaxAnalysisId = 0;
 
-        static int tempCacheSize = 1000000;
-        static int mergedCacheSize = 800000;
+        static int tempCacheSize = 100000;
+        static int mergedCacheSize = 80000;
         static int newCacheSize = 50000;
     }
 }

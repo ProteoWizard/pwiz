@@ -125,6 +125,7 @@ namespace IDPicker.Forms
             };
 
             Text = TabText = "Peak Statistics";
+            Icon = Properties.Resources.BlankIcon;
 
             var csr = new ColorSymbolRotator();
             var colors = new List<Color>() { Color.Gray };

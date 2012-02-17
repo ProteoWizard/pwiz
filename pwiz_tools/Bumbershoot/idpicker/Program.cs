@@ -37,6 +37,7 @@ namespace IDPicker
 {
     static class Program
     {
+        public static bool IsHeadless { get; private set; }
         public static IDPickerForm MainWindow { get; private set; }
 
         /// <summary>
@@ -61,6 +62,11 @@ namespace IDPicker
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
 
+                var singleInstanceArgs = e.Args.ToList();
+                IsHeadless = singleInstanceArgs.Contains("--headless");
+                if (IsHeadless)
+                    singleInstanceArgs.Remove("--headless");
+
                 // initialize webClient asynchronously
                 initializeWebClient();
 
@@ -68,7 +74,7 @@ namespace IDPicker
 
                 //HibernatingRhinos.Profiler.Appender.NHibernate.NHibernateProfiler.Initialize();
 
-                MainWindow = new IDPickerForm(e.Args);
+                MainWindow = new IDPickerForm(singleInstanceArgs);
                 Application.Run(MainWindow);
             };
 
@@ -82,6 +88,7 @@ namespace IDPicker
             }
         }
 
+        #region Exception handling
         public static void HandleException (Exception e)
         {
             if (MainWindow == null)
@@ -98,6 +105,12 @@ namespace IDPicker
 
             using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.choice))
             {
+                if (IsHeadless)
+                {
+                    Console.Error.WriteLine("Error: {0}\r\n\r\nDetails:\r\n{1}", reportForm.ExceptionType, reportForm.MessageBody);
+                    System.Diagnostics.Process.GetCurrentProcess().Kill();
+                }
+
                 if (MainWindow.IsDisposed)
                 {
                     if (reportForm.ShowDialog() == DialogResult.OK)
@@ -121,7 +134,9 @@ namespace IDPicker
         {
             HandleException(e.ExceptionObject as Exception);
         }
+        #endregion
 
+        #region Update checking and error reporting
         private static WebClient webClient = new WebClient();
         private static void initializeWebClient ()
         {
@@ -225,5 +240,6 @@ namespace IDPicker
                 webClient.UploadValues(address, form);
             }
         }
+        #endregion
     }
 }

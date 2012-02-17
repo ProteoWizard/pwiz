@@ -200,6 +200,12 @@
     <Compile Include="Forms\ReportErrorDlg.designer.cs">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\RescuePSMForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\RescuePSMForm.designer.cs">
+      <DependentUpon>RescuePSMForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\SequenceCoverageForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -293,10 +299,6 @@
       <Project>{2399F68B-D886-4D94-AB4B-700FE3E46849}</Project>
       <Name>seems</Name>
     </ProjectReference>
-    <ProjectReference Include="freicore\pwiz_src\pwiz_tools\Shared\Common\Common.csproj">
-      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
     <ProjectReference Include="freicore\pwiz_src\pwiz_tools\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>
@@ -352,6 +354,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\ReportErrorDlg.resx">
       <DependentUpon>ReportErrorDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\RescuePSMForm.resx">
+      <DependentUpon>RescuePSMForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\SequenceCoverageForm.resx">
       <DependentUpon>SequenceCoverageForm.cs</DependentUpon>
@@ -485,6 +490,18 @@
   <ItemGroup>
     <None Include="Resources\Resources.rc" />
     <None Include="Resources\Resources.res" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\PeptideViewIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\ProteinViewIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\SpectrumViewIcon.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\BlankIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

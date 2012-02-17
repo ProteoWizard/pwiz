@@ -363,6 +363,7 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             Text = TabText = "Protein View";
+            Icon = Properties.Resources.ProteinViewIcon;
 
             SetDefaults();
 
@@ -796,8 +797,11 @@ namespace IDPicker.Forms
             checkedPivots = pivotSetupControl.CheckedPivots;
             checkedGroupings = groupingSetupControl.CheckedGroupings;
 
-            clusterColumn.Visible = groupingSetupControl.CheckedGroupings.Count(o => o.Mode == GroupBy.Cluster) == 0;
-            countColumn.Visible = groupingSetupControl.CheckedGroupings.Count > 0;
+            if (!_columnSettings[clusterColumn].Visible.HasValue || _columnSettings[clusterColumn].Visible.Value)
+                clusterColumn.Visible = groupingSetupControl.CheckedGroupings.Count(o => o.Mode == GroupBy.Cluster) == 0;
+
+            if (!_columnSettings[countColumn].Visible.HasValue || _columnSettings[countColumn].Visible.Value)
+                countColumn.Visible = groupingSetupControl.CheckedGroupings.Count > 0;
 
             Text = TabText = "Loading protein view...";
 

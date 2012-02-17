@@ -70,7 +70,7 @@ namespace IDPicker.Controls
         #region UnimodTreeNode class
         private class UnimodNode : TreeNode
         {
-            public int Mass { get; set; }
+            public double Mass { get; set; }
             public string Site { get; set; }
             public bool Hidden { get; set; }
 
@@ -86,11 +86,11 @@ namespace IDPicker.Controls
         }
         #endregion
 
-        private HashSet<int> _savedMasses;
+        private HashSet<double> _savedMasses;
         private HashSet<char> _savedSites;
         private bool _automated;
         private Dictionary<TreeNode, TreeNode> _hiddenNodes;
-        private Dictionary<int, int> _currentMasses;
+        private Dictionary<double, int> _currentMasses;
         private Dictionary<char, int> _currentSites;
         private Dictionary<TreeNode, int> _categoryChecked;
         private TreeNode _rootNode;
@@ -100,17 +100,17 @@ namespace IDPicker.Controls
             InitializeComponent();
 
             //Initialize members
-            SetUnimodDefaults(null,null);
+            SetUnimodDefaults(null, null, null);
         }
 
-        public void SetUnimodDefaults(HashSet<char> relevantSites, HashSet<int> relevantMasses)
+        public void SetUnimodDefaults(HashSet<char> relevantSites, HashSet<double> relevantMasses, DistinctMatchFormat distinctMatchFormat)
         {
             UnimodTree.Nodes.Clear();
             _hiddenNodes = new Dictionary<TreeNode, TreeNode>();
-            _currentMasses = new Dictionary<int, int>();
+            _currentMasses = new Dictionary<double, int>();
             _currentSites = new Dictionary<char, int>();
             _categoryChecked = new Dictionary<TreeNode, int>();
-            _savedMasses = new HashSet<int>();
+            _savedMasses = new HashSet<double>();
             _savedSites = new HashSet<char>();
             
             //get unimod values
@@ -119,10 +119,12 @@ namespace IDPicker.Controls
                 refDict.Add(classification, new List<UnimodNode>());
             foreach (var mod in unimod.modifications())
             {
+                double mass = mod.deltaMonoisotopicMass;
+                if (distinctMatchFormat != null)
+                    mass = distinctMatchFormat.Round(mod.deltaMonoisotopicMass);
+
                 foreach (var spec in mod.specificities)
                 {
-                    var intMass = Convert.ToInt32(Math.Round(mod.deltaMonoisotopicMass));
-
                     //'if' statement broken up to reduce complexity
                     if (!refDict.ContainsKey(spec.classification))
                         continue;
@@ -130,13 +132,13 @@ namespace IDPicker.Controls
                         && (!_nameToAbbreviation.ContainsKey(spec.site.ToString())
                         || !relevantSites.Contains(_nameToAbbreviation[spec.site.ToString()])))
                         continue;
-                    if (relevantMasses != null && !relevantMasses.Contains(intMass))
+                    if (relevantMasses != null && !relevantMasses.Contains(mass))
                         continue;
 
                     refDict[spec.classification].Add(new UnimodNode()
                                                          {
                                                              Text = mod.name + " - " + spec.site,
-                                                             Mass = intMass,
+                                                             Mass = mass,
                                                              Site = spec.site.ToString(),
                                                              Hidden = spec.hidden
                                                          });
@@ -229,7 +231,7 @@ namespace IDPicker.Controls
 
         public bool ChangesMade(bool resetChangeLog)
         {
-            var massList = new HashSet<int>();
+            var massList = new HashSet<double>();
             var siteList = new HashSet<char>();
             foreach (var kvp in _currentMasses)
                 massList.Add(kvp.Key);
@@ -240,12 +242,8 @@ namespace IDPicker.Controls
                                     !siteList.SetEquals(_savedSites);
             if (resetChangeLog)
             {
-                _savedMasses = new HashSet<int>();
-                _savedSites = new HashSet<char>();
-                foreach (var item in massList)
-                    _savedMasses.Add(item);
-                foreach (var item in siteList)
-                    _savedSites.Add(item);
+                _savedMasses = new HashSet<double>(massList);
+                _savedSites = new HashSet<char>(siteList);
             }
             return confirmedChanges;
         }
@@ -255,7 +253,7 @@ namespace IDPicker.Controls
             return _currentSites.Select(kvp => kvp.Key).ToList();
         }
 
-        public List<int> GetUnimodMasses()
+        public List<double> GetUnimodMasses()
         {
             return _currentMasses.Select(kvp => kvp.Key).ToList();
         }

@@ -206,7 +206,8 @@ namespace IDPicker.DataModel
                    NullSafeSequenceEqual(SpectrumSource, other.SpectrumSource) &&
                    NullSafeSequenceEqual(SpectrumSourceGroup, other.SpectrumSourceGroup) &&
                    NullSafeSequenceEqual(AminoAcidOffset, other.AminoAcidOffset) &&
-                   Composition == other.Composition;
+                   Composition == other.Composition &&
+                   DistinctMatchFormat == other.DistinctMatchFormat;
         }
 
         public static DataFilter operator + (DataFilter lhs, DataFilter rhs)

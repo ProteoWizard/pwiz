@@ -70,6 +70,7 @@ namespace IDPicker
         AnalysisTableForm analysisTableForm;
         FragmentationStatisticsForm fragmentationStatisticsForm;
         PeakStatisticsForm peakStatisticsForm;
+        RescuePSMsForm reassignPSMsForm;
 
         LogForm logForm = null;
         //SpyEventLogForm spyEventLogForm;
@@ -87,9 +88,9 @@ namespace IDPicker
         private DataFilter basicFilter, viewFilter;
         private IDictionary<Analysis, QonverterSettings> qonverterSettingsByAnalysis;
 
-        string[] args;
+        IList<string> args;
 
-        public IDPickerForm (string[] args)
+        public IDPickerForm (IList<string> args)
         {
             InitializeComponent();
 
@@ -107,7 +108,10 @@ namespace IDPicker
             progressMonitor = new ProgressMonitor();
             progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
 
-            Shown += IDPickerForm_Load;
+            if (Program.IsHeadless)
+                Load += IDPickerForm_Load;
+            else
+                Shown += IDPickerForm_Load;
 
             basicFilterControl = new BasicFilterControl();
             basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
@@ -124,6 +128,9 @@ namespace IDPicker
 
             peakStatisticsForm = new PeakStatisticsForm(this);
             peakStatisticsForm.Show(dockPanel, DockState.DockBottomAutoHide);
+
+            reassignPSMsForm = new RescuePSMsForm(this);
+            reassignPSMsForm.Show(dockPanel, DockState.DockBottomAutoHide);
 
             spectrumTableForm = new SpectrumTableForm();
             spectrumTableForm.Show(dockPanel, DockState.DockLeft);
@@ -149,15 +156,21 @@ namespace IDPicker
 
             // hide DockPanel before initializing layout manager
             dockPanel.Visible = false;
+            dockPanel.ShowDocumentIcon = true;
 
             _layoutManager = new LayoutManager(this, peptideTableForm, proteinTableForm, spectrumTableForm, dockPanel);
 
             // load last or default location and size
             _layoutManager.LoadMainFormSettings();
 
-            //logForm = new LogForm();
-            //Console.SetOut(logForm.LogWriter);
-            Console.SetOut(TextWriter.Null);
+            // provide SQL logging for development builds
+            if (Application.ExecutablePath.Contains("build-nt-x86"))
+            {
+                logForm = new LogForm();
+                Console.SetOut(logForm.LogWriter);
+            }
+            else
+                Console.SetOut(TextWriter.Null);
 
             /*spyEventLogForm = new SpyEventLogForm();
             spyEventLogForm.AddEventSpy(new EventSpy("proteinTableForm", proteinTableForm));
@@ -574,6 +587,9 @@ namespace IDPicker
             {
                 e.Result = ex;
             }
+
+            if (Program.IsHeadless)
+                Close();
         }
 
         void clearData ()
@@ -586,6 +602,7 @@ namespace IDPicker
             fragmentationStatisticsForm.ClearData(true);
             peakStatisticsForm.ClearData(true);
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.ClearData());
+            if (reassignPSMsForm != null) reassignPSMsForm.ClearData(true);
         }
 
         void setData ()
@@ -598,6 +615,7 @@ namespace IDPicker
             fragmentationStatisticsForm.SetData(session, viewFilter);
             peakStatisticsForm.SetData(session, viewFilter);
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
+            reassignPSMsForm.SetData(session, basicFilter);
         }
 
         void clearSession()
@@ -634,10 +652,14 @@ namespace IDPicker
             //Get user layout profiles
             _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
 
-            if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
-            {
-                new Thread(() => { OpenFiles(args, null); }).Start();
-            }
+            if (args.IsNullOrEmpty())
+                return;
+
+            var missingFiles = args.Where(o => !File.Exists(o));
+            if (missingFiles.Any())
+                throw new ArgumentException("some files do not exist: " + String.Join(" ", missingFiles.ToArray()));
+
+            new Thread(() => { OpenFiles(args, null); }).Start();
         }
 
         void sourceNotFoundOnVisualizeHandler (object sender, SourceNotFoundEventArgs e)
@@ -687,6 +709,9 @@ namespace IDPicker
                     return;
                 }
 
+                if (Program.IsHeadless && xml_filepaths.Any())
+                    MessageBox.Show("Headless mode only supports merging idpDB files.");
+
                 // warn if idpDBs already exist
                 bool warnOnce = false;
                 foreach (string filepath in xml_filepaths)
@@ -713,9 +738,11 @@ namespace IDPicker
                 var potentialPaths = filepaths.Select(item =>
                                                       Path.Combine(Path.GetDirectoryName(item) ?? string.Empty,
                                                                    Path.GetFileNameWithoutExtension(item) ??
-                                                                   string.Empty) + ".idpDB").ToList();
 
-                if ((fileExists ||
+                                                                   string.Empty) + ".idpDB").ToList();
+                if (fileExists && Program.IsHeadless)
+                    File.Delete(commonFilename);
+                else if ((fileExists ||
                     potentialPaths.Contains(commonFilename)) && filepaths.Count > 1 && workToBeDone)
                 {
                     if(filepaths.Contains(commonFilename))
@@ -760,7 +787,7 @@ namespace IDPicker
                             case DialogResult.Yes:
                                 if (!potentialPaths.Contains(commonFilename) && fileExists)
                                 {
-                                        File.Delete(commonFilename);
+                                    File.Delete(commonFilename);
                                 }
                                 break;
                             case DialogResult.No:
@@ -804,7 +831,7 @@ namespace IDPicker
                     {
                         try
                         {
-                            string randomTestFile = Path.GetRandomFileName();
+                            string randomTestFile = Path.Combine(possibleDirectory, Path.GetRandomFileName());
                             using (var tmp = File.Create(randomTestFile)) { }
                             File.Delete(randomTestFile);
                             break;
@@ -1040,10 +1067,16 @@ namespace IDPicker
             using (var tempFile = new StreamWriter(tempFilepath, false, Encoding.Unicode))
                 tempFile.Write(userLayout.PaneLocations);
 
-            dockPanel.SuspendLayout();
-            dockPanel.LoadFromXml(tempFilepath, DeserializeForm);
-            dockPanel.ResumeLayout(true, true);
-            File.Delete(tempFilepath);
+            try
+            {
+                dockPanel.SuspendLayout();
+                dockPanel.LoadFromXml(tempFilepath, DeserializeForm);
+                dockPanel.ResumeLayout(true, true);
+            }
+            finally
+            {
+                File.Delete(tempFilepath);
+            }
 
             if (userLayout.HasCustomColumnSettings &&
                 proteinTableForm != null &&
@@ -1068,6 +1101,8 @@ namespace IDPicker
                 return modificationTableForm;
             if (persistantString == typeof(AnalysisTableForm).ToString())
                 return analysisTableForm;
+            if (persistantString == typeof(RescuePSMsForm).ToString())
+                return reassignPSMsForm;
             
             return null;
         }
@@ -1182,12 +1217,12 @@ namespace IDPicker
             lock (session)
             {
                 var databaseAnalysis = session.QueryOver<Analysis>().List();
-            var oldSettings =session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
+                var oldSettings = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
 
-            bool cancel;
-            var qonverterSettings = qonverterSettingsHandler(oldSettings, out cancel);
-            if (cancel)
-                return;
+                bool cancel;
+                var qonverterSettings = qonverterSettingsHandler(oldSettings, out cancel);
+                if (cancel)
+                    return;
 
                 var qonverter = new Qonverter();
                 qonverter.QonversionProgress += progressMonitor.UpdateProgress;
@@ -1564,11 +1599,11 @@ namespace IDPicker
                     {
                         if (first)
                         {
-                            filterInfo.Add(new List<string> { "Modifications", item.Name });
+                            filterInfo.Add(new List<string> { "Modifications", item.MonoMassDelta.ToString() });
                             first = false;
                         }
                         else
-                            filterInfo.Add(new List<string> { string.Empty, item.Name });
+                            filterInfo.Add(new List<string> { string.Empty, item.MonoMassDelta.ToString() });
                     }
                 }
                 if (viewFilter.ProteinGroup != null)
