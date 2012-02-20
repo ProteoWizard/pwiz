@@ -214,6 +214,6 @@ LIST *svnrevinfo( FRAME *frame, int flags )
 
 void init_svnrev()
 {
-    char* args[] = { "filepath", "+", ":", "warn-on-missing-info", "?", ":", "print-revision-info", "?", 0 };
+    const char* args[] = { "filepath", "+", ":", "warn-on-missing-info", "?", ":", "print-revision-info", "?", 0 };
     declare_native_rule("svnrev", "get-revision-info", args, svnrevinfo, 1);
 }
