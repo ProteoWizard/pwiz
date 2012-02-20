@@ -97,6 +97,12 @@ namespace IDPicker.Forms
 
         const string deltaMassColumnName = "ΔMass";
 
+        public decimal RoundToNearest
+        {
+            get { return roundToNearestUpDown.Value; }
+            set { roundToNearestUpDown.Value = value; }
+        }
+
         private string PivotMode { get; set; }
         private DistinctMatchFormat DistinctModificationFormat { get; set; }
 
@@ -258,7 +264,7 @@ namespace IDPicker.Forms
 
             string massDeltaExpression = null;
             if (e.RowIndex > 0)
-                massDeltaExpression = String.Format("{0} = {1}", RoundedDeltaMassExpression, (cell.OwningRow.DataBoundItem as DataRowView)[0]);
+                massDeltaExpression = String.Format("ABS({0}-{1}) <= 0.0001", RoundedDeltaMassExpression, (cell.OwningRow.DataBoundItem as DataRowView)[0]);
 
             string whereExpression = String.Empty;
             if (massDeltaExpression != null && site != null)
@@ -295,7 +301,7 @@ namespace IDPicker.Forms
                 ModifiedSite = new List<char>()
             };
 
-            string massDeltaFormat = String.Format("{0} = {{0}}", RoundedDeltaMassExpression);
+            string massDeltaFormat = String.Format("ABS({0}-{{0}}) <= 0.0001", RoundedDeltaMassExpression);
 
             foreach (DataGridViewCell cell in dataGridView.SelectedCells)
             {
@@ -616,7 +622,7 @@ namespace IDPicker.Forms
             var rowFilter = new StringBuilder();
             rowFilter.AppendFormat("[{0}] = 'Infinity' OR Total >= {1}", deltaMassColumnName, minRows);
             if (unimodFilter)
-                rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodMasses.Select(o => String.Format("{0} = {1}", deltaMassColumnName, o)).ToArray()));
+                rowFilter.AppendFormat(" AND ({0})", String.Join(" OR ", unimodMasses.Select(o => String.Format("([{0}]-{1} <= 0.0001 AND [{0}]-{1} >= -0.0001)", deltaMassColumnName, o)).ToArray()));
             (dataGridView.DataSource as DataTable).DefaultView.RowFilter = rowFilter.ToString();
 
             var unimodRowStyle = new DataGridViewCellStyle(dataGridView.RowHeadersDefaultCellStyle)
@@ -642,7 +648,7 @@ namespace IDPicker.Forms
 
                     // see if row snaps to a single Unimod delta mass at a very tight tolerance
                     double deltaMass = (double) (row.DataBoundItem as DataRowView).Row[deltaMassColumnName];
-                    var filter = new unimod.Filter(deltaMass, 1e-4) { approved = null, hidden = null };
+                    var filter = new unimod.Filter(deltaMass, (double) roundToNearestUpDown.Value) { approved = null, hidden = null };
                     var mods = unimod.modifications(filter);
                     if (mods.Select(o => o.deltaMonoisotopicMass).Distinct().Count() == 1)
                     {
@@ -657,14 +663,14 @@ namespace IDPicker.Forms
                 }
                 maxRowHeaderWidth = Math.Max(maxRowHeaderWidth, g.MeasureString((string) row.HeaderCell.Value, unimodRowStyle.Font).Width);
             }
-            dataGridView.RowHeadersWidth = (int) Math.Ceiling(maxRowHeaderWidth * 1.2) + 25;
+            dataGridView.RowHeadersWidth = (int) Math.Ceiling(maxRowHeaderWidth * 1.3) + 25;
 
             dataGridView.ResumeLayout();
         }
 
         private void SetUnimodDefaults(IList<object[]> queryRows)
         {
-            var roundedDeltaMasses = deltaMassTable.Rows.Cast<DataRow>().Select(o => viewFilter.DistinctMatchFormat.Round((double) o[0]));
+            var roundedDeltaMasses = deltaMassTable.Rows.Cast<DataRow>().Select(o => DistinctModificationFormat.Round((double) o[0]));
             var massSet = new HashSet<double>(roundedDeltaMasses);
 
             var siteSet = new HashSet<char>();
@@ -672,9 +678,9 @@ namespace IDPicker.Forms
                 siteSet.Add((char) item[0]);
 
             if (_unimodControl.InvokeRequired)
-                _unimodControl.Invoke(new MethodInvoker(() => _unimodControl.SetUnimodDefaults(siteSet, massSet, viewFilter.DistinctMatchFormat)));
+                _unimodControl.Invoke(new MethodInvoker(() => _unimodControl.SetUnimodDefaults(siteSet, massSet, DistinctModificationFormat)));
             else
-                _unimodControl.SetUnimodDefaults(siteSet, massSet, viewFilter.DistinctMatchFormat);
+                _unimodControl.SetUnimodDefaults(siteSet, massSet, DistinctModificationFormat);
         }
 
         void renderData (object sender, RunWorkerCompletedEventArgs e)

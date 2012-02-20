@@ -959,6 +959,20 @@ namespace IDPicker
 
                     //breadCrumbControl.BreadCrumbs.Clear();
 
+                    // pick a default RoundToNearest based on number of distinct modifications
+                    modificationTableForm.RoundToNearest = 1m;
+                    var distinctModificationFormat = new DistinctMatchFormat();
+                    var modMasses = session.CreateQuery("SELECT DISTINCT mod.MonoMassDelta FROM Modification mod").List<double>();
+                    for (int i = 4; i > 0; --i)
+                    {
+                        distinctModificationFormat.ModificationMassRoundToNearest = (decimal) (1.0 / Math.Pow(10, i));
+                        if (modMasses.Select(o => distinctModificationFormat.Round(o)).Distinct().Count() < 30)
+                        {
+                            modificationTableForm.RoundToNearest = distinctModificationFormat.ModificationMassRoundToNearest.Value;
+                            break;
+                        }
+                    }
+
                     basicFilter = DataFilter.LoadFilter(session);
 
                     if (basicFilter == null)

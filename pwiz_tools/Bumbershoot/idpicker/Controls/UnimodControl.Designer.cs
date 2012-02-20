@@ -70,8 +70,8 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(269, 6);
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.label2.Location = new System.Drawing.Point(288, 7);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(80, 12);
             this.label2.TabIndex = 5;
@@ -80,8 +80,8 @@
             // MassesLabel
             // 
             this.MassesLabel.AutoSize = true;
-            this.MassesLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MassesLabel.Location = new System.Drawing.Point(347, 6);
+            this.MassesLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.MassesLabel.Location = new System.Drawing.Point(366, 7);
             this.MassesLabel.Name = "MassesLabel";
             this.MassesLabel.Size = new System.Drawing.Size(11, 12);
             this.MassesLabel.TabIndex = 4;
@@ -90,8 +90,8 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(180, 6);
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.label1.Location = new System.Drawing.Point(199, 7);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(67, 12);
             this.label1.TabIndex = 3;
@@ -100,8 +100,8 @@
             // SitesLabel
             // 
             this.SitesLabel.AutoSize = true;
-            this.SitesLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.SitesLabel.Location = new System.Drawing.Point(246, 6);
+            this.SitesLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 6.5F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.SitesLabel.Location = new System.Drawing.Point(265, 7);
             this.SitesLabel.Name = "SitesLabel";
             this.SitesLabel.Size = new System.Drawing.Size(11, 12);
             this.SitesLabel.TabIndex = 2;
@@ -135,7 +135,7 @@
             "Valine",
             "Tryptophan",
             "Tyrosine"});
-            this.SiteFilterBox.Location = new System.Drawing.Point(89, 3);
+            this.SiteFilterBox.Location = new System.Drawing.Point(108, 3);
             this.SiteFilterBox.Name = "SiteFilterBox";
             this.SiteFilterBox.Size = new System.Drawing.Size(85, 21);
             this.SiteFilterBox.TabIndex = 1;
