@@ -55,6 +55,20 @@ rule boost-tag ( name : type ? : property-set )
         : $(name) : $(type) : $(property-set) ] ;
 }
 
+
+# warning: _SECURE_SCL_THROWS is deprecated
+# checked iterators throw instead of crash  
+rule secure-scl-throws ( properties * )
+{
+    if <toolset>msvc in $(properties) &&
+       ! ( <toolset-msvc:version>11.0 in $(properties) )
+    {
+        return <define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+               <define>_SECURE_SCL_THROWS=1 ;
+    }
+}
+
+
 rule init ( version : location : options * )
 {
     if ! $(.initialized)
@@ -90,13 +104,13 @@ rule init ( version : location : options * )
             <toolset>msvc:<define>BOOST_WINDOWS_API
             <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
             <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+            <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
             <link>shared:<define>BOOST_ALL_DYN_LINK=1
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <define>BOOST_ALL_NO_LIB=1
             <warnings>off
 
-            # checked iterators throw instead of crash  
-            <toolset>msvc:<define>_SECURE_SCL_THROWS=1
+            <conditional>@secure-scl-throws
             ;
 
         lib pthread : : <name>pthread <link>shared : 
