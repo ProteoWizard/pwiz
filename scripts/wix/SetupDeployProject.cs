@@ -48,9 +48,9 @@ namespace SetupDeployProject
             wxsTemplate = wxsTemplate.Replace("<ProductGuid>", guid);
             wxsTemplate = wxsTemplate.Replace("<version>", version);
 
-            // delete old wxs files
-            foreach (string filepath in Directory.GetFiles(buildPath, "*.wxs"))
-                File.Delete(filepath);
+            // delete old wxs and wixObj files
+            foreach (string filepath in Directory.GetFiles(buildPath, "*.wxs")) File.Delete(filepath);
+            foreach (string filepath in Directory.GetFiles(buildPath, "*.wixObj")) File.Delete(filepath);
 
             string wxsFilepath = String.Format("{0}/pwiz-setup-{1}.wxs", buildPath, version);
             File.WriteAllText(wxsFilepath, wxsTemplate.ToString());

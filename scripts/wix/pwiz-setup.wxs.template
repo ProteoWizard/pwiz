@@ -21,7 +21,7 @@
 # limitations under the License.
 #
 -->
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
    <Product Id="<ProductGuid>"
             Name="ProteoWizard <version>"
             Language="1033"
@@ -40,7 +40,9 @@
 
       <PropertyRef Id='NETFRAMEWORK35'/>
       <PropertyRef Id='NETFRAMEWORK35_SP_LEVEL'/>
-      <Condition Message="Requires Microsoft .NET 3.5 Framework with Service Pack 1">NETFRAMEWORK35 AND (NETFRAMEWORK35_SP_LEVEL >= 1)</Condition>
+      <Condition Message="Requires Microsoft .NET 3.5 Framework with Service Pack 1">
+		  <![CDATA[Installed OR (NETFRAMEWORK35_SP_LEVEL and NOT NETFRAMEWORK35_SP_LEVEL = "#0")]]>
+	  </Condition>
 
       <UI>
          <UIRef Id="WixUI_InstallDir" />
