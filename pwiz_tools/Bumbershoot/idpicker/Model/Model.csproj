@@ -89,6 +89,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BulkInserter.cs" />
+    <Compile Include="Clustering.cs" />
     <Compile Include="DataFilter.cs" />
     <Compile Include="DataModel.cs" />
     <Compile Include="DistinctMatch.cs" />
