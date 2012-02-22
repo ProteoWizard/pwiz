@@ -1047,7 +1047,15 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
                 proteinBatch.clear();
 
                 for (int j=0; j < batchSize && i+j < pl.size(); ++j)
-                    proteinBatch.push_back(pl.protein(i+j));
+                {
+                    proteome::ProteinPtr p = pl.protein(i+j);
+                    string sequence = p->sequence();
+                    for (size_t k=0; k < sequence.length(); ++k)
+                        if (sequence[k] < 'A' || sequence[k] > 'Z')
+                            sequence[k] = 'X';
+                    p.reset(new proteome::Protein(p->id, p->index, p->description, sequence));
+                    proteinBatch.push_back(p);
+                }
                 i += batchSize - 1;
 
                 while (true)
