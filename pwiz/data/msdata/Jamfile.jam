@@ -140,7 +140,7 @@ if ! [ without-mz5 ]
 unit-test-if-exists MSnReaderTest : MSnReaderTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
 unit-test-if-exists MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test-if-exists RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
-unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_msdata ../vendor_readers ;
+unit-test-if-exists ReaderTest : ReaderTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ../vendor_readers ;
 unit-test-if-exists SpectrumInfoTest : SpectrumInfoTest.cpp pwiz_data_msdata_examples ;
 unit-test-if-exists SpectrumListBaseTest : SpectrumListBaseTest.cpp pwiz_data_msdata ;
 unit-test-if-exists ChromatogramListBaseTest : ChromatogramListBaseTest.cpp pwiz_data_msdata ;

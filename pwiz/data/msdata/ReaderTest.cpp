@@ -25,6 +25,8 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "Reader.hpp"
+#include "examples.hpp"
+#include "MSDataFile.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include <cstring>
 
@@ -214,6 +216,17 @@ void testIdentifyFileFormat()
     {ofstream fs("testSpectraDataFile.mzedXML"); fs << "<?xml?><mzXML>";}
     unit_assert_operator_equal(MS_ISB_mzXML_file, identifyFileFormat(readers, "testSpectraDataFile.mzedXML"));
     bfs::remove("testSpectraDataFile.mzedXML");
+
+    
+    {
+        MSData msd;
+        examples::initializeTiny(msd);
+        MSDataFile::WriteConfig config;
+        config.format = MSDataFile::Format_MZ5;
+        MSDataFile::write(msd, "testSpectraDataFile.Mz5", config);
+        unit_assert_operator_equal(MS_mz5_file, identifyFileFormat(readers, "testSpectraDataFile.Mz5"));
+    }
+    bfs::remove("testSpectraDataFile.Mz5");
 
     {ofstream fs("testSpectraDataFile.mGF"); fs << "MGF";}
     unit_assert_operator_equal(MS_Mascot_MGF_file, identifyFileFormat(readers, "testSpectraDataFile.mGF"));
