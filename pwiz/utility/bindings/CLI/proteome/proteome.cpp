@@ -247,7 +247,7 @@ Digestion::Digestion(Peptide^ peptide, IEnumerable<CVID>^ cleavageAgents, Config
 
 Digestion::Digestion(Peptide^ peptide, System::String^ cleavageAgentRegex)
 {
-    base_ = new b::Digestion(peptide->base(), ToStdString(cleavageAgentRegex));
+    base_ = new b::Digestion(peptide->base(), boost::regex(ToStdString(cleavageAgentRegex)));
     System::GC::KeepAlive(peptide);
 }
 

@@ -48,7 +48,7 @@ class RecordData : public boost::singleton<RecordData>
     }
 
     inline const Record& record(Type type) {return records_[type];}
-    inline const Record* record(char symbol) {return recordsSymbolIndex_[symbol];}
+    inline const Record* record(char symbol) {return (size_t) symbol >= recordsSymbolIndex_.size() ? NULL : recordsSymbolIndex_[symbol];}
 
     private:
     void initializeRecords();

@@ -59,6 +59,12 @@ PWIZ_API_DECL bool operator==(const MZTolerance& a, const MZTolerance& b)
 }
 
 
+PWIZ_API_DECL bool operator!=(const MZTolerance& a, const MZTolerance& b)
+{
+    return a.value!=b.value || a.units!=b.units;
+}
+
+
 PWIZ_API_DECL double& operator+=(double& d, const MZTolerance& tolerance)
 {
     if (tolerance.units == MZTolerance::MZ)

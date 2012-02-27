@@ -29,6 +29,7 @@
 
 #pragma unmanaged
 #include "pwiz/utility/chemistry/Chemistry.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 #pragma managed
 
 #include "../common/SharedCLI.hpp"
@@ -128,8 +129,7 @@ public ref class Formula
     /// <summary>formula string given by symbol/count pairs, e.g. water: "H2 O1" (whitespace optional)</summary>
     Formula(System::String^ formula);
 
-    Formula(const Formula% other);
-    Formula% operator=(const Formula% other);
+    Formula(Formula^ other);
 
     double monoisotopicMass();
     double molecularWeight();
@@ -161,6 +161,32 @@ public ref class Formula
 
     /// <summary>formulas are equal iff their elemental compositions are equal</summary>
     static bool operator!=(Formula^ lhs, Formula^ rhs);
+};
+
+
+/// <summary>struct for expressing m/z tolerance in either amu or ppm</summary>
+public ref struct MZTolerance
+{
+    enum class Units {MZ, PPM};
+    double value;
+    Units units;
+
+    MZTolerance();
+    MZTolerance(double value);
+    MZTolerance(double value, Units units);
+
+    MZTolerance(System::String^ tolerance);
+    virtual System::String^ ToString() override;
+
+    // operators
+    static double operator+(double d, MZTolerance^ tolerance);
+    static double operator-(double d, MZTolerance^ tolerance);
+
+    /// <summary>tolerances are equal iff their value and units are equal</summary>
+    static bool operator==(MZTolerance^ lhs, MZTolerance^ rhs);
+
+    /// <summary>tolerances are equal iff their value and units are equal</summary>
+    static bool operator!=(MZTolerance^ lhs, MZTolerance^ rhs);
 };
 
 

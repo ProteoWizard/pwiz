@@ -50,6 +50,7 @@ struct PWIZ_API_DECL MZTolerance
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MZTolerance& mzt);
 PWIZ_API_DECL std::istream& operator>>(std::istream& is, MZTolerance& mzt);
 PWIZ_API_DECL bool operator==(const MZTolerance& a, const MZTolerance& b);
+PWIZ_API_DECL bool operator!=(const MZTolerance& a, const MZTolerance& b);
 
 
 PWIZ_API_DECL double& operator+=(double& d, const MZTolerance& tolerance);

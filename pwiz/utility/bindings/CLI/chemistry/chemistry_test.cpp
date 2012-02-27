@@ -92,8 +92,7 @@ void testFormula()
         if (os_) Console::WriteLine(String::Format("formula: {0}", formula));
         if (os_) Console::WriteLine(String::Format("formula2: {0}", formula2));
 
-        // test operator=
-        *formula = *formula2;
+        formula = gcnew Formula(formula2);
         unit_assert_equal(formula->monoisotopicMass(), formula2->monoisotopicMass(), EPSILON);
         if (os_) Console::WriteLine(String::Format("formula: {0}", formula));
         if (os_) Console::WriteLine(String::Format("formula2: {0}", formula2));
@@ -143,39 +142,100 @@ void testFormulaOperations()
 }
 
 
-void testInfo()
+const double epsilon_ = 1e-14;
+
+
+void testMZ()
 {
-    /*if (os_)
-    {
-        for (Element::Type e=Element::H; e<=Element::Ca; e=(Element::Type)(e+1))
-            *os_ << Element::Info::record(e).symbol << " " << Element::Info::record(e).atomicNumber << endl;
-        *os_ << endl;
-    }*/
+    double x = 1000;
+    MZTolerance tolerance(.1);
+
+    x = x + %tolerance;
+    unit_assert_equal(x, 1000.1, epsilon_);
+
+    x = x - %tolerance;
+    unit_assert_equal(x, 1000, epsilon_);
+
+    unit_assert_equal(x+%tolerance, 1000.1, epsilon_);
+    unit_assert_equal(x-%tolerance, 999.9, epsilon_);
 }
 
 
-void infoExample()
+void testPPM()
 {
-    /*if (os_)
-    {
-        *os_ << "Sulfur isotopes: " << Element::Info::record(Element::S).isotopes.size() << endl
-             << Element::Info::record(Element::S).isotopes;
-    }*/
+    double x = 1000;
+    MZTolerance tolerance(5, MZTolerance::Units::PPM);
+
+    x = x + %tolerance;
+    unit_assert_equal(x, 1000.005, epsilon_);
+
+    x = x - %tolerance;
+    const double delta = 1000.005 * 5e-6; // a little more than .005
+    unit_assert_equal(x, 1000.005 - delta, epsilon_);
+
+    unit_assert_equal(1000+%tolerance, 1000.005, epsilon_);
+    unit_assert_equal(1000-%tolerance, 999.995, epsilon_);
+
+    unit_assert_equal(-1000+%tolerance, -999.995, epsilon_);
+    unit_assert_equal(-1000-%tolerance, -1000.005, epsilon_);
 }
 
 
-void testPolysiloxane()
+void testIO()
 {
-    Formula formula("Si6C12H36O6");
+    if (os_) Console::WriteLine("testIO()");
 
-    /*if (os_) 
+    MZTolerance temp;
+    if (os_) Console::WriteLine("temp: {0}", %temp);
+
+    MZTolerance fiveppm(5, MZTolerance::Units::PPM);
+    MZTolerance blackbirds(4.20, MZTolerance::Units::MZ);
+    if (os_) Console::WriteLine("fiveppm: {0}", %fiveppm);
+    if (os_) Console::WriteLine("blackbirds: {0}", %blackbirds);
+
     {
-        *os_ << "polysiloxane:\n"
-             << formula << " " 
-             << formula->monoisotopicMass() << " " 
-             << formula->molecularWeight() << endl
-             << "ion: " << Ion::mz(formula->monoisotopicMass(), 1) << endl;
-    }*/
+        MZTolerance temp(fiveppm.ToString());
+        if (os_) Console::WriteLine("temp: {0}", %temp);
+        unit_assert(%temp == %fiveppm);
+        unit_assert(%temp != %blackbirds);
+    }
+
+    {
+        MZTolerance temp(fiveppm.ToString());
+        if (os_) Console::WriteLine("temp: {0}", %temp);
+        unit_assert(%temp == %fiveppm);
+    }
+
+    {
+        MZTolerance temp(fiveppm.ToString());
+        if (os_) Console::WriteLine("temp: {0}", %temp);
+        unit_assert(%temp == %fiveppm);
+    }
+
+    {
+        MZTolerance temp(blackbirds.ToString());
+        if (os_) Console::WriteLine("temp: {0}", %temp);
+        unit_assert(%temp == %blackbirds);
+        unit_assert(%temp != %fiveppm);
+    }
+
+    {
+        MZTolerance temp(blackbirds.ToString());
+        if (os_) Console::WriteLine("temp: {0}", %temp); 
+        unit_assert(%temp == %blackbirds);
+    }
+
+    {
+        MZTolerance temp(blackbirds.ToString());
+        if (os_) Console::WriteLine("temp: {0}", %temp); 
+        unit_assert(%temp == %blackbirds);
+    }
+
+    {
+        MZTolerance temp(blackbirds.ToString());
+        if (os_) Console::WriteLine("temp: {0}", %temp); 
+        unit_assert(%temp == %blackbirds);
+    }
 }
 
 
@@ -188,9 +248,9 @@ int main(int argc, char* argv[])
         testMassAbundance();
         testFormula();
         testFormulaOperations();
-        testInfo();
-        infoExample();
-        testPolysiloxane();
+        testMZ();
+        testPPM();
+        testIO();
         return 0;
     }
     catch (std::exception& e)

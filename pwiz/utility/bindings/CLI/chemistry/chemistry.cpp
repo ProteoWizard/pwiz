@@ -25,6 +25,7 @@
 #include "pwiz/utility/misc/String.hpp"
 
 using namespace System::Collections::Generic;
+using namespace System;
 
 namespace b = pwiz::chemistry;
 
@@ -68,8 +69,7 @@ ElementInfo::Record^ ElementInfo::record(Element element)
 
 Formula::Formula() : base_(new b::Formula()) {}
 Formula::Formula(System::String^ formula) : base_(new b::Formula(ToStdString(formula))) {}
-Formula::Formula(const Formula% other) : base_(new b::Formula(*other.base_)) {}
-Formula% Formula::operator=(const Formula% other) {base() = *other.base_; return *this;}
+Formula::Formula(Formula^ other) : base_(new b::Formula(*other->base_)) {}
 
 double Formula::monoisotopicMass() {return base().monoisotopicMass();}
 double Formula::molecularWeight() {return base().molecularWeight();}
@@ -153,6 +153,63 @@ bool Formula::operator==(Formula^ lhs, Formula^ rhs)
 bool Formula::operator!=(Formula^ lhs, Formula^ rhs)
 {
     return lhs->base() != rhs->base();
+}
+
+
+
+
+MZTolerance::MZTolerance() : value(0), units(Units::MZ) {}
+MZTolerance::MZTolerance(double value) : value(value), units(Units::MZ) {}
+MZTolerance::MZTolerance(double value, Units units) : value(value), units(units) {}
+
+MZTolerance::MZTolerance(System::String^ tolerance)
+{
+    b::MZTolerance tmp;
+    istringstream iss(ToStdString(tolerance));
+    iss >> tmp;
+    value = tmp.value;
+    units = (Units) tmp.units;
+}
+
+System::String^ MZTolerance::ToString()
+{
+    ostringstream oss;
+    oss << b::MZTolerance(value, (b::MZTolerance::Units) units);
+    return ToSystemString(oss.str());
+}
+
+double MZTolerance::operator+(double d, MZTolerance^ tolerance)
+{   
+    if (tolerance->units == MZTolerance::Units::MZ)
+        return d + tolerance->value;
+    else
+        return d + Math::Abs(d) * tolerance->value * 1e-6;
+}
+
+double MZTolerance::operator-(double d, MZTolerance^ tolerance)
+{   
+    if (tolerance->units == MZTolerance::Units::MZ)
+        return d - tolerance->value;
+    else
+        return d - Math::Abs(d) * tolerance->value * 1e-6;
+}
+
+bool MZTolerance::operator==(MZTolerance^ lhs, MZTolerance^ rhs)
+{
+    if (ReferenceEquals(lhs, nullptr) && ReferenceEquals(rhs, nullptr))
+        return true;
+    if (ReferenceEquals(lhs, nullptr) || ReferenceEquals(rhs, nullptr))
+        return false;
+    return lhs->value == rhs->value && lhs->units == rhs->units;
+}
+
+bool MZTolerance::operator!=(MZTolerance^ lhs, MZTolerance^ rhs)
+{
+    if (ReferenceEquals(lhs, nullptr) && ReferenceEquals(rhs, nullptr))
+        return false;
+    if (ReferenceEquals(lhs, nullptr) || ReferenceEquals(rhs, nullptr))
+        return true;
+    return lhs->value != rhs->value || lhs->units != rhs->units;
 }
 
 

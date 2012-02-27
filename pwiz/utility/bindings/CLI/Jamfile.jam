@@ -105,6 +105,7 @@ path-constant CLI_ROOT : . ;
 # http://www.codeguru.com/forum/showthread.php?t=425441
 #
 build-project-if-exists common ;
+build-project-if-exists chemistry ;
 build-project-if-exists msdata ;
 build-project-if-exists analysis ;
 build-project-if-exists proteome ;
