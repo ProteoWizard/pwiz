@@ -45,5 +45,19 @@ namespace seems
         {
             maxChargeUpDown.Value = Math.Max( maxChargeUpDown.Value, minChargeUpDown.Value );
         }
+
+        private void fragmentToleranceTextBox_KeyDown (object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Decimal || e.KeyCode == Keys.OemPeriod)
+            {
+                if ((sender as Control).Text.Length == 0 || (sender as Control).Text.Contains("."))
+                    e.SuppressKeyPress = true;
+            }
+            else if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
+                    e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
+                    e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
+                    e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
+                e.SuppressKeyPress = true;
+        }
     }
 }
