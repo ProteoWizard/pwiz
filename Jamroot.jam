@@ -340,8 +340,8 @@ modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIB
 import svnrev ;
 import generate-version ;
 
-constant PWIZ_MAJOR : 2 ;
-constant PWIZ_MINOR : 2 ;
+constant PWIZ_MAJOR : 3 ;
+constant PWIZ_MINOR : 0 ;
 
 generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdata : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
     [ path.glob $(PWIZ_ROOT_PATH)/pwiz/data/msdata

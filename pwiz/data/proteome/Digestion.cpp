@@ -187,182 +187,6 @@ Digestion::Config::Config(int maximumMissedCleavages,
 }
 
 
-class Digestion::Motif::Impl
-{
-    public:
-    Impl(const string& motif)
-        :   motif_(motif)
-    {
-        parseMotif();
-    }
-
-    typedef CharIndexedVector<bool> IsValidAA;
-
-    inline bool testSite(const string& sequence, int offset) const
-    {
-        bool test = true;
-
-        // start at offset and work toward the sequence's N terminus;
-        // if testing at the N terminus (offset = -1), test '{'
-        {
-            vector<IsValidAA>::const_reverse_iterator filterItr;
-            int testOffset = offset;
-            for (filterItr = nFilters_.rbegin();
-                 test && testOffset >= 0 && filterItr != nFilters_.rend();
-                 --testOffset, ++filterItr)
-            {
-                test = (*filterItr)[sequence[testOffset]];
-            }
-            if (testOffset < 0 && test && filterItr != nFilters_.rend())
-                return (*filterItr)['{'];
-        }
-
-        if (!test)
-            return false;
-
-        // start at offset+1 and work toward the sequence's C terminus;
-        // if testing at the C terminus (offset = length-1), test '}'
-        {
-            vector<IsValidAA>::const_iterator filterItr;
-            int end = (int) sequence.length();
-            int testOffset = offset+1;
-            for (filterItr = cFilters_.begin();
-                 test && testOffset < end && filterItr != cFilters_.end();
-                 ++testOffset, ++filterItr)
-            {
-                test = (*filterItr)[sequence[testOffset]];
-            }
-            if (testOffset == end && test && filterItr != cFilters_.end())
-                return (*filterItr)['}'];
-        }
-
-        return test;
-    }
-
-    private:
-    inline void parseMotif()
-    {
-        vector<char> multiResidueBlock;
-		int multiResidueBlockMode = 0; // 0=off 1=contained residues are included 2=contained residues are excluded
-        bool parsedSiteDelimiter = false;
-        IsValidAA* pFilter;
-
-		for (size_t i=0, end=motif_.size(); i < end; ++i)
-		{
-			switch (motif_[i])
-			{
-				case '[':
-					// start multi residue block
-					if (multiResidueBlockMode > 0)
-						throw runtime_error("[Digestion::Motif::Impl::parseMotif()] Invalid nested multi-residue block opening bracket in motif \"" + motif_ + "\"");
-                    else if (i+1 == end)
-                        throw runtime_error("[Digestion::Motif::Impl::parseMotif()] Mismatched multi-residue block opening bracket at end of motif \"" + motif_ + "\"");
-
-					multiResidueBlockMode = ( motif_[i+1] == '^' ? 2 : 1 );
-                    if (multiResidueBlockMode == 2)
-                        ++i; // skip '^'
-					break;
-
-				case ']':
-					// close multi residue block
-					if (multiResidueBlockMode == 0)
-                        throw runtime_error("[Digestion::Motif::Impl::parseMotif()] Mismatched multi-residue block closing bracket in motif \"" + motif_ + "\"");
-                    (parsedSiteDelimiter ? cFilters_ : nFilters_).push_back(IsValidAA());
-                    pFilter = &(parsedSiteDelimiter ? cFilters_ : nFilters_).back();
-
-					if (multiResidueBlockMode == 2)
-					{
-                        // all residues are valid by default
-                        std::fill(pFilter->begin(), pFilter->end(), true);
-
-                        for (size_t j=0; j < multiResidueBlock.size(); ++j)
-                            motif_[multiResidueBlock[j]] = false;
-					}
-                    else
-					{
-                        // all residues are invalid by default
-                        std::fill(pFilter->begin(), pFilter->end(), false);
-
-						for (size_t j=0; j < multiResidueBlock.size(); ++j)
-							(*pFilter)[multiResidueBlock[j]] = true;
-					}
-				
-					multiResidueBlockMode = 0;
-					multiResidueBlock.clear();
-					break;
-
-                case '|':
-					// set last block as the modification site
-					if( multiResidueBlockMode > 0 )
-						throw runtime_error("[Digestion::Motif::Impl::parseMotif()] Digestion site specifier ('|') is invalid inside a multi-residue block in motif \"" + motif_ + "\"");
-					else
-						parsedSiteDelimiter = true;
-					break;
-
-				default:
-					if (multiResidueBlockMode > 0)
-						multiResidueBlock.push_back(motif_[i]);
-                    else
-                    {
-					    (parsedSiteDelimiter ? cFilters_ : nFilters_).push_back(IsValidAA());
-                        pFilter = &(parsedSiteDelimiter ? cFilters_ : nFilters_).back();
-
-                        if (motif_[i] == 'X' || motif_[i] == '.')
-                            std::fill(pFilter->begin(), pFilter->end(), true);
-                        else
-                            (*pFilter)[motif_[i]] = true;
-                    }
-			}
-		}
-
-		if( multiResidueBlockMode > 0 )
-            throw runtime_error("[Digestion::Motif::Impl::parseMotif()] Mismatched multi-residue block opening bracket in motif \"" + motif_ + "\"");
-    }
-
-    string motif_;
-
-    // Let offset be the residue immediately N terminal to a potential digestion site
-    // and offset+1 be the residue immediately C terminal.
-    // nFilters_.rbegin() tests offset, rbegin()+1 tests offset-1, etc.
-    // cFilters_.begin() tests offset+1, begin()+1 tests offset+1, etc.
-    vector<IsValidAA> nFilters_;
-    vector<IsValidAA> cFilters_;
-};
-
-
-PWIZ_API_DECL
-Digestion::Motif::Motif(const string& motif)
-:   impl_(new Impl(motif))
-{
-}
-
-PWIZ_API_DECL
-Digestion::Motif::Motif(const char* motif)
-:   impl_(new Impl(motif))
-{
-}
-
-PWIZ_API_DECL Digestion::Motif::Motif(const Motif& other)
-:   impl_(new Impl(*other.impl_))
-{
-}
-
-PWIZ_API_DECL Digestion::Motif& Digestion::Motif::operator=(const Motif& rhs)
-{
-    impl_.reset(new Impl(*rhs.impl_));
-    return *this;
-}
-
-PWIZ_API_DECL Digestion::Motif::~Motif()
-{
-}
-
-PWIZ_API_DECL bool Digestion::Motif::testSite(const string& sequence, int offset) const
-{
-    return impl_->testSite(sequence, offset);
-}
-
-
 namespace {
 
 class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
@@ -504,86 +328,37 @@ class Digestion::Impl
         cleavageAgentRegex_ = mergedRegex;
     }
 
-    Impl(const Peptide& peptide, const std::vector<ProteolyticEnzyme>& enzymes, const Config& config)
-        :   peptide_(peptide), config_(config)
-    {
-        motifs_.push_back(Motif("{|"));
-        motifs_.push_back(Motif("|}"));
-        for (size_t i=0; i < enzymes.size(); ++i)
-        {
-            switch (enzymes[i])
-            {
-                case ProteolyticEnzyme_Trypsin:
-                    motifs_.push_back(Motif("[KR]|"));
-                    break;
-                case ProteolyticEnzyme_Chymotrypsin:
-                    motifs_.push_back(Motif("[FWY]|"));
-                    break;
-                case ProteolyticEnzyme_Clostripain:
-                    motifs_.push_back(Motif("R|"));
-                    break;
-                case ProteolyticEnzyme_CyanogenBromide:
-                    motifs_.push_back(Motif("M|[^ST]"));
-                    break;
-                case ProteolyticEnzyme_Pepsin:
-                    motifs_.push_back(Motif("[FWY]|"));
-                    break;
-            }
-        }
-    }
-
-    Impl(const Peptide& peptide, const vector<Motif>& motifs, const Config& config)
-        :   peptide_(peptide), config_(config), motifs_(motifs)
-    {
-        motifs_.push_back(Motif("{|"));
-        motifs_.push_back(Motif("|}"));
-    }
-
     inline void digest() const
     {
         if (sites_.empty())
         {
             try
             {
+                if (cleavageAgentRegex_.empty())
+                    throw runtime_error("empty cleavage regex");
+
                 const string& sequence = peptide_.sequence();
-
-                if (!cleavageAgentRegex_.empty())
+                std::string::const_iterator start = sequence.begin();
+                std::string::const_iterator end = sequence.end();
+                boost::smatch what;
+                boost::match_flag_type flags = boost::match_default;
+                while (regex_search(start, end, what, cleavageAgentRegex_, flags))
                 {
-                    std::string::const_iterator start = sequence.begin();
-                    std::string::const_iterator end = sequence.end();
-                    boost::smatch what;
-                    boost::match_flag_type flags = boost::match_default;
-                    while (regex_search(start, end, what, cleavageAgentRegex_, flags))
-                    {
-                        sites_.push_back(int(what[0].first-sequence.begin()-1));
+                    sites_.push_back(int(what[0].first-sequence.begin()-1));
 
-                        // update search position and flags
-                        start = max(what[0].second, start+1);
-                        flags |= boost::match_prev_avail;
-                        flags |= boost::match_not_bob;
-                    }
-
-                    // if regex didn't match n-terminus, insert it
-                    if (sites_.empty() || sites_.front() > -1)
-                        sites_.insert(sites_.begin(), -1);
-
-                    // if regex didn't match c-terminus, insert it
-                    if (sites_.back() < (int)sequence.length()-1)
-                        sites_.push_back(sequence.length()-1);
+                    // update search position and flags
+                    start = max(what[0].second, start+1);
+                    flags |= boost::match_prev_avail;
+                    flags |= boost::match_not_bob;
                 }
-                else
-                {
-                    // iterate to find all valid digestion sites
-                    for (int offset = -1, end = (int) sequence.length(); offset < end; ++offset)
-                    {
-                        for (size_t i=0; i < motifs_.size(); ++i)
-                            if (motifs_[i].testSite(sequence, offset))
-                            {
-                                sites_.push_back(offset);
-                                break; // skip other motifs after finding a valid site
-                            }
-                    }
-                }
+
+                // if regex didn't match n-terminus, insert it
+                if (sites_.empty() || sites_.front() > -1)
+                    sites_.insert(sites_.begin(), -1);
+
+                // if regex didn't match c-terminus, insert it
+                if (sites_.back() < (int)sequence.length()-1)
+                    sites_.push_back(sequence.length()-1);
 
                 if (sites_.size() > 2 && sites_[1] != 0 &&
                     !sequence.empty() && config_.clipNTerminalMethionine && sequence[0] == 'M')
@@ -718,7 +493,6 @@ class Digestion::Impl
     Peptide peptide_;
     Config config_;
     boost::regex cleavageAgentRegex_;
-    vector<Motif> motifs_;
     friend class Digestion::const_iterator::Impl;
 
     // precalculated offsets to digestion sites in order of occurence;
@@ -759,41 +533,6 @@ Digestion::Digestion(const Peptide& peptide,
                      const vector<boost::regex>& cleavageAgentRegexes,
                      const Config& config)
 :   impl_(new Impl(peptide, cleavageAgentRegexes, config))
-{
-}
-
-
-// DEPRECATED CONSTRUCTORS
-
-PWIZ_API_DECL
-Digestion::Digestion(const Peptide& peptide,
-                     ProteolyticEnzyme enzyme,
-                     const Config& config)
-:   impl_(new Impl(peptide, vector<ProteolyticEnzyme>(1, enzyme), config))
-{
-}
-
-PWIZ_API_DECL
-Digestion::Digestion(const Peptide& peptide,
-                     const vector<ProteolyticEnzyme>& enzymes,
-                     const Config& config)
-:   impl_(new Impl(peptide, enzymes, config))
-{
-}
-
-PWIZ_API_DECL
-Digestion::Digestion(const Peptide& peptide,
-                     const Motif& motif,
-                     const Config& config)
-:   impl_(new Impl(peptide, vector<Motif>(1, motif), config))
-{
-}
-
-PWIZ_API_DECL
-Digestion::Digestion(const Peptide& peptide,
-                     const vector<Motif>& motifs,
-                     const Config& config)
-:   impl_(new Impl(peptide, motifs, config))
 {
 }
 

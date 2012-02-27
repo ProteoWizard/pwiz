@@ -24,8 +24,7 @@ using namespace pwiz::util;
 
 struct Config
 {
-    ProteolyticEnzyme proteolyticEnzyme;
-    string digestionMotif;
+    CVID cleavageAgent;
     string cleavageAgentRegex;
     Digestion::Config digestionConfig;
     vector<string> filenames;
@@ -35,7 +34,7 @@ struct Config
     bool proteinSummary;
 
     Config()
-        :   proteolyticEnzyme(ProteolyticEnzyme_Trypsin),
+        :   cleavageAgent(MS_Trypsin_P),
             digestionConfig(0,0,100000),
             precision(12),
             benchmark(false),
@@ -45,25 +44,20 @@ struct Config
 
 };
 
-ProteolyticEnzyme translateProteolyticEnzyme(const string& s)
-{    
-    if (s.compare("trypsin") == 0) return ProteolyticEnzyme_Trypsin;
-    else if (s.compare("chymotrypsin") == 0) return ProteolyticEnzyme_Chymotrypsin;
-    else if (s.compare("chymotrypsin") == 0) return ProteolyticEnzyme_Chymotrypsin;
-    else if (s.compare("clostripain") == 0) return ProteolyticEnzyme_Clostripain;
-    else if (s.compare("cyanogenBromide") == 0) return ProteolyticEnzyme_CyanogenBromide;
-    else if (s.compare("pepsin") == 0) return ProteolyticEnzyme_Pepsin;
-    else throw runtime_error(("[chainsaw] Unsupported proteolyticEnzyme: " + s).c_str());
-
+CVID translateCleavageAgentName(const string& s)
+{
+    CVID cleavageAgent = Digestion::getCleavageAgentByName(s);
+    if (cleavageAgent == CVID_Unknown)
+        throw runtime_error("[chainsaw] Unsupported cleavage agent name: " + s);
+    return cleavageAgent;
 }
 
 Digestion::Specificity translateSpecificity(const string& s)
 {
-    if (s.compare("none") == 0 ) return Digestion::NonSpecific;
-    else if (s.compare("semi") == 0 ) return Digestion::SemiSpecific;
-    else if (s.compare("fully") == 0 ) return Digestion::FullySpecific;
-    else throw runtime_error(("[chainsaw] Unsupported specificity: " + s).c_str());
-
+    if (s == "none") return Digestion::NonSpecific;
+    else if (s == "semi") return Digestion::SemiSpecific;
+    else if (s == "fully") return Digestion::FullySpecific;
+    else throw runtime_error("[chainsaw] Unsupported specificity: " + s);
 }
 
 Config parseCommandLine(int argc, const char* argv[])
@@ -79,11 +73,12 @@ Config parseCommandLine(int argc, const char* argv[])
     string tempEnzyme;
     string tempSpecificity;
 
+    string cleavageAgentNameOptions = bal::join(Digestion::getCleavageAgentNames(), ", ");
+
     // define command line options
     po::options_description od_config("Options");
     od_config.add_options()
-        ("proteolyticEnzyme,e", po::value<string>(&tempEnzyme), " : specify proteolytic enzyme for digestion. Options: trypsin, chromotrypsin, clostripain, cyanogenBromide, pepsin. \nDefault : trypsin")
-        ("digestionMotif,d", po::value<string>(&config.digestionMotif), " : specify a digestion motif (e.g. trypsin = \"[KR]|[^P]\")")
+        ("cleavageAgentName,c", po::value<string>(&tempEnzyme), (" : specify cleavage by name. Options: " + cleavageAgentNameOptions + "\nDefault : trypsin").c_str())
         ("cleavageAgentRegex,r", po::value<string>(&config.cleavageAgentRegex), " : specify a cleavage agent regex (e.g. trypsin = \"(?<=[KR])(?!P)\")")
         ("numMissedCleavages,n", po::value<int>(&config.digestionConfig.maximumMissedCleavages)->default_value(config.digestionConfig.maximumMissedCleavages), " : specify number of missed cleavages to allow.")
         ("specificity,s", po::value<string>(&tempSpecificity), " : specify minimum specificity. Options: none, semi, fully. \nDefault: fully")
@@ -92,7 +87,7 @@ Config parseCommandLine(int argc, const char* argv[])
         ("massPrecison,p", po::value<size_t>(&config.precision)->default_value(config.precision), " : specify precision of calculated mass of digested peptides")
         ("benchmark", po::value<bool>(&config.benchmark)->zero_tokens(), " : do not write results")
         ("indexOnly", po::value<bool>(&config.indexOnly)->zero_tokens(), " : create database index (if necessary)")
-        ("proteinSummary", po::value<bool>(&config.proteinSummary)->zero_tokens(), " : print a table with index, id, MW, and description for each protein");
+        ("proteinSummary", po::value<bool>(&config.proteinSummary)->zero_tokens(), " : print a table with index, id, length, MW, and description for each protein");
     
     
     // append options to usage string
@@ -169,7 +164,7 @@ Config parseCommandLine(int argc, const char* argv[])
         throw runtime_error(usage.str());
 
     // assign local variables to config
-    if (tempEnzyme.size() > 0) config.proteolyticEnzyme = translateProteolyticEnzyme(tempEnzyme);
+    if (tempEnzyme.size() > 0) config.cleavageAgent = translateCleavageAgentName(tempEnzyme);
     if (tempSpecificity.size() > 0) config.digestionConfig.minimumSpecificity = translateSpecificity(tempSpecificity);
 
     return config;
@@ -197,7 +192,7 @@ void writeSummary(const Config& config, const ProteomeData& pd)
     bpt::ptime start = bpt::microsec_clock::local_time();
     for(size_t index = 0, end=pl.size(); index < end; ++index)
     {
-        if (index > 0 && (index % 10) == 0)
+        if (index > 0 && (index % 100) == 0)
         {
             bpt::ptime stop = bpt::microsec_clock::local_time();
             bpt::time_duration duration = stop - start;
@@ -226,6 +221,10 @@ void writeSummary(const Config& config, const ProteomeData& pd)
         catch (runtime_error& e)
         {
             cerr << "Error summarizing protein " << index << " (" << id << "): " << e.what() << endl;
+        }
+        catch (...)
+        {
+            cerr << "Unknown error summarizing protein " << index << " (" << id << ")" << endl;
         }
     }
     bpt::ptime stop = bpt::microsec_clock::local_time();
@@ -256,7 +255,7 @@ void writeDigestion(const Config& config, const ProteomeData& pd)
     bpt::ptime start = bpt::microsec_clock::local_time();
     for(size_t index = 0, end=pl.size(); index < end; ++index)
     {
-        if (index > 0 && (index % 10) == 0)
+        if (index > 0 && (index % 100) == 0)
         {
             bpt::ptime stop = bpt::microsec_clock::local_time();
             bpt::time_duration duration = stop - start;
@@ -274,10 +273,8 @@ void writeDigestion(const Config& config, const ProteomeData& pd)
             shared_ptr<Digestion> digestion;
             if (!config.cleavageAgentRegex.empty())
                 digestion.reset(new Digestion(*proteinPtr, boost::regex(config.cleavageAgentRegex), config.digestionConfig));
-            else if (!config.digestionMotif.empty())
-                digestion.reset(new Digestion(*proteinPtr, config.digestionMotif, config.digestionConfig));
             else
-                digestion.reset(new Digestion(*proteinPtr, config.proteolyticEnzyme, config.digestionConfig));
+                digestion.reset(new Digestion(*proteinPtr, config.cleavageAgent, config.digestionConfig));
 
             // iterate through digested peptides (and, if not benchmarking, write output)
             if (config.benchmark)
@@ -303,6 +300,10 @@ void writeDigestion(const Config& config, const ProteomeData& pd)
         catch (runtime_error& e)
         {
             cerr << "Error digesting protein " << index << " (" << id << "): " << e.what() << endl;
+        }
+        catch (...)
+        {
+            cerr << "Unknown error digesting protein " << index << " (" << id << ")" << endl;
         }
     }
     bpt::ptime stop = bpt::microsec_clock::local_time();
