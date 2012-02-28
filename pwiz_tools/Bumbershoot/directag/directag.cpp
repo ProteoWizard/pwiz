@@ -117,7 +117,8 @@ namespace directag
 					<< bestTagTICIQR << '\t'
 					<< tagMzRangeIQR << '\t'
 					<< numTaggedSpectra << "\n";
-		fileStream << "H\tIndex\tNativeID\tPrecursorMZ\tCharge\tPrecursorMass\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
+		//fileStream << "H\tIndex\tNativeID\tPrecursorMZ\tCharge\tPrecursorMass\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
+		fileStream << "H\tNativeID\tPrecursorMZ\tCharge\tPrecursorMass\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
 		set<NativeID> seen;
 		Spectrum* s;
 		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
@@ -125,10 +126,10 @@ namespace directag
 			s = *sItr;
 			float logBestTagTIC = (s->bestTagTIC == 0) ? 0 : (log( s->bestTagTIC ));
             pair<set<NativeID>::iterator, bool> insertResult = seen.insert(s->id.nativeID);
-			if( !insertResult.second ) // only write out metrics of best scored spectrum if existing multiple charge states
+			if( insertResult.second ) // only write out metrics of best scored spectrum if existing multiple charge states
 			{
 				fileStream	<< "S" << '\t'
-							<< s->nativeID << '\t'
+							//<< s->nativeID << '\t'
 							<< s->nativeID << '\t'
 							<< s->mzOfPrecursor << '\t'
 							<< s->id.charge << '\t'
@@ -794,7 +795,7 @@ namespace directag
                         {
 							// merge duplicate spectra with differen charge state
                             pair<set<NativeID>::iterator, bool> insertResult = seen.insert(s->id.nativeID);
-							if( !insertResult.second )
+							if( insertResult.second )
 								mergedSpectraIndices.push_back( s->id.nativeID );
 						}
 						int maxOutput = (int) (((double) mergedSpectraIndices.size()) * g_rtConfig->HighQualSpecCutoff);

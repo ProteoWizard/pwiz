@@ -135,15 +135,11 @@ void adjustScore(	const string& filename,
 				v.push_back(segments);
 			}
 			// metrics file format:
-			// H	Index NativeID	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore
-			// S	5387	controllerType=0 controllerNumber=1 scan=5388	54.3165	12.459	1533.74	2.00768
-			// new format:
-			//H	Index	NativeID	PrecursorMZ	Charge	PrecursorMass	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore
-			
-			float bestTagScore = lexical_cast<float>( v[6] );
-			float bestTagTIC = lexical_cast<float>( v[7] );
-			float tagMzRange = lexical_cast<float>( v[8] );
-			float originalScore = lexical_cast<float>( v[9] );
+			//H	NativeID	PrecursorMZ	Charge	PrecursorMass	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore
+			float bestTagScore = lexical_cast<float>( v[5] );
+			float bestTagTIC = lexical_cast<float>( v[6] );
+			float tagMzRange = lexical_cast<float>( v[7] );
+			float originalScore = lexical_cast<float>( v[8] );
 			float bestTagScoreNorm = ( bestTagScore - gbBestTagScoreMean ) / gbBestTagScoreIQRMean;
 			float bestTagTICNorm = ( bestTagTIC - gbBestTagTICMean ) / gbBestTagTICIQRMean;
 			float tagMzRangeNorm = ( tagMzRange - gbTagMzRangeMean ) / gbTagMzRangeIQRMean;

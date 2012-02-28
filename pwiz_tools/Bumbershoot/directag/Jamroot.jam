@@ -74,15 +74,6 @@ local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
 local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
 zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
 
-local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
-expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
-expat_src = $(expat_src[0]) ;
-
-if ! $(expat_src)
-{
-     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
-}
-
 
 path-constant ROOT_PATH : . ;
 path-constant BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
@@ -92,7 +83,10 @@ path-constant PWIZ_SOURCE : ./freicore/pwiz_src ;
 
 # this makes pwiz use freicore's libraries directory
 local argv = [ modules.peek : ARGV ] ;
-modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
+if ! [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ]
+{
+    modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
+}
 
 
 import os ;
@@ -107,8 +101,10 @@ import mpi ;
 
 project bumbershoot
 	: requirements
-	    <include>freicore/pwiz_src
-	    <include>$(libraries_path)/boost_aux
+        <include>freicore/pwiz_src
+	      <include>$(libraries_path)/boost_aux
+        <include>$(boost_src)
+        <include>$(zlib_src)
 
         <toolset>gcc,<link>shared:<runtime-link>shared
         <toolset>darwin,<link>shared:<runtime-link>shared
@@ -163,16 +159,7 @@ project bumbershoot
       <runtime-link>static
 	;
 
-
-local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
-expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
-expat_src = $(expat_src[0]) ;
-
-if ! $(expat_src)
-{
-     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
-}
-
+alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
 
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
 tmp += freicore/ext $(libraries_path) ;
@@ -212,11 +199,11 @@ if $(revision-info[5]) > 0
 echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
-path-constant EXPAT_SOURCE : $(expat_src) ;
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
-
-using expat : 2.0 : $(EXPAT_SOURCE) ;
+path-constant GD_SOURCE : $(LIBRARIES_PATH)/libgd-2.1.0alpha ;
+path-constant PNG_SOURCE : $(LIBRARIES_PATH)/libpng-1.5.6 ;
+path-constant FREETYPE_SOURCE : $(LIBRARIES_PATH)/freetype-2.4.7 ;
 
 local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
 if ! $(.has-boost)
@@ -224,6 +211,7 @@ if ! $(.has-boost)
     modules.poke : BOOST_VERSION : $(BOOST_VERSION) ;
     using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 }
+using gd : 2.1.0 : $(GD_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) <png-src-location>$(PNG_SOURCE) <freetype-src-location>$(FREETYPE_SOURCE) ;
 
 
 rule install-location ( properties * )
