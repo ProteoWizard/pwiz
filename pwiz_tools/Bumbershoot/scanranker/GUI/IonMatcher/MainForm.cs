@@ -333,15 +333,15 @@ namespace IonMatcher
         /// </summary>
         public string convertToSeeMSFormat(string rawSequence)
         {
-            //rawSequence = "LKEC1C2EKPLLEK{1=57.0215;2=57.0215}";
+            //rawSequence = "LKECCEKPLLEK{3=57.0215;4=57.0215}";
             //output seq = LKEC[+57.0215]C[+57.0215]EKPLLEK
             Dictionary<string, string> dict = new Dictionary<string, string>();
             if (rawSequence.Contains("{"))
             {
                 string[] subPep = rawSequence.Split(new char[] { '{', '}' });
-                //subPep[0] = LKEC1C2EKPLLEK; subPep[1] = 1=57.0215;2=57.0215                
+                //subPep[0] = LKECCEKPLLEK; subPep[1] = 3=57.0215;4=57.0215 
                 string[] mods = subPep[1].Split(';');
-                //mods[0] = 1=57.0215; mods[1] = 2=57.0215
+                //mods[0] = 3=57.0215; mods[1] = 4=57.0215
                 foreach (string s in mods)
                 {
                     string[] mod = s.Split('=');
@@ -357,8 +357,20 @@ namespace IonMatcher
                     }
                     dict.Add(mod[0], '[' + modMass + ']');
                 }
-                Regex r = new Regex(@"(\d)");
-                string result = r.Replace(subPep[0], (Match m) => dict[m.Value]);
+
+                //add mod position to seq, then replace to mods
+                string seq = subPep[0];
+                int extend = 0;
+                foreach (string k in dict.Keys)
+                {
+                    int pos = Convert.ToInt32(k) + extend + 1;
+                    seq = seq.Insert(pos, k);
+                    extend++;
+                }
+                // seq = LKEC3C4EKPLLEK
+                Regex r = new Regex(@"(\d+)");
+                string result = r.Replace(seq, (Match m) => dict[m.Value]);
+                
                 return result;
             }
             else
@@ -374,7 +386,8 @@ namespace IonMatcher
             string[] fields = null;
             DataTable dt = new DataTable();
             //metrics file header:
-            //H	Index	NativeID	"PrecursorMZ","Charge","PrecursorMass", BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore	AdjustedScore	Label	CumsumLabel	Peptide	Protein(locus;peptide starting position)
+            // old: H	Index	NativeID	"PrecursorMZ","Charge","PrecursorMass", BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore	AdjustedScore	Label	CumsumLabel	Peptide	Protein(locus;peptide starting position)
+            //H	NativeID	PrecursorMZ	Charge	PrecursorMass	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore AdjustedScore	Label	CumsumLabel	Peptide	Protein
             //List<string> selectedColumns = new List<string>(new string[] { "NativeID", "PrecursorMZ", "Charge", "PrecursorMass", "ScanRankerScore", "Peptide" });
             //dt.TableName = tableName;  
             try
@@ -710,13 +723,28 @@ namespace IonMatcher
              mainForm.tbPepNovoResult.AppendText(text);
          }
 
-        private class SpectrumList_FilterPredicate_IndexSet
+        //private class SpectrumList_FilterPredicate_IndexSet
+        //{
+        //    public List<string> indexSet;
+        //    public bool? accept(Spectrum s) { return indexSet.Contains(s.id); }
+        //    public SpectrumList_FilterPredicate_IndexSet()
+        //    {
+        //        indexSet = new List<string>();
+        //    }
+
+        //}
+
+        private class SpectrumList_FilterPredicate_NativeIDSet
         {
-            public List<string> indexSet;
-            public bool accept(Spectrum s) { return indexSet.Contains(s.id); }
-            public SpectrumList_FilterPredicate_IndexSet()
+            public List<string> nativeIDSet;
+            public bool? accept(Spectrum s)
             {
-                indexSet = new List<string>();
+                if (String.IsNullOrEmpty(s.id)) return null;
+                return nativeIDSet.Contains(s.id);
+            }
+            public SpectrumList_FilterPredicate_NativeIDSet()
+            {
+                nativeIDSet = new List<string>();
             }
 
         }
@@ -727,8 +755,12 @@ namespace IonMatcher
             writeConfig.format = MSDataFile.Format.Format_MGF;
             writeConfig.precision = MSDataFile.Precision.Precision_32;
 
-            var predicate = new SpectrumList_FilterPredicate_IndexSet();
-            predicate.indexSet.Add(nativeID);
+            //var predicate = new SpectrumList_FilterPredicate_IndexSet();
+            //predicate.indexSet.Add(nativeID);
+
+            var predicate = new SpectrumList_FilterPredicate_NativeIDSet();
+            predicate.nativeIDSet.Add(nativeID);
+            
 
             try
             {

@@ -30,11 +30,11 @@ using System.IO;
 using System.Xml;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using IDPicker;
+//using IDPicker;
 using pwiz.CLI;
 using pwiz.CLI.msdata;
 using pwiz.CLI.analysis;
-
+using System.Data.SQLite;
 
 namespace ScanRanker
 {
@@ -120,11 +120,23 @@ namespace ScanRanker
             string BIN_DIR = Path.GetDirectoryName(Application.ExecutablePath);
             string pathAndExeFile = BIN_DIR + "\\" + EXE;
             // string outputFilename = Path.GetFileNameWithoutExtension(idpCfg.PepXMLFile) + ".idpXML";
+            //// IDPicker 2 args
+            //string args =
+            //      " -MaxFDR " + idpCfg.MaxFDR
+            //    + " -NormalizeSearchScores " + idpCfg.NormalizeSearchScores
+            //    + " -OptimizeScoreWeights " + idpCfg.OptimizeScoreWeights
+            //    + " -SearchScoreWeights " + "\"" + idpCfg.ScoreInfo + "\""
+            //    + " -DecoyPrefix " + "\"" + idpCfg.DecoyPrefix + "\""
+            //    + " -WriteQonversionDetails  0 "
+            //    + " -ProteinDatabase " + "\"" + idpCfg.DBFile + "\"" + " "
+            //    + idpCfg.PepXMLFiles; // each file enclosed by "..." and separated by a space
+            //// IDPicker 3 args
+            // MaxImportFDR equal to MaxFDR to reduce idpDB size
             string args =
-                  " -MaxFDR " + idpCfg.MaxFDR
-                + " -NormalizeSearchScores " + idpCfg.NormalizeSearchScores
-                + " -OptimizeScoreWeights " + idpCfg.OptimizeScoreWeights
-                + " -SearchScoreWeights " + "\"" + idpCfg.ScoreWeights + "\""
+                  " -MaxImportFDR " + idpCfg.MaxFDR
+                + " -MaxFDR " + idpCfg.MaxFDR
+                + " -QonverterMethod " + "\"" + idpCfg.QonverterMethod + "\"" 
+                + " -ScoreInfo " + "\"" + idpCfg.ScoreInfo + "\""
                 + " -DecoyPrefix " + "\"" + idpCfg.DecoyPrefix + "\""
                 + " -WriteQonversionDetails  0 "
                 + " -ProteinDatabase " + "\"" + idpCfg.DBFile + "\"" + " "
@@ -137,6 +149,7 @@ namespace ScanRanker
                 //{
                 //    File.Delete(outputFilename);
                 //}
+                Workspace.SetText("\r\nidpQonvert command:\r\n" + pathAndExeFile + args + "\r\n");
                 Workspace.RunProcess(pathAndExeFile, args, outDir);
             }
             catch (Exception exc)
@@ -181,31 +194,53 @@ namespace ScanRanker
                 return default(T);
         }
         
-        private class SpectrumList_FilterPredicate_IndexSet
+        //private class SpectrumList_FilterPredicate_IndexSet
+        //{
+        //    public List<int> indexSet;
+        //    public bool? accept(Spectrum s) { return indexSet.Contains(s.index); }
+        //    public SpectrumList_FilterPredicate_IndexSet()
+        //    {
+        //        indexSet = new List<int>();
+        //    }
+
+        //}
+
+        private class SpectrumList_FilterPredicate_NativeIDSet
         {
-            public List<int> indexSet;
-            public bool accept(Spectrum s) { return indexSet.Contains(s.index); }
-            public SpectrumList_FilterPredicate_IndexSet()
+            public List<string> nativeIDSet;
+            public bool? accept(Spectrum s)
             {
-                indexSet = new List<int>();
+                if (String.IsNullOrEmpty(s.id)) return null;
+                return nativeIDSet.Contains(s.id);
+            }
+            public SpectrumList_FilterPredicate_NativeIDSet()
+            {
+                nativeIDSet = new List<string>();
             }
 
         }
 
         private void writeUnidentifiedSpectra(string spectraFilename,
                                                string outFileSuffix,
-                                               List<int> unidentifiedSpectra,
+                                               List<string> unidentifiedSpectra,
                                                float cutoff,
                                                string outFormat)
         {
             int numOutputSpectra = Convert.ToInt32(unidentifiedSpectra.Count * cutoff);
-            List<int> highQualIndices;
+            //List<int> highQualIndices;
+            List<string> highQualIndices;
             highQualIndices = unidentifiedSpectra.GetRange(0, numOutputSpectra);
   
-            var predicate = new SpectrumList_FilterPredicate_IndexSet();
-            foreach (int i in highQualIndices)
+            //var predicate = new SpectrumList_FilterPredicate_IndexSet();
+            //foreach (int i in highQualIndices)
+            //{
+            //    predicate.indexSet.Add(i);
+            //}
+
+            var predicate = new SpectrumList_FilterPredicate_NativeIDSet();
+            foreach (string i in highQualIndices)
             {
-                predicate.indexSet.Add(i);
+                predicate.nativeIDSet.Add(i);
             }
 
             //MSDataFile.WriteConfig writeConfig = new MSDataFile.WriteConfig(MSDataFile.Format.Format_mzXML);
@@ -252,7 +287,15 @@ namespace ScanRanker
                 throw new Exception(exc.Message);
             }
         }
-        
+
+
+        public class ResultInstance
+        {
+            public string Mods;
+            public string Peptide;
+            public string Protein;
+
+        }
         /// <summary>
         /// add spectra labels to ScanRanker metrics file
         /// identified spectra ids stored in idpXML file by idqQonvert 
@@ -266,6 +309,13 @@ namespace ScanRanker
                 string fileBaseName = Path.GetFileNameWithoutExtension(file.Name);
                 string pepXMLFile = idpCfg.PepXMLFileDir + "\\" + fileBaseName + ".pepXML";  // pepXML file has to be the same basename
                 idpCfg.PepXMLFiles += "\"" + pepXMLFile + "\"" + " ";  // each file enclosed by "..." and separated by a space
+                string idpDBFilename = fileBaseName + ".idpDB";  // pepXML file has to be the same basename as spectra filename
+                if (File.Exists(idpDBFilename))
+                {
+                    File.Delete(idpDBFilename);
+                    Workspace.SetText("\r\nRemoved existing idpDB file: " + idpDBFilename + "\n");
+                }
+
             }
             //Workspace.SetText("\r\npepXMLFies\r\n" + idpCfg.PepXMLFiles + "\r\n\r\n");
 
@@ -281,46 +331,107 @@ namespace ScanRanker
                 throw new Exception(exc.Message);
             }
 
-            // use IDPickerWorkspace.dll to parse idpXML, get spectra->peptides->proteins info
+            // use IDPickerWorkspace.dll to parse idpXML, get spectra->peptides->proteins info, work for IDP2
+            // use System.Data.SQLite to read idpDB for IDP3, get spectra->peptides->proteins info
             // add labels, peptide and proteins to metrics file
             foreach (FileInfo file in inFileList)
             {
                 string fileBaseName = Path.GetFileNameWithoutExtension(file.Name);
-                string idpXMLFilename = fileBaseName + ".idpXML";  // pepXML file has to be the same basename as spectra filename
+                //string idpXMLFilename = fileBaseName + ".idpXML";  // pepXML file has to be the same basename as spectra filename
+                string idpDBFilename = fileBaseName + ".idpDB";  // pepXML file has to be the same basename as spectra filename
 
-                if (!File.Exists(idpXMLFilename))
+                if (!File.Exists(idpDBFilename))
                 {
-                    Workspace.SetText("\r\nError: Cannot create idpXML file: " + idpXMLFilename + " in output directory!");
+                    Workspace.SetText("\r\nError: Cannot find idpDB file: " + idpDBFilename + " in output directory!");
                     Workspace.SetText("\r\nPlease check IDPicker configurations and the database file");
                     Workspace.ChangeButtonTo("Close");
                     return;
                 }
 
-                // parse idpXML file
-                Workspace.SetText("\r\nReading idpXML file: " + idpXMLFilename);
-                IDPicker.Workspace ws = new IDPicker.Workspace();
-                using (StreamReader idpXMLStream = new StreamReader(idpXMLFilename))
-                {
-                    ws.readPeptidesXml(idpXMLStream, "", (float)idpCfg.MaxFDR, 1);
-                }
+                // parse idpDB file
+                Workspace.SetText("\r\nReading idpDB file: " + idpDBFilename);
 
-                Workspace.SetText("\r\nExtracting identified spectra, peptides and proteins from " + idpXMLFilename);
                 Map<string, ResultInstance> resultsMap = new Map<string, ResultInstance>();
-                foreach (SourceGroupInfo group in ws.groups.Values)
-                    foreach (SourceInfo source in group.getSources())
-                        foreach (SpectrumInfo spectrum in source.spectra.Values)
-                        {
-                            ResultInstance ri = spectrum.results[1];
-                            resultsMap.Add(spectrum.nativeID, ri);                            
-                            //Workspace.SetText("\r\n" + spectrum.nativeID);
-                        }
 
-                // remove idpXML file
-                if (File.Exists(idpXMLFilename))
+                // Connect to database
+                string dbConnectionString = "Data Source=" + idpDBFilename;
+                using (SQLiteConnection sqliteCon = new SQLiteConnection(dbConnectionString))
                 {
-                    File.Delete(idpXMLFilename);
+                    // Execute query on database
+                    string querySQL = @"SELECT s.NativeID,  
+                                    REPLACE(IFNULL(GROUP_CONCAT(DISTINCT pm.Offset || '=' || mod.MonoMassDelta),''),',',';') as Mods,
+                                    IFNULL(IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length),
+                                        (SELECT DecoySequence FROM Peptide p WHERE p.Id = pi.Peptide)),
+                                        (SELECT SUBSTR(pd.Sequence, pi.Offset+1, pi.Length)
+                                        FROM PeptideInstance pi 
+                                        JOIN Protein pro ON pi.Protein = pro.Id AND pro.IsDecoy = 0
+                                        LEFT JOIN ProteinData pd ON pi.Protein=pd.Id
+                                        WHERE psm.Peptide = pi.Peptide
+                                        UNION
+                                        SELECT p.DecoySequence
+                                        FROM Peptide p
+                                        JOIN PeptideInstance pi ON p.Id = pi.Peptide
+                                        JOIN Protein pro ON pi.Protein = pro.Id AND pro.IsDecoy = 1
+                                        WHERE psm.Peptide = pi.Peptide AND p.DecoySequence is not null)) as Peptide,
+                                    GROUP_CONCAT(pro.Accession) as Protein
+                                    FROM PeptideSpectrumMatch psm 
+                                    JOIN Spectrum s ON s.Id = psm.Spectrum
+                                    JOIN SpectrumSource source ON s.Source = source.Id
+                                    JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
+                                    JOIN Protein pro ON pi.Protein = pro.Id
+                                    LEFT JOIN ProteinData pd ON pi.Protein=pd.Id
+                                    LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch
+                                    LEFT JOIN Modification mod ON pm.Modification = mod.Id
+                                    Where psm.Rank = 1 and psm.Qvalue < " + idpCfg.MaxFDR.ToString() +
+                                        " GROUP BY psm.Id";
+
+                    Workspace.SetText("\r\nExtracting identified spectra, peptides and proteins from " + idpDBFilename);
+                    using (SQLiteCommand queryCommand = new SQLiteCommand(querySQL, sqliteCon))
+                    {
+                        sqliteCon.Open();
+                        using (SQLiteDataReader dataReader = queryCommand.ExecuteReader())
+                        {
+                            // Iterate every record 
+                            while (dataReader.Read())
+                            {
+                                Console.WriteLine(dataReader.GetString(0) + " " + dataReader.GetString(1) + " " + dataReader.GetString(2));
+                                ResultInstance ri = new ResultInstance();
+                                string nativeID = dataReader.GetString(0);
+                                ri.Mods = dataReader.GetString(1);
+                                ri.Peptide = dataReader.GetString(2);
+                                ri.Protein = dataReader.GetString(3);
+                                resultsMap.Add(nativeID, ri);
+
+                            }
+                        }
+                    }
                 }
-                Workspace.SetText("\r\nRemoved idpXML file: " + idpXMLFilename + "\n");
+                //dataReader.Close();
+                //sqliteCon.Close();
+
+
+                //IDPicker.Workspace ws = new IDPicker.Workspace();
+                //using (StreamReader idpXMLStream = new StreamReader(idpDBFilename))
+                //{
+                //    ws.readPeptidesXml(idpXMLStream, "", (float)idpCfg.MaxFDR, 1);
+                //}
+
+                  
+                //foreach (SourceGroupInfo group in ws.groups.Values)
+                //    foreach (SourceInfo source in group.getSources())
+                //        foreach (SpectrumInfo spectrum in source.spectra.Values)
+                //        {
+                //            ResultInstance ri = spectrum.results[1];
+                //            resultsMap.Add(spectrum.nativeID, ri);                            
+                //            //Workspace.SetText("\r\n" + spectrum.nativeID);
+                //        }
+
+                // remove idpDB file
+                if (File.Exists(idpDBFilename))
+                {
+                    File.Delete(idpDBFilename);
+                }
+                Workspace.SetText("\r\nRemoved idpDB file: " + idpDBFilename + "\n");
 
                 // read idpxml, extract spectra id, save to a dictionary
                 /*Dictionary<string, int> idtScanDict = new Dictionary<string, int>();
@@ -363,7 +474,8 @@ namespace ScanRanker
                 
                 Workspace.SetText("\r\nWriting labbled metrics file: " + outFileName);
 
-                List<int> unidentifiedSpectra = new List<int>();
+                //List<int> unidentifiedSpectra = new List<int>();
+                List<string> unidentifiedSpectra = new List<string>();
                 int numSpectra = 0;
                 int cumsum = 0;
 
@@ -381,15 +493,16 @@ namespace ScanRanker
                             w.WriteLine(r.ReadLine());  // read and write the 1st header line
                             w.WriteLine(r.ReadLine());  // read and write the 1st header line
                             string header = r.ReadLine();  // read the 3rd header line
-                            w.WriteLine(header + "\t" + "Label" + "\t" + "CumsumLabel" + "\t" + "Peptide" + "\t" + "Protein(locus;peptide starting position)"); // write the 3rd header line
+                            w.WriteLine(header + "\t" + "Label" + "\t" + "CumsumLabel" + "\t" + "Peptide" + "\t" + "Protein"); // write the 3rd header line
 
                             string line = string.Empty;
                             while ((line = r.ReadLine()) != null)
                             {
                                 numSpectra++;
                                 string[] items = line.Split('\t');
-                                string scanNativeID = items[2];   // items[2]: nativeID
-                                int index = Convert.ToInt32(items[1]);  //index
+                                //string scanNativeID = items[2];   //  nativeID
+                                string scanNativeID = items[1];   //  nativeID
+                                //int index = Convert.ToInt32(items[1]);  //index
                                 
                                 //Match m = Regex.Match(scanNativeID, @"scan=(\d+)");  // extract scan number in nativeID
                                 //if (m.Success)
@@ -401,13 +514,20 @@ namespace ScanRanker
                                 {
                                     cumsum += 1;
                                     ResultInstance ri = resultsMap[scanNativeID];
-                                    w.WriteLine(line + "\t1\t" + cumsum + "\t" + ri.info.peptides.ToString() + "\t"
-                                                + ri.info.getProteinLoci());
+                                    if (ri.Mods.Equals(string.Empty))
+                                    {
+                                        w.WriteLine(line + "\t1\t" + cumsum + "\t" + ri.Peptide.ToString() + "\t" + ri.Protein.ToString());
+                                    }
+                                    else
+                                    {
+                                        w.WriteLine(line + "\t1\t" + cumsum + "\t" + ri.Peptide.ToString() + '{' + ri.Mods.ToString() + '}' + "\t" + ri.Protein.ToString());
+                                    }
                                 }
                                 else
                                 {
                                     w.WriteLine(line + "\t0\t" + cumsum);
-                                    unidentifiedSpectra.Add(index);
+                                    //unidentifiedSpectra.Add(index);
+                                    unidentifiedSpectra.Add(scanNativeID);
                                 }
                                
                                 //scanNativeID = scanNativeID + "." + items[2]; // use nativeID scanNumber.charge as scanID

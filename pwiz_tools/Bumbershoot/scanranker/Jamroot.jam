@@ -47,15 +47,9 @@ path-constant PWIZ_SOURCE : ./DirecTag/freicore/pwiz_src ;
 
 # this makes pwiz use DirecTag/freicore's libraries directory
 local argv = [ modules.peek : ARGV ] ;
-modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
-
-
-local msvc-secure-scl = ;
-if --without-secure-scl in [ modules.peek : ARGV ]
+if ! [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ]
 {
-    # TODO: change this from a <define> to a feature in msvc.jam
-    # disable checked iterators (on by default in VC8/9)
-    msvc-secure-scl = <toolset>msvc,<variant>release:<define>_SECURE_SCL=0 ;
+    modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
 }
 
 
@@ -66,7 +60,7 @@ import package ;
 import errors : error ;
 import feature ;
 import mpi ;
-
+import path ;
 
 project bumbershoot
 	: requirements
@@ -130,16 +124,7 @@ project bumbershoot
       <runtime-link>static
 	;
 
-
-local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
-expat_src ?= [ glob "DirecTag/freicore/ext/src/expat*" : "DirecTag/freicore/ext/src/*.tar.gz" ] ;
-expat_src = $(expat_src[0]) ;
-
-if ! $(expat_src)
-{
-     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
-}
-
+alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
 
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
 tmp += DirecTag/freicore/ext DirecTag/freicore/libraries ;
@@ -249,11 +234,6 @@ echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 #generate-AssemblyInfo.cs Presentation/Properties/AssemblyInfo.cs : [ glob Presentation/*.cs ] : : : "Presentation" "Implements ScanRanker's presentation logic." $(COMPANY_AND_PRODUCT) ;
 generate-AssemblyInfo.cs GUI/IonMatcher/Properties/AssemblyInfo.cs : [ path.glob GUI/IonMatcher : *.cs ] : : : "IonMatcherGUI" "Graphical interface for IonMatcher." $(COMPANY_AND_PRODUCT) ;
 
-path-constant BOOST_SOURCE : "DirecTag/freicore/libraries/boost_1_43_0" ;
-
-using ext-boost : 1.43.0 : $(BOOST_SOURCE) ;
-
-
 rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
@@ -299,6 +279,7 @@ install install
         DirecTag//directag
 		DirecTag//adjustScanRankerScoreByGroup
         DirecTag/idpQonvert//idpQonvert
+		
     : # requirements
         <conditional>@install-type
         <conditional>@dotNET-dependencies

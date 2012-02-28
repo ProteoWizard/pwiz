@@ -68,28 +68,46 @@ namespace ScanRanker
             set { outFileSuffix = value; }
         }
 
-        private class SpectrumList_FilterPredicate_IndexSet
+        //private class SpectrumList_FilterPredicate_IndexSet
+        //{
+        //    public List<int> indexSet;
+        //    public bool? accept(Spectrum s) { return indexSet.Contains(s.index); }
+        //    public SpectrumList_FilterPredicate_IndexSet()
+        //    {
+        //        indexSet = new List<int>();
+        //    }
+
+        //}
+
+        //private class SpectrumList_SorterPredicate_IndexSet
+        //{
+        //    public List<int> indexSet;
+        //    public bool lessThan(Spectrum lhs, Spectrum rhs) {return indexSet[lhs.index] < indexSet[rhs.index];}            
+        //    public SpectrumList_SorterPredicate_IndexSet()
+        //    {
+        //        indexSet = new List<int>();
+
+        //    }
+
+        //}
+       
+        private class SpectrumList_FilterPredicate_NativeIDSet
         {
-            public List<int> indexSet;
-            public bool accept(Spectrum s) { return indexSet.Contains(s.index); }
-            public SpectrumList_FilterPredicate_IndexSet()
+            public List<string> nativeIDSet;
+            public bool? accept(Spectrum s) 
             {
-                indexSet = new List<int>();
+                if (String.IsNullOrEmpty(s.id)) return null;
+                //Workspace.SetText("\r\nProcessing: " + s.id);
+                return nativeIDSet.Contains(s.id); 
+            }
+            public SpectrumList_FilterPredicate_NativeIDSet()
+            {
+                nativeIDSet = new List<string>();
             }
 
         }
 
-        private class SpectrumList_SorterPredicate_IndexSet
-        {
-            public List<int> indexSet;
-            public bool lessThan(Spectrum lhs, Spectrum rhs) {return indexSet[lhs.index] < indexSet[rhs.index];}            
-            public SpectrumList_SorterPredicate_IndexSet()
-            {
-                indexSet = new List<int>();
-
-            }
-
-        }
+       
 
         private bool lessThan(Spectrum lhs, Spectrum rhs) { return (double)lhs.cvParam(CVID.MS_TIC).value < (double)rhs.cvParam(CVID.MS_TIC).value; }
 
@@ -119,8 +137,10 @@ namespace ScanRanker
                 }
 
 
-                List<int> allIndices = new List<int>();
-                List<int> highQualIndices = new List<int>();
+                //List<int> allIndices = new List<int>();
+                //List<int> highQualIndices = new List<int>();
+                List<string> allIndices = new List<string>();   
+                List<string> highQualIndices = new List<string>();
 
                 // read metrics file, split and get high quality spectra indecies from the second column
                 try
@@ -135,7 +155,8 @@ namespace ScanRanker
                         while ((line = tr.ReadLine()) != null)
                         {
                             string[] items = line.Split('\t');
-                            int index = Convert.ToInt32(items[1]);  //index
+                            //int index = Convert.ToInt32(items[1]);  //index
+                            string index = Convert.ToString(items[1]);  //nativeID
                             if (!allIndices.Exists(element => element == index))   // remove duplicate index
                             {
                                 allIndices.Add(index);
@@ -157,10 +178,16 @@ namespace ScanRanker
                 highQualIndices = allIndices.GetRange(0, numOutputSpectra);
                 //highQualIndices.Sort();
 
-                var predicate = new SpectrumList_FilterPredicate_IndexSet();
-                foreach (int i in highQualIndices)
+                //var predicate = new SpectrumList_FilterPredicate_IndexSet();
+                //foreach (int i in highQualIndices)
+                //{
+                //    predicate.indexSet.Add(i);                    
+                //}
+
+                var predicate = new SpectrumList_FilterPredicate_NativeIDSet();
+                foreach (string i in highQualIndices)
                 {
-                    predicate.indexSet.Add(i);
+                    predicate.nativeIDSet.Add(i);
                 }
 
                 //var sorterPredicate = new SpectrumList_SorterPredicate_IndexSet();
@@ -198,11 +225,12 @@ namespace ScanRanker
                 {
                     Workspace.SetText("\r\nWriting high quality spectra to file: " + outFileName);
                     using (MSDataFile msFile = new MSDataFile(file.FullName))
-                    {                  
+                    {
                         msFile.run.spectrumList = new SpectrumList_Filter(msFile.run.spectrumList, new SpectrumList_FilterAcceptSpectrum(predicate.accept));
+                        
                         //msFile.run.spectrumList = new SpectrumList_Sorter(msFile.run.spectrumList, new SpectrumList_Sorter_LessThan( sorterPredicate.lessThan ));
                         //msFile.run.spectrumList = new SpectrumList_Sorter(msFile.run.spectrumList, new SpectrumList_Sorter_LessThan(lessThan));
-
+                        //Workspace.SetText("\r\nFinished msFile.run.spectrumList");
                         msFile.write(outFileName, writeConfig);
                     }
                 }

@@ -30,10 +30,11 @@ namespace ScanRanker
         public string PepXMLFiles;
         public string DBFile;
         public string DecoyPrefix;
-        public double MaxFDR;
-        public string ScoreWeights;
-        public int NormalizeSearchScores;
-        public int OptimizeScoreWeights;
+        public double MaxFDR;  
+        public string ScoreInfo;
+        public string QonverterMethod;
+        //public int NormalizeSearchScores;
+        //public int OptimizeScoreWeights;
 
         //public IDPickerInfo()
         //{

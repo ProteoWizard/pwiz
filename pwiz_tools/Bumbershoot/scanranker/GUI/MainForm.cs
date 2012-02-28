@@ -633,9 +633,10 @@ namespace ScanRanker
             idpickerCfg.DBFile = tbDBFile.Text;
             idpickerCfg.MaxFDR = Convert.ToDouble(tbMaxFDR.Text) / 100;
             idpickerCfg.DecoyPrefix = tbDecoyPrefix.Text;
-            idpickerCfg.ScoreWeights = cmbScoreWeights.Text;
-            idpickerCfg.NormalizeSearchScores = (cbNormSearchScores.Checked) ? 1 : 0;
-            idpickerCfg.OptimizeScoreWeights = (cbOptimizeScoreWeights.Checked) ? 1 : 0;
+            idpickerCfg.ScoreInfo = cmbScoreInfo.Text;
+            idpickerCfg.QonverterMethod = cmbQonverterMethod.Text;
+            //idpickerCfg.NormalizeSearchScores = (cbNormSearchScores.Checked) ? 1 : 0;
+            //idpickerCfg.OptimizeScoreWeights = (cbOptimizeScoreWeights.Checked) ? 1 : 0;
             //idpickerCfg.PepXMLFile given when running idpqonvert
             return idpickerCfg;
         }
@@ -707,7 +708,7 @@ namespace ScanRanker
                         MessageBox.Show("Please input proper FDR between 0 and 100");
                         return;
                     }
-                    if (cmbScoreWeights.Text.Equals(string.Empty))
+                    if (cmbScoreInfo.Text.Equals(string.Empty))
                     {
                         MessageBox.Show("Error: Please specify database search score weights!");
                         return;
@@ -857,7 +858,7 @@ namespace ScanRanker
                         MessageBox.Show("Please input proper FDR between 0 and 100");
                         return;
                     }
-                    if (cmbScoreWeights.Text.Equals(string.Empty))
+                    if (cmbScoreInfo.Text.Equals(string.Empty))
                     {
                         MessageBox.Show("Error: Please specify database search score weights!");
                         return;

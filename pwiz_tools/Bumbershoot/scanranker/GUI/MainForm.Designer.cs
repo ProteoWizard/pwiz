@@ -89,6 +89,8 @@ namespace ScanRanker
             this.lblMetricsFileSuffixForRemoval = new System.Windows.Forms.Label();
             this.cbRemoval = new System.Windows.Forms.CheckBox();
             this.gbRecovery = new System.Windows.Forms.GroupBox();
+            this.cmbQonverterMethod = new System.Windows.Forms.ComboBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.tbMetricsFileSuffixForRecovery = new System.Windows.Forms.TextBox();
             this.lblRecoveryMetricsFileSuffixForRecovery = new System.Windows.Forms.Label();
@@ -98,9 +100,7 @@ namespace ScanRanker
             this.label1 = new System.Windows.Forms.Label();
             this.tbRecoveryCutoff = new System.Windows.Forms.TextBox();
             this.cbWriteOutUnidentifiedSpectra = new System.Windows.Forms.CheckBox();
-            this.cbOptimizeScoreWeights = new System.Windows.Forms.CheckBox();
-            this.cmbScoreWeights = new System.Windows.Forms.ComboBox();
-            this.cbNormSearchScores = new System.Windows.Forms.CheckBox();
+            this.cmbScoreInfo = new System.Windows.Forms.ComboBox();
             this.tbDecoyPrefix = new System.Windows.Forms.TextBox();
             this.tbMaxFDR = new System.Windows.Forms.TextBox();
             this.lblDecoyPrefix = new System.Windows.Forms.Label();
@@ -510,6 +510,8 @@ namespace ScanRanker
             // gbRecovery
             // 
             this.gbRecovery.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.gbRecovery.Controls.Add(this.cmbQonverterMethod);
+            this.gbRecovery.Controls.Add(this.label5);
             this.gbRecovery.Controls.Add(this.label4);
             this.gbRecovery.Controls.Add(this.tbMetricsFileSuffixForRecovery);
             this.gbRecovery.Controls.Add(this.lblRecoveryMetricsFileSuffixForRecovery);
@@ -519,9 +521,7 @@ namespace ScanRanker
             this.gbRecovery.Controls.Add(this.label1);
             this.gbRecovery.Controls.Add(this.tbRecoveryCutoff);
             this.gbRecovery.Controls.Add(this.cbWriteOutUnidentifiedSpectra);
-            this.gbRecovery.Controls.Add(this.cbOptimizeScoreWeights);
-            this.gbRecovery.Controls.Add(this.cmbScoreWeights);
-            this.gbRecovery.Controls.Add(this.cbNormSearchScores);
+            this.gbRecovery.Controls.Add(this.cmbScoreInfo);
             this.gbRecovery.Controls.Add(this.tbDecoyPrefix);
             this.gbRecovery.Controls.Add(this.tbMaxFDR);
             this.gbRecovery.Controls.Add(this.lblDecoyPrefix);
@@ -542,6 +542,27 @@ namespace ScanRanker
             this.gbRecovery.TabIndex = 5;
             this.gbRecovery.TabStop = false;
             this.gbRecovery.Text = " ";
+            // 
+            // cmbQonverterMethod
+            // 
+            this.cmbQonverterMethod.FormattingEnabled = true;
+            this.cmbQonverterMethod.Items.AddRange(new object[] {
+            "MonteCarlo",
+            "StaticWeighted"});
+            this.cmbQonverterMethod.Location = new System.Drawing.Point(17, 143);
+            this.cmbQonverterMethod.Name = "cmbQonverterMethod";
+            this.cmbQonverterMethod.Size = new System.Drawing.Size(121, 21);
+            this.cmbQonverterMethod.TabIndex = 34;
+            this.cmbQonverterMethod.Text = "MonteCarlo";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(16, 124);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(96, 13);
+            this.label5.TabIndex = 33;
+            this.label5.Text = "Qonverter Method:";
             // 
             // label4
             // 
@@ -627,48 +648,24 @@ namespace ScanRanker
             this.cbWriteOutUnidentifiedSpectra.Text = "Write Out The Top";
             this.cbWriteOutUnidentifiedSpectra.UseVisualStyleBackColor = true;
             // 
-            // cbOptimizeScoreWeights
+            // cmbScoreInfo
             // 
-            this.cbOptimizeScoreWeights.AutoSize = true;
-            this.cbOptimizeScoreWeights.Checked = true;
-            this.cbOptimizeScoreWeights.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbOptimizeScoreWeights.Location = new System.Drawing.Point(206, 128);
-            this.cbOptimizeScoreWeights.Name = "cbOptimizeScoreWeights";
-            this.cbOptimizeScoreWeights.Size = new System.Drawing.Size(142, 17);
-            this.cbOptimizeScoreWeights.TabIndex = 16;
-            this.cbOptimizeScoreWeights.Text = "Optimize Score Weights ";
-            this.toolTip1.SetToolTip(this.cbOptimizeScoreWeights, "Optimize weights to combine multiple scores\r\nNot recommended for Mascot search re" +
-                    "sults");
-            this.cbOptimizeScoreWeights.UseVisualStyleBackColor = true;
-            // 
-            // cmbScoreWeights
-            // 
-            this.cmbScoreWeights.FormattingEnabled = true;
-            this.cmbScoreWeights.Items.AddRange(new object[] {
-            "mvh 1 mzFidelity 1 xcorr 1",
-            "xcorr 1 deltacn 1",
-            "hyperscore 1 expect -1",
-            "ionscore 1 identityscore -1"});
-            this.cmbScoreWeights.Location = new System.Drawing.Point(17, 143);
-            this.cmbScoreWeights.Name = "cmbScoreWeights";
-            this.cmbScoreWeights.Size = new System.Drawing.Size(166, 21);
-            this.cmbScoreWeights.TabIndex = 17;
-            this.cmbScoreWeights.Text = "mvh 1 mzFidelity 1 xcorr 1";
-            this.toolTip1.SetToolTip(this.cmbScoreWeights, "Weights used in IDPicker for multiple score combination\r\n\"Optimize Score Weights\"" +
+            this.cmbScoreInfo.FormattingEnabled = true;
+            this.cmbScoreInfo.Items.AddRange(new object[] {
+            "1 off myrimatch:mvh; 1 off xcorr",
+            "1 off sequest:xcorr; 1 off sequest:deltacn",
+            "-1 off x!tandem:expect; 1 off x!tandem:hyperscore",
+            "1 off mascot:score",
+            "1 off myrimatch:mvh",
+            "1 off sequest:xcorr",
+            "-1 off x!tandem:expect"});
+            this.cmbScoreInfo.Location = new System.Drawing.Point(185, 143);
+            this.cmbScoreInfo.Name = "cmbScoreInfo";
+            this.cmbScoreInfo.Size = new System.Drawing.Size(166, 21);
+            this.cmbScoreInfo.TabIndex = 17;
+            this.cmbScoreInfo.Text = "1 off myrimatch:mvh; 1 off xcorr";
+            this.toolTip1.SetToolTip(this.cmbScoreInfo, "Weights used in IDPicker for multiple score combination\r\n\"Optimize Score Weights\"" +
                     " is recommended");
-            // 
-            // cbNormSearchScores
-            // 
-            this.cbNormSearchScores.AutoSize = true;
-            this.cbNormSearchScores.Checked = true;
-            this.cbNormSearchScores.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbNormSearchScores.Location = new System.Drawing.Point(206, 147);
-            this.cbNormSearchScores.Name = "cbNormSearchScores";
-            this.cbNormSearchScores.Size = new System.Drawing.Size(148, 17);
-            this.cbNormSearchScores.TabIndex = 15;
-            this.cbNormSearchScores.Text = "Normalize Search Scores ";
-            this.toolTip1.SetToolTip(this.cbNormSearchScores, "Recommended if \"Optimize Score Weights\" is checked");
-            this.cbNormSearchScores.UseVisualStyleBackColor = true;
             // 
             // tbDecoyPrefix
             // 
@@ -700,11 +697,11 @@ namespace ScanRanker
             // lblSearchScoreWeights
             // 
             this.lblSearchScoreWeights.AutoSize = true;
-            this.lblSearchScoreWeights.Location = new System.Drawing.Point(14, 124);
+            this.lblSearchScoreWeights.Location = new System.Drawing.Point(182, 124);
             this.lblSearchScoreWeights.Name = "lblSearchScoreWeights";
-            this.lblSearchScoreWeights.Size = new System.Drawing.Size(169, 13);
+            this.lblSearchScoreWeights.Size = new System.Drawing.Size(148, 13);
             this.lblSearchScoreWeights.TabIndex = 14;
-            this.lblSearchScoreWeights.Text = "Database Search Score Weights: ";
+            this.lblSearchScoreWeights.Text = "Database Search Score Info: ";
             // 
             // lblMaxFDR
             // 
@@ -1033,9 +1030,7 @@ namespace ScanRanker
         private System.Windows.Forms.Label lblDecoyPrefix;
         private System.Windows.Forms.Label lblMaxFDR;
         private System.Windows.Forms.TextBox tbDecoyPrefix;
-        private System.Windows.Forms.CheckBox cbOptimizeScoreWeights;
-        private System.Windows.Forms.ComboBox cmbScoreWeights;
-        private System.Windows.Forms.CheckBox cbNormSearchScores;
+        private System.Windows.Forms.ComboBox cmbScoreInfo;
         private System.Windows.Forms.Label lblSearchScoreWeights;
         private System.Windows.Forms.CheckBox cbAdjustScoreByGroup;
         private System.Windows.Forms.Label label1;
@@ -1050,6 +1045,8 @@ namespace ScanRanker
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.LinkLabel linkLabelHelp;
         private System.Windows.Forms.LinkLabel linkLabelAnalyzeResult;
+        private System.Windows.Forms.ComboBox cmbQonverterMethod;
+        private System.Windows.Forms.Label label5;
 
 
         

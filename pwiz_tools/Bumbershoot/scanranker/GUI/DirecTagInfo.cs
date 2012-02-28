@@ -71,8 +71,9 @@ namespace ScanRanker
                  + "MaxTagCount = 20" + "\r\n"
                  + "MaxTagScore = 20" + "\r\n"
                  + "TicCutoffPercentage = 1" + "\r\n"
+                 + "PreferIntenseComplements = 1" + "\r\n"
                  + "ContextScoreWeight = 0" + "\r\n"
-                 + "DeisotopingMode = 1" + "\r\n"
+                 + "DeisotopingMode = 0" + "\r\n"
                  + "OnLongestPathScoreWeight = 0" + "\r\n"
                  + "OutputSuffix = \"\"";
         public string HardCodeCfg
@@ -211,7 +212,7 @@ namespace ScanRanker
                     tw.WriteLine("UseAvgMassOfSequences = {0}", useAvgMassOfSequences);
                     tw.WriteLine("UseChargeStateFromMS = {0}", useChargeStateFromMS);
                     tw.WriteLine("UseMultipleProcessors = {0}", useMultipleProcessors);
-                    tw.WriteLine("StaticMods = {0}", staticMods);
+                    tw.WriteLine("StaticMods = \"{0}\"", staticMods);
                     tw.WriteLine();
                     tw.WriteLine("WriteOutTags = {0}", writeOutTags);
                     tw.WriteLine("WriteScanRankerMetrics = {0}", writeScanRankerMetrics);
