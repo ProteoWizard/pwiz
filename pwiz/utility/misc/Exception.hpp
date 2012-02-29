@@ -39,7 +39,7 @@ namespace {
 inline std::string narrow(const std::wstring& str)
 {
     std::ostringstream oss;
-    const std::ctype<char>& ctfacet = std::use_facet< std::ctype<char> >(oss.getloc());
+    const std::ctype<wchar_t>& ctfacet = std::use_facet< std::ctype<wchar_t> >(oss.getloc());
     for (size_t i=0; i < str.size(); ++i)
         oss << ctfacet.narrow(str[i], 0);
     return oss.str();
