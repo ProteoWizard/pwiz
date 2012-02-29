@@ -699,6 +699,7 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const IdentData& mzid, const s
     int lastChargeState, lastSpectrumIndex;
     int spectrumIndex = 0;
     int queryIndex = 0;
+    bool inSpectrumQuery = false;
 
     string basename = base_name(mzid, filepath);
 
@@ -724,10 +725,11 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const IdentData& mzid, const s
             if (sii.chargeState != lastChargeState || spectrumIndex != lastSpectrumIndex)
             {
                 // close the current spectrum_query
-                if (queryIndex > 1)
+                if (queryIndex > 0)
                 {
                     xmlWriter.endElement(); // search_result
                     xmlWriter.endElement(); // spectrum_query
+                    inSpectrumQuery = false;
                 }
 
                 ++queryIndex;
@@ -766,6 +768,8 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const IdentData& mzid, const s
                     attributes.add(userParam.name, userParam.value);
 
                 xmlWriter.startElement("search_result", attributes);
+
+                inSpectrumQuery = true;
             }
 
             write_search_hit(xmlWriter, analysisSoftware.cvid, mzid, sir, sii);
@@ -773,7 +777,7 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const IdentData& mzid, const s
     }
 
     // close the last spectrum_query
-    if (!sil.spectrumIdentificationResult.empty())
+    if (inSpectrumQuery)
     {
         xmlWriter.endElement(); // search_result
         xmlWriter.endElement(); // spectrum_query
