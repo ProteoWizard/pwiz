@@ -29,23 +29,32 @@
 # Targets and Related Options:
 #
 #   build                   Build Bumbershoot libraries and applications
-#   =====
-#
-#   --expat-src=<DIR>       Find Expat 2.0+ source distribution here.
-#                           Default: "ext/src/expat*"
-
 
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
+constant BOOST_VERSION : 1 43 0 ;
+
+local default_libraries_path = "./DirecTag/freicore/libraries" ;
+local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
+libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
+
+local default_boost_src = "$(libraries_path)/boost_$(BOOST_VERSION:J=_)" ;
+local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
+boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
+
+local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
+local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
+zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
+
 
 path-constant ROOT_PATH : . ;
-path-constant BUILD_PATH : ./DirecTag/build-$(.os:L)-$(.platform:L) ;
-path-constant LIBRARIES_PATH : ./DirecTag/freicore/libraries ;
+path-constant BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
+path-constant LIBRARIES_PATH : $(libraries_path) ;
 path-constant PWIZ_SOURCE : ./DirecTag/freicore/pwiz_src ;
 
 
-# this makes pwiz use DirecTag/freicore's libraries directory
+# this makes pwiz use freicore's libraries directory
 local argv = [ modules.peek : ARGV ] ;
 if ! [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ]
 {
@@ -59,7 +68,6 @@ import common ;
 import package ;
 import errors : error ;
 import feature ;
-import mpi ;
 import path ;
 
 project bumbershoot
@@ -67,8 +75,6 @@ project bumbershoot
 	    #<include>DirecTag/freicore/pwiz_src
 	    #<include>DirecTag/freicore/libraries/boost_aux
 
-      <toolset>gcc,<link>shared:<runtime-link>shared
-      
       # any module which links with .NET (either dynamically or statically) must use the shared runtime
       <toolset>msvc:<runtime-link>shared
 
@@ -92,29 +98,12 @@ project bumbershoot
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
       <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
+      <toolset>msvc:<linkflags>/OPT:REF,ICF
 
       # warning: _SECURE_SCL_THROWS is deprecated
       <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
 
-      $(msvc-secure-scl)
-
-      # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
-      # warning: '__cur' might be used uninitialized in this function 
-      <toolset>gcc:<cxxflags>-Wno-uninitialized   
-
-      # special Cygwin gcc-3.4.4 hack
-      # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
-      <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
-      <toolset>gcc-mingw-3.4.5:<linkflags>-Wl,--allow-multiple-definition
-
-      # allow "long long" even with -pedantic
-      <toolset>gcc:<cxxflags>-Wno-long-long
-      <toolset>darwin:<cxxflags>-Wno-long-long
-
-      # don't call 'strip' -- causes 'Bus error' in some cases
-      #  e.g. find_if with inline predicate
-      <toolset>darwin:<debug-symbols>on
-
+      # use of boost::thread requires multithreaded runtime
       <threading>multi
 
   : build-dir $(BUILD_PATH)
@@ -127,7 +116,7 @@ project bumbershoot
 alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
 
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
-tmp += DirecTag/freicore/ext DirecTag/freicore/libraries ;
+tmp += DirecTag/freicore/ext $(libraries_path) ;
 modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 
@@ -138,7 +127,7 @@ local application-name = "ScanRanker" ;
 import svnrev sequence ;
 
 constant MAJOR : 1 ;
-constant MINOR : 0 ;
+constant MINOR : 1 ;
 
 # rule for generating a C# AssemblyInfo file
 rule generate-AssemblyInfo.cs ( filepath ? : sources-with-rcs-keywords + : warn-on-missing ? : print-revision-info ? :
@@ -228,6 +217,17 @@ if $(revision-info[5]) > 0
 echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
+path-constant BOOST_SOURCE : $(boost_src) ;
+path-constant ZLIB_SOURCE : $(zlib_src) ;
+
+local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
+if ! $(.has-boost)
+{
+    modules.poke : BOOST_VERSION : $(BOOST_VERSION) ;
+    using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE[1]) : <zlib-src-location>$(ZLIB_SOURCE) ;
+}
+
+
 # generate version headers for other projects
 #generate-AssemblyInfo.cs GUI/Forms/Properties/AssemblyInfo.cs : [ path.glob-tree GUI : *.cs ] : : : "ScanRankerGUI" "Graphical interface for ScanRanker." $(COMPANY_AND_PRODUCT) ;
 #generate-AssemblyInfo.cs Workspace/Properties/AssemblyInfo.cs : [ glob Workspace/*.cs ] : : : "Workspace" "Implements ScanRanker's core logic." $(COMPANY_AND_PRODUCT) ;
@@ -238,7 +238,14 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    if <link>shared in $(properties)
+    {
+        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
+    }
+    else
+    {
+        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    }
 }
 
 rule install-type ( properties * )
@@ -271,13 +278,13 @@ rule dotNET-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
     #return <dependency>GUI//ScanRanker.exe/$(location) ;
-	return <dependency>GUI//ScanRanker.exe/$(location) <dependency>GUI/IonMatcher//IonMatcher.exe/$(location) ;
+    return <dependency>GUI//ScanRanker.exe/$(location) <dependency>GUI/IonMatcher//IonMatcher.exe/$(location) ;
 }
 
 install install
     : # sources
         DirecTag//directag
-		DirecTag//adjustScanRankerScoreByGroup
+        DirecTag//adjustScanRankerScoreByGroup
         DirecTag/idpQonvert//idpQonvert
 		
     : # requirements
@@ -314,24 +321,19 @@ rule binary-tarball-requirements ( properties * )
     local location = [ install-location $(properties) ] ;
     location = $(location:G=) ;
 
-    local non-redistributables =
-        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
-        *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
+    local non-redistributables = pwiz_bindings_cli.xml ; # .NET documentation
 
     if $(variants[1]) = "release"
     {
-        non-redistributables += *.pdb   # MSVC debug symbols
-                                *.xml ; # .NET documentation
+        non-redistributables += *.pdb ; # MSVC debug symbols
     }
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
     local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
-    if ! <architecture> in $(properties:G)
-    {
-        if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
-        else { properties += <architecture>$(.platform:L) ; }
-    }
-    local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <runtime> -$(version-tag:J=_)
+    if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
+    local linkage ;
+    if <link>shared in $(properties) { linkage = "-shared" ; }
+    local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
                                       : $(bin-tarball-basename) : TBZ2 : [ property-set.create $(properties) ] ] ;
     result += <name>$(name) <dependency>install <location>$(BUILD_PATH) ;
     return $(result) ;
@@ -389,7 +391,8 @@ tar.create $(application-name:L)-src.tar.bz2
 
     $(LIBRARIES_PATH)/boost-build
     $(LIBRARIES_PATH)/boost_aux
-    [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
+    $(LIBRARIES_PATH)/libsvm-3.0
+    [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp libgd*.tar.bz2 libpng*.tar.bz2 freetype*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
   
     path-anchor:$(BUILD_PATH)
     $(BUILD_PATH)/SUBSET

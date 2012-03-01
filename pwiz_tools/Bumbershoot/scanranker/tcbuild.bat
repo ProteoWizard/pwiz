@@ -18,17 +18,11 @@ REM # HACK: this will get the tarballs extracted so the parse-time globbing work
 echo ##teamcity[progressMessage 'Extracting dependency tarballs...']
 call quickbuild.bat -p1 --clean
 
-REM # call quickbuild to build and run tests with variant=release
+REM # call quickbuild to build and run tests
 echo ##teamcity[progressMessage 'Running quickbuild for release variant...']
 call quickbuild.bat %* -p1 --teamcity-test-decoration release
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 echo ##teamcity[message text='Error running quickbuild for release variant! See full build log for more details.' status='ERROR']
-
-REM # call quickbuild to build and run tests with variant=debug
-echo ##teamcity[progressMessage 'Running quickbuild for debug variant...']
-call quickbuild.bat %* -p1 --teamcity-test-decoration debug
-set EXIT=%ERRORLEVEL%
-if %EXIT% NEQ 0 echo ##teamcity[message text='Error running quickbuild for debug variant! See full build log for more details.' status='ERROR']
 
 REM # uncomment this to test that test failures and error output are handled properly
 REM call quickbuild.bat -p1 ci=teamcity pwiz/utility/misc//FailUnitTest pwiz/utility/misc//FailRunTest
