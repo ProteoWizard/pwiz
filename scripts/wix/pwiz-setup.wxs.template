@@ -140,7 +140,7 @@
 <Component Feature="MainFeature"><File Id="_peakaboo.exe" Name="peakaboo.exe" Source="msvc-release\peakaboo.exe" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_pepcat.exe" Name="pepcat.exe" Source="msvc-release\pepcat.exe" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_pepsum.exe" Name="pepsum.exe" Source="msvc-release\pepsum.exe" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Id="_pwiz.Common.dll" Name="pwiz.Common.dll" Source="msvc-release\pwiz.Common.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_pwiz.CommonUtil.dll" Name="pwiz.CommonUtil.dll" Source="msvc-release\pwiz.CommonUtil.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_pwiz_bindings_cli.dll" Name="pwiz_bindings_cli.dll" Source="msvc-release\pwiz_bindings_cli.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_seems.exe.config" Name="seems.exe.config" Source="msvc-release\seems.exe.config" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_seems.exe.manifest" Name="seems.exe.manifest" Source="msvc-release\seems.exe.manifest" KeyPath="yes"/></Component>
