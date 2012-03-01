@@ -397,9 +397,9 @@
     <None Include="Resources\folder.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Common\Common.csproj">
-      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
-      <Name>Common</Name>
+    <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
     </ProjectReference>
     <ProjectReference Include="..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>

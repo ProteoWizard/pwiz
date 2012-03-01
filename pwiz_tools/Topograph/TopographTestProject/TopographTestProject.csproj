@@ -96,6 +96,10 @@
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\Common\CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
       <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
       <Name>ProteowizardWrapper</Name>

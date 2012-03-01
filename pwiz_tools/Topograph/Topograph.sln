@@ -19,6 +19,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProteomeDb", "..\Shared\Pro
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "..\Shared\Common\Common.csproj", "{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\Shared\Common\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "..\Shared\MSGraph\MSGraph.csproj", "{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawdad", "..\Shared\Crawdad\Crawdad.vcproj", "{5C81BB57-E46C-4B3B-9764-82F835E643B8}"
@@ -58,6 +60,10 @@ Global
 		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|Mixed Platforms.Build.0 = Debug|x86
 		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|Mixed Platforms.ActiveCfg = Release|x86
 		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|Mixed Platforms.Build.0 = Release|x86
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|Mixed Platforms.Build.0 = Release|x86
 		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
 		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Debug|Mixed Platforms.Build.0 = Debug|x86
 		{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}.Release|Mixed Platforms.ActiveCfg = Release|x86

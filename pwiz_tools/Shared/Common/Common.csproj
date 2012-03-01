@@ -87,19 +87,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Chemistry\AminoAcidFormulas.cs" />
-    <Compile Include="Chemistry\Formula.cs" />
-    <Compile Include="Chemistry\IsotopeAbundances.cs" />
-    <Compile Include="Chemistry\MassDistribution.cs" />
-    <Compile Include="Chemistry\Molecule.cs" />
-    <Compile Include="Collections\BoundList.cs" />
-    <Compile Include="Collections\CollectionUtil.cs" />
-    <Compile Include="Collections\ConvertedList.cs" />
-    <Compile Include="Collections\ImmutableCollection.cs" />
-    <Compile Include="Collections\ImmutableDictionary.cs" />
-    <Compile Include="Collections\ImmutableList.cs" />
-    <Compile Include="Collections\ImmutableSortedList.cs" />
-    <Compile Include="Collections\RedBlackTree.cs" />
     <Compile Include="Controls\DoubleBufferedListView.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -186,12 +173,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="SystemUtil\IProgressMonitor.cs" />
-    <Compile Include="SystemUtil\MustDispose.cs" />
-    <Compile Include="SystemUtil\PathEx.cs" />
-    <Compile Include="SystemUtil\ProcessStreamReader.cs" />
-    <Compile Include="SystemUtil\ProcessRunner.cs" />
-    <Compile Include="SystemUtil\ProgressStatus.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Controls\FindBox.resx">
@@ -239,6 +220,12 @@
     <Content Include="Resources\restore.bmp" />
     <Content Include="Resources\maximize.bmp" />
     <Content Include="Resources\MatchCase.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="CommonUtil.csproj">
+      <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
+      <Name>CommonUtil</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSConvertGUI", "MSConvertGU
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "..\Shared\Common\Common.csproj", "{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommonUtil", "..\Shared\Common\CommonUtil.csproj", "{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{DB61BBC0-0AA6-489F-8070-18CB626CDD75}"
 	ProjectSection(SolutionItems) = preProject
 		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
@@ -58,6 +60,10 @@ Global
 		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Debug|x64.Build.0 = Debug|x64
 		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Release|x64.ActiveCfg = Release|x64
 		{6B7B0771-4D09-469F-AEFA-00E4FA06D017}.Release|x64.Build.0 = Release|x64
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|x64.ActiveCfg = Debug|x64
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Debug|x64.Build.0 = Debug|x64
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x64.ActiveCfg = Release|x64
+		{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
