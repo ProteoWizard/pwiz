@@ -224,9 +224,23 @@ namespace ScanRanker
                 try
                 {
                     Workspace.SetText("\r\nWriting high quality spectra to file: " + outFileName);
-                    using (MSDataFile msFile = new MSDataFile(file.FullName))
+                    using (var msFile = new MSDataFile(file.FullName))
                     {
-                        msFile.run.spectrumList = new SpectrumList_Filter(msFile.run.spectrumList, new SpectrumList_FilterAcceptSpectrum(predicate.accept));
+                        var indexSet = new string[highQualIndices.Count];
+                        var sl = msFile.run.spectrumList;
+                        for (int i=0; i < highQualIndices.Count; ++i)
+                        {
+                            string id = highQualIndices[i];
+                            int index = sl.find(id);
+                            if (index == sl.size())
+                                throw new Exception("nativeID \"" + id + "\" not found in file");
+                            indexSet[i] = index.ToString();
+                        }
+
+                        var indexSetString = String.Join(" ", indexSet);
+                        var predicate2 = new SpectrumList_FilterPredicate_IndexSet(indexSetString);
+                        var filter = new SpectrumList_Filter(msFile.run.spectrumList, predicate2);
+                        msFile.run.spectrumList = filter;
                         
                         //msFile.run.spectrumList = new SpectrumList_Sorter(msFile.run.spectrumList, new SpectrumList_Sorter_LessThan( sorterPredicate.lessThan ));
                         //msFile.run.spectrumList = new SpectrumList_Sorter(msFile.run.spectrumList, new SpectrumList_Sorter_LessThan(lessThan));
