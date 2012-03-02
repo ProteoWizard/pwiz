@@ -230,14 +230,11 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    if <link>shared in $(properties)
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
-    }
-    else
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
-    }
+    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    if <link>shared in $(properties) { location = $(location)-shared ; }
+    if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
+
+    return <location>$(location) ;
 }
 
 rule install-type ( properties * )

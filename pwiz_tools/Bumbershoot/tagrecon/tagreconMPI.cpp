@@ -24,12 +24,12 @@
 
 #define BOOST_LIB_DIAGNOSTIC
 #include "stdafx.h"
-#include "tagrecon.h"
 
 //#define MPI_DEBUG 1
 
 #ifdef USE_MPI
 
+#include "tagrecon.h"
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
