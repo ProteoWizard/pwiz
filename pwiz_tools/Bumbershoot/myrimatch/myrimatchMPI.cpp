@@ -24,10 +24,10 @@
 
 #define BOOST_LIB_DIAGNOSTIC
 #include "stdafx.h"
-#include "myrimatch.h"
 
 #ifdef USE_MPI
 
+#include "myrimatch.h"
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
