@@ -33,10 +33,6 @@
 #   build                   Build Bumbershoot libraries and applications
 #   =====
 #
-#   --expat-src=<DIR>       Find Expat 2.0+ source distribution here.
-#                           Default: "ext/src/expat*"
-#
-#
 #   --with-mpi              For MPI-enabled applications, compile with
 #                           support for running the application in parallel
 #                           across multiple nodes. This support depends on
@@ -73,15 +69,6 @@ boost_src ?= $(default_boost_src) ; # set default path in absence of command-lin
 local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
 local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
 zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
-
-local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
-expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
-expat_src = $(expat_src[0]) ;
-
-if ! $(expat_src)
-{
-     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
-}
 
 
 path-constant ROOT_PATH : . ;
@@ -211,11 +198,8 @@ if $(revision-info[5]) > 0
 echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
-path-constant EXPAT_SOURCE : $(expat_src) ;
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
-
-using expat : 2.0 : $(EXPAT_SOURCE) ;
 
 local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
 if ! $(.has-boost)
@@ -229,14 +213,11 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    if <link>shared in $(properties)
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
-    }
-    else
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
-    }
+    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    if <link>shared in $(properties) { location = $(location)-shared ; }
+    if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
+
+    return <location>$(location) ;
 }
 
 rule install-type ( properties * )
