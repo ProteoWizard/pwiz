@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 using pwiz.CLI.cv;
+using pwiz.CLI.msdata;
 using pwiz.CLI.proteome;
 using pwiz.CLI.chemistry;
 using ZedGraph;
@@ -162,6 +163,7 @@ namespace seems
             {CVID.MS_electron_capture_dissociation, IonSeries.c | IonSeries.z},
         };
 
+        // the most specific analyzer types should be listed first, i.e. a special type of TOF or ion trap
         Map<CVID, MZTolerance> mzToleranceByAnalyzer = new Map<CVID, MZTolerance>
         {
             {CVID.MS_ion_trap, new MZTolerance(0.5)},
@@ -1085,11 +1087,22 @@ namespace seems
                 MZTolerance maxTolerance = new MZTolerance(0.5);
                 foreach (var scan in spectrum.scanList.scans.Where(o => o.instrumentConfiguration != null))
                 {
-                    var analyzer = scan.instrumentConfiguration.componentList.analyzer(0).cvParamChild(CVID.MS_mass_analyzer_type);
+                    // assume the last analyzer of the instrument configuration is responsible for the resolution
+                    var analyzer = scan.instrumentConfiguration.componentList.Where(o => o.type == ComponentType.ComponentType_Analyzer).Last().cvParamChild(CVID.MS_mass_analyzer_type);
                     if (analyzer.cvid == CVID.CVID_Unknown)
                         continue;
 
-                    var analyzerTolerance = mzToleranceByAnalyzer[analyzer.cvid];
+                    MZTolerance analyzerTolerance = null;
+                    foreach (var kvp in mzToleranceByAnalyzer)
+                        if (CV.cvIsA(analyzer.cvid, kvp.Key))
+                        {
+                            analyzerTolerance = kvp.Value;
+                            break;
+                        }
+
+                    if (analyzerTolerance == null)
+                        continue;
+
                     if (maxTolerance.units == analyzerTolerance.units)
                     {
                         if (maxTolerance.value < analyzerTolerance.value)

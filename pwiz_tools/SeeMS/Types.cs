@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text;
+using System.Linq;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.CLI.cv;
@@ -453,7 +454,18 @@ namespace seems
                     if (element.defaultArrayLength == 0)
                         return new ZedGraph.PointPairList();
 
-                    return new ZedGraph.PointPairList(element.getMZArray().data, element.getIntensityArray().data);
+                    IList<double> mzArray = element.getMZArray().data;
+                    IList<double> intensityArray = element.getIntensityArray().data;
+
+                    // only sort centroid spectra; profile spectra are assumed to already be sorted
+                    if (element.hasCVParam(CVID.MS_centroid_spectrum))
+                    {
+                        // TODO: use Zip extension method after .NET 4 upgrade
+                        var map = new SortedDictionary<double, double>(Enumerable.Range(0, mzArray.Count - 1).ToDictionary(i => mzArray[i], i => intensityArray[i]));
+                        mzArray = map.Keys.ToList();
+                        intensityArray = map.Values.ToList();
+                    }
+                    return new ZedGraph.PointPairList(mzArray, intensityArray);
                 }
             }
 		}
