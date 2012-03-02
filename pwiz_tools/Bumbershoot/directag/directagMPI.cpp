@@ -23,10 +23,10 @@
 //
 
 #include "stdafx.h"
-#include "directag.h"
 
 #ifdef USE_MPI
 
+#include "directag.h"
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>

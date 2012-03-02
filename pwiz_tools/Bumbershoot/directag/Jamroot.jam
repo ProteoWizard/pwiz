@@ -33,10 +33,6 @@
 #   build                   Build Bumbershoot libraries and applications
 #   =====
 #
-#   --expat-src=<DIR>       Find Expat 2.0+ source distribution here.
-#                           Default: "ext/src/expat*"
-#
-#
 #   --with-mpi              For MPI-enabled applications, compile with
 #                           support for running the application in parallel
 #                           across multiple nodes. This support depends on
@@ -218,14 +214,11 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    if <link>shared in $(properties)
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
-    }
-    else
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
-    }
+    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    if <link>shared in $(properties) { location = $(location)-shared ; }
+    if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
+
+    return <location>$(location) ;
 }
 
 rule install-vendor-api-dependencies ( properties * )
