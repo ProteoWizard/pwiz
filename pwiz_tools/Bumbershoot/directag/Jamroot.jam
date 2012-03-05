@@ -91,14 +91,14 @@ import common ;
 import package ;
 import errors : error ;
 import feature ;
-import path ;
 import mpi ;
+import path ;
 
 
 project bumbershoot
 	: requirements
-        <include>freicore/pwiz_src
-	      <include>$(libraries_path)/boost_aux
+	    <include>freicore/pwiz_src
+	    <include>$(libraries_path)/boost_aux
         <include>$(boost_src)
         <include>$(zlib_src)
 
@@ -107,6 +107,10 @@ project bumbershoot
 
         # any module which links with .NET (either dynamically or statically) must use the shared runtime
         <toolset>msvc:<runtime-link>shared
+
+        # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+        # also, catch(...) will catch SEH exceptions with this on
+        <toolset>msvc:<asynch-exceptions>on
 
         # special msvc hacks
         <toolset>msvc:<define>WIN32                     # windows
@@ -123,7 +127,11 @@ project bumbershoot
         <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
         <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
         <toolset>msvc:<linkflags>/OPT:REF,ICF
+
+        # warning: _SECURE_SCL_THROWS is deprecated
+        <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
 
         # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
         # warning: '__cur' might be used uninitialized in this function 
@@ -150,9 +158,9 @@ project bumbershoot
 
   : build-dir $(BUILD_PATH)
   : default-build
-      <variant>release
-      <link>static
-      <runtime-link>static
+        <variant>release
+        <link>static
+        <runtime-link>static
 	;
 
 alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
@@ -221,6 +229,16 @@ rule install-location ( properties * )
     return <location>$(location) ;
 }
 
+rule install-type ( properties * )
+{
+    local result = <install-type>EXE ;
+    if <link>shared in $(properties)
+    {
+        result += <install-dependencies>on <install-type>SHARED_LIB <install-type>MANIFEST ;
+    }
+    return $(result) ;
+}
+
 rule install-vendor-api-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
@@ -272,11 +290,13 @@ exe adjustScanRankerScoreByGroup
 
 install install
     : $(application-name:L) adjustScanRankerScoreByGroup
-    : <install-type>EXE
+    : <conditional>@install-type
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
+      <conditional>@gcc-install-dll-path
     ;
-    
+
+
 # any GCC executable that uses shared libraries must have all its code built with -fPIC
 rule static-with-fpic ( properties * )
 {
@@ -286,6 +306,7 @@ rule static-with-fpic ( properties * )
         return <cflags>-fPIC <linkflags>-fPIC ;
     }
 }
+
 
 # any source tree can build binary tarballs
 
