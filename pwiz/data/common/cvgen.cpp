@@ -227,7 +227,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid);\n\n\n";
 
     os << "/// returns CV term info for the specified id (accession number)\n"
-          "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char *id);\n"
+          "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char* id);\n"
           "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id);\n\n\n";
 
     os << "/// returns true iff child IsA parent in the CV\n"
@@ -597,27 +597,26 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    return value;\n"
           "}\n\n\n";
 
-    // this is a very obtuse way to write code that doesn't actually need to change - what's wrong with include files?   
-    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id) {\n"
+    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id)\n"
+          "{\n"
           "    return cvTermInfo(id.c_str());\n"
           "}\n\n\n";
 
-    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char *id)\n"
+    os << "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char* id)\n"
           "{\n"
-          "    // called a LOT - rewritten as zero-copy for speed\n"
-          "    if (id) {\n"
-          "        for (int o=0;o<oboPrefixesSize_;o++) {\n"
-          "            const char *ip = id;\n"
-          "            const char *op = oboPrefixes_[o];\n"
-          "            while (*op==*ip) {\n"
-          "                op++; ip++;\n"
-          "            }\n"
-          "            if ( (!*op) && (*ip++==':') ) {\n"
+          "    if (id)\n"
+          "        for (int o=0;o<oboPrefixesSize_;++o)\n"
+          "        {\n"
+          "            const char* ip = id;\n"
+          "            const char* op = oboPrefixes_[o];\n"
+          "            const char* end = op + strlen(op) + 1;\n"
+          "            while (op != end && *op==*ip) {++op;++ip;}\n"
+          "            if (op != end && (!*op) && (*ip++==':'))\n"
+          "            {\n"
           "                CVID cvid = (CVID)(o*enumBlockSize_ + strtoul(ip,NULL,10));\n"
           "                return CVTermData::instance->infoMap().find(cvid)->second;\n"
           "            }\n"
           "        }\n"
-          "    }\n"
           "    return CVTermData::instance->infoMap().find(CVID_Unknown)->second;\n"
           "}\n\n\n";
 

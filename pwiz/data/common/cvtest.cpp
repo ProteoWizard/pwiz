@@ -116,6 +116,9 @@ void testIDTranslation()
     unit_assert(cvTermInfo("MS:1000042").cvid == MS_peak_intensity);
     unit_assert(cvTermInfo("UO:0000231").cvid == UO_information_unit);
     unit_assert(cvTermInfo("XX:0000231").cvid == CVID_Unknown);
+    unit_assert(cvTermInfo("FOO:").cvid == CVID_Unknown);
+    unit_assert(cvTermInfo(":FOO").cvid == CVID_Unknown);
+    unit_assert(cvTermInfo("MS").cvid == CVID_Unknown);
 }
 
 
