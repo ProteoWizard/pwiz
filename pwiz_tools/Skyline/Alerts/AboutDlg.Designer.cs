@@ -34,13 +34,13 @@ namespace pwiz.Skyline.Alerts
             this.linkProteome = new System.Windows.Forms.LinkLabel();
             this.btnOk = new System.Windows.Forms.Button();
             this.pictureSkylineIcon = new System.Windows.Forms.PictureBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.labelSoftwareVersion = new System.Windows.Forms.Label();
             this.textBox1 = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.pictureProteoWizardIcon = new System.Windows.Forms.PictureBox();
             this.linkProteoWizard = new System.Windows.Forms.LinkLabel();
             this.label3 = new System.Windows.Forms.Label();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.pictureSkylineIcon)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.pictureProteoWizardIcon)).BeginInit();
             this.SuspendLayout();
@@ -54,13 +54,13 @@ namespace pwiz.Skyline.Alerts
             this.linkProteome.TabIndex = 0;
             this.linkProteome.TabStop = true;
             this.linkProteome.Text = "proteome.gs.washington.edu";
-            this.linkProteome.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(linkProteome_LinkClicked);
+            this.linkProteome.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkProteome_LinkClicked);
             // 
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnOk.Location = new System.Drawing.Point(424, 305);
+            this.btnOk.Location = new System.Drawing.Point(434, 305);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -76,15 +76,6 @@ namespace pwiz.Skyline.Alerts
             this.pictureSkylineIcon.TabIndex = 2;
             this.pictureSkylineIcon.TabStop = false;
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(163, 40);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(339, 91);
-            this.label1.TabIndex = 3;
-            this.label1.Text = resources.GetString("label1.Text");
-            // 
             // labelSoftwareVersion
             // 
             this.labelSoftwareVersion.AutoSize = true;
@@ -97,12 +88,14 @@ namespace pwiz.Skyline.Alerts
             // 
             // textBox1
             // 
+            this.textBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.textBox1.Location = new System.Drawing.Point(163, 168);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.ReadOnly = true;
             this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox1.Size = new System.Drawing.Size(322, 112);
+            this.textBox1.Size = new System.Drawing.Size(346, 112);
             this.textBox1.TabIndex = 5;
             this.textBox1.Text = resources.GetString("textBox1.Text");
             // 
@@ -144,23 +137,36 @@ namespace pwiz.Skyline.Alerts
             this.label3.TabIndex = 9;
             this.label3.Text = "A ProteoWizard Application";
             // 
+            // linkLabel1
+            // 
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.LinkArea = new System.Windows.Forms.LinkArea(246, 15);
+            this.linkLabel1.Location = new System.Drawing.Point(164, 36);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(351, 92);
+            this.linkLabel1.TabIndex = 10;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = resources.GetString("linkLabel1.Text");
+            this.linkLabel1.UseCompatibleTextRendering = true;
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            // 
             // AboutDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnOk;
-            this.ClientSize = new System.Drawing.Size(511, 344);
+            this.ClientSize = new System.Drawing.Size(521, 344);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.linkProteoWizard);
             this.Controls.Add(this.pictureProteoWizardIcon);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.textBox1);
             this.Controls.Add(this.labelSoftwareVersion);
-            this.Controls.Add(this.label1);
             this.Controls.Add(this.pictureSkylineIcon);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.linkProteome);
+            this.Controls.Add(this.linkLabel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -180,12 +186,12 @@ namespace pwiz.Skyline.Alerts
         private System.Windows.Forms.LinkLabel linkProteome;
         private System.Windows.Forms.Button btnOk;
         private System.Windows.Forms.PictureBox pictureSkylineIcon;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label labelSoftwareVersion;
         private System.Windows.Forms.TextBox textBox1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.PictureBox pictureProteoWizardIcon;
         private System.Windows.Forms.LinkLabel linkProteoWizard;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.LinkLabel linkLabel1;
     }
 }

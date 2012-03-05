@@ -70,6 +70,8 @@ namespace pwiz.SkylineTestA.Results
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
             string docPath = testFilesDir.GetTestPath("Asym_DIA.sky");
+            string cachePath = ChromatogramCache.FinalPathForName(docPath, null);
+            File.Delete(cachePath);
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, null, 1, 1, 2, 4);
             var fullScanInitial = doc.Settings.TransitionSettings.FullScan;

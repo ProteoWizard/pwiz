@@ -138,6 +138,7 @@ namespace pwiz.SkylineTestTutorial
                         }
                         calibrateDlg.OkDialog();
                     });
+            Assert.IsTrue(WaitForConditionUI(() => editIrtCalc1.StandardPeptideCount == 11));
 
             // Check iRT values and update to defined values p. 6-7
             var irtDefinitionPath = GetTestPath("iRT definition.xlsx");

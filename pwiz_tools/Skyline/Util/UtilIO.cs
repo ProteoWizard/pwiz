@@ -539,8 +539,18 @@ namespace pwiz.Skyline.Util
             {
                 try
                 {
+                    string backupFile = pathDestination + ".old";
+                    File.Delete(backupFile);
                     // First try replacing the destination file, if it exists
-                    File.Replace(pathTemp, pathDestination, null, true);
+                    File.Replace(pathTemp, pathDestination, backupFile, true);
+                    try
+                    {
+                        // TODO: Use try twice, but still swallow any failure to delete
+                        File.Delete(backupFile);
+                    }
+                    catch (IOException)
+                    {
+                    }
                 }
                 catch (FileNotFoundException)
                 {

@@ -52,8 +52,11 @@ namespace pwiz.SkylineTestUtil
         public TestFilesDir(TestContext testContext, string relativePathZip, string directoryName)
         {
             TestContext = testContext;
-            if (directoryName == null)
-                directoryName = Path.GetFileNameWithoutExtension(relativePathZip);
+            string zipBaseName = Path.GetFileNameWithoutExtension(relativePathZip);
+            Assert.IsNotNull(zipBaseName);  // Resharper
+            directoryName = directoryName != null
+                ? Path.Combine(directoryName, zipBaseName)
+                : zipBaseName;
             FullPath = TestContext.GetTestPath(directoryName);
             TestContext.ExtractTestFiles(relativePathZip, FullPath);
         }

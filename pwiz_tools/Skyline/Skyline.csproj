@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>D5C6BA82C38242ED7D7A9F608854A2BCE918FC7A</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>F98EE4EF7786EA098B4A4E267DF2D943B3C85EB2</ManifestCertificateThumbprint>
     <ManifestKeyFile>
     </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
@@ -38,8 +38,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3269</ApplicationRevision>
-    <ApplicationVersion>1.1.9.3269</ApplicationVersion>
+    <ApplicationRevision>3304</ApplicationRevision>
+    <ApplicationVersion>1.2.1.3305</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1491,7 +1491,6 @@
       <Link>unimod_2.xsd</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="MacCossLabUW.p12" />
     <None Include="Resources\add-pro32.bmp" />
     <None Include="Skyline_TemporaryKey.pfx" />
     <EmbeddedResource Include="Resources\PeptideStandard.bmp" />

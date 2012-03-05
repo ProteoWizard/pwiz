@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestUtil
         {
             if (LastProgress == null) return;
             if (LastProgress.IsError)
-                throw LastProgress.ErrorException;
+                Assert.Fail(LastProgress.ErrorException.ToString());
 
             Assert.Fail(LastProgress.IsCanceled
                             ? "Loader cancelled"
