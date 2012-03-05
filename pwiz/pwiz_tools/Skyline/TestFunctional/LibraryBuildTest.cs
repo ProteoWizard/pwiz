@@ -344,6 +344,11 @@ namespace pwiz.SkylineTestFunctional
         private void BuildLibraryError(string inputFile, string libraryPath, string libraryAuth,
             params string[] messageParts)
         {
+            string redundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT);
+            File.Delete(redundantBuildPath);
+            string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
+            File.Delete(nonredundantBuildPath);
+
             BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] { inputFile },
                 libraryPath, libraryAuth, false, false);
 
@@ -355,8 +360,8 @@ namespace pwiz.SkylineTestFunctional
             else
                 AssertEx.Contains(messageDlg.Message, messageParts);
             OkDialog(messageDlg, messageDlg.OkDialog);           
-            CheckLibraryExistence(TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT), false);
-            CheckLibraryExistence(TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT), false);
+            CheckLibraryExistence(redundantBuildPath, false);
+            CheckLibraryExistence(nonredundantBuildPath, false);
         }
 
         private void EnsurePeptideSettings()

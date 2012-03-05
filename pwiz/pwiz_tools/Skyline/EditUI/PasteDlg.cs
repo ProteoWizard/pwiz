@@ -257,6 +257,9 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument AddPeptides(SrmDocument document, bool validating)
         {
+            if (tabControl1.SelectedTab != tabPagePeptideList)
+                return document;
+
             var matcher = new ModificationMatcher();
             var listPeptideSequences = ListPeptideSequences();
             if (listPeptideSequences == null)
@@ -422,6 +425,9 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument AddProteins(SrmDocument document)
         {
+            if (tabControl1.SelectedTab != tabPageProteinList)
+                return document;
+
             var backgroundProteome = GetBackgroundProteome(document);
             for (int i = gridViewProteins.Rows.Count - 1; i >= 0; i--)
             {
@@ -521,6 +527,17 @@ namespace pwiz.Skyline.EditUI
                 string line = lines[i];
                 if (line.StartsWith(">"))
                 {
+                    if (line.Trim().Length == 1)
+                    {
+                        ShowFastaError(new PasteError
+                        {
+                            Message = "There is no name for this protein",
+                            Column = 0,
+                            Line = i,
+                            Length = 1
+                        });
+                        return null;
+                    }
                     int lineWithMissingProteinSequence = -1;
                     if (i == lines.Length - 1)
                     {
@@ -593,6 +610,9 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument AddTransitionList(SrmDocument document)
         {
+            if (tabControl1.SelectedTab != tabPageTransitionList)
+                return document;
+
             var backgroundProteome = GetBackgroundProteome(document);
             var sbTransitionList = new StringBuilder();
             var dictNameSeq = new Dictionary<string, FastaSequence>();

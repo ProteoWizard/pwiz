@@ -1992,7 +1992,6 @@ namespace pwiz.Skyline
 
         #region Help menu
 
-// ReSharper disable MemberCanBeMadeStatic.Local
         private void homeMenuItem_Click(object sender, EventArgs e)
         {
             ShowUrl("http://proteome.gs.washington.edu/software/skyline/");
@@ -2017,7 +2016,6 @@ namespace pwiz.Skyline
         {
             ShowUrl("http://proteome.gs.washington.edu/software/Skyline/issues.html");
         }
-// ReSharper restore MemberCanBeMadeStatic.Local
 
         private void ShowUrl(string url)
         {

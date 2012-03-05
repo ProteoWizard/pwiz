@@ -1091,10 +1091,12 @@ namespace pwiz.Skyline.Model
                     throw new InvalidDataException("Results found in document with no replicates.");
                 return;
             }
-            if (results == null)
-                throw new InvalidDataException("DocNode missing results in document with replicates.");
-
-            results.Validate(settings);
+            // This check was a little too agressive.
+            // If a node's transition count is zero, then it can still have null for results.
+//            if (results == null)
+//                throw new InvalidDataException("DocNode missing results in document with replicates.");
+            if (results != null)
+                results.Validate(settings);
         }
 
         /// <summary>

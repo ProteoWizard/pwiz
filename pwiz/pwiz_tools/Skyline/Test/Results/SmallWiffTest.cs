@@ -75,6 +75,7 @@ namespace pwiz.SkylineTest.Results
             SrmDocument doc = InitWiffDocument(testFilesDir);
             var docContainer = new ResultsTestDocumentContainer(doc,
                 testFilesDir.GetTestPath("SimpleWiffTest.sky"));
+            File.Delete(ChromatogramCache.FinalPathForName(docContainer.DocumentFilePath, null));
 
             string pathWiff = testFilesDir.GetTestPath("051309_digestion.wiff");
             string[] dataIds = MsDataFileImpl.ReadIds(pathWiff);

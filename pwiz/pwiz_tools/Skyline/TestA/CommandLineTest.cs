@@ -650,8 +650,11 @@ namespace pwiz.SkylineTestA
 
             var docPath = testFilesDir.GetTestPath("test.sky");
             var outPath1 = testFilesDir.GetTestPath("Imported_multiple1.sky");
+            File.Delete(outPath1);
             var outPath2 = testFilesDir.GetTestPath("Imported_multiple2.sky");
+            File.Delete(outPath2);
             var outPath3 = testFilesDir.GetTestPath("Imported_multiple3.sky");
+            File.Delete(outPath3);
 
             var rawPath = testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
                 ExtensionTestContext.ExtThermoRaw);

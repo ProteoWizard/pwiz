@@ -52,7 +52,11 @@ namespace pwiz.SkylineTestUtil
         private string[] _testFilesZips;
         public string TestFilesZip
         {
-            get { return _testFilesZips[0]; }
+            get
+            {
+                Assert.AreEqual(1, _testFilesZips.Length, "Attempt to use TestFilesZip on test with multiple ZIP files.\nUse TestFilesZipPaths instead.");
+                return _testFilesZips[0];
+            }
             set { TestFilesZipPaths = new[] {value}; }
         }
 
@@ -93,7 +97,11 @@ namespace pwiz.SkylineTestUtil
         public string TestDirectoryName { get; set; }
         public TestFilesDir TestFilesDir
         {
-            get { return TestFilesDirs[0]; }
+            get
+            {
+                Assert.AreEqual(1, TestFilesDirs.Length, "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead.");
+                return TestFilesDirs[0];
+            }
             set { TestFilesDirs = new[] {value}; }
         }
         public TestFilesDir[] TestFilesDirs { get; set; }

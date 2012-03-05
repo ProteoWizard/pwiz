@@ -117,15 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="label1.Text" xml:space="preserve">
-    <value>Copyright © 2008-2010 University of Washington, all rights reserved
-
-MacCoss Lab, Department of Genome Sciences, UW
-
-This software was created by the MacCoss Lab under a subcontract
-from Vanderbilt University under NIH/NCI grant number U24CA126479
-for the NCI CPTAC program.</value>
-  </data>
   <data name="textBox1.Text" xml:space="preserve">
     <value>AB Sciex
 WIFF File Reader Library
@@ -197,5 +188,14 @@ http://zedgraph.org
 Zlib
 Data Compression
 http://www.zlib.net</value>
+  </data>
+  <data name="linkLabel1.Text" xml:space="preserve">
+    <value>Copyright © 2008-2012 University of Washington, all rights reserved
+
+MacCoss Lab, Department of Genome Sciences, UW
+
+This software was created by the MacCoss Lab using federal and
+private funding sources.  For complete details, consult the
+Skyline website.</value>
   </data>
 </root>

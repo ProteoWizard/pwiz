@@ -82,17 +82,17 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Open the .sky file
-            string documentPath = TestFilesDir.GetTestPath(docName);
+            string documentPath = TestFilesDirs[1].GetTestPath(docName);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
             // Share the complete document.
             // The zip file should include the redundant library
-            string shareDocPath = TestFilesDir.GetTestPath(zipNameComplete);
+            string shareDocPath = TestFilesDirs[1].GetTestPath(zipNameComplete);
             Share(shareDocPath, true, origFileSet, newFileSet, docName);
             WaitForLibraries();
 
             // Share the minimal document.
-            string shareMinPath = TestFilesDir.GetTestPath(zipFileMin);
+            string shareMinPath = TestFilesDirs[1].GetTestPath(zipFileMin);
             Share(shareMinPath, false, origFileSet, newFileSet, docName);
             Assert.AreEqual(origFileSet[blibName].UncompressedSize,
                             newFileSet[blibName].UncompressedSize);
@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
             // Remove the last peptide in the document.
             // Share the minimal document
             DeleteLastPeptide();
-            string shareMinPath2 = TestFilesDir.GetTestPath(zipFileMin2);
+            string shareMinPath2 = TestFilesDirs[1].GetTestPath(zipFileMin2);
             Share(shareMinPath2, false, origFileSet, newFileSet, docName);
             Assert.IsTrue(origFileSet[blibName].UncompressedSize >
                           newFileSet[blibName].UncompressedSize);
@@ -115,21 +115,18 @@ namespace pwiz.SkylineTestFunctional
             // Remove the last replicate from the document.
             // Share the minimal document
             var doc = SkylineWindow.Document;
-            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
-                                                                      {
-                                                                          var chromatograms =
-                                                                              doc.Settings.MeasuredResults.Chromatograms;
-                                                                          dlg.SelectedChromatograms = new[]
-                                                                                                          {
-                                                                                                              chromatograms
-                                                                                                                  [1]
-                                                                                                          };
-                                                                          dlg.Remove();
-                                                                          dlg.OkDialog();
-                                                                      });
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults,
+                                     dlg =>
+                                         {
+                                             var chromatograms =
+                                                 doc.Settings.MeasuredResults.Chromatograms;
+                                             dlg.SelectedChromatograms = new[] { chromatograms[1] };
+                                             dlg.Remove();
+                                             dlg.OkDialog();
+                                         });
             WaitForDocumentChange(doc);
 
-            string shareMinPath3 = TestFilesDir.GetTestPath(zipFileMin3);
+            string shareMinPath3 = TestFilesDirs[1].GetTestPath(zipFileMin3);
             var origFileSet2 = new Dictionary<string, ZipEntry>(newFileSet);
             Share(shareMinPath3, false, origFileSet, newFileSet, docName);
 
@@ -157,13 +154,13 @@ namespace pwiz.SkylineTestFunctional
             // The zip file should not contain the redundant library.
             origFileSet.Remove(redundantBlibName);
             DisableMS1Filtering();
-            shareDocPath = TestFilesDir.GetTestPath(zipNameCompleteNoMS1);
+            shareDocPath = TestFilesDirs[1].GetTestPath(zipNameCompleteNoMS1);
             Share(shareDocPath, true, origFileSet, newFileSet, docName);
             WaitForLibraries();
 
             // Share the minimal document
             // The zip file should not contain the redundant library
-            string shareMinPath4 = TestFilesDir.GetTestPath(zipNameMinNoMS1);
+            string shareMinPath4 = TestFilesDirs[1].GetTestPath(zipNameMinNoMS1);
             Share(shareMinPath4, false, origFileSet, newFileSet, docName);
         }
 
@@ -173,7 +170,7 @@ namespace pwiz.SkylineTestFunctional
             // Remember original files
             var origFileSet = new Dictionary<string, ZipEntry>();
             var newFileSet = new Dictionary<string, ZipEntry>();
-            string zipPath = TestContext.GetProjectDirectory(TestFilesZip);
+            string zipPath = TestContext.GetProjectDirectory(TestFilesZipPaths[0]);
             using (ZipFile zipFile = ZipFile.Read(zipPath))
             {
                 foreach (ZipEntry zipEntry in zipFile)
@@ -181,10 +178,10 @@ namespace pwiz.SkylineTestFunctional
             }
 
             // Open the .sky file
-            string documentPath = TestFilesDir.GetTestPath(DOCUMENT_NAME);
+            string documentPath = TestFilesDirs[0].GetTestPath(DOCUMENT_NAME);
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
-            string shareCompletePath = TestFilesDir.GetTestPath("ShareComplete.zip");
+            string shareCompletePath = TestFilesDirs[0].GetTestPath("ShareComplete.zip");
             Share(shareCompletePath, true, origFileSet, newFileSet, DOCUMENT_NAME);
             WaitForLibraries();
 
@@ -195,13 +192,13 @@ namespace pwiz.SkylineTestFunctional
             nistLibName = Path.ChangeExtension(nistLibName, ".blib");
             origFileSet[nistLibName] = nistLibEntry;
 
-            string shareMin1Path = TestFilesDir.GetTestPath("ShareMin1.zip");
+            string shareMin1Path = TestFilesDirs[0].GetTestPath("ShareMin1.zip");
             Share(shareMin1Path, false, origFileSet, newFileSet, DOCUMENT_NAME);
             // This test no longer works since the schema in the minimized library
             // now has one additional table -- RetentionTimes.
             //            Assert.AreEqual(origFileSet[blibLibName].UncompressedSize,
             //                newFileSet[blibLibName].UncompressedSize);
-            String originalLibPath = TestFilesDir.GetTestPath(blibLibName);
+            String originalLibPath = TestFilesDirs[0].GetTestPath(blibLibName);
             String minimalLibPath = GetPathToBlibFile(shareMin1Path, blibLibName);
             Assert.AreNotSame(originalLibPath, minimalLibPath);
 
@@ -236,7 +233,7 @@ namespace pwiz.SkylineTestFunctional
             // gotten rid of it.
             origFileSet.Remove(nistLibName);
 
-            string shareMin2Path = TestFilesDir.GetTestPath("ShareMin2.zip");
+            string shareMin2Path = TestFilesDirs[0].GetTestPath("ShareMin2.zip");
             Share(shareMin2Path, false, origFileSet, newFileSet, DOCUMENT_NAME);
             Assert.IsTrue(origFileSet[blibLibName].UncompressedSize >
                 newFileSet[blibLibName].UncompressedSize);
@@ -287,7 +284,7 @@ namespace pwiz.SkylineTestFunctional
                         string.Format("Found new entry {0} in complete sharing zip file.", zipEntry.FileName));
                     if (extract)
                     {
-                        zipEntry.Extract(extractDir);                        
+                        zipEntry.Extract(extractDir, ExtractExistingFileAction.OverwriteSilently);                        
                     }
                     else
                     {
