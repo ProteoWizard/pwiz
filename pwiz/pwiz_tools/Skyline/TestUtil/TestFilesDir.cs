@@ -19,6 +19,7 @@
 using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -83,23 +84,23 @@ namespace pwiz.SkylineTestUtil
             string guidName = Guid.NewGuid().ToString();
             try
             {
-                Directory.Move(FullPath, guidName);
+                Helpers.TryTwice(() => Directory.Move(FullPath, guidName));
             }
             catch (IOException)
             {
                 // Useful for debugging. Exception names file that is locked.
-                Directory.Delete(FullPath, true);
+                Helpers.TryTwice(() => Directory.Delete(FullPath, true));
             }
 
             // Move the file back to where it was, and fail if this throws
             try
             {
-                Directory.Move(guidName, FullPath);
+                Helpers.TryTwice(() => Directory.Move(guidName, FullPath));
             }
             catch (IOException)
             {
                 // Useful for debugging. Exception names file that is locked.
-                Directory.Delete(guidName, true);
+                Helpers.TryTwice(() => Directory.Delete(guidName, true));
             }
         }
     }

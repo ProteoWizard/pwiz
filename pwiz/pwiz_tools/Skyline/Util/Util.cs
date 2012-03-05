@@ -27,6 +27,7 @@ using System.Linq;
 using System.Text;
 using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.SettingsUI;
@@ -1248,6 +1249,38 @@ namespace pwiz.Skyline.Util
                 return label;
             }
             return label;
+        }
+
+        /// <summary>
+        /// Try an action that might throw an exception.  If it does, sleep for a little while and
+        /// try the action one more time.  This oddity is necessary because certain file system
+        /// operations (like moving a directory) can fail due to temporary file locks held by
+        /// anti-virus software.
+        /// </summary>
+        /// <typeparam name="TEx">type of exception to catch</typeparam>
+        /// <param name="action">action to try</param>
+        /// <param name="milliseconds">how long (in milliseconds) to wait before the action is retried</param>
+        public static void TryTwice<TEx>(Action action, int milliseconds) where TEx : Exception
+        {
+            try
+            {
+                action();
+            }
+            catch (TEx)
+            {
+                Thread.Sleep(milliseconds);
+                action();
+            }
+        }
+
+        /// <summary>
+        /// Try an action the might throw an IOException.  If it fails, sleep for 500 milliseconds and try
+        /// again.  See the comments above for more detail about why this is necessary.
+        /// </summary>
+        /// <param name="action">action to try</param>
+        public static void TryTwice(Action action)
+        {
+            TryTwice<IOException>(action, 500);
         }
     }
 
