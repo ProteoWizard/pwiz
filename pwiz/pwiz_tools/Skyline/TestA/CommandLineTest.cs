@@ -506,11 +506,11 @@ namespace pwiz.SkylineTestA
                 //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
                 //   -- 160109_Mix1_calcurve_070.mzML
                 //   -- 160109_Mix1_calcurve_073.mzML
-                //   -- 160109_Mix1_calcurve_071.raw
-                //   -- 160109_Mix1_calcurve_074.raw
-                //   -- bad_file.raw (should not be imported)
+                //   -- 160109_Mix1_calcurve_071.raw (Waters .raw directory)
+                //   -- 160109_Mix1_calcurve_074.raw (Waters .raw directory)
+                //   -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
                 //   -- bad_file_folder
-                //       -- bad_file.raw (should not be imported)
+                //       -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
                 //   -- FullScan.RAW|mzML (should not be imported)
                 //   -- FullScan_folder
                 //       -- FullScan.RAW|mzML (should not be imported)
@@ -570,11 +570,11 @@ namespace pwiz.SkylineTestA
             //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
             //   -- 160109_Mix1_calcurve_070.mzML
             //   -- 160109_Mix1_calcurve_073.mzML
-            //   -- 160109_Mix1_calcurve_071.raw
-            //   -- 160109_Mix1_calcurve_074.raw
-            //   -- bad_file.raw (should not be imported)
+            //   -- 160109_Mix1_calcurve_071.raw (Waters .raw directory)
+            //   -- 160109_Mix1_calcurve_074.raw (Waters .raw directory)
+            //   -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
             //   -- bad_file_folder
-            //       -- bad_file.raw (should not be imported)
+            //       -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
             //   -- FullScan.RAW|mzML (should not be imported)
             //   -- FullScan_folder
             //       -- FullScan.RAW|mzML (should not be imported)
@@ -637,11 +637,11 @@ namespace pwiz.SkylineTestA
             //       -- CE_Vantage_15mTorr_0001_REP2_02.raw|mzML
             //   -- 160109_Mix1_calcurve_070.mzML
             //   -- 160109_Mix1_calcurve_073.mzML
-            //   -- 160109_Mix1_calcurve_071.raw
-            //   -- 160109_Mix1_calcurve_074.raw
-            //   -- bad_file.raw (should not be imported)
+            //   -- 160109_Mix1_calcurve_071.raw (Waters .raw directory)
+            //   -- 160109_Mix1_calcurve_074.raw (Waters .raw directory)
+            //   -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
             //   -- bad_file_folder
-            //       -- bad_file.raw (should not be imported)
+            //       -- bad_file.raw (Should not be imported. Only in ImportAllCmdLineTest.zip)
             //   -- FullScan.RAW|mzML (should not be imported)
             //   -- FullScan_folder
             //       -- FullScan.RAW|mzML (should not be imported)
@@ -760,29 +760,38 @@ namespace pwiz.SkylineTestA
                 initialFileCount += chromatogram.MSDataFilePaths.Count();
             }
 
-            // Import another single file. Importing all results in the directory
-            // should output a message about this file already existing in the replicate.
+            // Import another single file. 
             var rawPath2 = testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML");
-            RunCommand("--in=" + outPath2,
+            msg = RunCommand("--in=" + outPath2,
                        "--import-file=" + rawPath2,
                        "--import-replicate-name=160109_Mix1_calcurve_070",
                        "--save");
+            doc = ResultsUtil.DeserializeDocument(outPath2);
+            Assert.AreEqual(2, doc.Settings.MeasuredResults.Chromatograms.Count, msg);
+            ChromatogramSet chromatSet;
+            int idx;
+            doc.Settings.MeasuredResults.TryGetChromatogramSet("160109_Mix1_calcurve_070", out chromatSet, out idx);
+            Assert.IsNotNull(chromatSet, msg);
+            Assert.IsTrue(chromatSet.MSDataFilePaths.Contains(rawPath2));
 
 
             // Test: Import all files and sub-folders in test directory
             // The document should already contain a replicate named "REP01".
             // Only one more file should be added to the "REP01" replicate.
-            // There should be a note about ignoring existing file
-            // that is already in the document.
+            // The document should also already contain replicate "160109_Mix1_calcurve_070".
+            // There should be notes about ignoring the two files that are already in the document.
             msg = RunCommand("--in=" + outPath2,
                              "--import-all=" + testFilesDir.FullPath,
                              "--save");
             // ExtensionTestContext.ExtThermo raw uses different case from file on disk
             // which happens to make a good test case.
             string rawPathDisk = GetThermoDiskPath(rawPath);
-            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPathDisk)), msg);
+
+            // These messages are due to files that were already in the document.
+            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPathDisk)), msg); 
             Assert.IsTrue(msg.Contains("Note: The file has already been imported. Ignoring..."), msg);
-            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg);
+            Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg); 
+
             doc = ResultsUtil.DeserializeDocument(outPath2);
             Assert.IsTrue(doc.Settings.HasResults);
             Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,
