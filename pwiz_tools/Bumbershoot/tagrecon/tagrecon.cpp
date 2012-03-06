@@ -789,8 +789,21 @@ namespace tagrecon
         double topMVHScore = 0.0;
         size_t numDynamicMods = candidate.modifications().size();
         
-        // For each amino acid between the location bounds
-        for(size_t aaIndex = locStart; aaIndex <= locEnd; aaIndex++) {
+        // For each amino acid between the location bounds.
+        // Check if the user wants to restrict the blind PTM 
+        // to a particular residue. If not, localize it to all
+        // possible sites in that peptide.
+        for(size_t aaIndex = locStart; aaIndex <= locEnd; aaIndex++) 
+        {
+            bool considerLocation = true;
+            if(g_rtConfig->restrictBlindPTMLocality)
+            {
+                size_t resIndex = static_cast<size_t>(peptideSeq[aaIndex])-65;
+                if(resIndex >= 0 && resIndex <= 29 && !g_rtConfig->blindPTMLocalities[resIndex])
+                    considerLocation = false;
+            }
+            if(!considerLocation)
+                continue;
             // Add the modification to the amino acid
             DynamicMod mod(peptideSeq[aaIndex],peptideSeq[aaIndex],modMass);
             possibleInterpretations.insert(mod);

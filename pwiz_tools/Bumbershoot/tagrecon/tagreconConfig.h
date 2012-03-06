@@ -98,7 +98,8 @@ using namespace pwiz;
 	RTCONFIG_VARIABLE( bool,			UseSmartPlusThreeModel,		true			) \
 	RTCONFIG_VARIABLE( bool,			UseChargeStateFromMS,		false			) \
 	RTCONFIG_VARIABLE( bool,			SearchUntaggedSpectra,		false			) \
-    RTCONFIG_VARIABLE( MZTolerance,     UntaggedSpectraPrecMZTol,   string("1.25 mz")) 
+    RTCONFIG_VARIABLE( MZTolerance,     UntaggedSpectraPrecMZTol,   string("1.25 mz")) \
+    RTCONFIG_VARIABLE( string,          BlindPTMResidues,           ""              ) 
 
 
 namespace freicore
@@ -146,6 +147,9 @@ namespace tagrecon
         int             maxFragmentChargeState;
         int             maxChargeStateFromSpectra;
         vector<double>  NETRewardVector;
+
+        bool            restrictBlindPTMLocality;
+        vector<bool>    blindPTMLocalities;
         
         vector<MZTolerance> untaggedSpectraPrecMassTolerance;
 
@@ -333,6 +337,29 @@ namespace tagrecon
             {
                 largestPositiveDynamicModMass = max(largestPositiveDynamicModMass, mod.modMass * MaxDynamicMods);
                 largestNegativeDynamicModMass = min(largestNegativeDynamicModMass, mod.modMass * MaxDynamicMods);
+            }
+
+            // Check to see if the user wants to restrict the blind PTMs to particular residues.
+            restrictBlindPTMLocality = false;
+            if(BlindPTMResidues.size()>0)
+            {
+                restrictBlindPTMLocality = true;
+                // Reset the ascii indexed array for residues.
+                blindPTMLocalities.resize(29);
+                fill(blindPTMLocalities.begin(),blindPTMLocalities.end(),false);
+                // Split the residue locality rule, get the index of the residues to be used for
+                // blind PTM localization, and set the flag.
+                vector<string> residues;
+                split( residues, BlindPTMResidues, is_any_of(",") );
+                if( residues.empty() )
+                    throw runtime_error("invalid blind ptm residue restriction rule");
+                BOOST_FOREACH(const string& res, residues)
+                {
+                    size_t index = static_cast<size_t>(std::toupper(res.at(0)));
+                    index -= 65;
+                    if(index >= 0 && index <= 29)
+                        blindPTMLocalities[index] = true;
+                }
             }
 
             maxChargeStateFromSpectra = 1;

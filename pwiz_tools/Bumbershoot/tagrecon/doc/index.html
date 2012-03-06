@@ -21,17 +21,17 @@ xmlns="http://www.w3.org/TR/REC-html40">
   <o:Author>Matt Chambers</o:Author>
   <o:Template>Normal</o:Template>
   <o:LastAuthor>Windows User</o:LastAuthor>
-  <o:Revision>968</o:Revision>
-  <o:TotalTime>2296</o:TotalTime>
+  <o:Revision>969</o:Revision>
+  <o:TotalTime>2298</o:TotalTime>
   <o:Created>2007-05-31T15:23:00Z</o:Created>
-  <o:LastSaved>2012-02-17T21:01:00Z</o:LastSaved>
+  <o:LastSaved>2012-03-06T18:17:00Z</o:LastSaved>
   <o:Pages>6</o:Pages>
-  <o:Words>5129</o:Words>
-  <o:Characters>29237</o:Characters>
+  <o:Words>5157</o:Words>
+  <o:Characters>29399</o:Characters>
   <o:Company>MSRC</o:Company>
-  <o:Lines>243</o:Lines>
+  <o:Lines>244</o:Lines>
   <o:Paragraphs>68</o:Paragraphs>
-  <o:CharactersWithSpaces>34298</o:CharactersWithSpaces>
+  <o:CharactersWithSpaces>34488</o:CharactersWithSpaces>
   <o:Version>14.00</o:Version>
  </o:DocumentProperties>
 </xml><![endif]-->
@@ -719,8 +719,8 @@ tab-stops:list 1.0in'><![if !supportLists]><span style='mso-bidi-font-size:
 36.0pt;font-family:"Arial","sans-serif";mso-fareast-font-family:Arial'><span
 style='mso-list:Ignore'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;
 </span></span></span><![endif]><span style='mso-bidi-font-size:36.0pt;
-font-family:"Arial","sans-serif"'><a href="#UsagePTMs">Specifying static or
-dynamic mass modifications</a><o:p></o:p></span></p>
+font-family:"Arial","sans-serif"'><a href="#UsagePTMs">Specifying static or dynamic
+mass modifications</a><o:p></o:p></span></p>
 
 <p class=MsoNormal style='margin-left:1.0in;text-indent:-.25in;mso-list:l1 level2 lfo2;
 tab-stops:list 1.0in'><![if !supportLists]><span style='mso-bidi-font-size:
@@ -774,9 +774,9 @@ style='font-size:14.0pt;mso-bidi-font-size:36.0pt;font-family:"Arial","sans-seri
 
 <p class=MsoNormal style='margin-left:.25in;text-indent:.25in'><span
 style='mso-bidi-font-size:36.0pt;font-family:"Arial","sans-serif"'>TagRecon is
-a mutation-tolerant search engine. The software reconciles peptide sequence
-tags derived by DirecTag against a protein database. The software can be
-configured to make allowances for unanticipated mutations and posttranslational
+a mutation-tolerant search engine. The software reconciles peptide sequence tags
+derived by DirecTag against a protein database. The software can be configured
+to make allowances for unanticipated mutations and posttranslational
 modifications during the tag reconciliation process. The software was
 thoroughly validated on multiple mass spectrometer platforms. The software can
 distribute its operations across multi-core CPUs and multi-node computer
@@ -825,8 +825,7 @@ current working directory]<o:p></o:p></span></p>
 <p class=MsoNormal style='margin-left:.5in'><b style='mso-bidi-font-weight:
 normal'><span style='mso-bidi-font-size:36.0pt;font-family:"Arial","sans-serif"'><span
 style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span>-cpus
-&lt;integer&gt;<span style='mso-tab-count:2'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><span
-style='mso-tab-count:3'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></b><span
+&lt;integer&gt;<span style='mso-tab-count:5'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span></span></b><span
 style='mso-bidi-font-size:36.0pt;font-family:"Arial","sans-serif"'>specifies
 the number of worker threads to use during search [default: all available
 processors]<o:p></o:p></span></p>
@@ -877,11 +876,11 @@ usually &#8220;-ProteinDatabase&#8221; followed by the relative or absolute
 path to the FASTA protein database you want to search against.<span
 style='mso-spacerun:yes'>&nbsp; </span>Every file argument after that is a
 relative or absolute path to a sequence tags file from which to extract short
-sequence tags. The FASTA database filepath must be a valid filepath, it does not
-support wildcards. The sequence tags file path, however, supports, do support
-wildcards. The provided tags must be in .tags format (DirecTag). The software
-expects the corresponding raw data to be present in the same folder as the tags
-file. The software supports the following MS/MS data formats:<o:p></o:p></span></p>
+sequence tags. The FASTA database filepath must be a valid filepath, it does
+not support wildcards. The sequence tags file path, however, supports, do
+support wildcards. The provided tags must be in .tags format (DirecTag). The
+software expects the corresponding raw data to be present in the same folder as
+the tags file. The software supports the following MS/MS data formats:<o:p></o:p></span></p>
 
 <p class=MsoNormal style='margin-left:.5in'><span style='mso-bidi-font-size:
 36.0pt;font-family:"Arial","sans-serif"'><span style='mso-tab-count:1'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </span><b
@@ -1006,14 +1005,34 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true,
-  the preprocessing step will correct the precursor mass by adjusting it through
-  a specified range in steps of a specified length, finally choosing the
-  optimal adjustment. The optimal adjustment is the one that maximizes the sum
-  of products of all complementary peaks in the spectrum.<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true, the
+  preprocessing step will correct the precursor mass by adjusting it through a
+  specified range in steps of a specified length, finally choosing the optimal
+  adjustment. The optimal adjustment is the one that maximizes the sum of
+  products of all complementary peaks in the spectrum.<o:p></o:p></span></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:2'>
+  <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
+  none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
+  padding:.15in .1in .15in .1in'>
+  <p class=MsoNormal align=center style='text-align:center'><span
+  style='font-family:"Arial","sans-serif"'>BlindPTMResidues<o:p></o:p></span></p>
+  <p class=MsoNormal align=center style='text-align:center'><span
+  style='font-family:"Arial","sans-serif"'>(string, &#8220;&#8221;)<o:p></o:p></span></p>
+  </td>
+  <td width=977 valign=top style='width:732.65pt;border-top:none;border-left:
+  none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
+  mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
+  mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
+  <p class=MsoNormal><span style='mso-bidi-font-size:11.0pt;font-family:"Arial","sans-serif"'>A
+  comma-separated string of amino acid residue specificity for blind PTM
+  searches. This variable also considers N-terminal and C-terminal symbols ([
+  and ]). <span style='mso-spacerun:yes'>&nbsp;</span></span><span
+  style='font-family:"Arial","sans-serif"'><o:p></o:p></span></p>
+  </td>
+ </tr>
+ <tr style='mso-yfti-irow:3'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1035,7 +1054,7 @@ parameters guide<o:p></o:p></span></p>
   matrix.</span><span style='font-family:"Arial","sans-serif"'><o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:3'>
+ <tr style='mso-yfti-irow:4'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1053,7 +1072,7 @@ parameters guide<o:p></o:p></span></p>
   the log-odds scores.</span><span style='font-family:"Arial","sans-serif"'><o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:4;height:12.1pt'>
+ <tr style='mso-yfti-irow:5;height:12.1pt'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in;height:12.1pt'>
@@ -1068,14 +1087,13 @@ parameters guide<o:p></o:p></span></p>
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in;
   height:12.1pt'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When
-  stratifying peaks into a specified, fixed number of intensity classes, this
-  parameter controls the size of each class relative to the class above it (where
-  the peaks are more intense). At default values, if the best class, A, has 1
-  peak in it, then class B will have 2 peaks in it and class C will have 4
-  peaks.<o:p></o:p></span></p>
+  stratifying peaks into a specified, fixed number of intensity classes, this parameter
+  controls the size of each class relative to the class above it (where the
+  peaks are more intense). At default values, if the best class, A, has 1 peak
+  in it, then class B will have 2 peaks in it and class C will have 4 peaks.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:5'>
+ <tr style='mso-yfti-irow:6'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1254,7 +1272,7 @@ parameters guide<o:p></o:p></span></p>
   at the N terminus of a protein)<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:6'>
+ <tr style='mso-yfti-irow:7'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1267,12 +1285,12 @@ parameters guide<o:p></o:p></span></p>
   border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true, a Sequest-like
-  cross correlation (xcorr) score will be calculated for the top ranking hits
-  in each spectrum&#8217;s result set.<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true, a
+  Sequest-like cross correlation (xcorr) score will be calculated for the top
+  ranking hits in each spectrum&#8217;s result set.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:7'>
+ <tr style='mso-yfti-irow:8'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1292,7 +1310,7 @@ parameters guide<o:p></o:p></span></p>
   parameter defines the mass tolerance used for sufix matching.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:8'>
+ <tr style='mso-yfti-irow:9'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1305,17 +1323,17 @@ parameters guide<o:p></o:p></span></p>
   border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Specifying a
-  decoy prefix enables TagRecon to know if it is making a target or a decoy
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Specifying
+  a decoy prefix enables TagRecon to know if it is making a target or a decoy
   comparison for each PSM. If the protein database has proteins that begin with
-  DecoyPrefix, then those proteins are decoys. If not, decoy proteins are
-  created on-the-fly by reversing each target protein in the database (so there
-  is one decoy protein per target protein). The automatic reversal (as well as
-  the ability to distinguish between target and decoy comparisons) can be
-  disabled by setting the DecoyPrefix to the empty string (&#8220;&#8221;).<o:p></o:p></span></p>
+  DecoyPrefix, then those proteins are decoys. If not, decoy proteins are created
+  on-the-fly by reversing each target protein in the database (so there is one
+  decoy protein per target protein). The automatic reversal (as well as the
+  ability to distinguish between target and decoy comparisons) can be disabled
+  by setting the DecoyPrefix to the empty string (&#8220;&#8221;).<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:9'>
+ <tr style='mso-yfti-irow:10'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1335,7 +1353,7 @@ parameters guide<o:p></o:p></span></p>
   will simply be treated as a +2.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:10'>
+ <tr style='mso-yfti-irow:11'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1366,10 +1384,10 @@ parameters guide<o:p></o:p></span></p>
   <p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span
   style='font-family:"Arial","sans-serif"'><o:p>&nbsp;</o:p></span></b></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Thus, to
-  search for potentially oxidized methionines and phosphorylated serines, this
-  parameter would be set to something like the string:<o:p></o:p></span></p>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>&#8220;M * 15.995
-  S $ 79.966&#8221;<o:p></o:p></span></p>
+  search for potentially oxidized methionines and phosphorylated serines, this parameter
+  would be set to something like the string:<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>&#8220;M *
+  15.995 S $ 79.966&#8221;<o:p></o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'><o:p>&nbsp;</o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The AA
   motif can include multiple residues, and the peptide termini are represented
@@ -1426,7 +1444,7 @@ parameters guide<o:p></o:p></span></p>
   <o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:11'>
+ <tr style='mso-yfti-irow:12'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1439,9 +1457,10 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>This variable
-  controls how TagRecon interprets the mass differences between the precursor
-  and database peptide. This variable can take on three possible values:<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>This
+  variable controls how TagRecon interprets the mass differences between the
+  precursor and database peptide. This variable can take on three possible
+  values:<o:p></o:p></span></p>
   <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in;mso-list:l3 level1 lfo8'><![if !supportLists]><span
   style='font-family:"Arial","sans-serif";mso-fareast-font-family:Arial'><span
   style='mso-list:Ignore'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;
@@ -1472,7 +1491,7 @@ parameters guide<o:p></o:p></span></p>
   string turns off the delta mass interpretation in TagRecon.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:12'>
+ <tr style='mso-yfti-irow:13'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1493,7 +1512,7 @@ parameters guide<o:p></o:p></span></p>
   is used (see above).<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:13'>
+ <tr style='mso-yfti-irow:14'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1506,9 +1525,9 @@ parameters guide<o:p></o:p></span></p>
   border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>This parameter
-  determines which ion series are used to build the theoretical spectrum for
-  each candidate peptide. Possible values are:<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>This
+  parameter determines which ion series are used to build the theoretical
+  spectrum for each candidate peptide. Possible values are:<o:p></o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>CID: b, y<o:p></o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>ETD: c, z*<o:p></o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>manual:
@@ -1516,7 +1535,7 @@ parameters guide<o:p></o:p></span></p>
   manual:b,y,z<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:14'>
+ <tr style='mso-yfti-irow:15'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1534,7 +1553,7 @@ parameters guide<o:p></o:p></span></p>
   m/z when looking for an ion fragment peak during candidate scoring.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:15'>
+ <tr style='mso-yfti-irow:16'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1547,13 +1566,13 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If set to true,
-  TagRecon will ignore tag matching, and match each spectrum to all peptide
-  sequences culled from a protein database while allowing for an unknown
-  modification.<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If set to
+  true, TagRecon will ignore tag matching, and match each spectrum to all
+  peptide sequences culled from a protein database while allowing for an
+  unknown modification.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:16'>
+ <tr style='mso-yfti-irow:17'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1571,7 +1590,7 @@ parameters guide<o:p></o:p></span></p>
   candidate sequence.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:17'>
+ <tr style='mso-yfti-irow:18'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1586,13 +1605,13 @@ parameters guide<o:p></o:p></span></p>
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>By default,
   when generating peptides from the protein database, a peptide may contain any
-  number of missed cleavages. A missed cleavage is a site within the peptide that
-  matches one of the cleavage rules (refer to CleavageRules). Settings this
-  parameter to some other number will stop generating peptides from a sequence
-  if it contains more than the specified number of missed cleavages.<o:p></o:p></span></p>
+  number of missed cleavages. A missed cleavage is a site within the peptide
+  that matches one of the cleavage rules (refer to CleavageRules). Settings
+  this parameter to some other number will stop generating peptides from a
+  sequence if it contains more than the specified number of missed cleavages.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:18'>
+ <tr style='mso-yfti-irow:19'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1612,7 +1631,7 @@ parameters guide<o:p></o:p></span></p>
   ignored.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:19'>
+ <tr style='mso-yfti-irow:20'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1637,7 +1656,7 @@ parameters guide<o:p></o:p></span></p>
   style='mso-bidi-font-size:11.0pt;font-family:"Arial","sans-serif"'><o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:20'>
+ <tr style='mso-yfti-irow:21'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1655,7 +1674,7 @@ parameters guide<o:p></o:p></span></p>
   explain a delta mass between precursor and database peptide.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:21'>
+ <tr style='mso-yfti-irow:22'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1672,7 +1691,7 @@ parameters guide<o:p></o:p></span></p>
   all peaks except the MaxPeakCount most intense peaks.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:22'>
+ <tr style='mso-yfti-irow:23'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1690,7 +1709,7 @@ parameters guide<o:p></o:p></span></p>
   disqualified.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:23'>
+ <tr style='mso-yfti-irow:24'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1709,7 +1728,7 @@ parameters guide<o:p></o:p></span></p>
   w:st="on"><st1:City w:st="on">Daltons</st1:City></st1:place>.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:24'>
+ <tr style='mso-yfti-irow:25'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1722,13 +1741,13 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When adjusting
-  the precursor mass, this parameter sets the lower mass limit of adjustment
-  allowable from the original precursor mass, measured in <st1:place w:st="on"><st1:City
-   w:st="on">Daltons</st1:City></st1:place>.<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When
+  adjusting the precursor mass, this parameter sets the lower mass limit of
+  adjustment allowable from the original precursor mass, measured in <st1:place
+  w:st="on"><st1:City w:st="on">Daltons</st1:City></st1:place>.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:25'>
+ <tr style='mso-yfti-irow:26'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1749,7 +1768,7 @@ parameters guide<o:p></o:p></span></p>
   each digestion specificity (full, semi, non) is reported. <o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:26'>
+ <tr style='mso-yfti-irow:27'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1767,7 +1786,7 @@ parameters guide<o:p></o:p></span></p>
   that exceeds the specified mass will be disqualified.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:27'>
+ <tr style='mso-yfti-irow:28'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1780,12 +1799,12 @@ parameters guide<o:p></o:p></span></p>
   border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When digesting
-  proteins, any peptide which does not meet or exceed the specified length will
-  be disqualified.<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When
+  digesting proteins, any peptide which does not meet or exceed the specified
+  length will be disqualified.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:28'>
+ <tr style='mso-yfti-irow:29'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1806,7 +1825,7 @@ parameters guide<o:p></o:p></span></p>
   up the output file quite a lot.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:29'>
+ <tr style='mso-yfti-irow:30'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1828,7 +1847,7 @@ parameters guide<o:p></o:p></span></p>
   into a semi-tryptic digest.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:30'>
+ <tr style='mso-yfti-irow:31'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1848,7 +1867,7 @@ parameters guide<o:p></o:p></span></p>
   parameter defines the mass tolerance used for prefix matching.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:31'>
+ <tr style='mso-yfti-irow:32'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1868,7 +1887,7 @@ parameters guide<o:p></o:p></span></p>
   high means more overhead in network transmission as each batch is smaller. <o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:32'>
+ <tr style='mso-yfti-irow:33'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1882,12 +1901,12 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Controls
-  the number of charge states that TagRecon will handle during all stages of the
-  program. It is especially important during determination of charge state (see
-  DuplicateSpectra for more information).<o:p></o:p></span></p>
+  the number of charge states that TagRecon will handle during all stages of
+  the program. It is especially important during determination of charge state
+  (see DuplicateSpectra for more information).<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:33'>
+ <tr style='mso-yfti-irow:34'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1908,7 +1927,7 @@ parameters guide<o:p></o:p></span></p>
   very sparse will not see much benefit from using many intensity classes.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:34'>
+ <tr style='mso-yfti-irow:35'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1926,7 +1945,7 @@ parameters guide<o:p></o:p></span></p>
   &#8220;pepXML&#8221; format.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:35'>
+ <tr style='mso-yfti-irow:36'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1939,13 +1958,13 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The output of
-  a TagRecon job will be a pepXML file for each input file. The string
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The output
+  of a TagRecon job will be a pepXML file for each input file. The string
   specified by this parameter will be appended to each pepXML filename. It is
   useful for differentiating jobs within a single directory.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:36'>
+ <tr style='mso-yfti-irow:37'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1964,7 +1983,7 @@ parameters guide<o:p></o:p></span></p>
   each modification.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:37'>
+ <tr style='mso-yfti-irow:38'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -1978,11 +1997,11 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When
-  adjusting the precursor mass, this parameter sets the size of the steps between
-  adjustments, measured in <st1:place w:st="on"><st1:City w:st="on">Daltons</st1:City></st1:place>.<o:p></o:p></span></p>
+  adjusting the precursor mass, this parameter sets the size of the steps
+  between adjustments, measured in <st1:place w:st="on"><st1:City w:st="on">Daltons</st1:City></st1:place>.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:38'>
+ <tr style='mso-yfti-irow:39'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2005,7 +2024,7 @@ parameters guide<o:p></o:p></span></p>
   three charge states, respectively. <o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:39'>
+ <tr style='mso-yfti-irow:40'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2022,7 +2041,7 @@ parameters guide<o:p></o:p></span></p>
   the FASTA protein database to be searched.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:40'>
+ <tr style='mso-yfti-irow:41'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2035,16 +2054,17 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Before beginning
-  sequence candidate generation and scoring, TagRecon will do a random sampling
-  of the protein database to get an estimate of the number of comparisons that
-  will be done by the job. The bigger the sample size, the longer this estimate
-  will take and the more accurate it will be. Of course, if there are fewer
-  proteins in the database than the sample size, all proteins will be used in
-  the sampling and the number of comparisons will be exact.<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Before
+  beginning sequence candidate generation and scoring, TagRecon will do a
+  random sampling of the protein database to get an estimate of the number of
+  comparisons that will be done by the job. The bigger the sample size, the
+  longer this estimate will take and the more accurate it will be. Of course,
+  if there are fewer proteins in the database than the sample size, all
+  proteins will be used in the sampling and the number of comparisons will be
+  exact.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:41'>
+ <tr style='mso-yfti-irow:42'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2061,7 +2081,7 @@ parameters guide<o:p></o:p></span></p>
   TagRecon searches untagged spectra like a database search.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:42'>
+ <tr style='mso-yfti-irow:43'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2173,8 +2193,8 @@ parameters guide<o:p></o:p></span></p>
     none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
     mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
     mso-border-alt:solid windowtext .5pt;padding:0in 5.4pt 0in 5.4pt'>
-    <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Filters spectra
-    by scan event<o:p></o:p></span></p>
+    <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Filters
+    spectra by scan event<o:p></o:p></span></p>
     </td>
     <td width=402 valign=top style='width:301.5pt;border-top:none;border-left:
     none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
@@ -2484,11 +2504,11 @@ parameters guide<o:p></o:p></span></p>
   form [a,b] or a[-][b]<o:p></o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'><o:p>&nbsp;</o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If no
-  chargeStatePredictor is specified, a default one will be added like:
-  &#8220;chargeStatePredictor false &lt;NumChargeStates&gt; 2 0.9&#8221;<o:p></o:p></span></p>
+  chargeStatePredictor is specified, a default one will be added like: &#8220;chargeStatePredictor
+  false &lt;NumChargeStates&gt; 2 0.9&#8221;<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:43'>
+ <tr style='mso-yfti-irow:44'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2501,11 +2521,11 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If a residue
-  (or multiple residues) should always be treated as having a modification on
-  their natural mass, set this parameter to inform the search engine which
-  residues are modified. Residues are entered into this string as a
-  space-delimited list of pairs. Each pair is of the form:<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If a
+  residue (or multiple residues) should always be treated as having a
+  modification on their natural mass, set this parameter to inform the search
+  engine which residues are modified. Residues are entered into this string as
+  a space-delimited list of pairs. Each pair is of the form:<o:p></o:p></span></p>
   <p class=MsoNormal><b style='mso-bidi-font-weight:normal'><span
   style='font-family:"Arial","sans-serif"'>&lt;AA residue character&gt; &lt;mod
   mass&gt;<o:p></o:p></span></b></p>
@@ -2517,7 +2537,7 @@ parameters guide<o:p></o:p></span></p>
   57&#8221;<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:44'>
+ <tr style='mso-yfti-irow:45'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2537,13 +2557,13 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>A useful
-  feature to focus a search on a subset of spectra in a particular data file,
-  these two parameters can be set in order to limit the possible range of scan
+  feature to focus a search on a subset of spectra in a particular data file, these
+  two parameters can be set in order to limit the possible range of scan
   numbers that TagRecon will read from the input data files. By default, all
   tandem mass spectra in the input files are read in for processing.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:45'>
+ <tr style='mso-yfti-irow:46'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2569,7 +2589,7 @@ parameters guide<o:p></o:p></span></p>
   protein database are read in for processing.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:46'>
+ <tr style='mso-yfti-irow:47'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2588,7 +2608,7 @@ parameters guide<o:p></o:p></span></p>
   this parameter, measured in seconds.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:47'>
+ <tr style='mso-yfti-irow:48'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2603,8 +2623,8 @@ parameters guide<o:p></o:p></span></p>
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>In order to
   maximize the effectiveness of the MVH scoring algorithm, an important step in
-  preprocessing the experimental spectra is filtering out noise peaks. Noise
-  peaks are filtered out by sorting the original peaks in descending order of
+  preprocessing the experimental spectra is filtering out noise peaks. Noise peaks
+  are filtered out by sorting the original peaks in descending order of
   intensity, and then picking peaks from that list until the cumulative ion
   current of the picked peaks divided by the total ion current (TIC) is greater
   than or equal to this parameter. Lower percentages mean that less of the
@@ -2613,7 +2633,7 @@ parameters guide<o:p></o:p></span></p>
   optimally.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:48'>
+ <tr style='mso-yfti-irow:49'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2646,7 +2666,7 @@ parameters guide<o:p></o:p></span></p>
   compromise between incurring that overhead and minimizing wasted time.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:49'>
+ <tr style='mso-yfti-irow:50'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2663,7 +2683,7 @@ parameters guide<o:p></o:p></span></p>
   parameter tells TagRecon where to find the unimod XML file.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:50'>
+ <tr style='mso-yfti-irow:51'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2677,15 +2697,15 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true,
-  the mass of candidate sequences will be calculated using the average masses
-  of its amino acid residues. This parameter should be set based on whether the
+  the mass of candidate sequences will be calculated using the average masses of
+  its amino acid residues. This parameter should be set based on whether the
   experimental data has precursor masses that are monoisotopic. For example,
   LCQ/LTQ-derived precursors are generally measured by average masses and
   FT-ICR/Orbitrap-derived precursors are generally measured by monoisotopic
   masses.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:51'>
+ <tr style='mso-yfti-irow:52'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2700,14 +2720,14 @@ parameters guide<o:p></o:p></span></p>
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true,
   TagRecon will use the charge state from the input data if it is available. If
-  false, or if charge state is not available from a particular spectrum,
-  TagRecon will use its internal algorithm to determine charge state. If, for a
-  given spectrum, TagRecon uses its internal algorithm to determine charge
-  state and the result is multiply charged, that spectrum may be duplicated to
-  other charge states (see DuplicateSpectra for more information).<o:p></o:p></span></p>
+  false, or if charge state is not available from a particular spectrum, TagRecon
+  will use its internal algorithm to determine charge state. If, for a given
+  spectrum, TagRecon uses its internal algorithm to determine charge state and
+  the result is multiply charged, that spectrum may be duplicated to other
+  charge states (see DuplicateSpectra for more information).<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:52'>
+ <tr style='mso-yfti-irow:53'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2720,12 +2740,12 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true, each
-  process will use all the processing units available on the system it is
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true,
+  each process will use all the processing units available on the system it is
   running on.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:53'>
+ <tr style='mso-yfti-irow:54'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2738,12 +2758,12 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true,
-  TagRecon adds a probabilistic bonus to peptide scores depending on whether
-  the peptides are fully-enzymatic, semi-enzymatic, or non-enzymatic. <o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true, TagRecon
+  adds a probabilistic bonus to peptide scores depending on whether the
+  peptides are fully-enzymatic, semi-enzymatic, or non-enzymatic. <o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:54'>
+ <tr style='mso-yfti-irow:55'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2766,9 +2786,9 @@ parameters guide<o:p></o:p></span></p>
   +2 precursors, a +1 b and y ion is always predicted at each peptide bond.<o:p></o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'><o:p>&nbsp;</o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>For +3 and
-  higher precursors, the fragment ions predicted depend on the way this parameter
-  is set. When this parameter is true, then for each peptide bond, an internal
-  calculation is done to estimate the basicity of the b and y fragment
+  higher precursors, the fragment ions predicted depend on the way this
+  parameter is set. When this parameter is true, then for each peptide bond, an
+  internal calculation is done to estimate the basicity of the b and y fragment
   sequence. The precursors protons are distributed to those ions based on that
   calculation, with the more basic sequence generally getting more of the
   protons. For example, when this parameter is true, each peptide bond of a +3
@@ -2782,7 +2802,7 @@ parameters guide<o:p></o:p></span></p>
   have theoretical +1 y5, +2 y5, +1 b5, and +2 b5 ions.<o:p></o:p></span></p>
   </td>
  </tr>
- <tr style='mso-yfti-irow:55;mso-yfti-lastrow:yes'>
+ <tr style='mso-yfti-irow:56;mso-yfti-lastrow:yes'>
   <td width=238 style='width:178.5pt;border:solid windowtext 1.0pt;border-top:
   none;mso-border-top-alt:solid windowtext .5pt;mso-border-alt:solid windowtext .5pt;
   padding:.15in .1in .15in .1in'>
@@ -2796,9 +2816,9 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>TagRecon
-  uses this variable to when &#8220;SearchUntaggedSpectra&#8221; is set to true.
-  A generated sequence candidate is only compared to an experimental spectrum
-  if the candidates mass is within this tolerance of the experimental
+  uses this variable to when &#8220;SearchUntaggedSpectra&#8221; is set to
+  true. A generated sequence candidate is only compared to an experimental
+  spectrum if the candidates mass is within this tolerance of the experimental
   spectrum&#8217;s precursor mass. The units (&#8220;daltons&#8221; or
   &#8220;ppm&#8221;) must be provided as well as the magnitude. The actual
   tolerance used for the search is calculated by multiplying the tolerance by
@@ -2824,10 +2844,10 @@ mso-bidi-font-size:12.0pt;font-family:"Arial","sans-serif";mso-fareast-font-fami
 Arial'><span style='mso-list:Ignore'>a)<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;
 </span></span></span><![endif]><span style='font-family:"Arial","sans-serif"'>S<a
 name=InterpretingResultsSearchOutput></a>earch-time output of TagRecon serves
-several purposes. The majority of the output will usually be progress
-information, telling the user which part of the job that TagRecon is currently
-working on, and in some cases how far along into that part the job is. There
-will be periodic updates when TagRecon is preprocessing spectra and when it is
+several purposes. The majority of the output will usually be progress information,
+telling the user which part of the job that TagRecon is currently working on,
+and in some cases how far along into that part the job is. There will be
+periodic updates when TagRecon is preprocessing spectra and when it is
 generating candidates from the database and comparing those candidates against
 the spectra. In a multi-process (MPI) job, there will also be progress
 information on bulk transfers of data over the network. Additionally, TagRecon
@@ -2835,9 +2855,9 @@ will display statistics on the spectra that remain after preprocessing,
 specifically the average number of peaks in a spectrum before and after
 preprocessing. Also provided is the average number of the percentage of peaks
 that were filtered out by the preprocessing step. Finally, in the case of an
-MPI job, when the database search is complete each node that took part in the search
-will display statistics detailing the work that node did. The lines will be
-like:<o:p></o:p></span></p>
+MPI job, when the database search is complete each node that took part in the
+search will display statistics detailing the work that node did. The lines will
+be like:<o:p></o:p></span></p>
 
 <p class=MsoNormal style='margin-left:.5in'><b style='mso-bidi-font-weight:
 normal'><span style='font-family:"Arial","sans-serif"'>Process #1 (foohost)
@@ -2861,8 +2881,8 @@ defaulting to 5) matches for each spectrum are kept and output in the file. The
 pepXML format is quite versatile, but does have a few limitations. It is not
 possible to fully encode TagRecon&#8217;s CleavageRules variable if
 multi-residue motifs are used (in the rule &#8220;[|[M|K|R .&#8221; the
-&#8220;[M&#8221; part is a multi-residue motif), and it is not possible to
-fully encode Static/DynamicMods if multi-residue motifs are used (in the mod
+&#8220;[M&#8221; part is a multi-residue motif), and it is not possible to fully
+encode Static/DynamicMods if multi-residue motifs are used (in the mod
 &#8220;(Q ^ -17&#8221; the &#8220;(Q&#8221; part is a multi-residue motif). We
 have proposed extensions to pepXML to support these motif-oriented
 capabilities.<o:p></o:p></span></p>
