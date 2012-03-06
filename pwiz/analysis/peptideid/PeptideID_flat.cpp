@@ -41,13 +41,13 @@ typedef multimap<const std::string, const PeptideID::Record*> nativeID_map;
 
 struct redirect
 {
-    shared_ptr<FlatRecordBuilder> builder;
+    boost::shared_ptr<FlatRecordBuilder> builder;
 
     redirect(const redirect& rd)
         : builder(rd.builder)
     {}
     
-    redirect(shared_ptr<FlatRecordBuilder> builder)
+    redirect(boost::shared_ptr<FlatRecordBuilder> builder)
         : builder(builder)
     {}
     
@@ -67,7 +67,7 @@ public:
 
     void increment() { it++; }
 
-    bool equal(const shared_ptr<PeptideID::IteratorInternal>& impl) const
+    bool equal(const boost::shared_ptr<PeptideID::IteratorInternal>& impl) const
     {
         local_iterator* li = dynamic_cast<local_iterator*>(impl.get());
         if (li)
@@ -96,13 +96,13 @@ public:
     istream* in;
     enum Source {Source_file, Source_stream};
     Source source;
-    shared_ptr<FlatRecordBuilder> builder;
+    boost::shared_ptr<FlatRecordBuilder> builder;
 
     vector<PeptideID::Record> records;
     nativeID_map nativeIDMap;
     
     Impl(const string& filename,
-         shared_ptr<FlatRecordBuilder> builder)
+         boost::shared_ptr<FlatRecordBuilder> builder)
     {
         source = Source_file;
         this->filename = filename;
@@ -111,7 +111,7 @@ public:
     }
     
     Impl(istream* in,
-         shared_ptr<FlatRecordBuilder> builder)
+         boost::shared_ptr<FlatRecordBuilder> builder)
     {
         source = Source_stream;
         filename.empty();
@@ -219,14 +219,14 @@ public:
 // PeptideID_flat
 
 PeptideID_flat::PeptideID_flat(const std::string& filename,
-                                shared_ptr<FlatRecordBuilder> builder)
+                                boost::shared_ptr<FlatRecordBuilder> builder)
     : pimpl(new Impl(filename, builder))
 {
     pimpl->parse();
 }
 
 PeptideID_flat::PeptideID_flat(std::istream* in,
-                               shared_ptr<FlatRecordBuilder> builder)
+                               boost::shared_ptr<FlatRecordBuilder> builder)
     : pimpl(new Impl(in, builder))
 {
     pimpl->parse();
