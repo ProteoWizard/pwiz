@@ -151,8 +151,7 @@ namespace directag
 			if( TicCutoffPercentage > 1.0f )
 			{
 				TicCutoffPercentage /= 100.0f;
-				if( g_pid == 0 )
-					cerr << "TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
+				cerr << "TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
 			}
 
 			if( !DynamicMods.empty() )

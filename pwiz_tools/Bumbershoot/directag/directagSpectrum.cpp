@@ -737,8 +737,7 @@ namespace directag
 	{
 		intensityRanksumBinsTable.clear();
 
-        if( g_pid == 0 )
-		    cout << "Reading intensity ranksum bins cache file." << endl;
+		cout << "Reading intensity ranksum bins cache file." << endl;
 		ifstream cacheInputFile( "directag_intensity_ranksum_bins.cache" );
 		if( cacheInputFile.is_open() )
 		{
@@ -747,8 +746,7 @@ namespace directag
 		}
 		cacheInputFile.close();
 
-		if( g_pid == 0 )
-		    cout << "Calculating uncached ranksum bins (this could take a while)." << endl;
+		cout << "Calculating uncached ranksum bins (this could take a while)." << endl;
 		for( iterator itr = instance.begin(); itr != instance.end(); ++itr )
 		{
 			if( intensityRanksumBinsTable.size() <= (size_t) g_rtConfig->TagLength ||
@@ -760,14 +758,11 @@ namespace directag
 			}
 		}
 
-		if( g_pid == 0 )
-		{
-			cout << "Writing intensity ranksum bins cache file." << endl;
-			ofstream cacheOutputFile( "directag_intensity_ranksum_bins.cache" );
-			text_oarchive cacheOutputArchive( cacheOutputFile );
-			cacheOutputArchive & intensityRanksumBinsTable;
-			cacheOutputFile.close();
-		}
+        cout << "Writing intensity ranksum bins cache file." << endl;
+        ofstream cacheOutputFile( "directag_intensity_ranksum_bins.cache" );
+        text_oarchive cacheOutputArchive( cacheOutputFile );
+        cacheOutputArchive & intensityRanksumBinsTable;
+        cacheOutputFile.close();
 	}
 
 	void SpectraList::InitMzFEBins()

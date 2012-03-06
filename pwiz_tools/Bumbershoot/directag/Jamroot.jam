@@ -91,7 +91,6 @@ import common ;
 import package ;
 import errors : error ;
 import feature ;
-import mpi ;
 import path ;
 
 
@@ -255,14 +254,6 @@ rule install-vendor-api-dependencies ( properties * )
     return $(dependencies) ;
 }
 
-rule with-mpi ( properties * )
-{
-    if --with-mpi in [ modules.peek : ARGV ]
-    {
-        return <location-prefix>with-mpi <library>/mpi//mpi <define>USE_MPI ;
-    }
-}
-
 rule gcc-install-dll-path ( properties * )
 {
     if <toolset>gcc in $(properties) && <link>shared in $(properties) && <target-os>linux in $(properties)
@@ -274,9 +265,8 @@ rule gcc-install-dll-path ( properties * )
 
 exe $(application-name:L)
   : # sources
-    directag.cpp directagMPI.cpp directagSpectrum.cpp directagVersion.cpp writeHighQualSpectra.cpp
+    directag.cpp directagSpectrum.cpp directagVersion.cpp writeHighQualSpectra.cpp
   : # requirements
-      <conditional>@with-mpi
       <conditional>@gcc-install-dll-path
       <library>freicore
   ;

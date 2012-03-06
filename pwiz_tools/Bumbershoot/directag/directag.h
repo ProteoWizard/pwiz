@@ -38,10 +38,6 @@ using namespace freicore;
 
 namespace freicore
 {
-    #ifdef USE_MPI
-        extern MPI_Status st;
-        extern void* g_mpiBuffer;
-    #endif
 
 namespace directag
 {
@@ -101,20 +97,6 @@ namespace directag
 		}
 	};
     
-    #ifdef USE_MPI
-        void TransmitConfigsToChildProcesses();
-		void ReceiveConfigsFromRootProcess();
-		int ReceivePreparedSpectraFromChildProcesses();
-		int TransmitPreparedSpectraToRootProcess( SpectraList& preparedSpectra );
-		int ReceiveUnpreparedSpectraBatchFromRootProcess();
-		int TransmitUnpreparedSpectraToChildProcesses();
-
-        int TransmitUntaggedSpectraToChildProcesses();
-		int ReceiveUntaggedSpectraBatchFromRootProcess();
-		int ReceiveTaggedSpectraFromChildProcesses();
-		int TransmitTaggedSpectraToRootProcess( SpectraList& preparedSpectra );
-    #endif
-
 	extern SpectraList                  spectra;
     extern TaggingStatistics            taggingStatistics;
 	extern map< char, float >           compositionInfo;

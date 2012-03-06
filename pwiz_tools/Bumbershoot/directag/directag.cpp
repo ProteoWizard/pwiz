@@ -211,10 +211,7 @@ namespace directag
 	{
 		Timer timer;
 
-		if( g_pid == 0 )
-		{
-			cout << "Trimming spectra with less than " << 10 << " peaks." << endl;
-		}
+		cout << "Trimming spectra with less than " << 10 << " peaks." << endl;
 
 		int preTrimCount = 0;
 		try
@@ -228,11 +225,8 @@ namespace directag
 			throw runtime_error( "trimming spectra" );
 		}
 
-		if( g_pid == 0 )
-		{
-			cout << "Trimmed " << preTrimCount << " spectra for being too small before peak filtering." << endl;
-			cout << "Determining spectrum charge states from " << spectra.size() << " spectra." << endl;
-		}
+		cout << "Trimmed " << preTrimCount << " spectra for being too small before peak filtering." << endl;
+		cout << "Determining spectrum charge states from " << spectra.size() << " spectra." << endl;
 
 		timer.Begin();
 		SpectraList duplicates;
@@ -288,11 +282,8 @@ namespace directag
 			throw runtime_error( "adding duplicated spectra" );
 		}
 
-		if( g_pid == 0 )
-		{
-			cout << "Finished determining spectrum charge states; " << timer.End() << " seconds elapsed." << endl;
-			cout << "Filtering peaks in " << spectra.size() << " spectra." << endl;
-		}
+		cout << "Finished determining spectrum charge states; " << timer.End() << " seconds elapsed." << endl;
+		cout << "Filtering peaks in " << spectra.size() << " spectra." << endl;
 
 		timer.Begin();
 		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
@@ -312,14 +303,12 @@ namespace directag
 			}
 		}
 
-		if( g_pid == 0 )
-			cout << "Finished filtering peaks; " << timer.End() << " seconds elapsed." << endl;
+		cout << "Finished filtering peaks; " << timer.End() << " seconds elapsed." << endl;
 
 		int postTrimCount = 0;
 		postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
 
-		if( g_pid == 0 )
-			cout << "Trimmed " << postTrimCount << " spectra for being too small after peak filtering." << endl;
+		cout << "Trimmed " << postTrimCount << " spectra for being too small after peak filtering." << endl;
 	}
 
 	vector< int > workerNumbers;
@@ -445,14 +434,11 @@ namespace directag
 	int InitProcess( argList_t& args )
 	{
 		//cout << g_hostString << " is initializing." << endl;
-		if( g_pid == 0 )
-		{
           cout << "DirecTag " << Version::str() << " (" << Version::LastModified() << ")\n" <<
                   "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
                   "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
                   "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
                   DIRECTAG_LICENSE << endl;
-		}
 
 		proteinStore proteins;
 
@@ -479,68 +465,54 @@ namespace directag
 			--i;
 		}
 
-		if( g_pid == 0 )
-		{
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				if( args[i] == "-cfg" && i+1 <= args.size() )
-				{
-					if( g_rtConfig->initializeFromFile( args[i+1] ) )
-					{
-						cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
-						return 1;
-					}
-					args.erase( args.begin() + i );
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i] == "-cfg" && i+1 <= args.size() )
+            {
+                if( g_rtConfig->initializeFromFile( args[i+1] ) )
+                {
+                    cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
+                    return 1;
+                }
+                args.erase( args.begin() + i );
 
-				} else if( args[i] == "-rescfg" && i+1 <= args.size() )
-				{
-					if( g_residueMap->initializeFromFile( args[i+1] ) )
-					{
-						cerr << "Could not find residue masses at \"" << args[i+1] << "\"." << endl;
-						return 1;
-					}
-					args.erase( args.begin() + i );
-				} else
-					continue;
+            } else if( args[i] == "-rescfg" && i+1 <= args.size() )
+            {
+                if( g_residueMap->initializeFromFile( args[i+1] ) )
+                {
+                    cerr << "Could not find residue masses at \"" << args[i+1] << "\"." << endl;
+                    return 1;
+                }
+                args.erase( args.begin() + i );
+            } else
+                continue;
 
-				args.erase( args.begin() + i );
-				--i;
-			}
+            args.erase( args.begin() + i );
+            --i;
+        }
 
-			if( args.size() < 2 )
-			{
-				cout << "Not enough arguments.\nUsage: " << args[0] << " <input spectra filemask 1> [input spectra filemask 2] ..." << endl;
-				return 1;
-			}
+        if( args.size() < 2 )
+        {
+            cout << "Not enough arguments.\nUsage: " << args[0] << " <input spectra filemask 1> [input spectra filemask 2] ..." << endl;
+            return 1;
+        }
 
-			if( !g_rtConfig->initialized() )
-			{
-				if( g_rtConfig->initializeFromFile() )
-				{
-					cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
-				}
-				//return 1;
-			}
+        if( !g_rtConfig->initialized() )
+        {
+            if( g_rtConfig->initializeFromFile() )
+            {
+                cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
+            }
+            //return 1;
+        }
 
-			if( !g_residueMap->initialized() )
-			{
-				if( g_residueMap->initializeFromFile() )
-				{
-					cerr << "Could not find the default residue masses file (hard-coded defaults in use)." << endl;
-				}
-			}
-
-			#ifdef USE_MPI
-				if( g_numChildren > 0 )
-					TransmitConfigsToChildProcesses();
-			#endif
-
-		} else // child process
-		{
-			#ifdef USE_MPI
-				ReceiveConfigsFromRootProcess();
-			#endif
-		}
+        if( !g_residueMap->initialized() )
+        {
+            if( g_residueMap->initializeFromFile() )
+            {
+                cerr << "Could not find the default residue masses file (hard-coded defaults in use)." << endl;
+            }
+        }
 
 		// Command line overrides happen after config file has been distributed but before PTM parsing
 		RunTimeVariableMap vars = g_rtConfig->getVariables();
@@ -563,29 +535,26 @@ namespace directag
 		}
 		g_rtConfig->setVariables( vars );
 
-		if( g_pid == 0 )
-		{
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				if( args[i] == "-dump" )
-				{
-					g_rtConfig->dump();
-					g_residueMap->dump();
-					args.erase( args.begin() + i );
-					--i;
-				}
-			}
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i] == "-dump" )
+            {
+                g_rtConfig->dump();
+                g_residueMap->dump();
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
 
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				if( args[i][0] == '-' )
-				{
-					cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-					args.erase( args.begin() + i );
-					--i;
-				}
-			}
-		}
+        for( size_t i=1; i < args.size(); ++i )
+        {
+            if( args[i][0] == '-' )
+            {
+                cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+                args.erase( args.begin() + i );
+                --i;
+            }
+        }
 
 		return 0;
 	}
@@ -602,298 +571,157 @@ namespace directag
 		SpectraList::InitMzFEBins();
 		SpectraList::InitCEBins();
 
-		INIT_PROFILERS(10)
+        INIT_PROFILERS(10)
 
-		if( g_pid == 0 )
-		{
-			// The root process parses the XML data file and distributes spectra to child processes
-			g_inputFilenames.clear();
-			for( size_t i=1; i < args.size(); ++i )
-			{
-				//cout << "Reading spectra from files matching mask \"" << args[i] << "\"" << endl;
-				FindFilesByMask( args[i], g_inputFilenames );
-			}
+        // The root process parses the XML data file and distributes spectra to child processes
+        g_inputFilenames.clear();
+        for( size_t i=1; i < args.size(); ++i )
+            FindFilesByMask( args[i], g_inputFilenames );
 
-			if( g_inputFilenames.empty() )
-			{
-				cerr << "No source files found matching given filemasks." << endl;
-				return 1;
-			}
+        if( g_inputFilenames.empty() )
+        {
+            cerr << "No source files found matching given filemasks." << endl;
+            return 1;
+        }
 
-			Timer overallTime(true);
-			fileList_t finishedFiles;
-			fileList_t::iterator fItr;
-			for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
-			{
-				spectra.clear();
+        Timer overallTime(true);
+        fileList_t finishedFiles;
+        fileList_t::iterator fItr;
+        for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
+        {
+            spectra.clear();
 
-				Timer fileTime(true);
+            Timer fileTime(true);
 
-				cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
-				finishedFiles.insert( *fItr );
+            cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
+            finishedFiles.insert( *fItr );
 
-				Timer readTime(true);
-				spectra.readPeaks( *fItr, 0, -1, 2, g_rtConfig->SpectrumListFilters, g_rtConfig->NumChargeStates );
-				readTime.End();
+            Timer readTime(true);
+            spectra.readPeaks( *fItr, 0, -1, 2, g_rtConfig->SpectrumListFilters, g_rtConfig->NumChargeStates );
+            readTime.End();
 
-				int totalPeakCount = 0;
-				int numSpectra = (int) spectra.size();
-				for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-					totalPeakCount += (*sItr)->peakPreCount;
+            int totalPeakCount = 0;
+            int numSpectra = (int) spectra.size();
+            for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+                totalPeakCount += (*sItr)->peakPreCount;
 
-				cout << "Read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.TimeElapsed() << " seconds elapsed." << endl;
+            cout << "Read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.TimeElapsed() << " seconds elapsed." << endl;
 
-				int skip = 0;
-				if( numSpectra == 0 )
-				{
-					cout << "Skipping a file with no spectra." << endl;
-					skip = 1;
-				}
-				#ifdef USE_MPI
-					for( int p=0; p < g_numChildren; ++p )
-						MPI_Ssend( &skip,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
-				#endif
+            if( numSpectra == 0 )
+            {
+                cout << "Skipping a file with no spectra." << endl;
+                continue;
+            }
 
-				Timer taggingTime;
-				string startDate;
-				string startTime;
-				vector< size_t > opcs; // original peak count statistics
-				vector< size_t > fpcs; // filtered peak count statistics
+            Timer taggingTime;
+            string startDate;
+            string startTime;
+            vector< size_t > opcs; // original peak count statistics
+            vector< size_t > fpcs; // filtered peak count statistics
 
-				if( !skip )
-				{
-					if( g_numProcesses > 1 )
-					{
-						#ifdef USE_MPI
-							if( g_numChildren > 0 )
-							{
-								g_rtConfig->SpectraBatchSize = (int) ceil( (float) numSpectra / (float) g_numChildren / 10 );
-								cout << "Dynamic spectra batch size is " << g_rtConfig->SpectraBatchSize << endl;
-							}
+            spectra.random_shuffle();
 
-							cout << "Sending spectra to worker nodes to prepare them for search." << endl;
-							Timer prepareTime(true);
-							TransmitUnpreparedSpectraToChildProcesses();
+            PrepareSpectra();
 
-							deallocate( spectra );
+            if( spectra.size() == 0 )
+            {
+                cout << "Skipping a file with no suitable spectra." << endl;
+                continue;
+            }
 
-							ReceivePreparedSpectraFromChildProcesses();
+            opcs = spectra.getOriginalPeakCountStatistics();
+            fpcs = spectra.getFilteredPeakCountStatistics();
+            cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+            cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+            cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+                opcs[2] << " (" << fpcs[2] << "), " <<
+                opcs[3] << " (" << fpcs[3] << "), " <<
+                opcs[4] << " (" << fpcs[4] << ")" << endl;
 
-							SpectraList::PrecacheIRBins( spectra );
+            float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
+            cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
 
-							numSpectra = (int) spectra.size();
+            SpectraList::PrecacheIRBins( spectra );
 
-							skip = 0;
-							if( numSpectra == 0 )
-							{
-								cout << "Skipping a file with no suitable spectra." << endl;
-								skip = 1;
-							}
+            cout << "Sequence tagging " << spectra.size() << " spectra." << endl;
+            startTime = GetTimeString(); startDate = GetDateString(); taggingTime.Begin();
+            ExecutePipeline();
 
-							for( int p=0; p < g_numChildren; ++p )
-								MPI_Ssend( &skip,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
+            cout << "Finished sequence tagging spectra; " << taggingTime.End() << " seconds elapsed." << endl;
 
-							if( !skip )
-							{
-								opcs = spectra.getOriginalPeakCountStatistics();
-								fpcs = spectra.getFilteredPeakCountStatistics();
-							    cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
-							    cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-							    cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
-									    opcs[2] << " (" << fpcs[2] << "), " <<
-									    opcs[3] << " (" << fpcs[3] << "), " <<
-									    opcs[4] << " (" << fpcs[4] << ")" << endl;
+            cout << "Overall stats: " << (string) taggingStatistics << endl;
+            taggingStatistics.reset();
 
-								float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-								cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
+            // Code for ScanRanker, write metrics and high quality spectra
+            if( g_rtConfig->WriteScanRankerMetrics || g_rtConfig->WriteHighQualSpectra )
+            {
+                CalculateQualScore( spectra );
+                spectra.sort( spectraSortByQualScore() );
+            }
 
-								cout << "Prepared " << numSpectra << " spectra; " << prepareTime.End() << " seconds elapsed." << endl;
+            if( g_rtConfig->WriteScanRankerMetrics )
+            {
+                try
+                {
+                    WriteSpecQualMetrics( *fItr, spectra, g_rtConfig->ScanRankerMetricsFileName);
+                    cout << "Finished writing spectral quality metrics for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+                } catch( ... )
+                {
+                    cerr << "Error while writing ScanRanker metrics file." << endl;
+                    exit(1);
+                }
+            }
 
-								cout << "Sending " << spectra.size() << " spectra to worker nodes for sequence tagging." << endl;
-								startTime = GetTimeString(); startDate = GetDateString(); taggingTime.Begin();
-								TransmitUntaggedSpectraToChildProcesses();
-								cout << "Finished sequence tagging spectra; " << taggingTime.End() << " seconds elapsed." << endl;
+            if(  g_rtConfig->WriteHighQualSpectra )
+            {						
+                mergedSpectraIndices.clear();
+                highQualSpectraIndices.clear();
+                set<NativeID> seen;
+                BOOST_FOREACH(Spectrum* s, spectra)
+                {
+                    // merge duplicate spectra with differen charge state
+                    pair<set<NativeID>::iterator, bool> insertResult = seen.insert(s->id.nativeID);
+                    if( insertResult.second )
+                        mergedSpectraIndices.push_back( s->id.nativeID );
+                }
+                int maxOutput = (int) (((double) mergedSpectraIndices.size()) * g_rtConfig->HighQualSpecCutoff);
+                cout << endl << "Extracting high quality spectra ..." << endl;
+                cout << "The number of filtered spectra: " << mergedSpectraIndices.size() << endl;
+                cout << "The number of high quality spectra: " << maxOutput << endl;
+                for(int i = 0; i < maxOutput; ++i )
+                {
+                    highQualSpectraIndices.push_back( mergedSpectraIndices.at(i) );
+                }
 
-								deallocate( spectra );
+                try
+                {
+                    //std::sort( highQualSpectraIndices.begin(), highQualSpectraIndices.end() );
+                    writeHighQualSpectra( *fItr, highQualSpectraIndices, g_rtConfig->OutputFormat, g_rtConfig->HighQualSpecFileName);
+                    cout << "Finished writing high quality spectra for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
 
-								cout << "Receiving tag results from worker nodes." << endl;
-								Timer resultsTime(true);
-								ReceiveTaggedSpectraFromChildProcesses();
-								cout << "Finished receiving tag results for " << spectra.size() << " spectra; " << resultsTime.End() << " seconds elapsed." << endl;
+                } catch( ... )
+                {
+                    cerr << "Error while sorting and writing output." << endl;
+                    exit(1);
+                }
+            }
 
-    							cout << "Overall stats: " << (string) taggingStatistics << endl;
-                                taggingStatistics.reset();
-							}
+            if( g_rtConfig->WriteOutTags )
+            {
+                try
+                {
+                    spectra.sort( spectraSortByID() );
+                    WriteTagsToTagsFile( *fItr, startTime, startDate, taggingTime.End() );
+                    cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+                } catch( ... )
+                {
+                    cerr << "Error while sorting and writing XML output." << endl;
+                    exit(1);
+                }
+            }
+        }
 
-						#endif
-					} else
-					{
-						spectra.random_shuffle();
-
-						PrepareSpectra();
-
-						skip = 0;
-						if( spectra.size() == 0 )
-						{
-							cout << "Skipping a file with no suitable spectra." << endl;
-							skip = 1;
-						}
-
-						if( !skip )
-						{
-							opcs = spectra.getOriginalPeakCountStatistics();
-							fpcs = spectra.getFilteredPeakCountStatistics();
-							cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
-							cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-							cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
-									opcs[2] << " (" << fpcs[2] << "), " <<
-									opcs[3] << " (" << fpcs[3] << "), " <<
-									opcs[4] << " (" << fpcs[4] << ")" << endl;
-
-							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-							cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
-
-							SpectraList::PrecacheIRBins( spectra );
-
-							cout << "Sequence tagging " << spectra.size() << " spectra." << endl;
-							startTime = GetTimeString(); startDate = GetDateString(); taggingTime.Begin();
-							ExecutePipeline();
-
-							cout << "Finished sequence tagging spectra; " << taggingTime.End() << " seconds elapsed." << endl;
-
-							cout << "Overall stats: " << (string) taggingStatistics << endl;
-                            taggingStatistics.reset();
-						}
-					}
-
-					// Code for ScanRanker, write metrics and high quality spectra
-					if( !skip && (g_rtConfig->WriteScanRankerMetrics || g_rtConfig->WriteHighQualSpectra))
-					{
-						CalculateQualScore( spectra );
-						spectra.sort( spectraSortByQualScore() );
-					}
-
-					if( !skip && g_rtConfig->WriteScanRankerMetrics)
-					{
-						try
-						{
-						WriteSpecQualMetrics( *fItr, spectra, g_rtConfig->ScanRankerMetricsFileName);
-						cout << "Finished writing spectral quality metrics for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
-						} catch( ... )
-						{
-							cerr << "Error while writing ScanRanker metrics file." << endl;
-							exit(1);
-						}
-					}
-
-					if( !skip && g_rtConfig->WriteHighQualSpectra)
-					{						
-						mergedSpectraIndices.clear();
-						highQualSpectraIndices.clear();
-                        set<NativeID> seen;
-						BOOST_FOREACH(Spectrum* s, spectra)
-                        {
-							// merge duplicate spectra with differen charge state
-                            pair<set<NativeID>::iterator, bool> insertResult = seen.insert(s->id.nativeID);
-							if( insertResult.second )
-								mergedSpectraIndices.push_back( s->id.nativeID );
-						}
-						int maxOutput = (int) (((double) mergedSpectraIndices.size()) * g_rtConfig->HighQualSpecCutoff);
-						cout << endl << "Extracting high quality spectra ..." << endl;
-						cout << "The number of filtered spectra: " << mergedSpectraIndices.size() << endl;
-						cout << "The number of high quality spectra: " << maxOutput << endl;
-						for(int i = 0; i < maxOutput; ++i )
-						{
-							highQualSpectraIndices.push_back( mergedSpectraIndices.at(i) );
-						}
-
-						try
-						{
-							//std::sort( highQualSpectraIndices.begin(), highQualSpectraIndices.end() );
-							writeHighQualSpectra( *fItr, highQualSpectraIndices, g_rtConfig->OutputFormat, g_rtConfig->HighQualSpecFileName);
-							cout << "Finished writing high quality spectra for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
-
-						} catch( ... )
-						{
-							cerr << "Error while sorting and writing output." << endl;
-							exit(1);
-						}
-					}
-
-					if( !skip && g_rtConfig->WriteOutTags)
-					{
-						try
-						{
-							spectra.sort( spectraSortByID() );
-							WriteTagsToTagsFile( *fItr, startTime, startDate, taggingTime.End() );
-							cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
-						} catch( ... )
-						{
-							cerr << "Error while sorting and writing XML output." << endl;
-							exit(1);
-						}
-					}
-				}
-			}
-
-			#ifdef USE_MPI
-					int done = ( ( g_inputFilenames.size() - finishedFiles.size() ) == 0 ? 1 : 0 );
-					for( int p=0; p < g_numChildren; ++p )
-						MPI_Ssend( &done,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
-			#endif
-
-			cout << "Finished tagging " << g_inputFilenames.size() << " files; " << overallTime.End() << " seconds elapsed." << endl;
-		}
-		#ifdef USE_MPI
-		else
-		{
-			int allDone = 0;
-
-			while( !allDone )
-			{
-				int skip;
-				MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
-
-				if( !skip )
-				{
-					SpectraList preparedSpectra;
-
-					while( ReceiveUnpreparedSpectraBatchFromRootProcess() )
-					{
-						PrepareSpectra();
-						preparedSpectra.insert( spectra.begin(), spectra.end(), preparedSpectra.end() );
-						spectra.clear( false );
-					}
-
-					TransmitPreparedSpectraToRootProcess( preparedSpectra );
-					deallocate( preparedSpectra );
-
-					MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
-
-					if( !skip )
-					{
-						SpectraList taggedSpectra;
-						SpectraList::PrecacheIRBins( spectra );
-
-						while( ReceiveUntaggedSpectraBatchFromRootProcess() )
-						{
-							ExecutePipeline();
-
-							taggedSpectra.insert( spectra.begin(), spectra.end(), taggedSpectra.end() );
-							spectra.clear( false );
-						}
-
-						cout << g_hostString << " stats: " << (string) taggingStatistics << endl;
-
-						TransmitTaggedSpectraToRootProcess( taggedSpectra );
-						taggedSpectra.clear();
-					}
-				}
-
-				MPI_Recv( &allDone,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
-			}
-		}
-		#endif
+        cout << "Finished tagging " << g_inputFilenames.size() << " files; " << overallTime.End() << " seconds elapsed." << endl;
 
 		return 0;
 	}
@@ -933,39 +761,8 @@ int main( int argc, char* argv[] )
 		char buf[256];
 		GetHostname( buf, sizeof(buf) );
 
-		// Initialize the message passing interface for the parallel processing system
-		#ifdef MPI_DEBUG
-			cout << buf << " is initializing MPI... " << endl;
-		#endif
-
-		#ifdef USE_MPI
-			int threadLevel;
-			MPI_Init_thread( &argc, &argv, MPI_THREAD_MULTIPLE, &threadLevel );
-			if( threadLevel < MPI_THREAD_SINGLE )
-			{
-				cerr << "MPI library is not thread compliant: " << threadLevel << " should be " << MPI_THREAD_MULTIPLE << endl;
-				return 1;
-			}
-			MPI_Buffer_attach( malloc( MPI_BUFFER_SIZE ), MPI_BUFFER_SIZE );
-			//CommitCommonDatatypes();
-		#endif
-
-		#ifdef MPI_DEBUG
-			cout << buf << " has initialized MPI... " << endl;
-		#endif
-
-		// Get information on the MPI environment
-		#ifdef MPI_DEBUG
-			cout << buf << " is gathering MPI information... " << endl;
-		#endif
-
-		#ifdef USE_MPI
-			MPI_Comm_size( MPI_COMM_WORLD, &g_numProcesses );
-			MPI_Comm_rank( MPI_COMM_WORLD, &g_pid );
-		#else
-			g_numProcesses = 1;
-			g_pid = 0;
-		#endif
+		g_numProcesses = 1;
+		g_pid = 0;
 
 		g_numChildren = g_numProcesses - 1;
 
@@ -973,42 +770,7 @@ int main( int argc, char* argv[] )
 		str << "Process #" << g_pid << " (" << buf << ")";
 		g_hostString = str.str();
 
-		#ifdef MPI_DEBUG
-			cout << g_hostString << " has gathered its MPI information." << endl;
-		#endif
-
-
-		// Process the data
-		#ifdef MPI_DEBUG
-			cout << g_hostString << " is starting." << endl;
-		#endif
-
 		int result = directag::ProcessHandler( argc, argv );
-
-		#ifdef USE_MPI
-			if( g_pid == 0 && g_numChildren > 0 && result > 0 )
-				MPI_Abort( MPI_COMM_WORLD, 1 );
-		#endif
-
-		#ifdef MPI_DEBUG
-			cout << g_hostString << " has finished." << endl;	
-		#endif
-
-		// Destroy the message passing interface
-		#ifdef MPI_DEBUG
-			cout << g_hostString << " is finalizing MPI... " << endl;
-		#endif
-
-		#ifdef USE_MPI
-			int size;
-			MPI_Buffer_detach( &g_mpiBuffer, &size );
-			free( g_mpiBuffer );
-			MPI_Finalize();
-		#endif
-
-		#ifdef MPI_DEBUG
-			cout << g_hostString << " is terminating." << endl;
-		#endif
 
 		return result;
 
