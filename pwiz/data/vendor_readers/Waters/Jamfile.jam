@@ -57,7 +57,9 @@ rule vendor-api-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>9.0 in $(properties) ||
-         <toolset-msvc:version>9.0express in $(properties) ) &&
+         <toolset-msvc:version>9.0express in $(properties) ||
+         <toolset-msvc:version>10.0 in $(properties) ||
+         <toolset-msvc:version>10.0express in $(properties) ) &&
        ! ( <address-model>64 in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
@@ -73,7 +75,9 @@ rule vendor-api-usage-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        ( <toolset-msvc:version>9.0 in $(properties) ||
-         <toolset-msvc:version>9.0express in $(properties) ) &&
+         <toolset-msvc:version>9.0express in $(properties) ||
+         <toolset-msvc:version>10.0 in $(properties) ||
+         <toolset-msvc:version>10.0express in $(properties) ) &&
        ! ( <address-model>64 in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&

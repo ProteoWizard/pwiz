@@ -22,11 +22,6 @@
             Store the root node of the RBTree.
             </summary>
         </member>
-        <member name="F:System.Collections.Generic.RBTree`1.comparer">
-            <summary>
-            Store the IComparer that allows to compare the node keys.
-            </summary>
-        </member>
         <member name="M:System.Collections.Generic.RBTree`1.#ctor">
             <summary>
             Initializes an new instance of Collections.System.RBTree
@@ -153,6 +148,11 @@
             exception is thrown.
             </summary>
             <param name="node">The root of the tree.</param>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.Comparer">
+            <summary>
+            Store the IComparer that allows to compare the node keys.
+            </summary>
         </member>
         <member name="P:System.Collections.Generic.RBTree`1.Count">
             <summary>
@@ -355,6 +355,11 @@
         <member name="M:System.Collections.Generic.Set`1.#ctor(System.Collections.Generic.IComparer{`0})">
             <summary>
             Constructs an empty set using the specified comparer
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.#ctor(System.Comparison{`0})">
+            <summary>
+            Constructs an empty set using the specified comparison
             </summary>
         </member>
         <member name="M:System.Collections.Generic.Set`1.#ctor(System.Collections.Generic.Set{`0})">

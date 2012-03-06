@@ -129,9 +129,9 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var selNode = SkylineWindow.SequenceTree.SelectedNode;
-                Assert.IsTrue(selNode.Text.Contains("ETFPILVEEK")
-                            && ((PeptideDocNode)((PeptideTreeNode)selNode).Model).HasResults
-                            && Equals(selNode.StateImageIndex, (int)SequenceTree.StateImageId.keep));
+                Assert.IsTrue(selNode.Text.Contains("ETFPILVEEK"));
+                Assert.IsTrue(((PeptideDocNode)((PeptideTreeNode)selNode).Model).HasResults);
+                Assert.IsTrue(Equals(selNode.StateImageIndex, (int)SequenceTree.StateImageId.keep));
                 SkylineWindow.AutoZoomBestPeak();
                 SkylineWindow.ShowAllTransitions();
                 SkylineWindow.SelectedPath =

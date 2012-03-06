@@ -19,6 +19,8 @@
 // limitations under the License.
 //
 
+using System;
+
 namespace seems
 {
     partial class AboutForm
@@ -94,7 +96,7 @@ namespace seems
             this.aboutTextBox.Name = "aboutTextBox";
             this.aboutTextBox.Size = new System.Drawing.Size( 261, 97 );
             this.aboutTextBox.TabIndex = 1;
-            this.aboutTextBox.Text = "SeeMS <<version>>\r\n© <<date>> Vanderbilt University\r\n\r\nAuthor: Matt Chambers\r\n\r\nT" +
+            this.aboutTextBox.Text = "<<appname>> <<version>>\r\n© <<date>> Vanderbilt University\r\n\r\nAuthor: Matt Chambers\r\n\r\nT" +
                 "hanks to: David Tabb, the ProteoWizard Team,\r\n                  Digital Rune, Jo" +
                 "e Woodbury";
             // 

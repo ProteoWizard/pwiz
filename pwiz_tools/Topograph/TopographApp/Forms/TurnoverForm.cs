@@ -47,6 +47,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             Instance = this;
+            this.Text = Environment.Is64BitProcess ? "Topograph (64-bit)" : "Topograph";
             ShowDashboard();
             var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
             string[] args = (activationArgs != null ? activationArgs.ActivationData : null);

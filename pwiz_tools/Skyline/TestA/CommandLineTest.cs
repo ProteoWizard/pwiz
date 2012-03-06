@@ -490,7 +490,8 @@ namespace pwiz.SkylineTestA
         public void ConsoleBadRawFileImportTest()
         {
             // Run this test only if we can read Thermo's raw files
-            if(ExtensionTestContext.CanImportThermoRaw)
+            if(ExtensionTestContext.CanImportThermoRaw &&
+                ExtensionTestContext.CanImportWatersRaw)
             {
                 const string testZipPath = @"TestA\ImportAllCmdLineTest.zip";
 
@@ -555,7 +556,11 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void ConsoleImportNonSRMFile()
         {
-            string testZipPath = ExtensionTestContext.CanImportThermoRaw
+            bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+            string extRaw = useRaw
+                                ? ".raw"
+                                : ".mzML";
+            string testZipPath = useRaw
                                     ? @"TestA\ImportAllCmdLineTest.zip"
                                     : @"TestA\ImportAllCmdLineTestMzml.zip";
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
@@ -583,7 +588,7 @@ namespace pwiz.SkylineTestA
             var docPath = testFilesDir.GetTestPath("test.sky");
             var outPath = testFilesDir.GetTestPath("import_nonSRM_file.sky");
 
-            var rawPath = testFilesDir.GetTestPath("FullScan"+ExtensionTestContext.ExtThermoRaw);
+            var rawPath = testFilesDir.GetTestPath("FullScan" + extRaw);
 
             // Try to import FullScan.RAW|mzML
             var msg = RunCommand("--in=" + docPath,
@@ -621,11 +626,16 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void ConsoleMultiReplicateImportTest()
         {
-            string testZipPath = ExtensionTestContext.CanImportThermoRaw
+            bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
+            string testZipPath = useRaw
                                      ? @"TestA\ImportAllCmdLineTest.zip"
                                      : @"TestA\ImportAllCmdLineTestMzml.zip";
+            string extRaw = useRaw
+                                ? ".raw"
+                                : ".mzML";
 
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
+
 
             // Contents:
             // ImportAllCmdLineTest
@@ -656,8 +666,7 @@ namespace pwiz.SkylineTestA
             var outPath3 = testFilesDir.GetTestPath("Imported_multiple3.sky");
             File.Delete(outPath3);
 
-            var rawPath = testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
-                ExtensionTestContext.ExtThermoRaw);
+            var rawPath = testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" + extRaw);
             
             // Test: Cannot use --import-file and --import-all options simultaneously
             var msg = RunCommand("--in=" + docPath,
@@ -814,10 +823,10 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(rawPath));
             Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
                 testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_01" +
-                ExtensionTestContext.ExtThermoRaw)));
-            Assert.IsTrue(chromatogramSet.MSDataFilePaths.Contains(
+                extRaw)));
+            Assert.IsTrue(!useRaw || chromatogramSet.MSDataFilePaths.Contains(
                 GetThermoDiskPath(testFilesDir.GetTestPath(@"REP01\CE_Vantage_15mTorr_0001_REP1_02" +
-                ExtensionTestContext.ExtThermoRaw))));
+                extRaw))));
 
            
 
@@ -825,7 +834,7 @@ namespace pwiz.SkylineTestA
             // Test: Import a single file
             // Import 160109_Mix1_calcurve_074.raw;
             // Use replicate name "REP01"
-            var rawPath3 = testFilesDir.GetTestPath("160109_Mix1_calcurve_074.raw");
+            var rawPath3 = testFilesDir.GetTestPath("160109_Mix1_calcurve_074" + extRaw);
             msg = RunCommand("--in=" + docPath,
                        "--import-file=" + rawPath3,
                        "--import-replicate-name=REP01",

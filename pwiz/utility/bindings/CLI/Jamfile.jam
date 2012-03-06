@@ -209,10 +209,8 @@ rule merge_xdc_files ( targets + : sources * : properties * )
 
 actions merge_xdc_files
 {
-    REM support both MSVC 8 and 9
     IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE)  >nul
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
     xdcmake.exe /nologo $(DOC_DATA_PATH)/*.xdc $(DOC_PATH)/*.xdc /out:$(OUTPUT_PATH)\$(<[1]:D=)
 }
 
@@ -234,10 +232,8 @@ rule merge_xdc_data_files ( targets + : sources * : properties * )
 
 actions merge_xdc_data_files
 {
-    REM support both MSVC 8 and 9
     IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE)  >nul
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
     xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
 }
 

@@ -541,13 +541,18 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
+    local targetPlatform ;
+    if <address-model>64 in $(properties)
+    {
+        targetPlatform = -x86_64 ;
+    }
     if <link>shared in $(properties)
     {
-        return <location>$(PWIZ_BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
+        return <location>$(PWIZ_BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared$(targetPlatform) ;
     }
     else
     {
-        return <location>$(PWIZ_BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+        return <location>$(PWIZ_BUILD_PATH)/$(toolsets[1])-$(variants[1])$(targetPlatform) ;
     }
 }
 
@@ -716,6 +721,22 @@ rule msvc-requirement ( properties * )
     if ! <toolset>msvc in $(properties) { return <build>no ; }
 }
 
+# predicate for use as a <conditional> requirement of targets that must only build with MSVC and current .NET Framework
+rule msvc-dotnet-requirement ( properties * )
+{
+    # require VS 2010 because of .NET Framework version
+    if ! ( <toolset-msvc:version>10.0 in $(properties) ||
+           10.0express in $(properties:G=) )
+        { return <build>no ; }
+}
+
+# predicate for use as a <conditional> requirement of targets that must only build with non-express version of MSVC
+rule no-express-requirement ( properties * )
+{
+    # only the latest, non-express version of MSVC
+    if ! <toolset-msvc:version>10.0 in $(properties) { return <build>no ; }
+    if 10.0express in $(properties:G=) { return <build>no ; }
+}
 
 # TODO HACK: find location of MSFileReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
 

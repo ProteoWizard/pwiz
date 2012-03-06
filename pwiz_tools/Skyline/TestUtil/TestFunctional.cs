@@ -524,7 +524,7 @@ namespace pwiz.SkylineTestUtil
                    openDataSourceDialog.Open();
                });
             RunUI(importResultsDlg.OkDialog);
-            WaitForCondition(30 * 1000,
+            WaitForCondition(180 * 1000,
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
         }
 

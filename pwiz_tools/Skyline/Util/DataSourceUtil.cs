@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Util
             XmlReaderSettings settings = new XmlReaderSettings
             {
                 ValidationType = ValidationType.None,
-                ProhibitDtd = false,
+                DtdProcessing = System.Xml.DtdProcessing.Prohibit,
                 XmlResolver = null
             };
             using (XmlReader reader = XmlReader.Create(new StreamReader(filepath, true), settings))

@@ -75,12 +75,13 @@ namespace pwiz.SkylineTest.Results
             SrmDocument docOriginal = InitWatersDocument(testFilesDir, out docPath);
             SrmDocument doc = docOriginal;
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
+            string extRaw = ExtensionTestContext.ExtWatersRaw;
 
             string[] replicatePaths = new[]
                                           {
                                               testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
                                               testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"),
-                                              testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"),
+                                              testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
                                               testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
                                           };
             // Count peaks where higher concentration replicates show less area
@@ -273,6 +274,7 @@ namespace pwiz.SkylineTest.Results
             SrmDocument docOriginal = InitWatersDocument(testFilesDir, out docPath);
             SrmDocument doc = docOriginal;
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
+            string extRaw = ExtensionTestContext.ExtWatersRaw;
 
             var listChromatograms = new List<ChromatogramSet>
             {
@@ -283,7 +285,7 @@ namespace pwiz.SkylineTest.Results
                     }),
                 new ChromatogramSet("trouble", new[]
                     {
-                        testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"),                                                                        
+                        testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),                                                                        
                         testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
                     })
             };
@@ -422,11 +424,12 @@ namespace pwiz.SkylineTest.Results
             var cacheInfo = new FileInfo(cachePath);
             long cacheSize = cacheInfo.Length;
 
-            // Adding files already in the docuemnt should have no impact on the cache.
+            // Adding files already in the document should have no impact on the cache.
+            string extRaw = ExtensionTestContext.ExtWatersRaw;
             var listChromatograms = new List<ChromatogramSet>(docCached.Settings.MeasuredResults.Chromatograms)
                 {
                     new ChromatogramSet("extra1",
-                                        new[] { testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw") }),
+                                        new[] { testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw) }),
                     new ChromatogramSet("extra2",
                                         new[] { testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML") })
                 };
@@ -448,7 +451,7 @@ namespace pwiz.SkylineTest.Results
                     new ChromatogramSet("double",
                         new[]
                             {
-                                testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"),
+                                testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw),
                                 testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
                             }));
 

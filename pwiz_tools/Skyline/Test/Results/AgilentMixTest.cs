@@ -71,10 +71,11 @@ namespace pwiz.SkylineTest.Results
 
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
             const string replicateName = "AgilentTest";
+            string extRaw = ExtensionTestContext.ExtAgilentRaw;
             var chromSets = new[]
                                 {
                                     new ChromatogramSet(replicateName, new[]
-                                        { testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d") }),
+                                        { testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw) }),
                                 };
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
             Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));

@@ -108,9 +108,8 @@ using System.Runtime.InteropServices;
 
     actions do_seems_build
     {
-        REM support both MSVC 8 and 9
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Building SeeMS in $(CONFIGURATION:L) configuration...
         msbuild $(SEEMS_PATH)/seems.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     }
@@ -125,11 +124,11 @@ using System.Runtime.InteropServices;
             if <variant>debug in $(properties) ||
                <debug-symbols>on in $(properties)
             {
-                result = <location>$(PWIZ_BUILD_PATH)/SeeMS/bin/x86/Debug ;
+                result = <location>$(PWIZ_BUILD_PATH)/SeeMS/bin/$(PLATFORM)/Debug ;
             }
             else
             {
-                result = <location>$(PWIZ_BUILD_PATH)/SeeMS/bin/x86/Release ;
+                result = <location>$(PWIZ_BUILD_PATH)/SeeMS/bin/$(PLATFORM)/Release ;
             }
             return $(result) ;
         }
@@ -145,9 +144,8 @@ using System.Runtime.InteropServices;
         : # actions
             @do_seems_build
         : # requirements
-            <conditional>@msvc-requirement
+            <conditional>@msvc-dotnet-requirement
             <conditional>@pwiz-bindings-dependency
             <conditional>@build-location
-            <address-model>64:<build>no
         ;
 }

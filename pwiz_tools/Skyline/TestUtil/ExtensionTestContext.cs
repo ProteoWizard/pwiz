@@ -72,5 +72,33 @@ namespace pwiz.SkylineTestUtil
         {
             get { return CanImportThermoRaw ? ".RAW" : ".mzML"; }
         }
+        
+        public static bool CanImportAgilentRaw
+        {
+            get
+            {
+                // return false to import mzML
+                return true;
+            }
+        }
+
+        public static string ExtAgilentRaw
+        {
+            get { return CanImportAgilentRaw ? ".d" : ".mzML"; }
+        }
+
+        public static bool CanImportWatersRaw
+        {
+            get
+            {
+                // return false to import mzML
+                return !Environment.Is64BitProcess;   // no 64-bit reader yet
+            }
+        }
+
+        public static string ExtWatersRaw
+        {
+            get { return CanImportWatersRaw ? ".raw" : ".mzML"; }
+        }
     }
 }

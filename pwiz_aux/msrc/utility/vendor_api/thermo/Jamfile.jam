@@ -149,11 +149,4 @@ install install_pwiz_vendor_api_thermo_eula
 
 explicit install_pwiz_vendor_api_thermo_eula ;
 
-install install_pwiz_vendor_api_thermo_mfc
-    : $(API_PATH)/Microsoft.VC90.MFC/$(PLATFORM)/mfc90u.dll
-      $(API_PATH)/Microsoft.VC90.MFC/$(PLATFORM)/mfcm90u.dll
-      $(API_PATH)/Microsoft.VC90.MFC/$(PLATFORM)/Microsoft.VC90.MFC.manifest
-    ;
-
-explicit install_pwiz_vendor_api_thermo_mfc ;
 }

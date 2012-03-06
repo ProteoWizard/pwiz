@@ -20,6 +20,7 @@
 using System;
 using System.Deployment.Application;
 using System.Diagnostics;
+using System.IO;
 using System.Windows.Forms;
 
 namespace pwiz.Skyline.Alerts
@@ -30,11 +31,10 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            if (ApplicationDeployment.IsNetworkDeployed)
-            {
-                labelSoftwareVersion.Text = Program.Name + " " +
-                    ApplicationDeployment.CurrentDeployment.CurrentVersion;
-            }
+            labelSoftwareVersion.Text = string.Format("{0} {1} {2}",
+                    Program.Name,
+                    (File.Exists("fileio_x64.dll") ? "(64-bit)" : ""),
+                    (ApplicationDeployment.IsNetworkDeployed ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString() : ""));
         }
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)

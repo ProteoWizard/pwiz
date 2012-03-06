@@ -34,7 +34,7 @@ rule vendor-api-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+       [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
     {
         result += <source>MassHunterData.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
@@ -47,16 +47,16 @@ rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
     if <toolset>msvc in $(properties) &&
-       [ path.exists $(API_PATH)/MassSpecDataReader.dll ]
+       [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
     {
         result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <cxxflags>/wd4945 ; # warning C4945: 'x' : cannot import symbol from 'some.dll': as 'x' has already been imported from another assembly
-        result += <assembly>$(API_PATH)/MassSpecDataReader.dll ;
-        result += <assembly>$(API_PATH)/BaseCommon.dll ;
-        result += <assembly>$(API_PATH)/BaseDataAccess.dll ;
-        result += <assembly>$(API_PATH)/BaseError.dll ;
-        result += <assembly>$(API_PATH)/BaseTof.dll ;
-        result += <assembly-dependency>$(API_PATH)/agtsampleinforw.dll ;
+        result += <assembly>$(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ;
+        result += <assembly>$(API_PATH)/$(PLATFORM)/BaseCommon.dll ;
+        result += <assembly>$(API_PATH)/$(PLATFORM)/BaseDataAccess.dll ;
+        result += <assembly>$(API_PATH)/$(PLATFORM)/BaseError.dll ;
+        result += <assembly>$(API_PATH)/$(PLATFORM)/BaseTof.dll ;
+        result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/agtsampleinforw.dll ;
         result += <assembly-dependency>$(API_PATH)/EULA.MHDAC ;
         result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
     }
@@ -79,7 +79,6 @@ lib pwiz_vendor_api_agilent
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
         <conditional>@msvc-requirement
-        <address-model>64:<build>no
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements

@@ -54,11 +54,10 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
     }
 
-    # HACK: Removed the switch /verbosity:minimal because TeamCity failures can be avoided by doing so
     actions do_skyline_build
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
@@ -77,7 +76,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_skyline_test
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Unit testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test"
         $(TEST_PRECOMMAND)
@@ -94,7 +93,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_skyline_test_a
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Unit A testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline unit test A"
         $(TEST_PRECOMMAND)
@@ -111,7 +110,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_skyline_test_functional
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Functional testing Skyline in $(CONFIGURATION:L) configuration...
         set name="Skyline functional test"
         $(TEST_PRECOMMAND)
@@ -128,7 +127,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_skyline_test_passed
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Copying Skyline test output in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.test.proj /p:SolutionDir=$(SKYLINE_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /t:MSTest:Clean /nologo /verbosity:minimal
     }
@@ -156,14 +155,6 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         }
     }
 
-    rule no-msvc-express ( properties * )
-    {
-        if 9.0express in $(properties:G=) ||
-           8.0express in $(properties:G=)
-        {
-            return <build>no ;
-        }
-    }
 
 
     make Skyline.exe
@@ -172,8 +163,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             @do_skyline_build
         : # requirements
             <link>shared:<build>no
-            <conditional>@no-msvc-express
-            <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <conditional>@no-express-requirement
+            <assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
             <conditional>@build-location
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
@@ -185,9 +176,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # actions
             @do_skyline_test
         : # requirements
-            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
-            <conditional>@no-msvc-express
+            <conditional>@no-express-requirement
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
@@ -197,9 +187,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # actions
             @do_skyline_test_a
         : # requirements
-            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
-            <conditional>@no-msvc-express
+            <conditional>@no-express-requirement
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
@@ -209,9 +198,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # actions
             @do_skyline_test_functional
         : # requirements
-            <address-model>64,<toolset>msvc-9.0:<build>no
             <link>shared:<build>no
-            <conditional>@no-msvc-express
+            <conditional>@no-express-requirement
             <conditional>@build-location
             <dependency>Skyline.exe
         ;
@@ -222,8 +210,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             @do_skyline_test_passed
         : # requirements
             <link>shared:<build>no
-            <address-model>64,<toolset>msvc-9.0:<build>no
-            <conditional>@no-msvc-express
+            <conditional>@no-express-requirement
             <conditional>@build-location
             <dependency>Skyline.exe
             <dependency>Test.dll

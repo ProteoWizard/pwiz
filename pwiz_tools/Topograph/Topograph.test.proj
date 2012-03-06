@@ -10,7 +10,7 @@
   <Target Name="MSTest">
    
     <MakeDir Directories="$(TestResultsDir)" />    
-    <Exec Command="&quot;$(VS90COMNTOOLS)..\IDE\mstest.exe&quot; /testcontainer:$(OutDir)$(TestProject).dll /runconfig:$(SolutionDir)\LocalTestRun.testrunconfig" />
+    <Exec Command="&quot;$(VS100COMNTOOLS)..\IDE\mstest.exe&quot; /testcontainer:$(OutDir)$(TestProject).dll /runconfig:$(SolutionDir)\LocalTestRun_$(Platform).testrunconfig" />
 
   </Target>
   <Target Name="MSTest:Clean">

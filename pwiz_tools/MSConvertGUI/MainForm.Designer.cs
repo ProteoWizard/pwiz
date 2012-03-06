@@ -19,6 +19,8 @@
 // limitations under the License.
 //
 
+using System;
+
 namespace MSConvertGUI
 {
     partial class MainForm
@@ -987,7 +989,7 @@ namespace MSConvertGUI
             this.Controls.Add(this.FileBox);
             this.Controls.Add(this.SlidingPanel);
             this.Name = "MainForm";
-            this.Text = "MSConvert";
+            this.Text = "MSConvert" + (Environment.Is64BitProcess ? " (64-bit)" : "");
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize) (this.FilterDGV)).EndInit();
             this.FilterGB.ResumeLayout(false);

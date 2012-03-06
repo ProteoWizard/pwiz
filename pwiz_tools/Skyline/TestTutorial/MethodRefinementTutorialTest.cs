@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestTutorial
                     new[] {new KeyValuePair<string, string[]>(replicateName, namedPathSets[0].Value.Take(15).ToArray())};
                 importResultsDlg.OkDialog();
             });
-            WaitForCondition(300*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 5 minutes
+            WaitForCondition(600*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 10 minutes
 
             Assert.IsTrue(SkylineWindow.Document.Settings.HasResults);
             Assert.AreEqual(15, SkylineWindow.Document.Settings.MeasuredResults.CachedFilePaths.ToArray().Length);
@@ -126,7 +126,7 @@ namespace pwiz.SkylineTestTutorial
                     new[] { new KeyValuePair<string, string[]>(replicateName, namedPathSets[0].Value.Skip(15).ToArray()) };
                 importResultsDlg.OkDialog();
             });
-            WaitForCondition(300*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 5 minutes
+            WaitForCondition(900*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 15 minutes
 
             Assert.AreEqual(39, SkylineWindow.Document.Settings.MeasuredResults.CachedFilePaths.ToArray().Length);
            

@@ -33,6 +33,7 @@ namespace peptideid {
 
 using boost::tokenizer;
 using boost::char_separator;
+using boost::shared_ptr;
 using namespace std;
 
 namespace {

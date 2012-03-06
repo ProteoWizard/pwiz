@@ -57,9 +57,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_topograph_build
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Building Topograph in $(CONFIGURATION:L) configuration...
-        msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TopographApp /nologo /verbosity:minimal
+        msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographApp /nologo /verbosity:minimal
     }
     
     rule build-location ( properties * )
@@ -71,26 +71,17 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             if <variant>debug in $(properties) ||
                <debug-symbols>on in $(properties)
             {
-                result = <location>$(TOPOGRAPH_PATH)/bin/x86/Debug ;
+                result = <location>$(TOPOGRAPH_PATH)/bin/$(PLATFORM)/Debug ;
             }
             else
             {
-                result = <location>$(TOPOGRAPH_PATH)/bin/x86/Release ;
+                result = <location>$(TOPOGRAPH_PATH)/bin/$(PLATFORM)/Release ;
             }
             return $(result) ;
         }
         else
         {
             return $(properties) ;
-        }
-    }
-
-    rule no-msvc-express ( properties * )
-    {
-        if 9.0express in $(properties:G=) ||
-           8.0express in $(properties:G=)
-        {
-            return <build>no ;
         }
     }
 
@@ -101,13 +92,12 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             @do_topograph_build
         : # requirements
             <link>shared:<build>no
-            <address-model>64:<build>no
-            <conditional>@no-msvc-express
+            <conditional>@no-express-requirement
             <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
             <conditional>@build-location
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
         ;
 #Test
     rule do_topograph_test ( targets + : sources * : properties * )
@@ -118,12 +108,12 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_topograph_test
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
         set name="Topograph unit test"
         $(TEST_PRECOMMAND)
-        msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
-        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
+        msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
+        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
         set status=%ERRORLEVEL%
         $(TEST_POSTCOMMAND)
     }
@@ -136,9 +126,9 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
     actions do_topograph_test_passed
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+        IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
         echo Copying Topograph test output in $(CONFIGURATION:L) configuration...
-        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /t:MSTest:Clean /nologo /verbosity:minimal
+        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /t:MSTest:Clean /nologo /verbosity:minimal
     }
 
     make TopographTestProject.dll
@@ -147,8 +137,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             @do_topograph_test
         : # requirements
             <link>shared:<build>no
-            <address-model>64:<build>no
-            <conditional>@no-msvc-express
+            <conditional>@no-express-requirement
             <conditional>@build-location
             <dependency>Topograph.exe
         ;
@@ -158,8 +147,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
             @do_topograph_test_passed
         : # requirements
             <link>shared:<build>no
-            <address-model>64:<build>no
-            <conditional>@no-msvc-express
+            <conditional>@no-express-requirement
             <conditional>@build-location
             <dependency>TopographTestProject.dll
         ;

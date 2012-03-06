@@ -39,6 +39,9 @@ namespace seems
         {
             InitializeComponent();
 
+            aboutTextBox.Text = aboutTextBox.Text.Replace("<<appname>>",
+                String.Format("SeeMS {0}", (Environment.Is64BitProcess ? "(64-bit) " : "") ) );
+
             aboutTextBox.Text = aboutTextBox.Text.Replace( "<<version>>",
                 String.Format( "{0} ({1})", Version, LastModified.ToShortDateString() ) );
             aboutTextBox.Text = aboutTextBox.Text.Replace( "<<date>>", LastModified.Year.ToString() );

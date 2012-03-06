@@ -10,6 +10,7 @@ pushd %PWIZ_ROOT%
 IF EXIST bin rmdir /s /q bin
 IF EXIST obj rmdir /s /q obj
 IF EXIST Microsoft.VC90.MFC rmdir /s /q Microsoft.VC90.MFC
+IF EXIST Microsoft.VC100.MFC rmdir /s /q Microsoft.VC100.MFC
 IF EXIST ClearCore.dll del /q ClearCore.dll
 IF EXIST ClearCore.Storage.dll del /q ClearCore.Storage.dll
 IF EXIST EULA.MHDAC del /q EULA.MHDAC

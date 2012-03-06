@@ -18,6 +18,7 @@
  */
 #include <algorithm>
 #include <vector>
+#include <iterator>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
