@@ -33,8 +33,7 @@ if [ modules.peek : NT ]
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) &&
-       [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
+    if [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
     {
         result += <source>MassHunterData.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
@@ -46,8 +45,7 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) &&
-       [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
+    if [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
     {
         result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <cxxflags>/wd4945 ; # warning C4945: 'x' : cannot import symbol from 'some.dll': as 'x' has already been imported from another assembly
@@ -78,10 +76,11 @@ lib pwiz_vendor_api_agilent
         
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
-        <conditional>@msvc-requirement
+        <conditional>@msvc-dotnet-requirement
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements
+        <conditional>@msvc-dotnet-requirement
     ;
 
 

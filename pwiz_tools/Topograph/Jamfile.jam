@@ -93,6 +93,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
             <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
             <conditional>@build-location
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
@@ -138,6 +139,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
             <conditional>@build-location
             <dependency>Topograph.exe
         ;
@@ -148,6 +150,7 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         : # requirements
             <link>shared:<build>no
             <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
             <conditional>@build-location
             <dependency>TopographTestProject.dll
         ;

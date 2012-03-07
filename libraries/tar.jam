@@ -49,7 +49,7 @@ rule init ( tar-binary-filepath ? )
     if ! [ path.exists $(tar-binary-filepath) ] &&
        ! [ path.glob [ path.programs-path ] : $(tar-binary-filepath:D=) ]
     {
-        errors.error Filepath to tar binary \"$(tar-binary-filepath)\" not found. ;
+        errors.user-error Filepath to tar binary \"$(tar-binary-filepath)\" not found. ;
     }
 
     .tar-binary-filepath = [ path.make $(tar-binary-filepath) ] ;

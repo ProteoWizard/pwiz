@@ -48,7 +48,7 @@ if [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) &&
+    if ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) ) &&
        [ project-exists $(API_PATH) ]
     {
         result += <source>Reader_Agilent_Detail.cpp ;
@@ -59,12 +59,12 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) &&
+    if ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) ) &&
        [ project-exists $(API_PATH) ] &&
        $(.hasDLLs) && ! [ without-binary-msdata ]
     {
-        result += <library>$(API_PATH)//pwiz_vendor_api_agilent ;
         result += <define>PWIZ_READER_AGILENT ;
+        result += <library>$(API_PATH)//pwiz_vendor_api_agilent ;
     }
     else if ! $(.warn-once)
     {
@@ -73,9 +73,9 @@ rule vendor-api-usage-requirements ( properties * )
 		{
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
 		}
-        else if ! <toolset>msvc in $(properties)
+        else if ! ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) )
         {
-            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+            echo "[$(READER_PATH)] Non-MSVC (version > 9) build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
@@ -128,9 +128,9 @@ rule test-requirements ( properties * )
 		{
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
 		}
-        else if ! <toolset>msvc in $(properties)
+        else if ! ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) )
         {
-            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+            echo "[$(READER_PATH)] Non-MSVC (version > 9) build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
@@ -157,8 +157,6 @@ run-if-exists Reader_Agilent_Test.cpp $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_
         <library>pwiz_reader_agilent
         <conditional>@test-requirements
 
-        # configuration file sets the "useLegacyV2RuntimeActivationPolicy" attribute
-        <toolset>msvc-10.0:<configuration-file>Reader_Agilent_Test.exe.config
     : # target name
         Reader_Agilent_Test 
     : # default-build
