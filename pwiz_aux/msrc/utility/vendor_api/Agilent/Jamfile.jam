@@ -94,13 +94,18 @@ explicit MassHunterDataTest ;
 
 
 install install_pwiz_vendor_api_agilent
-    : [ path.glob $(API_PATH) : *.dll *.manifest EULA.* ]
+    : $(API_PATH)/$(PLATFORM)/agtsampleinforw.dll
+      $(API_PATH)/$(PLATFORM)/BaseCommon.dll
+      $(API_PATH)/$(PLATFORM)/BaseDataAccess.dll
+      $(API_PATH)/$(PLATFORM)/BaseError.dll
+      $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll
+      $(API_PATH)/EULA.MHDAC
     ;
 
 explicit install_pwiz_vendor_api_agilent ;
 
 install install_pwiz_vendor_api_agilent_eula
-    : [ path.glob $(API_PATH) : EULA.* ]
+    : $(API_PATH)/EULA.MHDAC
     ;
 
 explicit install_pwiz_vendor_api_agilent_eula ;

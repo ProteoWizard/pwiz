@@ -44,6 +44,11 @@
 		  <![CDATA[Installed OR (NETFRAMEWORK35_SP_LEVEL and NOT NETFRAMEWORK35_SP_LEVEL = "#0")]]>
 	  </Condition>
 
+	  <PropertyRef Id='NETFRAMEWORK40FULL'/>
+	  <Condition Message="Requires Microsoft .NET 4.0 Framework">
+		  <![CDATA[Installed OR (NETFRAMEWORK40FULL = "#0")]]>
+	  </Condition>
+
       <UI>
          <UIRef Id="WixUI_InstallDir" />
          <!-- skip license dialog -->

@@ -42,8 +42,8 @@ rule msbuild_deploy ( targets + : sources * : properties * )
 
 actions msbuild_deploy
 {
-    IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 10.0\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
     echo Building SetupDeployProject in $(CONFIGURATION:L) configuration...
     pushd $(THIS_PATH)
     msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
