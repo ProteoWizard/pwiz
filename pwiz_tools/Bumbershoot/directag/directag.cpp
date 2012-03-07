@@ -476,14 +476,6 @@ namespace directag
                 }
                 args.erase( args.begin() + i );
 
-            } else if( args[i] == "-rescfg" && i+1 <= args.size() )
-            {
-                if( g_residueMap->initializeFromFile( args[i+1] ) )
-                {
-                    cerr << "Could not find residue masses at \"" << args[i+1] << "\"." << endl;
-                    return 1;
-                }
-                args.erase( args.begin() + i );
             } else
                 continue;
 
@@ -508,10 +500,8 @@ namespace directag
 
         if( !g_residueMap->initialized() )
         {
-            if( g_residueMap->initializeFromFile() )
-            {
-                cerr << "Could not find the default residue masses file (hard-coded defaults in use)." << endl;
-            }
+            cerr << "Failed to initialize residue masses." << endl;
+            return 1;
         }
 
 		// Command line overrides happen after config file has been distributed but before PTM parsing
@@ -583,6 +573,8 @@ namespace directag
             cerr << "No source files found matching given filemasks." << endl;
             return 1;
         }
+
+        cout << "Found " << g_inputFilenames.size() << " file" << (g_inputFilenames.size()>1?"s ":" ") << "for sequence tagging." << endl;
 
         Timer overallTime(true);
         fileList_t finishedFiles;

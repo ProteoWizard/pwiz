@@ -66,38 +66,6 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath=".\freicore\AhoCorasickTrie.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\base64.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\BaseRunTimeConfig.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\BaseSpectrum.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\BitwiseSubsetGenerator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\BlosumMatrix.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\CharIndexedVector.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\constants.h"
-				>
-			</File>
-			<File
 				RelativePath=".\directag.h"
 				>
 			</File>
@@ -114,119 +82,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\freicore\expat_xml.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\freicore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\Histogram.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\lnFactorialTable.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\MixedRadixEnumerator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\PeakSpectrum.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\pepXmlTypes.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\Profiler.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\proteinStore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\PTMVariantList.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\ResidueMap.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\searchResult.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\SearchResultSet.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\SearchSpectrum.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\SequestRunTimeConfig.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\shared_defs.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\shared_funcs.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\shared_types.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\simplethreads.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\SimpleXMLWriter.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\spectraStore.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\stdafx.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\SubsetEnumerator.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\svnrev.hpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\tagsFile.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\topset.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\UniModXMLParser.h"
+				RelativePath=".\ranker.h"
 				>
 			</File>
 			<File
 				RelativePath=".\writeHighQualSpectra.h"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\WuManber.h"
 				>
 			</File>
 		</Filter>
@@ -242,35 +102,11 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\freicore\AhoCorasickTrieTest.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\base64.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\BaseRunTimeConfig.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\BaseSpectrum.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\BlosumMatrix.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\constants.cpp"
+				RelativePath=".\adjustScanRankerScoreByGroup.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\directag.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\directagMPI.cpp"
 				>
 			</File>
 			<File
@@ -282,51 +118,7 @@
 				>
 			</File>
 			<File
-				RelativePath=".\freicore\freicore.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\proteinStore.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\SearchResultSetTest.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\SearchSpectrum.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\shared_defs.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\shared_funcs.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\SharedTests.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\stdafx.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\tagsFile.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\UniModXMLParser.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\writeHighQualSpectra.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\freicore\WuManber.cpp"
 				>
 			</File>
 		</Filter>
