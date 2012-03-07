@@ -79,8 +79,8 @@ echo Build output: %QUICKBUILDLOG%
 
 REM # build!
 echo.
-echo %QUICKBUILD% %TARGETS% %ARGS% -j%NUMBER_OF_PROCESSORS% --hash optimization=space secure-scl=off address-model=%TARGETPLATFORM%
-call %QUICKBUILD% %TARGETS% %ARGS% -j%NUMBER_OF_PROCESSORS% --hash optimization=space secure-scl=off address-model=%TARGETPLATFORM% >%QUICKBUILDLOG% 2>&1
+echo %QUICKBUILD% %TARGETS% %ARGS% -j%NUMBER_OF_PROCESSORS% --hash optimization=space address-model=%TARGETPLATFORM%
+call %QUICKBUILD% %TARGETS% %ARGS% -j%NUMBER_OF_PROCESSORS% --hash optimization=space address-model=%TARGETPLATFORM% >%QUICKBUILDLOG% 2>&1
 echo.
 echo Build done.
 echo.
