@@ -12,8 +12,8 @@ set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 pushd %PWIZ_ROOT%
 
 if %VERBOSE%==1 echo.
-if %VERBOSE%==1 echo   Cleaning objs...
-for /d /r . %%d in (obj) do @if exist "%%d" rmdir /s/q "%%d"
+if %VERBOSE%==1 echo   Cleaning bin/obj directories...
+for /d /r pwiz_tools %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 
 if %VERBOSE%==1 echo   Cleaning build directories...
 IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
@@ -57,14 +57,11 @@ del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\x64 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\EULA.* > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\Microsoft.VC90.MFC > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\Microsoft.VC100.MFC > nul 2>&1
 del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
 del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-1 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_scl-0 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_scl-1 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
 
 if %VERBOSE%==1 echo   Cleaning vendor test data...
