@@ -637,7 +637,7 @@ void testThreadSafety(const int& testThreadCount)
             if (t->timed_join(boost::posix_time::seconds(1)))
                 finishedThreads.insert(t);
 
-            if (status.exception.get())
+            if (status.exception != boost::exception_ptr()) // non-null exception?
                 boost::rethrow_exception(status.exception);
         }
 }
