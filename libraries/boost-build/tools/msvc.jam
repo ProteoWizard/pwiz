@@ -1289,7 +1289,7 @@ local rule register-toolset-really ( )
     {
         feature.feature debug-store : object database : propagated ;
         feature.feature pch-source  :                 : dependency free ;
-        feature.feature secure-scl          : on off                : propagated ;
+        feature.feature secure-scl          : default on off        : propagated ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
         feature.feature manifest-dependency :                       : free dependency ;
