@@ -80,4 +80,5 @@ make pwiz-setup.exe
         <variant>debug:<build>no # don't make debug installs
         <dependency>../..//executables
         <conditional>@build-location
+        <conditional>@msvc-dotnet-requirement
     ;
