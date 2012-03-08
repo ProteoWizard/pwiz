@@ -558,7 +558,7 @@ namespace pwiz.SkylineTestA
         {
             bool useRaw = ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw;
             string extRaw = useRaw
-                                ? ".raw"
+                                ? ExtensionTestContext.ExtThermoRaw
                                 : ".mzML";
             string testZipPath = useRaw
                                     ? @"TestA\ImportAllCmdLineTest.zip"
@@ -858,7 +858,7 @@ namespace pwiz.SkylineTestA
 
         private string GetThermoDiskPath(string pathToRaw)
         {
-            return ExtensionTestContext.CanImportThermoRaw
+            return ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw
                 ? Path.ChangeExtension(pathToRaw, "raw")
                 : pathToRaw;
         }
