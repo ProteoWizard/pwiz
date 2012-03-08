@@ -81,6 +81,13 @@ namespace freicore
 {
 namespace directag
 {
+    
+    typedef map< double, double >					MzFidelityErrorBins, MzFEBins;
+	typedef map< double, double >					ComplementErrorBins, CEBins;
+	typedef vector< CEBins >					    CEBinsList;
+	typedef vector< double >						IntensityRanksumBins, IRBins;
+	typedef vector< vector< IRBins > >			    IntensityRanksumBinsByPeakCountAndTagLength, IRBinsTable;
+
 
 	struct RunTimeConfig : public BaseRunTimeConfig
 	{
@@ -137,6 +144,177 @@ namespace directag
 		int		tagPeakCount;
 		double	MzFidelityErrorBinsScaling;
 		double	MzFidelityErrorBinsOffset;
+
+        CEBinsList			complementErrorBinsList;
+		IRBinsTable			intensityRanksumBinsTable;
+        MzFEBins			mzFidelityErrorBins;
+
+        void CalculateIRBins_R( IRBins& theseRanksumBins, int tagLength, int numPeaks, int curRanksum, int curRank, int loopDepth )
+        {
+            if( loopDepth > tagLength )
+                ++ theseRanksumBins[ curRanksum ];
+            else
+                for( int rank = curRank + 1; rank <= numPeaks; ++rank )
+                    CalculateIRBins_R( theseRanksumBins, tagLength, numPeaks, curRanksum + rank, rank, loopDepth+1 );
+        }
+
+        void CalculateIRBins( int tagLength, int numPeaks )
+        {
+            if( intensityRanksumBinsTable.size() <= (size_t) tagLength )
+                intensityRanksumBinsTable.resize( tagLength+1, vector< IRBins >() );
+            if( intensityRanksumBinsTable[ tagLength ].size() <= (size_t) numPeaks )
+                intensityRanksumBinsTable[ tagLength ].resize( numPeaks+1, IRBins() );
+            IRBins& theseRanksumBins = intensityRanksumBinsTable[ tagLength ][ numPeaks ];
+            theseRanksumBins.resize( (tagLength+1) * numPeaks, 0 );
+            CalculateIRBins_R( theseRanksumBins, tagLength, numPeaks, 0, 0, 0 );
+
+            double totalRanksum = 0;
+            for( IRBins::iterator itr = theseRanksumBins.begin(); itr != theseRanksumBins.end(); ++itr )
+                totalRanksum += *itr;
+
+            double tmpRanksum = 0;
+            for( IRBins::iterator itr = theseRanksumBins.begin(); itr != theseRanksumBins.end(); ++itr )
+            {
+                tmpRanksum += *itr;
+                *itr = tmpRanksum / totalRanksum;
+            }
+        }
+
+        void PrecacheIRBins( )
+        {
+            intensityRanksumBinsTable.clear();
+            try {
+                cout << "Reading intensity ranksum bins cache file." << endl;
+                ifstream cacheInputFile( "directag_intensity_ranksum_bins.cache" );
+                if( cacheInputFile.is_open() )
+                {
+                    text_iarchive cacheInputArchive( cacheInputFile );
+                    cacheInputArchive & intensityRanksumBinsTable;
+                }
+                cacheInputFile.close();
+            } catch(exception& e)
+            {
+                cout << "Error parsing cache file..." << e.what() << endl;
+            }
+
+            cout << "Calculating uncached ranksum bins (this could take a while)." << endl;
+            for( size_t peakCount = 4; peakCount <= MaxPeakCount; ++peakCount )
+            {
+                if( intensityRanksumBinsTable.size() <= (size_t) TagLength ||
+                    intensityRanksumBinsTable[ TagLength ].size() <= peakCount ||
+                    intensityRanksumBinsTable[ TagLength ][ peakCount ].empty() )
+                {
+                    CalculateIRBins( TagLength, peakCount );
+                }
+            }
+
+            cout << "Writing intensity ranksum bins cache file." << endl;
+            ofstream cacheOutputFile( "directag_intensity_ranksum_bins.cache" );
+            text_oarchive cacheOutputArchive( cacheOutputFile );
+            cacheOutputArchive & intensityRanksumBinsTable;
+            cacheOutputFile.close();
+        }
+
+        void InitMzFEBins()
+        {
+            int numPeaks = tagPeakCount;
+            vector< double > peakErrors( numPeaks );
+            double peakErrorSum = 0.0;
+            for( int i=0; i < numPeaks; ++i )
+            {
+                peakErrors[i] = FragmentMzTolerance * i;
+                peakErrorSum += peakErrors[i];
+            }
+
+            double peakErrorAvg = peakErrorSum / numPeaks;
+            for( int i=0; i < numPeaks; ++i )
+                peakErrors[i] -= peakErrorAvg;
+            //cout << peakErrors << endl;
+
+            double maxError = 0.0;
+            for( int i=0; i < numPeaks; ++i )
+                maxError += pow( peakErrors[i], 2 );
+            //cout << maxError << endl;
+
+            mzFidelityErrorBins[ 0.0 ] = 0.0;
+
+            peakErrors.clear();
+            peakErrors.resize( numPeaks, 0.0 );
+            vector< double > sumErrors( numPeaks, 0.0 );
+            vector< double > adjustedSumErrors( numPeaks, 0.0 );
+
+            // Random sampling permits longer tag lengths
+            boost::mt19937 rng(0);
+            boost::uniform_real<double> MzErrorRange( -FragmentMzTolerance, FragmentMzTolerance );
+            boost::variate_generator< boost::mt19937&, boost::uniform_real<double> > RandomMzError( rng, MzErrorRange );
+            for( int i=0; i < MzFidelityErrorBinsSamples; ++i )
+            {
+                for( int p=1; p < numPeaks; ++p )
+                {
+                    double e = RandomMzError();
+                    peakErrors[p] = e;
+                    sumErrors[p] = accumulate( peakErrors.begin(), peakErrors.begin()+p, e );
+                }
+                //cout << sumErrors << endl;
+                //double sum = accumulate( peakErrors.begin(), peakErrors.end(), 0.0 );
+                //double avg = sum / (int) peakErrors.size();
+                double sum = accumulate( sumErrors.begin(), sumErrors.end(), 0.0 );
+                double avg = sum / (int) sumErrors.size();
+
+                sum = 0.0;
+                for( size_t i=0; i < sumErrors.size(); ++i )
+                {
+                    adjustedSumErrors[i] = sumErrors[i] - avg;
+                    sum += pow( adjustedSumErrors[i], 2 );
+                }
+
+                mzFidelityErrorBins[ sum ] = 0;
+            }
+
+            double n = 0.0;
+            double totalSize = (double) mzFidelityErrorBins.size();
+            for( MzFEBins::iterator itr = mzFidelityErrorBins.begin(); itr != mzFidelityErrorBins.end(); ++itr )
+            {
+                n += 1.0;
+                itr->second = n / totalSize;
+            }
+            //cout << mzFidelityErrorBins << endl;
+        }
+
+        void InitCEBins()
+        {
+            boost::mt19937 rng(0);
+            boost::uniform_real<double> ComplementErrorRange( -ComplementMzTolerance, ComplementMzTolerance );
+            boost::variate_generator< boost::mt19937&, boost::uniform_real<double> > RandomComplementError( rng, ComplementErrorRange );
+            complementErrorBinsList.resize( tagPeakCount+1, CEBins() );
+            for( int numComplements = 2; numComplements <= tagPeakCount; ++numComplements )
+            {
+                CEBins& errorBins = complementErrorBinsList[numComplements];
+                errorBins[0.0] = 0.0;
+                for( int i=0; i < MzFidelityErrorBinsSamples; ++i )
+                {
+                    vector< double > errors;
+                    for( int j=0; j < numComplements; ++j )
+                        errors.push_back( RandomComplementError() );
+                    double mean = arithmetic_mean<float>(errors);
+                    for( int j=0; j < numComplements; ++j )
+                        errors[j] = pow( errors[j] - mean, 2.0 );
+                    double sse = accumulate( errors.begin(), errors.end(), 0.0 );
+                    errorBins[sse] = 0;
+                }
+                double count = 0;
+                for( map< double, double >::iterator itr = errorBins.begin(); itr != errorBins.end(); ++itr, ++count )
+                    itr->second = count / (double) errorBins.size();
+                //cout << errorBins << endl << endl;
+            }
+        }
+
+        void PreComputeScoreDistributions()
+        {
+            InitMzFEBins();
+		    InitCEBins();
+            PrecacheIRBins();
+        }
 
 	protected:
 		void finalize()

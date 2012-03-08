@@ -37,11 +37,6 @@ namespace freicore
 {
 namespace directag
 {
-	typedef map< double, double >						MzFidelityErrorBins, MzFEBins;
-	typedef map< double, double >						ComplementErrorBins, CEBins;
-	typedef vector< CEBins >						CEBinsList;
-	typedef vector< double >							IntensityRanksumBins, IRBins;
-	typedef vector< vector< IRBins > >				IntensityRanksumBinsByPeakCountAndTagLength, IRBinsTable;
 
 	typedef set< double >						nodeSet_t;
 	typedef MvhTable				bgProbabilities_t, bgComplements_t, bgFidelities_t;
@@ -166,20 +161,7 @@ namespace directag
 								SearchSpectraList< Spectrum, SpectraList >
 	{
 		typedef BaseSpectraList<Spectrum, SpectraList>::ListConstIterator	ListConstIterator;
-		typedef BaseSpectraList<Spectrum, SpectraList>::ListIterator			ListIterator;
-
-		static void					InitCEBins();
-
-		static void					InitIRBins();
-		static void					PrecacheIRBins( SpectraList& instance );
-		static void					CalculateIRBins( int tagLength, int numPeaks );
-		static void					CalculateIRBins_R( IRBins& theseIRBins, int tagLength, int numPeaks, int curRanksum, int curRank, int loopDepth );
-
-		static void					InitMzFEBins();
-
-		static CEBinsList			complementErrorBinsList;
-		static IRBinsTable			intensityRanksumBinsTable;
-		static MzFEBins				mzFidelityErrorBins;
+		typedef BaseSpectraList<Spectrum, SpectraList>::ListIterator		ListIterator;
 
 		using BaseSpectraList< Spectrum, SpectraList >::ListIndex;
 		using BaseSpectraList< Spectrum, SpectraList >::ListIndexIterator;

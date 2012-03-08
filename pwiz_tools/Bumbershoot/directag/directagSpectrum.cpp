@@ -24,6 +24,7 @@
 
 #include "stdafx.h"
 #include "directagSpectrum.h"
+#include "directagConfig.h"
 
 using namespace freicore;
 
@@ -64,9 +65,6 @@ namespace freicore
 {
 namespace directag
 {
-	MzFEBins SpectraList::mzFidelityErrorBins;
-	CEBinsList SpectraList::complementErrorBinsList;
-	IRBinsTable SpectraList::intensityRanksumBinsTable;
 
 	Spectrum::Spectrum()
 		:	BaseSpectrum(), PeakSpectrum< PeakInfo >(), TaggingSpectrum()
@@ -537,7 +535,7 @@ namespace directag
 				//cout << e1 << " " << e2 << " " << e3 << ": " << errors << endl;
 			}
 
-			MzFEBins::iterator binItr = SpectraList::mzFidelityErrorBins.upper_bound( sum );
+			MzFEBins::iterator binItr = g_rtConfig->mzFidelityErrorBins.upper_bound( sum );
 			-- binItr;
 			//newTag.scores[ "mzFidelity" ] = binItr->second;
 			newTag.mzFidelityScore = binItr->second;
@@ -583,7 +581,7 @@ namespace directag
 			double complementClassScore = 0;
 			if( complementClassCounts[0] > 0 )
 			{
-				CEBins::iterator binItr = SpectraList::complementErrorBinsList[2].begin();
+				CEBins::iterator binItr = g_rtConfig->complementErrorBinsList[2].begin();
 				if( complementClassKey[0] > 1 )
 				{
 					double complementPairMean = arithmetic_mean<double>( complementPairMasses );
@@ -591,7 +589,7 @@ namespace directag
 						complementPairMasses[i] = pow( complementPairMasses[i] - complementPairMean, 2.0 );
 					double sse = accumulate( complementPairMasses.begin(), complementPairMasses.end(), 0.0 );
 
-					binItr = SpectraList::complementErrorBinsList[complementClassKey[0]].upper_bound( sse );
+					binItr = g_rtConfig->complementErrorBinsList[complementClassKey[0]].upper_bound( sse );
 					-- binItr;
 					while(binItr->second == 0)
 						++ binItr;
@@ -685,7 +683,7 @@ namespace directag
 		string tag;
 		vector< double > peakErrors;
 		vector< PeakData::iterator > peakList;
-		IRBins& irBins = SpectraList::intensityRanksumBinsTable[ g_rtConfig->TagLength ][ peakData.size() ];
+		IRBins& irBins = g_rtConfig->intensityRanksumBinsTable[ g_rtConfig->TagLength ][ peakData.size() ];
 //cout << peakData.size() << irBins << endl;
 		peakErrors.reserve( g_rtConfig->tagPeakCount );
 		peakList.reserve( g_rtConfig->tagPeakCount );
@@ -700,163 +698,6 @@ namespace directag
 		}
 
 		return numTagsGenerated;
-	}
-
-	void SpectraList::CalculateIRBins_R( IRBins& theseRanksumBins, int tagLength, int numPeaks, int curRanksum, int curRank, int loopDepth )
-	{
-		if( loopDepth > tagLength )
-			++ theseRanksumBins[ curRanksum ];
-		else
-			for( int rank = curRank + 1; rank <= numPeaks; ++rank )
-				CalculateIRBins_R( theseRanksumBins, tagLength, numPeaks, curRanksum + rank, rank, loopDepth+1 );
-	}
-
-	void SpectraList::CalculateIRBins( int tagLength, int numPeaks )
-	{
-		if( intensityRanksumBinsTable.size() <= (size_t) tagLength )
-			intensityRanksumBinsTable.resize( tagLength+1, vector< IRBins >() );
-		if( intensityRanksumBinsTable[ tagLength ].size() <= (size_t) numPeaks )
-			intensityRanksumBinsTable[ tagLength ].resize( numPeaks+1, IRBins() );
-		IRBins& theseRanksumBins = intensityRanksumBinsTable[ tagLength ][ numPeaks ];
-		theseRanksumBins.resize( (tagLength+1) * numPeaks, 0 );
-		CalculateIRBins_R( theseRanksumBins, tagLength, numPeaks, 0, 0, 0 );
-
-		double totalRanksum = 0;
-		for( IRBins::iterator itr = theseRanksumBins.begin(); itr != theseRanksumBins.end(); ++itr )
-			totalRanksum += *itr;
-
-		double tmpRanksum = 0;
-		for( IRBins::iterator itr = theseRanksumBins.begin(); itr != theseRanksumBins.end(); ++itr )
-		{
-			tmpRanksum += *itr;
-			*itr = tmpRanksum / totalRanksum;
-		}
-	}
-
-	void SpectraList::PrecacheIRBins( SpectraList& instance )
-	{
-		intensityRanksumBinsTable.clear();
-
-		cout << "Reading intensity ranksum bins cache file." << endl;
-		ifstream cacheInputFile( "directag_intensity_ranksum_bins.cache" );
-		if( cacheInputFile.is_open() )
-		{
-			text_iarchive cacheInputArchive( cacheInputFile );
-			cacheInputArchive & intensityRanksumBinsTable;
-		}
-		cacheInputFile.close();
-
-		cout << "Calculating uncached ranksum bins (this could take a while)." << endl;
-		for( iterator itr = instance.begin(); itr != instance.end(); ++itr )
-		{
-			if( intensityRanksumBinsTable.size() <= (size_t) g_rtConfig->TagLength ||
-				intensityRanksumBinsTable[ g_rtConfig->TagLength ].size() <= (*itr)->peakData.size() ||
-				intensityRanksumBinsTable[ g_rtConfig->TagLength ][ (*itr)->peakData.size() ].empty() )
-			{
-				//cout << g_rtConfig->TagLength << "," << (*itr)->peakData.size() << endl;
-				CalculateIRBins( g_rtConfig->TagLength, (*itr)->peakData.size() );
-			}
-		}
-
-        cout << "Writing intensity ranksum bins cache file." << endl;
-        ofstream cacheOutputFile( "directag_intensity_ranksum_bins.cache" );
-        text_oarchive cacheOutputArchive( cacheOutputFile );
-        cacheOutputArchive & intensityRanksumBinsTable;
-        cacheOutputFile.close();
-	}
-
-	void SpectraList::InitMzFEBins()
-	{
-		int numPeaks = g_rtConfig->tagPeakCount;
-		vector< double > peakErrors( numPeaks );
-		double peakErrorSum = 0.0;
-		for( int i=0; i < numPeaks; ++i )
-		{
-			peakErrors[i] = g_rtConfig->FragmentMzTolerance * i;
-			peakErrorSum += peakErrors[i];
-		}
-
-		double peakErrorAvg = peakErrorSum / numPeaks;
-		for( int i=0; i < numPeaks; ++i )
-			peakErrors[i] -= peakErrorAvg;
-		//cout << peakErrors << endl;
-
-		double maxError = 0.0;
-		for( int i=0; i < numPeaks; ++i )
-			maxError += pow( peakErrors[i], 2 );
-		//cout << maxError << endl;
-
-		mzFidelityErrorBins[ 0.0 ] = 0.0;
-
-		peakErrors.clear();
-		peakErrors.resize( numPeaks, 0.0 );
-		vector< double > sumErrors( numPeaks, 0.0 );
-		vector< double > adjustedSumErrors( numPeaks, 0.0 );
-
-		// Random sampling permits longer tag lengths
-		boost::mt19937 rng(0);
-		boost::uniform_real<double> MzErrorRange( -g_rtConfig->FragmentMzTolerance, g_rtConfig->FragmentMzTolerance );
-		boost::variate_generator< boost::mt19937&, boost::uniform_real<double> > RandomMzError( rng, MzErrorRange );
-		for( int i=0; i < g_rtConfig->MzFidelityErrorBinsSamples; ++i )
-		{
-			for( int p=1; p < numPeaks; ++p )
-			{
-				double e = RandomMzError();
-				peakErrors[p] = e;
-				sumErrors[p] = accumulate( peakErrors.begin(), peakErrors.begin()+p, e );
-			}
-			//cout << sumErrors << endl;
-			//double sum = accumulate( peakErrors.begin(), peakErrors.end(), 0.0 );
-			//double avg = sum / (int) peakErrors.size();
-			double sum = accumulate( sumErrors.begin(), sumErrors.end(), 0.0 );
-			double avg = sum / (int) sumErrors.size();
-
-			sum = 0.0;
-			for( size_t i=0; i < sumErrors.size(); ++i )
-			{
-				adjustedSumErrors[i] = sumErrors[i] - avg;
-				sum += pow( adjustedSumErrors[i], 2 );
-			}
-
-			mzFidelityErrorBins[ sum ] = 0;
-		}
-
-		double n = 0.0;
-		double totalSize = (double) mzFidelityErrorBins.size();
-		for( MzFEBins::iterator itr = mzFidelityErrorBins.begin(); itr != mzFidelityErrorBins.end(); ++itr )
-		{
-			n += 1.0;
-			itr->second = n / totalSize;
-		}
-		//cout << mzFidelityErrorBins << endl;
-	}
-
-	void SpectraList::InitCEBins()
-	{
-		boost::mt19937 rng(0);
-		boost::uniform_real<double> ComplementErrorRange( -g_rtConfig->ComplementMzTolerance, g_rtConfig->ComplementMzTolerance );
-		boost::variate_generator< boost::mt19937&, boost::uniform_real<double> > RandomComplementError( rng, ComplementErrorRange );
-		complementErrorBinsList.resize( g_rtConfig->tagPeakCount+1, CEBins() );
-		for( int numComplements = 2; numComplements <= g_rtConfig->tagPeakCount; ++numComplements )
-		{
-			CEBins& errorBins = complementErrorBinsList[numComplements];
-			errorBins[0.0] = 0.0;
-			for( int i=0; i < g_rtConfig->MzFidelityErrorBinsSamples; ++i )
-			{
-				vector< double > errors;
-				for( int j=0; j < numComplements; ++j )
-					errors.push_back( RandomComplementError() );
-				double mean = arithmetic_mean<float>(errors);
-				for( int j=0; j < numComplements; ++j )
-					errors[j] = pow( errors[j] - mean, 2.0 );
-				double sse = accumulate( errors.begin(), errors.end(), 0.0 );
-				errorBins[sse] = 0;
-			}
-			double count = 0;
-			for( map< double, double >::iterator itr = errorBins.begin(); itr != errorBins.end(); ++itr, ++count )
-				itr->second = count / (double) errorBins.size();
-			//cout << errorBins << endl << endl;
-		}
 	}
 }
 }

@@ -433,14 +433,11 @@ namespace directag
 
 	int InitProcess( argList_t& args )
 	{
-		//cout << g_hostString << " is initializing." << endl;
-          cout << "DirecTag " << Version::str() << " (" << Version::LastModified() << ")\n" <<
-                  "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
-                  "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
-                  "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
-                  DIRECTAG_LICENSE << endl;
-
-		proteinStore proteins;
+       cout << "DirecTag " << Version::str() << " (" << Version::LastModified() << ")\n" <<
+               "FreiCore " << freicore::Version::str() << " (" << freicore::Version::LastModified() << ")\n" <<
+               "ProteoWizard MSData " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")\n" <<
+               "ProteoWizard Proteome " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")\n" <<
+               DIRECTAG_LICENSE << endl;
 
 		g_residueMap = new ResidueMap;
 		g_rtConfig = new RunTimeConfig;
@@ -558,8 +555,7 @@ namespace directag
 		if( InitProcess( args ) )
 			return 1;
 
-		SpectraList::InitMzFEBins();
-		SpectraList::InitCEBins();
+        g_rtConfig->PreComputeScoreDistributions();
 
         INIT_PROFILERS(10)
 
@@ -632,9 +628,7 @@ namespace directag
 
             float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
             cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
-
-            SpectraList::PrecacheIRBins( spectra );
-
+            
             cout << "Sequence tagging " << spectra.size() << " spectra." << endl;
             startTime = GetTimeString(); startDate = GetDateString(); taggingTime.Begin();
             ExecutePipeline();
