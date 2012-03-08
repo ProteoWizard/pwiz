@@ -11,10 +11,6 @@ set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 pushd %PWIZ_ROOT%
 
-if %VERBOSE%==1 echo.
-if %VERBOSE%==1 echo   Cleaning bin/obj directories...
-for /d /r pwiz_tools %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
-
 if %VERBOSE%==1 echo   Cleaning build directories...
 IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
 IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
@@ -72,13 +68,6 @@ rmdir /s /q pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data > nul 2>&1
 rmdir /s /q pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul 2>&1
 rmdir /s /q pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data > nul 2>&1
 
-if %VERBOSE%==1 echo   Cleaning SeeMS...
-IF EXIST pwiz_tools\SeeMS\CleanSeeMS.bat call pwiz_tools\SeeMS\CleanSeeMS.bat
-
-if %VERBOSE%==1 echo   Cleaning Skyline...
-IF EXIST pwiz_tools\Skyline\CleanSkyline.bat call pwiz_tools\Skyline\CleanSkyline.bat
-
-if %VERBOSE%==1 echo   Cleaning Topograph...
-IF EXIST pwiz_tools\Topograph\CleanTopograph.bat call pwiz_tools\Topograph\CleanTopograph.bat
+IF EXIST pwiz_tools\clean-apps.bat call pwiz_tools\clean-apps.bat
 
 popd
