@@ -591,18 +591,11 @@ rule pwiz-bindings-dependency ( properties * )
 
 rule dotNET-dependencies ( properties * )
 {
-    if <toolset>msvc in $(properties)
+    if <toolset-msvc:version>10.0 in $(properties) || <toolset-msvc:version>10.0express in $(properties)
     {
-        local location = [ install-location $(properties) ] ;
-        if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
-        {
-            return <dependency>pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location) 
-                   <dependency>pwiz_tools/SeeMS//seems.exe/$(location) ;
-        }
-        else
-        {
-            return <dependency>pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location) ;
-        }
+        local location = [ install-location $(properties) ] ; ;
+        return <dependency>pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location) 
+               <dependency>pwiz_tools/SeeMS//seems.exe/$(location) ;
     }
 }
 
