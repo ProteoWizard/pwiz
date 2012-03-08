@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
             // Show losses in the pick list
             var docFasta = SkylineWindow.Document;
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
-            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildren, dlg =>
+            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
             {
                 dlg.ApplyFilter(false);
                 var losses = GetLossGroups(dlg.ItemNames).ToArray();
@@ -178,7 +178,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Make sure 2 phospho losses are now possible
             IGrouping<double, string>[] losses1 = null;
-            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildren, dlg =>
+            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
             {
                 dlg.ApplyFilter(false);
                 losses1 = GetLossGroups(dlg.ItemNames).ToArray();
@@ -201,7 +201,7 @@ namespace pwiz.SkylineTestFunctional
             // Make sure all combinations of 2 except 2 of the multiple
             // losses are possible, since only one amino acid A exists in this
             // peptide.
-            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildren, dlg =>
+            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
             {
                 dlg.ApplyFilter(false);
                 var losses = GetLossGroups(dlg.ItemNames).ToArray();
@@ -265,7 +265,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(0, GetLossCount(docNoLoss2, 1));
 
             // Add a neutral loss transition with constant numeric loss
-            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildren, dlg =>
+            RunDlg<PopupPickList>(SkylineWindow.ShowPickChildrenInTest, dlg =>
             {
                 dlg.ApplyFilter(false);
                 var losses = GetLossGroups(dlg.ItemNames).ToArray();

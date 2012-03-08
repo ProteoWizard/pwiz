@@ -71,7 +71,7 @@ namespace pwiz.SkylineTestFunctional
             string precursorLabel = precursorPrefix + Transition.GetChargeIndicator(2);
 
             SrmDocument docCurrent = SkylineWindow.Document;
-            var pickList0 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList0 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
                       {
                           Assert.IsFalse(pickList0.ItemNames.Contains(name => name.StartsWith(precursorPrefix)));
@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestFunctional
 
             SelectNode(SrmDocument.Level.TransitionGroups, 2);  // Charge 3
             docCurrent = SkylineWindow.Document;
-            var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
             {
                 pickList1.ApplyFilter(false);

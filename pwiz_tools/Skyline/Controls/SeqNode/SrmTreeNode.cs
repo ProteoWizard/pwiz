@@ -361,9 +361,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public virtual bool CanShow { get { return true; } }
 
-        public void ShowPickList(Point location)
+        public void ShowPickList(Point location, bool okOnDeactivate)
         {
-            PopupPickList popup = new PopupPickList(this, ChildHeading) { Location = location };
+            PopupPickList popup = new PopupPickList(this, ChildHeading, okOnDeactivate) { Location = location };
             popup.Show();
             popup.Focus();
         }
@@ -700,7 +700,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// containing appropriate choices for the implementing node.
         /// </summary>
         /// <param name="location">Location to show the popup</param>
-        void ShowPickList(Point location);
+        /// <param name="okOnDeactivate">Causes OnOk when the form is deactivated when true</param>
+        void ShowPickList(Point location, bool okOnDeactivate);
 
         /// <summary>
         /// Property to determine whether the picker is showing a filtered list

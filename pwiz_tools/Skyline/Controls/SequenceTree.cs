@@ -176,11 +176,11 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Shows the pick list for the current node, if it allows node picking.
         /// </summary>
-        public void ShowPickList()
+        public void ShowPickList(bool okOnDeactivate = true)
         {
             IShowPicker picker = GetPicker(SelectedNode);
             if (picker != null)
-                picker.ShowPickList(GetPickerLocation(SelectedNode));            
+                picker.ShowPickList(GetPickerLocation(SelectedNode), okOnDeactivate);            
         }
 
         private void tick_ShowPickList(object sender, EventArgs e)

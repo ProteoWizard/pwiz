@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Controls
 
         private readonly IChildPicker _picker;
         private readonly List<DocNode> _chosenAtStart;
+        private readonly bool _okOnDeactivate;
         private List<PickListChoice> _choices;
         private List<int> _indexListChoices;
         private bool _closing;
@@ -53,7 +54,7 @@ namespace pwiz.Skyline.Controls
         private DocNode _lastTipNode;
         private ITipProvider _lastTipProvider;
 
-        public PopupPickList(IChildPicker picker, string childHeading)
+        public PopupPickList(IChildPicker picker, string childHeading, bool okOnDeactivate)
         {
             InitializeComponent();
 
@@ -66,6 +67,7 @@ namespace pwiz.Skyline.Controls
 
             _picker = picker;
             _chosenAtStart = new List<DocNode>(picker.Chosen);
+            _okOnDeactivate = okOnDeactivate;
 
             bool filter = tbbFilter.Checked = _picker.Filtered;
             var choices = picker.GetChoices(filter).ToArray();
@@ -298,7 +300,7 @@ namespace pwiz.Skyline.Controls
             _nodeTip.HideTip();
 
             base.OnDeactivate(e);
-            if (!_closing)
+            if (!_closing && _okOnDeactivate)
                 OnOk();
         }
 

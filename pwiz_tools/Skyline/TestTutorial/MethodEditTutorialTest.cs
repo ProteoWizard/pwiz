@@ -253,7 +253,7 @@ namespace pwiz.SkylineTestTutorial
                 var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 3];
                 SkylineWindow.SequenceTree.SelectedNode = node;
             });
-            var pickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             var curDoc = SkylineWindow.Document;
             RunUI(() =>
             {
@@ -272,7 +272,7 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.SequenceTree.Nodes[34].Nodes[0].Nodes[0];
                 SkylineWindow.SequenceTree.SelectedNode = node;
             });
-            var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             curDoc = SkylineWindow.Document;
             RunUI(() =>
             {

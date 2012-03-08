@@ -61,7 +61,7 @@ namespace pwiz.SkylineTestFunctional
             SelectNode(SrmDocument.Level.TransitionGroups, 0);
 
             // Add two new transitions to it
-            var pickList0 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList0 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
             {
                 pickList0.ApplyFilter(false);
@@ -74,7 +74,7 @@ namespace pwiz.SkylineTestFunctional
             VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
 
             // Uncheck one transition without synchronizing
-            var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList1 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
             {
                 pickList1.ApplyFilter(false);
@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(7, nodes[2].Nodes.Count);
 
             // Now synchronize the other two
-            var pickList2 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList2 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
             {
                 Assert.IsFalse(pickList2.IsSynchSiblings);
@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
             // Change selection to one of the heavy nodes
             // and synchronize siblings to automanage
             SelectNode(SrmDocument.Level.TransitionGroups, 1);
-            var pickList3 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList3 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
             {
                 pickList3.AutoManageChildren = true;
@@ -126,14 +126,14 @@ namespace pwiz.SkylineTestFunctional
 
             // Undo and make sure it is possible to synch again
             RunUI(SkylineWindow.Undo);
-            var pickList4 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList4 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() => Assert.IsTrue(pickList4.CanSynchSiblings));
             OkDialog(pickList4, pickList4.OnCancel);
 
             // Pick different charge states of the same label type,
             // and make sure it is not possible to synchronize siblings
             SelectNode(SrmDocument.Level.Peptides, 0);
-            var pickListPep = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickListPep = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() =>
             {
                 pickListPep.ApplyFilter(false);
@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestFunctional
         private static void VerifyCannotSynch(SrmDocument.Level levelNode)
         {
             SelectNode(levelNode, 0);
-            var pickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildren);
+            var pickList = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() => Assert.IsFalse(pickList.CanSynchSiblings));
             OkDialog(pickList, pickList.OnCancel);
         }

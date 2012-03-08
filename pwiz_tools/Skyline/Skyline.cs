@@ -1691,12 +1691,21 @@ namespace pwiz.Skyline
             modifyPeptideContextMenuItem.Visible = (sequenceTree.SelectedNode is PeptideTreeNode && enabled);
         }
 
-        private void pickChildrenContextMenuItem_Click(object sender, EventArgs e) { ShowPickChildren(); }
-        public void ShowPickChildren()
+        private void pickChildrenContextMenuItem_Click(object sender, EventArgs e) { ShowPickChildrenInternal(true); }
+
+        public void ShowPickChildrenInternal(bool okOnDeactivate)
         {
-            sequenceTree.ShowPickList();
+            sequenceTree.ShowPickList(okOnDeactivate);
         }
 
+        /// <summary>
+        /// Shows pop-up pick list for tests, with no automatic OK on deactivation of the pick list,
+        /// since this can cause failures, if the test computer is in use during the tests.
+        /// </summary>
+        public void ShowPickChildrenInTest()
+        {
+            ShowPickChildrenInternal(false);
+        }
 
         private void singleReplicateTreeContextMenuItem_Click(object sender, EventArgs e)
         {
