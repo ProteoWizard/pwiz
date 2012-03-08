@@ -413,7 +413,7 @@ namespace IDPicker.DataModel
     {
         public TemporaryMSDataFile(string tempFilepath) : base(tempFilepath)
         {
-            this.tempFilepath = tempFilepath;
+            Filepath = tempFilepath;
         }
 
         public new void Dispose ()
@@ -421,7 +421,7 @@ namespace IDPicker.DataModel
             try
             {
                 base.Dispose();
-                File.Delete(tempFilepath);
+                File.Delete(Filepath);
             }
             catch (Exception)
             {
@@ -429,7 +429,7 @@ namespace IDPicker.DataModel
             }
         }
 
-        private string tempFilepath;
+        public string Filepath { get; private set; }
     }
 
     public class SpectrumSourceMetadataUserType : NHibernate.UserTypes.IUserType

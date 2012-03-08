@@ -48,10 +48,6 @@ namespace IDPicker.Forms
 
     public partial class PeakStatisticsForm : DockableForm
     {
-        public event EventHandler<SourceNotFoundEventArgs> SourceNotFound;
-
-        //public DataGridView DataGridView { get { return dataGridView; } }
-
         #region Wrapper class for encapsulating query results
         public class SpectrumRow
         {
@@ -216,7 +212,7 @@ namespace IDPicker.Forms
                 if (row.SourceName != currentSourceName)
                 {
                     currentSourceName = row.SourceName;
-                    currentSourcePath = locateSpectrumSource(currentSourceName);
+                    currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName);
                     msd = new pwiz.CLI.msdata.MSDataFile(currentSourcePath);
 
                     //var param = session.Query<AnalysisParameter>().Where(o => o.Name == "SpectrumListFilters").Min(o => o.Value);
@@ -488,37 +484,6 @@ namespace IDPicker.Forms
             //dataGridView.Rows.Clear();
             //dataGridView.Rows.Add(fragmentationStatistics.Cast<object>().ToArray());
             //dataGridView.Refresh();
-        }
-
-        string locateSpectrumSource (string spectrumSourceName)
-        {
-            try
-            {
-                return Util.FindSourceInSearchPath(spectrumSourceName, ".");
-            }
-            catch
-            {
-                try
-                {
-                    return Util.FindSourceInSearchPath(spectrumSourceName, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
-                }
-                catch
-                {
-                    if (SourceNotFound != null)
-                    {
-                        var eventArgs = new SourceNotFoundEventArgs() {SourcePath = spectrumSourceName};
-                        SourceNotFound(this, eventArgs);
-                        if (System.IO.File.Exists(eventArgs.SourcePath) || System.IO.Directory.Exists(eventArgs.SourcePath))
-                        {
-                            Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = System.IO.Path.GetDirectoryName(eventArgs.SourcePath);
-                            Properties.GUI.Settings.Default.Save();
-                            return eventArgs.SourcePath;
-                        }
-                    }
-
-                    throw;
-                }
-            }
         }
 
         #region Export stuff

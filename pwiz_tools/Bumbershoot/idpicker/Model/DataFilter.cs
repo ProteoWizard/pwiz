@@ -69,6 +69,9 @@ namespace IDPicker.DataModel
             MinimumDistinctPeptidesPerProtein = 2;
             MinimumSpectraPerProtein = 2;
             MinimumAdditionalPeptidesPerProtein = 1;
+            MinimumSpectraPerDistinctMatch = 1;
+            MinimumSpectraPerDistinctPeptide = 1;
+            MaximumProteinGroupsPerPeptide = 5;
 
             DistinctMatchFormat = new DistinctMatchFormat()
             {
@@ -85,6 +88,8 @@ namespace IDPicker.DataModel
             MinimumDistinctPeptidesPerProtein = other.MinimumDistinctPeptidesPerProtein;
             MinimumSpectraPerProtein = other.MinimumSpectraPerProtein;
             MinimumAdditionalPeptidesPerProtein = other.MinimumAdditionalPeptidesPerProtein;
+            MinimumSpectraPerDistinctMatch = other.MinimumSpectraPerDistinctMatch;
+            MinimumSpectraPerDistinctPeptide = other.MinimumSpectraPerDistinctPeptide;
             DistinctMatchFormat = other.DistinctMatchFormat;
             Cluster = other.Cluster == null ? null : new List<int>(other.Cluster);
             ProteinGroup = other.ProteinGroup == null ? null : new List<int>(other.ProteinGroup);
@@ -106,6 +111,9 @@ namespace IDPicker.DataModel
         public int MinimumDistinctPeptidesPerProtein { get; set; }
         public int MinimumSpectraPerProtein { get; set; }
         public int MinimumAdditionalPeptidesPerProtein { get; set; }
+        public int MinimumSpectraPerDistinctMatch { get; set; }
+        public int MinimumSpectraPerDistinctPeptide { get; set; }
+        public int MaximumProteinGroupsPerPeptide { get; set; }
 
         public DistinctMatchFormat DistinctMatchFormat { get; set; }
 
@@ -192,6 +200,9 @@ namespace IDPicker.DataModel
                    MinimumDistinctPeptidesPerProtein == other.MinimumDistinctPeptidesPerProtein &&
                    MinimumSpectraPerProtein == other.MinimumSpectraPerProtein &&
                    MinimumAdditionalPeptidesPerProtein == other.MinimumAdditionalPeptidesPerProtein &&
+                   MinimumSpectraPerDistinctMatch == other.MinimumSpectraPerDistinctMatch &&
+                   MinimumSpectraPerDistinctPeptide == other.MinimumSpectraPerDistinctPeptide &&
+                   MaximumProteinGroupsPerPeptide == other.MaximumProteinGroupsPerPeptide &&
                    NullSafeSequenceEqual(Cluster, other.Cluster) &&
                    NullSafeSequenceEqual(ProteinGroup, other.ProteinGroup) &&
                    NullSafeSequenceEqual(PeptideGroup, other.PeptideGroup) &&
@@ -283,13 +294,19 @@ namespace IDPicker.DataModel
                 return String.Join("; ", result.ToArray());
 
             return String.Format("Q-value ≤ {0}; " +
-                                 "Min. distinct peptides per protein ≥ {1}; " +
-                                 "Min. spectra per protein ≥ {2}; ",
-                                 "Min. additional peptides per protein ≥ {3}",
+                                 "Distinct peptides per protein ≥ {1}; " +
+                                 "Spectra per protein ≥ {2}; " +
+                                 "Additional peptides per protein ≥ {3}" +
+                                 "Spectra per distinct match ≥ {4}; " +
+                                 "Spectra per distinct peptide ≥ {5}; ",
+                                 "Protein groups per peptide ≤ {6}",
                                  MaximumQValue,
                                  MinimumDistinctPeptidesPerProtein,
                                  MinimumSpectraPerProtein,
-                                 MinimumAdditionalPeptidesPerProtein);
+                                 MinimumAdditionalPeptidesPerProtein,
+                                 MinimumSpectraPerDistinctMatch,
+                                 MinimumSpectraPerDistinctPeptide,
+                                 MaximumProteinGroupsPerPeptide);
         }
 
         public static DataFilter LoadFilter (NHibernate.ISession session)
@@ -299,7 +316,10 @@ namespace IDPicker.DataModel
                 var filteringCriteria = session.CreateSQLQuery(@"SELECT MaximumQValue,
                                                                         MinimumDistinctPeptidesPerProtein,
                                                                         MinimumSpectraPerProtein,
-                                                                        MinimumAdditionalPeptidesPerProtein
+                                                                        MinimumAdditionalPeptidesPerProtein,
+                                                                        MinimumSpectraPerDistinctMatch,
+                                                                        MinimumSpectraPerDistinctPeptide,
+                                                                        MaximumProteinGroupsPerPeptide
                                                                  FROM FilteringCriteria
                                                                 ").List<object[]>()[0];
                 var dataFilter = new DataFilter();
@@ -307,6 +327,9 @@ namespace IDPicker.DataModel
                 dataFilter.MinimumDistinctPeptidesPerProtein = Convert.ToInt32(filteringCriteria[1]);
                 dataFilter.MinimumSpectraPerProtein = Convert.ToInt32(filteringCriteria[2]);
                 dataFilter.MinimumAdditionalPeptidesPerProtein = Convert.ToInt32(filteringCriteria[3]);
+                dataFilter.MinimumSpectraPerDistinctMatch = Convert.ToInt32(filteringCriteria[4]);
+                dataFilter.MinimumSpectraPerDistinctPeptide = Convert.ToInt32(filteringCriteria[5]);
+                dataFilter.MaximumProteinGroupsPerPeptide = Convert.ToInt32(filteringCriteria[6]);
                 return dataFilter;
             }
             catch
@@ -321,9 +344,12 @@ namespace IDPicker.DataModel
                                          MaximumQValue NUMERIC,
                                          MinimumDistinctPeptidesPerProtein INT,
                                          MinimumSpectraPerProtein INT,
-                                         MinimumAdditionalPeptidesPerProtein INT
+                                         MinimumAdditionalPeptidesPerProtein INT,
+                                         MinimumSpectraPerDistinctMatch INT,
+                                         MinimumSpectraPerDistinctPeptide INT,
+                                         MaximumProteinGroupsPerPeptide INT
                                         );
-                                        INSERT INTO FilteringCriteria SELECT {0}, {1}, {2}, {3}
+                                        INSERT INTO FilteringCriteria SELECT {0}, {1}, {2}, {3}, {4}, {5}, {6}
                                        ";
         private void SaveFilter(NHibernate.ISession session)
         {
@@ -331,7 +357,10 @@ namespace IDPicker.DataModel
                                                  MaximumQValue,
                                                  MinimumDistinctPeptidesPerProtein,
                                                  MinimumSpectraPerProtein,
-                                                 MinimumAdditionalPeptidesPerProtein)).ExecuteUpdate();
+                                                 MinimumAdditionalPeptidesPerProtein,
+                                                 MinimumSpectraPerDistinctMatch,
+                                                 MinimumSpectraPerDistinctPeptide,
+                                                 MaximumProteinGroupsPerPeptide)).ExecuteUpdate();
         }
 
         public string GetBasicQueryStringSQL ()
@@ -441,15 +470,22 @@ namespace IDPicker.DataModel
                                      JOIN Spectrum s ON psm.Spectrum = s.Id
                                      JOIN SpectrumSource ss ON s.Source = ss.Id
                                      -- filter out ungrouped spectrum sources
-                                     WHERE ss.Group_ AND " + MaximumQValue.ToString() + @" >= psm.QValue AND psm.Rank = 1
+                                     WHERE ss.Group_ AND " + MaximumQValue + @" >= psm.QValue AND psm.Rank = 1
                                      GROUP BY psm.Id;
-                                     CREATE INDEX FilteredPeptideSpectrumMatch_Spectrum ON FilteredPeptideSpectrumMatch (Spectrum);
-                                     CREATE INDEX FilteredPeptideSpectrumMatch_Peptide ON FilteredPeptideSpectrumMatch (Peptide);
-                                     CREATE INDEX FilteredPeptideSpectrumMatch_QValue ON FilteredPeptideSpectrumMatch (QValue);
-                                     CREATE INDEX FilteredPeptideSpectrumMatch_Analysis ON FilteredPeptideSpectrumMatch (Analysis);
-                                     CREATE INDEX FilteredPeptideSpectrumMatch_Rank ON FilteredPeptideSpectrumMatch (Rank);
+                                     CREATE INDEX FilteredPeptideSpectrumMatch_PeptideSpectrumAnalysis ON FilteredPeptideSpectrumMatch (Peptide, Spectrum, Analysis);
+                                     CREATE INDEX FilteredPeptideSpectrumMatch_AnalysisSpectrumPeptide ON FilteredPeptideSpectrumMatch (Analysis, Spectrum, Peptide);
+                                     CREATE INDEX FilteredPeptideSpectrumMatch_SpectrumPeptideAnalysis ON FilteredPeptideSpectrumMatch (Spectrum, Peptide, Analysis);
                                     "
                                   ).ExecuteUpdate();
+
+            if (MinimumSpectraPerDistinctMatch > 1)
+                session.CreateSQLQuery(@"DELETE FROM FilteredPeptideSpectrumMatch
+                                         WHERE " + DistinctMatchFormat.SqlExpression.Replace("psm.", "FilteredPeptideSpectrumMatch.") + @" IN
+                                               (SELECT " + DistinctMatchFormat.SqlExpression + @"
+                                                FROM FilteredPeptideSpectrumMatch psm
+                                                GROUP BY " + DistinctMatchFormat.SqlExpression + @"
+                                                HAVING " + MinimumSpectraPerDistinctMatch + @" > COUNT(DISTINCT psm.Spectrum))
+                                        ").ExecuteUpdate();
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptides...", ++stepsCompleted, null)))
                 return;
@@ -457,8 +493,15 @@ namespace IDPicker.DataModel
                                      INSERT INTO FilteredPeptide SELECT pep.*
                                      FROM FilteredPeptideSpectrumMatch psm
                                      JOIN Peptide pep ON psm.Peptide = pep.Id
-                                     GROUP BY pep.Id"
+                                     GROUP BY pep.Id " +
+                                     (MinimumSpectraPerDistinctPeptide > 1 ? @"HAVING " + MinimumSpectraPerDistinctPeptide + @" <= COUNT(DISTINCT psm.Spectrum)"
+                                                                           : @"")
+                                    //"
                                   ).ExecuteUpdate();
+
+            if (MinimumSpectraPerDistinctMatch + MinimumSpectraPerDistinctPeptide > 1)
+                session.CreateSQLQuery(@"DELETE FROM FilteredPeptideSpectrumMatch WHERE Peptide NOT IN (SELECT Id FROM FilteredPeptide);
+                                        ").ExecuteUpdate();
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide instances...", ++stepsCompleted, null)))
                 return;
@@ -491,6 +534,26 @@ namespace IDPicker.DataModel
             #endregion
 
             if (AssembleProteinGroups(session, ref stepsCompleted)) return;
+
+            if (MaximumProteinGroupsPerPeptide > 0)
+            {
+                session.CreateSQLQuery(@"DELETE FROM Peptide WHERE Id IN
+                                             (
+                                              SELECT pi.Peptide
+                                              FROM Protein pro
+                                              JOIN PeptideInstance pi on pro.Id = pi.Protein
+                                              GROUP BY pi.Peptide
+                                              HAVING COUNT(DISTINCT ProteinGroup) > " + MaximumProteinGroupsPerPeptide + @"
+                                             );
+                                          DELETE FROM PeptideInstance WHERE Peptide NOT IN (SELECT Id FROM Peptide);
+                                          DELETE FROM Protein WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);
+                                          DELETE FROM PeptideSpectrumMatch WHERE Peptide NOT IN (SELECT Id FROM Peptide);
+                                         ").ExecuteUpdate();
+                --stepsCompleted;
+                session.CreateSQLQuery("DROP INDEX Protein_ProteinGroup").ExecuteUpdate();
+                if (AssembleProteinGroups(session, ref stepsCompleted)) return;
+            }
+
             if (ApplyAdditionalPeptidesFilter(session, ref stepsCompleted)) return;
             if (AssembleClusters(session, ref stepsCompleted)) return;
             if (AssembleProteinCoverage(session, ref stepsCompleted)) return;
@@ -539,6 +602,7 @@ namespace IDPicker.DataModel
                                      DROP TABLE ProteinGroups;
                                      DROP TABLE TempProtein;
                                     ").ExecuteUpdate();
+
             session.Clear();
 
             return false;
@@ -586,7 +650,7 @@ namespace IDPicker.DataModel
         bool ApplyAdditionalPeptidesFilter (NHibernate.ISession session, ref int stepsCompleted)
         {
             if (MinimumAdditionalPeptidesPerProtein == 0)
-                return false;
+                return OnFilteringProgress(new FilteringProgressEventArgs("Skipping additional peptide filter...", stepsCompleted += 2, null));
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating additional peptide counts...", ++stepsCompleted, null)))
                 return true;
@@ -1095,7 +1159,7 @@ namespace IDPicker.DataModel
             var sharedResultsByProteinId = new Map<long, long>();
 
             session.CreateSQLQuery(@"DROP TABLE IF EXISTS SpectrumResults;
-                                     CREATE TABLE SpectrumResults AS
+                                     CREATE TEMP TABLE SpectrumResults AS
                                      SELECT psm.Spectrum AS Spectrum, GROUP_CONCAT(DISTINCT psm.Peptide) AS Peptides, COUNT(DISTINCT pi.Protein) AS SharedResultCount
                                      FROM PeptideSpectrumMatch psm
                                      JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
@@ -1336,6 +1400,9 @@ namespace IDPicker.DataModel
                    DataFilter.MinimumDistinctPeptidesPerProtein.GetHashCode() ^
                    DataFilter.MinimumSpectraPerProtein.GetHashCode() ^
                    DataFilter.MinimumAdditionalPeptidesPerProtein.GetHashCode() ^
+                   DataFilter.MinimumSpectraPerDistinctMatch.GetHashCode() ^
+                   DataFilter.MinimumSpectraPerDistinctPeptide.GetHashCode() ^
+                   DataFilter.MaximumProteinGroupsPerPeptide.GetHashCode() ^
                    NullSafeHashCode(DataFilter.Cluster) ^
                    NullSafeHashCode(DataFilter.ProteinGroup) ^
                    NullSafeHashCode(DataFilter.PeptideGroup) ^

@@ -79,7 +79,7 @@ namespace IDPicker.Forms
             this.keyColumn.HeaderText = "Key";
             this.keyColumn.Name = "keyColumn";
             this.keyColumn.ReadOnly = true;
-            this.keyColumn.Width = 100;
+            this.keyColumn.Width = 200;
             // 
             // totalSpectraColumn
             // 
@@ -186,7 +186,7 @@ namespace IDPicker.Forms
             this.sequenceColumn.HeaderText = "Sequence";
             this.sequenceColumn.Name = "sequenceColumn";
             this.sequenceColumn.ReadOnly = true;
-            this.sequenceColumn.Width = 70;
+            this.sequenceColumn.Width = 300;
             // 
             // treeDataGridView
             // 

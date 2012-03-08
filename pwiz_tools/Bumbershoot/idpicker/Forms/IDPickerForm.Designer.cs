@@ -85,6 +85,7 @@ namespace IDPicker
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toQuasitelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -210,7 +211,8 @@ namespace IDPicker
             // 
             this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.exportAllViewsToolStripMenuItem,
-            this.subsetFASTAToolStripMenuItem});
+            this.subsetFASTAToolStripMenuItem,
+            this.toQuasitelToolStripMenuItem});
             this.exportToolStripMenuItem.Name = "exportToolStripMenuItem";
             this.exportToolStripMenuItem.Size = new System.Drawing.Size(161, 22);
             this.exportToolStripMenuItem.Text = "Export";
@@ -352,6 +354,13 @@ namespace IDPicker
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
+            // toQuasitelToolStripMenuItem
+            // 
+            this.toQuasitelToolStripMenuItem.Name = "toQuasitelToolStripMenuItem";
+            this.toQuasitelToolStripMenuItem.Size = new System.Drawing.Size(156, 22);
+            this.toQuasitelToolStripMenuItem.Text = "To Quasitel...";
+            this.toQuasitelToolStripMenuItem.Click += new System.EventHandler(this.toQuasitelToolStripMenuItem_Click);
+            // 
             // IDPickerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -363,6 +372,7 @@ namespace IDPicker
             this.Controls.Add(this.dockPanel);
             this.Controls.Add(this.breadCrumbPanel);
             this.Icon = ((System.Drawing.Icon) (resources.GetObject("$this.Icon")));
+            this.MainMenuStrip = this.menuStrip1;
             this.Name = "IDPickerForm";
             this.Text = "IDPicker";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.IDPickerForm_FormClosing);
@@ -409,6 +419,7 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem toExcelToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toExcelSelectToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem subsetFASTAToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toQuasitelToolStripMenuItem;
 
     }
 }

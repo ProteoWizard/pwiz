@@ -283,77 +283,6 @@ namespace IDPicker.Forms
             ClearData();
         }
 
-        void sourceNotFoundOnClusteringHandler(object sender, SourceNotFoundEventArgs e)
-        {
-            if (String.IsNullOrEmpty(e.SourcePath))
-                return;
-
-            if (InvokeRequired)
-            {
-                Invoke(new MethodInvoker(() => sourceNotFoundOnClusteringHandler(sender, e)));
-                return;
-            }
-
-            var findDirectoryDialog = new FolderBrowserDialog()
-            {
-                SelectedPath = Properties.GUI.Settings.Default.LastSpectrumSourceDirectory,
-                ShowNewFolderButton = false,
-                Description = "Locate the directory containing the source \"" + e.SourcePath + "\""
-            };
-
-            while (findDirectoryDialog.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
-                    Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
-                    Properties.GUI.Settings.Default.Save();
-                    return;
-                }
-                catch
-                {
-                    // couldn't find the source in that directory; prompt user again
-                }
-            }
-        }
-
-        //// prompt to select source file directory
-        string locateSpectrumSource(string spectrumSourceName)
-        {
-            try
-            {
-                return Util.FindSourceInSearchPath(spectrumSourceName, ".");
-            }
-            catch
-            {
-                try
-                {
-                    //// try the last looked-in path
-                    return Util.FindSourceInSearchPath(spectrumSourceName, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
-                }
-                catch
-                {
-                    //// prompt user to find the source
-                    var eventArgs = new SourceNotFoundEventArgs() { SourcePath = spectrumSourceName };
-                    sourceNotFoundOnClusteringHandler(this, eventArgs);
-
-                    if (eventArgs.SourcePath == spectrumSourceName)
-                        return spectrumSourceName; //// user canceled
-
-                    if (System.IO.File.Exists(eventArgs.SourcePath) || System.IO.Directory.Exists(eventArgs.SourcePath))
-                    {
-                        Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = System.IO.Path.GetDirectoryName(eventArgs.SourcePath);
-                        Properties.GUI.Settings.Default.Save();
-                        return eventArgs.SourcePath;
-                    }
-                    else
-                        throw; //// file still not found, abort the visualization
-                }
-            }
-        }
-
-
-
         /// <summary>
         /// run clustering, Rescue PSMs, update idpDB
         /// </summary>
@@ -363,10 +292,7 @@ namespace IDPicker.Forms
             reportProgressDelegate reportProgress = new reportProgressDelegate(setProgress);
             reportStatusDelegate reportStatus = new reportStatusDelegate(setStatus);
 
-            string database = (from System.Text.RegularExpressions.Match m
-                                in (new System.Text.RegularExpressions.Regex(@"\w:(?:\\(?:\w| |_|-)+)+.idpDB"))
-                                .Matches(session.Connection.ConnectionString)
-                                   select m.Value).SingleOrDefault<string>();
+            string database = Path.GetFileName(session.Connection.GetDataSource());
             logFile = database + "-log.txt";
 
             string config = string.Format("Parameters:\r\n" +
@@ -468,7 +394,7 @@ namespace IDPicker.Forms
                     if (row.SourceName != currentSourceName)
                     {
                         currentSourceName = row.SourceName;
-                        currentSourcePath = locateSpectrumSource(currentSourceName);
+                        currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName);
                         msd = new pwiz.CLI.msdata.MSDataFile(currentSourcePath);
                                                 
                         SpectrumListFactory.wrap(msd, "threshold count 100 most-intense"); //only keep the top 100 peaks
@@ -1001,8 +927,5 @@ namespace IDPicker.Forms
             }
 
         }
-
-
-
     }
 }

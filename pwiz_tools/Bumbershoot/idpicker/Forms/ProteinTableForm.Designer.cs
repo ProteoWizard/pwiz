@@ -70,7 +70,7 @@ namespace IDPicker.Forms
             this.keyColumn.HeaderText = "Accession";
             this.keyColumn.Name = "keyColumn";
             this.keyColumn.ReadOnly = true;
-            this.keyColumn.Width = 81;
+            this.keyColumn.Width = 150;
             // 
             // clusterColumn
             // 
@@ -135,7 +135,7 @@ namespace IDPicker.Forms
             this.descriptionColumn.HeaderText = "Description";
             this.descriptionColumn.Name = "descriptionColumn";
             this.descriptionColumn.ReadOnly = true;
-            this.descriptionColumn.Width = 85;
+            this.descriptionColumn.Width = 200;
             // 
             // peptideSequencesColumn
             // 

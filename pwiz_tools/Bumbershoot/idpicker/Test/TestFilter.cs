@@ -107,6 +107,8 @@ namespace Test
 
                 "ELVISKLIVESRTHANKYAVERYMUCH",
                 "ELVISISRCKNRLLKING",
+
+                "THEQUICKBRWNFXJUMPSVERTHELAZYDG",
             };
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
@@ -130,30 +132,96 @@ namespace Test
 
                     // not enough passing peptides for DERPEPTIDEKPEPTIDE or TIDERPEPTIDEKPEP
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "PEPTIDEK@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "PEPTIDEK@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "PEPTIDEK@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "PEPTIDEK@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "DERPEPTIDEK@1/1 PEPTIDER@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "DERPEPTIDEK@1/1 PEPTIDER@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "DERPEPTIDEK@1/1 PEPTIDER@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "DERPEPTIDEK@1/1 PEPTIDER@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "TIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "TIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "TIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "TIDER@1/1"),
+
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 1, "PEPTIDEK@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 1, "DERPEPTIDEK@1/1 PEPTIDER@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 1, "TIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 1, "PEPTIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 1, "PEPTIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 1, "PEPTIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 1, "PEPTIDER@1/1"),
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 1, "PEPTIDER@1/1"),
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "PEPTIDERPEPTIDEK@1/1 PEPTIDEK@1/2"),
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "PEPTIDERPEPTIDEK@1/1 PEPTIDEK@1/2"),
-                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "DERPEPTIDEK@1/1 PEPTIDER@1/2"),
-                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 2, "TIDER@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "PEPTIDERPEPTIDEK@1/1 PEPTIDEK@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "PEPTIDERPEPTIDEK@1/1 PEPTIDEK@1/2"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "PEPTIDERPEPTIDEK@1/1 PEPTIDEK@1/2"),
 
                     // not enough distinct peptides for ELVISKLIVESRTHANKYAVERYMUCH
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISKLIVESR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISKLIVESR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISKLIVESR@1/1"),
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISKLIVESR@1/1"),
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISKLIVESR@1/1"),
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISKLIVESR@1/1"),
 
                     // not enough spectra for ELVISISRCKNRLLKING
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISISR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISISR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISISR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISISR@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "ELVISISR@1/1"),
                     new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "CKNRLLKING@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "CKNRLLKING@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "CKNRLLKING@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "CKNRLLKING@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "CKNRLLKING@1/1"),
+
+                    // not enough spectra for distinct peptide THEQUICK
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "THEQUICK@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "THEQUICK@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "THEQU[H3C2N1O1]ICK@1/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "THEQU[H3C2N1O1]ICK@1/1"),
+
+                    // not enough spectra for distinct matches THEQUICK@2 and THEQUICK@3
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "THEQUICK@2/1"),
+                    new SpectrumTuple("/", source, ++scan, analysis, scan*2, 0, "THEQUICK@3/1"),
                 };
 
                 TestModel.CreateTestData(session, testPsmSummary);
             }
 
+            // Spectral counts must be multiplied by numSources.
+
+            // Distinct Matches:
+            // PEPTIDEK(+1): 1 spectrum
+            // DERPEPTIDEK(+1): 1 spectrum
+            // TIDER(+1): 1 spectrum
+            // PEPTIDER(+1): 5 spectra
+            // PEPTIDERPEPTIDEK(+1): 5 spectra
+            // ELVISKLIVESR(+1): 6 spectra
+            // ELVISISR(+1): 5 spectra
+            // CKNRLLKING(+1): 5 spectra
+            // THEQUICK(+1): 2 spectra
+            // THEQUICK(+2): 1 spectrum
+            // THEQUICK(+3): 1 spectrum
+            // THEQU[H3C2N1O1]ICK(+1): 2 spectra
+
+            // Proteins:
+            // PEPTIDERPEPTIDEKPEPTIDE: 5 distinct peptides over 13 (passing) spectra
+            // DERPEPTIDEKPEPTIDE: 2 distinct peptides, 2 spectra
+            // TIDERPEPTIDEKPEP: 3 distinct peptides, 3 spectra
+            // ELVISKLIVESRTHANKYAVERYMUCH: 1 distinct peptide, 6 spectra
+            // ELVISISRCKNRLLKING: 2 distinct peptides, 10 spectra
+            // THEQUICKBRWNFXJUMPSVERTHELAZYDG: 1 distinct peptide, 6 spectra
+
             var dataFilter = new DataFilter()
             {
                 MaximumQValue = 1,
-                MinimumDistinctPeptidesPerProtein = 2,
-                MinimumSpectraPerProtein = 3 * numSources,
+                MinimumDistinctPeptidesPerProtein = 1,
+                MinimumSpectraPerProtein = 1,
+                MinimumAdditionalPeptidesPerProtein = 0
             };
             dataFilter.ApplyBasicFilters(session);
             
@@ -165,56 +233,152 @@ namespace Test
             {
                 string source = "Source " + sourceId.ToString();
                 string analysis = "Engine " + analysisId.ToString();
+                var sourceAnalysisPSMs = session.Query<PeptideSpectrumMatch>().Where(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source);
+
                 // test that PSMs with QValue > MaximumQValue are filtered out
-                Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 0));
-                Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 4));
-                Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 5));
-                Assert.IsNotNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 1));
-                Assert.IsNotNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 2));
-                Assert.IsNotNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 3));
+                Assert.AreEqual(0, sourceAnalysisPSMs.Count(o => o.QValue > 1));
             }
 
             // test that non-rank-1 PSMs are filtered out
             Assert.AreEqual(0, session.Query<PeptideSpectrumMatch>().Where(o => o.Rank > 1).Count());
 
-            // test that proteins without at least MinimumPeptidesPerProtein peptides are filtered out
-            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKPEPTIDE"));
-            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "TIDERPEPTIDEKPEP"));
-            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH"));
-            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE"));
+            // test that nothing else is filtered out
+            Assert.AreEqual(6, session.Query<Protein>().Count());
+            Assert.AreEqual(9, session.Query<Peptide>().Count());
+            Assert.AreEqual(35 * (numSources + numAnalyses), session.Query<PeptideSpectrumMatch>().Count());
 
-            // test that proteins without at least MinimumSpectraPerProtein spectra are filtered out
+            dataFilter.MinimumDistinctPeptidesPerProtein = 3;
+            dataFilter.MinimumSpectraPerProtein = 1;
+            dataFilter.ApplyBasicFilters(session);
+            session.Clear();
+
+            // test that proteins without at least MinimumPeptidesPerProtein peptides are filtered out
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "TIDERPEPTIDEKPEP"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKPEPTIDE"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH"));
             Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "THEQUICKBRWNFXJUMPSVERTHELAZYDG"));
 
             // test that protein filters cascade to peptide instances
-            Assert.AreEqual(0, session.Query<PeptideInstance>().Where(o => o.Protein.Sequence == "DERPEPTIDEKPEPTIDE").Count());
-            Assert.AreEqual(0, session.Query<PeptideInstance>().Where(o => o.Protein.Sequence == "TIDERPEPTIDEKPEP").Count());
-            Assert.AreEqual(0, session.Query<PeptideInstance>().Where(o => o.Protein.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH").Count());
-            Assert.AreEqual(0, session.Query<PeptideInstance>().Where(o => o.Protein.Sequence == "ELVISISRCKNRLLKING").Count());
-            Assert.AreEqual(2, session.Query<PeptideInstance>().Where(o => o.Protein.Sequence == "PEPTIDERPEPTIDEKPEPTIDE").Count());
+            Assert.AreEqual(5, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "PEPTIDERPEPTIDEKPEPTIDE"));
+            Assert.AreEqual(3, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "TIDERPEPTIDEKPEP"));
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "DERPEPTIDEKPEPTIDE"));
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH"));
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "ELVISISRCKNRLLKING"));
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "THEQUICKBRWNFXJUMPSVERTHELAZYDG"));
 
             // test that protein filters cascade to peptides
-            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDEK"));
-            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "DERPEPTIDEK"));
-            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "TIDER"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDEK"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "DERPEPTIDEK"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "TIDER"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDER"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDERPEPTIDEK"));
             Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "ELVISKLIVESR"));
             Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "ELVISISR"));
             Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "CKNRLLKING"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "THEQUICK"));
+
+            // test that protein filters cascade to PSMs 
+            Assert.AreEqual(13 * (numSources + numAnalyses), session.Query<PeptideSpectrumMatch>().Count());
+
+            dataFilter.MinimumDistinctPeptidesPerProtein = 1;
+            dataFilter.MinimumSpectraPerProtein = 4 * numSources;
+            dataFilter.ApplyBasicFilters(session);
+            session.Clear();
+
+            // test that proteins without at least MinimumSpectraPerProtein spectra are filtered out
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "TIDERPEPTIDEKPEP"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKPEPTIDE"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "THEQUICKBRWNFXJUMPSVERTHELAZYDG"));
+
+            dataFilter.MinimumDistinctPeptidesPerProtein = 1;
+            dataFilter.MinimumSpectraPerProtein = 1;
+            dataFilter.MinimumSpectraPerDistinctMatch = 2 * numSources;
+            dataFilter.ApplyBasicFilters(session);
+            session.Clear();
+
+            // test that distinct matches without at least MinimumSpectraPerDistinctMatch spectra are filtered out
             Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDER"));
             Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDERPEPTIDEK"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "ELVISKLIVESR"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "ELVISISR"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "CKNRLLKING"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "THEQUICK"));
+            Assert.AreEqual(4 * (numSources + numAnalyses), session.Query<PeptideSpectrumMatch>().Count(o => o.Peptide.Sequence == "THEQUICK" && o.Charge == 1));
+            Assert.AreEqual(0, session.Query<PeptideSpectrumMatch>().Count(o => o.Charge == 2));
+            Assert.AreEqual(0, session.Query<PeptideSpectrumMatch>().Count(o => o.Charge == 3));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDEK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "DERPEPTIDEK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "TIDER"));
 
-            for (int sourceId = 1; sourceId <= numSources; ++sourceId)
-            for (int analysisId = 1; analysisId <= numAnalyses; ++analysisId)
-            {
-                string source = "Source " + sourceId.ToString();
-                string analysis = "Engine " + analysisId.ToString();
-                // test that protein filters cascade to PSMs 
-                Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 6));
-                Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 7));
-                Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 8));
-                Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 9));
-                Assert.IsNull(session.UniqueResult<PeptideSpectrumMatch>(o => o.Analysis.Software.Name == analysis && o.Spectrum.Source.Name == source && o.Spectrum.Index == 10));
-            }
+            // test that peptide filters cascade to proteins
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "THEQUICKBRWNFXJUMPSVERTHELAZYDG"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "TIDERPEPTIDEKPEP"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKPEPTIDE"));
+
+            dataFilter.MinimumSpectraPerDistinctMatch = 1;
+            dataFilter.MinimumSpectraPerDistinctPeptide = 6 * numSources;
+            dataFilter.ApplyBasicFilters(session);
+            session.Clear();
+
+            // test that distinct peptides without at least MinimumSpectraPerDistinctPeptide spectra are filtered out
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "ELVISKLIVESR"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "THEQUICK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDER"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDERPEPTIDEK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "ELVISISR"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "CKNRLLKING"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDEK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "DERPEPTIDEK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "TIDER"));
+
+            // test that peptide filters cascade to proteins
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "THEQUICKBRWNFXJUMPSVERTHELAZYDG"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "TIDERPEPTIDEKPEP"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKPEPTIDE"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING"));
+
+            // test that peptide filters cascade to peptide instances
+            Assert.AreEqual(1, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH"));
+            Assert.AreEqual(1, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "THEQUICKBRWNFXJUMPSVERTHELAZYDG"));
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "PEPTIDERPEPTIDEKPEPTIDE"));
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "TIDERPEPTIDEKPEP"));
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "DERPEPTIDEKPEPTIDE"));
+            Assert.AreEqual(0, session.Query<PeptideInstance>().Count(o => o.Protein.Sequence == "ELVISISRCKNRLLKING"));
+
+            dataFilter.MinimumSpectraPerDistinctMatch = 1;
+            dataFilter.MinimumSpectraPerDistinctPeptide = 1;
+            dataFilter.MaximumProteinGroupsPerPeptide = 1;
+            dataFilter.ApplyBasicFilters(session);
+            session.Clear();
+
+            // test that distinct peptides linking to more than MaximumProteinGroupsPerPeptide protein groups are filtered out
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "ELVISKLIVESR"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "THEQUICK"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "ELVISISR"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "CKNRLLKING"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDER"));
+            Assert.IsNotNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDERPEPTIDEK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "PEPTIDEK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "DERPEPTIDEK"));
+            Assert.IsNull(session.UniqueResult<Peptide>(o => o.Sequence == "TIDER"));
+
+            // test that MaximumProteinGroupsPerPeptide filter cascades to proteins
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING"));
+            Assert.IsNotNull(session.UniqueResult<Protein>(o => o.Sequence == "THEQUICKBRWNFXJUMPSVERTHELAZYDG"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "TIDERPEPTIDEKPEP"));
+            Assert.IsNull(session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKPEPTIDE"));
 
             session.Close();
         }

@@ -217,6 +217,7 @@ namespace IDPicker.Forms
                 "FROM UnfilteredPeptideSpectrumMatch psm " +
                 "JOIN UnfilteredPeptide pep ON psm.Peptide=pep.Id " +
                 "JOIN UnfilteredPeptideInstance pi ON pep.Id=pi.Peptide " +
+                "JOIN UnfilteredProtein pro ON pi.Protein=pro.Id " +
                 "LEFT JOIN ProteinData pd ON pi.Protein=pd.Id " +
                 "LEFT JOIN PeptideModification pm ON psm.Id=pm.PeptideSpectrumMatch " +
                 "LEFT JOIN Modification mod ON pm.Modification=mod.Id " +
@@ -234,6 +235,7 @@ namespace IDPicker.Forms
                 "FROM UnfilteredPeptideSpectrumMatch psm " +
                 "JOIN UnfilteredPeptide pep ON psm.Peptide=pep.Id " +
                 "JOIN UnfilteredPeptideInstance pi ON pep.Id=pi.Peptide " +
+                "JOIN UnfilteredProtein pro ON pi.Protein=pro.Id " +
                 "LEFT JOIN PeptideModification pm ON psm.Id=pm.PeptideSpectrumMatch " +
                 "LEFT JOIN Modification mod ON pm.Modification=mod.Id " +
                 "LEFT JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +

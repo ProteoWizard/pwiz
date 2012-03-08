@@ -72,7 +72,7 @@ namespace IDPicker.Forms
             this.keyColumn.HeaderText = "Sequence";
             this.keyColumn.Name = "keyColumn";
             this.keyColumn.ReadOnly = true;
-            this.keyColumn.Width = 81;
+            this.keyColumn.Width = 250;
             // 
             // distinctPeptidesColumn
             // 

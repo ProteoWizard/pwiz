@@ -501,6 +501,9 @@
     <None Include="Resources\SpectrumViewIcon.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="QuasiTel V2.R">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <None Include="Resources\BlankIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

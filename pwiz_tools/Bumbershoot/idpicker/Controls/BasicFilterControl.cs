@@ -57,12 +57,13 @@ namespace IDPicker.Controls
                 return new DataFilter()
                 {
                     MaximumQValue = maxQValue / 100,
-                    //MaxAmbiguousIds
-                    //MinPeptideLength
                     MinimumDistinctPeptidesPerProtein = minDistinctPeptidesTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minDistinctPeptidesTextBox.Text),
                     //MinDistinctMatchesPerProtein
                     MinimumAdditionalPeptidesPerProtein = minAdditionalPeptidesTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minAdditionalPeptidesTextBox.Text),
-                    MinimumSpectraPerProtein = minSpectraTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraTextBox.Text)
+                    MinimumSpectraPerProtein = minSpectraPerProteinTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraPerProteinTextBox.Text),
+                    MinimumSpectraPerDistinctPeptide = minSpectraPerPeptideTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraPerPeptideTextBox.Text),
+                    MinimumSpectraPerDistinctMatch = minSpectraPerMatchTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minSpectraPerMatchTextBox.Text),
+                    MaximumProteinGroupsPerPeptide = maxProteinGroupsTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(maxProteinGroupsTextBox.Text),
                 };
             }
 
@@ -70,12 +71,13 @@ namespace IDPicker.Controls
             {
                 settingDataFilter = true;
                 maxQValueComboBox.Text = (value.MaximumQValue * 100).ToString();
-                //maxAmbiguousIds
-                //minPeptideLength
                 minDistinctPeptidesTextBox.Text = value.MinimumDistinctPeptidesPerProtein.ToString();
                 //minDistinctMatches
                 minAdditionalPeptidesTextBox.Text = value.MinimumAdditionalPeptidesPerProtein.ToString();
-                minSpectraTextBox.Text = value.MinimumSpectraPerProtein.ToString();
+                minSpectraPerProteinTextBox.Text = value.MinimumSpectraPerProtein.ToString();
+                minSpectraPerPeptideTextBox.Text = value.MinimumSpectraPerDistinctPeptide.ToString();
+                minSpectraPerMatchTextBox.Text = value.MinimumSpectraPerDistinctMatch.ToString();
+                maxProteinGroupsTextBox.Text = value.MaximumProteinGroupsPerPeptide.ToString();
                 settingDataFilter = false;
             }
         }

@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Data.SQLite;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Resources;
@@ -41,6 +42,7 @@ using DigitalRune.Windows.Docking;
 using IDPicker.Forms;
 using IDPicker.Controls;
 using IDPicker.DataModel;
+using pwiz.CLI.chemistry;
 using pwiz.CLI.cv;
 using pwiz.CLI.proteome;
 using pwiz.CLI.util;
@@ -125,27 +127,35 @@ namespace IDPicker
 
             fragmentationStatisticsForm = new FragmentationStatisticsForm(this);
             fragmentationStatisticsForm.Show(dockPanel, DockState.DockBottomAutoHide);
+            fragmentationStatisticsForm.AutoHidePortion = 0.5;
 
             peakStatisticsForm = new PeakStatisticsForm(this);
             peakStatisticsForm.Show(dockPanel, DockState.DockBottomAutoHide);
+            peakStatisticsForm.AutoHidePortion = 0.5;
 
             reassignPSMsForm = new RescuePSMsForm(this);
             reassignPSMsForm.Show(dockPanel, DockState.DockBottomAutoHide);
+            reassignPSMsForm.AutoHidePortion = 0.5;
 
             spectrumTableForm = new SpectrumTableForm();
             spectrumTableForm.Show(dockPanel, DockState.DockLeft);
+            spectrumTableForm.AutoHidePortion = 0.5;
 
             proteinTableForm = new ProteinTableForm();
             proteinTableForm.Show(dockPanel, DockState.DockTop);
+            proteinTableForm.AutoHidePortion = 0.5;
 
             peptideTableForm = new PeptideTableForm();
             peptideTableForm.Show(proteinTableForm.Pane, DockPaneAlignment.Right, 0.7);
+            peptideTableForm.AutoHidePortion = 0.5;
 
             modificationTableForm = new ModificationTableForm();
             modificationTableForm.Show(dockPanel, DockState.Document);
+            modificationTableForm.AutoHidePortion = 0.5;
 
             analysisTableForm = new AnalysisTableForm();
             analysisTableForm.Show(dockPanel, DockState.Document);
+            analysisTableForm.AutoHidePortion = 0.5;
 
             spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
             spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
@@ -332,7 +342,53 @@ namespace IDPicker
         }
 
         #region Handling of events for spectrum/protein visualization
+
+        public static string LocateSpectrumSource (string spectrumSourceName)
+        {
+            if (String.IsNullOrEmpty(spectrumSourceName))
+                return String.Empty;
+
+            try
+            {
+                return Util.FindSourceInSearchPath(spectrumSourceName, ".");
+            }
+            catch
+            {
+                try
+                {
+                    return Util.FindSourceInSearchPath(spectrumSourceName, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
+                }
+                catch
+                {
+                    var findDirectoryDialog = new FolderBrowserDialog()
+                    {
+                        SelectedPath = Properties.GUI.Settings.Default.LastSpectrumSourceDirectory,
+                        ShowNewFolderButton = false,
+                        Description = "Locate the directory containing the source \"" + spectrumSourceName + "\""
+                    };
+
+                    while (findDirectoryDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        try
+                        {
+                            string sourcePath = Util.FindSourceInSearchPath(spectrumSourceName, findDirectoryDialog.SelectedPath);
+                            Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
+                            Properties.GUI.Settings.Default.Save();
+                            return sourcePath;
+                        }
+                        catch
+                        {
+                            // couldn't find the source in that directory; prompt user again
+                        }
+                    }
+
+                    return String.Empty; // user canceled
+                }
+            }
+        }
+
         Dictionary<GraphForm, bool> handlerIsAttached = new Dictionary<GraphForm, bool>();
+        Dictionary<GraphForm, PeptideFragmentationAnnotation> annotationByGraphForm = new Dictionary<GraphForm, PeptideFragmentationAnnotation>();
         void spectrumTableForm_SpectrumViewVisualize (object sender, SpectrumViewVisualizeEventArgs e)
         {
             var spectrum = e.Spectrum;
@@ -341,43 +397,17 @@ namespace IDPicker
             string sourcePath;
             if (source.Metadata != null)
             {
-                // accessing the Metadata property creates a temporary mzML file;
-                // here we access the path to that file
-                var tmpSourceFile = source.Metadata.fileDescription.sourceFiles.Last();
-                sourcePath = Path.Combine(new Uri(tmpSourceFile.location).LocalPath, tmpSourceFile.name);
+                //BeginInvoke(new MethodInvoker(() => toolStripStatusLabel.Text = "Extracting embedded spectrum source: " + source.Name));
+
+                // accessing the Metadata property creates a temporary mz5 file
+                var mz5 = source.Metadata as TemporaryMSDataFile;
+                sourcePath = mz5.Filepath;
             }
             else
             {
-                try
-                {
-                    sourcePath = Util.FindSourceInSearchPath(source.Name, ".");
-                }
-                catch
-                {
-                    try
-                    {
-                        // try the last looked-in path
-                        sourcePath = Util.FindSourceInSearchPath(source.Name, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
-                    }
-                    catch
-                    {
-                        // prompt user to find the source
-                        var eventArgs = new SourceNotFoundEventArgs() { SourcePath = source.Name };
-                        sourceNotFoundOnVisualizeHandler(this, eventArgs);
-
-                        if (eventArgs.SourcePath == source.Name)
-                            return; // user canceled
-
-                        if (File.Exists(eventArgs.SourcePath) || Directory.Exists(eventArgs.SourcePath))
-                        {
-                            Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = Path.GetDirectoryName(eventArgs.SourcePath);
-                            Properties.GUI.Settings.Default.Save();
-                            sourcePath = eventArgs.SourcePath;
-                        }
-                        else
-                            throw; // file still not found, abort the visualization
-                    }
-                }
+                sourcePath = LocateSpectrumSource(source.Name);
+                if (String.IsNullOrEmpty(sourcePath))
+                    return; // file still not found, abort the visualization
             }
 
             var param = e.Analysis.Parameters.Where(o => o.Name == "SpectrumListFilters").SingleOrDefault();
@@ -388,20 +418,54 @@ namespace IDPicker
             if (sourcePath.ToLower().EndsWith(".mgf"))
                 ionSeries = PeptideFragmentationAnnotation.IonSeries.b | PeptideFragmentationAnnotation.IonSeries.y;
 
+            bool showFragmentationLadders = true;
+            bool showMissedFragments = false;
+            bool showLabels = true;
+            bool showFragmentationSummary = false;
+            MZTolerance tolerance = null;
+
+            if (manager.CurrentGraphForm != null && annotationByGraphForm[manager.CurrentGraphForm] != null)
+            {
+                var panel = PeptideFragmentationAnnotation.annotationPanels;
+                showFragmentationLadders = panel.showFragmentationLaddersCheckBox.Checked;
+                showMissedFragments = panel.showMissesCheckBox.Checked;
+                showFragmentationSummary = panel.showFragmentationSummaryCheckBox.Checked;
+                if (panel.fragmentToleranceTextBox.Text.Length > 0)
+                {
+                    tolerance = new MZTolerance();
+                    tolerance.value = Convert.ToDouble(panel.fragmentToleranceTextBox.Text);
+                    tolerance.units = (MZTolerance.Units) panel.fragmentToleranceUnitsComboBox.SelectedIndex;
+                }
+                else
+                    tolerance = null;
+            }
+
             var annotation = new PeptideFragmentationAnnotation(e.ModifiedSequence, 1, Math.Max(1, e.Charge - 1),
-                                                                ionSeries, true, false, true, false);
+                                                                tolerance,
+                                                                ionSeries,
+                                                                showFragmentationLadders,
+                                                                showMissedFragments,
+                                                                showLabels,
+                                                                showFragmentationSummary);
 
             (manager.SpectrumAnnotationForm.Controls[0] as ToolStrip).Hide();
             (manager.SpectrumAnnotationForm.Controls[1] as SplitContainer).Panel1Collapsed = true;
             (manager.SpectrumAnnotationForm.Controls[1] as SplitContainer).Dock = DockStyle.Fill;
 
+            //BeginInvoke(new MethodInvoker(() => toolStripStatusLabel.Text = toolStripStatusLabel.Text = "Opening spectrum source: " + sourcePath));
+
             manager.OpenFile(sourcePath, spectrum.NativeID, annotation, spectrumListFilters);
             manager.CurrentGraphForm.Focus();
+            manager.CurrentGraphForm.Icon = Properties.Resources.SpectrumViewIcon;
+
+            //BeginInvoke(new MethodInvoker(() => toolStripStatusLabel.Text = toolStripStatusLabel.Text = "Ready"));
+
+            annotationByGraphForm[manager.CurrentGraphForm] = annotation;
 
             if (!handlerIsAttached.ContainsKey(manager.CurrentGraphForm))
             {
                 handlerIsAttached[manager.CurrentGraphForm] = true;
-                manager.CurrentGraphForm.ZedGraphControl.PreviewKeyDown += new PreviewKeyDownEventHandler(CurrentGraphForm_PreviewKeyDown);
+                manager.CurrentGraphForm.ZedGraphControl.PreviewKeyDown += CurrentGraphForm_PreviewKeyDown;
             }
         }
 
@@ -662,40 +726,6 @@ namespace IDPicker
             new Thread(() => { OpenFiles(args, null); }).Start();
         }
 
-        void sourceNotFoundOnVisualizeHandler (object sender, SourceNotFoundEventArgs e)
-        {
-            if (String.IsNullOrEmpty(e.SourcePath))
-                return;
-
-            if (InvokeRequired)
-            {
-                Invoke(new MethodInvoker(() => sourceNotFoundOnVisualizeHandler(sender, e)));
-                return;
-            }
-
-            var findDirectoryDialog = new FolderBrowserDialog()
-            {
-                SelectedPath = Properties.GUI.Settings.Default.LastSpectrumSourceDirectory,
-                ShowNewFolderButton = false,
-                Description = "Locate the directory containing the source \"" + e.SourcePath + "\""
-            };
-
-            while (findDirectoryDialog.ShowDialog() == DialogResult.OK)
-            {
-                try
-                {
-                    e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
-                    Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
-                    Properties.GUI.Settings.Default.Save();
-                    return;
-                }
-                catch
-                {
-                    // couldn't find the source in that directory; prompt user again
-                }
-            }
-        }
-
         void OpenFiles (IList<string> filepaths, TreeNode rootNode)
         {
             try
@@ -917,9 +947,10 @@ namespace IDPicker
                     idpDB_filepaths = new List<string>() {commonFilename};
                 }
 
-                // if the database can fit in the available RAM, populate the disk cache
+                // if the database is on a hard drive and can fit in the available RAM, populate the disk cache
                 long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
-                if (ramBytesAvailable > new FileInfo(commonFilename).Length)
+                if (ramBytesAvailable > new FileInfo(commonFilename).Length &&
+                    DriveType.Fixed == new DriveInfo(Path.GetPathRoot(commonFilename)).DriveType)
                 {
                     toolStripStatusLabel.Text = "Precaching idpDB...";
                     using (var fs = new FileStream(commonFilename, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, (1 << 15), FileOptions.SequentialScan))
@@ -934,6 +965,8 @@ namespace IDPicker
                     var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
 
                     // reload qonverter settings because the ids may change after merging
+                    toolStripStatusLabel.Text = "Loading qonverter settings...";
+                    statusStrip.Refresh();
                     session = sessionFactory.OpenSession();
                     qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
 
@@ -946,6 +979,7 @@ namespace IDPicker
                     _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
 
                     toolStripStatusLabel.Text = "Refreshing group structure...";
+                    statusStrip.Refresh();
                     var usedGroups = GroupingControlForm.SetInitialStructure(rootNode, session);
                     if (usedGroups != null && usedGroups.Any())
                     {
@@ -2237,6 +2271,42 @@ namespace IDPicker
                     exporter.WriteProteins(saveDialog.FileName, addDecoys);
             }
         }
+
+        private void toQuasitelToolStripMenuItem_Click (object sender, EventArgs e)
+        {
+            if (session == null)
+                return;
+
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string programFilesRoot = Path.GetPathRoot(programFiles);
+            string rPath;
+            if (Directory.Exists(Path.Combine(programFiles, "R")))
+                rPath = Path.Combine(programFiles, "R");
+            else if (Directory.Exists(Path.Combine(programFilesRoot, "Program Files/R")))
+                rPath = Path.Combine(programFilesRoot, "Program Files/R");
+            else if (Directory.Exists(Path.Combine(programFilesRoot, "Program Files (x86)/R")))
+                rPath = Path.Combine(programFilesRoot, "Program Files (x86)/R");
+            else
+                throw new FileNotFoundException("unable to find an installation of R in Program Files");
+
+            string rFilepath = Directory.GetFiles(rPath, "Rscript.exe", SearchOption.AllDirectories).LastOrDefault();
+            if (rFilepath == null)
+                throw new FileNotFoundException("unable to find an installation of R in Program Files");
+
+            string quasitelFilepath = Path.Combine(Application.StartupPath, "QuasiTel V2.R");
+            if (!File.Exists(quasitelFilepath))
+                throw new FileNotFoundException("unable to find QuasiTel R script");
+
+            string idpDbFilepath = session.Connection.GetDataSource();
+
+            var process = new System.Diagnostics.Process
+            {
+                StartInfo = new ProcessStartInfo(rFilepath, String.Format("\"{0}\" \"{1}\"", quasitelFilepath, idpDbFilepath))
+            };
+            process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
+            process.StartInfo.CreateNoWindow = false;
+            process.Start();
+        }
     }
 
     internal class ClusterInfo
@@ -2246,10 +2316,5 @@ namespace IDPicker
         public int peptideCount { get; set; }
         public long spectraCount { get; set; }
         public List<List<List<string>>> clusterTables { get; set; }
-    }
-
-    public class SourceNotFoundEventArgs : EventArgs
-    {
-        public string SourcePath { get; set; }
     }
 }

@@ -48,10 +48,6 @@ namespace IDPicker.Forms
 
     public partial class FragmentationStatisticsForm : DockableForm
     {
-        public event EventHandler<SourceNotFoundEventArgs> SourceNotFound;
-
-        //public DataGridView DataGridView { get { return dataGridView; } }
-
         #region Wrapper class for encapsulating query results
         public class SpectrumRow
         {
@@ -99,15 +95,15 @@ namespace IDPicker.Forms
 
         private enum IonSeries
         {
-            a, b, c, cMinus1,
-            x, y, z, zPlus1, zPlus2,
+            a, b, c, //cMinus1,
+            x, y, z, //zPlus1, zPlus2,
             Count
         }
 
         private string[] IonSeriesLabels =
         {
-            "a", "b", "c", "c-1",
-            "x", "y", "z", "z+1", "z+2"
+            "a", "b", "c", //"c-1",
+            "x", "y", "z", //"z+1", "z+2"
         };
 
         public FragmentationStatisticsForm (IDPickerForm owner)
@@ -372,7 +368,7 @@ namespace IDPicker.Forms
             double q3 = sortedNumbers[sortedNumbers.Count * 3 / 4];
             double max = sortedNumbers.Last();
 
-            string label = String.Format("Max: {0:G4}%\n3rd Quartile: {1:G4}%\nMedian: {2:G4}%\n1st Quartile: {3:G4}%\nMin: {4:G4}%\nMean: {5:G4}%", max, q3, median, q1, min, mean);
+            string label = String.Format("Max: {0:G4}\n3rd Quartile: {1:G4}\nMedian: {2:G4}\n1st Quartile: {3:G4}\nMin: {4:G4}\nMean: {5:G4}", max, q3, median, q1, min, mean);
             graphPane.CurveList[0].AddPoint(new PointPair(0, mean, label));
             graphPane.CurveList[1].AddPoint(new PointPair(0, max, q3, label));
             graphPane.CurveList[1].AddPoint(new PointPair(0, q1, min, label));
@@ -443,7 +439,7 @@ namespace IDPicker.Forms
                 if (row.SourceName != currentSourceName)
                 {
                     currentSourceName = row.SourceName;
-                    currentSourcePath = locateSpectrumSource(currentSourceName);
+                    currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName);
                     msd = new pwiz.CLI.msdata.MSDataFile(currentSourcePath);
 
                     //var param = session.Query<AnalysisParameter>().Where(o => o.Name == "SpectrumListFilters").Min(o => o.Value);
@@ -480,9 +476,9 @@ namespace IDPicker.Forms
                     itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
-                        percentTicByFragmentType[0] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[0];
-                        meanMzErrorByFragmentType[0] += (itr.Current.Key - expected) / expected * 1e6;
+                        percentTicByFragmentType[(int) IonSeries.a] += itr.Current.Value;
+                        ++percentPeakCountByFragmentType[(int) IonSeries.a];
+                        meanMzErrorByFragmentType[(int) IonSeries.a] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     // b
@@ -490,9 +486,9 @@ namespace IDPicker.Forms
                     itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
-                        percentTicByFragmentType[1] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[1];
-                        meanMzErrorByFragmentType[1] += (itr.Current.Key - expected) / expected * 1e6;
+                        percentTicByFragmentType[(int) IonSeries.b] += itr.Current.Value;
+                        ++percentPeakCountByFragmentType[(int) IonSeries.b];
+                        meanMzErrorByFragmentType[(int) IonSeries.b] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     if (length != pwizPeptide.sequence.Length)
@@ -502,28 +498,28 @@ namespace IDPicker.Forms
                         itr = pointMap.FindNear(expected, 0.5);
                         if (itr != null && itr.IsValid)
                         {
-                            percentTicByFragmentType[2] += itr.Current.Value;
-                            ++percentPeakCountByFragmentType[2];
-                            meanMzErrorByFragmentType[2] += (itr.Current.Key - expected) / expected * 1e6;
+                            percentTicByFragmentType[(int) IonSeries.a] += itr.Current.Value;
+                            ++percentPeakCountByFragmentType[(int) IonSeries.a];
+                            meanMzErrorByFragmentType[(int) IonSeries.a] += (itr.Current.Key - expected) / expected * 1e6;
                         }
 
                         // c-1
-                        itr = pointMap.FindNear(fragmentation.c(length, z) - Proton.Mass / z, 0.5);
+                        /*itr = pointMap.FindNear(fragmentation.c(length, z) - Proton.Mass / z, 0.5);
                         if (itr != null && itr.IsValid)
                         {
                             percentTicByFragmentType[3] += itr.Current.Value;
                             ++percentPeakCountByFragmentType[3];
                             meanMzErrorByFragmentType[3] += itr.Current.Key - fragmentation.c(length, z) - Proton.Mass / z;
-                        }
+                        }*/
 
                         // x
                         expected = fragmentation.x(length, z);
                         itr = pointMap.FindNear(expected, 0.5);
                         if (itr != null && itr.IsValid)
                         {
-                            percentTicByFragmentType[4] += itr.Current.Value;
-                            ++percentPeakCountByFragmentType[4];
-                            meanMzErrorByFragmentType[4] += (itr.Current.Key - expected) / expected * 1e6;
+                            percentTicByFragmentType[(int) IonSeries.x] += itr.Current.Value;
+                            ++percentPeakCountByFragmentType[(int) IonSeries.x];
+                            meanMzErrorByFragmentType[(int) IonSeries.x] += (itr.Current.Key - expected) / expected * 1e6;
                         }
                     }
 
@@ -532,9 +528,9 @@ namespace IDPicker.Forms
                     itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
-                        percentTicByFragmentType[5] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[5];
-                        meanMzErrorByFragmentType[5] += (itr.Current.Key - expected) / expected * 1e6;
+                        percentTicByFragmentType[(int) IonSeries.y] += itr.Current.Value;
+                        ++percentPeakCountByFragmentType[(int) IonSeries.y];
+                        meanMzErrorByFragmentType[(int) IonSeries.y] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     // z
@@ -542,13 +538,13 @@ namespace IDPicker.Forms
                     itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
-                        percentTicByFragmentType[6] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[6];
-                        meanMzErrorByFragmentType[6] += (itr.Current.Key - expected) / expected * 1e6;
+                        percentTicByFragmentType[(int) IonSeries.z] += itr.Current.Value;
+                        ++percentPeakCountByFragmentType[(int) IonSeries.z];
+                        meanMzErrorByFragmentType[(int) IonSeries.z] += (itr.Current.Key - expected) / expected * 1e6;
                     }
 
                     // z+1
-                    expected = fragmentation.zRadical(length, z);
+                    /*expected = fragmentation.zRadical(length, z);
                     itr = pointMap.FindNear(expected, 0.5);
                     if (itr != null && itr.IsValid)
                     {
@@ -564,7 +560,7 @@ namespace IDPicker.Forms
                         percentTicByFragmentType[8] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[8];
                         meanMzErrorByFragmentType[8] += itr.Current.Key - fragmentation.zRadical(length, z) + Proton.Mass / z;
-                    }
+                    }*/
                 }
 
                 var rng = new Random();
@@ -697,37 +693,6 @@ namespace IDPicker.Forms
             //dataGridView.Rows.Clear();
             //dataGridView.Rows.Add(fragmentationStatistics.Cast<object>().ToArray());
             //dataGridView.Refresh();
-        }
-
-        string locateSpectrumSource (string spectrumSourceName)
-        {
-            try
-            {
-                return Util.FindSourceInSearchPath(spectrumSourceName, ".");
-            }
-            catch
-            {
-                try
-                {
-                    return Util.FindSourceInSearchPath(spectrumSourceName, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
-                }
-                catch
-                {
-                    if (SourceNotFound != null)
-                    {
-                        var eventArgs = new SourceNotFoundEventArgs() {SourcePath = spectrumSourceName};
-                        SourceNotFound(this, eventArgs);
-                        if (System.IO.File.Exists(eventArgs.SourcePath) || System.IO.Directory.Exists(eventArgs.SourcePath))
-                        {
-                            Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = System.IO.Path.GetDirectoryName(eventArgs.SourcePath);
-                            Properties.GUI.Settings.Default.Save();
-                            return eventArgs.SourcePath;
-                        }
-                    }
-
-                    throw;
-                }
-            }
         }
 
         #region Export stuff

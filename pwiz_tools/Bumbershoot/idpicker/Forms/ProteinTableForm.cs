@@ -560,7 +560,7 @@ namespace IDPicker.Forms
             {
                 var row = baseRow as ClusterRow;
                 if (columnIndex == keyColumn.Index) return row.Cluster;
-                else if (columnIndex == countColumn.Index) return row.ProteinCount;
+                else if (columnIndex == countColumn.Index) return row.ProteinGroupCount;
                 else if (columnIndex == distinctPeptidesColumn.Index) return row.DistinctPeptides;
                 else if (columnIndex == distinctMatchesColumn.Index) return row.DistinctMatches;
                 else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
