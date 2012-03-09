@@ -28,6 +28,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline
 {
@@ -51,6 +52,18 @@ namespace pwiz.Skyline
         [STAThread]
         public static void Main()
         {
+            // don't allow 64-bit Skyline to run in a 32-bit process
+            if (Install.Is64Bit && !Environment.Is64BitProcess)
+            {
+                string installUrl = Install.Url;
+                string installLabel = (installUrl == "") ? "" : string.Format("Install 32-bit {0}", Program.Name);
+                AlertLinkDlg.Show(null,
+                    string.Format("You are attempting to run a 64-bit version of {0} on a 32-bit OS.  Please install the 32-bit version.", Program.Name),
+                    installLabel,
+                    installUrl);
+                return;
+            }
+
             if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
@@ -104,60 +117,12 @@ namespace pwiz.Skyline
         public static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
             List<string> stackTraceList = Settings.Default.StackTraceList;
-            var reportChoice = ReportErrorDlg.ReportChoice.choice;
-            // If it was not network deployed, then either it is just a developer build,
-            // or it was deployed in an environment where posting back to the web may not
-            // be allowed.  In either case, never post directly to the web site.
-            if (!ApplicationDeployment.IsNetworkDeployed)
-                reportChoice = ReportErrorDlg.ReportChoice.never;
-            else
-            {
-                string version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-                string[] versionParts = version.Split('.');
-                // Version #.#.0.# is used for release builds
-                // If it is not a release build, then always post error reports
-                if (versionParts.Length > 2 && !Equals(versionParts[2], "0"))
-                    reportChoice = ReportErrorDlg.ReportChoice.always;
 
-                if (!Equals(Settings.Default.StackTraceListVersion, version))
-                {
-                    Settings.Default.StackTraceListVersion = version;
-                    stackTraceList.Clear();
-                }
-            }
-
-            using (var reportForm = new ReportErrorDlg(e.Exception, reportChoice))
+            using (var reportForm = new ReportErrorDlg(e.Exception, stackTraceList))
             {
-                if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
-                {
-                    string stackText = reportForm.StackTraceText;
-                    if (!stackTraceList.Contains(stackText))
-                    {
-                        stackTraceList.Add(stackText);
-                        SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType);
-                    }
-                }
+                reportForm.ShowDialog(MainWindow);
             }         
         }
-
-        private static void SendErrorReport(string messageBody, string exceptionType)
-        {
-            WebClient webClient = new WebClient();
-
-            const string address = "https://brendanx-uw1.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view";
-
-            NameValueCollection form = new NameValueCollection
-                                           {
-                                               { "title", "Unhandled " + exceptionType},
-                                               { "body", messageBody },
-                                               { "fromDiscussion", "false"},
-                                               { "allowMultipleDiscussions", "false"},
-                                               { "rendererType", "TEXT_WITH_LINKS"}
-                                           };
-
-            webClient.UploadValues(address, form);
-        }
-
 
         public static SkylineWindow MainWindow { get; private set; }
         public static SrmDocument ActiveDocument { get { return MainWindow.Document; } }

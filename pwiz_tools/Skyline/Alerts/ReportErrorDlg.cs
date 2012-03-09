@@ -18,20 +18,23 @@
  */
 
 using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Deployment.Application;
+using System.Net;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
     public partial class ReportErrorDlg : Form
     {
-        public enum ReportChoice { choice, always, never }
-
-        public ReportErrorDlg(Exception e, ReportChoice reportChoice)
+        public ReportErrorDlg(Exception e, List<string> stackTraceList)
         {
             _exception = e;
+            _stackTraceList = stackTraceList;
 
             InitializeComponent();
 
@@ -41,29 +44,66 @@ namespace pwiz.Skyline.Alerts
 
             tbSourceCodeLocation.Text = StackTraceText;
 
-            // If the user runs the daily version, they automatically
-            // agree to letting us send reports.
-            if (reportChoice != ReportChoice.choice)
+            Install.InstallType installType = Install.Type;
+
+            // The user can choose to send the error report unless he's running the daily version,
+            // which automatically sends the report.
+            if (installType == Install.InstallType.daily)
             {
                 btnOK.Visible = false;
                 btnOK.DialogResult = DialogResult.None;
 
                 btnCancel.Text = "Close";
-                if (reportChoice == ReportChoice.always)
-                    btnCancel.DialogResult = DialogResult.OK;
+                btnCancel.DialogResult = DialogResult.OK;
                 AcceptButton = btnCancel;
 
                 StringBuilder error = new StringBuilder("An unexpected error has occurred, as shown below.");
-                if (reportChoice == ReportChoice.always)
-                    error.AppendLine().Append("An error report will be posted.");
+                error.AppendLine().Append("An error report will be posted.");
 
                 lblReportError.Text = error.ToString();
             }
         }
 
-        public static Exception _exception;
+        private void OkDialog()
+        {
+            if (!Equals(Settings.Default.StackTraceListVersion, Install.Version))
+            {
+                Settings.Default.StackTraceListVersion = Install.Version;
+                _stackTraceList.Clear();
+            }
 
-        public string StackTraceText
+            string stackText = StackTraceText;
+            if (!_stackTraceList.Contains(stackText))
+            {
+                _stackTraceList.Add(stackText);
+                SendErrorReport(MessageBody, ExceptionType);
+            }
+
+            DialogResult = DialogResult.OK;
+        }
+
+        private void SendErrorReport(string messageBody, string exceptionType)
+        {
+            WebClient webClient = new WebClient();
+
+            const string address = "https://brendanx-uw1.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view";
+
+            NameValueCollection form = new NameValueCollection
+                                           {
+                                               { "title", "Unhandled " + exceptionType},
+                                               { "body", messageBody },
+                                               { "fromDiscussion", "false"},
+                                               { "allowMultipleDiscussions", "false"},
+                                               { "rendererType", "TEXT_WITH_LINKS"}
+                                           };
+
+            webClient.UploadValues(address, form);
+        }
+
+        private readonly Exception _exception;
+        private readonly List<string> _stackTraceList;
+
+        private string StackTraceText
         {
             get
             {
@@ -86,25 +126,24 @@ namespace pwiz.Skyline.Alerts
         }
 
     
-        public string MessageBody
+        private string MessageBody
         {
             get
             {
                 StringBuilder sb = new StringBuilder();
-                if (!string.IsNullOrEmpty(tbEmail.Text))
+                if (!String.IsNullOrEmpty(tbEmail.Text))
                     sb.Append("User email address: ").AppendLine(tbEmail.Text);
                 
-                if (!string.IsNullOrEmpty(tbMessage.Text))
+                if (!String.IsNullOrEmpty(tbMessage.Text))
                     sb.Append("User comments:").AppendLine().AppendLine(tbMessage.Text).AppendLine();
                 
                 if (ApplicationDeployment.IsNetworkDeployed)
                 {
-                    string version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
-                    sb.Append("Skyline version: ").AppendLine(version);
+                    sb.Append("Skyline version: ").AppendLine(Install.Version);
                 }
 
                 string guid = Settings.Default.InstallationId;
-                if (string.IsNullOrEmpty(guid))
+                if (String.IsNullOrEmpty(guid))
                     guid = Settings.Default.InstallationId = Guid.NewGuid().ToString();
                 sb.Append("Installation ID: ").AppendLine(guid);
 
@@ -118,7 +157,7 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        public string ExceptionType
+        private string ExceptionType
         {
             get
             {
@@ -127,11 +166,14 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        public void btnClipboard_Click(object sender, EventArgs e)
+        private void btnClipboard_Click(object sender, EventArgs e)
         {
             Clipboard.SetDataObject(MessageBody, true);
         }
 
-        
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }        
     }
 }

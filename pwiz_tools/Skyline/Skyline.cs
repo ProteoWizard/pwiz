@@ -95,13 +95,6 @@ namespace pwiz.Skyline
         {
             InitializeComponent();
 
-            // don't allow 64-bit Skyline to run in a 32-bit process
-            if (!Environment.Is64BitProcess && File.Exists("fileio_x64.dll"))
-            {
-                MessageDlg.Show(this, "Sorry, you are attempting to run a 64-bit version of Skyline on a 32-bit OS.  Please install the 32-bit version.");
-                throw new InvalidOperationException("Installed 64-bit version on 32-bit OS");
-            }
-
             _undoManager = new UndoManager(this);
             _undoRedoButtons = new UndoRedoButtons(_undoManager,
                 undoMenuItem, undoToolBarButton,

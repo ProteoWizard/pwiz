@@ -56,8 +56,8 @@
             // tbMessage
             // 
             this.tbMessage.AcceptsTab = true;
-            this.tbMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tbMessage.Location = new System.Drawing.Point(12, 304);
             this.tbMessage.Name = "tbMessage";
             this.tbMessage.Size = new System.Drawing.Size(549, 80);
@@ -93,7 +93,7 @@
             this.lblReportError.Size = new System.Drawing.Size(350, 36);
             this.lblReportError.TabIndex = 7;
             this.lblReportError.Text = "An unexpected error has occurred, as shown below.\r\nReport the error to help impro" +
-                "ve Skyline.";
+    "ve Skyline.";
             // 
             // label1
             // 
@@ -107,9 +107,9 @@
             // 
             // tbSourceCodeLocation
             // 
-            this.tbSourceCodeLocation.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbSourceCodeLocation.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tbSourceCodeLocation.Location = new System.Drawing.Point(12, 123);
             this.tbSourceCodeLocation.Multiline = true;
             this.tbSourceCodeLocation.Name = "tbSourceCodeLocation";
@@ -149,8 +149,8 @@
             // 
             // tbErrorDescription
             // 
-            this.tbErrorDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbErrorDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tbErrorDescription.Location = new System.Drawing.Point(12, 72);
             this.tbErrorDescription.Multiline = true;
             this.tbErrorDescription.Name = "tbErrorDescription";
@@ -163,13 +163,13 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Location = new System.Drawing.Point(402, 428);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 4;
             this.btnOK.Text = "Report";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // ReportErrorDlg
             // 

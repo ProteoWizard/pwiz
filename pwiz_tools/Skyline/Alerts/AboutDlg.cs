@@ -22,6 +22,7 @@ using System.Deployment.Application;
 using System.Diagnostics;
 using System.IO;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -31,10 +32,10 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            labelSoftwareVersion.Text = string.Format("{0} {1} {2}",
+            labelSoftwareVersion.Text = string.Format("{0}{1} {2}",
                     Program.Name,
-                    (File.Exists("fileio_x64.dll") ? "(64-bit)" : ""),
-                    (ApplicationDeployment.IsNetworkDeployed ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString() : ""));
+                    (Install.Is64Bit ? " (64-bit)" : ""),
+                    (ApplicationDeployment.IsNetworkDeployed ? Install.Version : ""));
         }
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
