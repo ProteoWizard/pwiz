@@ -339,7 +339,7 @@ namespace pwiz.ProteowizardWrapper
 
         private static MsDataSpectrum GetSpectrum(Spectrum spectrum)
         {
-            if (spectrum != null)
+            if (spectrum != null && spectrum.binaryDataArrays.Count > 1)
             {
                 try
                 {

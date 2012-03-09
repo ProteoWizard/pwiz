@@ -92,13 +92,26 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return !Environment.Is64BitProcess;   // no 64-bit reader yet
+                return !IsDebugMode &&  // no waters library for debug
+                    !Environment.Is64BitProcess;   // no 64-bit reader yet
             }
         }
 
         public static string ExtWatersRaw
         {
             get { return CanImportWatersRaw ? ".raw" : ".mzML"; }
+        }
+
+        private static bool IsDebugMode
+        {
+            get
+            {
+#if DEBUG
+                return true;
+#else
+                return false;
+#endif
+            }
         }
     }
 }

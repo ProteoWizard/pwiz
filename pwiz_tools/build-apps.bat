@@ -42,24 +42,27 @@ IF EXIST "%CD%\quickbuild.bat" (
 REM # register correct MSFileReader
 if "%REGISTER%"=="1" (
     echo.
-    echo Registering MSFileReader [please OK the dialog box to continue]
+    echo Registering MSFileReader
     echo.
     if "%TARGETPLATFORM%"=="64" (
         IF EXIST "c:\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll" regsvr32 /s /u "c:\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll"
-        IF EXIST "c:\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll" regsvr32 "c:\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll"
-        REM # regsvr32 doesn't return a non-zero ERRORLEVEL if it fails, so I removed the /s flag so we could see failures, but the bat file will continue to execute
+        REM # regsvr32 must be called through cmd /c for it to impact %ERRORLEVEL% with the /s option
+        IF EXIST "c:\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll" cmd /c "regsvr32 /s "c:\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll""
         if %ERRORLEVEL% GTR 0 (
             echo *** Couldn't register 64-bit MSFileReader
             exit /b
         )
+        echo *** Registered 64-bit MSFileReader
+
     ) else (
         IF EXIST "c:\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll" regsvr32 /s /u "c:\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll"
-        IF EXIST "c:\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll" regsvr32 "c:\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll"
-        REM # regsvr32 doesn't return a non-zero ERRORLEVEL if it fails, so I removed the /s flag so we could see failures, but the bat file will continue to execute
+        REM # regsvr32 must be called through cmd /c for it to impact %ERRORLEVEL% with the /s option
+        IF EXIST "c:\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll" cmd /c "regsvr32 /s "c:\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll""
         if %ERRORLEVEL% GTR 0 (
             echo *** Couldn't register 32-bit MSFileReader
             exit /b
         )
+        echo *** Registered 32-bit MSFileReader
     )
 ) else (
     echo.

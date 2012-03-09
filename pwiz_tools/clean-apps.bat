@@ -7,7 +7,7 @@ set PWIZ_ROOT=%~dp0
 set PWIZ_ROOT=%PWIZ_ROOT:~0,-1%
 pushd %PWIZ_ROOT%
 
-echo Cleaning .NET applications...
+echo   Cleaning .NET applications...
 for /d /r Shared\BiblioSpec %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Shared\Common %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
 for /d /r Shared\Crawdad %%d in (obj, bin) do @if exist "%%d" rmdir /s/q "%%d"
