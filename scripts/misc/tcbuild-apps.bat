@@ -28,6 +28,7 @@ shift
 goto setArgs
 :doneSetArgs
 
+set EXIT=0
 set PROGRAM_FILES_DRIVE=%ProgramFiles:~0,2%
 
 REM # register correct MSFileReader
@@ -38,24 +39,18 @@ if "%TARGETPLATFORM%"=="64" (
     IF EXIST "%PROGRAM_FILES_DRIVE%\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll" regsvr32 /s /u "%PROGRAM_FILES_DRIVE%\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll"
     REM # regsvr32 must be called through cmd /c for it to impact %ERRORLEVEL% with the /s option
     IF EXIST "%PROGRAM_FILES_DRIVE%\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll" cmd /c "regsvr32 /s ""%PROGRAM_FILES_DRIVE%\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll"""
-    if %ERRORLEVEL% GTR 0 (
-        echo *** Couldn't register 64-bit MSFileReader
-        exit /b
-    )
+    set EXIT=%ERRORLEVEL%
+    if %EXIT% NEQ 0 ERROR_TEXT=Error registering MSFileReader & goto error
     echo *** Registered 64-bit MSFileReader
 
 ) else (
     IF EXIST "%PROGRAM_FILES_DRIVE%\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll" regsvr32 /s /u "%PROGRAM_FILES_DRIVE%\Program Files\Thermo\MSFileReader\XRawfile2_x64.dll"
     REM # regsvr32 must be called through cmd /c for it to impact %ERRORLEVEL% with the /s option
     IF EXIST "%PROGRAM_FILES_DRIVE%\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll" cmd /c "regsvr32 /s ""%PROGRAM_FILES_DRIVE%\Program Files (x86)\Thermo\MSFileReader\XRawfile2.dll"""
-    if %ERRORLEVEL% GTR 0 (
-        echo *** Couldn't register 32-bit MSFileReader
-        exit /b
-    )
+    set EXIT=%ERRORLEVEL%
+    if %EXIT% NEQ 0 ERROR_TEXT=Error registering MSFileReader & goto error
     echo *** Registered 32-bit MSFileReader
 )
-
-set EXIT=0
 
 REM # call clean
 echo ##teamcity[progressMessage 'Cleaning project...']
