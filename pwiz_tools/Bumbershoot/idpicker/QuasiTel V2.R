@@ -364,6 +364,8 @@ quasitelgui <- function(inputfile = NULL) {
     tkgrid(bott.frm)
     tkgrid.columnconfigure(base, 0, weight=1)
 
+    tcl("wm", "attributes", base, topmost=TRUE)
+    tcl("wm", "attributes", base, topmost=FALSE)
     tkfocus(base)
 
     if (length(inputfile) > 0) { datafile.open(inputfile) }
