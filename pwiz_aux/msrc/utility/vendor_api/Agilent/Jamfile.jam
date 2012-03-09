@@ -92,7 +92,7 @@ exe MassHunterDataTest
 
 explicit MassHunterDataTest ;
 
-if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
 install install_pwiz_vendor_api_agilent
     : $(API_PATH)/$(PLATFORM)/agtsampleinforw.dll
@@ -105,7 +105,7 @@ install install_pwiz_vendor_api_agilent
 }
 else
 {
-install install_pwiz_vendor_api_thermo ;
+install install_pwiz_vendor_api_agilent ;
 }
 
 explicit install_pwiz_vendor_api_agilent ;
