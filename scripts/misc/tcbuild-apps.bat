@@ -63,6 +63,7 @@ REM # the --abbreviate-paths argument abbreviates paths like .../ftr1-value/ftr2
 
 REM # call quickbuild to build and run tests
 echo ##teamcity[progressMessage 'Running build-apps...']
+echo quickbuild.bat %TARGETS% %ARGS% -p1 --abbreviate-paths --teamcity-test-decoration
 call quickbuild.bat %TARGETS% %ARGS% -p1 --abbreviate-paths --teamcity-test-decoration
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 set ERROR_TEXT=Error running quickbuild & goto error
