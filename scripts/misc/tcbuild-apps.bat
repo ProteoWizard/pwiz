@@ -10,9 +10,16 @@ pushd %SCRIPTS_MISC_ROOT%\..\..
 REM # argument of 32 or 64 sets target platform (default 32)
 set TARGETPLATFORM=32
 
-set ARGS=%*
-echo %* | find "address-model=64"
-if %ERRORLEVEL% EQU 0 set TARGETPLATFORM=64
+set ALL_ARGS= %*
+
+if "%ALL_ARGS: 32=%" neq "%*" (
+    set TARGETPLATFORM=32
+    set ALL_ARGS=%ALL_ARGS: 32=%
+)
+if "%ALL_ARGS: 64=%" neq "%*" (
+    set TARGETPLATFORM=64
+    set ALL_ARGS=%ALL_ARGS: 64=%
+)
 
 set EXIT=0
 set PROGRAM_FILES_DRIVE=%ProgramFiles:~0,2%
@@ -32,8 +39,8 @@ REM # the --abbreviate-paths argument abbreviates paths like .../ftr1-value/ftr2
 
 REM # call quickbuild to build and run tests
 echo ##teamcity[progressMessage 'Running build-apps...']
-echo quickbuild.bat %* -p1 --abbreviate-paths --teamcity-test-decoration
-call quickbuild.bat %* -p1 --abbreviate-paths --teamcity-test-decoration
+echo quickbuild.bat %ALL_ARGS% -p1 --abbreviate-paths --teamcity-test-decoration
+call quickbuild.bat %ALL_ARGS% -p1 --abbreviate-paths --teamcity-test-decoration
 set EXIT=%ERRORLEVEL%
 if %EXIT% NEQ 0 set ERROR_TEXT=Error running quickbuild & goto error
 
