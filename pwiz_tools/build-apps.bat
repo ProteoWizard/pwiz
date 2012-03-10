@@ -10,19 +10,19 @@ set REGISTER=
 
 set ALL_ARGS= %*
 
-if "%ALL_ARGS: 32=%" neq "%*" (
+if "%ALL_ARGS: 32=%" neq "%ALL_ARGS%" (
     set TARGETPLATFORM=32
     set ALL_ARGS=%ALL_ARGS: 32=%
 )
-if "%ALL_ARGS: 64=%" neq "%*" (
+if "%ALL_ARGS: 64=%" neq "%ALL_ARGS%" (
     set TARGETPLATFORM=64
     set ALL_ARGS=%ALL_ARGS: 64=%
 )
-if "%ALL_ARGS: register=%" neq "%*" (
+if "%ALL_ARGS: register=%" neq "%ALL_ARGS%" (
     set REGISTER=1
     set ALL_ARGS=%ALL_ARGS: register=%
 )
-if "%ALL_ARGS: REGISTER=%" neq "%*" (
+if "%ALL_ARGS: REGISTER=%" neq "%ALL_ARGS%" (
     set REGISTER=1
     set ALL_ARGS=%ALL_ARGS: REGISTER=%
 )

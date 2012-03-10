@@ -12,11 +12,11 @@ set TARGETPLATFORM=32
 
 set ALL_ARGS= %*
 
-if "%ALL_ARGS: 32=%" neq "%*" (
+if "%ALL_ARGS: 32=%" neq "%ALL_ARGS%" (
     set TARGETPLATFORM=32
     set ALL_ARGS=%ALL_ARGS: 32=%
 )
-if "%ALL_ARGS: 64=%" neq "%*" (
+if "%ALL_ARGS: 64=%" neq "%ALL_ARGS%" (
     set TARGETPLATFORM=64
     set ALL_ARGS=%ALL_ARGS: 64=%
 )
