@@ -792,7 +792,7 @@ namespace pwiz.Skyline
                 DataObject data = provider.ProvideData();
                 int levels = node.Level - shallowestLevel;
                 int lineBreaks = GetLineBreakCount(node, prev);
-                string providerHtml = (string) data.GetData("HTML Format");
+                string providerHtml = (string)data.GetData(DataFormats.Html);
                 if (providerHtml != null)
                     AppendClipboardText(htmlSb, new HtmlFragment(providerHtml).Fragment,
                         "<br>\r\n", "&nbsp;&nbsp;&nbsp;&nbsp;", levels, lineBreaks);
@@ -824,12 +824,12 @@ namespace pwiz.Skyline
             sbData.Append("proteins-selected=").Append(selectionContainsProteins).AppendLine();
             sbData.AppendLine();
             sbData.Append(stringWriter);
-            dataObj.SetData("Skyline Format", sbData.ToString());
+            dataObj.SetData(ClipboardEx.SKYLINE_FORMAT, sbData.ToString());
 
             try
             {
-                Clipboard.Clear();
-                Clipboard.SetDataObject(dataObj);
+                ClipboardEx.Clear();
+                ClipboardEx.SetDataObject(dataObj);
             }
             catch (ExternalException)
             {
@@ -856,7 +856,7 @@ namespace pwiz.Skyline
 
             try
             {
-                dataObjectSkyline = (string) Clipboard.GetData("Skyline Format");
+                dataObjectSkyline = (string)ClipboardEx.GetData(ClipboardEx.SKYLINE_FORMAT);
             }
             catch (ExternalException)
             {
@@ -900,8 +900,8 @@ namespace pwiz.Skyline
                 string textCsv;
                 try
                 {
-                    text = Clipboard.GetText().Trim();
-                    textCsv = Clipboard.GetText(TextDataFormat.CommaSeparatedValue);
+                    text = ClipboardEx.GetText().Trim();
+                    textCsv = ClipboardEx.GetText(TextDataFormat.CommaSeparatedValue);
                 }
                 catch (ExternalException)
                 {

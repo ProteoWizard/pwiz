@@ -64,8 +64,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 try
                 {
-                    Clipboard.Clear();
-                    Clipboard.SetText(sb.ToString());
+                    ClipboardEx.Clear();
+                    ClipboardEx.SetText(sb.ToString());
                 }
                 catch (ExternalException)
                 {

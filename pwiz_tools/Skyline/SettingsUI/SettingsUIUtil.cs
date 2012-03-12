@@ -74,7 +74,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             try
             {
-                return Clipboard.GetText();
+                return ClipboardEx.GetText();
             }
             catch (ExternalException)
             {

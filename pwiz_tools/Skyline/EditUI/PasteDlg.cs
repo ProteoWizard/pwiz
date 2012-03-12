@@ -1225,7 +1225,7 @@ namespace pwiz.Skyline.EditUI
 
             try
             {
-                text = Clipboard.GetText();
+                text = ClipboardEx.GetText();
             }
             catch (ExternalException)
             {

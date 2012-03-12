@@ -956,6 +956,7 @@
     </Compile>
     <Compile Include="Util\Xml.cs" />
     <Compile Include="Model\DocSettings\XmlNamedElement.cs" />
+    <Compile Include="Util\ClipboardEx.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\app.manifest" />

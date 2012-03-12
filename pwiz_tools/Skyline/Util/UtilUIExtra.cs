@@ -28,7 +28,7 @@ namespace pwiz.Skyline.Util
         /// <exception cref="ExternalException" />
         public static HtmlFragment FromClipboard()
         {
-            string rawClipboardText = Clipboard.GetText(TextDataFormat.Html);
+            string rawClipboardText = ClipboardEx.GetText(TextDataFormat.Html);
             HtmlFragment h = new HtmlFragment(rawClipboardText);
             return h;
         }
@@ -46,7 +46,7 @@ namespace pwiz.Skyline.Util
 
             // Note the counters are byte counts in the original string, which may be Ansi. So byte counts
             // may be the same as character counts (since sizeof(char) == 1).
-            // But System.String is unicode, and so byte couns are no longer the same as character counts,
+            // But System.String is unicode, and so byte counts are no longer the same as character counts,
             // (since sizeof(wchar) == 2). 
             int startHmtl = 0;
 
@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Util
         /// <exception cref="ExternalException" />
         public static void CopyToClipboard(string htmlFragment, string title, Uri sourceUrl)
         {
-            Clipboard.SetText(ClipBoardText(htmlFragment, title, sourceUrl), TextDataFormat.Html);
+            ClipboardEx.SetText(ClipBoardText(htmlFragment, title, sourceUrl), TextDataFormat.Html);
         }
 
         public static string ClipBoardText(string htmlFragment)

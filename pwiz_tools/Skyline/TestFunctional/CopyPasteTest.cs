@@ -151,7 +151,7 @@ namespace pwiz.SkylineTestFunctional
                 if (data == null)
                     continue;
                 int levels = node.Level - shallowestLevel;
-                string providerHtml = (string) data.GetData("HTML Format");
+                string providerHtml = (string)data.GetData(DataFormats.Html);
                 if (providerHtml != null)
                     AppendText(htmlSb, new HtmlFragment(providerHtml).Fragment,
                         HTML_LINE_BREAK, HTML_INDENT, levels, lineBreaks);
@@ -169,7 +169,7 @@ namespace pwiz.SkylineTestFunctional
 
             try
             {
-                clipboardText = Clipboard.GetText();
+                clipboardText = ClipboardEx.GetText();
                 clipboardHtml = GetClipboardHtml();
             }
             catch (ExternalException)
@@ -183,8 +183,7 @@ namespace pwiz.SkylineTestFunctional
 
         private static string GetClipboardHtml()
         {
-            var dataObject = (MemoryStream)Clipboard.GetData("HTML format");
-            return new StreamReader(dataObject).ReadToEnd();            
+            return (string)ClipboardEx.GetData(DataFormats.Html);
         }
 
         private static void AppendText(StringBuilder sb, string text, string lineSep, string indent, int levels, int lineBreaks)

@@ -68,8 +68,8 @@ namespace pwiz.Skyline.EditUI
             var allText = string.Join("\r\n", list.ToArray());
             try
             {
-                Clipboard.Clear();
-                Clipboard.SetText(allText);
+                ClipboardEx.Clear();
+                ClipboardEx.SetText(allText);
             }
             catch (ExternalException)
             {

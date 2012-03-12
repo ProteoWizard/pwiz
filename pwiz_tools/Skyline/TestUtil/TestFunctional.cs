@@ -164,7 +164,8 @@ namespace pwiz.SkylineTestUtil
         {
             try
             {
-                Clipboard.SetText(text);
+                ClipboardEx.UseInternalClipboard();
+                ClipboardEx.SetText(text);
             }
             catch (ExternalException)
             {
@@ -406,6 +407,10 @@ namespace pwiz.SkylineTestUtil
                                                  doc => doc.ChangeSettings(SrmSettingsList.GetDefault()));
                 });
             
+            // Use internal clipboard for testing so that we don't collide with other processes
+            // using the clipboard during a test run.
+            ClipboardEx.UseInternalClipboard();
+
             DoTest();
             EndTest();
         }
