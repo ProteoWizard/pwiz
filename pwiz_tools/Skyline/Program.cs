@@ -18,11 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Deployment.Application;
 using System.IO;
 using System.IO.Pipes;
-using System.Net;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -133,7 +130,7 @@ namespace pwiz.Skyline
         /// </summary>
         public static string Name
         {
-            get { return Settings.Default.ProgramName; }
+            get { return Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? "-daily" : ""); }
         }
     }
 
