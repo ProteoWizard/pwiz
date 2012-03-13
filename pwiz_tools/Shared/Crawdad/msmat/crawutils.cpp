@@ -102,7 +102,7 @@ namespace crawutils {
   void file_info::strip_extension( char delim ) {
     if ( ! ext_stripped ) {
       std::string tmp_s("");
-      uint last_ext_pos = filename.rfind(delim);
+      uint last_ext_pos = (uint) filename.rfind(delim);
       if (  last_ext_pos != std::string::npos )  {
 	tmp_s.append(filename,0,last_ext_pos);
 	std::cerr << "stripped extension" << tmp_s << std::endl;
@@ -175,8 +175,8 @@ namespace crawutils {
   }	
 
 std::string trim_whitespace ( const std::string & in_str ) {
-   int start_ws = in_str.find_first_not_of(" \t\n\r");
-   int stop_ws  = in_str.find_last_not_of(" \t\n\r");
+   size_t start_ws = in_str.find_first_not_of(" \t\n\r");
+   size_t stop_ws  = in_str.find_last_not_of(" \t\n\r");
    return in_str.substr(start_ws, stop_ws - start_ws + 1);
 }
 
@@ -916,7 +916,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     float diff = *rh - *lh;
     assert( half_val >= *lh && *rh >= half_val);
     assert(diff >= 0);
-    uint lh_idx = lh - cum_sum.begin();
+    uint lh_idx = (uint) (lh - cum_sum.begin());
     if ( diff == 0 ) {
       return lh_idx + 0.5f;
     }
@@ -1039,7 +1039,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     char * delim_pos = strrchr((char*)str, delim);
     if ( delim_pos == NULL ) return NULL;
    
-    uint len = delim_pos - str;
+    uint len = (uint)(delim_pos - str);
     strncpy( new_str, str, len);
     new_str[len] = '\0';
     return new_str;
@@ -1052,7 +1052,7 @@ void make_idx_segments ( int num_mzs, int num_rts, int num_mzs_segments, int num
     std::vector<size_t> ps;
     int pos = 0;
     while ( true ) {
-      pos = s.find(c, pos);
+      pos = (int) s.find(c, pos);
       if ( pos < 0 ) {
 	break;
       }
@@ -1228,8 +1228,8 @@ return drand48();
 
 std::vector< TwoGroupsType >
 permute_two_groups ( IdxGroupType g1, IdxGroupType g2 ) {
-   int g1_len = g1.size();
-   int g2_len = g2.size();
+   int g1_len = (int) g1.size();
+   int g2_len = (int) g2.size();
   
    //vector for storing all selections of size(len(g1))
    std::vector< std::vector< int > > g1_permutes;   
@@ -1326,15 +1326,15 @@ std::vector< std::vector< int > > unique_selections ( std::vector< int > vals , 
   }
 
   void spectra_sqrt ( std::vector<float> & s, void * p ) {
-    int size = s.size();
-    for ( int i = 0 ; i < size ; i++ ) {
+    size_t size = s.size();
+    for ( size_t i = 0 ; i < size ; i++ ) {
       float intensity = s[i];
       s[i] = sqrtf(intensity);
     }
   }
   void spectra_log10 ( std::vector<float> & s, void * p){
-    int size = s.size();
-    for ( int i = 0 ; i < size ; i ++ ) {
+    size_t size = s.size();
+    for ( size_t i = 0 ; i < size ; i ++ ) {
       float intensity = s[i];
       if ( intensity <= 0.0f ) {
 	s[i] = 0.0f;
@@ -1357,10 +1357,10 @@ std::vector< std::vector< int > > unique_selections ( std::vector< int > vals , 
   ///zeros out all but the top N signals in a spectrum
   void spectra_topN ( std::vector<float> & s , void * p ) {
     int n = *(int*)p;
-    int size = s.size();
-    std::vector< std::pair<float,int> > sorted(s.size());
-    for ( int i = 0 ; i < (int)s.size() ; i++ ) {
-      sorted[i].second = i;
+    size_t size = s.size();
+    std::vector< std::pair<float,int> > sorted(size);
+    for ( size_t i = 0 ; i < s.size() ; i++ ) {
+      sorted[i].second = (int) i;
       sorted[i].first = s[i];
     }
     std::sort(sorted.begin(),sorted.end());
@@ -1372,11 +1372,11 @@ std::vector< std::vector< int > > unique_selections ( std::vector< int > vals , 
   }
   ///converts a spectrum to the top N rank values, the rest are zero
   void spectra_topN_rank ( std::vector<float> & s , void * p ) {
-    int size = s.size();
+    size_t size = s.size();
     int n = *(int*)p;
-    std::vector< std::pair<float,int> > sorted(s.size());
-    for ( int i = 0 ; i < (int)s.size() ; i++ ) {
-      sorted[i].second = i;
+    std::vector< std::pair<float,int> > sorted(size);
+    for ( size_t i = 0 ; i < size ; i++ ) {
+      sorted[i].second = (int) i;
       sorted[i].first = s[i];
     }
     //std::pair is sorted first by 'first' field, i.e intensity, from lowest to highest

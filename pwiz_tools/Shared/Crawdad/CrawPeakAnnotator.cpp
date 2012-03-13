@@ -550,7 +550,7 @@ void CrawPeakAnnotator::extend_to_zero_crossing ( SlimCrawPeak & peak , float pe
    float lh_cutoff = c2d_intensity_at_lh_bound * perc_towards_valley;
 
    std::vector<int>::iterator f = std::lower_bound(this->pf->plus_crosses.begin(), this->pf->plus_crosses.end(), peak.stop_rt_idx );
-   int plus_cross_to_right_idx  = f - this->pf->plus_crosses.begin();
+   int plus_cross_to_right_idx  = (int)(f - this->pf->plus_crosses.begin());
    if ( plus_cross_to_right_idx == this->pf->plus_crosses.size() - 1 )  {
       //TODO -- extend out to last point?
    }
@@ -563,7 +563,7 @@ void CrawPeakAnnotator::extend_to_zero_crossing ( SlimCrawPeak & peak , float pe
        }
    }
 
-   int minus_cross_to_left_idx = std::lower_bound(this->pf->minus_crosses.begin(), this->pf->minus_crosses.end(), peak.start_rt_idx ) - this->pf->minus_crosses.begin();
+   int minus_cross_to_left_idx = (int) (std::lower_bound(this->pf->minus_crosses.begin(), this->pf->minus_crosses.end(), peak.start_rt_idx ) - this->pf->minus_crosses.begin());
    if ( minus_cross_to_left_idx == 0 ) {
       //TODO -- extend out to last point?
    }

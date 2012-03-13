@@ -78,15 +78,15 @@ void GaussSmoother::trim_weights_by_frac_max(float frac ) {
     first_keep = last_keep = -1;
     float weights_max = crawutils::max_vect(this->weights);
     float thresh = weights_max * frac;
-    for ( int i = 0 ; i < (int)this->weights.size() ; i++ ) {
+    for ( size_t i = 0 ; i < this->weights.size() ; i++ ) {
         if ( fabs(weights[i]) >= thresh ) {
-            first_keep = i;
+            first_keep = (int)i;
             break;
         }
     }
-    for ( int i = weights.size() - 1; i>= first_keep ; i-- ) {
+    for ( size_t i = weights.size() - 1; i>= first_keep ; i-- ) {
         if ( fabs(weights[i]) >= thresh ) {
-            last_keep = i;
+            last_keep = (int)i;
             break;
         }
     }
@@ -95,7 +95,7 @@ void GaussSmoother::trim_weights_by_frac_max(float frac ) {
     for ( int i = 0 ; i < (int)new_weights.size() ; i++ ) {
        new_weights[i] = weights[first_keep+i];
     }
-    this->set_weight_size(new_weights.size());
+    this->set_weight_size((int)new_weights.size());
     this->set_weights(new_weights);
 }
 

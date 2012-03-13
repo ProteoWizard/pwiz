@@ -217,7 +217,7 @@ void BaseCrawPeakFinder::peaks_and_valleys_fast( std::vector<float> & c ) {
 
   }
   //adding a valley at the end of the chrom
-  valleys.push_back(c.size() - 1);
+  valleys.push_back((int) c.size() - 1);
   
 #ifdef GFDEBUG
     std::ofstream ps("peaks.tab");
@@ -295,7 +295,7 @@ void BaseCrawPeakFinder::peaks_and_valleys_brendanx( std::vector<float> & c ) {
     }
     //adding a valley at the end of the chromatogram
     if (iValley == iPeak)
-        valleys[iValley++] = c.size()-1;
+        valleys[iValley++] = (int) c.size()-1;
     // Make sure the arrays are the right size
     valleys.resize(iValley);
     peaks.resize(iPeak);
@@ -350,7 +350,7 @@ void BaseCrawPeakFinder::peaks_and_valleys_slow( std::vector<float> & c ) {
       }
     }
     //adding a valley at the end of the chromatogram
-    valleys.push_back(c.size()-1);
+    valleys.push_back((int) c.size()-1);
   }
 
 #ifdef GFDEBUG
@@ -511,7 +511,7 @@ void BaseCrawPeakFinder::call_peaks() {
       }
       else {
           lh_valley = valleys[0];
-          rh_valley = chrom_2d.size() - 1;
+          rh_valley = (int)chrom_2d.size() - 1;
       }
     }
 
@@ -522,7 +522,7 @@ void BaseCrawPeakFinder::call_peaks() {
     }
     else if ( lh_valley_idx >= valleys.size() - 1 ) {
       lh_valley = valleys[lh_valley_idx-1];
-      rh_valley = chrom_2d.size() - 1;
+      rh_valley = (int) chrom_2d.size() - 1;
     }
     else {
       lh_valley = valleys[lh_valley_idx];
@@ -750,11 +750,11 @@ SlimCrawPeak * CrawPeakFinder::get_peak_ptr(int idx) {
 
 
 int CrawPeakFinder::get_num_stored_peaks() {
-  return sps.size();
+  return (int) sps.size();
 }
 
 int StackCrawPeakFinder::get_num_stored_peaks() {
-  return sps.size();
+  return (int) sps.size();
 }
 
 

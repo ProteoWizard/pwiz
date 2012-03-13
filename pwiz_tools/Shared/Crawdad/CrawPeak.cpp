@@ -54,7 +54,7 @@ namespace crawpeaks {
      
     // begin erynes BUGBUG DEBUG
     if (!raw.empty())
-      raw_area = crawutils::area_under_curve(raw, start_idx, stop_idx);
+      raw_area = (float)crawutils::area_under_curve(raw, start_idx, stop_idx);
     // end erynes BUGBUG DEBUG
 
     //calculate_slope( raw );

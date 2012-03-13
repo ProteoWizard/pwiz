@@ -54,7 +54,7 @@ void UnevenChromSmoother::smooth_vect(const std::vector<float> &raw_vec,
       }
    }
 
-   for ( int i = RT.size() - 1; i > safe_start_rt_idx ; i-- ) {
+   for ( int i = (int)RT.size() - 1; i > safe_start_rt_idx ; i-- ) {
       rt_delt = RT.back() - RT[i];
       if ( (this->rt_filter_half_size) <= rt_delt ) {
          safe_stop_rt_idx = i;
@@ -79,8 +79,8 @@ void UnevenChromSmoother::smooth_vect(const std::vector<float> &raw_vec,
        float RT_rh = RT[i] + (float)this->rt_filter_half_size;
        std::vector<float>::const_iterator lh_bound = std::lower_bound(RT.begin(), RT.end(), RT_lh);
        std::vector<float>::const_iterator rh_bound = std::lower_bound(RT.begin(), RT.end(), RT_rh);
-       int lh_idx = lh_bound - RT.begin() + 1;
-       int rh_idx = rh_bound - RT.begin();
+       int lh_idx = (int) (lh_bound - RT.begin()) + 1;
+       int rh_idx = (int) (rh_bound - RT.begin());
        float t = 0.0f;
        for ( int j = lh_idx ; j <= rh_idx ; j++ ) {
            float rt_delta = RT[j] - RT[i] - (float)this->rt_filter_half_size;
@@ -112,7 +112,7 @@ void ChromSmoother::smooth_vect_discrete( const std::vector<float> & raw_vec, st
 	    for ( int i = 0 ; i < half_window_size ; i++ ) {
 	      out_vec[i] = raw_vec[i]; 
 	    }
-	    for ( uint i = raw_vec.size() - half_window_size; i < raw_vec.size() ; i++) {
+	    for ( uint i = (uint)raw_vec.size() - half_window_size; i < (uint)raw_vec.size() ; i++) {
 	      out_vec[i] = raw_vec[i];
 	    }
 	    /* we assume the weights are normalized */
@@ -162,7 +162,7 @@ int ChromSmoother::spike_filter( const std::vector<float> & raw_vec, std::vector
        }
    }
    if ( spike_points <= spike_len ) {
-       for ( int b = smooth_vect.size() - 1 - spike_points ; b < (int)smooth_vect.size() - 1 ; b++ ) {
+       for ( int b = (int)smooth_vect.size() - 1 - spike_points ; b < (int)smooth_vect.size() - 1 ; b++ ) {
            smooth_vect[b] = baseline;
        }
        num_spikes++;

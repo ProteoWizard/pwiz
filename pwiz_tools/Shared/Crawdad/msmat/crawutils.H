@@ -498,9 +498,9 @@ std::vector<double> vect_multd( std::vector<data_type> & a, std::vector<data_typ
 template <typename data_type>
 data_type mult_accum_vects( const std::vector<data_type> & a, const std::vector<data_type> & b ) {
     assert(a.size() == b.size());
-    uint lim = a.size();
+    size_t lim = a.size();
     data_type accum = (data_type)0.0;
-	for ( uint i = 0 ; i < lim ; i++ ) {
+	for ( size_t i = 0 ; i < lim ; i++ ) {
        accum += a[i] * b[i];
 	}
     return accum;
@@ -684,13 +684,13 @@ uint get_lh_idx (std::vector<T> & v, T lookup ) {
 	typename std::vector<T>::iterator lh = lower_bound(begin , end, lookup);
     if ( lh == end ) {
         //std::cerr << "after end" << std::endl;
-        return v.size() - 1;
+        return (uint) v.size() - 1;
     }
     if ( lookup == *lh ) { 
-      return lh - begin;
+      return (uint) (lh - begin);
     }
     else if ( lh == begin ) { return 0 ; }
-    else { return ( lh - 1 - begin ) ; }
+    else { return (uint) ( lh - 1 - begin ) ; }
 }
 
 std::vector<std::string> * split_string( std::string & s, char c );
@@ -825,7 +825,7 @@ template <typename T>
         }
         //even
         else {
-          int rh_mid = v_c.size() / 2;
+          int rh_mid = (int)v_c.size() / 2;
           return (v_c[rh_mid] + v_c[rh_mid-1]) / 2.0;
         }
     }

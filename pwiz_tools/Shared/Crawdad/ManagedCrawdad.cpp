@@ -98,7 +98,7 @@ namespace Crawdad {
                     break;
                 }
             }
-            int len = intensities.size();
+            int len = (int)intensities.size();
             int iEnd = len - 1;
             for (int i = maxIntensityIndex + 1; i < len; i++)
             {
@@ -134,7 +134,7 @@ namespace Crawdad {
         }
 
         // Marshall 2nd derivative peaks back to managed list
-	    List<float>^ intensities2d = gcnew List<float>(_pPeakFinder->chrom.size() - _widthDataWings*2);
+	    List<float>^ intensities2d = gcnew List<float>(((int)_pPeakFinder->chrom.size()) - _widthDataWings*2);
 
         vector<float>::iterator it = _pPeakFinder->chrom_2d.begin() + _widthDataWings;
         vector<float>::iterator itEnd = _pPeakFinder->chrom_2d.end() - _widthDataWings;
@@ -156,7 +156,7 @@ namespace Crawdad {
         }
 
         // Marshall 2nd derivative peaks back to managed list
-	    List<float>^ intensities1d = gcnew List<float>(_pPeakFinder->chrom.size() - _widthDataWings*2);
+	    List<float>^ intensities1d = gcnew List<float>(((int)_pPeakFinder->chrom.size()) - _widthDataWings*2);
 
         vector<float>::iterator it = _pPeakFinder->chrom_1d.begin() + _widthDataWings;
         vector<float>::iterator itEnd = _pPeakFinder->chrom_1d.end() - _widthDataWings;
@@ -190,11 +190,11 @@ namespace Crawdad {
         _pPeakFinder->call_peaks();
 
         // Marshall found peaks to managed list
-	    List<CrawdadPeak^>^ result = gcnew List<CrawdadPeak^>(_pPeakFinder->sps.size());
+	    List<CrawdadPeak^>^ result = gcnew List<CrawdadPeak^>((int)_pPeakFinder->sps.size());
         vector<SlimCrawPeak>::iterator itPeak = _pPeakFinder->sps.begin();
         vector<SlimCrawPeak>::iterator itPeakEnd = _pPeakFinder->sps.end();
         double totalArea = 0;
-		int stop_rt = _pPeakFinder->chrom.size() - _widthDataWings - 1;
+		int stop_rt = (int)_pPeakFinder->chrom.size() - _widthDataWings - 1;
 		int adjust_stop_rt = stop_rt - _widthDataWings;
         while (itPeak != itPeakEnd)
         {
