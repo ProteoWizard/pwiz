@@ -42,9 +42,9 @@ namespace directag
     SpectraList                         spectra;
     boost::lockfree::fifo<Spectrum*>    taggingTasks;
     TaggingStatistics                   taggingStatistics;
-	map< char, float >                  compositionInfo;
+    PeakFilteringStatistics             peakStatistics;
 
-	RunTimeConfig*               g_rtConfig;
+    shared_ptr<RunTimeConfig>   rtConfig;
 
 	// Code for ScanRanker
 	vector<NativeID>		mergedSpectraIndices;
@@ -57,10 +57,6 @@ namespace directag
 	float					tagMzRangeIQR;
 	size_t					numTaggedSpectra;
 
-
-	double lnCombin( int a, int b ) { return lnCombin( a, b, g_lnFactorialTable ); }
-	float GetMassOfResidues( const string& a, bool b ) { return g_residueMap->GetMassOfResidues( a, b ); }
-
 	void WriteTagsToTagsFile(	const string& inputFilename,
 								string startTime,
 								string startDate,
@@ -69,7 +65,7 @@ namespace directag
 		string filenameAsScanName;
 		filenameAsScanName =	inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
 								inputFilename.find_last_of( '.' ) - inputFilename.find_last_of( SYS_PATH_SEPARATOR )-1 );
-		string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + ".tags";
+		string outputFilename = filenameAsScanName + rtConfig->OutputSuffix + ".tags";
 
 		stringstream header;
 		header << "H\tTagsGenerator\tDirecTag\n" <<
@@ -92,7 +88,7 @@ namespace directag
 																						opcs[4] << " (" << fpcs[4] << ")\n";*/
 
 		cout << "Writing tags to \"" << outputFilename << "\"." << endl;
-		spectra.writeTags( inputFilename, g_rtConfig->OutputSuffix, header.str(), g_rtConfig->getVariables() );
+		spectra.writeTags( inputFilename, rtConfig->OutputSuffix, header.str(), rtConfig->getVariables() );
 		spectra.clear();
 	}
 
@@ -234,7 +230,7 @@ namespace directag
 		{
 			try
 			{
-				if( !g_rtConfig->UseChargeStateFromMS )
+				if( !rtConfig->UseChargeStateFromMS )
 					spectra.setId( s->id, SpectrumId( s->id.nativeID, 0 ) );
 
 				if( s->id.charge == 0 )
@@ -247,12 +243,13 @@ namespace directag
 					{
 						postChargeId.setCharge(2);
 
-						if( g_rtConfig->DuplicateSpectra )
+						if( rtConfig->DuplicateSpectra )
 						{
-							for( int z = 3; z <= g_rtConfig->NumChargeStates; ++z )
+							for( int z = 3; z <= rtConfig->NumChargeStates; ++z )
 							{
 								Spectrum* s2 = new Spectrum( *s );
 								s2->id.setCharge(z);
+                                s2->setTagConfig(rtConfig);
 								duplicates.push_back(s2);
 							}
 						}
@@ -285,7 +282,7 @@ namespace directag
 		cout << "Finished determining spectrum charge states; " << timer.End() << " seconds elapsed." << endl;
 		cout << "Filtering peaks in " << spectra.size() << " spectra." << endl;
 
-		timer.Begin();
+		/*timer.Begin();
 		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 		{
 			try
@@ -306,15 +303,15 @@ namespace directag
 		cout << "Finished filtering peaks; " << timer.End() << " seconds elapsed." << endl;
 
 		int postTrimCount = 0;
-		postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
+		postTrimCount = spectra.filterByPeakCount( rtConfig->minIntensityClassCount );
 
-		cout << "Trimmed " << postTrimCount << " spectra for being too small after peak filtering." << endl;
+		cout << "Trimmed " << postTrimCount << " spectra for being too small after peak filtering." << endl;*/
 	}
 
 	vector< int > workerNumbers;
 	int numSearched;
 
-	void ExecutePipelineThread()
+    void ExecuteSequenceTagger()
 	{
         try
         {
@@ -325,43 +322,7 @@ namespace directag
 			        break;
 
 			    Spectrum* s = taggingTask;
-			    ++ taggingStatistics.numSpectraTagged;
-
-			    //s->DetermineSpectrumChargeState();
-			    START_PROFILER(0)
-			    s->Preprocess();
-			    STOP_PROFILER(0)
-
-			    if( (int) s->peakPreData.size() < g_rtConfig->minIntensityClassCount )
-				    continue;
-
-			    START_PROFILER(1)
-			    taggingStatistics.numResidueMassGaps += s->MakeTagGraph();
-			    STOP_PROFILER(1)
-
-			    s->MakeProbabilityTables();
-
-			    //s->tagGraphs.clear();
-			    //s->nodeSet.clear();
-			    deallocate(s->nodeSet);
-
-			    START_PROFILER(2)
-			    taggingStatistics.numTagsGenerated += s->Score();
-			    STOP_PROFILER(2)
-
-			    taggingStatistics.numTagsRetained += s->tagList.size();
-
-			    //s->gapMaps.clear();
-			    //s->tagGraphs.clear();
-			    deallocate(s->gapMaps);
-			    deallocate(s->tagGraphs);
-			    if( !g_rtConfig->MakeSpectrumGraphs )
-			    {
-				    //s->peakPreData.clear();
-				    //s->peakData.clear();
-				    deallocate(s->peakPreData);
-				    deallocate(s->peakData);
-			    }
+                s->processAndTagSpectrum(peakStatistics, taggingStatistics, true);
 		    }
         } catch( std::exception& e )
         {
@@ -393,7 +354,7 @@ namespace directag
         vector<boost::thread*> workerThreads;
 
 		for (int i = 0; i < g_numWorkers; ++i)
-            workerThreads.push_back(workerThreadGroup.create_thread(&ExecutePipelineThread));
+            workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteSequenceTagger));
 
         if (g_numChildren > 0)
         {
@@ -408,13 +369,13 @@ namespace directag
             {
                 // returns true if the thread finished before the timeout;
                 // (each thread index is joined until it finishes)
-                if (!workerThreads[i]->timed_join(bpt::seconds(round(g_rtConfig->StatusUpdateFrequency))))
+                if (!workerThreads[i]->timed_join(bpt::seconds(round(rtConfig->StatusUpdateFrequency))))
                     --i;
 
                 bpt::ptime current = bpt::microsec_clock::local_time();
 
                 // only make one update per StatusUpdateFrequency seconds
-                if ((current - lastUpdate).total_microseconds() / 1e6 < g_rtConfig->StatusUpdateFrequency)
+                if ((current - lastUpdate).total_microseconds() / 1e6 < rtConfig->StatusUpdateFrequency)
                     continue;
 
                 lastUpdate = current;
@@ -440,8 +401,7 @@ namespace directag
                DIRECTAG_LICENSE << endl;
 
 		g_residueMap = new ResidueMap;
-		g_rtConfig = new RunTimeConfig;
-		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
+		rtConfig = shared_ptr<RunTimeConfig>(new RunTimeConfig);
 		g_endianType = GetHostEndianType();
 		g_numWorkers = GetNumProcessors();
 
@@ -466,7 +426,7 @@ namespace directag
         {
             if( args[i] == "-cfg" && i+1 <= args.size() )
             {
-                if( g_rtConfig->initializeFromFile( args[i+1] ) )
+                if( rtConfig->initializeFromFile( args[i+1] ) )
                 {
                     cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
                     return 1;
@@ -486,9 +446,9 @@ namespace directag
             return 1;
         }
 
-        if( !g_rtConfig->initialized() )
+        if( !rtConfig->initialized() )
         {
-            if( g_rtConfig->initializeFromFile() )
+            if( rtConfig->initializeFromFile() )
             {
                 cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
             }
@@ -502,7 +462,7 @@ namespace directag
         }
 
 		// Command line overrides happen after config file has been distributed but before PTM parsing
-		RunTimeVariableMap vars = g_rtConfig->getVariables();
+		RunTimeVariableMap vars = rtConfig->getVariables();
 		for( RunTimeVariableMap::iterator itr = vars.begin(); itr != vars.end(); ++itr )
 		{
 			string varName;
@@ -520,13 +480,13 @@ namespace directag
 				}
 			}
 		}
-		g_rtConfig->setVariables( vars );
+		rtConfig->setVariables( vars );
 
         for( size_t i=1; i < args.size(); ++i )
         {
             if( args[i] == "-dump" )
             {
-                g_rtConfig->dump();
+                rtConfig->dump();
                 g_residueMap->dump();
                 args.erase( args.begin() + i );
                 --i;
@@ -555,7 +515,7 @@ namespace directag
 		if( InitProcess( args ) )
 			return 1;
 
-        g_rtConfig->PreComputeScoreDistributions();
+        rtConfig->PreComputeScoreDistributions();
 
         INIT_PROFILERS(10)
 
@@ -585,13 +545,16 @@ namespace directag
             finishedFiles.insert( *fItr );
 
             Timer readTime(true);
-            spectra.readPeaks( *fItr, 0, -1, 2, g_rtConfig->SpectrumListFilters, g_rtConfig->NumChargeStates );
+            spectra.readPeaks( *fItr, 0, -1, 2, rtConfig->SpectrumListFilters, rtConfig->NumChargeStates );
             readTime.End();
 
             int totalPeakCount = 0;
             int numSpectra = (int) spectra.size();
             for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+            {
                 totalPeakCount += (*sItr)->peakPreCount;
+                (*sItr)->setTagConfig(rtConfig);
+            }
 
             cout << "Read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.TimeElapsed() << " seconds elapsed." << endl;
 
@@ -604,12 +567,9 @@ namespace directag
             Timer taggingTime;
             string startDate;
             string startTime;
-            vector< size_t > opcs; // original peak count statistics
-            vector< size_t > fpcs; // filtered peak count statistics
-
-            spectra.random_shuffle();
 
             PrepareSpectra();
+            spectra.random_shuffle();
 
             if( spectra.size() == 0 )
             {
@@ -617,39 +577,27 @@ namespace directag
                 continue;
             }
 
-            opcs = spectra.getOriginalPeakCountStatistics();
-            fpcs = spectra.getFilteredPeakCountStatistics();
-            cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
-            cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-            cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
-                opcs[2] << " (" << fpcs[2] << "), " <<
-                opcs[3] << " (" << fpcs[3] << "), " <<
-                opcs[4] << " (" << fpcs[4] << ")" << endl;
-
-            float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-            cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
-            
             cout << "Sequence tagging " << spectra.size() << " spectra." << endl;
             startTime = GetTimeString(); startDate = GetDateString(); taggingTime.Begin();
             ExecutePipeline();
-
             cout << "Finished sequence tagging spectra; " << taggingTime.End() << " seconds elapsed." << endl;
-
+            cout << (string) peakStatistics << endl;
             cout << "Overall stats: " << (string) taggingStatistics << endl;
+            peakStatistics.reset();
             taggingStatistics.reset();
 
             // Code for ScanRanker, write metrics and high quality spectra
-            if( g_rtConfig->WriteScanRankerMetrics || g_rtConfig->WriteHighQualSpectra )
+            if( rtConfig->WriteScanRankerMetrics || rtConfig->WriteHighQualSpectra )
             {
                 CalculateQualScore( spectra );
                 spectra.sort( spectraSortByQualScore() );
             }
 
-            if( g_rtConfig->WriteScanRankerMetrics )
+            if( rtConfig->WriteScanRankerMetrics )
             {
                 try
                 {
-                    WriteSpecQualMetrics( *fItr, spectra, g_rtConfig->ScanRankerMetricsFileName);
+                    WriteSpecQualMetrics( *fItr, spectra, rtConfig->ScanRankerMetricsFileName);
                     cout << "Finished writing spectral quality metrics for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
                 } catch( ... )
                 {
@@ -658,7 +606,7 @@ namespace directag
                 }
             }
 
-            if(  g_rtConfig->WriteHighQualSpectra )
+            if(  rtConfig->WriteHighQualSpectra )
             {						
                 mergedSpectraIndices.clear();
                 highQualSpectraIndices.clear();
@@ -670,7 +618,7 @@ namespace directag
                     if( insertResult.second )
                         mergedSpectraIndices.push_back( s->id.nativeID );
                 }
-                int maxOutput = (int) (((double) mergedSpectraIndices.size()) * g_rtConfig->HighQualSpecCutoff);
+                int maxOutput = (int) (((double) mergedSpectraIndices.size()) * rtConfig->HighQualSpecCutoff);
                 cout << endl << "Extracting high quality spectra ..." << endl;
                 cout << "The number of filtered spectra: " << mergedSpectraIndices.size() << endl;
                 cout << "The number of high quality spectra: " << maxOutput << endl;
@@ -682,7 +630,7 @@ namespace directag
                 try
                 {
                     //std::sort( highQualSpectraIndices.begin(), highQualSpectraIndices.end() );
-                    writeHighQualSpectra( *fItr, highQualSpectraIndices, g_rtConfig->OutputFormat, g_rtConfig->HighQualSpecFileName);
+                    writeHighQualSpectra( *fItr, highQualSpectraIndices, rtConfig->OutputFormat, rtConfig->HighQualSpecFileName);
                     cout << "Finished writing high quality spectra for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
 
                 } catch( ... )
@@ -692,7 +640,7 @@ namespace directag
                 }
             }
 
-            if( g_rtConfig->WriteOutTags )
+            if( rtConfig->WriteOutTags )
             {
                 try
                 {

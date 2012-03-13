@@ -69,22 +69,110 @@ namespace directag
 	Spectrum::Spectrum()
 		:	BaseSpectrum(), PeakSpectrum< PeakInfo >(), TaggingSpectrum()
 	{
-		tagList.max_size( g_rtConfig->MaxTagCount );
-
-		scoreWeights[ "intensity" ] = intensityScoreWeight = g_rtConfig->IntensityScoreWeight;
-		scoreWeights[ "mzFidelity" ] = mzFidelityScoreWeight = g_rtConfig->MzFidelityScoreWeight;
-		scoreWeights[ "complement" ] = complementScoreWeight = g_rtConfig->ComplementScoreWeight;
-		scoreWeights[ "random" ] = g_rtConfig->RandomScoreWeight;
 	}
 
 	Spectrum::Spectrum( const Spectrum& old )
 		:	BaseSpectrum( old ), PeakSpectrum< PeakInfo >( old ), TaggingSpectrum( old )
 	{
-		scoreWeights[ "intensity" ] = intensityScoreWeight = g_rtConfig->IntensityScoreWeight;
-		scoreWeights[ "mzFidelity" ] = mzFidelityScoreWeight = g_rtConfig->MzFidelityScoreWeight;
-		scoreWeights[ "complement" ] = complementScoreWeight = g_rtConfig->ComplementScoreWeight;
-		scoreWeights[ "random" ] = g_rtConfig->RandomScoreWeight;
 	}
+
+    Spectrum::Spectrum(const string& nativeID, size_t charge, double precursorMZ, const flat_map<double,double>& peaks)
+    {
+        id.setId(nativeID);
+        id.charge = charge;
+        mzOfPrecursor = precursorMZ;
+		mOfPrecursor = mzOfPrecursor * id.charge - ( id.charge * PROTON );
+        peakPreData.clear();
+        typedef pair<double,double> Peak;
+        BOOST_FOREACH(Peak p, peaks)
+            peakPreData.insert(p);
+    }
+
+    void Spectrum::setTagConfig(shared_ptr<DirecTagAPIConfig> config)
+    {
+        tagConfig = config;
+        scoreWeights[ "intensity" ] = intensityScoreWeight = tagConfig->IntensityScoreWeight;
+		scoreWeights[ "mzFidelity" ] = mzFidelityScoreWeight = tagConfig->MzFidelityScoreWeight;
+		scoreWeights[ "complement" ] = complementScoreWeight = tagConfig->ComplementScoreWeight;
+		scoreWeights[ "random" ] = tagConfig->RandomScoreWeight;
+        tagList.max_size( tagConfig->MaxTagCount );
+    }
+
+    void Spectrum::processAndTagSpectrum(bool clearPeakData = false)
+    {
+        // Check the tagging configuration before proceeding.
+        if(tagConfig.use_count() == 0)
+            throw runtime_error("Tagging configuration was not set.");
+        try 
+        {
+            // Filter the peaks according to users config.
+            FilterPeaks();
+            Preprocess();
+            // Ignore sparse spectra for tagging.
+            if( (int) peakPreData.size() < tagConfig->minIntensityClassCount )
+                return;
+            // Generate tag graph, score the tags, and collect them.
+            MakeTagGraph();
+            MakeProbabilityTables();
+            deallocate(nodeSet);
+            Score();
+            // Free memory
+            deallocate(gapMaps);
+            deallocate(tagGraphs);
+            if( !tagConfig->MakeSpectrumGraphs || clearPeakData )
+            {
+                deallocate(peakPreData);
+                deallocate(peakData);
+            }
+        } catch( std::exception& e )
+        {
+            cerr << " terminated with an error: " << e.what() << endl;
+        } catch(...)
+        {
+            cerr << " terminated with an unknown error." << endl;
+        }
+    }
+
+    void Spectrum::processAndTagSpectrum(PeakFilteringStatistics& peakStats, TaggingStatistics& stats, bool clearPeakData = false)
+    {
+        // Check the tagging configuration before proceeding.
+        if(tagConfig.use_count() == 0)
+            throw runtime_error("Tagging configuration was not set.");
+        try
+        {
+            // Filter the peaks according to users config.
+            // Update the peak counts for user stats.
+            peakStats.before(peakPreCount);
+            FilterPeaks();
+            Preprocess();
+            peakStats.after(peakCount);
+            // Ignore sparse spectra for tagging.
+            if( (int) peakPreData.size() < tagConfig->minIntensityClassCount )
+                return;
+            // Generate tag graph, score the tags, and collect them.
+            // Update the tagging statistics variable.
+            ++stats.numSpectraTagged;
+            stats.numResidueMassGaps += MakeTagGraph();
+            MakeProbabilityTables();
+            deallocate(nodeSet);
+            stats.numTagsGenerated += Score();
+            stats.numTagsRetained += tagList.size();
+            // Free memory
+            deallocate(gapMaps);
+            deallocate(tagGraphs);
+            if( !tagConfig->MakeSpectrumGraphs || clearPeakData)
+            {
+                deallocate(peakPreData);
+                deallocate(peakData);
+            }
+        } catch( std::exception& e )
+        {
+            cerr << " terminated with an error: " << e.what() << endl;
+        } catch(...)
+        {
+            cerr << " terminated with an unknown error." << endl;
+        }
+    }
 
 	void Spectrum::ClassifyPeakIntensities()
 	{
@@ -103,9 +191,9 @@ namespace directag
 		peakPreData.clear();
 		peakData.clear();
 
-		for( int i=0; i < g_rtConfig->NumIntensityClasses; ++i )
+		for( int i=0; i < tagConfig->NumIntensityClasses; ++i )
 		{
-			int numFragments = (int) round( (double) ( pow( (double) g_rtConfig->ClassSizeMultiplier, i ) * intenSortedPeakPreData.size() ) / (double) g_rtConfig->minIntensityClassCount, 0 );
+			int numFragments = (int) round( (double) ( pow( (double) tagConfig->ClassSizeMultiplier, i ) * intenSortedPeakPreData.size() ) / (double) tagConfig->minIntensityClassCount, 0 );
 			for( int j=0; r_iItr != intenSortedPeakPreData.rend() && j < numFragments; ++j, ++r_iItr )
 			{
 				double mz = r_iItr->second;
@@ -173,13 +261,13 @@ namespace directag
 
 					double mzGap = resItr->first / (float) (z+1);
 					double expectedMZ = left->first + mzGap;
-					cur = peakData.findNear( expectedMZ, g_rtConfig->FragmentMzTolerance );
+					cur = peakData.findNear( expectedMZ, rtConfig->FragmentMzTolerance );
 
 					if( cur != peakData.end() )
 					{
 						// Calculate the error between the m/z of the actual peak and the m/z that was expected for it
 						double error = (cur->first - left->first) - mzGap;
-						if( fabs( error ) > g_rtConfig->FragmentMzTolerance )
+						if( fabs( error ) > tagConfig->FragmentMzTolerance )
 							continue;
 
 						gapMap_t::iterator nextGapInfo = gapMap.insert( gapMap_t::value_type( cur->first, gapVector_t() ) ).first;
@@ -228,7 +316,7 @@ namespace directag
 			return;
 
 		// Eliminate peaks above the precursor's mass with a given tolerance
-		double maxPeakMass = mOfPrecursor + PROTON + g_rtConfig->PrecursorMzTolerance;
+		double maxPeakMass = mOfPrecursor + PROTON + tagConfig->PrecursorMzTolerance;
 		PeakPreData::iterator itr = peakPreData.upper_bound( maxPeakMass );
 		peakPreData.erase( itr, peakPreData.end() );
 
@@ -240,24 +328,24 @@ namespace directag
 		mzUpperBound = peakPreData.rbegin()->first;
 		totalPeakSpace = mzUpperBound - mzLowerBound;
 
-		if( g_rtConfig->MakeSpectrumGraphs )
-			writeToSvgFile( "-unprocessed" + g_rtConfig->OutputSuffix );
+		//if( tagConfig->MakeSpectrumGraphs )
+		//	writeToSvgFile( "-unprocessed" + tagConfig->OutputSuffix );
 
-		if( g_rtConfig->DeisotopingMode > 0 || g_rtConfig->AdjustPrecursorMass )
+		if( tagConfig->DeisotopingMode > 0 || tagConfig->AdjustPrecursorMass )
 		{
-			Deisotope( g_rtConfig->IsotopeMzTolerance );
+			Deisotope( tagConfig->IsotopeMzTolerance );
 
-			if( g_rtConfig->MakeSpectrumGraphs )
-				writeToSvgFile( "-deisotoped" + g_rtConfig->OutputSuffix );
+			//if( tagConfig->MakeSpectrumGraphs )
+			//	writeToSvgFile( "-deisotoped" + tagConfig->OutputSuffix );
 		}
 
-		FilterByTIC( g_rtConfig->TicCutoffPercentage );
-		FilterByPeakCount( g_rtConfig->MaxPeakCount );
+		FilterByTIC( tagConfig->TicCutoffPercentage );
+		FilterByPeakCount( tagConfig->MaxPeakCount );
 
-		if( g_rtConfig->MakeSpectrumGraphs )
-			writeToSvgFile( "-filtered" + g_rtConfig->OutputSuffix );
+		//if( tagConfig->MakeSpectrumGraphs )
+		//	writeToSvgFile( "-filtered" + tagConfig->OutputSuffix );
 
-		if( peakPreData.size() < (size_t) g_rtConfig->minIntensityClassCount )
+		if( peakPreData.size() < (size_t) tagConfig->minIntensityClassCount )
 		{
 			peakPreData.clear();
 			return;
@@ -291,7 +379,7 @@ namespace directag
 		vector< PeakData::iterator > junkPeaks;
 		for( PeakData::iterator cur = peakData.begin(); cur != peakData.end(); ++cur )
 		{
-			if( longestPathMap[ cur->first ] < g_rtConfig->tagPeakCount )
+			if( longestPathMap[ cur->first ] < tagConfig->tagPeakCount )
 				junkPeaks.push_back( cur );
 		}
 
@@ -301,7 +389,7 @@ namespace directag
 			peakPreData.erase( junkPeaks[i]->first );
 		}
 
-		if( peakData.size() < (size_t) g_rtConfig->minIntensityClassCount )
+		if( peakData.size() < (size_t) tagConfig->minIntensityClassCount )
 		{
 			deallocate(peakPreData);
 			deallocate(peakData);
@@ -332,7 +420,7 @@ namespace directag
 			return;
 		}
 
-		if( g_rtConfig->AdjustPrecursorMass )
+		if( tagConfig->AdjustPrecursorMass )
 		{
 			double originalPrecursorMass = mOfPrecursor;
 			double originalPrecursorMz = mzOfPrecursor;
@@ -340,13 +428,13 @@ namespace directag
 			double maxSumOfProducts = 0.0;
 			map<double, double> AdjustmentResults;
 
-			for( mOfPrecursor += g_rtConfig->MinPrecursorAdjustment;
-				 mOfPrecursor <= originalPrecursorMass + g_rtConfig->MaxPrecursorAdjustment;
-				 mOfPrecursor += g_rtConfig->PrecursorAdjustmentStep )
+			for( mOfPrecursor += tagConfig->MinPrecursorAdjustment;
+				 mOfPrecursor <= originalPrecursorMass + tagConfig->MaxPrecursorAdjustment;
+				 mOfPrecursor += tagConfig->PrecursorAdjustmentStep )
 			{
 				mzOfPrecursor = ( mOfPrecursor + ( id.charge * PROTON ) ) / id.charge;
 
-				double sumOfProducts = FindComplements( g_rtConfig->ComplementMzTolerance );
+				double sumOfProducts = FindComplements( tagConfig->ComplementMzTolerance );
 
 				if( sumOfProducts > maxSumOfProducts )
 				{
@@ -367,25 +455,25 @@ namespace directag
 				mzOfPrecursor = originalPrecursorMz;
 			}
 
-			if( g_rtConfig->MakeSpectrumGraphs )
-			{
-				writeToSvgFile( "-adjusted" + g_rtConfig->OutputSuffix );
-				cout << "Original precursor m/z: " << originalPrecursorMz << endl;
-				cout << "Corrected precursor m/z: " << mzOfPrecursor << endl;
-				cout << "Sum of complement products: " << maxSumOfProducts << endl;
+			//if( tagConfig->MakeSpectrumGraphs )
+			//{
+			//	writeToSvgFile( "-adjusted" + tagConfig->OutputSuffix );
+			//	cout << "Original precursor m/z: " << originalPrecursorMz << endl;
+			//	cout << "Corrected precursor m/z: " << mzOfPrecursor << endl;
+			//	cout << "Sum of complement products: " << maxSumOfProducts << endl;
 
 				/*cout << "Best complement total: " << BestComplementTotal << endl;
 				cout << oldPrecursor << " (" << spectrum->mOfPrecursorFixed << ") corrected by " << spectrum->mzOfPrecursor - oldPrecursor <<
 						" to " << spectrum->mzOfPrecursor << " (" << spectrum->mOfPrecursor << ") " << endl;*/
 
-				cout << AdjustmentResults << endl;
-			}
+			//	cout << AdjustmentResults << endl;
+			//}
 		}
 
 		// Initialize the spectrum info tables
-		initialize( g_rtConfig->NumIntensityClasses, g_rtConfig->NumMzFidelityClasses );
+		initialize( tagConfig->NumIntensityClasses, tagConfig->NumMzFidelityClasses );
 
-		if( peakData.size() < (size_t) g_rtConfig->minIntensityClassCount )
+		if( peakData.size() < (size_t) tagConfig->minIntensityClassCount )
 		{
 			peakPreData.clear();
 			peakData.clear();
@@ -395,12 +483,12 @@ namespace directag
 		// Reclassify intensities and find complements based on fully processed spectrum
 		ClassifyPeakIntensities();
 				
-		for( PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr )
-           {
-                 itr->second.hasComplementAsCharge.resize(numFragmentChargeStates, false);
-           }
+        for( PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr )
+        {
+            itr->second.hasComplementAsCharge.resize(numFragmentChargeStates, false);
+        }
 
-		FindComplements( g_rtConfig->ComplementMzTolerance );
+		FindComplements( tagConfig->ComplementMzTolerance );
 
 		totalPeakSpace = peakData.rbegin()->first - peakData.begin()->first;
 		peakCount = (int) peakData.size();
@@ -421,7 +509,7 @@ namespace directag
 			//scoreWeights["complement"] = 0;
 			complementScoreWeight = 0;
 		} else
-			CreateScoringTableMVH( 0, g_rtConfig->tagPeakCount, 2, complementClassCounts, bgComplements, g_lnFactorialTable, false, false, false );
+			CreateScoringTableMVH( 0, tagConfig->tagPeakCount, 2, complementClassCounts, bgComplements, g_lnFactorialTable, false, false, false );
 	}
 
 	size_t Spectrum::Score()
@@ -449,7 +537,7 @@ namespace directag
 			tagMzRangeUpperBound = max( tagMzRangeUpperBound, tag.highPeakMz);
 
 			START_PROFILER(5)
-			if( g_rtConfig->MaxTagScore == 0 || tag.totalScore <= g_rtConfig->MaxTagScore )
+			if( tagConfig->MaxTagScore == 0 || tag.totalScore <= tagConfig->MaxTagScore )
 				tagList.insert( tag );
 			STOP_PROFILER(5)
 		}
@@ -510,7 +598,7 @@ namespace directag
 			TagInfo newTag;
 
 			MvIntKey intensityClassKey, complementClassKey, mzFidelityKey;
-			intensityClassKey.resize( g_rtConfig->NumIntensityClasses, 0 );
+			intensityClassKey.resize( tagConfig->NumIntensityClasses, 0 );
 			complementClassKey.resize( 2, 0 );
 
 			vector<double> modelPeaks;
@@ -519,30 +607,30 @@ namespace directag
 
 			double gapMass = 0.0;
 			modelPeaks.push_back( peakList[0]->first );
-			for( int i=0; i < g_rtConfig->TagLength; ++i )
+			for( int i=0; i < tagConfig->TagLength; ++i )
 			{
 				gapMass += g_residueMap->getMonoMassByName( tag[i] ) / (double) peakChargeState;
 				modelPeaks.push_back( peakList[i+1]->first - gapMass );
 			}
 			double sum = accumulate( modelPeaks.begin(), modelPeaks.end(), 0.0 );
-			double avg = sum / g_rtConfig->tagPeakCount;
+			double avg = sum / tagConfig->tagPeakCount;
 
 			sum = 0.0;
-			for( int i=0; i < g_rtConfig->tagPeakCount; ++i )
+			for( int i=0; i < tagConfig->tagPeakCount; ++i )
 			{
 				modelErrors.push_back( fabs( modelPeaks[i] - avg ) );
 				sum += pow( modelErrors[i], 2 );
 				//cout << e1 << " " << e2 << " " << e3 << ": " << errors << endl;
 			}
 
-			MzFEBins::iterator binItr = g_rtConfig->mzFidelityErrorBins.upper_bound( sum );
+			MzFEBins::iterator binItr = tagConfig->mzFidelityErrorBins.upper_bound( sum );
 			-- binItr;
 			//newTag.scores[ "mzFidelity" ] = binItr->second;
 			newTag.mzFidelityScore = binItr->second;
 
 			gapMass = 0.0;
 			modelPeaks[0] = avg;
-			for( int i=0; i < g_rtConfig->TagLength; ++i )
+			for( int i=0; i < tagConfig->TagLength; ++i )
 			{
 				gapMass += g_residueMap->getMonoMassByName( tag[i] ) / (double) peakChargeState;
 				modelPeaks[i+1] = avg + gapMass;
@@ -555,7 +643,7 @@ namespace directag
 			//int totalContextRanks = 1;
 			vector< double > complementPairMasses;
 			//spectrumGraph& tagGraph = tagGraphs[peakChargeState-1];
-			for( int i=0; i < g_rtConfig->tagPeakCount; ++i )
+			for( int i=0; i < tagConfig->tagPeakCount; ++i )
 			{
 				PeakInfo& peak = peakList[i]->second;
 
@@ -568,7 +656,7 @@ namespace directag
 				if( hasComplement )
 				{
 					double complementMz = CalculateComplementMz( peakList[i]->first, peakChargeState );
-					PeakData::iterator complementItr = peakData.findNear( complementMz, g_rtConfig->ComplementMzTolerance );
+					PeakData::iterator complementItr = peakData.findNear( complementMz, tagConfig->ComplementMzTolerance );
 					complementPairMasses.push_back( peakList[i]->first + complementItr->first );
 				}
 			}
@@ -581,7 +669,7 @@ namespace directag
 			double complementClassScore = 0;
 			if( complementClassCounts[0] > 0 )
 			{
-				CEBins::iterator binItr = g_rtConfig->complementErrorBinsList[2].begin();
+				CEBins::iterator binItr = tagConfig->complementErrorBinsList[2].begin();
 				if( complementClassKey[0] > 1 )
 				{
 					double complementPairMean = arithmetic_mean<double>( complementPairMasses );
@@ -589,13 +677,13 @@ namespace directag
 						complementPairMasses[i] = pow( complementPairMasses[i] - complementPairMean, 2.0 );
 					double sse = accumulate( complementPairMasses.begin(), complementPairMasses.end(), 0.0 );
 
-					binItr = g_rtConfig->complementErrorBinsList[complementClassKey[0]].upper_bound( sse );
+					binItr = tagConfig->complementErrorBinsList[complementClassKey[0]].upper_bound( sse );
 					-- binItr;
 					while(binItr->second == 0)
 						++ binItr;
 				}
 				MvhTable::reverse_iterator itr;
-				int i = g_rtConfig->tagPeakCount;
+				int i = tagConfig->tagPeakCount;
 				for( itr = bgComplements.rbegin(); itr != bgComplements.rend() && i >= (int) complementPairMasses.size(); ++itr, --i )
 					complementClassScore += (double) exp(itr->second);
 				--itr;
@@ -612,8 +700,8 @@ namespace directag
 
 			//newNode.peakList = peakList;
 
-			if( g_rtConfig->RandomScoreWeight != 0 )
-				newTag.scores[ "random" ] = (double) g_rtConfig->GetRandomScore();
+			if( tagConfig->RandomScoreWeight != 0 )
+				newTag.scores[ "random" ] = (double) tagConfig->GetRandomScore();
 
 			newTag.lowPeakMz = peakList.front()->first;
 			newTag.highPeakMz = peakList.back()->first;
@@ -683,10 +771,10 @@ namespace directag
 		string tag;
 		vector< double > peakErrors;
 		vector< PeakData::iterator > peakList;
-		IRBins& irBins = g_rtConfig->intensityRanksumBinsTable[ g_rtConfig->TagLength ][ peakData.size() ];
+		IRBins& irBins = tagConfig->intensityRanksumBinsTable[ tagConfig->TagLength ][ peakData.size() ];
 //cout << peakData.size() << irBins << endl;
-		peakErrors.reserve( g_rtConfig->tagPeakCount );
-		peakList.reserve( g_rtConfig->tagPeakCount );
+		peakErrors.reserve( tagConfig->tagPeakCount );
+		peakList.reserve( tagConfig->tagPeakCount );
 
 		tagCount = 0;
 
@@ -694,7 +782,7 @@ namespace directag
 		{
 			gapMap_t& gapMap = gapMaps[z];
 			for( gapInfoItr = gapMap.begin(); gapInfoItr != gapMap.end(); ++gapInfoItr )
-				findTags_R( gapInfoItr, g_rtConfig->TagLength, tag, peakErrors, peakList, z+1, numTagsGenerated, irBins );
+				findTags_R( gapInfoItr, tagConfig->TagLength, tag, peakErrors, peakList, z+1, numTagsGenerated, irBins );
 		}
 
 		return numTagsGenerated;

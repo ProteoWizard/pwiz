@@ -70,6 +70,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\directagAPIConfig.h"
+				>
+			</File>
+			<File
 				RelativePath=".\directagConfig.h"
 				>
 			</File>

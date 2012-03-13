@@ -39,7 +39,7 @@ namespace directag
 {
 
 	typedef set< double >						nodeSet_t;
-	typedef MvhTable				bgProbabilities_t, bgComplements_t, bgFidelities_t;
+	typedef MvhTable				            bgProbabilities_t, bgComplements_t, bgFidelities_t;
 	struct GapInfo;
 	typedef vector< GapInfo >					gapVector_t;
 	typedef map< double, gapVector_t >			gapMap_t;		// peakMz -> vector of TagInfos for individual peaks
@@ -63,7 +63,7 @@ namespace directag
 	struct PeakInfo
 	{
 		PeakInfo()
-			:	hasComplementAsCharge( g_rtConfig->NumChargeStates-1, false )
+			:	hasComplementAsCharge( 1, false )
 		{}
 
 		template< class Archive >
@@ -89,6 +89,7 @@ namespace directag
 	{
 		Spectrum();
 		Spectrum( const Spectrum& old );
+        Spectrum( const string& nativeID, size_t charge, double precursorMZ, const flat_map<double,double>& peaks);
 
 		void initialize( int numIntenClasses, int NumMzFidelityClasses )
 		{
@@ -102,6 +103,7 @@ namespace directag
 		void FilterPeaks();
 		void Preprocess();
 		size_t Score();
+        void setTagConfig(shared_ptr<DirecTagAPIConfig> config);
 
 		void findTags_R(	gapMap_t::iterator gapInfoItr,
 							int tagIndex,
@@ -112,6 +114,9 @@ namespace directag
 							size_t& numTagsGenerated,
 							IRBins& irBins );
 		size_t findTags();
+
+        void processAndTagSpectrum(bool clearPeakData);
+        void processAndTagSpectrum(PeakFilteringStatistics& peakStats, TaggingStatistics& stats, bool clearPeakData);
 
 		template< class Archive >
 		void serialize( Archive& ar, const unsigned int version )
@@ -129,13 +134,15 @@ namespace directag
 		float					complementScoreWeight;
 		float					intensityScoreWeight;
 		float					mzFidelityScoreWeight;
+        
+        shared_ptr<DirecTagAPIConfig>   tagConfig;
 
 		vector< int >			complementClassCounts;
 	
 		//Histogram< int >		intensityScoreHistogram;
 
         double                   complementaryTIC;
-        int                     tagGraphPeakCount;
+        int                      tagGraphPeakCount;
         double                   tagGraphTIC;
 
 		vector< gapMap_t >		gapMaps;			// a graph of peaks to peaks that are a residue's width away
@@ -157,8 +164,7 @@ namespace directag
 	};
 
 	struct SpectraList : public	PeakSpectraList< Spectrum, SpectraList >,
-								TaggingSpectraList< Spectrum, SpectraList >,
-								SearchSpectraList< Spectrum, SpectraList >
+								TaggingSpectraList< Spectrum, SpectraList >
 	{
 		typedef BaseSpectraList<Spectrum, SpectraList>::ListConstIterator	ListConstIterator;
 		typedef BaseSpectraList<Spectrum, SpectraList>::ListIterator		ListIterator;
