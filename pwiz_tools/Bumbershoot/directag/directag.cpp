@@ -1,15 +1,17 @@
 //
 // $Id$
 //
-// The contents of this file are subject to the Mozilla Public License
-// Version 1.1 (the "License"); you may not use this file except in
-// compliance with the License. You may obtain a copy of the License at
-// http://www.mozilla.org/MPL/
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
 //
-// Software distributed under the License is distributed on an "AS IS"
-// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
-// License for the specific language governing rights and limitations
-// under the License.
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
 //
 // The Original Code is the DirecTag peptide sequence tagger.
 //
@@ -22,6 +24,7 @@
 
 #include "stdafx.h"
 #include "directag.h"
+#include "scanRanker.h"
 #include "Histogram.h"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
@@ -31,7 +34,7 @@
 #include <boost/thread/mutex.hpp>
 
 //#include "ranker.h"
-#include "writeHighQualSpectra.h"
+//#include "writeHighQualSpectra.h"
 
 using namespace freicore;
 
@@ -43,19 +46,7 @@ namespace directag
     boost::lockfree::fifo<Spectrum*>    taggingTasks;
     TaggingStatistics                   taggingStatistics;
     PeakFilteringStatistics             peakStatistics;
-
-    shared_ptr<RunTimeConfig>   rtConfig;
-
-	// Code for ScanRanker
-	vector<NativeID>		mergedSpectraIndices;
-	vector<NativeID>		highQualSpectraIndices;
-	float					bestTagScoreMean;
-	float					bestTagTICMean;
-	float					tagMzRangeMean;
-	float					bestTagScoreIQR;
-	float					bestTagTICIQR;
-	float					tagMzRangeIQR;
-	size_t					numTaggedSpectra;
+    shared_ptr<RunTimeConfig>           rtConfig;
 
 	void WriteTagsToTagsFile(	const string& inputFilename,
 								string startTime,
@@ -80,127 +71,11 @@ namespace directag
 		header <<	"H\tTagging started at " << startTime << " on " << startDate << ".\n" <<
 					"H\tTagging finished at " << GetTimeString() << " on " << GetDateString() << ".\n" <<
 					"H\tTotal tagging time: " << totalTaggingTime << " seconds.\n" <<
-					"H\tUsed " << g_numProcesses << " processing " << ( g_numProcesses > 1 ? "nodes" : "node" ) << ".\n";/* <<
-					"H\tMean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")\n" <<
-					"H\tMin/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")\n" <<
-					"H\tOriginal (filtered) peak count at 1st/2nd/3rd quartiles: " <<	opcs[2] << " (" << fpcs[2] << "), " <<
-																						opcs[3] << " (" << fpcs[3] << "), " <<
-																						opcs[4] << " (" << fpcs[4] << ")\n";*/
+					"H\tUsed " << g_numProcesses << " processing " << ( g_numProcesses > 1 ? "nodes" : "node" ) << ".\n";
 
 		cout << "Writing tags to \"" << outputFilename << "\"." << endl;
 		spectra.writeTags( inputFilename, rtConfig->OutputSuffix, header.str(), rtConfig->getVariables() );
 		spectra.clear();
-	}
-
-	// Code for writing ScanRanker metrics file
-	void WriteSpecQualMetrics( const string& inputFilename, SpectraList& instance, const string& outFilename)
-	{
-		cout << "Generating output of quality metrics." << endl;
-		string filenameAsScanName;
-		filenameAsScanName =	inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
-								inputFilename.find_last_of( '.' ) - inputFilename.find_last_of( SYS_PATH_SEPARATOR )-1 );
-
-		string outputFilename = (outFilename.empty()) ? (filenameAsScanName + "-ScanRankerMetrics" + ".txt") :  outFilename;
-		
-		ofstream fileStream( outputFilename.c_str() );
-
-		fileStream << "H\tBestTagScoreMean\tBestTagTICMean\tTagMzRangeMean\tBestTagScoreIQR\tBestTagTICIQR\tTagMzRangeIQR\tnumTaggedSpectra\n";
-		fileStream 	<< "H"<< '\t'
-					<< bestTagScoreMean << '\t'
-					<< bestTagTICMean << '\t'
-					<< tagMzRangeMean << '\t'
-					<< bestTagScoreIQR << '\t'
-					<< bestTagTICIQR << '\t'
-					<< tagMzRangeIQR << '\t'
-					<< numTaggedSpectra << "\n";
-		//fileStream << "H\tIndex\tNativeID\tPrecursorMZ\tCharge\tPrecursorMass\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
-		fileStream << "H\tNativeID\tPrecursorMZ\tCharge\tPrecursorMass\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
-		set<NativeID> seen;
-		Spectrum* s;
-		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
-		{
-			s = *sItr;
-			float logBestTagTIC = (s->bestTagTIC == 0) ? 0 : (log( s->bestTagTIC ));
-            pair<set<NativeID>::iterator, bool> insertResult = seen.insert(s->id.nativeID);
-			if( insertResult.second ) // only write out metrics of best scored spectrum if existing multiple charge states
-			{
-				fileStream	<< "S" << '\t'
-							//<< s->nativeID << '\t'
-							<< s->nativeID << '\t'
-							<< s->mzOfPrecursor << '\t'
-							<< s->id.charge << '\t'
-							<< s->mOfPrecursor << '\t'
-							<< s->bestTagScore << '\t'
-							<< logBestTagTIC << '\t'
-							<< s->tagMzRange << '\t'
-							//<< s->bestTagScoreNorm << '\t'
-							//<< s->bestTagTICNorm << '\t'
-							//<< s->tagMzRangeNorm << '\t'
-							<< s->qualScore << '\n';
-			}
-		}
-	}
-
-	// Code for calculating ScanRanker score
-	void CalculateQualScore( SpectraList& instance)
-	{
-		vector<float> bestTagScoreList;
-		vector<float> bestTagTICList;
-		vector<float> tagMzRangeList;
-		//vector<float> rankedBestTagScoreList;
-		//vector<float> rankedBestTagTICList;
-		//vector<float> rankedTagMzRangeList;
-
-		Spectrum* s;
-		// string rankMethod = "average"; //Can also be "min" or "max" or "default"
-	
-		// use log transformed mean and IQR of spectra with at least 1 tag for normalization
-		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
-		{
-			s = *sItr;
-			if ( s->bestTagScore != 0 )    // at least 1 tag generated and <= MaxTagScore
-			{  
-				bestTagScoreList.push_back( s->bestTagScore );  // bestTagScore is the chisqured value
-				bestTagTICList.push_back( log( s->bestTagTIC ));
-				tagMzRangeList.push_back( s->tagMzRange );
-			}
-		}
-
-		//rankhigh( bestTagScoreList, rankedBestTagScoreList, rankMethod );
-		//rank( bestTagTICList, rankedBestTagTICList, rankMethod );
-		//rank( tagMzRangeList, rankedTagMzRangeList, rankMethod );
-
-		float bestTagScoreSum = accumulate( bestTagScoreList.begin(), bestTagScoreList.end(), 0.0 );
-		float bestTagTICSum = accumulate( bestTagTICList.begin(), bestTagTICList.end(), 0.0 );
-		float tagMzRangeSum = accumulate( tagMzRangeList.begin(), tagMzRangeList.end(), 0.0 );
-
-		std::sort( bestTagScoreList.begin(), bestTagScoreList.end() );
-		bestTagScoreIQR = bestTagScoreList[(int)(bestTagScoreList.size() * 0.75)] - bestTagScoreList[(int)(bestTagScoreList.size() * 0.25)];
-		std::sort( bestTagTICList.begin(), bestTagTICList.end() );
-		bestTagTICIQR = bestTagTICList[(int)(bestTagTICList.size() * 0.75)] - bestTagTICList[(int)(bestTagTICList.size() * 0.25)];
-		std::sort( tagMzRangeList.begin(), tagMzRangeList.end() );
-		tagMzRangeIQR = tagMzRangeList[(int)(tagMzRangeList.size() * 0.75)] - tagMzRangeList[(int)(tagMzRangeList.size() * 0.25)];
-		//int i = 0;
-		//size_t numSpectra = instance.size();
-		numTaggedSpectra = bestTagScoreList.size();
-		bestTagScoreMean = bestTagScoreSum / (float) numTaggedSpectra;
-		bestTagTICMean = bestTagTICSum / (float) numTaggedSpectra;
-		tagMzRangeMean = tagMzRangeSum / (float) numTaggedSpectra;
-		
-		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
-		{
-			s = *sItr;
-			s->bestTagScoreNorm = (s->bestTagScore - bestTagScoreMean) / bestTagScoreIQR;
-			s->bestTagTICNorm = ( s->bestTagScore == 0 ) ? ( 0 - bestTagTICMean) / bestTagTICIQR : (log( s->bestTagTIC ) - bestTagTICMean) / bestTagTICIQR;
-			s->tagMzRangeNorm = ( s->bestTagScore == 0 ) ? ( 0 - tagMzRangeMean) / tagMzRangeIQR : ( s->tagMzRange - tagMzRangeMean) /tagMzRangeIQR;
-
-//			s->bestTagScoreNorm = (rankedBestTagScoreList[i]-1) / (float) numTotalSpectra;
-//			s->bestTagTICNorm = (rankedBestTagTICList[i]-1) / (float) numTotalSpectra;
-//			s->tagMzRangeNorm = (rankedTagMzRangeList[i]-1) / (float) numTotalSpectra;
-//          s->qualScore = ( rankedBestTagScoreList[i] + rankedBestTagTICList[i] + rankedTagMzRangeList[i] ) / (3 * (float) numTotalSpectra);
-			s->qualScore = (s->bestTagScoreNorm + s->bestTagTICNorm + s->tagMzRangeNorm ) / 3;
-			//++i;
-		}
 	}
 
 	void PrepareSpectra()
@@ -281,31 +156,6 @@ namespace directag
 
 		cout << "Finished determining spectrum charge states; " << timer.End() << " seconds elapsed." << endl;
 		cout << "Filtering peaks in " << spectra.size() << " spectra." << endl;
-
-		/*timer.Begin();
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-		{
-			try
-			{
-				(*sItr)->FilterPeaks();
-
-				//if( !g_rtConfig->MakeSpectrumGraphs )
-				//	(*sItr)->peakPreData.clear();
-			} catch( exception& e )
-			{
-				throw runtime_error( string( "filtering peaks in scan: " ) + string( (*sItr)->id ) + e.what() );
-			} catch( ... )
-			{
-				throw runtime_error( "filtering peaks in scan" );
-			}
-		}
-
-		cout << "Finished filtering peaks; " << timer.End() << " seconds elapsed." << endl;
-
-		int postTrimCount = 0;
-		postTrimCount = spectra.filterByPeakCount( rtConfig->minIntensityClassCount );
-
-		cout << "Trimmed " << postTrimCount << " spectra for being too small after peak filtering." << endl;*/
 	}
 
 	vector< int > workerNumbers;
@@ -449,10 +299,7 @@ namespace directag
         if( !rtConfig->initialized() )
         {
             if( rtConfig->initializeFromFile() )
-            {
                 cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
-            }
-            //return 1;
         }
 
         if( !g_residueMap->initialized() )
@@ -623,9 +470,7 @@ namespace directag
                 cout << "The number of filtered spectra: " << mergedSpectraIndices.size() << endl;
                 cout << "The number of high quality spectra: " << maxOutput << endl;
                 for(int i = 0; i < maxOutput; ++i )
-                {
                     highQualSpectraIndices.push_back( mergedSpectraIndices.at(i) );
-                }
 
                 try
                 {

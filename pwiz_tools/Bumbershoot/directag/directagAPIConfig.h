@@ -161,7 +161,6 @@ namespace directag
 			stringstream s;
             s << "Mean original (filtered) peak count: " << accs::mean(before) << " (" << accs::mean(after) << ")" << endl;
             s << "Min/Max original (filtered) peak count: " << accs::min(before) << "/" << accs::max(before) << " (" << accs::min(after) << "/" << accs::max(after) << ")" << endl;
-
             float filter = 1.0f - ( (float) accs::sum(after) / (float) accs::sum(before) );
             s << "Filtered out " << filter * 100.0f << "% of peaks before tagging.";
 			return s.str();

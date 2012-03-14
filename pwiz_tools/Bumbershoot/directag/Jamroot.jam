@@ -265,7 +265,7 @@ rule gcc-install-dll-path ( properties * )
 
 exe $(application-name:L)
   : # sources
-    directag.cpp directagSpectrum.cpp directagVersion.cpp writeHighQualSpectra.cpp
+    directag.cpp directagSpectrum.cpp directagVersion.cpp 
   : # requirements
       <conditional>@gcc-install-dll-path
       <library>freicore

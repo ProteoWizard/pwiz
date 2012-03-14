@@ -51,7 +51,7 @@ namespace directag
 		string name;
 	};*/
 
-	extern SpectraList                  spectra;
+	extern SpectraList      spectra;
 
 	int						InitProcess( argList_t& args );
 	int						ProcessHandler( int argc, char* argv[] );
@@ -60,25 +60,7 @@ namespace directag
 
 	gapMap_t::iterator		FindPeakNear( gapMap_t&, float, float );
 
-	// code for ScanRanker
-	extern vector<NativeID>			mergedSpectraIndices;
-	extern vector<NativeID>			highQualSpectraIndices;
-	extern float					bestTagScoreMean;
-	extern float					bestTagTICMean;
-	extern float					tagMzRangeMean;
-	extern float					bestTagScoreIQR;
-	extern float					bestTagTICIQR;
-	extern float					tagMzRangeIQR;
-	extern size_t					numTaggedSpectra;
-
-
-	struct spectraSortByQualScore
-	{
-		bool operator() ( const Spectrum* a, const Spectrum* b )
-		{
-			return a->qualScore > b->qualScore;  // descending order
-		}
-	};
+	
 }
 }
 

@@ -90,6 +90,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\scanRanker.h"
+				>
+			</File>
+			<File
 				RelativePath=".\writeHighQualSpectra.h"
 				>
 			</File>
