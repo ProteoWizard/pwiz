@@ -71,7 +71,18 @@ namespace pwiz.ProteomeDatabase.API
                 _cancelled = true;
                 if (_session != null && _session.IsOpen)
                     {
-                        _session.CancelQuery();
+                        try
+                        {
+                            _session.CancelQuery();
+                        }
+// ReSharper disable EmptyGeneralCatchClause
+                        catch (Exception)
+                        {
+
+                            // Handle race condition where SQLite command is disposed
+                            // before the call to CancelQuery.
+                        }
+// ReSharper restore EmptyGeneralCatchClause
                     }
                 }
             }
