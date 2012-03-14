@@ -45,11 +45,7 @@ namespace directag
 
 	int						InitProcess( argList_t& args );
 	int						ProcessHandler( int argc, char* argv[] );
-	void					MakeResultFiles();
 	void					GenerateForegroundTables();
-	gapMap_t::iterator		FindPeakNear( gapMap_t&, float, float );
-
-	
 }
 }
 

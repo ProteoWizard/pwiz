@@ -504,32 +504,6 @@ namespace directag
 
 		return 0;
 	}
-
-	gapMap_t::iterator FindPeakNear( gapMap_t& peakData, float mz, float tolerance )
-	{
-		gapMap_t::iterator cur, min, max, best;
-
-		min = peakData.lower_bound( mz - tolerance );
-		max = peakData.lower_bound( mz + tolerance );
-
-		if( min == max )
-			return peakData.end(); // no peaks
-
-		// find the peak closest to the desired mz
-		best = min;
-		float minDiff = (float) fabs( mz - best->first );
-		for( cur = min; cur != max; ++cur )
-		{
-			float curDiff = (float) fabs( mz - cur->first );
-			if( curDiff < minDiff )
-			{
-				minDiff = curDiff;
-				best = cur;
-			}
-		}
-
-		return best;
-	}
 }
 }
 
