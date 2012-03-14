@@ -42,9 +42,8 @@ namespace freicore
 {
 namespace directag
 {
-    
-	vector<NativeID>		mergedSpectraIndices;
-	vector<NativeID>		highQualSpectraIndices;
+namespace scanranker
+{    
 	float					bestTagScoreMean;
 	float					bestTagTICMean;
 	float					tagMzRangeMean;
@@ -375,7 +374,7 @@ namespace directag
             }
         }
     }
-
+}
 }
 }
 

@@ -41,23 +41,12 @@ namespace freicore
 
 namespace directag
 {
-	/*struct tagFinder
-	{
-		tagFinder( const string& tagName = "" ) { name = tagName; }
-		bool operator() ( TagInfo& test )
-		{
-			return name == test.tag;
-		}
-		string name;
-	};*/
-
 	extern SpectraList      spectra;
 
 	int						InitProcess( argList_t& args );
 	int						ProcessHandler( int argc, char* argv[] );
 	void					MakeResultFiles();
 	void					GenerateForegroundTables();
-
 	gapMap_t::iterator		FindPeakNear( gapMap_t&, float, float );
 
 	

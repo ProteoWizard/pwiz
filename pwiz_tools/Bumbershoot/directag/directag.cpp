@@ -436,15 +436,15 @@ namespace directag
             // Code for ScanRanker, write metrics and high quality spectra
             if( rtConfig->WriteScanRankerMetrics || rtConfig->WriteHighQualSpectra )
             {
-                CalculateQualScore( spectra );
-                spectra.sort( spectraSortByQualScore() );
+                scanranker::CalculateQualScore( spectra );
+                spectra.sort( scanranker::spectraSortByQualScore() );
             }
 
             if( rtConfig->WriteScanRankerMetrics )
             {
                 try
                 {
-                    WriteSpecQualMetrics( *fItr, spectra, rtConfig->ScanRankerMetricsFileName);
+                    scanranker::WriteSpecQualMetrics( *fItr, spectra, rtConfig->ScanRankerMetricsFileName);
                     cout << "Finished writing spectral quality metrics for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
                 } catch( ... )
                 {
@@ -455,9 +455,9 @@ namespace directag
 
             if(  rtConfig->WriteHighQualSpectra )
             {						
-                mergedSpectraIndices.clear();
-                highQualSpectraIndices.clear();
-                set<NativeID> seen;
+                vector<NativeID>    mergedSpectraIndices;
+	            vector<NativeID>	highQualSpectraIndices;
+                set<NativeID>       seen;
                 BOOST_FOREACH(Spectrum* s, spectra)
                 {
                     // merge duplicate spectra with differen charge state
@@ -475,7 +475,7 @@ namespace directag
                 try
                 {
                     //std::sort( highQualSpectraIndices.begin(), highQualSpectraIndices.end() );
-                    writeHighQualSpectra( *fItr, highQualSpectraIndices, rtConfig->OutputFormat, rtConfig->HighQualSpecFileName);
+                    scanranker::writeHighQualSpectra( *fItr, highQualSpectraIndices, rtConfig->OutputFormat, rtConfig->HighQualSpecFileName);
                     cout << "Finished writing high quality spectra for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
 
                 } catch( ... )

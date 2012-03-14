@@ -93,10 +93,6 @@
 				RelativePath=".\scanRanker.h"
 				>
 			</File>
-			<File
-				RelativePath=".\writeHighQualSpectra.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"
@@ -123,10 +119,6 @@
 			</File>
 			<File
 				RelativePath=".\directagVersion.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\writeHighQualSpectra.cpp"
 				>
 			</File>
 		</Filter>
