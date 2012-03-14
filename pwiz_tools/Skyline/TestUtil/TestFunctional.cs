@@ -121,6 +121,21 @@ namespace pwiz.SkylineTestUtil
 
         protected static void RunUI(Action act)
         {
+            SkylineInvoke(() =>
+                              {
+                                  try
+                                  {
+                                      act();
+                                  }
+                                  catch(Exception e)
+                                  {
+                                      Assert.Fail(e.ToString());
+                                  }
+                              });
+        }
+        
+        private static void SkylineInvoke(Action act)
+        {
             SkylineWindow.Invoke(act);
         }
 
