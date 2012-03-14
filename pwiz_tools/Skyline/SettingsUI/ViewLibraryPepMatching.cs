@@ -162,8 +162,6 @@ namespace pwiz.Skyline.SettingsUI
 
                     PeptideMatch peptideMatchInDict;
                     // If peptide is already in the dictionary of peptides to add, merge the children.
-                    if (nodePepMatched.HasExplicitMods)
-                        Console.Write("Explict mods on {0}", nodePepMatched.Peptide.Sequence);
                     if (!dictNewNodePeps.TryGetValue(nodePepMatched.SequenceKey, out peptideMatchInDict))
                     {
                         IList<Protein> matchedProteins = null;
