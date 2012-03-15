@@ -533,20 +533,20 @@ namespace pwiz.Skyline.Util
                 catch (DirectoryNotFoundException)
                 {
                 }
-                Directory.Move(pathTemp, pathDestination);
+                Helpers.TryTwice(() => Directory.Move(pathTemp, pathDestination));
             }
             else
             {
                 try
                 {
-                    string backupFile = pathDestination + ".old";
-                    File.Delete(backupFile);
+                    string backupFile = GetBackupFileName(pathDestination);
+                    Helpers.TryTwice(() => File.Delete(backupFile));
                     // First try replacing the destination file, if it exists
                     File.Replace(pathTemp, pathDestination, backupFile, true);
                     try
                     {
-                        // TODO: Use try twice, but still swallow any failure to delete
-                        File.Delete(backupFile);
+                        // Try delete once more if it fails initially, but still swallow any failure to delete
+                        Helpers.TryTwice(() => File.Delete(backupFile));
                     }
                     catch (IOException)
                     {
@@ -555,9 +555,20 @@ namespace pwiz.Skyline.Util
                 catch (FileNotFoundException)
                 {
                     // Or just move, if it does not.
-                    File.Move(pathTemp, pathDestination);
+                    Helpers.TryTwice(() => File.Move(pathTemp, pathDestination));
                 }
             }
+        }
+
+        private static string GetBackupFileName(string pathDestination)
+        {
+            string backupFile = FileSaver.TEMP_PREFIX + Path.GetFileName(pathDestination) + ".bak";
+            string dirName = Path.GetDirectoryName(pathDestination);
+            if (!string.IsNullOrEmpty(dirName))
+                backupFile = Path.Combine(dirName, backupFile);
+            // CONSIDER: Handle failure by trying a different name, or use a true temporary name?
+            File.Delete(backupFile);
+            return backupFile;
         }
 
         /// <summary>
@@ -572,11 +583,12 @@ namespace pwiz.Skyline.Util
                 var attr = File.GetAttributes(file);
                 if ((attr & FileAttributes.ReadOnly) != 0)
                     File.SetAttributes(file,  attr & ~FileAttributes.ReadOnly);
-                File.Delete(file);
+                string fileLocal = file;
+                Helpers.TryTwice(() => File.Delete(fileLocal));
             }
             foreach (var directory in Directory.GetDirectories(path))
                 DirectoryForceDelete(directory);
-            Directory.Delete(path);
+            Helpers.TryTwice(() => Directory.Delete(path));
         }
 
         public void SetCache(string path, string pathCache)
@@ -782,7 +794,7 @@ namespace pwiz.Skyline.Util
 
         public void Dispose()
         {
-            Directory.Delete(DirPath, true);
+            Helpers.TryTwice(() => Directory.Delete(DirPath, true));
         }
     }
 }

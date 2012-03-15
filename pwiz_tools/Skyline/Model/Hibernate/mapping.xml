@@ -35,6 +35,7 @@
     <property name="Sequence" />
     <property name="BeginPos" />
     <property name="EndPos" />
+    <property name="MissedCleavages" />
     <property name="RetentionTimeCalculatorScore" />
     <property name="PredictedRetentionTime" />
     <property name="AverageMeasuredRetentionTime" />

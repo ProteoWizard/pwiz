@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestUtil
     public abstract class AbstractFunctionalTest
     {
         private const int SLEEP_INTERVAL = 100;
-        private const int WAIT_TIME = 30000;    // 30 seconds
+        private const int WAIT_TIME = 60000;    // 60 seconds
         private const int WAIT_CYCLES = WAIT_TIME/SLEEP_INTERVAL;
 
         /// <summary>
@@ -274,6 +274,7 @@ namespace pwiz.SkylineTestUtil
 
                 Thread.Sleep(SLEEP_INTERVAL);
             }
+            Assert.Fail("Timeout exceeded in WaitForOpenForm");
             return null;
         }
 
@@ -299,6 +300,7 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
+            Assert.Fail("Timeout exceeded in WaitForClosedForm");
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
@@ -335,6 +337,7 @@ namespace pwiz.SkylineTestUtil
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
+            Assert.Fail("Timeout exceeded in WaitForCondition");
             return false;
         }
 
@@ -348,6 +351,7 @@ namespace pwiz.SkylineTestUtil
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
+            Assert.Fail("Timeout exceeded in WaitForConditionUI");
             return false;
         }
 

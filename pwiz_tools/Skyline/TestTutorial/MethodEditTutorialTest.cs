@@ -21,6 +21,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -71,6 +72,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // Creating a Background Proteome File, p. 3
+            File.Delete(TestFilesDir.GetTestPath(@"MethodEdit\FASTA\Yeast" + ProteomeDb.EXT_PROTDB));
             var buildBackgroundProteomeDlg =
                 ShowDialog<BuildBackgroundProteomeDlg>(peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
             PeptideSettingsUI peptideSettingsUI1 = peptideSettingsUI;

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using NHibernate;
 using NHibernate.Cfg;
@@ -62,15 +63,28 @@ namespace pwiz.ProteomeDatabase.API
         {
             SessionFactoryFactory.ConfigureMappings(configuration);
         }
+
+        private struct ProtIdNames
+        {
+            public ProtIdNames(long id, ICollection<DbProteinName> names) : this()
+            {
+                Id = id;
+                Names = names;
+            }
+
+            public long Id { get; private set; }
+            public ICollection<DbProteinName> Names { get; private set; }
+        }
+
         public void AddFastaFile(StreamReader reader, ProgressMonitor progressMonitor)
         {
-            Dictionary<String, long> proteinIds = new Dictionary<string, long>();
+            Dictionary<string, ProtIdNames> proteinIds = new Dictionary<string, ProtIdNames>();
             using (ISession session = OpenWriteSession())
             {
                 foreach (DbProtein protein in session.CreateCriteria(typeof(DbProtein)).List())
                 {
                     if (protein.Id.HasValue)
-                        proteinIds.Add(protein.Sequence, protein.Id.Value);
+                        proteinIds.Add(protein.Sequence, new ProtIdNames(protein.Id.Value, protein.Names));
                 }
                 int proteinCount = 0;
                 using (var transaction = session.BeginTransaction())
@@ -96,23 +110,27 @@ namespace pwiz.ProteomeDatabase.API
                             return;
                         }
                         bool existingProtein = false;
-                        long proteinId;
-                        if (proteinIds.TryGetValue(protein.Sequence, out proteinId))
+                        ProtIdNames proteinIdNames;
+                        if (proteinIds.TryGetValue(protein.Sequence, out proteinIdNames))
                         {
                             existingProtein = true;
                         }
                         else
                         {
                             ((SQLiteParameter)insertProtein.Parameters[0]).Value = protein.Sequence;
-                            proteinId = Convert.ToInt64(insertProtein.ExecuteScalar());
-                            proteinIds.Add(protein.Sequence, proteinId);
+                            proteinIdNames = new ProtIdNames(Convert.ToInt64(insertProtein.ExecuteScalar()), new DbProteinName[0]);
+                            proteinIds.Add(protein.Sequence, proteinIdNames);
                             proteinCount++;
                         }
                         foreach (var proteinName in protein.Names)
                         {
+                            // Skip any names that already exist
+                            if (proteinIdNames.Names.Any(dbProteinName => Equals(dbProteinName.Name, proteinName.Name)))
+                                continue;
+
                             try
                             {
-                                ((SQLiteParameter)insertName.Parameters[0]).Value = proteinId;
+                                ((SQLiteParameter)insertName.Parameters[0]).Value = proteinIdNames.Id;
                                 ((SQLiteParameter)insertName.Parameters[1]).Value = proteinName.IsPrimary && !existingProtein;
                                 ((SQLiteParameter)insertName.Parameters[2]).Value = proteinName.Name;
                                 ((SQLiteParameter)insertName.Parameters[3]).Value = proteinName.Description;
