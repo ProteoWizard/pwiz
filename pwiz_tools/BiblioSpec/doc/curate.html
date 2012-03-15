@@ -1,0 +1,88 @@
+<html>
+<!--
+FILE: curate.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 7/22/05
+PROJECT: BiblioSpec
+REVISION:
+-->
+<head>
+<title>BlibCurate</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibCurate</h1></center>
+
+<blockquote>
+
+<p><b>Description:</b>&nbsp;&nbsp;Change the curation code for spectra
+in an existing library 
+
+<p><b>Usage:</b><code>  BlibCurate [options] 
+&nbsp;&lt;list&nbsp;file&gt;
+&nbsp;&lt;library&nbsp;file&gt;</code>
+
+<p><b>Input:</b>
+<ul>
+
+<li> &lt;list file&gt; - A tab-delimited file that contains a list of spectra
+ID numbers and the new curration code they should recieve.  The list
+should begin with the header <code>ID level</code>.  Following the
+list, an optional comment may be entered after the word
+<code>comment</code>  Curation
+codes are as follows:
+<table><tr><th>Code</th><th align=left>Description<th></tr>
+       <tr><td align=right>-1</td><td>problematic</td></tr>
+       <tr><td align=right> 0</td><td>default, no curation</td></tr>
+       <tr><td align=right> 1</td><td>manualy verified as good</td></tr>
+       <tr><td align=right> 2</td><td>manualy verified as excellent</td></tr>
+       <tr><td align=right> 3</td><td>verified by an alternative
+                             method, e.g. synthesized peptide</td></tr> 
+</table>
+
+<li> &lt;library file&gt; - An existing library in which the
+annoatations will be updated.
+</ul>
+
+<p><b>Output:</b>&nbsp;&nbsp;The input library with new annotations
+[and a record of changes made]
+
+<p><b>Options:</b>&nbsp;&nbsp;
+<ul>
+
+<li> -all n - Set all spectra to curation level n.
+<li> -verbose 0|1|2 - Set the verbosity level of output to stderr.
+The default is 1.  
+
+</ul>
+<!--
+<p><b>Warning messages:</b>
+
+<ul>
+
+<li> <p> <i>Warning: message</i><p>
+<p>description</p>
+
+</ul>
+
+<p><b>Bugs:</b>
+<ul>
+<li>description</li>
+<li>description</li>
+</ul>
+-->
+<p><b>To Do:</b></p>
+<ul>
+<li>This program does not yet exist</li>
+<li><b>done</b> Define the default level and what the levels mean</li>
+<li>Decide if the library should retain any history of how the
+annotations have changed</li> 
+
+
+</blockquote>
+
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

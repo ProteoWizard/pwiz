@@ -1,0 +1,188 @@
+# why is this not inherited from the root?
+.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+
+
+# use a rule to return <define>__LINUX__ based on the value of OS
+rule define-os ( properties * )
+{
+  if ( [ MATCH (LINUX) : $(.os) ] )
+  {
+    return <define>__LINUX__ ;
+  }
+}
+
+# some properties for all
+project 
+  : requirements
+      [ define-os ]
+      <include>../libraries/mascot-parser/include
+      <include>../libraries/sqlite
+      <include>../../../libraries/expat-2.0.1/lib
+  : default-build
+;
+
+# system library 
+lib dl : : <name>dl ;
+
+rule choose-dl ( properties * )
+{
+    if ( [ MATCH (LINUX) : $(.os) ] )
+    {
+       return dl ;
+    }
+}
+
+# external libraries
+lib msparser-linux-64
+  :
+  : <file>../libraries/mascot-parser/lib/x86_64/libmsparser.a
+   -<threading>multi
+ ;
+#lib msparser
+#  :
+#  : <address-model>64
+#   <file>../libraries/mascot-parser/lib/x86_64/libmsparser.a
+#   -<threading>multi
+# ;
+lib msparser-linux-32
+  :
+  : <file>../libraries/mascot-parser/lib/i386/libmsparser.a
+   -<threading>multi
+;    
+lib msparser-win32
+  :
+  : <file>../libraries/mascot-parser/lib/win32/msparser.lib
+;
+
+rule choose-msparser ( properties * )
+{
+    if ( [ MATCH (LINUX) : $(.os) ] )
+    {
+        if <address-model>64 in $(properties)
+        {
+            return msparser-linux-64 ;
+        }
+        else
+        {
+            return msparser-linux-32 ;
+        }
+    }
+    if ( [ MATCH (NT) : $(.os) ] )
+    {
+        return msparser-win32 ;
+    }
+}
+
+# the main BiblioSpec library
+lib blib
+  : # sources
+    AminoAcidMasses.cpp
+    BlibBuilder.cpp
+    BlibMaker.cpp
+    BlibUtils.cpp
+    BuildParser.cpp
+    CommandLine.cpp
+    DotProduct.cpp
+    IdpXMLreader.cpp
+    LibReader.cpp
+    MascotResultsReader.cpp
+    Match.cpp
+    MzIdentMLReader.cpp
+    Options.cpp
+    PeakProcess.cpp
+    PepXMLreader.cpp
+    PercolatorXmlReader.cpp
+    ProteinPilotReader.cpp
+    PsmFile.cpp
+    PwizReader.cpp
+    RefSpectrum.cpp
+    Reportfile.cpp
+    saxhandler.cpp
+    SearchLibrary.cpp
+    Spectrum.cpp
+    SqliteRoutine.cpp
+    SQTreader.cpp
+    SslReader.cpp
+    TandemNativeParser.cpp
+    Verbosity.cpp
+    WatersMseReader.cpp
+    WeibullPvalue.cpp
+    ../libraries/sqlite//sqlite
+    [ choose-msparser ]
+  : 
+    
+ ;   
+
+# all the pwiz and boost libraries required
+alias pwiz-boost-libraries 
+  : /ext/boost//program_options
+    /ext/boost//filesystem
+    /ext/boost//regex
+    /ext/boost//iostreams
+    /ext/boost//system
+    ../../../pwiz/data//msdata
+    ../../../pwiz/data/identdata//pwiz_data_identdata
+    ../../../pwiz/utility/minimxml//pwiz_utility_minimxml
+    ../../../pwiz/utility/misc//pwiz_utility_misc
+    [ choose-dl ]
+    /ext/expat//expat
+;
+
+
+ 
+# the main BiblioSpec tools
+
+exe BlibBuild
+  : # sources
+    BlibBuild.cpp
+    blib
+    pwiz-boost-libraries
+  : # requirements
+;
+
+exe BlibFilter
+  : # sources
+    BlibFilter.cpp
+    blib
+    pwiz-boost-libraries
+;
+
+exe BlibSearch
+  : # sources
+    BlibSearch.cpp
+    blib
+    pwiz-boost-libraries
+;
+
+exe BlibToMs2
+  : # sources
+    BlibToMs2.cpp
+    blib
+    pwiz-boost-libraries
+;
+
+# code from BiblioSpec version 1 for converter
+lib blib_v_1 
+  : # sources
+    original-LibIterator.cpp
+    original-Library.cpp
+    original-Modifications.cpp
+    original-Ms2file.cpp
+    original-ProcessedPeaks.cpp
+    original-RefFile.cpp
+    original-RefSpectrum.cpp
+    original-Spectrum.cpp
+   ;
+
+# converter for version 1 libraries to sqlite libraries
+exe LibToSqlite3
+  : # sources
+    LibToSqlite3.cpp
+    .//blib_v_1
+    ../libraries/sqlite//sqlite
+    [ choose-dl ]
+  : <include>../libraries/sqlite
+    <threading>multi
+    <library>/ext/zlib//z
+ ;
+

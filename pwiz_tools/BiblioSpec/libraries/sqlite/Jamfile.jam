@@ -1,0 +1,5 @@
+lib sqlite 
+  : sqlite3.c
+  : <link>static
+    <location>./bin
+ ;
