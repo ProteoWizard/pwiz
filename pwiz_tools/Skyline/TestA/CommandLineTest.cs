@@ -277,17 +277,26 @@ namespace pwiz.SkylineTestA
             string agilentTemplate = commandFilesDir.GetTestPath("43mm-40nL-30min-opt.m");
             string agilentOut = commandFilesDir.GetTestPath("Agilent_test.m");
 
-            string output = RunCommand("--in=" + docPath2,
-                                       "--exp-method-instrument=Agilent 6400 Series",
-                                       "--exp-template=" + agilentTemplate,
-                                       "--exp-file=" + agilentOut,
-                                       "--exp-dwell-time=20",
-                                       "--exp-strategy=buckets",
-                                       "--exp-max-trans=75");
+            // Try this twice, because Agilent method building seems to fail under stress
+            // about 10% of the time.
+            bool success = false;
+            for (int i = 0; !success && i < 2; i++)
+            {
+                string output = RunCommand("--in=" + docPath2,
+                                           "--exp-method-instrument=Agilent 6400 Series",
+                                           "--exp-template=" + agilentTemplate,
+                                           "--exp-file=" + agilentOut,
+                                           "--exp-dwell-time=20",
+                                           "--exp-strategy=buckets",
+                                           "--exp-max-trans=75");
 
-            //check for success
-            Assert.IsTrue(output.Contains("successfully."));
-            
+                //check for success
+                success = output.Contains("successfully.");
+                // Breakpoint setting location for testing
+//                if (!success)
+//                    Console.WriteLine("{0}: Failed to write Agilent method");
+            }
+            Assert.IsTrue(success);
         }
 
         [TestMethod]
