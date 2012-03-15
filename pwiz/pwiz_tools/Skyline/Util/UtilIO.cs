@@ -539,7 +539,7 @@ namespace pwiz.Skyline.Util
             {
                 try
                 {
-                    string backupFile = pathDestination + ".old";
+                    string backupFile = GetBackupFileName(pathDestination);
                     Helpers.TryTwice(() => File.Delete(backupFile));
                     // First try replacing the destination file, if it exists
                     File.Replace(pathTemp, pathDestination, backupFile, true);
@@ -560,6 +560,17 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        private static string GetBackupFileName(string pathDestination)
+        {
+            string backupFile = FileSaver.TEMP_PREFIX + Path.GetFileName(pathDestination) + ".bak";
+            string dirName = Path.GetDirectoryName(pathDestination);
+            if (!string.IsNullOrEmpty(dirName))
+                backupFile = Path.Combine(dirName, backupFile);
+            // CONSIDER: Handle failure by trying a different name, or use a true temporary name?
+            File.Delete(backupFile);
+            return backupFile;
+        }
+
         /// <summary>
         /// Recursive delete of a directory that removes the read-only flag
         /// from all files before attempting to remove them.  Necessary for
@@ -572,7 +583,8 @@ namespace pwiz.Skyline.Util
                 var attr = File.GetAttributes(file);
                 if ((attr & FileAttributes.ReadOnly) != 0)
                     File.SetAttributes(file,  attr & ~FileAttributes.ReadOnly);
-                Helpers.TryTwice(() => File.Delete(file));
+                string fileLocal = file;
+                Helpers.TryTwice(() => File.Delete(fileLocal));
             }
             foreach (var directory in Directory.GetDirectories(path))
                 DirectoryForceDelete(directory);
