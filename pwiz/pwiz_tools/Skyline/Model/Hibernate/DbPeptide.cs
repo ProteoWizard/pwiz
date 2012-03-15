@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual string Sequence { get; set; }
         public virtual int? BeginPos { get; set; }
         public virtual int? EndPos { get; set; }
+        public virtual int MissedCleavages { get; set; }
         [QueryColumn(Format = Formats.RETENTION_TIME)]
         public virtual double? RetentionTimeCalculatorScore { get; set; }
         [QueryColumn(Format = Formats.RETENTION_TIME)]

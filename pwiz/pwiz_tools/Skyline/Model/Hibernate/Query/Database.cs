@@ -298,6 +298,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 BeginPos = peptide.Begin,
                 // Convert from a non-inclusive end to an inclusive end
                 EndPos = (peptide.End.HasValue ? peptide.End.Value - 1 : (int?) null),
+                MissedCleavages = peptide.MissedCleavages,
                 Note = nodePeptide.Note,
                 AverageMeasuredRetentionTime = nodePeptide.AverageMeasuredRetentionTime,
             };
