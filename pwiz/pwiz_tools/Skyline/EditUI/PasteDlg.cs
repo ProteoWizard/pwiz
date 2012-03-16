@@ -521,6 +521,7 @@ namespace pwiz.Skyline.EditUI
                 return null;
             }
             string[] lines = text.Split('\n');
+            int lastNameLine = -1;
             int aa = 0;
             for (int i = 0; i < lines.Length; i++)
             {
@@ -538,26 +539,9 @@ namespace pwiz.Skyline.EditUI
                         });
                         return null;
                     }
-                    int lineWithMissingProteinSequence = -1;
-                    if (i == lines.Length - 1)
-                    {
-                        lineWithMissingProteinSequence = i;
-                    }
-                    else if (aa == 0)
-                    {
-                        lineWithMissingProteinSequence = i - 1;
-                    }
-                    if (lineWithMissingProteinSequence >= 0)
-                    {
-                        ShowFastaError(new PasteError
-                        {
-                            Message = "There is no sequence for this protein",
-                            Column = 0,
-                            Line = lineWithMissingProteinSequence,
-                            Length = lines[lineWithMissingProteinSequence].Length
-                        });
+                    if (!CheckSequence(aa, lastNameLine, lines))
                         return null;
-                    }
+                    lastNameLine = i;
                     aa = 0;
                     continue;
                 }
@@ -581,6 +565,10 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
             }
+
+            if (!CheckSequence(aa, lastNameLine, lines))
+                return null;
+
             var importer = new FastaImporter(document, false);
             try
             {
@@ -602,6 +590,22 @@ namespace pwiz.Skyline.EditUI
                 return null;
             }
             return document;
+        }
+
+        private bool CheckSequence(int aa, int lastNameLine, string[] lines)
+        {
+            if (aa == 0 && lastNameLine >= 0)
+            {
+                ShowFastaError(new PasteError
+                {
+                    Message = "There is no sequence for this protein",
+                    Column = 0,
+                    Line = lastNameLine,
+                    Length = lines[lastNameLine].Length
+                });
+                return false;
+            }
+            return true;
         }
 
         private const char TRANSITION_LIST_SEPARATOR = TextUtil.SEPARATOR_TSV;
@@ -801,8 +805,8 @@ namespace pwiz.Skyline.EditUI
         {
             ShowError(pasteError);
             tabControl1.SelectedTab = tabPageFasta;
-            tbxFasta.SelectionStart = tbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column;
-            tbxFasta.SelectionLength = pasteError.Length;
+            tbxFasta.SelectionStart = Math.Max(0, tbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
+            tbxFasta.SelectionLength = Math.Min(pasteError.Length, tbxFasta.Text.Length - tbxFasta.SelectionStart);
             tbxFasta.Focus();
         }
 
@@ -839,6 +843,7 @@ namespace pwiz.Skyline.EditUI
                 }
                 tabControl1.SelectedTab = tab;
                 Text = "Insert " + tabControl1.Text;
+                AcceptButton = tabControl1.SelectedTab != tabPageFasta ? btnInsert : null;
             }
         }
 

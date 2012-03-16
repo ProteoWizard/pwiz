@@ -944,7 +944,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int offset = _offset;
                 int length = masses.GetLength(1);
-                Debug.Assert(length > 0);
+                if (length == 0)
+                    throw new ArgumentException("Invalid attempt to find a fragment in a peptide without fragment ions.");
+                int typeIndex = (int) type;
+                if (0 > typeIndex || typeIndex >= masses.Length)
+                    throw new IndexOutOfRangeException(string.Format("Ion type {0} not found in masses array", type));
 
                 // Make sure to start outside the precursor m/z window
                 double thresholdMz = precursorMz + precursorMzWindow / 2;

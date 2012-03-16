@@ -24,17 +24,28 @@ namespace pwiz.Skyline.Alerts
 {
     public sealed partial class MultiButtonMsgDlg : Form
     {
+        /// <summary>
+        /// Show a message box with a Cancel button and one other button.
+        /// </summary>
+        /// <param name="message">The message to show</param>
+        /// <param name="btnText">The text to show in the non-Cancel button (DialogResult.OK)</param>
         public MultiButtonMsgDlg(string message, string btnText)
             : this(message, null, btnText)
         {
         }
 
+        /// <summary>
+        /// Show a message box with a Cancel button and two other buttons.
+        /// </summary>
+        /// <param name="message">The message to show</param>
+        /// <param name="btn0Text">The text to show in the left-most, default button (DialogResult.Yes)</param>
+        /// <param name="btn1Text">The text to show in the second, non-default button (DialogResult.No)</param>
         public MultiButtonMsgDlg(string message, string btn0Text, string btn1Text)
             : this(Program.Name, message, btn0Text, btn1Text)
         {
         }
 
-        public MultiButtonMsgDlg(string labelText, string message, string btn0Text, string btn1Text)
+        private MultiButtonMsgDlg(string labelText, string message, string btn0Text, string btn1Text)
         {
             InitializeComponent();
 

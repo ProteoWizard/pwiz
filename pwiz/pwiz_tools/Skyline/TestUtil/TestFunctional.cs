@@ -346,7 +346,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void OkDialog(Form form, Action okAction)
         {
-            form.Invoke(okAction);
+            RunUI(okAction);
             WaitForClosedForm(form);
         }
 

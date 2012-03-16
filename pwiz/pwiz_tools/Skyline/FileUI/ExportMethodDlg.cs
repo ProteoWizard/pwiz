@@ -443,6 +443,15 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
+            if (!documentExport.HasAllRetentionTimeStandards())
+            {
+                using (var messageDlg = new MultiButtonMsgDlg("The document does not contain all of the retention time standard peptides.\nYou will not be able to use retention time prediction with acquired results.\nAre you sure you want to continue?", "OK"))
+                {
+                    if (messageDlg.ShowDialog(this) == DialogResult.Cancel)
+                        return;
+                }
+            }
+
             // Thermo LTQ method building ignores CE and DP regression values
             if (!Equals(InstrumentType, ExportInstrumentType.Thermo_LTQ))
             {
