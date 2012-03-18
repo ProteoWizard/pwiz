@@ -107,14 +107,28 @@ if ( [ MATCH (NT) : $(.os) ] )
         }
         
         # MSFileReader install directory
-        constant MSFILEREADER_INSTALL_DIR : "C:\\Program Files\\Thermo\\MSFileReader" ;
+        constant ProgramFilesLibs : "C:\\Program Files" ;
         constant MSFILEREADER_SUFFIX : "_x64" ;
     }
     else
     {
         # MSFileReader install directory
-        constant MSFILEREADER_INSTALL_DIR : "$(ProgramFiles)\\Thermo\\MSFileReader" ;
+        constant ProgramFilesLibs : "$(ProgramFiles)" ;
         constant MSFILEREADER_SUFFIX : "" ;
+    }
+    constant MSFILEREADER_INSTALL_DIR : "$(ProgramFilesLibs)\\Thermo\\MSFileReader" ;
+}
+
+rule mascot-parser-location ( properties * )
+{
+    if <toolset-msvc:version>9.0 in $(properties) ||
+            <toolset-msvc:version>9.0express in $(properties)
+    {
+        return "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2008" ;
+    }
+    else
+    {
+        return "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2010" ;
     }
 }
 
@@ -577,6 +591,14 @@ rule install-vendor-api-dependencies ( properties * )
     return $(dependencies) ;
 }
 
+rule install-indentdata-dependencies ( properties * )
+{
+    local location = [ install-location $(properties) ] ;
+    local dependencies ;
+    if [ path.exists pwiz/data/identdata ] { dependencies += <dependency>pwiz/data/identdata//install_pwiz_identdata/$(location) ; }
+    return $(dependencies) ;
+}
+
 rule pwiz-bindings-dependency ( properties * )
 {
     if <toolset>msvc in $(properties)
@@ -641,6 +663,7 @@ install idconvert
     : pwiz_tools/commandline//idconvert
     : <conditional>@install-type
       <conditional>@install-location
+      <conditional>@install-indentdata-dependencies
       <conditional>@install-vendor-api-dependencies
       <conditional>@gcc-install-dll-path
     ;

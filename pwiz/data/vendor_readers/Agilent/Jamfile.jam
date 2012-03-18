@@ -38,8 +38,24 @@ path-constant TEST_DATA_PATH : ./Reader_Agilent_Test.data ;
 constant READER_PATH : "pwiz/data/vendor_readers/Agilent" ;
 constant READER_NAME : "Reader_Agilent" ;
 
+if <toolset-msvc:version>9.0 in $(properties) ||
+        <toolset-msvc:version>9.0express in $(properties)
+{
+    path-constant LIB_PATH : $(API_PATH)\\vc9_x86 ;
+}
+else
+{
+    if ( [ MATCH (x64) : $(PLATFORM) ] )
+    {
+        path-constant LIB_PATH : $(API_PATH)\\vc10_x64 ;
+    }
+    else
+    {
+        path-constant LIB_PATH : $(API_PATH)\\vc10_x86 ;
+    }
+}
 
-if [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
+if [ path.exists $(LIB_PATH)/MassSpecDataReader.dll ]
 {
     .hasDLLs = true ;
 }
@@ -48,8 +64,7 @@ if [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) ) &&
-       [ project-exists $(API_PATH) ]
+    if [ project-exists $(API_PATH) ]
     {
         result += <source>Reader_Agilent_Detail.cpp ;
     }
@@ -59,9 +74,11 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) ) &&
+    if <toolset>msvc in $(properties) &&
+       ! ( ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) && [ MATCH (x64) : $(PLATFORM) ] ) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs) && ! [ without-binary-msdata ]
+       $(.hasDLLs) &&
+       ! [ without-binary-msdata ]
     {
         result += <define>PWIZ_READER_AGILENT ;
         result += <library>$(API_PATH)//pwiz_vendor_api_agilent ;
@@ -69,13 +86,18 @@ rule vendor-api-usage-requirements ( properties * )
     else if ! $(.warn-once)
     {
         .warn-once = true ;
-		if  [ without-binary-msdata ] 
-		{
-            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
-		}
-        else if ! ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) )
+        if  [ without-binary-msdata ] 
         {
-            echo "[$(READER_PATH)] Non-MSVC (version > 9) build: $(READER_NAME) can only identify files, not read them." ;
+            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ! ( <toolset>msvc in $(properties) )
+        {
+            echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if ( ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) &&
+                   ( [ MATCH (x64) : $(PLATFORM) ] ) )
+        {
+            echo "[$(READER_PATH)] MSVC 9.0 64-bit build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
@@ -125,12 +147,8 @@ rule test-requirements ( properties * )
             result += <build>no ;
         }
         else if  [ without-binary-msdata ] 
-		{
-            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-		}
-        else if ! ( <toolset-msvc:version>10.0 in $(properties) || 10.0express in $(properties:G=) )
         {
-            echo "[$(READER_PATH)] Non-MSVC (version > 9) build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {

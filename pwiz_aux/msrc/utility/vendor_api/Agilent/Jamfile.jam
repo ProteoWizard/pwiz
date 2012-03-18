@@ -24,16 +24,39 @@ import modules ;
 import path ;
 
 
-path-constant API_PATH : . ;
+path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agilent ;
 
 
 if [ modules.peek : NT ]
 {
 
+rule mhdac-dll-location ( properties * )
+{
+    local result ;
+    if <toolset-msvc:version>9.0 in $(properties) ||
+            <toolset-msvc:version>9.0express in $(properties)
+    {
+        result = $(API_PATH)\\vc9_x86 ;
+    }
+    else
+    {
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        {
+            result = $(API_PATH)\\vc10_x64 ;
+        }
+        else
+        {
+            result = $(API_PATH)\\vc10_x86 ;
+        }
+    }
+    return $(result) ;
+}
+
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
+    local dll_location = [ mhdac-dll-location $(properties) ] ;
+    if $(dll_location) && [ path.exists $(dll_location)\\MassSpecDataReader.dll ]
     {
         result += <source>MassHunterData.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
@@ -45,20 +68,31 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    if [ path.exists $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ]
+    local dll_location = [ mhdac-dll-location $(properties) ] ;
+    if $(dll_location) && [ path.exists $(dll_location)\\MassSpecDataReader.dll ]
     {
         result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <cxxflags>/wd4945 ; # warning C4945: 'x' : cannot import symbol from 'some.dll': as 'x' has already been imported from another assembly
-        result += <assembly>$(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll ;
-        result += <assembly>$(API_PATH)/$(PLATFORM)/BaseCommon.dll ;
-        result += <assembly>$(API_PATH)/$(PLATFORM)/BaseDataAccess.dll ;
-        result += <assembly>$(API_PATH)/$(PLATFORM)/BaseError.dll ;
-        result += <assembly>$(API_PATH)/$(PLATFORM)/BaseTof.dll ;
-        result += <assembly-dependency>$(API_PATH)/$(PLATFORM)/agtsampleinforw.dll ;
+        result += <assembly>$(dll_location)/MassSpecDataReader.dll ;
+        result += <assembly>$(dll_location)/BaseCommon.dll ;
+        result += <assembly>$(dll_location)/BaseDataAccess.dll ;
+        result += <assembly>$(dll_location)/BaseError.dll ;
+        result += <assembly>$(dll_location)/BaseTof.dll ;
+        result += <assembly-dependency>$(dll_location)/agtsampleinforw.dll ;
         result += <assembly-dependency>$(API_PATH)/EULA.MHDAC ;
         result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
     }
     return $(result) ;
+}
+
+rule msvc-agilent-requirement ( properties * )
+{
+    # Must be msvc
+    if ! <toolset>msvc in $(properties) { return <build>no ; }
+    # If msvc 9.0, must be 32-bit
+    if ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) &&
+       ( [ MATCH (x64) : $(PLATFORM) ] )           
+    { return <build>no ; }
 }
 
 lib pwiz_vendor_api_agilent
@@ -76,11 +110,11 @@ lib pwiz_vendor_api_agilent
         
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
-        <conditional>@msvc-dotnet-requirement
+        <conditional>@msvc-agilent-requirement
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements
-        <conditional>@msvc-dotnet-requirement
+        <conditional>@msvc-agilent-requirement
     ;
 
 
@@ -92,21 +126,26 @@ exe MassHunterDataTest
 
 explicit MassHunterDataTest ;
 
-if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+rule install-requirements ( properties * )
 {
+    local result ;
+    local dll_location = [ mhdac-dll-location $(properties) ] ;
+    if $(dll_location) && [ path.exists $(dll_location)\\MassSpecDataReader.dll ]
+    {
+        result += <source>$(dll_location)\\agtsampleinforw.dll ;
+        result += <source>$(dll_location)\\BaseCommon.dll ;
+        result += <source>$(dll_location)\\BaseDataAccess.dll ;
+        result += <source>$(dll_location)\\BaseError.dll ;
+        result += <source>$(dll_location)\\BaseTof.dll ;
+        result += <source>$(dll_location)\\MassSpecDataReader.dll ;
+        result += <source>$(API_PATH)\\EULA.MHDAC ;
+    }
+    return $(result) ;
+}
+
 install install_pwiz_vendor_api_agilent
-    : $(API_PATH)/$(PLATFORM)/agtsampleinforw.dll
-      $(API_PATH)/$(PLATFORM)/BaseCommon.dll
-      $(API_PATH)/$(PLATFORM)/BaseDataAccess.dll
-      $(API_PATH)/$(PLATFORM)/BaseError.dll
-      $(API_PATH)/$(PLATFORM)/MassSpecDataReader.dll
-      $(API_PATH)/EULA.MHDAC
+    : : <conditional>@install-requirements
     ;
-}
-else
-{
-install install_pwiz_vendor_api_agilent ;
-}
 
 explicit install_pwiz_vendor_api_agilent ;
 

@@ -41,8 +41,9 @@ del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\install_pwiz_vendor_api_abi > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\x86 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\x64 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\vc9_x86 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x64 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.* > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1

@@ -41,47 +41,108 @@ import os ;
 import modules ;
 import path ;
 
-local ProgramFiles = [ os.environ ProgramFiles ] ;
-ProgramFiles ?= "C:\\Program Files" ;
-
-# Assign the most likely msparser library path
-local msparser_lib_path = [ MATCH --msparser-path=(.*) : [ modules.peek : ARGV ] ] ;
-
-if ! $(msparser_path)
+rule msparser-path ( properties * )
 {
-    if "NT" in [ modules.peek : OS ]
+    # Assign the most likely msparser library path
+    local msparser_path_arg = [ MATCH --msparser-path=(.*) : [ modules.peek : ARGV ] ] ;
+
+    local parser-path ;
+    if $(msparser_path_arg)
     {
-        msparser_path = $(ProgramFiles)/msparser ;
+        lib-location = $(msparser_path_arg) ;
     }
+    else if "NT" in [ modules.peek : OS ]
+    {
+        lib-location = [ mascot-parser-location $(properties) ] ;
+    } 
     else if "LINUX" in [ modules.peek : OS ]
     {
-        msparser_path = "/usr/local/msparser" ;
+        lib-location = "/usr/local/msparser" ;
+    }
+
+    # Check for msparser existence.
+    if "NT" in [ modules.peek : OS ] && [ path.exists $(lib-location)/lib/msparser.lib ]        
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "Using Mascot Parser in $(lib-location)" ;
+        }
+        return $(lib-location) ;
+    }
+    else if "LINUX" in [ modules.peek : OS ] && [ path.exists $(lib-location)/lib/libmsparser.a ]
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "Using Mascot Parser in $(lib-location)" ;
+        }
+        return $(lib-location) ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        
+        if $(lib-location)
+        {
+            echo "Warning: No Mascot Parser found at $(lib-location)." ;
+        }
+        else
+        {
+            echo "Warning: No Mascot Parser found." ;
+        }
+        echo "         mzIdentML support for Mascot will be disabled." ;
     }
 }
 
-local mascot_sources ;
-local mascot_libs ;
-
-# Check for libmsparser existence.
-if "NT" in [ modules.peek : OS ] && [ path.exists $(msparser_path)/lib/libmsparser.lib ]
+rule mascot-api-requirements ( properties * )
 {
-   lib mascot : : <name>msparser <search>$(msparser_path)/lib : : <include>$(msparser_path)/include ;
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        # CONSIDER: Should this be checking msvc?
+        if "NT" in [ modules.peek : OS ]
+        {
+            result += <include>$(PWIZ_ROOT_PATH)/libraries/msvc_extra ;
+        }
+        result += <include>$(msparser_path)/include ;
+        result += <source>MascotReader.cpp ;
+    }
+    else
+    {
+        result += <source>MascotReader_dummy.cpp ;
+    }
+    return $(result) [ mascot-api-usage-requirements $(properties) ] ;
+}
 
-   mascot_sources += MascotReader.cpp ;
-   mascot_libs +=  <library>mascot ;
-}
-else if "LINUX" in [ modules.peek : OS ] && [ path.exists $(msparser_path)/lib/libmsparser.a ]
+rule mascot-api-usage-requirements ( properties * )
 {
-   lib mascot : : <name>msparser <search>$(msparser_path)/lib : : <include>$(msparser_path)/include ;
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        if "NT" in [ modules.peek : OS ]
+        {
+            if <variant>debug in $(properties) ||
+                <debug-symbols>on in $(properties)
+            {   
+                result += <library>$(msparser_path)/lib/msparserD.lib ;
+            }
+            else
+            {
+                result += <library>$(msparser_path)/lib/msparser.lib ;
+            }
+        } 
+        else if "LINUX" in [ modules.peek : OS ]
+        {
+            result += <library>$(msparser_path)/libmsparser.a ;
+        }
+    }
 
-   mascot_sources += MascotReader.cpp ;
-   mascot_libs += <library>mascot ;
+    return $(result) ;
 }
-else
-{
-   echo "Warning: No mascot support found for the mzIdentML library. " ;
-   mascot_sources += MascotReader_dummy.cpp ;
-}
+
 
 lib pwiz_data_identdata_version : Version.cpp : <link>static <conditional>@static-with-fpic ;
 
@@ -102,7 +163,6 @@ lib pwiz_data_identdata
         DelimReader.cpp
         References.cpp
         KwCVMap.cpp
-        $(mascot_sources)
     : # requirements
         <library>pwiz_data_identdata_version
         <library>../proteome//pwiz_data_proteome
@@ -112,7 +172,7 @@ lib pwiz_data_identdata
         <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//regex
-        $(mascot_libs)
+        <conditional>@mascot-api-requirements
     : # default-build
     : # usage-requirements
         <library>pwiz_data_identdata_version
@@ -123,6 +183,7 @@ lib pwiz_data_identdata
         <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//regex
+        <conditional>@mascot-api-usage-requirements
     ;
 
 
@@ -130,9 +191,33 @@ lib pwiz_data_identdata_examples
     :   examples.cpp
     :   <library>pwiz_data_identdata
     :
-    :	<library>pwiz_data_identdata
+    :   <library>pwiz_data_identdata
     ;
 
+rule install-requirements ( properties * )
+{
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if "NT" in [ modules.peek : OS ] && $(msparser_path)
+    {
+        if <variant>debug in $(properties) ||
+            <debug-symbols>on in $(properties)
+        {   
+            return <source>$(msparser_path)/lib/msparserD.dll
+                <source>$(msparser_path)/../config/unimod_2.xsd ;
+        }
+        else
+        {
+            return <source>$(msparser_path)/lib/msparser.dll
+                <source>$(msparser_path)/../config/unimod_2.xsd ;
+        }
+    }
+}
+
+install install_pwiz_identdata
+    : : <conditional>@install-requirements
+    ;
+
+explicit install_pwiz_identdata ;
 
 #
 # testing tools
