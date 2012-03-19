@@ -41,60 +41,6 @@ import os ;
 import modules ;
 import path ;
 
-rule msparser-path ( properties * )
-{
-    # Assign the most likely msparser library path
-    local msparser_path_arg = [ MATCH --msparser-path=(.*) : [ modules.peek : ARGV ] ] ;
-
-    local parser-path ;
-    if $(msparser_path_arg)
-    {
-        lib-location = $(msparser_path_arg) ;
-    }
-    else if "NT" in [ modules.peek : OS ]
-    {
-        lib-location = [ mascot-parser-location $(properties) ] ;
-    } 
-    else if "LINUX" in [ modules.peek : OS ]
-    {
-        lib-location = "/usr/local/msparser" ;
-    }
-
-    # Check for msparser existence.
-    if "NT" in [ modules.peek : OS ] && [ path.exists $(lib-location)/lib/msparser.lib ]        
-    {
-        if ! $(.warn-once)
-        {
-            .warn-once = true ;
-            echo "Using Mascot Parser in $(lib-location)" ;
-        }
-        return $(lib-location) ;
-    }
-    else if "LINUX" in [ modules.peek : OS ] && [ path.exists $(lib-location)/lib/libmsparser.a ]
-    {
-        if ! $(.warn-once)
-        {
-            .warn-once = true ;
-            echo "Using Mascot Parser in $(lib-location)" ;
-        }
-        return $(lib-location) ;
-    }
-    else if ! $(.warn-once)
-    {
-        .warn-once = true ;
-        
-        if $(lib-location)
-        {
-            echo "Warning: No Mascot Parser found at $(lib-location)." ;
-        }
-        else
-        {
-            echo "Warning: No Mascot Parser found." ;
-        }
-        echo "         mzIdentML support for Mascot will be disabled." ;
-    }
-}
-
 rule mascot-api-requirements ( properties * )
 {
     local result ;

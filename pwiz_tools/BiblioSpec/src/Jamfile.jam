@@ -1,6 +1,29 @@
+#
+# $Id: Jamfile.jam 2824 2011-06-29 18:37:47Z chambm $
+#
+#
+# Original author: Barbara Frewen <frewen .at. u.washington.edu>,
+#                  MacCoss Lab, Department of Genome Sciences, UW
+#
+# Copyright 2009 University of Washington - Seattle, WA
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+# 
+
 # why is this not inherited from the root?
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 
+using expat : 2.0.1 : $(EXPAT_SOURCE) ;
 
 # use a rule to return <define>__LINUX__ based on the value of OS
 rule define-os ( properties * )
@@ -11,14 +34,69 @@ rule define-os ( properties * )
   }
 }
 
+rule mascot-api-requirements ( properties * )
+{
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        # CONSIDER: Should this be checking msvc?
+        if "NT" in [ modules.peek : OS ]
+        {
+            result += <include>$(PWIZ_ROOT_PATH)/libraries/msvc_extra ;
+        }
+        result += <include>$(msparser_path)/include ;
+        result += <source>MascotResultsReader.cpp ;
+    }
+    else
+    {
+        result += <source>MascotResultsReader_dummy.cpp ;
+    }
+    return $(result) [ mascot-api-usage-requirements $(properties) ] ;
+}
+
+rule mascot-api-usage-requirements ( properties * )
+{
+    local result ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        if "NT" in [ modules.peek : OS ]
+        {
+            if <variant>debug in $(properties) ||
+                <debug-symbols>on in $(properties)
+            {   
+                result += <library>$(msparser_path)/lib/msparserD.lib ;
+            }
+            else
+            {
+                result += <library>$(msparser_path)/lib/msparser.lib ;
+            }
+        } 
+        else if "LINUX" in [ modules.peek : OS ]
+        {
+            result += <library>$(msparser_path)/libmsparser.a ;
+        }
+    }
+
+    return $(result) ;
+}
+
+rule blib-build-mascot-requirements ( properties * )
+{
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        return <include>$(msparser_path)/include ;
+    }    
+}
+
 # some properties for all
 project 
   : requirements
       [ define-os ]
-      <include>../libraries/mascot-parser/include
       <include>../libraries/sqlite
       <include>../../../libraries/expat-2.0.1/lib
-  : default-build
 ;
 
 # system library 
@@ -29,47 +107,6 @@ rule choose-dl ( properties * )
     if ( [ MATCH (LINUX) : $(.os) ] )
     {
        return dl ;
-    }
-}
-
-# external libraries
-lib msparser-linux-64
-  :
-  : <file>../libraries/mascot-parser/lib/x86_64/libmsparser.a
-   -<threading>multi
- ;
-#lib msparser
-#  :
-#  : <address-model>64
-#   <file>../libraries/mascot-parser/lib/x86_64/libmsparser.a
-#   -<threading>multi
-# ;
-lib msparser-linux-32
-  :
-  : <file>../libraries/mascot-parser/lib/i386/libmsparser.a
-   -<threading>multi
-;    
-lib msparser-win32
-  :
-  : <file>../libraries/mascot-parser/lib/win32/msparser.lib
-;
-
-rule choose-msparser ( properties * )
-{
-    if ( [ MATCH (LINUX) : $(.os) ] )
-    {
-        if <address-model>64 in $(properties)
-        {
-            return msparser-linux-64 ;
-        }
-        else
-        {
-            return msparser-linux-32 ;
-        }
-    }
-    if ( [ MATCH (NT) : $(.os) ] )
-    {
-        return msparser-win32 ;
     }
 }
 
@@ -108,10 +145,13 @@ lib blib
     WatersMseReader.cpp
     WeibullPvalue.cpp
     ../libraries/sqlite//sqlite
-    [ choose-msparser ]
-  : 
-    
- ;   
+  : # requirements
+    <link>static
+    <conditional>@mascot-api-requirements
+  : # default-build
+  : # usage-requirements
+    <conditional>@mascot-api-usage-requirements
+ ;
 
 # all the pwiz and boost libraries required
 alias pwiz-boost-libraries 
@@ -131,13 +171,14 @@ alias pwiz-boost-libraries
 
  
 # the main BiblioSpec tools
-
 exe BlibBuild
   : # sources
     BlibBuild.cpp
     blib
     pwiz-boost-libraries
   : # requirements
+    <link>static  
+    <conditional>@blib-build-mascot-requirements
 ;
 
 exe BlibFilter
@@ -145,6 +186,8 @@ exe BlibFilter
     BlibFilter.cpp
     blib
     pwiz-boost-libraries
+  : # requirements
+    <link>static  
 ;
 
 exe BlibSearch
@@ -152,6 +195,8 @@ exe BlibSearch
     BlibSearch.cpp
     blib
     pwiz-boost-libraries
+  : # requirements
+    <link>static  
 ;
 
 exe BlibToMs2
@@ -159,6 +204,8 @@ exe BlibToMs2
     BlibToMs2.cpp
     blib
     pwiz-boost-libraries
+  : # requirements
+    <link>static  
 ;
 
 # code from BiblioSpec version 1 for converter
@@ -172,17 +219,20 @@ lib blib_v_1
     original-RefFile.cpp
     original-RefSpectrum.cpp
     original-Spectrum.cpp
+  : # requirements
+    <link>static
    ;
 
 # converter for version 1 libraries to sqlite libraries
 exe LibToSqlite3
   : # sources
     LibToSqlite3.cpp
-    .//blib_v_1
     ../libraries/sqlite//sqlite
     [ choose-dl ]
-  : <include>../libraries/sqlite
+  : # requirements
+    <link>static  
+    <include>../libraries/sqlite
     <threading>multi
     <library>/ext/zlib//z
+    <library>blib_v_1
  ;
-
