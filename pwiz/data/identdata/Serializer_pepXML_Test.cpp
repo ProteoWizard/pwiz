@@ -94,11 +94,11 @@ void stripUnmappedMetadata(IdentData& mzid)
 
     // pepXML doesn't reliably store location or file format
     string& location = mzid.analysisCollection.spectrumIdentification[0]->inputSpectra[0]->location;
-    location = bfs::path(location).replace_extension("").filename();
+    location = BFS_STRING(bfs::path(location).replace_extension("").filename());
     mzid.analysisCollection.spectrumIdentification[0]->inputSpectra[0]->fileFormat = CVParam();
 
     string& location2 = mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->location;
-    location2 = bfs::path(location2).replace_extension("").filename();
+    location2 = BFS_STRING(bfs::path(location2).replace_extension("").filename());
 
     // pepXML doesn't support protein sequences
     BOOST_FOREACH(DBSequencePtr& dbSequence, mzid.sequenceCollection.dbSequences)

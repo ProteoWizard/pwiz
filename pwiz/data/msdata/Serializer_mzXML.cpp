@@ -1050,9 +1050,9 @@ void fillInMetadata(MSData& msd)
         // path/to/source/1A/1/1SRef/fid, path/to/source/1B/1/1SRef/fid, lcp: path/to/source/1, run id: source (not "1")
         // path/to/source/1A/1/1SRef/fid, path/to/source/2A/1/1SRef/fid, lcp: path/to/source/, run id: source
         if (*lcp.rbegin() == '/')
-            msd.id = msd.run.id = bfs::path(lcp).leaf();
+            msd.id = msd.run.id = BFS_STRING(bfs::path(lcp).leaf());
         else
-            msd.id = msd.run.id = bfs::path(lcp).parent_path().leaf();
+            msd.id = msd.run.id = BFS_STRING(bfs::path(lcp).parent_path().leaf());
     }
 }
 

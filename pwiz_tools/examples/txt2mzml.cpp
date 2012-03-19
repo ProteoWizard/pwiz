@@ -23,8 +23,7 @@
 
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
-#include "boost/filesystem/path.hpp"
-#include "boost/filesystem/convenience.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::cv;
@@ -66,8 +65,8 @@ void txt2mzml(const char* filenameIn, const char* filenameOut)
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(filenameIn);
     sourceFile->id = "text_data";
-    sourceFile->name = p.leaf();
-    sourceFile->location = string("file://") + bfs::complete(p.branch_path()).string();
+    sourceFile->name = BFS_STRING(p.leaf());
+    sourceFile->location = string("file://") + BFS_COMPLETE(p.branch_path()).string();
     string sha1 = SHA1Calculator::hashFile(filenameIn);
     sourceFile->cvParams.push_back(CVParam(MS_SHA_1, sha1));
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);

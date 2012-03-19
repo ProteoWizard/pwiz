@@ -26,7 +26,7 @@
 #include "pwiz/utility/chemistry/Ion.hpp"
 #include "pwiz/data/common/cv.hpp"
 #include "boost/regex.hpp"
-#include "boost/filesystem.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "boost/tokenizer.hpp"
 
@@ -1268,7 +1268,7 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
     {
         fs::path localPath(summary->searchDatabase.localPath);
         searchDatabase->databaseName.userParams.push_back(
-            UserParam("local_path", localPath.filename()));
+            UserParam("local_path", BFS_STRING(localPath.filename())));
     }
 
     // TODO this goes in the analysis software section, I think.

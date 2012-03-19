@@ -37,7 +37,9 @@ and mzML, if you have the PWIZ library from Spielberg Family Proteomics Center
 #else
 // copied this code from TPP's sysdepend.h to make RAMP stand alone for other uses
 #if defined(_MSC_VER) || defined(__MINGW32__)  // MSVC or MinGW
+#ifndef WINDOWS_NATIVE
 #define WINDOWS_NATIVE
+#endif
 #endif
 #if defined(_MSC_VER) && !defined(S_ISREG)
 #define S_ISREG(mode) ((mode)&_S_IFREG)

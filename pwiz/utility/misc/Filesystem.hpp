@@ -35,6 +35,20 @@
 
 namespace bfs = boost::filesystem;
 
+// boost filesystem v2 support is going away
+// and v3 breaks the API in surprising ways
+// see http://www.boost.org/doc/libs/1_47_0/libs/filesystem/v3/doc/deprecated.html
+#if !defined(BOOST_FILESYSTEM_VERSION) || (BOOST_FILESYSTEM_VERSION == 2)
+// in BFS2 p.filename() or p.leaf() or p.extension() returns a string
+#define BFS_STRING(p) p
+// in BFS2 complete() is in namespace
+#define BFS_COMPLETE bfs::complete
+#else
+// in BFS3 p.filename() or p.leaf() or p.extension() returns a bfs::path
+#define BFS_STRING(p) (p).string()
+// in BFS3 complete() is not in namespace
+#define BFS_COMPLETE complete
+#endif
 
 namespace pwiz {
 namespace util {

@@ -1310,7 +1310,7 @@ struct HandlerTraData : public SAXParser::Handler
             else
             {
                 schemaLocation = schemaLocation.substr(schemaLocation.find(' ')+1);
-                string xsdName = bfs::path(schemaLocation).filename();
+                string xsdName = BFS_STRING(bfs::path(schemaLocation).filename());
                 td->version_ = xsdName.substr(5, xsdName.length()-9); // read between "traML" and ".xsd"
             }
 

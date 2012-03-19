@@ -29,6 +29,11 @@
 using namespace pwiz::util;
 using boost::system::error_code;
 using boost::system::system_category;
+#if (BOOST_VERSION/100) >= 1044 
+#define SYSTEMCATEGORY system_category()
+#else // exported library symbol used to be a global variable, now its a function. Okeedokee, then.
+#define SYSTEMCATEGORY system_category
+#endif
 using boost::system::system_error;
 
 
@@ -109,9 +114,9 @@ const int testPathmaskArraySize = sizeof(testPathmaskArray) / sizeof(TestPathmas
 
 void create_file(const bfs::path& ph, const string& contents)
 {
-    ofstream f(ph.file_string().c_str());
+    ofstream f(ph.string().c_str());
     if (!f)
-        throw bfs::filesystem_error("create_file", ph, error_code(errno, system_category));
+        throw bfs::filesystem_error("create_file", ph, error_code(errno, SYSTEMCATEGORY));
     if (!contents.empty()) f << contents;
 }
 

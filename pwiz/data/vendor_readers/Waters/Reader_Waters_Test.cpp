@@ -31,7 +31,7 @@ struct IsRawData : public pwiz::util::TestPathPredicate
     bool operator() (const string& rawpath) const
     {
         return bfs::is_directory(rawpath) &&
-               bal::to_lower_copy(bfs::path(rawpath).extension()) == ".raw";
+               bal::to_lower_copy(BFS_STRING(bfs::path(rawpath).extension())) == ".raw";
     }
 };
 

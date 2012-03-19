@@ -2595,7 +2595,7 @@ struct HandlerMSData : public SAXParser::Handler
             else
             {
                 schemaLocation = schemaLocation.substr(schemaLocation.find(' ')+1);
-                string xsdName = bfs::path(schemaLocation).filename();
+                string xsdName = BFS_STRING(bfs::path(schemaLocation).filename());
                 msd->version_ = xsdName.substr(4, xsdName.length()-8); // read between "mzML" and ".xsd"
             }
 

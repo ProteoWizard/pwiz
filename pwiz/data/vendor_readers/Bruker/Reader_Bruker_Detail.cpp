@@ -44,7 +44,7 @@ Reader_Bruker_Format format(const string& path)
     {
         // Special cases for identifying direct paths to fid/Analysis.yep/Analysis.baf/.U2
         // Note that direct paths to baf or u2 will fail to find a baf/u2 hybrid source
-        std::string leaf = sourcePath.leaf();
+        std::string leaf = BFS_STRING(sourcePath.leaf());
         bal::to_lower(leaf);
         if (leaf == "fid" && !bfs::exists(sourcePath.branch_path() / "analysis.baf"))
             return Reader_Bruker_Format_FID;
@@ -71,7 +71,7 @@ Reader_Bruker_Format format(const string& path)
     for (; itr != endItr; ++itr)
         if (bfs::is_directory(itr->status()))
         {
-            if (itr->path().leaf()[0] == '.') // HACK: skip ".svn"
+            if (BFS_STRING(itr->path().leaf())[0] == '.') // HACK: skip ".svn"
                 continue;
             else if (bfs::exists(itr->path() / "1/1SRef/fid") ||
                      bfs::exists(itr->path() / "1SRef/fid") ||

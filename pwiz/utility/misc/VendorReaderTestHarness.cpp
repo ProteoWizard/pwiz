@@ -25,7 +25,9 @@
 #include "VendorReaderTestHarness.hpp"
 #include "pwiz/data/msdata/TextWriter.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#ifndef WITHOUT_MZ5
 #include "pwiz/data/msdata/Serializer_mz5.hpp"
+#endif
 #include "pwiz/data/msdata/Serializer_mzXML.hpp"
 #include "pwiz/data/msdata/Serializer_MGF.hpp"
 #include "pwiz/data/msdata/Diff.hpp"
@@ -230,7 +232,7 @@ void testRead(const Reader& reader, const string& rawpath)
     string rawheader = pwiz::util::read_file_header(rawpath, 512);
     reader.read(rawpath, rawheader, msds);
 
-    string sourceName = bfs::path(rawpath).filename();
+    string sourceName = BFS_STRING(bfs::path(rawpath).filename());
 
     for (size_t i=0; i < msds.size(); ++i)
     {
@@ -252,7 +254,7 @@ void testRead(const Reader& reader, const string& rawpath)
         // test serialization of this vendor format in and out of pwiz's supported open formats
         stringstream* stringstreamPtr = new stringstream;
         boost::shared_ptr<std::iostream> serializedStreamPtr(stringstreamPtr);
-
+#ifndef WITHOUT_MZ5
         // mzML <-> mz5
         string targetResultFilename_mz5 = bfs::change_extension(targetResultFilename, ".mz5").string();
         {
@@ -266,7 +268,7 @@ void testRead(const Reader& reader, const string& rawpath)
             unit_assert(!diff_mz5);
         }
         bfs::remove(targetResultFilename_mz5);
-
+#endif
         DiffConfig diffConfig_non_mzML;
         diffConfig_non_mzML.ignoreMetadata = true;
         diffConfig_non_mzML.ignoreChromatograms = true;

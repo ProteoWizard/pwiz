@@ -233,7 +233,7 @@ void testBadFile(const string& filename)
 
     try
     {
-        filesize = bfs::file_size(filename);
+        filesize = (size_t) bfs::file_size(filename);
     }
     catch (exception&)
     {

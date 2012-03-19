@@ -51,6 +51,7 @@ void writeTiny()
 
 void writeSmall()
 {
+#ifdef PWIZ_READER_THERMO
     const string& inputFile = "small.RAW";
 
     try
@@ -94,6 +95,7 @@ void writeSmall()
         cerr << e.what() << endl;
         cerr << "Error opening file " << inputFile << endl;
     }
+#endif
 }
 
 

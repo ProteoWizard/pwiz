@@ -280,7 +280,7 @@ string base_name(const IdentData& mzid, const string& filepath)
     bfs::path location = filepath;
     if (!mzid.dataCollection.inputs.spectraData.empty())
         location = mzid.dataCollection.inputs.spectraData[0]->location;
-    return location.replace_extension("").filename();
+    return BFS_STRING(location.replace_extension("").filename());
 }
 
 void start_msms_pipeline_analysis(XMLWriter& xmlWriter, const IdentData& mzid, const string& filepath)
@@ -1200,7 +1200,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
             bal::to_lower(getAttribute(attributes, "type", type));
 
             if (searchDatabase->id.empty())
-                searchDatabase->id = searchDatabase->location.empty() ? "DB_1" : bfs::path(searchDatabase->location).filename();
+                searchDatabase->id = searchDatabase->location.empty() ? "DB_1" : BFS_STRING(bfs::path(searchDatabase->location).filename());
 
             if (type == "aa")
                 searchDatabase->set(MS_database_type_amino_acid);
@@ -1751,7 +1751,7 @@ struct Handler_pepXML : public SAXParser::Handler
         {
             SpectraDataPtr spectraData(new SpectraData("SD"));
             getAttribute(attributes, "base_name", spectraData->location);
-            spectraData->name = bfs::path(spectraData->location).filename();
+            spectraData->name = BFS_STRING(bfs::path(spectraData->location).filename());
 
             // TODO: attempt to determine file and nativeID format?
             mzid.dataCollection.inputs.spectraData.push_back(spectraData);
