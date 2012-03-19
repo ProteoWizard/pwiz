@@ -788,7 +788,7 @@ namespace pwiz.SkylineTestA
             string rawPathDisk = GetThermoDiskPath(rawPath);
 
             // These messages are due to files that were already in the document.
-            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPathDisk)) || msg.Contains(string.Format("REP01 -> {0}", rawPath)), msg); 
+            Assert.IsTrue(msg.Contains(string.Format("REP01 -> {0}", rawPathDisk)), msg); 
             Assert.IsTrue(msg.Contains("Note: The file has already been imported. Ignoring..."), msg);
             Assert.IsTrue(msg.Contains(string.Format("160109_Mix1_calcurve_070 -> {0}",rawPath2)), msg); 
 
