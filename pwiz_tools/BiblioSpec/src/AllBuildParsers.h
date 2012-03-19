@@ -35,7 +35,11 @@
 #include "IdpXMLreader.h"
 #include "SQTreader.h"
 #include "PepXMLreader.h"
+#ifdef USE_MASCOT_PARSER
 #include "MascotResultsReader.h"
+#else
+#include "MascotResultsReader_dummy.h"
+#endif
 #include "SslReader.h"
 #include "TandemNativeParser.h"
 #include "PwizReader.h"

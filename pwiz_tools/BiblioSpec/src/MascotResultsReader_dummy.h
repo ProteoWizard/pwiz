@@ -29,34 +29,27 @@
   ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
   POSSIBILITY OF SUCH DAMAGE.
 */
+#pragma once
+
 /**
- * The MascotResultsReader collects a list of psms that should be
- * included in the library.  It passes the file object it was using to
- * the MascotSpecReader so the file only has to be opened and parsed once.
+ * The MascotResultsReader_dummy disables Mascot support, issuing an
+ * error, if it is used.
  */
 
-#include <sys/stat.h>
-#include "MascotResultsReader_dummy.h"
-#include "BlibUtils.h"
+#include "BuildParser.h"
 
 namespace BiblioSpec {
 
-MascotResultsReader::MascotResultsReader(BlibBuilder& maker, 
-                    const char* datFileName, 
-                    const ProgressIndicator* parent_progress)
-: BuildParser(maker, datFileName, parent_progress)
-{
-    throw BlibException(false, "Mascot support was explicitly disabled at build time.");
-}
+class MascotResultsReader : public BuildParser{
+    
+ public:
+  MascotResultsReader(BlibBuilder& maker, 
+                      const char* datFileName, 
+                      const ProgressIndicator* parent_progress);
+  ~MascotResultsReader();
 
-
-MascotResultsReader::~MascotResultsReader()
-{
-}
-
-bool MascotResultsReader::parseFile(){
-    return false;
-}
+  bool parseFile();
+};
 
 } // namespace
 
@@ -66,3 +59,4 @@ bool MascotResultsReader::parseFile(){
  * c-basic-offset: 4
  * End:
  */
+

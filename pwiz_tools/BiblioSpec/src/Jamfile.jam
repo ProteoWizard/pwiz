@@ -47,6 +47,7 @@ rule mascot-api-requirements ( properties * )
         }
         result += <include>$(msparser_path)/include ;
         result += <source>MascotResultsReader.cpp ;
+        result += <define>USE_MASCOT_PARSER ;
     }
     else
     {
@@ -122,7 +123,6 @@ lib blib
     DotProduct.cpp
     IdpXMLreader.cpp
     LibReader.cpp
-    MascotResultsReader.cpp
     Match.cpp
     MzIdentMLReader.cpp
     Options.cpp
