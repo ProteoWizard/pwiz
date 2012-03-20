@@ -96,7 +96,7 @@ class PWIZ_API_DECL ScanFilter
 	void print();
 
     void initialize();
-	void parse(std::string filterLine);
+	void parse(const std::string& filterLine);
 
 };
 
