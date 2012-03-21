@@ -1656,11 +1656,11 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
 
             // Write special ID for AB software
-            string extPeptideId = string.Format("{0}.{1}.{2}{3}.{4}",
+            string extPeptideId = string.Format("{0}.{1}.{2}.{3}",
                                                 nodePepGroup.Name,
                                                 nodePep.Peptide.Sequence,
-                                                nodeTran.HasLibInfo ? nodeTran.LibInfo.Rank.ToString(CultureInfo.InvariantCulture) : "",
-                                                nodeTran.Transition.FragmentIonName,
+                                                GetTransitionName(nodeTranGroup.TransitionGroup.PrecursorCharge,
+                                                                     nodeTran.Transition),
                                                 nodeTranGroup.TransitionGroup.LabelType);
             writer.WriteDsvField(extPeptideId, FieldSeparator);
             writer.Write(FieldSeparator);
@@ -1669,6 +1669,20 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.WriteLine();
+        }
+
+        private static string GetTransitionName(int precursorCharge, Transition transition)
+        {
+            return GetTransitionName(precursorCharge, transition.FragmentIonName, transition.Charge);
+        }
+
+        public static string GetTransitionName(int precursorCharge, string fragmentIonName, int fragmentCharge)
+        {
+            return string.Format("+{0}{1}{2}", precursorCharge,
+                                 fragmentIonName,
+                                 fragmentCharge > 1
+                                     ? string.Format("+{0}", fragmentCharge)
+                                     : "");
         }
     }
 
@@ -1686,8 +1700,6 @@ namespace pwiz.Skyline.Model
         protected abstract string GetRegQueryKey();
 
         protected abstract string GetExeName();
-
-        protected abstract string GetAnalystVersions();
 
         protected abstract List<string> getArgs();
 
@@ -1708,24 +1720,16 @@ namespace pwiz.Skyline.Model
             string analystPath = AdvApi.GetPathFromProgId("Analyst.MassSpecMethod.1");
             string analystDir = (analystPath != null ? Path.GetDirectoryName(analystPath) : null);
 
-            if (analystDir != null)
-            {
-                string ver = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE, GetRegQueryKey(), "Version");
-                
-                if (string.IsNullOrEmpty(ver) || !GetAnalystVersions().Contains(ver))
-                    analystDir = null;
-            }
             if (analystDir == null)
             {
-                throw new IOException(String.Format("Failed to find a valid Analyst {0} installation.", GetAnalystVersions()));
+                throw new IOException("Failed to find a valid Analyst installation");
             }
 
 
             var procAnalyst = AnalystProcess ?? Process.Start(Path.Combine(analystDir, ANALYST_EXE));
             // Wait for main window to be present.
             ProgressStatus status = null;
-            while (!progressMonitor.IsCanceled &&
-                    !Equals(ANALYST_NAME, procAnalyst != null ? procAnalyst.MainWindowTitle : ""))
+            while (!progressMonitor.IsCanceled && IsAnalystProcessMainWindowActive(procAnalyst) == false)
             {
                 if (status == null)
                 {
@@ -1742,6 +1746,24 @@ namespace pwiz.Skyline.Model
                 Thread.Sleep(1500);
                 progressMonitor.UpdateProgress(status.ChangeMessage("Working..."));
             }    
+        }
+
+        private static bool IsAnalystProcessMainWindowActive(Process process)
+        {
+            if (process == null)
+            {
+                return false;
+            }
+
+            if (process.MainWindowTitle.StartsWith(ANALYST_NAME)
+                && process.MainWindowTitle.Contains("Registration") == false)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
 
         private static Process AnalystProcess
@@ -1785,11 +1807,6 @@ namespace pwiz.Skyline.Model
             return @"Method\AbSciex\TQ\BuildQTRAPMethod";
         }
 
-        protected override string GetAnalystVersions()
-        {
-            return "1.5.1 or 1.5.2";
-        }
-
         protected override List<string> getArgs()
         {
             var argv = new List<string>();
@@ -1819,11 +1836,6 @@ namespace pwiz.Skyline.Model
         protected override string GetExeName()
         {
             return @"Method\AbSciex\TOF\BuildAnalystFullScanMethod";
-        }
-
-        protected override string GetAnalystVersions()
-        {
-            return "TF1.5 or TF1.5.1 or 2.0";
         }
 
         protected override List<string> getArgs()

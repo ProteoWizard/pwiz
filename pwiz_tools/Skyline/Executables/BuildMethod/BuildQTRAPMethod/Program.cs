@@ -235,11 +235,6 @@ namespace BuildQTRAPMethod
             // Get the last period in the given template method. 
             // We will add transitions to the last period only. 
             var msPeriod = (Period)method.GetPeriod(method.PeriodCount - 1);
-            if (msPeriod.ExperimCount != 1)
-            {
-                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one experiment in the last period.",
-                                                    TemplateMethod));
-            }
 
             var msExperiment = (Experiment)msPeriod.GetExperiment(0);
             var experimentType = msExperiment.ScanType;

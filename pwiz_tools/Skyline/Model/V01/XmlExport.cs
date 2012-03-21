@@ -245,19 +245,14 @@ namespace pwiz.Skyline.Model.V01
             writer.Write(separator);
 
             // Write special ID for ABI software
-            writer.Write(sequence.Name);
-            writer.Write('.');
-            writer.Write(peptide.Sequence);
-            writer.Write('.');
-//            Removed in v0.2 for test compatibility
-//            writer.Write(transition.PrecursorCharge);
-            writer.Write(transition.FragmentType.ToString().ToLower());
-            writer.Write(transition.FragmentOrdinal);
-            writer.Write('.');
-            // OLD_DO: Support for heavy
-            writer.Write("light");
-            writer.Write(separator);
+            string extPeptideId = string.Format("{0}.{1}.{2}.{3}",
+                                                sequence.Name,
+                                                peptide.Sequence,
+                                                GetTransitionName(transition),
+                                                "light");
 
+            writer.WriteDsvField(extPeptideId, separator);
+            writer.Write(separator);
             writer.Write(Math.Round(transition.DeclusteringPotential ?? 0, 1).ToString(_cultureInfo));
 //            Removed in v0.2 for test compatibility
 //            writer.Write(separator);
@@ -268,6 +263,13 @@ namespace pwiz.Skyline.Model.V01
 //            writer.Write(separator);
             // CXP : not used by Paulovich Lab
             writer.WriteLine();
+        }
+
+        private static string GetTransitionName(XmlTransition transition)
+        {
+            return AbiMassListExporter.GetTransitionName(transition.PrecursorCharge,
+                                                        transition.FragmentType.ToString().ToLower() + transition.FragmentOrdinal,
+                                                        transition.ProductCharge);
         }
     }
 }
