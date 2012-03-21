@@ -74,10 +74,12 @@ rule mascot-api-usage-requirements ( properties * )
                 <debug-symbols>on in $(properties)
             {   
                 result += <library>$(msparser_path)/lib/msparserD.lib ;
+                result += <assembly>$(msparser_path)/lib/msparserD.dll ;
             }
             else
             {
                 result += <library>$(msparser_path)/lib/msparser.lib ;
+                result += <assembly>$(msparser_path)/lib/msparser.dll ;
             }
         } 
         else if "LINUX" in [ modules.peek : OS ]

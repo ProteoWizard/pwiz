@@ -133,6 +133,7 @@ public:
             addSearchDatabases(file, result);
             
             searchInformation(file, result);
+			// DEBUG begin 
             inputData(file, result);
             searchParameters(file, result);
             proteinSummary(file, result);
@@ -167,7 +168,7 @@ public:
                            vector<MeasurePtr>& measures,
                            IonTypePtr ionType)
     {
-        if (peaks.empty())
+		if (peaks.empty())
             return false;
         
         FragmentArrayPtr mzFa(new FragmentArray());
@@ -198,10 +199,13 @@ public:
 
         // Once filled, each FragmentArray is put into the ionType's
         // fragmentArray vector.
-        copy(mzArray.begin(), mzArray.end(), mzFa->values.begin());
+
+        //copy(mzArray.begin(), mzArray.end(), mzFa->values.begin());
+		mzFa->values.insert(mzFa->values.begin(), mzArray.begin(), mzArray.end());
         ionType->fragmentArray.push_back(mzFa);
 
-        copy(intensityArray.begin(), intensityArray.end(), intFa->values.begin());
+        //copy(intensityArray.begin(), intensityArray.end(), intFa->values.begin());
+		intFa->values.insert(intFa->values.begin(), intensityArray.begin(), intensityArray.end());
         ionType->fragmentArray.push_back(intFa);
 
         return true;
@@ -473,11 +477,11 @@ public:
         // Add fixed modifications
         typedef boost::tokenizer< boost::char_separator<char> > tokenizer;
         boost::char_separator<char> sep(",");
-        tokenizer tokens(p.getMODS(), sep);
+		string s(p.getMODS());
+        tokenizer tokens(s, sep);
         for (tokenizer::iterator tok_iter = tokens.begin();
-             tok_iter != tokens.end(); ++tok_iter)
+			tok_iter != tokens.end(); ++tok_iter)
             decryptMod(*tok_iter, 0, p, mzid);
-        
     }
 
     void searchInformation(ms_mascotresfile & file, IdentData& mzid)
