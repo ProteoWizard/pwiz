@@ -21,6 +21,22 @@
 
 using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE[1]) : <zlib-src-location>$(ZLIB_SOURCE[1]) ;
 
+rule link-requirements ( properties * )
+{
+    # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+    if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+    {
+        return <library>/ext/boost//serialization/<link>shared
+               <library>/ext/boost//iostreams/<link>shared
+               <library>/ext/zlib//z/<link>shared ;
+    }
+    else
+    {
+        return <library>/ext/boost//serialization
+               <library>/ext/boost//iostreams
+               <library>/ext/zlib//z ;
+    }
+}
 
 # a library for training and running SVM models
 lib svm 
@@ -28,14 +44,10 @@ lib svm
         svm.cpp
     : # requirements
         <link>static
-        <library>/ext/boost//serialization
-        <library>/ext/boost//iostreams
-        <library>/ext/zlib//z
+        <conditional>@link-requirements
     : # default-build
     : # usage-requirements
-        <library>/ext/boost//serialization
-        <library>/ext/boost//iostreams
-        <library>/ext/zlib//z
+        <conditional>@link-requirements
         <include>.
     ;
 

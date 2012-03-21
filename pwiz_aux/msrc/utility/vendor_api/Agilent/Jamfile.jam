@@ -33,20 +33,23 @@ if [ modules.peek : NT ]
 rule mhdac-dll-location ( properties * )
 {
     local result ;
-    if <toolset-msvc:version>9.0 in $(properties) ||
-            <toolset-msvc:version>9.0express in $(properties)
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
     {
-        result = $(API_PATH)\\vc9_x86 ;
-    }
-    else
-    {
-        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        if <toolset-msvc:version>9.0 in $(properties) ||
+           <toolset-msvc:version>9.0express in $(properties)
         {
-            result = $(API_PATH)\\vc10_x64 ;
+            result = $(API_PATH)\\vc9_x86 ;
         }
         else
         {
-            result = $(API_PATH)\\vc10_x86 ;
+            if ( [ MATCH (x64) : $(PLATFORM) ] )
+            {
+                result = $(API_PATH)\\vc10_x64 ;
+            }
+            else
+            {
+                result = $(API_PATH)\\vc10_x86 ;
+            }
         }
     }
     return $(result) ;
@@ -71,6 +74,15 @@ rule vendor-api-usage-requirements ( properties * )
     local dll_location = [ mhdac-dll-location $(properties) ] ;
     if $(dll_location) && [ path.exists $(dll_location)\\MassSpecDataReader.dll ]
     {
+        # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc/<link>shared ;
+        }
+        else
+        {
+            result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
+        }
         result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <cxxflags>/wd4945 ; # warning C4945: 'x' : cannot import symbol from 'some.dll': as 'x' has already been imported from another assembly
         result += <assembly>$(dll_location)/MassSpecDataReader.dll ;
@@ -80,7 +92,6 @@ rule vendor-api-usage-requirements ( properties * )
         result += <assembly>$(dll_location)/BaseTof.dll ;
         result += <assembly-dependency>$(dll_location)/agtsampleinforw.dll ;
         result += <assembly-dependency>$(API_PATH)/EULA.MHDAC ;
-        result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
     }
     return $(result) ;
 }

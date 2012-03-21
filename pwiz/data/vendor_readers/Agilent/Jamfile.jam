@@ -38,22 +38,31 @@ path-constant TEST_DATA_PATH : ./Reader_Agilent_Test.data ;
 constant READER_PATH : "pwiz/data/vendor_readers/Agilent" ;
 constant READER_NAME : "Reader_Agilent" ;
 
-if <toolset-msvc:version>9.0 in $(properties) ||
-        <toolset-msvc:version>9.0express in $(properties)
+
+if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
-    path-constant LIB_PATH : $(API_PATH)\\vc9_x86 ;
-}
-else
-{
-    if ( [ MATCH (x64) : $(PLATFORM) ] )
+    if <toolset-msvc:version>9.0 in $(properties) ||
+       <toolset-msvc:version>9.0express in $(properties)
     {
-        path-constant LIB_PATH : $(API_PATH)\\vc10_x64 ;
+        path-constant LIB_PATH : $(API_PATH)\\vc9_x86 ;
     }
     else
     {
-        path-constant LIB_PATH : $(API_PATH)\\vc10_x86 ;
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        {
+            path-constant LIB_PATH : $(API_PATH)\\vc10_x64 ;
+        }
+        else
+        {
+            path-constant LIB_PATH : $(API_PATH)\\vc10_x86 ;
+        }
     }
 }
+else
+{
+    path-constant LIB_PATH : $(API_PATH) ;
+}
+
 
 if [ path.exists $(LIB_PATH)/MassSpecDataReader.dll ]
 {

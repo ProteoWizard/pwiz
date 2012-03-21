@@ -93,6 +93,8 @@ searched-lib pwiz_vendor_api_waters
         <conditional>@msvc-requirement
         <address-model>64:<build>no
         <runtime-debugging>on:<build>no
+        <toolset-msvc:version>10.0,<secure-scl>on:<build>no
+        <toolset-msvc:version>10.0express,<secure-scl>on:<build>no
     : # default-build
     : # usage-requirements
         <conditional>@vendor-api-usage-requirements
