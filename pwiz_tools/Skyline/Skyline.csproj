@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3304</ApplicationRevision>
-    <ApplicationVersion>1.2.1.3305</ApplicationVersion>
+    <ApplicationRevision>3360</ApplicationRevision>
+    <ApplicationVersion>1.2.1.3360</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1487,7 +1487,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Wand.bmp" />
-    <EmbeddedResrouce Include="Resources\minus.bmp" />
+    <EmbeddedResource Include="Resources\minus.bmp" />
     <EmbeddedResource Include="Resources\plus.bmp" />
     <EmbeddedResource Include="Resources\Dash.bmp" />
     <EmbeddedResource Include="Resources\WandProhibit.bmp" />
@@ -1529,11 +1529,11 @@
     <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
-    <Content Include="Resources\Calculator.bmp" />
-    <Content Include="Resources\FragmentDecoy.bmp" />
-    <Content Include="Resources\PeptideDecoy.bmp" />
-    <Content Include="Resources\ProteinDecoy.bmp" />
-    <Content Include="Resources\TransitionGroupDecoy.bmp" />
+    <EmbeddedResource Include="Resources\Calculator.bmp" />
+    <EmbeddedResource Include="Resources\FragmentDecoy.bmp" />
+    <EmbeddedResource Include="Resources\PeptideDecoy.bmp" />
+    <EmbeddedResource Include="Resources\ProteinDecoy.bmp" />
+    <EmbeddedResource Include="Resources\TransitionGroupDecoy.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>
