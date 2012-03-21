@@ -1,2 +1,3 @@
 build-project-if-exists src ;
+build-project-if-exists tests ;
 
