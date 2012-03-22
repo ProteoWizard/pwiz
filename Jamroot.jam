@@ -807,16 +807,48 @@ rule no-express-requirement ( properties * )
 # TODO HACK: find location of MSFileReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
 
 # HACK: find location of WiffFileDataReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
-rule find-wiff-dlls ( api-path )
+rule wiff-dll-location ( api-path : properties * )
 {
-    if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
-
+    local result ;
+    if <toolset-msvc:version>9.0 in $(properties) ||
+            <toolset-msvc:version>9.0express in $(properties)
     {
-        return ; # skip these vendor APIs even if they're available
+        result = $(api-path)\\vc9 ;
     }
-    else if [ path.exists $(api-path)\\Clearcore2.Data.WiffReader.dll ]
+    else
     {
-        return $(api-path) ;
+		result = $(api-path)\\vc10 ;
+    }
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+			[ path.exists $(result)\\Clearcore2.Data.WiffReader.dll ]			
+    {
+		return $(result) ;
+    }
+}
+
+rule mhdac-dll-location ( api-path : properties * )
+{
+    local result ;
+    if <toolset-msvc:version>9.0 in $(properties) ||
+            <toolset-msvc:version>9.0express in $(properties)
+    {
+        result = $(api-path)\\vc9_x86 ;
+    }
+    else
+    {
+        if ( [ MATCH (x64) : $(PLATFORM) ] )
+        {
+            result = $(api-path)\\vc10_x64 ;
+        }
+        else
+        {
+            result = $(api-path)\\vc10_x86 ;
+        }
+    }
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
+			 [ path.exists $(result)\\MassSpecDataReader.dll ]			
+    {
+		return $(result) ;
     }
 }
 

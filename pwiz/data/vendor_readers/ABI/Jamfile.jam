@@ -43,14 +43,11 @@ constant READER_PATH : "pwiz/data/vendor_readers/ABI" ;
 constant READER_NAME : "Reader_ABI" ;
 
 
-if [ find-wiff-dlls $(API_PATH) ] { .hasDLLs = true ; }
-
-
 import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    if <toolset>msvc in $(properties) && $(.hasDLLs)
+    if <toolset>msvc in $(properties) && [ wiff-dll-location $(API_PATH) : $(properties) ]
     {
         result += <source>Reader_ABI_Detail.cpp ;
     }
@@ -62,7 +59,8 @@ rule vendor-api-usage-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs) && ! [ without-binary-msdata ]
+       [ wiff-dll-location $(API_PATH) : $(properties) ] &&
+	   ! [ without-binary-msdata ]
     {
         result += <define>PWIZ_READER_ABI ;
         result += <library>$(API_PATH)//pwiz_vendor_api_abi ;
@@ -82,7 +80,7 @@ rule vendor-api-usage-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if ! $(.hasDLLs)
+        else if ! [ wiff-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
@@ -138,7 +136,7 @@ rule test-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
-        else if ! $(.hasDLLs)
+        else if ! [ wiff-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }

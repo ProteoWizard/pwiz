@@ -38,38 +38,6 @@ path-constant TEST_DATA_PATH : ./Reader_Agilent_Test.data ;
 constant READER_PATH : "pwiz/data/vendor_readers/Agilent" ;
 constant READER_NAME : "Reader_Agilent" ;
 
-
-if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
-{
-    if <toolset-msvc:version>9.0 in $(properties) ||
-       <toolset-msvc:version>9.0express in $(properties)
-    {
-        path-constant LIB_PATH : $(API_PATH)\\vc9_x86 ;
-    }
-    else
-    {
-        if ( [ MATCH (x64) : $(PLATFORM) ] )
-        {
-            path-constant LIB_PATH : $(API_PATH)\\vc10_x64 ;
-        }
-        else
-        {
-            path-constant LIB_PATH : $(API_PATH)\\vc10_x86 ;
-        }
-    }
-}
-else
-{
-    path-constant LIB_PATH : $(API_PATH) ;
-}
-
-
-if [ path.exists $(LIB_PATH)/MassSpecDataReader.dll ]
-{
-    .hasDLLs = true ;
-}
-
-
 rule vendor-api-requirements ( properties * )
 {
     local result ;
@@ -83,10 +51,11 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
+    local dll_location = [ mhdac-dll-location $(API_PATH) : $(properties) ] ;
     if <toolset>msvc in $(properties) &&
        ! ( ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) && [ MATCH (x64) : $(PLATFORM) ] ) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs) &&
+       [ mhdac-dll-location $(API_PATH) : $(properties) ] &&
        ! [ without-binary-msdata ]
     {
         result += <define>PWIZ_READER_AGILENT ;
@@ -112,7 +81,7 @@ rule vendor-api-usage-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if ! $(.hasDLLs)
+        else if ! [ mhdac-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
@@ -146,7 +115,6 @@ rule test-requirements ( properties * )
     }
 
     local result ;
-
     if ! $(.warn-once-test)
     {
         .warn-once-test = true ;
@@ -163,7 +131,7 @@ rule test-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
-        else if ! $(.hasDLLs)
+        else if ! [ mhdac-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }

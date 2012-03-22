@@ -194,7 +194,11 @@ WiffFileImpl::WiffFileImpl(const string& wiffpath)
 {
     try
     {
+#if _MSC_VER > 1500
+        Clearcore2::Licensing::LicenseKeys::Keys = gcnew array<String^> {ABI_BETA_LICENSE_KEY};
+#else
         Licenser::LicenseKey = ABI_BETA_LICENSE_KEY;
+#endif
 
         provider = gcnew AnalystWiffDataProvider();
         batch = AnalystDataProviderFactory::CreateBatch(ToSystemString(wiffpath), provider);

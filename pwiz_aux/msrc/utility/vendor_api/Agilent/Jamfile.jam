@@ -30,36 +30,11 @@ path-constant API_PATH : $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Agil
 if [ modules.peek : NT ]
 {
 
-rule mhdac-dll-location ( properties * )
-{
-    local result ;
-    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
-    {
-        if <toolset-msvc:version>9.0 in $(properties) ||
-           <toolset-msvc:version>9.0express in $(properties)
-        {
-            result = $(API_PATH)\\vc9_x86 ;
-        }
-        else
-        {
-            if ( [ MATCH (x64) : $(PLATFORM) ] )
-            {
-                result = $(API_PATH)\\vc10_x64 ;
-            }
-            else
-            {
-                result = $(API_PATH)\\vc10_x86 ;
-            }
-        }
-    }
-    return $(result) ;
-}
-
 rule vendor-api-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ mhdac-dll-location $(properties) ] ;
-    if $(dll_location) && [ path.exists $(dll_location)\\MassSpecDataReader.dll ]
+    local dll_location = [ mhdac-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
     {
         result += <source>MassHunterData.cpp ;
         result += <using-clr>true ; # requires hacked msvc.jam
@@ -71,8 +46,8 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ mhdac-dll-location $(properties) ] ;
-    if $(dll_location) && [ path.exists $(dll_location)\\MassSpecDataReader.dll ]
+    local dll_location = [ mhdac-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
     {
         # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
         if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
@@ -140,8 +115,8 @@ explicit MassHunterDataTest ;
 rule install-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ mhdac-dll-location $(properties) ] ;
-    if $(dll_location) && [ path.exists $(dll_location)\\MassSpecDataReader.dll ]
+    local dll_location = [ mhdac-dll-location $(API_PATH) : $(properties) ] ;
+    if $(dll_location)
     {
         result += <source>$(dll_location)\\agtsampleinforw.dll ;
         result += <source>$(dll_location)\\BaseCommon.dll ;
