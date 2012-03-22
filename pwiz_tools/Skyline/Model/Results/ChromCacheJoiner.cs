@@ -101,7 +101,7 @@ namespace pwiz.Skyline.Model.Results
                                                                    out chromatogramPeaks);
 
                     // If joining, then format version should have already been checked.
-                    Debug.Assert(formatVersion == ChromatogramCache.FORMAT_VERSION_CACHE ||
+                    Debug.Assert(ChromatogramCache.IsVersionCurrent(formatVersion) ||
                         // WatersCacheTest uses older format partial caches
                         formatVersion == ChromatogramCache.FORMAT_VERSION_CACHE_2);
 

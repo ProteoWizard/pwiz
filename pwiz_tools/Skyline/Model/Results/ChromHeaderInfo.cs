@@ -21,10 +21,13 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using pwiz.Crawdad;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util.Extensions;
 
@@ -538,21 +541,149 @@ namespace pwiz.Skyline.Model.Results
             return File.GetLastWriteTime(SampleHelp.GetPathFilePart(filePath));
         }
 
-        public ChromCachedFile(string filePath, DateTime fileWriteTime, DateTime? runStartTime)
+        public ChromCachedFile(string filePath, DateTime fileWriteTime, DateTime? runStartTime, 
+                               IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
             : this()
         {
             FilePath = filePath;
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
+            InstrumentInfoList = instrumentInfoList;
         }
 
         public string FilePath { get; private set; }
         public DateTime FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+        public IEnumerable<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; } 
 
         public bool IsCurrent
         {
             get { return Equals(FileWriteTime, GetLastWriteTime(FilePath)); }
+        }
+    }
+
+    /// <summary>
+    /// A utility class that provides two methods. One for converting a collection of 
+    /// MsInstrumentConfigInfo objects into a string representation that can be written
+    /// to the chromatogram cache file.
+    /// The second method takes the string representation and parses the instrument information.
+    /// </summary>
+    public sealed class InstrumentInfoUtil
+    {
+        public const string MODEL = "MODEL:";
+        public const string ANALYZER = "ANALYZER:";
+        public const string DETECTOR = "DETECTOR:";
+        public const string IONIZATION = "IONIZATION:";
+
+        public static IEnumerable<MsInstrumentConfigInfo> GetInstrumentInfo(string infoString)
+        {
+            if (String.IsNullOrEmpty(infoString))
+            {
+                return Enumerable.Empty<MsInstrumentConfigInfo>();
+            }
+
+            IList<MsInstrumentConfigInfo> instrumentConfigList = new List<MsInstrumentConfigInfo>();
+
+            using (StringReader reader = new StringReader(infoString))
+            {
+                MsInstrumentConfigInfo instrumentInfo;
+                while (ReadInstrumentConfig(reader, out instrumentInfo))
+                {
+                    if(!instrumentInfo.IsEmpty)
+                        instrumentConfigList.Add(instrumentInfo);
+                }
+            }
+            return instrumentConfigList;
+        }
+
+        private static bool ReadInstrumentConfig(TextReader reader, out MsInstrumentConfigInfo instrumentInfo)
+        {
+            string model = null;
+            string ionization = null;
+            string analyzer = null;
+            string detector = null;
+
+            string line;
+            bool readLine = false;
+            while((line = reader.ReadLine()) != null)
+            {
+                readLine = true;
+
+                if (Equals("", line.Trim())) // We have come too far
+                    break;
+
+                if (line.StartsWith(MODEL))
+                {
+                    model =  line.Substring(MODEL.Length);
+                }
+                else if (line.StartsWith(IONIZATION))
+                {
+                    ionization = line.Substring(IONIZATION.Length);
+                }
+                else if (line.StartsWith(ANALYZER))
+                {
+                    analyzer = line.Substring(ANALYZER.Length);
+                }
+                else if (line.StartsWith(DETECTOR))
+                {
+                    detector = line.Substring(DETECTOR.Length);
+                }
+                else
+                {
+                    throw new IOException(string.Format("Unexpected line in instrument config: {0}", line));
+                }
+            }
+
+            if(readLine)
+            {
+                instrumentInfo = new MsInstrumentConfigInfo(model, ionization, analyzer, detector);
+                return true;
+            }
+            instrumentInfo = null;
+            return false;
+        }
+
+        public static string GetInstrumentInfoString(IEnumerable<MsInstrumentConfigInfo> instrumentConfigList)
+        {
+            if (instrumentConfigList == null)
+                return "";
+
+            StringBuilder infoString = new StringBuilder();
+
+            foreach (var configInfo in instrumentConfigList)
+            {
+                if (configInfo == null || configInfo.IsEmpty)
+                    continue;
+
+				if (infoString.Length > 0)
+	                infoString.Append('\n');
+
+                // instrument model
+                if(!string.IsNullOrWhiteSpace(configInfo.Model))
+                {
+                    infoString.Append(MODEL).Append(configInfo.Model).Append('\n');
+                }
+
+                // ionization type
+                if(!string.IsNullOrWhiteSpace(configInfo.Ionization))
+                {
+                    infoString.Append(IONIZATION).Append(configInfo.Ionization).Append('\n'); 
+                }
+
+                // analyzer
+                if (!string.IsNullOrWhiteSpace(configInfo.Analyzer))
+                {
+                    infoString.Append(ANALYZER).Append(configInfo.Analyzer).Append('\n');  
+                }
+
+                // detector
+                if(!string.IsNullOrWhiteSpace(configInfo.Detector))
+                {
+                    infoString.Append(DETECTOR).Append(configInfo.Detector).Append('\n');
+                }
+            }
+            
+            return infoString.ToString();
         }
     }
 

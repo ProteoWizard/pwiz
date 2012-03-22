@@ -470,7 +470,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // Write this bool whether it is true or false, to allow its absence
             // as a marker of needing default values.
-            writer.WriteAttribute<bool>(ATTR.use_measured_rts, UseMeasuredRTs);
+            writer.WriteAttribute(ATTR.use_measured_rts, UseMeasuredRTs);
             writer.WriteAttributeNullable(ATTR.measured_rt_window, MeasuredRTWindow);
 
             // Write child elements
@@ -1301,8 +1301,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write attibutes
-            writer.WriteAttribute(ATTR.max_variable_mods, MaxVariableMods, DEFAULT_MAX_VARIABLE_MODS);
-            writer.WriteAttribute(ATTR.max_neutral_losses, MaxNeutralLosses, DEFAULT_MAX_NEUTRAL_LOSSES);
+            writer.WriteAttribute(ATTR.max_variable_mods, MaxVariableMods);
+            writer.WriteAttribute(ATTR.max_neutral_losses, MaxNeutralLosses);
             if (InternalStandardTypes.Count == 1)
             {
                 var internalStandardType = InternalStandardTypes[0];

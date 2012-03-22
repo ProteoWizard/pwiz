@@ -543,7 +543,7 @@ namespace pwiz.SkylineTestA
                                  "--import-all=" + testFilesDir.FullPath,
                                  "--save");
 
-                Assert.IsTrue(msg.Contains("Warning: Cannot read file"));
+                Assert.IsTrue(msg.Contains("Warning: Cannot read file"), msg);
                 doc = ResultsUtil.DeserializeDocument(docPath);
                 Assert.IsTrue(doc.Settings.HasResults);
                 Assert.AreEqual(6, doc.Settings.MeasuredResults.Chromatograms.Count,

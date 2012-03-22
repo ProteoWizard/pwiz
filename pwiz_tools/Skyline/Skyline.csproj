@@ -394,6 +394,7 @@
     <Compile Include="FileUI\SchedulingOptionsDlg.Designer.cs">
       <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
     <Compile Include="Model\DocSettings\Loss.cs" />
     <Compile Include="Model\DocSettings\MeasuredIon.cs" />

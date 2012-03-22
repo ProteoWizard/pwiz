@@ -353,7 +353,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     AAs = null;
             }
 
-            Terminus = reader.GetAttribute<ModTerminus>(ATTR.terminus, ToModTerminus);
+            Terminus = reader.GetAttribute(ATTR.terminus, ToModTerminus);
             IsVariable = IsExplicit = reader.GetBoolAttribute(ATTR.variable);
             Formula = reader.GetAttribute(ATTR.formula);
             if (reader.GetBoolAttribute(ATTR.label_13C))
@@ -621,6 +621,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public ExplicitMods(PeptideDocNode nodePep,
             IList<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
             IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods)
+            :this(nodePep, staticMods, listStaticMods, heavyMods, listHeavyMods, false)
+        {
+            
+        }
+
+        public ExplicitMods(PeptideDocNode nodePep,
+            IList<StaticMod> staticMods, MappedList<string, StaticMod> listStaticMods,
+            IEnumerable<TypedModifications> heavyMods, MappedList<string, StaticMod> listHeavyMods,
+            bool implicitOnly)
         {
             Peptide = nodePep.Peptide;
 
@@ -632,7 +641,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 IList<ExplicitMod> explicitMods = GetImplicitMods(staticMods, listStaticMods);
                 // If the peptide has variable modifications, make them all override
                 // the modification state of the default implicit mods
-                if (nodePep.HasVariableMods)
+                if (!implicitOnly && nodePep.HasVariableMods)
                 {
                     explicitMods = MergeExplicitMods(nodePep.ExplicitMods.StaticModifications,
                         explicitMods, staticMods);

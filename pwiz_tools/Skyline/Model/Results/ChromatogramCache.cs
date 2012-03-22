@@ -31,7 +31,8 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
-        public const int FORMAT_VERSION_CACHE = 3;
+        public const int FORMAT_VERSION_CACHE = 4;
+        public const int FORMAT_VERSION_CACHE_3 = 3;
         public const int FORMAT_VERSION_CACHE_2 = 2;
 
         public const string EXT = ".skyd";
@@ -123,9 +124,26 @@ namespace pwiz.Skyline.Model.Results
         /// <summary>
         /// True if cache version is acceptable for current use.
         /// </summary>
+        public bool IsSupportedVersion
+        {
+            get
+            {
+                return (Version >= FORMAT_VERSION_CACHE_2);
+            }
+        }
+
         public bool IsCurrentVersion
         {
-            get { return (Version == FORMAT_VERSION_CACHE || Version == FORMAT_VERSION_CACHE_2); }
+            get
+            {
+                return IsVersionCurrent(Version);
+            }
+        }
+
+        public static bool IsVersionCurrent(int version)
+        {
+            return (version == FORMAT_VERSION_CACHE ||
+                    version == FORMAT_VERSION_CACHE_3);
         }
 
         public bool IsCurrentDisk
@@ -295,9 +313,12 @@ namespace pwiz.Skyline.Model.Results
             // Version 3 file header addition
             runstart_lo,
             runstart_hi,
+            // Version 4 file header addition
+            len_instrument_info,
 
             count,
-            count2 = runstart_lo
+            count2 = runstart_lo,
+			count3 = len_instrument_info,
         }
         // ReSharper restore UnusedMember.Local
 
@@ -414,8 +435,8 @@ namespace pwiz.Skyline.Model.Results
             // Read list of files cached
             stream.Seek(locationFiles, SeekOrigin.Begin);
             chromCacheFiles = new ChromCachedFile[numFiles];
-            int countFileHeader = (int) (formatVersion == FORMAT_VERSION_CACHE ?
-                FileHeader.count : FileHeader.count2) * 4;
+            var countFileHeader = GetFileHeaderCount(formatVersion);
+
             byte[] fileHeader = new byte[countFileHeader];
             byte[] filePathBuffer = new byte[1024];
             for (int i = 0; i < numFiles; i++)
@@ -424,13 +445,24 @@ namespace pwiz.Skyline.Model.Results
                 long modifiedBinary = BitConverter.ToInt64(fileHeader, ((int)FileHeader.modified_lo) * 4);
                 int lenPath = GetInt32(fileHeader, (int)FileHeader.len_path);
                 ReadComplete(stream, filePathBuffer, lenPath);
-                long runstartBinary = (formatVersion == FORMAT_VERSION_CACHE
+				long runstartBinary = (IsVersionCurrent(formatVersion)
                                            ? BitConverter.ToInt64(fileHeader, ((int) FileHeader.runstart_lo)*4)
                                            : 0);
                 string filePath = Encoding.Default.GetString(filePathBuffer, 0, lenPath);
+
+                string instrumentInfoStr = null;
+                if (formatVersion > FORMAT_VERSION_CACHE_3)
+                {
+                    int lenInstrumentInfo = GetInt32(fileHeader, (int) FileHeader.len_instrument_info);
+                    byte[] instrumentInfoBuffer = new byte[lenInstrumentInfo];
+                    ReadComplete(stream, instrumentInfoBuffer, lenInstrumentInfo);
+                    instrumentInfoStr = Encoding.UTF8.GetString(instrumentInfoBuffer, 0, lenInstrumentInfo);
+                }
+
                 DateTime modifiedTime = DateTime.FromBinary(modifiedBinary);
                 DateTime? runstartTime = runstartBinary != 0 ? DateTime.FromBinary(runstartBinary) : (DateTime?) null;
-                chromCacheFiles[i] = new ChromCachedFile(filePath, modifiedTime, runstartTime);
+                var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
+                chromCacheFiles[i] = new ChromCachedFile(filePath, modifiedTime, runstartTime, instrumentInfoList);
             }
 
             // Read list of chromatogram group headers
@@ -444,6 +476,19 @@ namespace pwiz.Skyline.Model.Results
             chromatogramPeaks = ChromPeak.ReadArray(stream, numPeaks);
 
             return locationPeaks;
+        }
+
+        private static int GetFileHeaderCount(int formatVersion)
+        {
+            switch (formatVersion)
+            {
+                case (FORMAT_VERSION_CACHE):
+                    return (int) (FileHeader.count)*4;
+                case (FORMAT_VERSION_CACHE_3):
+                    return (int) (FileHeader.count3)*4;
+                default:
+                    return (int) (FileHeader.count2)*4;
+            }
         }
 
         private static long EmptyCache(out ChromCachedFile[] chromCacheFiles,
@@ -533,7 +578,16 @@ namespace pwiz.Skyline.Model.Results
                 var runStartTime = cachedFile.RunStartTime;
                 time = (runStartTime.HasValue ? runStartTime.Value.ToBinary() : 0);
                 outStream.Write(BitConverter.GetBytes(time), 0, sizeof(long));
+
+                // Version 4 write instrument information
+                string instrumentInfo = InstrumentInfoUtil.GetInstrumentInfoString(cachedFile.InstrumentInfoList);
+                int instrumentInfoLen = Encoding.UTF8.GetByteCount(instrumentInfo);
+                byte[] instrumentInfoBuffer = new byte[instrumentInfoLen];
+                Encoding.UTF8.GetBytes(instrumentInfo, 0, instrumentInfo.Length, instrumentInfoBuffer, 0);
+                outStream.Write(BitConverter.GetBytes(instrumentInfoLen), 0, sizeof(int));
+
                 outStream.Write(pathBuffer, 0, len);
+                outStream.Write(instrumentInfoBuffer, 0, instrumentInfoLen);
             }
 
             outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));

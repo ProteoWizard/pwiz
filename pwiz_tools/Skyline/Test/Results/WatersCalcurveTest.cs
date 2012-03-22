@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
@@ -65,6 +66,40 @@ namespace pwiz.SkylineTest.Results
         #endregion
 
         private const string ZIP_FILE = @"Test\Results\WatersCalcurve.zip";
+
+        [TestMethod]
+        public void WatersFileTypeTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+
+            string extRaw = ExtensionTestContext.ExtWatersRaw;
+
+            // Do file type checks
+            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + extRaw));
+            Assert.IsTrue(msData.IsWatersFile);
+            msData.Dispose();
+
+            msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"));
+            Assert.IsTrue(msData.IsWatersFile);
+            msData.Dispose();
+
+            // TODO: Fix Proteowizard.
+            // This mzXML is from the MassWolf converter.  
+            // The source file types are recorded as "RAWData" and the parent file extension is .raw. 
+            // This ends up getting interpreted as ""Thermo RAW file" when reading with proteowizard.
+            // msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzXML"));
+            // Assert.IsFalse(msData.IsWatersFile);
+            // Assert.IsTrue(msData.IsThermoFile);
+            // msData.Dispose();
+
+            msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"));
+            Assert.IsTrue(msData.IsWatersFile);
+            msData.Dispose();
+
+            msData = new MsDataFileImpl(testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML"));
+            Assert.IsTrue(msData.IsWatersFile);
+            msData.Dispose();
+        }
 
         [TestMethod]
         public void WatersMultiReplicateTest()

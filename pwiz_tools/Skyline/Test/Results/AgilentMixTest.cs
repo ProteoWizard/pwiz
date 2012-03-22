@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
@@ -60,6 +61,19 @@ namespace pwiz.SkylineTest.Results
         #endregion
 
         private const string ZIP_FILE = @"Test\Results\AgilentMix.zip";
+
+        [TestMethod]
+        public void AgilentFileTypeTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+
+            string extRaw = ExtensionTestContext.ExtAgilentRaw;
+
+            // Do file type check
+            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + extRaw));
+            Assert.IsTrue(msData.IsAgilentFile);
+            msData.Dispose();
+        }
 
         [TestMethod]
         public void AgilentFormatsTest()

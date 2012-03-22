@@ -85,6 +85,21 @@ namespace pwiz.Skyline.Model
             return true;
         }
 
+        public bool CanHaveImplicitStaticMods
+        {
+            get
+            {
+                return !HasExplicitMods ||
+                       !ExplicitMods.IsModified(IsotopeLabelType.light) ||
+                       ExplicitMods.IsVariableStaticMods;
+            }
+        }
+
+        public bool CanHaveImplicitHeavyMods(IsotopeLabelType labelType)
+        {
+            return !HasExplicitMods || !ExplicitMods.IsModified(labelType);
+        }
+
         public bool HasChildType(IsotopeLabelType labelType)
         {
             return Children.Contains(nodeGroup => ReferenceEquals(labelType,

@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -67,6 +68,27 @@ namespace pwiz.SkylineTest.Results
         #endregion
 
         private const string ZIP_FILE = @"Test\Results\ThermoQuant.zip";
+
+        [TestMethod]
+        public void ThermoFileTypeTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+
+            string extRaw = ExtensionTestContext.ExtThermoRaw;
+
+            // Do file type checks
+            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03" + extRaw));
+            Assert.IsTrue(msData.IsThermoFile);
+            msData.Dispose();
+
+            msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_03.mzXML"));
+            Assert.IsTrue(msData.IsThermoFile);
+            msData.Dispose();
+
+            msData = new MsDataFileImpl(testFilesDir.GetTestPath("Site20_STUDY9P_PHASEII_QC_05" + extRaw));
+            Assert.IsTrue(msData.IsThermoFile);
+            msData.Dispose();
+        }
 
         /// <summary>
         /// Verifies that canceling an import cleans up correctly.

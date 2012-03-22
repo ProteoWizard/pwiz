@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -365,17 +366,29 @@ namespace pwiz.Skyline.Model.Results
             return reader.Deserialize(new ChromatogramSet());
         }
 
-        private enum EL
+        public enum EL
         {
             sample_file,
             replicate_file,
-            chromatogram_file
+            chromatogram_file,
+            instrument_info_list,
+            instrument_info,
+            model,
+            ionsource,
+            analyzer,
+            detector
         }
 
-        private enum ATTR
+        public enum ATTR
         {
             id,
-            file_path
+            file_path,
+            sample_name,
+            modified_time,
+            acquired_time,
+            cvid,
+            name,
+            value
         }
 
         private static readonly IXmlElementHelper<OptimizableRegression>[] OPTIMIZATION_HELPERS =
@@ -409,6 +422,11 @@ namespace pwiz.Skyline.Model.Results
                 string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
                 fileLoadIds.Add(id);
                 reader.Read();
+                if (reader.IsStartElement(EL.instrument_info_list))
+                {
+                    reader.Skip();
+                    reader.Read();
+                } 
             }
 
             MSDataFileInfos = msDataFilePaths.ConvertAll(path => new ChromFileInfo(path));
@@ -433,15 +451,55 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteElement(helper.ElementNames[0], OptimizationFunction);                
             }
 
-            int i = 0, countFiles = FileCount;
-            foreach (var path in MSDataFilePaths)
+            int i = 0;
+            foreach (var fileInfo in MSDataFileInfos)
             {
                 writer.WriteStartElement(EL.sample_file);
-                if (countFiles > 1)
-                    writer.WriteAttribute(ATTR.id, GetOrdinalSaveId(i++));
-                writer.WriteAttribute(ATTR.file_path, path);
+                writer.WriteAttribute(ATTR.id, GetOrdinalSaveId(i++));
+                writer.WriteAttribute(ATTR.file_path, fileInfo.FilePath);
+                writer.WriteAttribute(ATTR.sample_name, SampleHelp.GetFileSampleName(fileInfo.FilePath));
+                if(fileInfo.RunStartTime != null)
+                {
+                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, "yyyy-MM-ddTHH:mm:ss"));
+                }
+                if(fileInfo.FileWriteTime != null)
+                {
+                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, "yyyy-MM-ddTHH:mm:ss"));
+                }
+
+                // instrument information
+                WriteInstrumentConfigList(writer, fileInfo.InstrumentInfoList);
+
                 writer.WriteEndElement();
             }
+        }
+
+        private void WriteInstrumentConfigList(XmlWriter writer, IList<MsInstrumentConfigInfo> instrumentInfoList)
+        {
+            if (instrumentInfoList == null || instrumentInfoList.Count == 0)
+                return;
+
+            writer.WriteStartElement(EL.instrument_info_list);
+
+            foreach (var instrumentInfo in instrumentInfoList)
+            {
+                writer.WriteStartElement(EL.instrument_info);
+
+                if(!string.IsNullOrWhiteSpace(instrumentInfo.Model))
+                    writer.WriteElementString(EL.model, instrumentInfo.Model);
+
+                if(!string.IsNullOrWhiteSpace(instrumentInfo.Ionization))
+                    writer.WriteElementString(EL.ionsource, instrumentInfo.Ionization);
+
+                if (!string.IsNullOrWhiteSpace(instrumentInfo.Analyzer))
+                    writer.WriteElementString(EL.analyzer, instrumentInfo.Analyzer);
+
+                if (!string.IsNullOrWhiteSpace(instrumentInfo.Detector))
+                    writer.WriteElementString(EL.detector, instrumentInfo.Detector);
+
+                writer.WriteEndElement();
+            }
+            writer.WriteEndElement();
         }
 
         private string GetOrdinalSaveId(int ordinalIndex)
@@ -499,13 +557,22 @@ namespace pwiz.Skyline.Model.Results
             : base(new ChromFileInfoId())            
         {
             FilePath = filePath;
+            InstrumentInfoList = new MsInstrumentConfigInfo[0];
         }
+
+        private ReadOnlyCollection<MsInstrumentConfigInfo> _instrumentInfoList;
 
         public ChromFileInfoId FileId { get { return (ChromFileInfoId) Id; }}
         public int FileIndex { get { return Id.GlobalIndex; } }
         public string FilePath { get; private set; }
         public DateTime? FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+
+        public IList<MsInstrumentConfigInfo> InstrumentInfoList
+        {
+            get { return _instrumentInfoList; }
+            private set { _instrumentInfoList = MakeReadOnly(value); }
+        }
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget
         {
@@ -526,6 +593,7 @@ namespace pwiz.Skyline.Model.Results
                                                      im.FilePath = fileInfo.FilePath;
                                                      im.FileWriteTime = fileInfo.FileWriteTime;
                                                      im.RunStartTime = fileInfo.RunStartTime;
+                                                     im.InstrumentInfoList = fileInfo.InstrumentInfoList.ToArray();
                                                  });
         }
 
@@ -540,7 +608,8 @@ namespace pwiz.Skyline.Model.Results
             return Equals(other.Id, Id) &&
                 Equals(other.FilePath, FilePath) &&
                 other.FileWriteTime.Equals(FileWriteTime) &&
-                other.RunStartTime.Equals(RunStartTime);
+                other.RunStartTime.Equals(RunStartTime) &&
+                ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList);
         }
 
         public override bool Equals(object obj)
@@ -559,6 +628,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ FilePath.GetHashCode();
                 result = (result*397) ^ (FileWriteTime.HasValue ? FileWriteTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (RunStartTime.HasValue ? RunStartTime.Value.GetHashCode() : 0);
+                result = (result*397) ^
+                         (InstrumentInfoList != null ? InstrumentInfoList.GetHashCodeDeep() : 0);
                 return result;
             }
         }

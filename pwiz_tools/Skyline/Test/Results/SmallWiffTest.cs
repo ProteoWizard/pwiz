@@ -67,10 +67,28 @@ namespace pwiz.SkylineTest.Results
 
         #endregion
 
+        private const string ZIP_FILE = @"Test\Results\SmallWiff.zip";
+
+        [TestMethod]
+        public void FileTypeTest()
+        {
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+
+            // Do file type checks
+            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion.wiff"));
+            Assert.IsTrue(msData.IsABFile);
+            msData.Dispose();
+
+            msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion-s3.mzXML"));
+            Assert.IsTrue(msData.IsABFile);
+            Assert.IsTrue(msData.IsMzWiffXml);
+            msData.Dispose();
+        }
+
         [TestMethod]
         public void WiffResultsTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"Test\Results\SmallWiff.zip");
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             SrmDocument doc = InitWiffDocument(testFilesDir);
             var docContainer = new ResultsTestDocumentContainer(doc,

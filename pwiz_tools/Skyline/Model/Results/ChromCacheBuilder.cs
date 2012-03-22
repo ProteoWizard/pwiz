@@ -36,9 +36,11 @@ namespace pwiz.Skyline.Model.Results
         public FileBuildInfo(MsDataFileImpl file)
         {
             StartTime = file.RunStartTime;
+            InstrumentInfoList = file.GetInstrumentConfigInfoList();
         }
 
         public DateTime? StartTime { get; private set; }
+        public IEnumerable<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; }
     }
 
     internal sealed class ChromCacheBuilder : ChromCacheWriter
@@ -657,7 +659,7 @@ namespace pwiz.Skyline.Model.Results
                             string dataFilePath = MSDataFilePaths[_currentFileIndex];
                             DateTime fileWriteTime = ChromCachedFile.GetLastWriteTime(dataFilePath);
                             DateTime? runStartTime = _currentFileInfo.StartTime;
-                            _listCachedFiles.Add(new ChromCachedFile(dataFilePath, fileWriteTime, runStartTime));
+                            _listCachedFiles.Add(new ChromCachedFile(dataFilePath, fileWriteTime, runStartTime, _currentFileInfo.InstrumentInfoList));
                             _currentFileIndex++;
 
                             // Allow the reader thread to exit

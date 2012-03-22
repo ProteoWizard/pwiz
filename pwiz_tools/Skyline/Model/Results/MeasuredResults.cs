@@ -202,7 +202,7 @@ namespace pwiz.Skyline.Model.Results
 // ReSharper disable MemberCanBeMadeStatic.Local
         private bool IsValidCache(ChromatogramCache cache, bool current)
         {
-            if (!cache.IsCurrentVersion)
+            if (!cache.IsSupportedVersion)
                 return false;
             // Not if missing any files from the replicates
 //            if (MSDataFilePaths.Contains(path => !cache.CachedFiles.Contains(cachedFile =>
@@ -806,7 +806,7 @@ namespace pwiz.Skyline.Model.Results
                                 try
                                 {
                                     var cache = ChromatogramCache.Load(replicatePath, _status, _loader);
-                                    if (cache.IsCurrentVersion)
+                                    if (cache.IsSupportedVersion)
                                         listPartialCaches.Add(cache);
                                 }
                                 catch (Exception x)
@@ -835,7 +835,7 @@ namespace pwiz.Skyline.Model.Results
                             try
                             {
                                 var cache = ChromatogramCache.Load(sharedCachePath, _status, _loader);
-                                if (cache.IsCurrentVersion)
+                                if (cache.IsSupportedVersion)
                                     listAddCaches.Add(cache);
                             }
                             catch (IOException)
@@ -925,7 +925,7 @@ namespace pwiz.Skyline.Model.Results
                                 try
                                 {
                                     var cache = ChromatogramCache.Load(partPath, _status, _loader);
-                                    if (cache.IsCurrentVersion)
+                                    if (cache.IsSupportedVersion)
                                     {
                                         var listPartialCaches = new List<ChromatogramCache>();
                                         if (_resultsClone._listPartialCaches != null)
