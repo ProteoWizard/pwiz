@@ -153,6 +153,7 @@
 <Component Feature="MainFeature"><File Id="_STL_Containers.dll" Name="STL_Containers.dll" Source="msvc-release\STL_Containers.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_txt2mzml.exe" Name="txt2mzml.exe" Source="msvc-release\txt2mzml.exe" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_ZedGraph.dll" Name="ZedGraph.dll" Source="msvc-release\ZedGraph.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_msparser.dll" Name="msparser.dll" Source="msvc-release\msparser.dll" KeyPath="yes"/></Component>
                 </Directory>
             </Directory>
          </Directory>
