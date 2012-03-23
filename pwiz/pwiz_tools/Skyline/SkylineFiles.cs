@@ -1059,17 +1059,22 @@ namespace pwiz.Skyline
 
         private static bool HasResults(IEnumerable<string> filePaths)
         {
-            char[] buffer = new char[4096];
             foreach (string filePath in filePaths)
             {
                 try
                 {
                     using (var reader = new StreamReader(filePath))
                     {
-                        int readChars = reader.Read(buffer, 0, buffer.Length);
-                        string headerText = new string(buffer, 0, readChars);
-                        if (headerText.Contains("<measured_results"))
-                            return true;
+                        string line;
+                        while ((line = reader.ReadLine()) != null)
+                        {
+                            // If there is a measured results tag before the settings_summary end
+                            // tag, then this document contains results.  Otherwise not.
+                            if (line.Contains("<measured_results"))
+                                return true;
+                            if (line.Contains("</settings_summary>"))
+                                return false;
+                        }
                     }
                 }
                 catch (IOException)
