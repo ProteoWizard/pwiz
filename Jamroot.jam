@@ -89,103 +89,6 @@ else
     exit ;
 }
 
-
-# special support for MSFileReader on Windows
-if ( [ MATCH (NT) : $(.os) ] )
-{
-    # can't build or run 64-bit version on Windows 32-bit OS
-    import os ;
-    local ProgramFiles = [ os.environ ProgramFiles ] ;
-
-    if ( [ MATCH (x64) : $(PLATFORM) ] )
-    {
-        # HACK: we can't just look at the PROCESSOR_ARCHITECTURE environment variable, because it is
-        #       set to "x86" even on a 64-bit machine, probably because bjam is running in 32-bit mode
-        if ( ! [ MATCH (x86) : $(ProgramFiles) ] )    # infer 64-bit machine from (x86) appended to ProgramFiles
-        {
-            EXIT "\n*** ERROR: It is not possible to build or run a 64-bit build on 32-bit Windows." ;
-        }
-        
-        # MSFileReader install directory
-        constant ProgramFilesLibs : "C:\\Program Files" ;
-        constant MSFILEREADER_SUFFIX : "_x64" ;
-    }
-    else
-    {
-        # MSFileReader install directory
-        constant ProgramFilesLibs : "$(ProgramFiles)" ;
-        constant MSFILEREADER_SUFFIX : "" ;
-    }
-    constant MSFILEREADER_INSTALL_DIR : "$(ProgramFilesLibs)\\Thermo\\MSFileReader" ;
-}
-
-rule mascot-parser-location ( properties * )
-{
-    if <toolset-msvc:version>9.0 in $(properties) ||
-            <toolset-msvc:version>9.0express in $(properties)
-    {
-        return "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2008" ;
-    }
-    else
-    {
-        return "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2010" ;
-    }
-}
-
-rule msparser-path ( properties * )
-{
-    # Assign the most likely msparser library path
-    local msparser_path_arg = [ MATCH --msparser-path=(.*) : [ modules.peek : ARGV ] ] ;
-
-    local parser-path ;
-    if $(msparser_path_arg)
-    {
-        lib-location = $(msparser_path_arg) ;
-    }
-    else if "NT" in [ modules.peek : OS ]
-    {
-        lib-location = [ mascot-parser-location $(properties) ] ;
-    } 
-    else if "LINUX" in [ modules.peek : OS ]
-    {
-        lib-location = "/usr/local/msparser" ;
-    }
-
-    # Check for msparser existence.
-    if "NT" in [ modules.peek : OS ] && [ path.exists $(lib-location)/lib/msparser.lib ]        
-    {
-        if ! $(.warn-once)
-        {
-            .warn-once = true ;
-            echo "Using Mascot Parser in $(lib-location)" ;
-        }
-        return $(lib-location) ;
-    }
-    else if "LINUX" in [ modules.peek : OS ] && [ path.exists $(lib-location)/lib/libmsparser.a ]
-    {
-        if ! $(.warn-once)
-        {
-            .warn-once = true ;
-            echo "Using Mascot Parser in $(lib-location)" ;
-        }
-        return $(lib-location) ;
-    }
-    else if ! $(.warn-once)
-    {
-        .warn-once = true ;
-        
-        if $(lib-location)
-        {
-            echo "Warning: No Mascot Parser found at $(lib-location)." ;
-        }
-        else
-        {
-            echo "Warning: No Mascot Parser found." ;
-        }
-        echo "         Mascot support will be disabled." ;
-    }
-}
-
 constant BOOST_VERSION : 1 43 0 ;
 
 local default_libraries_path = "./libraries" ;
@@ -646,7 +549,7 @@ rule install-vendor-api-dependencies ( properties * )
     return $(dependencies) ;
 }
 
-rule install-indentdata-dependencies ( properties * )
+rule install-identdata-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
     local dependencies ;
@@ -691,6 +594,7 @@ install executables
       pwiz_tools/examples//example_tools
     : <conditional>@install-type
       <conditional>@install-location
+      <conditional>@install-identdata-dependencies
       <conditional>@install-vendor-api-dependencies
       <conditional>@dotNET-dependencies
       <conditional>@gcc-install-dll-path
@@ -718,7 +622,7 @@ install idconvert
     : pwiz_tools/commandline//idconvert
     : <conditional>@install-type
       <conditional>@install-location
-      <conditional>@install-indentdata-dependencies
+      <conditional>@install-identdata-dependencies
       <conditional>@install-vendor-api-dependencies
       <conditional>@gcc-install-dll-path
     ;
@@ -804,25 +708,52 @@ rule no-express-requirement ( properties * )
     if 10.0express in $(properties:G=) { return <build>no ; }
 }
 
-# TODO HACK: find location of MSFileReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
+# special support for MSFileReader on Windows
+if [ modules.peek : NT ]
+{
+    # can't build or run 64-bit version on Windows 32-bit OS
+    import os ;
+    local ProgramFiles = [ os.environ ProgramFiles ] ;
+
+    if ( [ MATCH (x64) : $(PLATFORM) ] )
+    {
+        # HACK: we can't just look at the PROCESSOR_ARCHITECTURE environment variable, because it is
+        #       set to "x86" even on a 64-bit machine, probably because bjam is running in 32-bit mode
+        if ( ! [ MATCH (x86) : $(ProgramFiles) ] )    # infer 64-bit machine from (x86) appended to ProgramFiles
+        {
+            EXIT "\n*** ERROR: It is not possible to build or run a 64-bit build on 32-bit Windows." ;
+        }
+        
+        # MSFileReader install directory
+        constant ProgramFilesLibs : "C:\\Program Files" ;
+        constant MSFILEREADER_SUFFIX : "_x64" ;
+    }
+    else
+    {
+        # MSFileReader install directory
+        constant ProgramFilesLibs : "$(ProgramFiles)" ;
+        constant MSFILEREADER_SUFFIX : "" ;
+    }
+    constant MSFILEREADER_INSTALL_DIR : "$(ProgramFilesLibs)\\Thermo\\MSFileReader" ;
+} # if NT
 
 # HACK: find location of WiffFileDataReader DLLs (it must be in Jamroot so both vendor_readers and vendor_api can use it)
 rule wiff-dll-location ( api-path : properties * )
 {
     local result ;
     if <toolset-msvc:version>9.0 in $(properties) ||
-            <toolset-msvc:version>9.0express in $(properties)
+       <toolset-msvc:version>9.0express in $(properties)
     {
         result = $(api-path)\\vc9 ;
     }
     else
     {
-		result = $(api-path)\\vc10 ;
+        result = $(api-path)\\vc10 ;
     }
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-			[ path.exists $(result)\\Clearcore2.Data.WiffReader.dll ]			
+       [ path.exists $(result)\\Clearcore2.Data.WiffReader.dll ]            
     {
-		return $(result) ;
+        return $(result) ;
     }
 }
 
@@ -830,7 +761,7 @@ rule mhdac-dll-location ( api-path : properties * )
 {
     local result ;
     if <toolset-msvc:version>9.0 in $(properties) ||
-            <toolset-msvc:version>9.0express in $(properties)
+       <toolset-msvc:version>9.0express in $(properties)
     {
         result = $(api-path)\\vc9_x86 ;
     }
@@ -846,13 +777,95 @@ rule mhdac-dll-location ( api-path : properties * )
         }
     }
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ] &&
-			 [ path.exists $(result)\\MassSpecDataReader.dll ]			
+       [ path.exists $(result)\\MassSpecDataReader.dll ]            
     {
-		return $(result) ;
+        return $(result) ;
     }
 }
 
 
+rule msparser-path ( properties * )
+{
+    # Assign the most likely msparser library path
+    local msparser_path_arg = [ MATCH --msparser-path=(.*) : [ modules.peek : ARGV ] ] ;
+
+    local lib-location ;
+    if $(msparser_path_arg)
+    {
+        lib-location = $(msparser_path_arg) ;
+    }
+    else if <toolset>msvc in $(properties)
+    {
+        if <toolset-msvc:version>9.0 in $(properties) ||
+           <toolset-msvc:version>9.0express in $(properties)
+        {
+            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2008" ;
+        }
+        else
+        {
+            lib-location = "$(ProgramFilesLibs)\\Matrix Science\\Mascot Parser\\vs2010" ;
+        }
+    } 
+    else if <toolset>gcc in $(properties)
+    {
+        lib-location = "/usr/local/msparser" ;
+    }
+
+    # Check for msparser existence.
+    if <toolset>msvc in $(properties) && [ path.exists $(lib-location)/lib/msparser.lib ]        
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "Using Mascot Parser in $(lib-location)" ;
+        }
+        return $(lib-location) ;
+    }
+    else if <toolset>gcc in $(properties) && [ path.exists $(lib-location)/lib/libmsparser.a ]
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "Using Mascot Parser in $(lib-location)" ;
+        }
+        return $(lib-location) ;
+    }
+    else if ! $(.warn-once)
+    {
+        .warn-once = true ;
+        
+        if $(lib-location)
+        {
+            echo "Warning: No Mascot Parser found at $(lib-location)." ;
+        }
+        else
+        {
+            echo "Warning: No Mascot Parser found." ;
+        }
+        echo "         Mascot support will be disabled." ;
+    }
+}
+
+rule msparser-requirements ( properties * )
+{
+    local msparser_path = [ msparser-path $(properties) ] ;
+    local result = <include>$(msparser_path)/include ;
+    if <toolset>msvc in $(properties)
+    {
+        result += <search>$(msparser_path)/lib ;
+        if <runtime-debugging>on in $(properties)
+        {
+            result += <name>msparserD ;
+        }
+    }
+    else if <toolset>gcc in $(properties)
+    {
+        result += <search>$(msparser_path) ;
+    }
+    return $(result) ;
+}
+
+searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@msparser-requirements ;
 
 
 # any source tree can build binary tarballs

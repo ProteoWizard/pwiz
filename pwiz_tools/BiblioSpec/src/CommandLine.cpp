@@ -82,7 +82,7 @@ CommandLine::CommandLine(const char* exeName,
     fileOptions_.add(commonOptions);
     helpOptions_.add(commonOptions);
     
-};
+}
 
 /**
  * Define visible options that are allowed in the parameter file only,
@@ -160,7 +160,7 @@ void CommandLine::parse(int argc,
     }
     
     
-};
+}
 
 
 /**

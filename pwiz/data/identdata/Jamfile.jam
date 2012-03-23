@@ -47,12 +47,6 @@ rule mascot-api-requirements ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        # CONSIDER: Should this be checking msvc?
-        if "NT" in [ modules.peek : OS ]
-        {
-            result += <include>$(PWIZ_ROOT_PATH)/libraries/msvc_extra ;
-        }
-        result += <include>$(msparser_path)/include ;
         result += <source>MascotReader.cpp ;
     }
     else
@@ -68,24 +62,7 @@ rule mascot-api-usage-requirements ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        if "NT" in [ modules.peek : OS ]
-        {
-            if <variant>debug in $(properties) ||
-                <debug-symbols>on in $(properties)
-            {   
-                result += <library>$(msparser_path)/lib/msparserD.lib ;
-                result += <assembly>$(msparser_path)/lib/msparserD.dll ;
-            }
-            else
-            {
-                result += <library>$(msparser_path)/lib/msparser.lib ;
-                result += <assembly>$(msparser_path)/lib/msparser.dll ;
-            }
-        } 
-        else if "LINUX" in [ modules.peek : OS ]
-        {
-            result += <library>$(msparser_path)/libmsparser.a ;
-        }
+        result += <library>$(PWIZ_ROOT_PATH)//msparser ;
     }
 
     return $(result) ;
@@ -145,19 +122,21 @@ lib pwiz_data_identdata_examples
 rule install-requirements ( properties * )
 {
     local msparser_path = [ msparser-path $(properties) ] ;
-    if "NT" in [ modules.peek : OS ] && $(msparser_path)
+    if $(msparser_path)
     {
-        if <variant>debug in $(properties) ||
-            <debug-symbols>on in $(properties)
-        {   
-            return <source>$(msparser_path)/lib/msparserD.dll
-                <source>$(msparser_path)/../config/unimod_2.xsd ;
-        }
-        else
+        local result = <source>$(msparser_path)/../config/unimod_2.xsd ;    
+        if <toolset>msvc in $(properties)
         {
-            return <source>$(msparser_path)/lib/msparser.dll
-                <source>$(msparser_path)/../config/unimod_2.xsd ;
+            if <runtime-debugging>on in $(properties)
+            {
+                result += <source>$(msparser_path)/lib/msparserD.dll ;
+            }
+            else
+            {
+                result += <source>$(msparser_path)/lib/msparser.dll ;
+            }
         }
+        return $(result) ;
     }
 }
 

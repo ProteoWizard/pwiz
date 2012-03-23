@@ -55,13 +55,13 @@ rule vendor-api-requirements ( properties * )
         result += <assembly>$(dll_location)/Clearcore2.ProjectUtilities.dll ;
         result += <assembly>$(dll_location)/Clearcore2.StructuredStorage.dll ;
         result += <assembly>$(dll_location)/Clearcore2.Utility.dll ;
-		if <toolset-msvc:version>10.0 in $(properties) ||
-				<toolset-msvc:version>10.0express in $(properties)
-		{
-			result += <assembly>$(dll_location)/Clearcore2.Muni.dll ;
-			result += <assembly>$(dll_location)/Clearcore2.RawXYProcessing.dll ;		
-		}		
-		result += <include>$(dll_location) ;
+        if <toolset-msvc:version>10.0 in $(properties) ||
+           <toolset-msvc:version>10.0express in $(properties)
+        {
+            result += <assembly>$(dll_location)/Clearcore2.Muni.dll ;
+            result += <assembly>$(dll_location)/Clearcore2.RawXYProcessing.dll ;        
+        }
+        result += <include>$(dll_location) ;
         result += <define>PWIZ_READER_ABI ;
     }
     else
@@ -105,11 +105,26 @@ explicit WiffFileTest ;
 
 rule install-requirements ( properties * )
 {
-    local dll_location = [ mhdac-dll-location $(API_PATH) : $(properties) ] ;
+    local result ;
+    local dll_location = [ wiff-dll-location $(API_PATH) : $(properties) ] ;
     if $(dll_location)
     {
-		return [ path.glob $dll_location : *.dll ] ;
+        result += <source>$(dll_location)/Clearcore2.Data.AnalystDataProvider.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.CommonInterfaces.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.dll ;
+        result += <source>$(dll_location)/Clearcore2.Data.WiffReader.dll ;
+        result += <source>$(dll_location)/Clearcore2.InternalRawXYProcessing.dll ;
+        result += <source>$(dll_location)/Clearcore2.ProjectUtilities.dll ;
+        result += <source>$(dll_location)/Clearcore2.StructuredStorage.dll ;
+        result += <source>$(dll_location)/Clearcore2.Utility.dll ;
+        if <toolset-msvc:version>10.0 in $(properties) ||
+           <toolset-msvc:version>10.0express in $(properties)
+        {
+            result += <source>$(dll_location)/Clearcore2.Muni.dll ;
+            result += <source>$(dll_location)/Clearcore2.RawXYProcessing.dll ;        
+        }
     }
+    return $(result) ;
 }
 
 install install_pwiz_vendor_api_abi

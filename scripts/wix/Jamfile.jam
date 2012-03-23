@@ -35,19 +35,16 @@ rule msbuild_deploy ( targets + : sources * : properties * )
     {
         CONFIGURATION on $(<[1]) = "Release" ;
     }
-
-    OUTPUT_PATH on $(<[1]) = [ path.native $(PWIZ_BUILD_PATH)/Deploy/ ] ; # OutDir requires trailing slash
-    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(PWIZ_BUILD_PATH)/obj/" ;
+    LOCATION on $(<[1]) = [ feature.get-values <location> : $(properties) ] ;
+    TOOLSET on $(<[1]) = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
 }
 
 actions msbuild_deploy
 {
-    IF EXIST "%VS90COMNTOOLS%" CALL "%VS90COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-    echo Building SetupDeployProject in $(CONFIGURATION:L) configuration...
+    echo Building pwiz-setup in $(CONFIGURATION:L) configuration...
     pushd $(THIS_PATH)
-    msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
-    $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)" "$(PWIZ_BUILD_PATH)" "$(PWIZ_VERSION_TAG)"
+    set TOOLSET=$(TOOLSET)
+    "%PYTHON_HOME%/python.exe" pwiz-setup.py "$(THIS_PATH)" "$(PWIZ_BUILD_PATH)" "$(LOCATION)" "$(PWIZ_VERSION_TAG)"
     pushd $(PWIZ_BUILD_PATH)
     "%WIX%\bin\candle.exe" -nologo *.wxs
     "%WIX%\bin\light.exe" -nologo *.wixObj -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
@@ -80,5 +77,5 @@ make pwiz-setup.exe
         <variant>debug:<build>no # don't make debug installs
         <dependency>../..//executables
         <conditional>@build-location
-        <conditional>@msvc-dotnet-requirement
+        <conditional>@msvc-requirement
     ;

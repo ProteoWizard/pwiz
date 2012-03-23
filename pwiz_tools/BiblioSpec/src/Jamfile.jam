@@ -40,12 +40,6 @@ rule mascot-api-requirements ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        # CONSIDER: Should this be checking msvc?
-        if "NT" in [ modules.peek : OS ]
-        {
-            result += <include>$(PWIZ_ROOT_PATH)/libraries/msvc_extra ;
-        }
-        result += <include>$(msparser_path)/include ;
         result += <source>MascotResultsReader.cpp ;
         result += <define>USE_MASCOT_PARSER ;
     }
@@ -62,54 +56,20 @@ rule mascot-api-usage-requirements ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        if "NT" in [ modules.peek : OS ]
-        {
-            if <variant>debug in $(properties) ||
-                <debug-symbols>on in $(properties)
-            {   
-                result += <library>$(msparser_path)/lib/msparserD.lib ;
-            }
-            else
-            {
-                result += <library>$(msparser_path)/lib/msparser.lib ;
-            }
-        } 
-        else if "LINUX" in [ modules.peek : OS ]
-        {
-            result += <library>$(msparser_path)/libmsparser.a ;
-        }
+        result += <library>$(PWIZ_ROOT_PATH)//msparser ;
     }
 
     return $(result) ;
 }
 
-rule blib-build-mascot-requirements ( properties * )
-{
-    local msparser_path = [ msparser-path $(properties) ] ;
-    if $(msparser_path)
-    {
-        return <include>$(msparser_path)/include ;
-    }    
-}
 
 # some properties for all
 project 
   : requirements
       [ define-os ]
       <include>../libraries/sqlite
-      <include>../../../libraries/expat-2.0.1/lib
+      <include>$(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib
 ;
-
-# system library 
-lib dl : : <name>dl ;
-
-rule choose-dl ( properties * )
-{
-    if ( [ MATCH (LINUX) : $(.os) ] )
-    {
-       return dl ;
-    }
-}
 
 # the main BiblioSpec library
 lib blib
@@ -144,13 +104,14 @@ lib blib
     Verbosity.cpp
     WatersMseReader.cpp
     WeibullPvalue.cpp
-    ../libraries/sqlite//sqlite
   : # requirements
     <link>static
     <conditional>@mascot-api-requirements
+    <library>../libraries/sqlite//sqlite
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
+    <library>../libraries/sqlite//sqlite
  ;
 
 # all the pwiz and boost libraries required
@@ -160,12 +121,11 @@ alias pwiz-boost-libraries
     /ext/boost//regex
     /ext/boost//iostreams
     /ext/boost//system
-    ../../../pwiz/data//msdata
-    ../../../pwiz/data/identdata//pwiz_data_identdata
-    ../../../pwiz/utility/minimxml//pwiz_utility_minimxml
-    ../../../pwiz/utility/misc//pwiz_utility_misc
-    [ choose-dl ]
     /ext/expat//expat
+    $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
+    $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
+    $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml//pwiz_utility_minimxml
+    $(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
 ;
 
 
@@ -177,8 +137,7 @@ exe BlibBuild
     blib
     pwiz-boost-libraries
   : # requirements
-    <link>static  
-    <conditional>@blib-build-mascot-requirements
+    <link>static
 ;
 
 exe BlibFilter
@@ -228,10 +187,8 @@ exe LibToSqlite3
   : # sources
     LibToSqlite3.cpp
     ../libraries/sqlite//sqlite
-    [ choose-dl ]
   : # requirements
-    <link>static  
-    <include>../libraries/sqlite
+    <link>static
     <threading>multi
     <library>/ext/zlib//z
     <library>blib_v_1
