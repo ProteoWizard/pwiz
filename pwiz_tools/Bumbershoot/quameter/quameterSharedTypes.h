@@ -85,6 +85,7 @@ namespace quameter
         size_t distinctModifiedPeptideID;
         string precursorNativeID;
         double precursorMZ;
+        int precursorCharge;
         double precursorIntensity;
         double precursorScanStartTime;
 

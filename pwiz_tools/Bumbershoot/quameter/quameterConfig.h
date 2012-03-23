@@ -87,7 +87,7 @@ namespace quameter
             if (OutputFormat != "tsv" && OutputFormat != "csv" && OutputFormat != "xml")
                 throw runtime_error("invalid output format");
 
-            if (!bal::starts_with(MetricsType, "nistms") && MetricsType != "pepitome" && MetricsType != "scanranker")
+            if (!bal::starts_with(MetricsType, "nistms") && MetricsType != "pepitome" && MetricsType != "scanranker" && MetricsType != "idfree")
                 throw runtime_error("invalid metrics type");
 
             bal::trim_right_if(RawDataPath, is_any_of("/\\"));

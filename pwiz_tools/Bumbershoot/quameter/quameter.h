@@ -63,7 +63,7 @@ namespace freicore
 namespace quameter
 {
 
-enum InputType { NISTMS, PEPITOME, SCANRANKER, NONE};
+enum InputType { NISTMS, PEPITOME, SCANRANKER, IDFREE, NONE};
 
 struct QuameterInput 
 {
@@ -83,25 +83,22 @@ struct QuameterInput
                   InputType inpType)
     {
         type = inpType;
+            sourceFile = srcFile;
         if(type == NISTMS)
         {
             sourceID = srcID;
-            sourceFile = srcFile;
             idpDBFile= idpDB;
-        } else if(type == PEPITOME)
-        {
-            sourceFile = srcFile;
-            pepXMLFile = pepXML;
-        } else if(type == SCANRANKER)
-        {
-            sourceFile = srcFile;
-            scanRankerFile = scanRanker;
         }
+        else if(type == PEPITOME)
+            pepXMLFile = pepXML;
+        else if(type == SCANRANKER)
+            scanRankerFile = scanRanker;
     }
 };
 
 void NISTMSMetrics(const QuameterInput&);
 void ScanRankerMetrics(const QuameterInput&);
+void IDFreeMetrics(const QuameterInput&);
 void ExecuteMetricsThread();
 
  /**

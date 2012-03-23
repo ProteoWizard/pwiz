@@ -445,11 +445,17 @@ namespace quameter
                    vector<QuameterInput> idpSrcs = GetIDPickerSpectraSources(inputFile);
                    allSources.insert(allSources.end(),idpSrcs.begin(),idpSrcs.end());
                 }
+                else if(g_rtConfig->MetricsType == "idfree")
+                {
+                   QuameterInput qip("",inputFile,"","","",IDFREE);
+                   allSources.push_back(qip);
+                }
                 else if(g_rtConfig->MetricsType == "scanranker" && bal::ends_with(inputFile,".txt") )
                 {
                    QuameterInput qip("",sourceFilepath.string(),"","",inputFile,SCANRANKER);
                    allSources.push_back(qip);
-                } else if(g_rtConfig->MetricsType == "pepitome" && bal::ends_with(inputFile,"pepXML") )
+                }
+                else if(g_rtConfig->MetricsType == "pepitome" && bal::ends_with(inputFile,"pepXML") )
                 {
                    QuameterInput qip("",sourceFilepath.string(),"",inputFile,"",PEPITOME);
                    allSources.push_back(qip); 
@@ -486,18 +492,14 @@ namespace quameter
                 const QuameterInput &metricsInput = allSources[metricsTask];
                 switch(metricsInput.type)
                 {
-                    case NISTMS : 
-                        NISTMSMetrics(metricsInput); 
-                        break;
-                    case SCANRANKER :
-                        ScanRankerMetrics(metricsInput); 
-                        break;
-                    default: 
-                        break;
+                    case NISTMS: NISTMSMetrics(metricsInput); break;
+                    case SCANRANKER: ScanRankerMetrics(metricsInput); break;
+                    case IDFREE: IDFreeMetrics(metricsInput); break;
+                    default: break;
                 }
             }
             
-        }catch( std::exception& e )
+        } catch( std::exception& e )
         {
             cerr << " terminated with an error: " << e.what() << endl;
         } catch(...)
@@ -563,23 +565,24 @@ namespace quameter
         }
     }
 
-    /**
-     * The primary function where all metrics are calculated.
-     */
-    void NISTMSMetrics(const QuameterInput& currentFile) 
+    struct MZIntensityPairSortByMZ
     {
-        try 
+        bool operator() (const pwiz::msdata::MZIntensityPair& lhs, const pwiz::msdata::MZIntensityPair& rhs) const
+        {
+            return lhs.mz < rhs.mz;
+        }
+    };
+
+    void IDFreeMetrics(const QuameterInput& currentFile)
+    {
+        try
         {
             boost::timer processingTimer;
 
             string sourceFilename = currentFile.sourceFile;
-            const string& dbFilename = currentFile.idpDBFile;
-            const string& sourceId = currentFile.sourceID;
-
-            // Initialize the idpicker reader. It supports idpDB's for now.
-            IDPDBReader idpReader(dbFilename, sourceId);
 
             // Obtain the list of readers available
+            cout << "Opening source file " << sourceFilename << endl;
             boost::unique_lock<boost::mutex> guard(msdMutex);
             FullReaderList readers;
             MSDataFile msd(sourceFilename, &readers);
@@ -595,6 +598,404 @@ namespace quameter
 
             SpectrumList& spectrumList = *msd.run.spectrumListPtr;
             string sourceName = GetFilenameWithoutExtension( GetFilenameFromFilepath( sourceFilename ) );
+
+            // get startTimeStamp
+            string startTimeStamp = msd.run.startTimeStamp;
+
+            MS1ScanMap ms1ScanMap;
+            MS2ScanMap ms2ScanMap;
+            size_t missingPrecursorIntensities = 0;
+            map<int, int> scanCountByChargeState;
+            
+            // For each spectrum
+            for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex ) 
+            {
+                if (g_numWorkers == 1 && (curIndex+1==spectrumList.size() || !((curIndex+1)%100))) cout << "\rReading metadata: " << (curIndex+1) << "/" << spectrumList.size() << flush;
+
+                SpectrumPtr spectrum = spectrumList.spectrum(curIndex, false);
+
+                if (spectrum->defaultArrayLength == 0)
+                    continue;
+
+                if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty())
+                    continue;
+
+                CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
+                if (spectrumMSLevel == CVID_Unknown)
+                    continue;
+
+                int msLevel = spectrumMSLevel.valueAs<int>();
+                if (msLevel == 1)
+                {
+                    MS1ScanInfo scanInfo;
+                    scanInfo.nativeID = spectrum->id;
+                    scanInfo.totalIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
+
+                    if (spectrum->scanList.scans.empty())
+                        throw runtime_error("No scan start time for " + spectrum->id);
+
+                    Scan& scan = spectrum->scanList.scans[0];
+                    CVParam scanTime = scan.cvParam(MS_scan_start_time);
+                    if (scanTime.empty())
+                        throw runtime_error("No scan start time for " + spectrum->id);
+
+                    scanInfo.scanStartTime = scanTime.timeInSeconds();
+
+                    ms1ScanMap.insert(scanInfo);
+                }
+                else if (msLevel == 2) 
+                {
+                    MS2ScanInfo scanInfo;
+                    scanInfo.nativeID = spectrum->id;
+                    scanInfo.identified = false;
+                    scanInfo.distinctModifiedPeptideID = 0;
+
+                    if (spectrum->precursors.empty() || spectrum->precursors[0].selectedIons.empty())
+                        throw runtime_error("No selected ion found for MS2 " + spectrum->id);
+
+                    Precursor& precursor = spectrum->precursors[0];
+                    const SelectedIon& si = precursor.selectedIons[0];
+
+                    scanInfo.precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
+                    if (scanInfo.precursorIntensity == 0)
+                    {
+                        //throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
+                        //cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
+                        ++missingPrecursorIntensities;
+
+                        // fall back on MS2 TIC
+                        scanInfo.precursorIntensity = si.cvParam(MS_total_ion_current).valueAs<double>();
+
+                        // calculate TIC manually if necessary
+                        if (scanInfo.precursorIntensity == 0)
+                            BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                                scanInfo.precursorIntensity += p;
+                    }
+
+                    CVParam chargeState = si.cvParam(MS_charge_state);
+                    if (!chargeState.empty())
+                    {
+                        scanInfo.precursorCharge = chargeState.valueAs<int>();
+                        ++scanCountByChargeState[scanInfo.precursorCharge];
+                    }
+                    else
+                        scanInfo.precursorCharge = 0;
+
+                    if (precursor.spectrumID.empty())
+                        throw runtime_error("No precursor spectrum ID for " + spectrum->id);
+                    scanInfo.precursorNativeID = precursor.spectrumID;
+
+                    if (spectrum->scanList.scans.empty())
+                        throw runtime_error("No scan start time for " + spectrum->id);
+
+                    Scan& scan = spectrum->scanList.scans[0];
+                    CVParam scanTime = scan.cvParam(MS_scan_start_time);
+                    if (scanTime.empty())
+                        throw runtime_error("No scan start time for " + spectrum->id);
+                    scanInfo.scanStartTime = scanTime.timeInSeconds();
+
+                    scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
+                    if (si.cvParam(MS_selected_ion_m_z).empty() )
+                        scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();	
+                    if (scanInfo.precursorMZ == 0)
+                        throw runtime_error("No precursor m/z for " + spectrum->id);
+
+                    scanInfo.precursorScanStartTime = ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID)->scanStartTime;
+
+                    ms2ScanMap.insert(scanInfo);
+                }
+            } // finished cycling through all metadata
+
+            if (g_numWorkers == 1) cout << endl;
+
+            if (missingPrecursorIntensities)
+                cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity." << endl;
+
+            vector<UnidentifiedPrecursorInfo> unidentifiedPrecursors;
+            unidentifiedPrecursors.reserve(ms2ScanMap.size());
+            BOOST_FOREACH(const MS2ScanInfo& scanInfo, ms2ScanMap)
+            {
+                unidentifiedPrecursors.push_back(UnidentifiedPrecursorInfo());
+                UnidentifiedPrecursorInfo& info = unidentifiedPrecursors.back();
+                info.spectrum = &scanInfo;
+                info.scanTimeWindow = g_rtConfig->chromatogramScanTimeWindow(scanInfo.precursorScanStartTime);
+                info.mzWindow = g_rtConfig->chromatogramMzWindow(scanInfo.precursorMZ, 1);
+                info.chromatogram.id = "unidentified precursor m/z " + lexical_cast<string>(scanInfo.precursorMZ);
+            }
+
+            accs::accumulator_set<double, accs::stats<accs::tag::percentile> > ms1PeakCounts, ms2PeakCounts;
+            accs::accumulator_set<double, accs::stats<accs::tag::percentile> > xicBestPeakTimes;
+            vector<double> ms1TICs;
+            ms1TICs.reserve(ms1ScanMap.size());
+
+            int multiplyChargedMS2s = 0;
+
+            // Going through all spectra once more to get intensities/retention times to build chromatograms
+            for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex ) 
+            {
+                if (g_numWorkers == 1 && (curIndex+1==spectrumList.size() || !((curIndex+1)%100))) cout << "\rReading peaks: " << (curIndex+1) << "/" << spectrumList.size() << flush;
+
+                SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
+
+                if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
+                    continue;
+
+                CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
+                if (spectrumMSLevel == CVID_Unknown)
+                    continue;
+
+                // this time around we're only looking for MS1 spectra
+                int msLevel = spectrumMSLevel.valueAs<int>();
+                if (msLevel == 1) 
+                {
+                    Scan& scan = spectrum->scanList.scans[0];	
+
+                    // all m/z and intensity data for a spectrum
+                    const vector<double>& mzV = spectrum->getMZArray()->data;
+                    const vector<double>& intensV = spectrum->getIntensityArray()->data;
+                    size_t arraySize = mzV.size();
+                    double curRT = scan.cvParam(MS_scan_start_time).timeInSeconds();
+
+                    ms1PeakCounts(arraySize);
+
+                    accs::accumulator_set<double, accs::stats<accs::tag::min, accs::tag::max> > mzMinMax;
+                    mzMinMax = std::for_each(mzV.begin(), mzV.end(), mzMinMax);
+                    interval_set<double> spectrumMzRange(continuous_interval<double>::closed(accs::min(mzMinMax), accs::max(mzMinMax)));
+
+                    // loop through all unidentified MS2 scans
+                    BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
+                    {
+                        if (!boost::icl::contains(info.scanTimeWindow, curRT))
+                            continue;
+
+                        // if the PSM's m/z window and the MS1 spectrum's m/z range do not overlap, skip this window
+                        if (disjoint(info.mzWindow, spectrumMzRange))
+                            continue;
+
+                        double XIC = 0;
+                        for (size_t i = 0; i < arraySize; ++i) 
+                            // if this m/z is in the window, record its intensity and retention time
+                            if (boost::icl::contains(info.mzWindow, mzV[i]))
+                                XIC += intensV[i];
+
+                        info.chromatogram.MS1Intensity.push_back(XIC);
+                        info.chromatogram.MS1RT.push_back(curRT);
+                    } // done with unidentified MS2 scans
+                    
+                    double TIC = accumulate(intensV.begin(), intensV.end(), 0);
+                    ms1TICs.push_back(TIC);
+                }
+                else if (msLevel == 2)
+                {
+                    vector<MZIntensityPair> peaks;
+                    spectrum->getMZIntensityPairs(peaks);
+                    sort(peaks.begin(), peaks.end(), MZIntensityPairSortByMZ());
+                    size_t arraySize = peaks.size();
+
+                    ms2PeakCounts(arraySize);
+
+                    const MS2ScanInfo& scanInfo = *ms2ScanMap.get<nativeID>().find(spectrum->id);
+
+                    // if charge states are unknown, keep a count of multiply charged MS2s
+                    if (scanCountByChargeState.empty())
+                    {
+                        double ticBelowPrecursorMz = 0;
+                        double TIC = 0;
+                        BOOST_FOREACH(MZIntensityPair& peak, peaks)
+                        {
+                            if (peak.mz < scanInfo.precursorMZ)
+                                ticBelowPrecursorMz += peak.intensity;
+                            TIC += peak.intensity;
+                        }
+
+                        // if less than 90% of the intensity is below the precursor m/z,
+                        // it's probably multiply charged
+                        if (ticBelowPrecursorMz / TIC < 0.9)
+                            ++multiplyChargedMS2s;
+                    }
+                }
+            } // end of spectra loop
+
+            double chargeStateMetric;
+            if (scanCountByChargeState.empty())
+            {
+                // the fraction of MS2s for which less than 90% of MS/MS intensity falls below the precursor
+                chargeStateMetric = (double) multiplyChargedMS2s / ms2ScanMap.size();
+            }
+            else
+            {
+                // the fraction of MS2s reported by the instrument to be doubly-charged of all those with determined charges
+                int charge2 = scanCountByChargeState[2];
+                int determinedCharges = 0;
+                BOOST_FOREACH_FIELD((int charge)(int scanCount), scanCountByChargeState)
+                    determinedCharges += scanCount;
+                chargeStateMetric = static_cast<double>(charge2) / determinedCharges;
+            }
+
+            if (g_numWorkers == 1) cout << endl;
+            
+            // cycle through all chromatograms, passing each one to crawdad
+            size_t i = 0;
+            BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
+            {
+                ++i;
+                if (g_numWorkers == 1 && (i==unidentifiedPrecursors.size() || !(i%100))) cout << "\rFinding precursor peaks: " << i << "/" << unidentifiedPrecursors.size() << flush;
+
+                LocalChromatogram& lc = info.chromatogram;
+                if (lc.MS1RT.empty())
+                {
+                    cerr << "Warning: precursor m/z " << info.spectrum->precursorMZ
+                         << " (m/z: " << info.mzWindow
+                         << "; time: " << info.scanTimeWindow
+                         << ") has no chromatogram data points!" << endl;
+                    continue;
+                }
+
+                // make chromatogram data points evenly spaced
+                Interpolator(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity).resample(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity);
+
+                // eliminate negative signal
+                BOOST_FOREACH(double& intensity, info.chromatogram.MS1Intensity)
+                    intensity = max(0.0, intensity);
+
+                CrawdadPeakFinder crawdadPeakFinder;
+                crawdadPeakFinder.SetChromatogram(lc.MS1RT, lc.MS1Intensity);
+                vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
+
+                if (crawPeaks.size() == 0) 
+                    continue;
+
+                BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks)
+                {
+                    double startTime = lc.MS1RT[crawPeak->getStartIndex()];
+                    double endTime = lc.MS1RT[crawPeak->getEndIndex()];
+                    double peakTime = lc.MS1RT[crawPeak->getTimeIndex()];
+                    //double peakTime = startTime + (endTime-startTime)/2;
+
+                    // skip degenerate peaks
+                    if (crawPeak->getFwhm() == 0 || startTime == peakTime || peakTime == endTime)
+                        continue;
+
+                    // skip peaks which don't follow the raw data
+                    double rawPeakIntensity = lc.MS1Intensity[crawPeak->getTimeIndex()];
+                    if (rawPeakIntensity < lc.MS1Intensity[crawPeak->getStartIndex()] ||
+                        rawPeakIntensity < lc.MS1Intensity[crawPeak->getEndIndex()])
+                        continue;
+
+                    // Crawdad Fwhm is in index units; we have to translate it back to time units
+                    double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
+                    Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
+                    lc.peaks.insert(peak);
+
+                    if (!lc.bestPeak || fabs(peakTime - info.spectrum->scanStartTime) < fabs(lc.bestPeak->peakTime - info.spectrum->scanStartTime))
+                        lc.bestPeak = peak;
+                }
+            }
+
+            XICWindowList dummyPepWindows;
+
+            // Write chromatograms for visualization of data
+		    if (g_rtConfig->ChromatogramOutput)
+                writeChromatograms(sourceFilename, ms2ScanMap, dummyPepWindows, unidentifiedPrecursors);
+
+            // TIC stability metrics
+            accs::accumulator_set<double, accs::stats<accs::tag::max, accs::tag::percentile> > ms1DeltaTICs;
+            for (size_t i=1; i < ms1TICs.size(); ++i)
+                ms1DeltaTICs(fabs(ms1TICs[i] - ms1TICs[i-1]));
+            double ms1StabilityOfTIC = accs::max(ms1DeltaTICs) / accs::percentile(ms1DeltaTICs, accs::percentile_number = 50);
+
+            // XIC peak metrics
+            double peakWidthMedian = 0;
+            double peakHeightMedian = 0;
+            double peakTimeIQR = 0;
+            {
+                accs::accumulator_set<double, accs::stats<accs::tag::percentile> > peakWidths, peakTimes, peakHeights;
+                BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
+                    if (info.chromatogram.bestPeak)
+                    {
+                        peakWidths(info.chromatogram.bestPeak->fwhm);
+                        peakTimes(info.chromatogram.bestPeak->peakTime);
+                        peakHeights(info.chromatogram.bestPeak->intensity);
+                    }
+                peakWidthMedian = accs::percentile(peakWidths, accs::percentile_number = 50);
+                peakHeightMedian = accs::percentile(peakHeights, accs::percentile_number = 50);
+                peakTimeIQR = accs::percentile(peakTimes, accs::percentile_number = 75) -
+                              accs::percentile(peakTimes, accs::percentile_number = 25);
+            }
+            
+            // File for quameter output, default is to save to same directory as input file
+            ofstream qout(bfs::change_extension(sourceFilename, ".qual.tsv").string().c_str());
+
+            // Tab delimited output header
+            qout << "Filename\tStartTimeStamp\t1\t2\t3\t4\t5\t6\t7\t8\t9" << endl;
+
+            // Tab delimited metrics
+            qout << bfs::path(sourceFilename).filename();
+            qout << "\t" << startTimeStamp;
+            qout << "\t" << peakWidthMedian;
+            qout << "\t" << peakTimeIQR;
+            qout << "\t" << chargeStateMetric;
+            qout << "\t" << peakHeightMedian;
+            qout << "\t" << ms1StabilityOfTIC;
+            qout << "\t" << ms1ScanMap.size();
+            qout << "\t" << accs::percentile(ms1PeakCounts, accs::percentile_number = 50);
+            qout << "\t" << ms2ScanMap.size();
+            qout << "\t" << accs::percentile(ms2PeakCounts, accs::percentile_number = 50);
+
+            guard.lock();
+            cout << endl << sourceFilename << " took " << processingTimer.elapsed() << " seconds to analyze.\n";
+            guard.unlock();
+
+            return;
+        }
+        catch (exception& e)
+        {
+            cerr << "Error processing ID-free metrics: " << e.what() << endl;
+        }
+        catch (...)
+        {
+            cerr << "Unknown error processing ID-free metrics." << endl;
+        }
+        exit(1);
+    }
+
+    /**
+     * The primary function where all metrics are calculated.
+     */
+    void NISTMSMetrics(const QuameterInput& currentFile) 
+    {
+        try 
+        {
+            boost::timer processingTimer;
+
+            string sourceFilename = currentFile.sourceFile;
+            const string& dbFilename = currentFile.idpDBFile;
+            const string& sourceId = currentFile.sourceID;
+
+            // Initialize the idpicker reader. It supports idpDB's for now.
+            cout << "Reading identifications from " << sourceFilename << endl;
+            IDPDBReader idpReader(dbFilename, sourceId);
+
+            // Obtain the list of readers available
+            cout << "Opening source file " << sourceFilename << endl;
+            boost::unique_lock<boost::mutex> guard(msdMutex);
+            FullReaderList readers;
+            MSDataFile msd(sourceFilename, &readers);
+            cout << "Started processing file " << sourceFilename << endl;
+            guard.unlock();
+
+            // apply spectrum list filters
+            vector<string> wrappers;
+            if (!g_rtConfig->SpectrumListFilters.empty())
+            	bal::split(wrappers, g_rtConfig->SpectrumListFilters, bal::is_any_of(";"));
+
+            SpectrumListFactory::wrap(msd, wrappers);
+
+            SpectrumList& spectrumList = *msd.run.spectrumListPtr;
+            string sourceName = GetFilenameWithoutExtension( GetFilenameFromFilepath( sourceFilename ) );
+
+            // get startTimeStamp
+            string startTimeStamp = msd.run.startTimeStamp;
 
             // Spectral counts
             int MS1Count = 0, MS2Count = 0;
@@ -676,10 +1077,14 @@ namespace quameter
                         //throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
                         //cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
                         ++missingPrecursorIntensities;
-                        double estimatedPrecursorIntensity = 0.0;
-                        BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
-                            estimatedPrecursorIntensity += p;
-                        scanInfo.precursorIntensity = estimatedPrecursorIntensity;
+
+                        // fall back on MS2 TIC
+                        scanInfo.precursorIntensity = si.cvParam(MS_total_ion_current).valueAs<double>();
+
+                        // calculate TIC manually if necessary
+                        if (scanInfo.precursorIntensity == 0)
+                            BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                                scanInfo.precursorIntensity += p;
                     }
 
                     if (precursor.spectrumID.empty())
@@ -1375,7 +1780,7 @@ namespace quameter
             if (true) 
             {
                 // Tab delimited output header
-                qout << "Filename\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
+                qout << "Filename\tStartTimeStamp\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
                 qout << "\tDS-1A\tDS-1B\tDS-2A\tDS-2B\tDS-3A\tDS-3B";
                 qout << "\tIS-1A\tIS-1B\tIS-2\tIS-3A\tIS-3B\tIS-3C";
                 qout << "\tMS1-1\tMS1-2A\tMS1-2B\tMS1-3A\tMS1-3B\tMS1-5A\tMS1-5B\tMS1-5C\tMS1-5D";
@@ -1384,6 +1789,7 @@ namespace quameter
 
                 // Tab delimited metrics
                 qout << sourceFilename;
+                qout << "\t" << startTimeStamp;
                 qout << "\t" << bleedRatio << "\t" << peakTailingRatio << "\t" << iqIDTime << "\t" << iqIDRate << "\t" << identifiedPeakWidthMedian << "\t" << identifiedPeakWidthIQR;
                 qout << "\t" << medianDistinctMatchPeakWidthOver9thScanTimeDecile  << "\t" << medianDistinctMatchPeakWidthOver1stScanTimeDecile  << "\t" << medianDistinctMatchPeakWidthOver5thScanTimeDecile;
                 qout << "\t" << DS1A << "\t" << DS1B << "\t" << iqMS1Scans << "\t" << iqMS2Scans;
