@@ -112,9 +112,7 @@ namespace pwiz.Skyline.Model
             if (massIndex == 0)
                 return "";
 
-            // CONSIDER: Should this be based on the true neutral mass shift from the
-            //           monoisotopic mass?
-            return string.Format(" [M{0}{1}]", massIndex > 0 ? "+" : "", massIndex);
+            return " " + SequenceMassCalc.GetMassIDescripion(massIndex);
         }
 
         private readonly TransitionGroup _group;

@@ -1220,6 +1220,14 @@ namespace pwiz.Skyline.Controls.Graphs
                                                 TransitionGroupDocNode[] nodeGroups,
                                                 ExplicitMods mods)
         {
+            SetRetentionTimePredictedIndicator(chromGraphPrimary, settings, chromatograms, nodeGroups, mods);
+            SetRetentionTimeIdIndicators(chromGraphPrimary, settings, nodeGroups, mods);
+        }
+
+        private static void SetRetentionTimePredictedIndicator(ChromGraphItem chromGraphPrimary, SrmSettings settings,
+                                                               ChromatogramSet chromatograms,
+                                                               TransitionGroupDocNode[] nodeGroups, ExplicitMods mods)
+        {
             // Set predicted retention time on the first graph item to make
             // line, label and shading show.
             var regression = settings.PeptideSettings.Prediction.RetentionTime;
@@ -1234,6 +1242,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 chromGraphPrimary.RetentionPrediction = predictedRT;
                 chromGraphPrimary.RetentionWindow = window;
             }
+        }
+
+
+        private void SetRetentionTimeIdIndicators(ChromGraphItem chromGraphPrimary, SrmSettings settings,
+                                                  IEnumerable<TransitionGroupDocNode> nodeGroups, ExplicitMods mods)
+        {
             // Set any MS/MS IDs on the first graph item also
             if (settings.TransitionSettings.FullScan.IsEnabled &&
                     settings.PeptideSettings.Libraries.IsLoaded &&

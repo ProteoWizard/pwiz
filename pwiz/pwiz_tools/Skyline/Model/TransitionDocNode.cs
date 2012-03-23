@@ -119,6 +119,14 @@ namespace pwiz.Skyline.Model
                 isotopeDist.GetProportionI(transition.MassIndex));
         }
 
+        public static bool IsValidIsotopeTransition(Transition transition, IsotopeDistInfo isotopeDist)
+        {
+            if (isotopeDist == null || !transition.IsPrecursor())
+                return true;
+            int i = isotopeDist.MassIndexToPeakIndex(transition.MassIndex);
+            return 0 <= i && i < isotopeDist.CountPeaks;
+        }
+
         public TransitionLibInfo LibInfo { get; private set; }
 
         public bool HasLibInfo { get { return LibInfo != null; } }

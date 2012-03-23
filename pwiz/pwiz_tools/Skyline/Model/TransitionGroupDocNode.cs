@@ -689,6 +689,9 @@ namespace pwiz.Skyline.Model
                             losses = losses.ChangeMassType(massType);
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var results = nodeTransition.Results;           // Results changes happen later
+                        // Discard isotope transitions which are no longer valid
+                        if (!TransitionDocNode.IsValidIsotopeTransition(tran, isotopeDist))
+                            continue;
                         double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
                         var isotopeDistInfo = losses == null ? TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist) : null;
                         var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks) : null;

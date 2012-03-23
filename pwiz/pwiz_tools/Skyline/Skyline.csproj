@@ -1438,7 +1438,7 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Wand.bmp" />
-    <EmbeddedResrouce Include="Resources\minus.bmp" />
+    <EmbeddedResource Include="Resources\minus.bmp" />
     <EmbeddedResource Include="Resources\plus.bmp" />
     <EmbeddedResource Include="Resources\Dash.bmp" />
     <EmbeddedResource Include="Resources\WandProhibit.bmp" />
@@ -1484,7 +1484,7 @@
     <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
-    <Content Include="Resources\Calculator.bmp" />
+    <EmbeddedResource Include="Resources\Calculator.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>
