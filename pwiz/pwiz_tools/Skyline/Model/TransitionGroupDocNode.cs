@@ -1195,7 +1195,7 @@ namespace pwiz.Skyline.Model
                 var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
 
                 var nodeGroupNew = nodeGroup;
-                if (!Equals(results, nodeGroupNew.Results))
+                if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
                 nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
@@ -1206,7 +1206,7 @@ namespace pwiz.Skyline.Model
             {
                 var listChromInfoLists = _arrayChromInfoSets[iTran];
                 var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, listChromInfoLists);
-                if (Results<TransitionChromInfo>.EqualsDeep(nodeTran.Results, results))
+                if (Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
                     return nodeTran;
                 return nodeTran.ChangeResults(results);
             }
