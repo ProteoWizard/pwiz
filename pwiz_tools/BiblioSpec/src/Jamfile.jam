@@ -47,7 +47,7 @@ rule mascot-api-requirements ( properties * )
     {
         result += <source>MascotResultsReader_dummy.cpp ;
     }
-    return $(result) [ mascot-api-usage-requirements $(properties) ] ;
+    return $(result) [ msparser-requirements $(properties) ] ;
 }
 
 rule mascot-api-usage-requirements ( properties * )
