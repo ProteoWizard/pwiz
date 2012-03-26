@@ -87,7 +87,7 @@ int main (int argc, char** argv){
             skipLinesIter++;
             continue;
         }
-	else if( skipLinesIter < lastLine ){ cerr << "did not find " << *skipLinesIter << ". not skipping" << endl;
+        else if( skipLinesIter < lastLine ){ cerr << "did not find " << *skipLinesIter << ". not skipping" << endl;
 	}
 
         //if( expected != observed ){

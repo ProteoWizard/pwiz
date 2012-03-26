@@ -128,14 +128,14 @@ void statementToLines(sqlite3* dbConnection,
         }
 
         if( swapSlash ){
-		cerr << "line before swap " << result << endl;
+            cerr << "line before swap " << result << endl;
             size_t position = result.find( "\\" ); 
 
             while ( position != string::npos ) {
               result.replace( position, 1, "/" );
               position = result.find( "\\", position + 1 );
            } 
-		cerr << "line after swap " << result << endl;
+            cerr << "line after swap " << result << endl;
         }
         Replace(findReplace, result);
         outputLines.push_back(result);
@@ -212,24 +212,32 @@ void printObserved(vector<string>& outputLines, string& libName){
 int main(int argc, char** argv){
 
     cerr << "Shall we begin?" << endl;
-    string usage = "CompareLibraryContents <library> <expected output>";
+    string usage = "CompareLibraryContents <library> <expected output> [<skip>]";
 
     if( argc < 2 ){
         cerr << usage << endl;
         exit(1);
     }
     
-    string libName = argv[1];
-    string expectedOutput = argv[2];
-    if( libName.find("blib") == string::npos ){
-        libName = argv[2];
-        expectedOutput = argv[1];
+    // since we can't rely on the order , sort them alphabetically
+    vector<string> tokens;
+    tokens.push_back(argv[1]);
+    tokens.push_back(argv[2]);
+    if( argc > 3 ){
+        tokens.push_back(argv[3]);
     }
+    sort(tokens.begin(), tokens.end());
+    cerr << "input now is " << endl;
+    for(size_t i = 0; i < tokens.size(); i++){
+        cerr << i << ": " << tokens[i] << endl;
+    }
+    string libName = tokens[0];
+    string expectedOutput = tokens[1];
 
     vector<string> skipLines;
     CompareDetails compareDetails;
     if( argc > 3 ){
-	    getSkipLines(argv[3], skipLines, compareDetails);
+        getSkipLines(tokens[2].c_str(), skipLines, compareDetails);
     }
     cerr << "We have " << skipLines.size() << " to skip " << endl;
 

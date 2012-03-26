@@ -71,6 +71,17 @@ project
       <include>$(PWIZ_ROOT_PATH)/libraries/expat-2.0.1/lib
 ;
 
+# system library 
+lib dl : : <name>dl ;
+
+rule choose-dl ( properties * )
+{
+    if ( [ MATCH (LINUX) : $(.os) ] )
+    {
+       return dl ;
+    }
+}
+
 # the main BiblioSpec library
 lib blib
   : # sources
@@ -121,6 +132,7 @@ alias pwiz-boost-libraries
     /ext/boost//regex
     /ext/boost//iostreams
     /ext/boost//system
+    [ choose-dl ]
     /ext/expat//expat
     $(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     $(PWIZ_ROOT_PATH)/pwiz/data/identdata//pwiz_data_identdata
@@ -187,6 +199,7 @@ exe LibToSqlite3
   : # sources
     LibToSqlite3.cpp
     ../libraries/sqlite//sqlite
+    [ choose-dl ]
   : # requirements
     <link>static
     <threading>multi

@@ -49,8 +49,20 @@ rule test-data
     return $(result) ;
 }
 
+.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+
+lib dl : : <name>dl ;
+
+rule choose-dl ( properties * )
+{
+    if ( [ MATCH (LINUX) : $(.os) ] )
+    {
+       return dl ;
+    }
+}
+
 local compare-reqs = <include>../libraries/sqlite <include>../src/ ; 
-alias compare-src : ../libraries/sqlite//sqlite ;
+alias compare-src : ../libraries/sqlite//sqlite [ choose-dl ] ;
 
 # Test building with sqt files
 
