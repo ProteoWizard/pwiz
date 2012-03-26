@@ -291,9 +291,12 @@ void BlibFilter::buildNonRedundantLib()
     transferSpectrumFiles(redundantDbName_);
 
     // find out if we have retention times and other additional columns
-    const char* optional_cols = "";
+    string optional_cols = "";
+    if( tableColumnExists(redundantDbName_, "RefSpectra", "SpecIDinFile") ){
+        optional_cols += ", SpecIDinFile";
+    }
     if( tableColumnExists(redundantDbName_, "RefSpectra", "retentionTime") ){
-        optional_cols = ", retentionTime ";
+        optional_cols += ", retentionTime ";
         redundantLibHasAdditionalColumns_ = true;
     } else {
         redundantLibHasAdditionalColumns_ = false;
@@ -313,11 +316,11 @@ void BlibFilter::buildNonRedundantLib()
     //first Order by peptideModSeq and charge, filter by num peaks
     sprintf(zSql,
             "SELECT id,peptideSeq,precursorMZ,precursorCharge,peptideModSeq,"
-            "prevAA, nextAA, numPeaks, peakMZ, peakIntensity %s "
+            "prevAA, nextAA, numPeaks, peakMZ, peakIntensity %s"
             "FROM %s.RefSpectra, %s.RefSpectraPeaks "
             "WHERE %s.RefSpectra.id=%s.RefSpectraPeaks.RefSpectraID "
             " and %s.RefSpectra.numPeaks >= %i "
-            "ORDER BY peptideModSeq, precursorCharge", optional_cols,
+            "ORDER BY peptideModSeq, precursorCharge", optional_cols.c_str(),
             redundantDbName_, redundantDbName_, redundantDbName_,
             redundantDbName_, redundantDbName_, minPeaks_);
 
@@ -350,11 +353,12 @@ void BlibFilter::buildNonRedundantLib()
         tmpRef->setMz(sqlite3_column_double(pStmt,2));
         tmpRef->setCharge(charge);
         // if not selected, value == 0
-        tmpRef->setRetentionTime(sqlite3_column_double(pStmt, 10));
+        tmpRef->setRetentionTime(sqlite3_column_double(pStmt, 11));
         tmpRef->setMods(pepModSeq);
         tmpRef->setPrevAA("-");
         tmpRef->setNextAA("-");
-        
+        tmpRef->setScanNumber(sqlite3_column_int(pStmt, 10));
+
         int numPeaks = sqlite3_column_int(pStmt,7);
 
         int numBytes1=sqlite3_column_bytes(pStmt,8);
@@ -496,6 +500,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
                 bestIndex = 1;
             }
         }
+        cerr << "selecting index " << bestIndex << ", scan " << oneIon.at(bestIndex)->getScanNumber() << endl;
 
         specID = transferSpectrum(redundantDbName_, 
                                   oneIon.at(bestIndex)->getLibSpecID(), 
