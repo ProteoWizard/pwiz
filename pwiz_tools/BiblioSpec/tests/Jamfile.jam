@@ -118,7 +118,7 @@ run-if-exists CompareLibraryContents.cpp compare-src : : output/pep-proph.blib r
 make output/prospector.blib : inputs/empty : @common.copy : <location>. ;
 run-if-exists ExecuteBlib.cpp : -o : ../src//BlibBuild inputs/V20120113-01_ITMSms2cid.pep.xml output/prospector.blib : 
   : build-prospector ;
-run-if-exists CompareLibraryContents.cpp compare-src : : output/prospector.blib reference/prospector.check : $(compare-reqs)
+run-if-exists CompareLibraryContents.cpp compare-src : : output/prospector.blib reference/prospector.check reference/zbuild.skip-lines : $(compare-reqs)
   : check-prospector ;
 
 make output/smill.blib : inputs/empty : @common.copy : <location>. ;
@@ -144,7 +144,7 @@ run-if-exists CompareLibraryContents.cpp compare-src : : output/idpicker.blib re
 make output/tandem.blib : inputs/empty : @common.copy : <location>. ;
 run-if-exists ExecuteBlib.cpp : -o : ../src//BlibBuild inputs/out_260_1_step01.2009_09_02_10_55_23.xtan.xml output/tandem.blib : 
   : build-tandem ;
-run-if-exists CompareLibraryContents.cpp compare-src : : output/tandem.blib reference/tandem.check : $(compare-reqs)
+run-if-exists CompareLibraryContents.cpp compare-src : : output/tandem.blib reference/tandem.check reference/zbuild.skip-lines : $(compare-reqs)
   : check-tandem ;
 
 make output/pilot.blib : inputs/empty : @common.copy : <location>. ;

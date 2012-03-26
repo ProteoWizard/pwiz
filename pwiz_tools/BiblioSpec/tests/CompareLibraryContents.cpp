@@ -6,6 +6,7 @@
 #include <vector>
 #include "sqlite3.h"
 #include "smart_stmt.h"
+#include "Compare.h"
 
 using namespace std;
 using namespace BiblioSpec;
@@ -95,7 +96,8 @@ void Replace(FindReplace& info, string& workingString){
 void statementToLines(sqlite3* dbConnection, 
                       const char* selectString,
                       FindReplace& findReplace,
-                      vector<string>& outputLines){
+                      vector<string>& outputLines,
+                      bool swapSlash){
 
     smart_stmt sqlStatement;
     int returnCode = sqlite3_prepare(dbConnection, selectString,
@@ -124,6 +126,17 @@ void statementToLines(sqlite3* dbConnection,
             result += reinterpret_cast<const char*>(
                           sqlite3_column_text(sqlStatement, i));
         }
+
+        if( swapSlash ){
+		cerr << "line before swap " << result << endl;
+            size_t position = result.find( "\\" ); 
+
+            while ( position != string::npos ) {
+              result.replace( position, 1, "/" );
+              position = result.find( "\\", position + 1 );
+           } 
+		cerr << "line after swap " << result << endl;
+        }
         Replace(findReplace, result);
         outputLines.push_back(result);
 
@@ -145,29 +158,36 @@ void getObserved(const char* libName, vector<string>& outputLines){
     vector<const char*> selectStrings;
     FindReplace fp;
     vector<FindReplace> deleteText;
+    vector<bool> swapSlash;
     selectStrings.push_back("SELECT libLSID, numSpecs, majorVersion, minorVersion FROM LibInfo");
     deleteText.push_back(fp);
+    swapSlash.push_back(false);
     selectStrings.push_back("select * from Modifications"); 
     deleteText.push_back(fp);
+    swapSlash.push_back(false);
     selectStrings.push_back("select * from RefSpectra");
     deleteText.push_back(fp);
+    swapSlash.push_back(false);
     selectStrings.push_back("select * from SpectrumSourceFiles");
     fp.find_str_start_ = "	";
     fp.find_str_end_ = "/BiblioSpec/tests";
     fp.replace_str_ = "	";
     deleteText.push_back(fp);
     fp.clear();
+    swapSlash.push_back(true);
     selectStrings.push_back("select * from ScoreTypes");
     deleteText.push_back(fp);
+    swapSlash.push_back(false);
     selectStrings.push_back("select * from RetentionTimes");
     deleteText.push_back(fp);
+    swapSlash.push_back(false);
 
     cerr << "after listing commands and delete there are " <<
         selectStrings.size() << " and " << deleteText.size() << " of each" << endl;
     // for each statement, execute on the db and put the results in outputLines
     for(size_t i = 0; i < selectStrings.size(); i++){
         cerr << "Selecting index " << i << endl;
-        statementToLines(db, selectStrings[i], deleteText[i], outputLines);
+        statementToLines(db, selectStrings[i], deleteText[i], outputLines, swapSlash[i]);
     }
     sqlite3_close(db);
 }
@@ -206,6 +226,13 @@ int main(int argc, char** argv){
         expectedOutput = argv[1];
     }
 
+    vector<string> skipLines;
+    CompareDetails compareDetails;
+    if( argc > 3 ){
+	    getSkipLines(argv[3], skipLines, compareDetails);
+    }
+    cerr << "We have " << skipLines.size() << " to skip " << endl;
+
     // extract what is in the library
     cerr << "Extracting the contents of " << libName << endl;
     vector<string> outputLines;
@@ -232,7 +259,8 @@ int main(int argc, char** argv){
 
         string& observed = outputLines[lineNum];
         cerr << "read observed line '" << observed << "'" << endl;
-        if( expected != observed ){
+        //if( expected != observed ){
+        if( ! linesMatch(expected, observed, compareDetails) ){
             cerr << "Line " << lineNum + 1 << " of the output does not match "
                  << endl;
             printObserved(outputLines, libName);

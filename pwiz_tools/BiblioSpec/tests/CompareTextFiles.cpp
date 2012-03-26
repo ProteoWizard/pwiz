@@ -1,30 +1,13 @@
 #include <iostream>
+#include <sstream>
 #include <algorithm>
 #include <fstream>
 #include <string>
 #include <stdlib.h>
 #include <vector>
+#include "Compare.h"
 
 using namespace std;
-
-// Read from file and save each line in vector
-void getSkipLines(const char* fileName, vector<string>& skipLines){
-    ifstream infile(fileName);
-    if( !infile.good() ){
-        cerr << "Could not open '" << fileName << "'.  No lines being skipped" 
-             << endl;
-        return;
-    }
-
-    string line;
-    getline(infile, line);
-    while( !infile.eof() ){
-        skipLines.push_back(line);
-        getline(infile, line);
-    }
-
-    infile.close();
-}
 
 // Take as input two text files and report if the differ
 int main (int argc, char** argv){
@@ -51,7 +34,7 @@ int main (int argc, char** argv){
     }
     sort(tokens.begin(), tokens.end());
     cerr << "input now is " << endl;
-    for(int i = 0; i < tokens.size(); i++){
+    for(size_t i = 0; i < tokens.size(); i++){
         cerr << i << ": " << tokens[i] << endl;
     }
     string observedName = tokens[0];
@@ -62,8 +45,9 @@ int main (int argc, char** argv){
 
     // get the text from any lines that should not be compared
     vector<string> skipLines;
+    CompareDetails compareDetails;
     if( argc > 3 ){
-        getSkipLines(tokens[2].c_str(), skipLines);
+        getSkipLines(tokens[2].c_str(), skipLines, compareDetails);
     }
     cerr << "We have " << skipLines.size() << " lines to skip" << endl;
 
@@ -103,8 +87,11 @@ int main (int argc, char** argv){
             skipLinesIter++;
             continue;
         }
+	else if( skipLinesIter < lastLine ){ cerr << "did not find " << *skipLinesIter << ". not skipping" << endl;
+	}
 
-        if( expected != observed ){
+        //if( expected != observed ){
+        if( ! linesMatch(expected, observed, compareDetails) ){
             cerr << "Line " << lineNum << " differs." << endl;
             cerr << "expected: " << expected << endl;
             cerr << "observed: " << observed << endl;
