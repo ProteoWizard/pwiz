@@ -13,6 +13,7 @@ struct CompareDetails
 	int fieldIdx_;   // compare the ith field 
 	double delta_;   // allow this much difference
     CompareDetails() : fieldIdx_(-1), delta_(0) {};
+    bool empty(){ return (fieldIdx_ == -1); }
 };
 
 // Read from file and save each line in vector
@@ -87,28 +88,33 @@ bool linesMatch(const string& expected,
 	       	const string& observed,
 	       	CompareDetails& details){
 
-	cerr << "Linesmatch comparing '" << expected << "'" << endl;
-	cerr << "with '" << observed << "'" << endl;
-	cerr << "expected is empty? " << boolalpha << expected.empty() << endl;
-	cerr << "observed is empty? " << boolalpha << observed.empty() << endl;
-
-	// account for Windows line endings
+    cerr << "Linesmatch comparing '" << expected << "'" << endl;
+    cerr << "with '" << observed << "'" << endl;
+    cerr << "expected is empty? " << boolalpha << expected.empty() << endl;
+    cerr << "observed is empty? " << boolalpha << observed.empty() << endl;
+    
+    // account for Windows line endings
     size_t length = observed.size() ;
     if( (observed.size() > 0) && (observed[observed.size() - 1] == '\r') ){
         length--;
-	//cerr << "removing line ending, length now " << length << endl;
     }
 
-	if(expected.empty() && length == 0 ){
-		cerr << "empty lines" << endl;
-		return true;
-	} else if ( expected.empty() || observed.empty() ){
-		return false;
-	}
+    // they match if both empty
+    if(expected.empty() && length == 0 ){
+        cerr << "empty lines" << endl;
+        return true;
+    } else if ( expected.empty() || observed.empty() ){// not if only one empty
+        return false;
+    }
 
     if( observed.compare(0, length, expected) == 0){
     cerr << "lines match" << endl;
 	    return true;
+    }
+
+    // now compare a single field for a small numerical difference, if given
+    if( details.empty() ){
+        return false;
     }
 
 // else, get a substr from each, cast to double and compare with delta

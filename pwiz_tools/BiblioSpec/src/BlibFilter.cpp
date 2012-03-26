@@ -320,9 +320,9 @@ void BlibFilter::buildNonRedundantLib()
             "FROM %s.RefSpectra, %s.RefSpectraPeaks "
             "WHERE %s.RefSpectra.id=%s.RefSpectraPeaks.RefSpectraID "
             " and %s.RefSpectra.numPeaks >= %i "
-            "ORDER BY peptideModSeq, precursorCharge", optional_cols.c_str(),
+            "ORDER BY peptideModSeq, precursorCharge %s", optional_cols.c_str(),
             redundantDbName_, redundantDbName_, redundantDbName_,
-            redundantDbName_, redundantDbName_, minPeaks_);
+            redundantDbName_, redundantDbName_, minPeaks_, optional_cols.c_str());
 
     smart_stmt pStmt;
     int rc = sqlite3_prepare(getDb(), zSql, -1, &pStmt, 0);
@@ -493,14 +493,8 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
         // in the future, pick the one with the best search score
         if( oneIon.at(0)->getNumRawPeaks() < oneIon.at(1)->getNumRawPeaks() ) {
             bestIndex = 1;
-        } else if ( oneIon.at(0)->getNumRawPeaks() 
-                    == oneIon.at(1)->getNumRawPeaks()){
-            // break ties with scan number, largly so tests are stable
-            if( oneIon.at(0)->getScanNumber() > oneIon.at(1)->getScanNumber() ){
-                bestIndex = 1;
-            }
         }
-        cerr << "selecting index " << bestIndex << ", scan " << oneIon.at(bestIndex)->getScanNumber() << endl;
+        cerr << "selecting index " << bestIndex << ", scan " << oneIon.at(bestIndex)->getScanNumber() << " from " << oneIon.at(0)->getScanNumber() << " and " << oneIon.at(1)->getScanNumber() << endl;
 
         specID = transferSpectrum(redundantDbName_, 
                                   oneIon.at(bestIndex)->getLibSpecID(), 
