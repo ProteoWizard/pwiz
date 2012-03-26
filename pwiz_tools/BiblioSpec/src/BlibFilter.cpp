@@ -489,10 +489,16 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
         // in the future, pick the one with the best search score
         if( oneIon.at(0)->getNumRawPeaks() < oneIon.at(1)->getNumRawPeaks() ) {
             bestIndex = 1;
+        } else if ( oneIon.at(0)->getNumRawPeaks() 
+                    == oneIon.at(1)->getNumRawPeaks()){
+            // break ties with scan number, largly so tests are stable
+            if( oneIon.at(0)->getScanNumber() > oneIon.at(1)->getScanNumber() ){
+                bestIndex = 1;
+            }
         }
 
         specID = transferSpectrum(redundantDbName_, 
-                                  oneIon.at(0)->getLibSpecID(), 
+                                  oneIon.at(bestIndex)->getLibSpecID(), 
                                   num_spec,
                                   redundantLibHasAdditionalColumns_);
     } else { // compute all-by-all dot-products
