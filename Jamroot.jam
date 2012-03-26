@@ -808,7 +808,7 @@ rule msparser-path ( properties * )
     } 
     else if <toolset>gcc in $(properties)
     {
-        lib-location = "/usr/local/msparser" ;
+        lib-location = "/usr/local/msparser/gnu" ;
     }
 
     # Check for msparser existence.
@@ -849,18 +849,15 @@ rule msparser-path ( properties * )
 rule msparser-requirements ( properties * )
 {
     local msparser_path = [ msparser-path $(properties) ] ;
-    local result = <include>$(msparser_path)/include ;
+    local result = <include>$(msparser_path)/include
+                   <search>$(msparser_path)/lib ;
     if <toolset>msvc in $(properties)
     {
-        result += <search>$(msparser_path)/lib ;
+        result += <include>$(PWIZ_ROOT_PATH)/libraries/msvc_extra ;
         if <runtime-debugging>on in $(properties)
         {
             result += <name>msparserD ;
         }
-    }
-    else if <toolset>gcc in $(properties)
-    {
-        result += <search>$(msparser_path) ;
     }
     return $(result) ;
 }
