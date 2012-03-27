@@ -980,6 +980,29 @@ namespace pwiz.Skyline.SettingsUI
             set { cbLibraryPick.Checked = value; }
         }
 
+        public bool SetAutoSelect
+        {
+            get { return cbAutoSelect.Checked; }
+            set { cbAutoSelect.Checked = value; }
+        }
+
+        public string Peaks
+        {
+            get { return textPrecursorIsotopeFilter.Text; }
+            set { textPrecursorIsotopeFilter.Text = value; }
+        }
+
+        public string MinTime
+        {
+            get { return textMinTime.Text; }
+            set { textMinTime.Text = value; }
+        }
+
+        public string MaxTime
+        {
+            get { return textMaxTime.Text; }
+            set { textMaxTime.Text = value; }
+        }
 
         #endregion
     }

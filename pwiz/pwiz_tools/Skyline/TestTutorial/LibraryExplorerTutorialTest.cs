@@ -41,7 +41,7 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestLibraryExplorerTutorial()
         {
-            TestFilesZip = @"https://brendanx-uw1.gs.washington.edu/tutorials/LibraryExplorer.zip";
+            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/LibraryExplorer.zip";
             RunFunctionalTest();
         }
         protected override void DoTest()

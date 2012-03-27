@@ -67,6 +67,8 @@ if [ modules.peek : NT ]
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal        
+        echo Building Skyline TestTutorial in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestTutorial /nologo /verbosity:minimal        
     }
 
     rule do_skyline_test ( targets + : sources * : properties * )
@@ -230,5 +232,6 @@ if [ modules.peek : NT ]
             <dependency>Test.dll
             <dependency>TestA.dll
             <dependency>TestFunctional.dll
+            # note: we build TestTutorial.dll in do_skyline_build, but it takes too long to run in a Jam build
         ;
 }

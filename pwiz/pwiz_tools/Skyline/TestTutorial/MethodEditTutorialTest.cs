@@ -48,7 +48,7 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestMethodEditTutorial()
         {
-            TestFilesZip = @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodEdit.zip";
+            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/MethodEdit.zip";
             RunFunctionalTest();
         }
 

@@ -45,12 +45,12 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodRefinementTutorial()
         {
             string supplementZip = (ExtensionTestContext.CanImportThermoRaw ?
-                @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineSupplement.zip" :
-                @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineSupplementMzml.zip");
+                @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplement.zip" :
+                @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplementMzml.zip");
 
             TestFilesZipPaths = new[] { supplementZip, ExtensionTestContext.CanImportThermoRaw ?
-                    @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefine.zip" :
-                    @"https://brendanx-uw1.gs.washington.edu/tutorials/MethodRefineMzml.zip"
+                    @"https://skyline.gs.washington.edu/tutorials/MethodRefine.zip" :
+                    @"https://skyline.gs.washington.edu/tutorials/MethodRefineMzml.zip"
                  };
 
          

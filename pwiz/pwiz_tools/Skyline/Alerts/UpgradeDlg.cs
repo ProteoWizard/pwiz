@@ -33,7 +33,7 @@ namespace pwiz.Skyline.Alerts
 // ReSharper disable MemberCanBeMadeStatic.Local
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://brendanx-uw1.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement");
+            Process.Start("https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement");
         }
 // ReSharper restore MemberCanBeMadeStatic.Local
     }

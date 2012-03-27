@@ -258,5 +258,18 @@ namespace pwiz.Skyline.EditUI
             set { textMinTransitions.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        #region Functional Test Support
+        public string MinPeptides
+        {
+            get { return textMinPeptides.Text; }
+            set { textMinPeptides.Text = value; }
+        }
+
+        public string MinPeakFoundRatio
+        {
+            get { return textMinPeakFoundRatio.Text; }
+            set { textMinPeakFoundRatio.Text = value; }
+        }
+        #endregion
     }
 }

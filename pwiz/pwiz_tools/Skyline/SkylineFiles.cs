@@ -774,20 +774,24 @@ namespace pwiz.Skyline
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
-
-                    try
-                    {
-                        long lineCount = Helpers.CountLinesInFile(dlg.FileName);
-                        using (var readerFasta = new StreamReader(dlg.FileName))
-                        {
-                            ImportFasta(readerFasta, lineCount, false, "Import FASTA");
-                        }
-                    }
-                    catch (Exception x)
-                    {
-                        MessageBox.Show(string.Format("Failed reading the file {0}. {1}", dlg.FileName, x.Message));
-                    }
+                    ImportFastaFile(dlg.FileName);
                 }
+            }
+        }
+
+        public void ImportFastaFile(string fastaFile)
+        {
+            try
+            {
+                long lineCount = Helpers.CountLinesInFile(fastaFile);
+                using (var readerFasta = new StreamReader(fastaFile))
+                {
+                    ImportFasta(readerFasta, lineCount, false, "Import FASTA");
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.Show(this, string.Format("Failed reading the file {0}. {1}", fastaFile, x.Message));
             }
         }
 

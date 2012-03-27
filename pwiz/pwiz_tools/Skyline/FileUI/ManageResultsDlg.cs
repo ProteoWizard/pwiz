@@ -292,7 +292,7 @@ namespace pwiz.Skyline.FileUI
             MinimizeResults();
         }
 
-        private void MinimizeResults()
+        public void MinimizeResults()
         {
             using (var dlg = new MinimizeResultsDlg(DocumentUIContainer))
             {
