@@ -7,6 +7,7 @@
 
 using namespace std;
 
+// Run the given BiblioSpec tool with the given arguments
 int main(int argc, char** argv){
 
     string usage = "ExecuteBlib <blib tool> [<inputs>+] ";
@@ -18,14 +19,14 @@ int main(int argc, char** argv){
     }
 
     // this absurd bjam run rule requires that input files be
-    // listed alphabetically!!
+    // listed alphabetically and then doesn't pass them in a stable order
     // hunt down the components separately: executable, options, inputs, lib
     string command; // must contain BlibBuild, BlibFilter, BlibSearch, BlibToMs2
     string options; // must start with '-'
     vector<string> libNames; // collect so we can sort them
-    string libName; // must end with '.blib'
     const char* libExt = ".blib";
     string inputs;  // all else
+
     for(int i = 1; i < argc; i++){
         string token = argv[i];
         if( token[0] == '-' ){
@@ -44,10 +45,7 @@ int main(int argc, char** argv){
             command += " ";
         } else if ( token.compare(token.length() - strlen(libExt),
                                   strlen(libExt), libExt) == 0 ){
-            cerr << "adding lib '" << token << endl;
             libNames.push_back(token);
-            //            libName += token; 
-            //            libName += " ";
         } else{
             inputs += token;
             inputs += " ";
@@ -57,6 +55,7 @@ int main(int argc, char** argv){
     // for multiple libs, put them in alphabetical order since we have no
     // guarantee how they will be passed to this
     sort(libNames.begin(), libNames.end());
+    string libName; 
     for(size_t i = 0; i < libNames.size(); i++){
         libName += libNames[i];
         libName += " ";
@@ -68,7 +67,7 @@ int main(int argc, char** argv){
     int returnValue = system(fullCommand.c_str());
     cerr << "System returned " << returnValue << endl;
 
-    // why does 'return returnValue' exit with 0 when returnValue != 0
+    // why does 'return returnValue' exit with 0 when returnValue != 0?
 
     if( returnValue != 0 ){
         return 1;

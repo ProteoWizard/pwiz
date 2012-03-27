@@ -9,10 +9,11 @@
 
 using namespace std;
 
-// Take as input two text files and report if the differ
+// Take as input two text files and report if the differ.  Optionally
+// take a list of lines to be skipped and/or fields that don't require
+// an exact text match
 int main (int argc, char** argv){
 
-    cerr << "Hit it" << endl;
     string usage = "CompareTextFiles <expected> <observed> [<skip lines>]";
 
     if( argc < 3 ){
@@ -20,12 +21,7 @@ int main (int argc, char** argv){
         exit(1);
     }
 
-    cerr << "argc is " << argc << endl;
-    cerr << "input was " << endl;
-    for(int i = 0; i < argc; i++){
-        cerr << i << ": " << argv[i] << endl;
-    }
-    // since we can't rely on the order , sort them alphabetically
+    // since we can't rely on the order, sort inputs alphabetically
     vector<string> tokens;
     tokens.push_back(argv[1]);
     tokens.push_back(argv[2]);
@@ -33,10 +29,7 @@ int main (int argc, char** argv){
         tokens.push_back(argv[3]);
     }
     sort(tokens.begin(), tokens.end());
-    cerr << "input now is " << endl;
-    for(size_t i = 0; i < tokens.size(); i++){
-        cerr << i << ": " << tokens[i] << endl;
-    }
+
     string observedName = tokens[0];
     string expectedName = tokens[1];
 
@@ -49,18 +42,18 @@ int main (int argc, char** argv){
     if( argc > 3 ){
         getSkipLines(tokens[2].c_str(), skipLines, compareDetails);
     }
-    cerr << "We have " << skipLines.size() << " lines to skip" << endl;
-
 
     ifstream expectedFile(expectedName.c_str());
     if( !expectedFile.good() ){
-        cerr << "Could not open first file, '" << expectedName << "'" << endl;
+        cerr << "Could not open file of expected results, '" 
+             << expectedName << "'" << endl;
         exit(1);
     }
 
     ifstream observedFile(observedName.c_str());
     if( !observedFile.good() ){
-        cerr << "Could not open second file, '" << observedName << "'" << endl;
+        cerr << "Could not open file of observed results, '" 
+             << observedName << "'" << endl;
         exit(1);
     }
 
@@ -70,6 +63,7 @@ int main (int argc, char** argv){
     string expected;
     string observed;
     getline(expectedFile, expected);
+
     while( !expectedFile.eof() ){
         if( observedFile.eof() ){
             cerr << "The expected file has more lines than observed ("
@@ -81,16 +75,12 @@ int main (int argc, char** argv){
         // should we compare this line or skip it?
         if( skipLinesIter < lastLine 
             && expected.find(*skipLinesIter) != string::npos ){
-            cerr << "skipping line " << lineNum << endl;
             lineNum++;
             getline(expectedFile, expected);
             skipLinesIter++;
             continue;
         }
-        else if( skipLinesIter < lastLine ){ cerr << "did not find " << *skipLinesIter << ". not skipping" << endl;
-	}
 
-        //if( expected != observed ){
         if( ! linesMatch(expected, observed, compareDetails) ){
             cerr << "Line " << lineNum << " differs." << endl;
             cerr << "expected: " << expected << endl;

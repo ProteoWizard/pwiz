@@ -13,7 +13,7 @@ using namespace BiblioSpec;
 
 // Information for replacing part of a string.
 // Replace text between start and end with replace_str.
-// Use str if not null, else use pos for defining text to replace.
+// To define the text to replace, use str if not null, else use pos.
 // e.g.  find_str_start_ == NULL and find_str_end == "here"
 // then replace text starting at find_pos_start_ and ending at the
 // character before first occurance of "here".
@@ -61,6 +61,7 @@ struct FindReplace {
     }
 };
 
+// Use info to modify the given string.
 void Replace(FindReplace& info, string& workingString){
 
     if( info.empty() ){ return; }
@@ -102,6 +103,7 @@ void statementToLines(sqlite3* dbConnection,
     smart_stmt sqlStatement;
     int returnCode = sqlite3_prepare(dbConnection, selectString,
                                      -1, &sqlStatement, 0);
+
     if( returnCode != SQLITE_OK ){ // no input to add, decide later if error
         return;
     }
@@ -128,37 +130,26 @@ void statementToLines(sqlite3* dbConnection,
         }
 
         if( swapSlash ){
-            cerr << "line before swap " << result << endl;
             size_t position = result.find( "\\" ); 
 
             while ( position != string::npos ) {
               result.replace( position, 1, "/" );
               position = result.find( "\\", position + 1 );
            } 
-            cerr << "line after swap " << result << endl;
         }
         Replace(findReplace, result);
         outputLines.push_back(result);
 
         returnCode = sqlite3_step(sqlStatement);
     }
-
 }
 
-
-// Select the contents of the library and store it, line by line, in the 
-// given vector
-void getObserved(const char* libName, vector<string>& outputLines){
-
-    // create a sqlite connection
-    sqlite3* db = NULL;
-    sqlite3_open(libName, &db);
-
-    // list the select statements to execute and changes for the output
-    vector<const char*> selectStrings;
+// List the select statements for the library along with any text
+// replacements to make and when to fix paths
+void getSelectInfo(vector<const char*>& selectStrings, 
+                   vector<FindReplace>& deleteText,
+                   vector<bool>& swapSlash){
     FindReplace fp;
-    vector<FindReplace> deleteText;
-    vector<bool> swapSlash;
     selectStrings.push_back("SELECT libLSID, numSpecs, majorVersion, minorVersion FROM LibInfo");
     deleteText.push_back(fp);
     swapSlash.push_back(false);
@@ -181,13 +172,27 @@ void getObserved(const char* libName, vector<string>& outputLines){
     selectStrings.push_back("select * from RetentionTimes");
     deleteText.push_back(fp);
     swapSlash.push_back(false);
+}
 
-    cerr << "after listing commands and delete there are " <<
-        selectStrings.size() << " and " << deleteText.size() << " of each" << endl;
+
+// Select the contents of the library and store it, line by line, in the 
+// given vector
+void getObserved(const char* libName, vector<string>& outputLines){
+
+    // create a sqlite connection
+    sqlite3* db = NULL;
+    sqlite3_open(libName, &db);
+
+    // list the select statements to execute and changes for the output
+    vector<const char*> selectStrings;
+    vector<FindReplace> deleteText;
+    vector<bool> swapSlash;
+    getSelectInfo(selectStrings, deleteText, swapSlash);
+
     // for each statement, execute on the db and put the results in outputLines
     for(size_t i = 0; i < selectStrings.size(); i++){
-        cerr << "Selecting index " << i << endl;
-        statementToLines(db, selectStrings[i], deleteText[i], outputLines, swapSlash[i]);
+        statementToLines(db, selectStrings[i], deleteText[i], 
+                         outputLines, swapSlash[i]);
     }
     sqlite3_close(db);
 }
@@ -209,10 +214,12 @@ void printObserved(vector<string>& outputLines, string& libName){
     outfile.close();
 }
 
+// Extract a pre-defined set of queries from the given library and
+// compare it to the given text file.  Optionally, give a list of
+// lines to skip and/or fields that do not require an exact text match
 int main(int argc, char** argv){
 
-    cerr << "Shall we begin?" << endl;
-    string usage = "CompareLibraryContents <library> <expected output> [<skip>]";
+    string usage ="CompareLibraryContents <library> <expected output> [<skip>]";
 
     if( argc < 2 ){
         cerr << usage << endl;
@@ -227,10 +234,7 @@ int main(int argc, char** argv){
         tokens.push_back(argv[3]);
     }
     sort(tokens.begin(), tokens.end());
-    cerr << "input now is " << endl;
-    for(size_t i = 0; i < tokens.size(); i++){
-        cerr << i << ": " << tokens[i] << endl;
-    }
+
     string libName = tokens[0];
     string expectedOutput = tokens[1];
 
@@ -239,7 +243,6 @@ int main(int argc, char** argv){
     if( argc > 3 ){
         getSkipLines(tokens[2].c_str(), skipLines, compareDetails);
     }
-    cerr << "We have " << skipLines.size() << " to skip " << endl;
 
     // extract what is in the library
     cerr << "Extracting the contents of " << libName << endl;
@@ -250,14 +253,13 @@ int main(int argc, char** argv){
     cerr << "Comparing library to " << expectedOutput << endl;
     ifstream compareFile(expectedOutput.c_str(), ifstream::in);
 
-    // for now do the stupidest thing, compare line i with line i and report if
-    // any do not match
+    // for now do the stupidest thing, compare line i with line i and
+    // report as soon as any do not match
     size_t lineNum = 0;
     string expected;
     getline(compareFile, expected);
 
     while( !compareFile.eof() ){
-        cerr << "read expected line '" << expected << "'" << endl;
 
         if( lineNum >= outputLines.size() ){
             cerr << "The expected input has more lines than what was observed ("
@@ -266,11 +268,11 @@ int main(int argc, char** argv){
         }
 
         string& observed = outputLines[lineNum];
-        cerr << "read observed line '" << observed << "'" << endl;
-        //if( expected != observed ){
+
         if( ! linesMatch(expected, observed, compareDetails) ){
-            cerr << "Line " << lineNum + 1 << " of the output does not match "
-                 << endl;
+            cerr << "Line " << lineNum + 1 << " differs." << endl;
+            cerr << "expected: " << expected << endl;
+            cerr << "observed: " << observed << endl;
             printObserved(outputLines, libName);
             exit(1);
         }
