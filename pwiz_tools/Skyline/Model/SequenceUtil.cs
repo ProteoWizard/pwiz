@@ -231,6 +231,11 @@ namespace pwiz.Skyline.Model
                 return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F01}]", (massDiff > 0 ? "+" : ""), massDiff);
         }
 
+        public static string GetMassIDescripion(int massIndex)
+        {
+            return string.Format("[M{0}{1}]", massIndex > 0 ? "+" : "", massIndex);            
+        }
+
         private readonly BioMassCalc _massCalc;
         public readonly double[] _aminoMasses = new double[128];
 
@@ -756,7 +761,19 @@ namespace pwiz.Skyline.Model
             int massIndex, IsotopeDistInfo isotopeDists, ExplicitSequenceMods mods)
         {
             if (Transition.IsPrecursor(type))
-                return isotopeDists != null ? isotopeDists.GetMassI(massIndex) : GetPrecursorMass(seq, mods);
+            {
+                if (isotopeDists != null)
+                {
+                    int i = isotopeDists.MassIndexToPeakIndex(massIndex);
+                    if (0 > i || i >= isotopeDists.CountPeaks)
+                    {
+                        throw new IndexOutOfRangeException(string.Format("Precursor isotope {0} is outside the isotope distribution {1} to {2}.",
+                                GetMassIDescripion(massIndex), isotopeDists.PeakIndexToMassIndex(0), isotopeDists.PeakIndexToMassIndex(isotopeDists.CountPeaks - 1)));
+                    }
+                    return isotopeDists.GetMassI(massIndex);
+                }
+                return GetPrecursorMass(seq, mods);                
+            }
 
             int len = seq.Length - 1;
 

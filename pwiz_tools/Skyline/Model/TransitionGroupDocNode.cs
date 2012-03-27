@@ -693,6 +693,9 @@ namespace pwiz.Skyline.Model
                             losses = losses.ChangeMassType(massType);
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var results = nodeTransition.Results;           // Results changes happen later
+                        // Discard isotope transitions which are no longer valid
+                        if (!TransitionDocNode.IsValidIsotopeTransition(tran, isotopeDist))
+                            continue;
                         double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
                         var isotopeDistInfo = losses == null ? TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist) : null;
                         var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks) : null;
@@ -1196,7 +1199,7 @@ namespace pwiz.Skyline.Model
                 var results = Results<TransitionGroupChromInfo>.Merge(nodeGroup.Results, listChromInfoLists);
 
                 var nodeGroupNew = nodeGroup;
-                if (!Equals(results, nodeGroupNew.Results))
+                if (!Results<TransitionGroupChromInfo>.EqualsDeep(results, nodeGroupNew.Results))
                     nodeGroupNew = nodeGroupNew.ChangeResults(results);
 
                 nodeGroupNew = (TransitionGroupDocNode)nodeGroupNew.ChangeChildrenChecked(childrenNew);
@@ -1207,7 +1210,7 @@ namespace pwiz.Skyline.Model
             {
                 var listChromInfoLists = _arrayChromInfoSets[iTran];
                 var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, listChromInfoLists);
-                if (Results<TransitionChromInfo>.EqualsDeep(nodeTran.Results, results))
+                if (Results<TransitionChromInfo>.EqualsDeep(results, nodeTran.Results))
                     return nodeTran;
                 return nodeTran.ChangeResults(results);
             }

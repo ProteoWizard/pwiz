@@ -288,10 +288,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (int iResult in GetReplicateIndices(nodeTran))
                 {
                     // Fill everything with missing data until filled for real
-                    for (int i = 0; i < maxSteps; i++)
-                        pointPairLists[i].Add(PointPairMissing(iResult));
+                    foreach (PointPairList pairList in pointPairLists)
+                        pairList.Add(PointPairMissing(iResult));
 
-                    if (iResult >= nodeTran.Results.Count)
+                    if (0 > iResult || iResult >= nodeTran.Results.Count)
                         continue;
                     var result = nodeTran.Results[iResult];
                     if (result == null || result.Count == 0)

@@ -169,6 +169,8 @@ namespace pwiz.Skyline.SettingsUI
         public void EditItem()
         {
             int i = listBox.SelectedIndex;
+            if (i == -1)
+                return;
             TItem item = _editor.EditItem(this, _list[i], GetAll(), TagEx);
             if (!Equals(item, default(TItem)))
             {

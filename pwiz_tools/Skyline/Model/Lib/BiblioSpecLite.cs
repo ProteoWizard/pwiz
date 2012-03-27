@@ -905,9 +905,16 @@ namespace pwiz.Skyline.Model.Lib
             int i = _librarySourceFiles.IndexOf(info => Equals(filePath, info.FilePath));
             if (i == -1)
             {
-                // Failing an exact path match, look for a basename match
-                string baseName = Path.GetFileNameWithoutExtension(filePath);
-                i = _librarySourceFiles.IndexOf(info => MeasuredResults.IsBaseNameMatch(baseName, info.BaseName));
+                try
+                {
+                    // Failing an exact path match, look for a basename match
+                    string baseName = Path.GetFileNameWithoutExtension(filePath);
+                    i = _librarySourceFiles.IndexOf(info => MeasuredResults.IsBaseNameMatch(baseName, info.BaseName));
+                }
+                catch (ArgumentException)
+                {
+                    // Handle: Illegal characters in path
+                }
             }
             return i;
         }

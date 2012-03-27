@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Drawing;
 using System.Text;
 using System.Windows.Forms;
@@ -529,10 +530,19 @@ namespace pwiz.Skyline.Controls
             {
                 return null;
             }
-            return new ProteinMatchSettings(backgroundProteome.OpenProteomeDb(),
-                                        new ProteaseImpl(peptideSettings.Enzyme),
-                                        matchTypes,
-                                        searchText);
+            try
+            {
+                return new ProteinMatchSettings(backgroundProteome.OpenProteomeDb(),
+                                            new ProteaseImpl(peptideSettings.Enzyme),
+                                            matchTypes,
+                                            searchText);
+            }
+            catch (SQLiteException)
+            {
+                // CONSIDER: Silent failure could be confusing.  Show a message box
+                //           about failing to open the database.
+                return null;
+            }
         }
 
         private static String StripTabs(String str)

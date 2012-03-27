@@ -288,12 +288,21 @@ namespace pwiz.Skyline.FileUI
             var match = REGEX_MISSING_COLUMN.Match(x.Message);
             if (match.Success)
             {
-                string columnName = match.Groups[1].ToString();
-                if (AnnotationDef.IsAnnotationProperty(columnName))
-                    columnName = AnnotationDef.GetColumnDisplayName(columnName);
-                else if (RatioPropertyAccessor.IsRatioProperty(columnName))
-                    columnName = RatioPropertyAccessor.GetDisplayName(columnName);
-                return string.Format("The field {0} does not exist in this document.", columnName);
+                try
+                {
+                    string columnName = match.Groups[1].ToString();
+                    if (AnnotationDef.IsAnnotationProperty(columnName))
+                        columnName = AnnotationDef.GetColumnDisplayName(columnName);
+                    else if (RatioPropertyAccessor.IsRatioProperty(columnName))
+                        columnName = RatioPropertyAccessor.GetDisplayName(columnName);
+                    return string.Format("The field {0} does not exist in this document.", columnName);
+                }
+// ReSharper disable EmptyGeneralCatchClause
+                catch
+                {
+                    // Could throw a variety of SQLiteException & NHibernat exceptions
+                }
+// ReSharper restore EmptyGeneralCatchClause
             }
 
             return x.Message;
