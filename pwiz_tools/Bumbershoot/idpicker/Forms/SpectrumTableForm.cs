@@ -55,7 +55,7 @@ namespace IDPicker.Forms
             public int DistinctPeptides { get; private set; }
             public int DistinctAnalyses { get; private set; }
             public int DistinctCharges { get; private set; }
-            public int DistinctProteins { get; private set; }
+            public int ProteinGroups { get; private set; }
 
             public static int ColumnCount = 8;
             public static string Selection = "SELECT " +
@@ -66,7 +66,7 @@ namespace IDPicker.Forms
                                              "COUNT(DISTINCT psm.Peptide.id), " +
                                              "COUNT(DISTINCT psm.Analysis.id), " +
                                              "COUNT(DISTINCT psm.Charge), " +
-                                             "COUNT(DISTINCT pi.Protein.id)";
+                                             "COUNT(DISTINCT pro.ProteinGroup)";
 
             #region Constructor
             public AggregateRow(object[] queryRow, DataFilter dataFilter)
@@ -79,7 +79,7 @@ namespace IDPicker.Forms
                 DistinctPeptides = Convert.ToInt32(queryRow[++column]);
                 DistinctAnalyses = Convert.ToInt32(queryRow[++column]);
                 DistinctCharges = Convert.ToInt32(queryRow[++column]);
-                DistinctProteins = Convert.ToInt32(queryRow[++column]);
+                ProteinGroups = Convert.ToInt32(queryRow[++column]);
                 DataFilter = dataFilter;
             }
             #endregion
@@ -438,7 +438,7 @@ namespace IDPicker.Forms
                     var groupsFilter = new DataFilter(parentFilter) { SpectrumSourceGroup = null };
                     var groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
                                                      groupsFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                         DataFilter.PeptideSpectrumMatchToPeptideInstance,
+                                                                                         DataFilter.PeptideSpectrumMatchToProtein,
                                                                                          DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
                                                      "GROUP BY ssgl.Group.id")
                         .List<object[]>()
@@ -447,7 +447,7 @@ namespace IDPicker.Forms
 
                     var sources = session.CreateQuery(AggregateRow.Selection + ", s.Source " +
                                                       parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                          DataFilter.PeptideSpectrumMatchToPeptideInstance,
+                                                                                          DataFilter.PeptideSpectrumMatchToProtein,
                                                                                           DataFilter.PeptideSpectrumMatchToSpectrum) +
                                                       "GROUP BY s.Source.id")
                         .List<object[]>()
@@ -481,7 +481,7 @@ namespace IDPicker.Forms
             lock (session)
             return session.CreateQuery(AggregateRow.Selection + ", psm.Analysis " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                           DataFilter.PeptideSpectrumMatchToPeptideInstance) +
+                                                                           DataFilter.PeptideSpectrumMatchToProtein) +
                                        "GROUP BY psm.Analysis.id")
                           .List<object[]>()
                           .Select(o => new AnalysisRow(o, parentFilter) as Row)
@@ -493,7 +493,7 @@ namespace IDPicker.Forms
             lock (session)
             return session.CreateQuery(AggregateRow.Selection + ", psm.Peptide " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                           DataFilter.PeptideSpectrumMatchToPeptideInstance) +
+                                                                           DataFilter.PeptideSpectrumMatchToProtein) +
                                        "GROUP BY psm.Peptide.id")
                           .List<object[]>()
                           .Select(o => new PeptideRow(o, parentFilter) as Row)
@@ -505,7 +505,7 @@ namespace IDPicker.Forms
             lock (session)
             return session.CreateQuery(AggregateRow.Selection + ", psm.Charge " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                           DataFilter.PeptideSpectrumMatchToPeptideInstance) +
+                                                                           DataFilter.PeptideSpectrumMatchToProtein) +
                                        "GROUP BY psm.Charge")
                           .List<object[]>()
                           .Select(o => new ChargeRow(o, parentFilter) as Row)
@@ -517,7 +517,7 @@ namespace IDPicker.Forms
             lock (session)
             return session.CreateQuery(AggregateRow.Selection + ", s, ss, ssg " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                           DataFilter.PeptideSpectrumMatchToPeptideInstance,
+                                                                           DataFilter.PeptideSpectrumMatchToProtein,
                                                                            DataFilter.PeptideSpectrumMatchToSpectrumSourceGroup) +
                                        "GROUP BY s.id " +
                                        "ORDER BY ss.Name, s.Index")
@@ -687,7 +687,7 @@ namespace IDPicker.Forms
                 distinctPeptidesColumn,
                 distinctMatchesColumn,
                 filteredSpectraColumn,
-                distinctProteinsColumn,
+                proteinGroupsColumn,
                 distinctAnalysesColumn,
                 distinctChargesColumn
             };
@@ -901,7 +901,7 @@ namespace IDPicker.Forms
                 if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
                 else if (columnIndex == distinctMatchesColumn.Index) return row.DistinctMatches;
                 else if (columnIndex == distinctPeptidesColumn.Index) return row.DistinctPeptides;
-                else if (columnIndex == distinctProteinsColumn.Index) return row.DistinctProteins;
+                else if (columnIndex == proteinGroupsColumn.Index) return row.ProteinGroups;
                 else if (columnIndex == distinctChargesColumn.Index) return row.DistinctCharges;
                 else if (columnIndex == distinctAnalysesColumn.Index) return row.DistinctAnalyses;
             }
@@ -1020,7 +1020,7 @@ namespace IDPicker.Forms
                 { filteredSpectraColumn, new ColumnProperty() {Type = typeof(int)}},
                 { distinctAnalysesColumn, new ColumnProperty() {Type = typeof(int)}},
                 { distinctChargesColumn, new ColumnProperty() {Type = typeof(int)}},
-                { distinctProteinsColumn, new ColumnProperty() {Type = typeof(int)}},
+                { proteinGroupsColumn, new ColumnProperty() {Type = typeof(int)}},
                 { precursorMzColumn, new ColumnProperty() {Type = typeof(float), Precision = 4}},
                 { observedMassColumn, new ColumnProperty() {Type = typeof(float), Precision = 4}},
                 { exactMassColumn, new ColumnProperty() {Type = typeof(float), Precision = 4}},
@@ -1046,7 +1046,7 @@ namespace IDPicker.Forms
                 {filteredSpectraColumn.Index, SortOrder.Descending},
                 {distinctAnalysesColumn.Index, SortOrder.Descending},
                 {distinctChargesColumn.Index, SortOrder.Descending},
-                {distinctProteinsColumn.Index, SortOrder.Descending},
+                {proteinGroupsColumn.Index, SortOrder.Descending},
                 {precursorMzColumn.Index, SortOrder.Ascending},
                 {observedMassColumn.Index, SortOrder.Ascending},
                 {exactMassColumn.Index, SortOrder.Ascending},
@@ -1254,20 +1254,23 @@ namespace IDPicker.Forms
                     if (basicDataFilter == null || (viewFilter.IsBasicFilter && dataFilter != basicDataFilter))
                     {
                         basicDataFilter = dataFilter;
-                        basicTotalCounts = new TotalCounts(session, dataFilter);
+                        basicTotalCounts = new TotalCounts(session, viewFilter);
 
                         rowsBySource = new Dictionary<DataFilterKey, List<Row>>();
                         basicRows = getChildren(rootGrouping, dataFilter);
                         basicRowsBySource = rowsBySource;
                     }
 
-                    totalCounts = basicTotalCounts;
+                    if(viewFilter.IsBasicFilter)
+                        totalCounts = basicTotalCounts;
+                    else
+                        totalCounts = new TotalCounts(session, viewFilter);
                     rowsBySource = basicRowsBySource;
                     rows = basicRows;
                 }
                 else
                 {
-                    totalCounts = new TotalCounts(session, dataFilter);
+                    totalCounts = new TotalCounts(session, viewFilter);
                     rowsBySource = new Dictionary<DataFilterKey, List<Row>>();
                     rows = getChildren(rootGrouping, dataFilter);
                 }
@@ -1357,7 +1360,7 @@ namespace IDPicker.Forms
                     //reload grouping
                     var rootGrouping = checkedGroupings.Count > 0 ? checkedGroupings.First() : null;
                     basicDataFilter = dataFilter;
-                    basicTotalCounts = new TotalCounts(session, dataFilter);
+                    basicTotalCounts = new TotalCounts(session, viewFilter);
                     rowsBySource = new Dictionary<DataFilterKey, List<Row>>();
                     basicRows = getChildren(rootGrouping, dataFilter);
                     basicRowsBySource = rowsBySource;

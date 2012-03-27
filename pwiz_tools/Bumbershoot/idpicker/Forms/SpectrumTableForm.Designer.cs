@@ -62,7 +62,7 @@ namespace IDPicker.Forms
             this.distinctMatchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctAnalysesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctChargesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.distinctProteinsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.proteinGroupsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.precursorMzColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.analysisColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.chargeColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -125,12 +125,12 @@ namespace IDPicker.Forms
             this.distinctChargesColumn.ReadOnly = true;
             this.distinctChargesColumn.Width = 95;
             // 
-            // distinctProteinsColumn
+            // proteinGroupsColumn
             // 
-            this.distinctProteinsColumn.HeaderText = "Distinct Proteins";
-            this.distinctProteinsColumn.Name = "distinctProteinsColumn";
-            this.distinctProteinsColumn.ReadOnly = true;
-            this.distinctProteinsColumn.Width = 100;
+            this.proteinGroupsColumn.HeaderText = "Protein Groups";
+            this.proteinGroupsColumn.Name = "proteinGroupsColumn";
+            this.proteinGroupsColumn.ReadOnly = true;
+            this.proteinGroupsColumn.Width = 100;
             // 
             // precursorMzColumn
             // 
@@ -196,7 +196,7 @@ namespace IDPicker.Forms
                                               filteredSpectraColumn,
                                               distinctAnalysesColumn,
                                               distinctChargesColumn,
-                                              distinctProteinsColumn,
+                                              proteinGroupsColumn,
                                               precursorMzColumn,
                                               observedMassColumn,
                                               exactMassColumn,
@@ -231,7 +231,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn filteredSpectraColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctAnalysesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctChargesColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn distinctProteinsColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn proteinGroupsColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn precursorMzColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn observedMassColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn exactMassColumn;

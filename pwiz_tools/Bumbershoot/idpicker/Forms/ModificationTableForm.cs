@@ -690,30 +690,34 @@ namespace IDPicker.Forms
 
             Text = TabText = String.Format("Modification View: {0} modified {1}", totalModifications, PivotMode.ToLower());
 
-            dataGridView.DataSource = deltaMassTable;
-            dataGridView.Columns[deltaMassColumnName].Visible = false;
-
-            applySort();
-
-            try
+            dataGridView.Visible = totalModifications > 0;
+            if (dataGridView.Visible)
             {
-                if (deltaMassTable.Rows.Count > 0)
+                dataGridView.DataSource = deltaMassTable;
+                dataGridView.Columns[deltaMassColumnName].Visible = false;
+
+                applySort();
+
+                try
                 {
-                    dataGridView[0, 0].Selected = false;
-                    if (oldSelectedAddress != null)
+                    if (deltaMassTable.Rows.Count > 0)
                     {
-                        string columnName = oldSelectedAddress.second;
-                        int rowIndex = deltaMassTable.DefaultView.Find(oldSelectedAddress.first);
-                        if (dataGridView.Columns.Contains(columnName) && rowIndex != -1)
+                        dataGridView[0, 0].Selected = false;
+                        if (oldSelectedAddress != null)
                         {
-                            dataGridView.FirstDisplayedCell = dataGridView[columnName, rowIndex];
-                            dataGridView.FirstDisplayedCell.Selected = true;
+                            string columnName = oldSelectedAddress.second;
+                            int rowIndex = deltaMassTable.DefaultView.Find(oldSelectedAddress.first);
+                            if (dataGridView.Columns.Contains(columnName) && rowIndex != -1)
+                            {
+                                dataGridView.FirstDisplayedCell = dataGridView[columnName, rowIndex];
+                                dataGridView.FirstDisplayedCell.Selected = true;
+                            }
                         }
                     }
                 }
-            }
-            catch
-            {
+                catch
+                {
+                }
             }
 
             dataGridView.Refresh();

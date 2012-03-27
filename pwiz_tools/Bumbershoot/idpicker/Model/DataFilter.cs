@@ -985,7 +985,7 @@ namespace IDPicker.DataModel
 
             if (!Protein.IsNullOrEmpty())
             {
-                string column = joins.Count(o => ((string) o.Value).EndsWith(" pro")) > 0 ? "pro.id" : "pi.Protein.id";
+                string column = fromTable == FromProtein || joins.Any(o => ((string) o.Value).EndsWith(" pro")) ? "pro.id" : "pi.Protein.id";
                 proteinConditions.Add(String.Format("{0} IN ({1})", column, String.Join(",", Protein.Select(o => o.Id.ToString()).ToArray())));
             }
 
@@ -994,7 +994,7 @@ namespace IDPicker.DataModel
 
             if (!Peptide.IsNullOrEmpty())
             {
-                string column = joins.Count(o => ((string) o.Value).EndsWith(" pi")) > 0 ? "pi.Peptide.id" : "psm.Peptide.id";
+                string column = joins.Any(o => ((string) o.Value).EndsWith(" pi")) ? "pi.Peptide.id" : "psm.Peptide.id";
                 peptideConditions.Add(String.Format("{0} IN ({1})", column, String.Join(",", Peptide.Select(o => o.Id.ToString()).ToArray())));
             }
 

@@ -535,7 +535,7 @@ namespace IDPicker.Forms
             else
                 e.CellStyle.BackColor = e.CellStyle.BackColor;
 
-            if (viewFilter.Cluster == null && viewFilter.Peptide == null && viewFilter.DistinctMatchKey == null)
+            if (viewFilter.PeptideGroup == null && viewFilter.Peptide == null && viewFilter.DistinctMatchKey == null)
                 return;
 
             Row row = rows[e.RowIndexHierarchy.First()];
@@ -894,7 +894,7 @@ namespace IDPicker.Forms
                     if (basicDataFilter == null || (viewFilter.IsBasicFilter && dataFilter != basicDataFilter))
                     {
                         basicDataFilter = dataFilter;
-                        basicTotalCounts = new TotalCounts(session, dataFilter);
+                        basicTotalCounts = new TotalCounts(session, viewFilter);
                         basicRows = getChildren(rootGrouping, dataFilter);
 
                         basicStatsBySpectrumSource = null;
@@ -914,14 +914,17 @@ namespace IDPicker.Forms
                         }
                     }
 
-                    totalCounts = basicTotalCounts;
+                    if (viewFilter.IsBasicFilter)
+                        totalCounts = basicTotalCounts;
+                    else
+                        totalCounts = new TotalCounts(session, viewFilter);
                     rows = basicRows;
                     statsBySpectrumSource = basicStatsBySpectrumSource;
                     statsBySpectrumSourceGroup = basicStatsBySpectrumSourceGroup;
                 }
                 else
                 {
-                    totalCounts = new TotalCounts(session, dataFilter);
+                    totalCounts = new TotalCounts(session, viewFilter);
                     rows = getChildren(rootGrouping, dataFilter);
 
                     statsBySpectrumSource = null;

@@ -353,7 +353,8 @@ generate-rc Resources\\Resources.rc :
                          #*.vdproj
       : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
     : warn-on-missing : : "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT)
-    : [ sequence.transform path.basename : [ path.glob Resources : *.ico ] ] ;
+    : IDPicker.ico IDPickerDatabase.ico IDPickerInputFile.ico
+      BlankIcon.ico PeptideViewIcon.ico ProteinViewIcon.ico SpectrumViewIcon.ico ;
 
 # generate IDPicker version header
 local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :

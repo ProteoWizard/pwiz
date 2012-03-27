@@ -517,6 +517,6 @@
   <PropertyGroup>
     <PostBuildEvent>
     </PostBuildEvent>
-    <PreBuildEvent>rc.exe $(ProjectDir)/Resources/Resources.rc</PreBuildEvent>
+    <PreBuildEvent>rc.exe /nologo $(ProjectDir)/Resources/Resources.rc</PreBuildEvent>
   </PropertyGroup>
 </Project>
