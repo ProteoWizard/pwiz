@@ -547,6 +547,7 @@ namespace pwiz.SkylineTestUtil
                    openDataSourceDialog.SelectFile(fileName);
                    openDataSourceDialog.Open();
                });
+            WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
             RunUI(importResultsDlg.OkDialog);
             WaitForCondition(180 * 1000,
                 () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            

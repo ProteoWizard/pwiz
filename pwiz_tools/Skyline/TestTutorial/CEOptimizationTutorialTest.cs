@@ -45,8 +45,8 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCEOptimizationTutorial()
         {
-            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ?  @"https://brendanx-uw1.gs.washington.edu/tutorials/OptimizeCE.zip"
-                : @"https://brendanx-uw1.gs.washington.edu/tutorials/OptimizeCEMzml.zip";
+            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ?  @"https://skyline.gs.washington.edu/tutorials/OptimizeCE.zip"
+                : @"https://skyline.gs.washington.edu/tutorials/OptimizeCEMzml.zip";
             RunFunctionalTest();
         }
 

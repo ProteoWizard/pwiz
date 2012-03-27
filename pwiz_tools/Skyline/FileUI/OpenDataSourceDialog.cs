@@ -600,8 +600,6 @@ namespace pwiz.Skyline.FileUI
                 DataSources = dataSourceList.ToArray();
                 _abortPopulateList = true;
                 DialogResult = DialogResult.OK;
-                Close();
-                Application.DoEvents();
             }
             else
                 MessageBox.Show("Please select one or more data sources.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);

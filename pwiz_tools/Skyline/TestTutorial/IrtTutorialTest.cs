@@ -43,8 +43,8 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestIrtTutorial()
         {
-            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ?  @"https://brendanx-uw1.gs.washington.edu/tutorials/iRT.zip"
-                               : @"https://brendanx-uw1.gs.washington.edu/tutorials/iRTMzml.zip";
+            TestFilesZip = ExtensionTestContext.CanImportThermoRaw ?  @"https://skyline.gs.washington.edu/tutorials/iRT.zip"
+                               : @"https://skyline.gs.washington.edu/tutorials/iRTMzml.zip";
             RunFunctionalTest();
         }
 
@@ -259,7 +259,7 @@ namespace pwiz.SkylineTestTutorial
                               SkylineWindow.RTGraphController.Outliers.Length);
                       });
 
-            // Find all unitegrated transitions, p. 13-14
+            // Find all unintegrated transitions, p. 13-14
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findDlg =>
                     {
                         findDlg.FindOptions = new FindOptions().ChangeText("")

@@ -46,7 +46,7 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestExistingExperimentsTutorial()
         {
-            TestFilesZip = "https://brendanx-uw1.gs.washington.edu/tutorials/ExistingQuant.zip";
+            TestFilesZip = "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip";
             RunFunctionalTest();
         }
 

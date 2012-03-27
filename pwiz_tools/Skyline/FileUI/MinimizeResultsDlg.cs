@@ -268,8 +268,13 @@ namespace pwiz.Skyline.FileUI
                     targetFile = saveFileDialog.FileName;
                 }
             }
+            MinimizeToFile(targetFile);
+        }
+
+        public void MinimizeToFile(string targetFile)
+        {
             var targetSkydFile = ChromatogramCache.FinalPathForName(targetFile, null);
-            using(var skydSaver = new FileSaver(targetSkydFile))
+            using (var skydSaver = new FileSaver(targetSkydFile))
             {
                 using (var stream = File.OpenWrite(skydSaver.SafeName))
                 using (var longWaitDlg = new LongWaitDlg(DocumentUIContainer))
@@ -314,18 +319,33 @@ namespace pwiz.Skyline.FileUI
                     {
                         docOrig = DocumentUIContainer.Document;
                         docNew = docOrig.ChangeMeasuredResults(measuredResults);
-                    }
-                    while (!DocumentUIContainer.SetDocument(docNew, docOrig));                    
+                    } while (!DocumentUIContainer.SetDocument(docNew, docOrig));
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(this, string.Format("An unexpected error occurred while saving the data cache file {0}.\n{1}", targetFile, x.Message));
+                    MessageDlg.Show(this,
+                                    string.Format("An unexpected error occurred while saving the data cache file {0}.\n{1}",
+                                                  targetFile, x.Message));
                     return;
                 }
                 skylineWindow.InvalidateChromatogramGraphs();
-                DialogResult = DialogResult.OK;
             }
+            DialogResult = DialogResult.OK;
         }
+
+        #region Functional Test Support
+        public bool LimitNoiseTime
+        {
+            get { return cbxLimitNoiseTime.Checked; }
+            set { cbxLimitNoiseTime.Checked = value; }
+        }
+
+        public string NoiseTimeRange
+        {
+            get { return tbxNoiseTimeRange.Text; }
+            set { tbxNoiseTimeRange.Text = value; }
+        }
+        #endregion
 
         /// <summary>
         /// Handles the task of either estimating the space savings the user will achieve

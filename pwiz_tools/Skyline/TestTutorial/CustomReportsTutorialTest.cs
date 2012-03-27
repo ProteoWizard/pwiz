@@ -42,7 +42,7 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestCustomReportsTutorial()
         {
-            TestFilesZip = @"https://brendanx-uw1.gs.washington.edu/tutorials/CustomReports.zip";
+            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/CustomReports.zip";
             RunFunctionalTest();
         }
 

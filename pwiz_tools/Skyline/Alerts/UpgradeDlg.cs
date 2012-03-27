@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Alerts
 
         private static void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://brendanx-uw1.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement");
+            Process.Start("https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement");
         }
     }
 }
