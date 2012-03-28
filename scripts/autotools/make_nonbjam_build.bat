@@ -1,1 +1,1 @@
-python generate_msvc.py %*
+generate_msvc.py %*
