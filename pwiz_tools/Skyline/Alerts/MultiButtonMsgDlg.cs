@@ -19,10 +19,11 @@
 
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public sealed partial class MultiButtonMsgDlg : Form
+    public sealed partial class MultiButtonMsgDlg : FormEx
     {
         /// <summary>
         /// Show a message box with a Cancel button and one other button.

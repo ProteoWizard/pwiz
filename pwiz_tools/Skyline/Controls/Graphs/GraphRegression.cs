@@ -29,7 +29,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class GraphRegression : Form
+    public partial class GraphRegression : FormEx
     {
         public GraphRegression(ICollection<RegressionGraphData> regressionGraphDatas)
         {

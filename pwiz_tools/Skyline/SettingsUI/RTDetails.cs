@@ -26,7 +26,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class RTDetails : Form
+    public partial class RTDetails : FormEx
     {
         public RTDetails(RetentionTimeStatistics statistics)
         {

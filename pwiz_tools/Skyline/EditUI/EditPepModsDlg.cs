@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class EditPepModsDlg : Form
+    public partial class EditPepModsDlg : FormEx
     {
         private const int VSPACE = 3;
         private const int HSPACE = 10;

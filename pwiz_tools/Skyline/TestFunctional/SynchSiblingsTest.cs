@@ -70,6 +70,7 @@ namespace pwiz.SkylineTestFunctional
                 pickList0.AutoManageChildren = false;
             });
             OkDialog(pickList0, pickList0.OnOk);
+            WaitForClosedForm(pickList0);
 
             VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
 
@@ -82,6 +83,7 @@ namespace pwiz.SkylineTestFunctional
                 pickList1.IsSynchSiblings = false;
             });
             OkDialog(pickList1, pickList1.OnOk);
+            WaitForClosedForm(pickList1);
 
             var nodes = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes;
             Assert.AreEqual(6, nodes[0].Nodes.Count);
@@ -96,6 +98,7 @@ namespace pwiz.SkylineTestFunctional
                 pickList2.IsSynchSiblings = true;
             });
             OkDialog(pickList2, pickList2.OnOk);
+            WaitForClosedForm(pickList2);
 
             VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
 
@@ -108,6 +111,7 @@ namespace pwiz.SkylineTestFunctional
                 pickList3.AutoManageChildren = true;
             });
             OkDialog(pickList3, pickList3.OnOk);
+            WaitForClosedForm(pickList3);
 
             VerifySynchronized(SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes);
 
@@ -129,6 +133,7 @@ namespace pwiz.SkylineTestFunctional
             var pickList4 = ShowDialog<PopupPickList>(SkylineWindow.ShowPickChildrenInTest);
             RunUI(() => Assert.IsTrue(pickList4.CanSynchSiblings));
             OkDialog(pickList4, pickList4.OnCancel);
+            WaitForClosedForm(pickList4);
 
             // Pick different charge states of the same label type,
             // and make sure it is not possible to synchronize siblings
@@ -143,6 +148,7 @@ namespace pwiz.SkylineTestFunctional
                     pickListPep.SetItemChecked(i * 3, true);
             });
             OkDialog(pickListPep, pickListPep.OnOk);
+            WaitForClosedForm(pickListPep);
 
             VerifyCannotSynch(SrmDocument.Level.TransitionGroups);
         }

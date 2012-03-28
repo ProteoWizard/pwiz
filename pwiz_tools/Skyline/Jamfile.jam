@@ -67,6 +67,8 @@ if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek :
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal        
         echo Building Skyline TestTutorial in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TestTutorial /nologo /verbosity:minimal        
+        echo Building Skyline Stress in $(CONFIGURATION:L) configuration...
+        msbuild $(SKYLINE_PATH)/SkylineStress/SkylineStress.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal        
     }
 
     rule do_skyline_test ( targets + : sources * : properties * )

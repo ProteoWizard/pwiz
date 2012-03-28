@@ -198,21 +198,4 @@ namespace pwiz.Skyline.Util
         public int Width { get; set; }
         public bool IsPlainText { get; set; }
     }
-
-    public static class FormEx
-    {
-        public static Form GetParentForm(Control control)
-        {
-            for (;;)
-            {
-                var parent = control.Parent;
-                if (parent == null)
-                    return null;
-                var parentForm = parent as Form;
-                if (parentForm != null)
-                    return parentForm;
-                control = parent;
-            }
-        }
-    }
 }

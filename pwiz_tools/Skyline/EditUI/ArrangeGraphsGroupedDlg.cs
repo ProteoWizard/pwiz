@@ -32,7 +32,7 @@ namespace pwiz.Skyline.EditUI
     public enum GroupGraphsOrder { Position, Document }
 // ReSharper restore InconsistentNaming
 
-    public partial class ArrangeGraphsGroupedDlg : Form
+    public partial class ArrangeGraphsGroupedDlg : FormEx
     {
         private readonly int _countGraphs;
 

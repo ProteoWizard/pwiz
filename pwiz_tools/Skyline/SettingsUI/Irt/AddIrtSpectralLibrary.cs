@@ -31,7 +31,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 {
     public enum SpectralLibrarySource { settings, file }
 
-    public partial class AddIrtSpectralLibrary : Form
+    public partial class AddIrtSpectralLibrary : FormEx
     {
         public AddIrtSpectralLibrary(IEnumerable<LibrarySpec> librarySpecs)
         {

@@ -34,7 +34,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class PeptideSettingsUI : Form
+    public partial class PeptideSettingsUI : FormEx
     {
         private const int BORDER_BOTTOM_HEIGHT = 16;
 

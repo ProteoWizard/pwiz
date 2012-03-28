@@ -20,10 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class PasteFilteredPeptidesDlg : Form
+    public partial class PasteFilteredPeptidesDlg : FormEx
     {
         private const int MAX_LINES = 10;
 

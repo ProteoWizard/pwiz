@@ -20,13 +20,14 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
     /// <summary>
     /// Grid view which displays results of a query.
     /// </summary>
-    public partial class PreviewReportDlg : Form
+    public partial class PreviewReportDlg : FormEx
     {
         public PreviewReportDlg()
         {

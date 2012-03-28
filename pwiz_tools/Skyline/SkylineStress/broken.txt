@@ -1,0 +1,9 @@
+TestSynchSiblings
+TestDocumentSharing
+TestPrecursorIon
+TestMethodEditTutorial
+TestLibraryExplorer
+TestIrtTutorial
+TestAnnotations
+TestEditNote
+IrtFunctionalTest

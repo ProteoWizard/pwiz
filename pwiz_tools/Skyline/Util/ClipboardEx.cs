@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Util
 
         // Set this true to check that the internal clipboard returns the
         // same values as the system clipboard.
-        private static bool CHECK_VALUES = true;
+        private static bool CHECK_VALUES = false;
 
         public static void UseInternalClipboard()
         {

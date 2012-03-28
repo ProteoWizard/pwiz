@@ -20,10 +20,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class ColumnChooser : Form
+    public partial class ColumnChooser : FormEx
     {
         public ColumnChooser()
         {

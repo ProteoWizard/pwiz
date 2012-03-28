@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Util;
@@ -32,7 +31,7 @@ namespace pwiz.Skyline.Controls
     /// Displays the results of a "Find All" operation in a list that allows the user to
     /// double-click and navigate to the location in the document.
     /// </summary>
-    public partial class FindResultsForm : DockableForm
+    public partial class FindResultsForm : DockableFormEx
     {
         public FindResultsForm(SkylineWindow skylineWindow, IEnumerable<FindResult> findResults)
         {

@@ -25,10 +25,11 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class GenerateDecoysDlg : Form
+    public partial class GenerateDecoysDlg : FormEx
     {
         private readonly SrmDocument _document;
         private readonly SrmSettings _settings;

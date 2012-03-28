@@ -25,10 +25,11 @@ using System.Windows.Forms;
 using System.Linq;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class SchedulingGraphPropertyDlg : Form
+    public partial class SchedulingGraphPropertyDlg : FormEx
     {
         public SchedulingGraphPropertyDlg()
         {

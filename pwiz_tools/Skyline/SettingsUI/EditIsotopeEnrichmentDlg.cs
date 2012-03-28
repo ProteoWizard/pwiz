@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditIsotopeEnrichmentDlg : Form
+    public partial class EditIsotopeEnrichmentDlg : FormEx
     {
         private const int COL_SYMBOL = 1;
         private const int COL_ENRICHMENT = 2;

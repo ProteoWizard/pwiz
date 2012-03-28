@@ -21,10 +21,11 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class AddIrtStandardsDlg : Form
+    public partial class AddIrtStandardsDlg : FormEx
     {
         private readonly int _peptideCount;
 

@@ -22,13 +22,14 @@ using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
     /// <summary>
     /// Window which pops up containing a list of undoable/redoable items.
     /// </summary>
-    public partial class UndoRedoList : Form
+    public partial class UndoRedoList : FormEx
     {
         const int MAX_DISPLAY_ITEMS = 16;
         const int TOTAL_BORDER_WIDTH = 2;

@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditCEDlg : Form
+    public partial class EditCEDlg : FormEx
     {
         private CollisionEnergyRegression _regression;
         private readonly IEnumerable<CollisionEnergyRegression> _existing;

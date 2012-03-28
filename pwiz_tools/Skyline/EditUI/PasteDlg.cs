@@ -38,7 +38,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class PasteDlg : Form
+    public partial class PasteDlg : FormEx
     {
         private readonly StatementCompletionTextBox _statementCompletionEditBox;
         private bool _noErrors;

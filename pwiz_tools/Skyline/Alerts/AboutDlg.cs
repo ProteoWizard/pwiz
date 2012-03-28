@@ -26,7 +26,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class AboutDlg : Form
+    public partial class AboutDlg : FormEx
     {
         public AboutDlg()
         {

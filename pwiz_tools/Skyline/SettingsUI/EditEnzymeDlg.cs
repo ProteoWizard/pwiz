@@ -25,10 +25,11 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditEnzymeDlg : Form
+    public partial class EditEnzymeDlg : FormEx
     {
         private Enzyme _enzyme;
         private readonly IEnumerable<Enzyme> _existing;

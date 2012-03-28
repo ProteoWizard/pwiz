@@ -27,7 +27,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class OpenDataSourceDialog : Form
+    public partial class OpenDataSourceDialog : FormEx
     {
         private readonly ListViewColumnSorter _listViewColumnSorter = new ListViewColumnSorter();
         private readonly Stack<string> _previousDirectories = new Stack<string>();

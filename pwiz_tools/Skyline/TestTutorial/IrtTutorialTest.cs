@@ -310,6 +310,8 @@ namespace pwiz.SkylineTestTutorial
                               });
                 }
             }
+            RunUI(findAllForm.Close);
+            WaitForClosedForm(findAllForm);
 
             // Calculate new iRT values for human peptides, p. 16
             var editIrtCalc2 = ShowDialog<EditIrtCalcDlg>(SkylineWindow.ShowEditCalculatorDlg);

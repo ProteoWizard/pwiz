@@ -34,7 +34,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ExportReportDlg : Form, IReportDatabaseProvider
+    public partial class ExportReportDlg : FormEx, IReportDatabaseProvider
     {
         private readonly IDocumentUIContainer _documentUiContainer;
         private Database _database;

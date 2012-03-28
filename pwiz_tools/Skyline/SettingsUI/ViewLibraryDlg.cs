@@ -75,7 +75,7 @@ namespace pwiz.Skyline.SettingsUI
     /// from a drop-down, view and search the list of peptides, and view the
     /// spectrum for peptide selected in the list.
     /// </summary>
-    public partial class ViewLibraryDlg : Form, IGraphContainer, IStateProvider, ITipDisplayer
+    public partial class ViewLibraryDlg : FormEx, IGraphContainer, IStateProvider, ITipDisplayer
     {
         // Used to parse the modification string in a given sequence
         private const string REGEX_MODIFICATION_PATTERN = @"\[[^\]]*\]";

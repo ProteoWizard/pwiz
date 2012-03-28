@@ -79,6 +79,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(Settings.Default.AnnotationColor, editNoteDlg.ColorIndex);
                 editNoteDlg.OkDialog();
             });
+            WaitForClosedForm(editNoteDlg);
             // Select just the first protein.
             RunUI(() =>
             {
@@ -144,6 +145,7 @@ namespace pwiz.SkylineTestFunctional
                     SkylineWindow.Document.GetPathTo((int)SrmDocument.Level.PeptideGroups, 0)
                 };
             });
+            WaitForClosedForm(editNoteDlg1);
             RunDlg<EditNoteDlg>(SkylineWindow.EditNote, editNoteDlg2 =>
             {
                 // Test annotation values for multiple nodes merge correctly.

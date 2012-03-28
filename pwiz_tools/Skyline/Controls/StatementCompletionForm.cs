@@ -25,7 +25,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class StatementCompletionForm : Form
+    public partial class StatementCompletionForm : FormEx
     {
         public StatementCompletionForm()
         {

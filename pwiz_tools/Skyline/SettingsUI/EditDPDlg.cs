@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditDPDlg : Form
+    public partial class EditDPDlg : FormEx
     {
         private DeclusteringPotentialRegression _regression;
         private readonly IEnumerable<DeclusteringPotentialRegression> _existing;

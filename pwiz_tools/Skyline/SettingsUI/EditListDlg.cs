@@ -25,7 +25,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditListDlg<TList, TItem> : Form
+    public partial class EditListDlg<TList, TItem> : FormEx
         where TList : ICollection<TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>
     {

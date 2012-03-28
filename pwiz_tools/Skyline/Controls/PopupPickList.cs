@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class PopupPickList : Form, ITipDisplayer
+    public partial class PopupPickList : FormEx, ITipDisplayer
     {
         /// <summary>
         /// Current size used for all popup pick-lists.

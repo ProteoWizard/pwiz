@@ -1,0 +1,20 @@
+# Top leaks (in MB per execution):
+  TestCustomReportsTutorial                #  min=0.80  max=8.40  mean=5.32
+  TestMethodRefinementTutorial             #  min=0.50  max=6.00  mean=4.29
+  TestExistingExperimentsTutorial          #  min=0.00  max=2.80  mean=2.05
+  TestReportSummary                        #  min=0.20  max=2.50  mean=2.01
+  TestExplicitMultiType                    #  min=0.00  max=1.50  mean=1.25
+  ConsoleReportExportTest                  #  min=0.00  max=1.40  mean=1.17
+  TestCopyPaste                            #  min=0.00  max=1.10  mean=0.89
+  TestLoadReportFile                       #  min=0.00  max=0.80  mean=0.66
+  TestCEOptimizationTutorial               #  min=0.00  max=1.30  mean=0.66
+  TestReportSpecList                       #  min=0.00  max=0.80  mean=0.65
+  TestScheduleMethodDlg                    #  min=0.00  max=0.90  mean=0.62
+  TestIsotopeLabelPivot                    #  min=0.00  max=0.70  mean=0.56
+  TestLibraryExplorerTutorial              #  min=0.00  max=0.90  mean=0.55
+  TestNeutralLoss                          #  min=0.00  max=0.90  mean=0.54
+  TestManageResults                        #  min=0.00  max=0.80  mean=0.51
+  TestGroupByColumns                       #  min=0.00  max=0.70  mean=0.48
+  TestColumnsFromResultsTables             #  min=0.00  max=0.70  mean=0.46
+  TestOptimization                         #  min=0.00  max=0.80  mean=0.42
+  TestLibraryBuild                         #  min=0.00  max=0.50  mean=0.14

@@ -23,10 +23,11 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class ChromChartPropertyDlg : Form
+    public partial class ChromChartPropertyDlg : FormEx
     {
         public ChromChartPropertyDlg()
         {

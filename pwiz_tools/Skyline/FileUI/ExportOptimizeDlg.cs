@@ -22,10 +22,11 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ExportOptimizeDlg : Form
+    public partial class ExportOptimizeDlg : FormEx
     {
         private double _stepSize;
         private int _stepCount;

@@ -35,7 +35,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditRTDlg : Form
+    public partial class EditRTDlg : FormEx
     {
         private readonly SettingsListComboDriver<RetentionScoreCalculatorSpec> _driverCalculators;
         private readonly RetentionTimeGridViewDriver _gridViewDriver;

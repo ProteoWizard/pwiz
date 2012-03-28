@@ -20,12 +20,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
     public enum AddIrtPeptidesAction { skip, replace, average }
 
-    public partial class AddIrtPeptidesDlg : Form
+    public partial class AddIrtPeptidesDlg : FormEx
     {
         public AddIrtPeptidesDlg(int peptideCount,
             int runsConvertedCount,

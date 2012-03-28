@@ -22,10 +22,11 @@ using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class SetRTThresholdDlg : Form
+    public partial class SetRTThresholdDlg : FormEx
     {
         private double _threshold;
 

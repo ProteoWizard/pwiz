@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.FileUI
     /// Dialog which allows the user to choose columns from the hierarchy from
     /// DbProtein to DbTransition.
     /// </summary>
-    public partial class PivotReportDlg : Form
+    public partial class PivotReportDlg : FormEx
     {
         private ReportSpec _reportSpec;
         private readonly IEnumerable<ReportSpec> _existing;

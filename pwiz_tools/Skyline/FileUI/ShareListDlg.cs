@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ShareListDlg<TList, TItem> : Form
+    public partial class ShareListDlg<TList, TItem> : FormEx
         where TList : IList<TItem>, IListSerializer<TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>, IXmlSerializable
     {

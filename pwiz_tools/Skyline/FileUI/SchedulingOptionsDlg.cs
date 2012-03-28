@@ -32,7 +32,7 @@ namespace pwiz.Skyline.FileUI
     /// or using retention values from a single data set.
     /// </summary>
 
-    public partial class SchedulingOptionsDlg : Form
+    public partial class SchedulingOptionsDlg : FormEx
     {
         private readonly SrmDocument _document;
 

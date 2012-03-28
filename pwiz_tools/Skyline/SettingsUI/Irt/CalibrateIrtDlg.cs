@@ -34,7 +34,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class CalibrateIrtDlg : Form
+    public partial class CalibrateIrtDlg : FormEx
     {
         public const int MAX_DEFAULT_STANDARD_PEPTIDES = 15;
         public const int MIN_STANDARD_PEPTIDES = 5;

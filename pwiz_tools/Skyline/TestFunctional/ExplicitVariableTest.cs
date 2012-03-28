@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
@@ -43,7 +44,7 @@ namespace pwiz.SkylineTestFunctional
             "LDSLDNAKDRMTRFLDRMISGPSSSSSAP*\n";
 
         [TestMethod]
-        public void TestExplicitMultiType()
+        public void TestExplicitVariable()
         {
             RunFunctionalTest();
         }
@@ -231,6 +232,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
 
+            Directory.CreateDirectory(TestContext.TestDir);
             string saveFilePath = TestContext.GetTestPath("TestExplicitVariable.sky");
             RunUI(() =>
                 {

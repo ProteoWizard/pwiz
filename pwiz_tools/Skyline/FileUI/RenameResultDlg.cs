@@ -21,10 +21,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class RenameResultDlg : Form
+    public partial class RenameResultDlg : FormEx
     {
         public RenameResultDlg(string name, IEnumerable<string> existing)
         {

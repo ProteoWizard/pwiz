@@ -31,7 +31,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 {
     public enum IrtCalculatorSource { settings, file }
 
-    public partial class AddIrtCalculatorDlg : Form
+    public partial class AddIrtCalculatorDlg : FormEx
     {
         public AddIrtCalculatorDlg(IEnumerable<RCalcIrt> calculators)
         {

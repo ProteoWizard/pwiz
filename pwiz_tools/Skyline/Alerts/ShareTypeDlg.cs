@@ -21,6 +21,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -28,7 +29,7 @@ namespace pwiz.Skyline.Alerts
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class ShareTypeDlg : Form
+    public partial class ShareTypeDlg : FormEx
     {
         public ShareTypeDlg(SrmDocument document)
         {

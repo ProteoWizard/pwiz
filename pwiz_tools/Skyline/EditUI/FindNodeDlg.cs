@@ -21,10 +21,11 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class FindNodeDlg : Form
+    public partial class FindNodeDlg : FormEx
     {
         private const int COLLAPSED_HEIGHT = 150;
 

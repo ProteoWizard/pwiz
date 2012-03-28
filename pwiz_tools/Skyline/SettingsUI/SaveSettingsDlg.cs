@@ -22,10 +22,11 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class SaveSettingsDlg : Form
+    public partial class SaveSettingsDlg : FormEx
     {
         private bool _clickedOk;
 

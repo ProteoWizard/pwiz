@@ -24,7 +24,6 @@ using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -49,7 +48,7 @@ namespace pwiz.Skyline.Controls.Graphs
         void LockYAxis(bool lockY);
     }
 
-    public partial class GraphSpectrum : DockableForm, IGraphContainer
+    public partial class GraphSpectrum : DockableFormEx, IGraphContainer
     {
         public interface IStateProvider
         {

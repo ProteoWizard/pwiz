@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditExclusionDlg : Form
+    public partial class EditExclusionDlg : FormEx
     {
         private PeptideExcludeRegex _exclusion;
         private readonly IEnumerable<PeptideExcludeRegex> _existing;

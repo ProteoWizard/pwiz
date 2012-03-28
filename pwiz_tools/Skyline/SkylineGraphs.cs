@@ -210,32 +210,24 @@ namespace pwiz.Skyline
             using (var layoutLock = new DockPanelLayoutLock(dockPanel))
             {
                 bool deserialized = false;
-                if (docIdChanged && File.Exists(GetViewFile(DocumentFilePath)))
+                string layoutFile = GetViewFile(DocumentFilePath);
+                if (docIdChanged && File.Exists(layoutFile))
                 {
                     layoutLock.EnsureLocked();
-                    // Get rid of any existing graph windows, since the layout
-                    // deserialization has problems using existing windows.
-                    DestroyGraphSpectrum();
-                    DestroyGraphRetentionTime();
-                    DestroyGraphPeakArea();
-                    DestroyResultsGrid();
-                    foreach (GraphChromatogram graphChrom in _listGraphChrom)
-                        DestroyGraphChrom(graphChrom);
-                    _listGraphChrom.Clear();
-                    // Deserialize from the file
-                    string layoutFile = GetViewFile(DocumentFilePath);
                     try
                     {
-                        dockPanel.LoadFromXml(layoutFile, DeserializeForm);
-                        // Hide the graph panel, if nothing remains
-                        if (FirstDocumentPane == -1)
-                            splitMain.Panel2Collapsed = true;
-                        EnsureFloatingWindowsVisible();
+                        using (var layoutReader = new StreamReader(layoutFile))
+                        {
+                            LoadLayout(layoutReader.BaseStream);
+                        }
                         deserialized = true;
                     }
                     catch (Exception x)
                     {
-                        throw new IOException(string.Format("Failure attempting to load the window layout file {0}.\nRename or delete this file to restore the default layout.\nSkyline may also need to be restarted.", layoutFile), x);
+                        throw new IOException(
+                            string.Format(
+                                "Failure attempting to load the window layout file {0}.\nRename or delete this file to restore the default layout.\nSkyline may also need to be restarted.",
+                                layoutFile), x);
                     }
                 }
 
@@ -420,6 +412,34 @@ namespace pwiz.Skyline
             }
 
             UpdateGraphPanes(listUpdateGraphs);
+        }
+
+        // Load view layout from the given stream.
+        public void LoadLayout(Stream layoutStream)
+        {
+            using (var layoutLock = new DockPanelLayoutLock(dockPanel, true))
+            {
+                LoadLayoutLocked(layoutStream);
+            }
+        }
+
+        // Load view layout from the given stream.
+        private void LoadLayoutLocked(Stream layoutStream)
+        {
+            // Get rid of any existing graph windows, since the layout
+            // deserialization has problems using existing windows.
+            DestroyGraphSpectrum();
+            DestroyGraphRetentionTime();
+            DestroyGraphPeakArea();
+            DestroyResultsGrid();
+            foreach (GraphChromatogram graphChrom in _listGraphChrom)
+                DestroyGraphChrom(graphChrom);
+            _listGraphChrom.Clear();
+            dockPanel.LoadFromXml(layoutStream, DeserializeForm);
+            // Hide the graph panel, if nothing remains
+            if (FirstDocumentPane == -1)
+                splitMain.Panel2Collapsed = true;
+            EnsureFloatingWindowsVisible();
         }
 
         public void InvalidateChromatogramGraphs()

@@ -38,7 +38,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class EditIrtCalcDlg : Form
+    public partial class EditIrtCalcDlg : FormEx
     {
         private const string STANDARD_TABLE_NAME = "standard";
         private const string LIBRARY_TABLE_NAME = "library";

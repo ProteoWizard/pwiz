@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading;
@@ -42,6 +43,9 @@ namespace pwiz.Skyline
     public static class Program
     {
         private const int LICENSE_VERSION_CURRENT = 3;
+        
+        // SkylineOffscreen is set true to move Skyline windows offscreen for stress testing.
+        public static bool SkylineOffscreen { get; set; }
 
         /// <summary>
         /// The main entry point for the application.
@@ -53,9 +57,9 @@ namespace pwiz.Skyline
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
                 string installUrl = Install.Url;
-                string installLabel = (installUrl == "") ? "" : string.Format("Install 32-bit {0}", Program.Name);
+                string installLabel = (installUrl == "") ? "" : string.Format("Install 32-bit {0}", Name);
                 AlertLinkDlg.Show(null,
-                    string.Format("You are attempting to run a 64-bit version of {0} on a 32-bit OS.  Please install the 32-bit version.", Program.Name),
+                    string.Format("You are attempting to run a 64-bit version of {0} on a 32-bit OS.  Please install the 32-bit version.", Name),
                     installLabel,
                     installUrl);
                 return;
@@ -101,6 +105,20 @@ namespace pwiz.Skyline
                 Settings.Default.Save();
 
                 MainWindow = new SkylineWindow();
+
+                // Position window offscreen for stress testing.
+                if (SkylineOffscreen)
+                {
+                    var offscreenPoint = new Point(0, 0);
+                    foreach (var screen in Screen.AllScreens)
+                    {
+                        offscreenPoint.X = Math.Min(offscreenPoint.X, screen.Bounds.Right);
+                        offscreenPoint.Y = Math.Min(offscreenPoint.Y, screen.Bounds.Bottom);
+                    }
+                    MainWindow.StartPosition = FormStartPosition.Manual;
+                    MainWindow.Location = offscreenPoint - Screen.PrimaryScreen.Bounds.Size;    // position one screen away to top left
+                }
+
                 Application.Run(MainWindow);
             }
             catch (Exception x)
@@ -109,6 +127,11 @@ namespace pwiz.Skyline
                 Console.WriteLine(x.Message);
                 Console.Write(x.StackTrace);
             }
+        }
+
+        public static void CloseSkyline()
+        {
+            MainWindow.Invoke(new Action(MainWindow.Close));
         }
 
         public static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)

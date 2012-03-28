@@ -32,7 +32,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportResultsDlg : Form
+    public partial class ImportResultsDlg : FormEx
     {
         private const string DEFAULT_NAME = "Chromatograms";
 

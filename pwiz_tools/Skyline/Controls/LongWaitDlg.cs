@@ -28,7 +28,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
 {
-    public partial class LongWaitDlg : Form, ILongWaitBroker
+    public partial class LongWaitDlg : FormEx, ILongWaitBroker
     {
         private const string CANCEL_MESSAGE = " (canceled)";
 

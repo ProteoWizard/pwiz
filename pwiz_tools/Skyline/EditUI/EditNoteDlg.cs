@@ -27,7 +27,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class EditNoteDlg : Form
+    public partial class EditNoteDlg : FormEx
     {
         public EditNoteDlg()
         {

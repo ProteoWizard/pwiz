@@ -341,6 +341,7 @@ namespace pwiz.SkylineTestTutorial
 
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, 
                 msgDlg => msgDlg.Btn1Click());
+            OkDialog(viewLibraryDlg1, viewLibraryDlg1.CancelDialog);
 
             var docProteins = WaitForDocumentChange(docInitial);
 

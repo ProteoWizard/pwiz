@@ -22,10 +22,11 @@ using System.Windows.Forms;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public sealed partial class FilterMatchedPeptidesDlg : Form
+    public sealed partial class FilterMatchedPeptidesDlg : FormEx
     {
 
         public FilterMatchedPeptidesDlg(int numWithDuplicates, int numUnmatched, int numFiltered, bool single)

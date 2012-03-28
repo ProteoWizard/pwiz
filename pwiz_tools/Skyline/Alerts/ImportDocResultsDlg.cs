@@ -19,10 +19,11 @@
 using System;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class ImportDocResultsDlg : Form
+    public partial class ImportDocResultsDlg : FormEx
     {
         public ImportDocResultsDlg(bool canImportResults)
         {

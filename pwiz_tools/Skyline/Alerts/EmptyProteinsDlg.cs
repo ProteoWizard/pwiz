@@ -18,6 +18,7 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -25,7 +26,7 @@ namespace pwiz.Skyline.Alerts
     /// Use for a <see cref="MessageBox"/> substitute that can be
     /// detected and closed by automated functional tests.
     /// </summary>
-    public partial class EmptyProteinsDlg : Form
+    public partial class EmptyProteinsDlg : FormEx
     {
         public EmptyProteinsDlg(int countEmpty)
         {

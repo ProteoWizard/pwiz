@@ -37,7 +37,7 @@ namespace pwiz.Skyline.FileUI
     /// Displays UI for choosing settings for reducing the size of the chromatogram cache file
     /// by removing unused transition and limiting the length along the time axis.
     /// </summary>
-    public partial class MinimizeResultsDlg : Form
+    public partial class MinimizeResultsDlg : FormEx
     {
         private readonly BindingList<GridRowItem> _rowItems;
         private ChromCacheMinimizer.Settings _settings;

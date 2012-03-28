@@ -17,10 +17,11 @@
  * limitations under the License.
  */
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class MissingFileDlg : Form
+    public partial class MissingFileDlg : FormEx
     {
         private string _itemName;
         private string _itemType;

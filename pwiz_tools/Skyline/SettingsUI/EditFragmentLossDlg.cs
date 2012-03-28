@@ -32,7 +32,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditFragmentLossDlg : Form
+    public partial class EditFragmentLossDlg : FormEx
     {
         private FragmentLoss _loss;
         private readonly IEnumerable<FragmentLoss> _existing;

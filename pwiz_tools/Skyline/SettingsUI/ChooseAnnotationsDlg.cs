@@ -23,13 +23,14 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
     /// <summary>
     /// Form for choosing which annotation definitions should be included in the document
     /// </summary>
-    public partial class ChooseAnnotationsDlg : Form
+    public partial class ChooseAnnotationsDlg : FormEx
     {
         private readonly SkylineWindow _parent;
         private readonly SettingsListBoxDriver<AnnotationDef> _annotationsListBoxDriver;

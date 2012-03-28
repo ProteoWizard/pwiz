@@ -1,16 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class AlertLinkDlg : Form
+    public partial class AlertLinkDlg : FormEx
     {
         public static DialogResult Show(IWin32Window parent, string message, string linkMessage, string linkUrl)
         {

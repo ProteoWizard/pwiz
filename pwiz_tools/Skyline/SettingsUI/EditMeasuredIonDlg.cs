@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditMeasuredIonDlg : Form
+    public partial class EditMeasuredIonDlg : FormEx
     {
         private MeasuredIon _measuredIon;
         private readonly IEnumerable<MeasuredIon> _existing;

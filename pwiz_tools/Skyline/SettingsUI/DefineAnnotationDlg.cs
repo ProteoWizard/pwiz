@@ -24,13 +24,14 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
     /// <summary>
     /// Dialog for defining new annotations.
     /// </summary>
-    public partial class DefineAnnotationDlg : Form
+    public partial class DefineAnnotationDlg : FormEx
     {
         private readonly IEnumerable<AnnotationDef> _existing;
         private AnnotationDef _annotationDef;

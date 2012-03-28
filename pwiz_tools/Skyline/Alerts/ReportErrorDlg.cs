@@ -29,7 +29,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class ReportErrorDlg : Form
+    public partial class ReportErrorDlg : FormEx
     {
         public ReportErrorDlg(Exception e, List<string> stackTraceList)
         {
@@ -86,7 +86,7 @@ namespace pwiz.Skyline.Alerts
         {
             WebClient webClient = new WebClient();
 
-            const string address = "https://brendanx-uw1.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view";
+            const string address = "https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view";
 
             NameValueCollection form = new NameValueCollection
                                            {

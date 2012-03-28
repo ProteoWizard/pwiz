@@ -21,10 +21,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineListDlg : Form
+    public partial class RefineListDlg : FormEx
     {
         private readonly SrmDocument _document;
 

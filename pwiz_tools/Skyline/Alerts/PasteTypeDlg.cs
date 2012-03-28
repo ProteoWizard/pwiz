@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 using System;
-using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class PasteTypeDlg : Form
+    public partial class PasteTypeDlg : FormEx
     {
         public PasteTypeDlg()
         {

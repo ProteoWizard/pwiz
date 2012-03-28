@@ -32,7 +32,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class BuildLibraryDlg : Form
+    public partial class BuildLibraryDlg : FormEx
     {
         private static readonly string[] RESULTS_EXTS = new[]
             {

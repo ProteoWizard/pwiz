@@ -33,7 +33,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditStaticModDlg : Form
+    public partial class EditStaticModDlg : FormEx
     {
         private StaticMod _modification;
         private readonly StaticMod _originalModification;

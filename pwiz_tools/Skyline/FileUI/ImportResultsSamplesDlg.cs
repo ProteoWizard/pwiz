@@ -21,10 +21,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportResultsSamplesDlg : Form
+    public partial class ImportResultsSamplesDlg : FormEx
     {
         private readonly List<int> _sampleIndices = new List<int>();
 

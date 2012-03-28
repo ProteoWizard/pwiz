@@ -22,10 +22,11 @@ using System.Globalization;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RTChartPropertyDlg : Form
+    public partial class RTChartPropertyDlg : FormEx
     {
         public RTChartPropertyDlg()
         {

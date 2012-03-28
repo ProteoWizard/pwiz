@@ -23,6 +23,7 @@ using System.Data.OleDb;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -139,12 +140,12 @@ namespace pwiz.SkylineTestUtil
             SkylineWindow.Invoke(act);
         }
 
-        protected static void RunDlg<TDlg>(Action show, Action<TDlg> act) where TDlg : Form
+        protected static void RunDlg<TDlg>(Action show, Action<TDlg> act) where TDlg : FormEx
         {
             RunDlg(show, false, act);
         }
 
-        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act) where TDlg : Form
+        protected static void RunDlg<TDlg>(Action show, bool waitForDocument, Action<TDlg> act) where TDlg : FormEx
         {
             var doc = SkylineWindow.Document;
             TDlg dlg = ShowDialog<TDlg>(show);
@@ -273,8 +274,8 @@ namespace pwiz.SkylineTestUtil
                     return tForm;
 
                 Thread.Sleep(SLEEP_INTERVAL);
+                Assert.IsTrue(i < WAIT_CYCLES - 1, "Timeout exceeded in WaitForOpenForm");
             }
-            Assert.Fail("Timeout exceeded in WaitForOpenForm");
             return null;
         }
 
@@ -336,8 +337,8 @@ namespace pwiz.SkylineTestUtil
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
+                Assert.IsTrue(i < waitCycles - 1, "Timeout exceeded in WaitForCondition");
             }
-            Assert.Fail("Timeout exceeded in WaitForCondition");
             return false;
         }
 
@@ -350,8 +351,8 @@ namespace pwiz.SkylineTestUtil
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
+                Assert.IsTrue(i < WAIT_CYCLES - 1, "Timeout exceeded in WaitForConditionUI");
             }
-            Assert.Fail("Timeout exceeded in WaitForConditionUI");
             return false;
         }
 
@@ -373,7 +374,10 @@ namespace pwiz.SkylineTestUtil
         {
             var threadTest = new Thread(WaitForSkyline);
             threadTest.Start();
-            Program.Main();
+            if (!TestContext.Properties.Contains("StressTest"))
+            {
+                Program.Main();
+            }
             threadTest.Join();
             if (_testExceptions.Count > 0)
             {
@@ -430,7 +434,20 @@ namespace pwiz.SkylineTestUtil
             // using the clipboard during a test run.
             ClipboardEx.UseInternalClipboard();
 
+            var doClipboardCheck = TestContext.Properties.Contains("ClipboardCheck");
+            string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties["ClipboardCheck"] : "";
+            if (doClipboardCheck)
+            {
+                RunUI(() => Clipboard.SetText(clipboardCheckText));
+            }
+            
             DoTest();
+            
+            if (doClipboardCheck)
+            {
+                RunUI(() => Assert.AreEqual(clipboardCheckText, Clipboard.GetText()));
+            }
+            
             EndTest();
         }
 
@@ -444,9 +461,45 @@ namespace pwiz.SkylineTestUtil
             // holds no file handles.
             var docNew = new SrmDocument(SrmSettingsList.GetDefault());
             RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+            WaitForGraphs();
+
+            // Restore minimal View to close dock windows.
+            RestoreMinimalView();
+
+            // Wait for forms to close.
+            try
+            {
+                WaitForConditionUI(() => Application.OpenForms.Count == 1);
+            }
+            catch (Exception)
+            {
+                foreach (var form in Application.OpenForms)
+                {
+                    Assert.IsTrue(form == skylineWindow,
+                                  string.Format("Form of type {0} left open at end of test", form.GetType()));
+                }
+            }
+
+            // Clear the clipboard to avoid the appearance of a memory leak.
+            RunUI(ClipboardEx.Clear);
+
             // Close the Skyline window
             _testCompleted = true;
-            skylineWindow.Invoke(new Action(skylineWindow.Close));                        
+            if (!TestContext.Properties.Contains("StressTest"))
+            {
+                skylineWindow.Invoke(new Action(skylineWindow.Close));                        
+            }
+        }
+
+        // Restore minimal view layout in order to close extra windows.
+        private void RestoreMinimalView()
+        {
+            var assembly = Assembly.GetAssembly(typeof(AbstractFunctionalTest));
+            var layoutStream = assembly.GetManifestResourceStream(
+                typeof(AbstractFunctionalTest).Namespace + ".minimal.sky.view");
+            Assert.IsNotNull(layoutStream);
+            RunUI(() => SkylineWindow.LoadLayout(layoutStream));
+            WaitForConditionUI(() => true);
         }
 
         protected abstract void DoTest();

@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditLibraryDlg : Form
+    public partial class EditLibraryDlg : FormEx
     {
         private LibrarySpec _librarySpec;
         private readonly IEnumerable<LibrarySpec> _existing;

@@ -18,10 +18,11 @@
  */
 using System.Diagnostics;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class UpgradeDlg : Form
+    public partial class UpgradeDlg : FormEx
     {
         public UpgradeDlg(int licenseVersion)
         {

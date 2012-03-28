@@ -26,10 +26,11 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public partial class RefineDlg : Form
+    public partial class RefineDlg : FormEx
     {
         private readonly SrmDocument _document;
         private readonly SrmSettings _settings;

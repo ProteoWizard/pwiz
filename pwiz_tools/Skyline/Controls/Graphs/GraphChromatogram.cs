@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
@@ -42,7 +41,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum DisplayTypeChrom { single, precursors, products, all, total }
 
-    public partial class GraphChromatogram : DockableForm, IGraphContainer
+    public partial class GraphChromatogram : DockableFormEx, IGraphContainer
     {
         public const double DEFAULT_PEAK_RELATIVE_WINDOW = 3.4;
 

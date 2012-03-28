@@ -36,7 +36,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public sealed partial class ExportMethodDlg : Form
+    public sealed partial class ExportMethodDlg : FormEx
     {
         public const string TRANS_PER_SAMPLE_INJ_TXT = "Ma&x transitions per sample injection:";
         public const string CONCUR_TRANS_TXT = "Ma&x concurrent transitions:";

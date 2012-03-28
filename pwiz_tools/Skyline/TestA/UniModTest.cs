@@ -16,11 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -106,7 +110,7 @@ namespace pwiz.SkylineTestA
 
         private static void WriteModListXml(string name, string tagName, IEnumerable<Dictionary<string, StaticMod>> dicts)
         {
-            FileStream fileStream = File.Create(string.Format(@"..\..\..\TestA\{0}", name));
+            FileStream fileStream = File.Create(GetProjectDirectory(string.Format(@"TestA\{0}", name)));
 
             XmlWriterSettings settings = new XmlWriterSettings
             {
@@ -123,5 +127,18 @@ namespace pwiz.SkylineTestA
             xmlWriter.Close();
             fileStream.Close();
         }
+
+        public static String GetProjectDirectory(string relativePath)
+        {
+            for (String directory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+                    directory != null && directory.Length > 10;
+                    directory = Path.GetDirectoryName(directory))
+            {
+                if (File.Exists(Path.Combine(directory, Program.Name + ".sln")))
+                    return Path.Combine(directory, relativePath);
+            }
+            return null;
+        }
+
     }
 }

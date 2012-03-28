@@ -23,10 +23,11 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class ChangeIrtPeptidesDlg : Form
+    public partial class ChangeIrtPeptidesDlg : FormEx
     {
         private readonly IDictionary<string, DbIrtPeptide> _dictSequenceToPeptide;
         private IList<DbIrtPeptide> _standardPeptides;

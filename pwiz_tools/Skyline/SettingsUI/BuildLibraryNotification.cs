@@ -28,7 +28,7 @@ using Timer=System.Windows.Forms.Timer;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class BuildLibraryNotification : Form
+    public partial class BuildLibraryNotification : FormEx
     {
         private const int ANIMATION_DURATION = 1000;
         private const int DISPLAY_DURATION = 10000;

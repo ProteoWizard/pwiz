@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class TransitionSettingsUI : Form
+    public partial class TransitionSettingsUI : FormEx
     {
 // ReSharper disable InconsistentNaming
         public enum TABS { Prediction, Filter, Library, Instrument, FullScan }

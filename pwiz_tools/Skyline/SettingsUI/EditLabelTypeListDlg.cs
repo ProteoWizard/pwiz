@@ -26,7 +26,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class EditLabelTypeListDlg : Form
+    public partial class EditLabelTypeListDlg : FormEx
     {
         public EditLabelTypeListDlg()
         {

@@ -24,10 +24,11 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ManageResultsDlg : Form
+    public partial class ManageResultsDlg : FormEx
     {
         public ManageResultsDlg(IDocumentUIContainer documentUIContainer)
         {

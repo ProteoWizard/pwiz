@@ -19,10 +19,11 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
-    public partial class ImportResultsNameDlg : Form
+    public partial class ImportResultsNameDlg : FormEx
     {
         private readonly string _prefixInitial;
 

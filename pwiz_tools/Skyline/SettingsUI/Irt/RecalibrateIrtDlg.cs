@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
-    public partial class RecalibrateIrtDlg : Form
+    public partial class RecalibrateIrtDlg : FormEx
     {
         private readonly IEnumerable<DbIrtPeptide> _irtPeptides;
 

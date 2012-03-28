@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -28,7 +27,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public partial class GraphSummary : DockableForm, IUpdatable
+    public partial class GraphSummary : DockableFormEx, IUpdatable
     {
         private const string FONT_FACE = "Arial";
         private const int FONT_SIZE = 10;
