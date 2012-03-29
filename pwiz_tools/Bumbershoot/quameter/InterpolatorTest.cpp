@@ -1,5 +1,5 @@
 //
-// $Id: AhoCorasickTrieTest.cpp 133 2011-04-21 14:31:43Z chambm $ 
+// $Id$ 
 //
 // Original author: Matt Chambers <matt.chambers .@. vanderbilt.edu>
 // Copyright 2011 Vanderbilt University

@@ -203,11 +203,9 @@ if $(revision-info[5]) > 0
 echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
-path-constant EXPAT_SOURCE : $(expat_src) ;
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
 
-using expat : 2.0 : $(EXPAT_SOURCE) ;
 
 local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
 if ! $(.has-boost)
@@ -298,16 +296,8 @@ rule static-with-fpic ( properties * )
 # any source tree can build binary tarballs
 
 import modules os ;
-
-if [ os.on-windows ]
-{
-    using tar : bsdtar.exe ;
-}
-else
-{
-    using tar ;
-}
 import tar sequence property-set ;
+using tar ;
 
 bin-tarball-basename = "$(application-name:L)-bin" ;
 
