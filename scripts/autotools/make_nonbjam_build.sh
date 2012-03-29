@@ -15,7 +15,7 @@
 export HERE=`pwd`
 pushd ../..
 export PWIZROOT=`pwd`
-export TMPDIR=`mktemp -d --tmpdir makemake.XXXXXX`
+export TMPDIR=`mktemp -d`
 if [ $# -eq 0 ] ; then
 ./clean.sh
 ./quickbuild.sh --without-binary-msdata -d+2 > $TMPDIR/build.log
