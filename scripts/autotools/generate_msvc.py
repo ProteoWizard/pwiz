@@ -19,6 +19,7 @@ import shutil
 import xml.dom.minidom
 import zipfile
 import stat
+import tempfile
 
 import autotools_common as ac
 
@@ -34,7 +35,7 @@ if (len(sys.argv) == 1) :
 
 ac.set_pwizroot(sys.argv[1])
 
-msvc_versions = range(10,7,-1)
+msvc_versions = range(10,7,-1) # build 10,9,8
 
 if (len(sys.argv) >= 3) :
 	buildlog = sys.argv[2]
@@ -43,7 +44,9 @@ if (len(sys.argv) >= 3) :
 		v = int(sys.argv[3])
 		msvc_versions = range(v,v+1)
 else : # no build log provided, go make one
-	buildlog = ac.get_pwizroot()+"\\msvcbuild.log"
+	tf = tempfile.mkstemp()
+	os.close(tf[0])
+	buildlog = tf[1]
 	print "creating build log %s\n"%buildlog
 	here = os.getcwd()
 	os.chdir(ac.get_pwizroot())
