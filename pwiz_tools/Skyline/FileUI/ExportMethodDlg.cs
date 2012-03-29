@@ -1006,7 +1006,9 @@ namespace pwiz.Skyline.FileUI
             {
                 Invoke(new Action<int?>(UpdateMethodCount), methodCount);
             }
-            catch (ObjectDisposedException)
+// ReSharper disable EmptyGeneralCatchClause
+            catch (Exception)
+// ReSharper restore EmptyGeneralCatchClause
             {
                 // If disposed, then no need to update the UI
             }

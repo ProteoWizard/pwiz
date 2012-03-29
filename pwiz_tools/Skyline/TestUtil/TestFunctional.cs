@@ -475,7 +475,8 @@ namespace pwiz.SkylineTestUtil
             {
                 foreach (var form in Application.OpenForms)
                 {
-                    Assert.IsTrue(form == skylineWindow,
+                    Assert.IsNotNull(SkylineWindow, "Skyline window is null at end of test");
+                    Assert.IsTrue(form is SkylineWindow,
                                   string.Format("Form of type {0} left open at end of test", form.GetType()));
                 }
             }

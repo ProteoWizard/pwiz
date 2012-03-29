@@ -231,6 +231,7 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
                 exportMethodDlg.CancelButton.PerformClick();
             });
+            WaitForClosedForm(exportMethodDlg);
         }
     }
 }
