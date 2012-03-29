@@ -434,7 +434,7 @@ namespace quameter
                 else
                     sourceFilepath = rawFile;
 
-                if(!bfs::exists(sourceFilepath))
+                if(g_rtConfig->MetricsType != "idfree" && !bfs::exists(sourceFilepath))
                 {
                     cerr << "Unable to find raw file at: " << sourceFilepath << endl;
                     continue;
@@ -608,103 +608,115 @@ namespace quameter
             map<int, int> scanCountByChargeState;
             
             // For each spectrum
-            for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex ) 
+            size_t curIndex;
+            try
             {
-                if (g_numWorkers == 1 && (curIndex+1==spectrumList.size() || !((curIndex+1)%100))) cout << "\rReading metadata: " << (curIndex+1) << "/" << spectrumList.size() << flush;
-
-                SpectrumPtr spectrum = spectrumList.spectrum(curIndex, false);
-
-                if (spectrum->defaultArrayLength == 0)
-                    continue;
-
-                if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty())
-                    continue;
-
-                CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
-                if (spectrumMSLevel == CVID_Unknown)
-                    continue;
-
-                int msLevel = spectrumMSLevel.valueAs<int>();
-                if (msLevel == 1)
+                for (curIndex = 0; curIndex < spectrumList.size(); ++curIndex)
                 {
-                    MS1ScanInfo scanInfo;
-                    scanInfo.nativeID = spectrum->id;
-                    scanInfo.totalIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
+                    if (g_numWorkers == 1 && (curIndex+1==spectrumList.size() || !((curIndex+1)%100))) cout << "\rReading metadata: " << (curIndex+1) << "/" << spectrumList.size() << flush;
 
-                    if (spectrum->scanList.scans.empty())
-                        throw runtime_error("No scan start time for " + spectrum->id);
+                    SpectrumPtr spectrum = spectrumList.spectrum(curIndex, false);
 
-                    Scan& scan = spectrum->scanList.scans[0];
-                    CVParam scanTime = scan.cvParam(MS_scan_start_time);
-                    if (scanTime.empty())
-                        throw runtime_error("No scan start time for " + spectrum->id);
+                    if (spectrum->defaultArrayLength == 0)
+                        continue;
 
-                    scanInfo.scanStartTime = scanTime.timeInSeconds();
+                    if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty())
+                        continue;
 
-                    ms1ScanMap.insert(scanInfo);
-                }
-                else if (msLevel == 2) 
-                {
-                    MS2ScanInfo scanInfo;
-                    scanInfo.nativeID = spectrum->id;
-                    scanInfo.identified = false;
-                    scanInfo.distinctModifiedPeptideID = 0;
+                    CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
+                    if (spectrumMSLevel == CVID_Unknown)
+                        continue;
 
-                    if (spectrum->precursors.empty() || spectrum->precursors[0].selectedIons.empty())
-                        throw runtime_error("No selected ion found for MS2 " + spectrum->id);
-
-                    Precursor& precursor = spectrum->precursors[0];
-                    const SelectedIon& si = precursor.selectedIons[0];
-
-                    scanInfo.precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
-                    if (scanInfo.precursorIntensity == 0)
+                    int msLevel = spectrumMSLevel.valueAs<int>();
+                    if (msLevel == 1)
                     {
-                        //throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
-                        //cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
-                        ++missingPrecursorIntensities;
+                        MS1ScanInfo scanInfo;
+                        scanInfo.nativeID = spectrum->id;
+                        scanInfo.totalIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
 
-                        // fall back on MS2 TIC
-                        scanInfo.precursorIntensity = si.cvParam(MS_total_ion_current).valueAs<double>();
+                        if (spectrum->scanList.scans.empty())
+                            throw runtime_error("No scan start time for " + spectrum->id);
 
-                        // calculate TIC manually if necessary
+                        Scan& scan = spectrum->scanList.scans[0];
+                        CVParam scanTime = scan.cvParam(MS_scan_start_time);
+                        if (scanTime.empty())
+                            throw runtime_error("No scan start time for " + spectrum->id);
+
+                        scanInfo.scanStartTime = scanTime.timeInSeconds();
+
+                        ms1ScanMap.insert(scanInfo);
+                    }
+                    else if (msLevel == 2) 
+                    {
+                        MS2ScanInfo scanInfo;
+                        scanInfo.nativeID = spectrum->id;
+                        scanInfo.identified = false;
+                        scanInfo.distinctModifiedPeptideID = 0;
+
+                        if (spectrum->precursors.empty() || spectrum->precursors[0].selectedIons.empty())
+                            throw runtime_error("No selected ion found for MS2 " + spectrum->id);
+
+                        Precursor& precursor = spectrum->precursors[0];
+                        const SelectedIon& si = precursor.selectedIons[0];
+
+                        scanInfo.precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
                         if (scanInfo.precursorIntensity == 0)
-                            BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
-                                scanInfo.precursorIntensity += p;
+                        {
+                            //throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
+                            //cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
+                            ++missingPrecursorIntensities;
+
+                            // fall back on MS2 TIC
+                            scanInfo.precursorIntensity = si.cvParam(MS_total_ion_current).valueAs<double>();
+
+                            // calculate TIC manually if necessary
+                            if (scanInfo.precursorIntensity == 0)
+                                BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                                    scanInfo.precursorIntensity += p;
+                        }
+
+                        CVParam chargeState = si.cvParam(MS_charge_state);
+                        if (!chargeState.empty())
+                        {
+                            scanInfo.precursorCharge = chargeState.valueAs<int>();
+                            ++scanCountByChargeState[scanInfo.precursorCharge];
+                        }
+                        else
+                            scanInfo.precursorCharge = 0;
+
+                        if (precursor.spectrumID.empty())
+                            throw runtime_error("No precursor spectrum ID for " + spectrum->id);
+                        scanInfo.precursorNativeID = precursor.spectrumID;
+
+                        if (spectrum->scanList.scans.empty())
+                            throw runtime_error("No scan start time for " + spectrum->id);
+
+                        Scan& scan = spectrum->scanList.scans[0];
+                        CVParam scanTime = scan.cvParam(MS_scan_start_time);
+                        if (scanTime.empty())
+                            throw runtime_error("No scan start time for " + spectrum->id);
+                        scanInfo.scanStartTime = scanTime.timeInSeconds();
+
+                        scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
+                        if (si.cvParam(MS_selected_ion_m_z).empty() )
+                            scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();	
+                        if (scanInfo.precursorMZ == 0)
+                            throw runtime_error("No precursor m/z for " + spectrum->id);
+
+                        scanInfo.precursorScanStartTime = ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID)->scanStartTime;
+
+                        ms2ScanMap.insert(scanInfo);
                     }
-
-                    CVParam chargeState = si.cvParam(MS_charge_state);
-                    if (!chargeState.empty())
-                    {
-                        scanInfo.precursorCharge = chargeState.valueAs<int>();
-                        ++scanCountByChargeState[scanInfo.precursorCharge];
-                    }
-                    else
-                        scanInfo.precursorCharge = 0;
-
-                    if (precursor.spectrumID.empty())
-                        throw runtime_error("No precursor spectrum ID for " + spectrum->id);
-                    scanInfo.precursorNativeID = precursor.spectrumID;
-
-                    if (spectrum->scanList.scans.empty())
-                        throw runtime_error("No scan start time for " + spectrum->id);
-
-                    Scan& scan = spectrum->scanList.scans[0];
-                    CVParam scanTime = scan.cvParam(MS_scan_start_time);
-                    if (scanTime.empty())
-                        throw runtime_error("No scan start time for " + spectrum->id);
-                    scanInfo.scanStartTime = scanTime.timeInSeconds();
-
-                    scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
-                    if (si.cvParam(MS_selected_ion_m_z).empty() )
-                        scanInfo.precursorMZ = si.cvParam(MS_m_z).valueAs<double>();	
-                    if (scanInfo.precursorMZ == 0)
-                        throw runtime_error("No precursor m/z for " + spectrum->id);
-
-                    scanInfo.precursorScanStartTime = ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID)->scanStartTime;
-
-                    ms2ScanMap.insert(scanInfo);
-                }
-            } // finished cycling through all metadata
+                } // finished cycling through all metadata
+            }
+            catch (exception& e)
+            {
+                throw runtime_error("error reading spectrum index " + lexical_cast<string>(curIndex) + " (" + e.what() + ")");
+            }
+            catch (...)
+            {
+                throw runtime_error("unknown error reading spectrum index " + lexical_cast<string>(curIndex));
+            }
 
             if (g_numWorkers == 1) cout << endl;
 
@@ -731,90 +743,101 @@ namespace quameter
             int multiplyChargedMS2s = 0;
 
             // Going through all spectra once more to get intensities/retention times to build chromatograms
-            for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex ) 
+            try
             {
-                if (g_numWorkers == 1 && (curIndex+1==spectrumList.size() || !((curIndex+1)%100))) cout << "\rReading peaks: " << (curIndex+1) << "/" << spectrumList.size() << flush;
-
-                SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
-
-                if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
-                    continue;
-
-                CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
-                if (spectrumMSLevel == CVID_Unknown)
-                    continue;
-
-                // this time around we're only looking for MS1 spectra
-                int msLevel = spectrumMSLevel.valueAs<int>();
-                if (msLevel == 1) 
+                for (curIndex = 0; curIndex < spectrumList.size(); ++curIndex)
                 {
-                    Scan& scan = spectrum->scanList.scans[0];	
+                    if (g_numWorkers == 1 && (curIndex+1==spectrumList.size() || !((curIndex+1)%100))) cout << "\rReading peaks: " << (curIndex+1) << "/" << spectrumList.size() << flush;
 
-                    // all m/z and intensity data for a spectrum
-                    const vector<double>& mzV = spectrum->getMZArray()->data;
-                    const vector<double>& intensV = spectrum->getIntensityArray()->data;
-                    size_t arraySize = mzV.size();
-                    double curRT = scan.cvParam(MS_scan_start_time).timeInSeconds();
+                    SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
 
-                    ms1PeakCounts(arraySize);
+                    if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
+                        continue;
 
-                    accs::accumulator_set<double, accs::stats<accs::tag::min, accs::tag::max> > mzMinMax;
-                    mzMinMax = std::for_each(mzV.begin(), mzV.end(), mzMinMax);
-                    interval_set<double> spectrumMzRange(continuous_interval<double>::closed(accs::min(mzMinMax), accs::max(mzMinMax)));
+                    CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
+                    if (spectrumMSLevel == CVID_Unknown)
+                        continue;
 
-                    // loop through all unidentified MS2 scans
-                    BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
+                    // this time around we're only looking for MS1 spectra
+                    int msLevel = spectrumMSLevel.valueAs<int>();
+                    if (msLevel == 1) 
                     {
-                        if (!boost::icl::contains(info.scanTimeWindow, curRT))
-                            continue;
+                        Scan& scan = spectrum->scanList.scans[0];	
 
-                        // if the PSM's m/z window and the MS1 spectrum's m/z range do not overlap, skip this window
-                        if (disjoint(info.mzWindow, spectrumMzRange))
-                            continue;
+                        // all m/z and intensity data for a spectrum
+                        const vector<double>& mzV = spectrum->getMZArray()->data;
+                        const vector<double>& intensV = spectrum->getIntensityArray()->data;
+                        size_t arraySize = mzV.size();
+                        double curRT = scan.cvParam(MS_scan_start_time).timeInSeconds();
 
-                        double XIC = 0;
-                        for (size_t i = 0; i < arraySize; ++i) 
-                            // if this m/z is in the window, record its intensity and retention time
-                            if (boost::icl::contains(info.mzWindow, mzV[i]))
-                                XIC += intensV[i];
+                        ms1PeakCounts(arraySize);
 
-                        info.chromatogram.MS1Intensity.push_back(XIC);
-                        info.chromatogram.MS1RT.push_back(curRT);
-                    } // done with unidentified MS2 scans
-                    
-                    double TIC = accumulate(intensV.begin(), intensV.end(), 0);
-                    ms1TICs.push_back(TIC);
-                }
-                else if (msLevel == 2)
-                {
-                    vector<MZIntensityPair> peaks;
-                    spectrum->getMZIntensityPairs(peaks);
-                    sort(peaks.begin(), peaks.end(), MZIntensityPairSortByMZ());
-                    size_t arraySize = peaks.size();
+                        accs::accumulator_set<double, accs::stats<accs::tag::min, accs::tag::max> > mzMinMax;
+                        mzMinMax = std::for_each(mzV.begin(), mzV.end(), mzMinMax);
+                        interval_set<double> spectrumMzRange(continuous_interval<double>::closed(accs::min(mzMinMax), accs::max(mzMinMax)));
 
-                    ms2PeakCounts(arraySize);
-
-                    const MS2ScanInfo& scanInfo = *ms2ScanMap.get<nativeID>().find(spectrum->id);
-
-                    // if charge states are unknown, keep a count of multiply charged MS2s
-                    if (scanCountByChargeState.empty())
-                    {
-                        double ticBelowPrecursorMz = 0;
-                        double TIC = 0;
-                        BOOST_FOREACH(MZIntensityPair& peak, peaks)
+                        // loop through all unidentified MS2 scans
+                        BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
                         {
-                            if (peak.mz < scanInfo.precursorMZ)
-                                ticBelowPrecursorMz += peak.intensity;
-                            TIC += peak.intensity;
-                        }
+                            if (!boost::icl::contains(info.scanTimeWindow, curRT))
+                                continue;
 
-                        // if less than 90% of the intensity is below the precursor m/z,
-                        // it's probably multiply charged
-                        if (ticBelowPrecursorMz / TIC < 0.9)
-                            ++multiplyChargedMS2s;
+                            // if the PSM's m/z window and the MS1 spectrum's m/z range do not overlap, skip this window
+                            if (disjoint(info.mzWindow, spectrumMzRange))
+                                continue;
+
+                            double XIC = 0;
+                            for (size_t i = 0; i < arraySize; ++i) 
+                                // if this m/z is in the window, record its intensity and retention time
+                                if (boost::icl::contains(info.mzWindow, mzV[i]))
+                                    XIC += intensV[i];
+
+                            info.chromatogram.MS1Intensity.push_back(XIC);
+                            info.chromatogram.MS1RT.push_back(curRT);
+                        } // done with unidentified MS2 scans
+                        
+                        double TIC = accumulate(intensV.begin(), intensV.end(), 0);
+                        ms1TICs.push_back(TIC);
                     }
-                }
-            } // end of spectra loop
+                    else if (msLevel == 2)
+                    {
+                        vector<MZIntensityPair> peaks;
+                        spectrum->getMZIntensityPairs(peaks);
+                        sort(peaks.begin(), peaks.end(), MZIntensityPairSortByMZ());
+                        size_t arraySize = peaks.size();
+
+                        ms2PeakCounts(arraySize);
+
+                        const MS2ScanInfo& scanInfo = *ms2ScanMap.get<nativeID>().find(spectrum->id);
+
+                        // if charge states are unknown, keep a count of multiply charged MS2s
+                        if (scanCountByChargeState.empty())
+                        {
+                            double ticBelowPrecursorMz = 0;
+                            double TIC = 0;
+                            BOOST_FOREACH(MZIntensityPair& peak, peaks)
+                            {
+                                if (peak.mz < scanInfo.precursorMZ)
+                                    ticBelowPrecursorMz += peak.intensity;
+                                TIC += peak.intensity;
+                            }
+
+                            // if less than 90% of the intensity is below the precursor m/z,
+                            // it's probably multiply charged
+                            if (ticBelowPrecursorMz / TIC < 0.9)
+                                ++multiplyChargedMS2s;
+                        }
+                    }
+                } // end of spectra loop
+            }
+            catch (exception& e)
+            {
+                throw runtime_error("error reading spectrum index " + lexical_cast<string>(curIndex) + " (" + e.what() + ")");
+            }
+            catch (...)
+            {
+                throw runtime_error("unknown error reading spectrum index " + lexical_cast<string>(curIndex));
+            }
 
             double chargeStateMetric;
             if (scanCountByChargeState.empty())
@@ -924,10 +947,18 @@ namespace quameter
             }
             
             // File for quameter output, default is to save to same directory as input file
-            ofstream qout(bfs::change_extension(sourceFilename, ".qual.tsv").string().c_str());
+            string outputFilepath = g_rtConfig->OutputFilepath;
+            if (outputFilepath.empty())
+                outputFilepath = bfs::change_extension(sourceFilename, ".qual.tsv").string();
+
+            bool needsHeader = !bfs::exists(outputFilepath);
+
+            ofstream qout(outputFilepath.c_str(), ios::out | ios::app);
 
             // Tab delimited output header
-            qout << "Filename\tStartTimeStamp\t1\t2\t3\t4\t5\t6\t7\t8\t9" << endl;
+            if (needsHeader)
+                qout << "Filename\tStartTimeStamp\t1\t2\t3\t4\t5\t6\t7\t8\t9";
+            qout << "\n";
 
             // Tab delimited metrics
             qout << bfs::path(sourceFilename).filename();
@@ -950,11 +981,11 @@ namespace quameter
         }
         catch (exception& e)
         {
-            cerr << "Error processing ID-free metrics: " << e.what() << endl;
+            cerr << "\nError processing ID-free metrics: " << e.what() << endl;
         }
         catch (...)
         {
-            cerr << "Unknown error processing ID-free metrics." << endl;
+            cerr << "\nUnknown error processing ID-free metrics." << endl;
         }
         exit(1);
     }

@@ -38,6 +38,7 @@ using boost::icl::continuous_interval;
 #define QUAMETER_RUNTIME_CONFIG \
 	COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
 	RTCONFIG_VARIABLE( string,          OutputFormat,                "tsv"        ) \
+    RTCONFIG_VARIABLE( string,          OutputFilepath,              ""           ) \
     RTCONFIG_VARIABLE( string,          MetricsType,                 "nistms"     ) \
     RTCONFIG_VARIABLE( string,          Instrument,                  "ltq"        ) \
     RTCONFIG_VARIABLE( IntegerSet,      MonoisotopeAdjustmentSet,    string("0")) \
