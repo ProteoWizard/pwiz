@@ -109,7 +109,6 @@ exe chainsaw
 
 
 alias idtool-requirements : : : :
-        <library>$(PWIZ_ROOT_PATH)//msparser 
         <library>../../pwiz/data/identdata//pwiz_data_identdata
         <library>/ext/boost//program_options ;
 
