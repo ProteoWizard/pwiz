@@ -29,4 +29,4 @@ build-project-if-exists MSConvertGUI ;
 build-project-if-exists Skyline ;
 build-project-if-exists Topograph ;
 build-project-if-exists sld ;
-
+build-project-if-exists BiblioSpec ;
