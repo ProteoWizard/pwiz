@@ -849,20 +849,25 @@ rule msparser-path ( properties * )
 rule msparser-requirements ( properties * )
 {
     local msparser_path = [ msparser-path $(properties) ] ;
-    local result = <include>$(msparser_path)/include
-                   <search>$(msparser_path)/lib ;
+    local result = <search>$(msparser_path)/lib ;
     if <toolset>msvc in $(properties)
     {
-        result += <include>$(PWIZ_ROOT_PATH)/libraries/msvc_extra ;
         if <runtime-debugging>on in $(properties)
         {
             result += <name>msparserD ;
         }
     }
+    return $(result) [ msparser-usage-requirements $(properties) ] ;
+}
+
+rule msparser-usage-requirements ( properties * )
+{
+    local msparser_path = [ msparser-path $(properties) ] ;
+    local result = <include>$(msparser_path)/include ;
     return $(result) ;
 }
 
-searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@msparser-requirements ;
+searched-lib msparser : : <conditional>@msparser-requirements : : <conditional>@msparser-usage-requirements ;
 
 
 # any source tree can build binary tarballs
