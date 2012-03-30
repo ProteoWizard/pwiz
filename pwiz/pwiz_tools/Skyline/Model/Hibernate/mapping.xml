@@ -163,6 +163,7 @@
     <property name="IsotopeDistIndex" />
     <property name="IsotopeDistRank" />
     <property name="IsotopeDistProportion" />
+    <property name="FullScanFilterWidth" />
   </class>
   <class name="DbTransitionResult">
     <id name="Id">

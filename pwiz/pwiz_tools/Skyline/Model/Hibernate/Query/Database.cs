@@ -620,6 +620,18 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 dbTransition.IsotopeDistRank = nodeTran.IsotopeDistInfo.Rank;
                 dbTransition.IsotopeDistProportion = nodeTran.IsotopeDistInfo.Proportion;
             }
+            var fullScan = docInfo.Settings.TransitionSettings.FullScan;
+            if (fullScan.IsEnabledMs && transition.IonType == IonType.precursor)
+            {
+                dbTransition.FullScanFilterWidth = SequenceMassCalc.PersistentMZ(
+                    fullScan.GetPrecursorFilterWindow(nodeTran.Mz));
+            }
+            else if (fullScan.IsEnabledMsMs &&
+                    (transition.IonType != IonType.precursor || transition.MassIndex == 0))
+            {
+                dbTransition.FullScanFilterWidth = SequenceMassCalc.PersistentMZ(
+                    fullScan.GetProductFilterWindow(nodeTran.Mz));
+            }
             AddAnnotations(docInfo, dbTransition, nodeTran.Annotations);
             session.Save(dbTransition);
             var precursorResults = docInfo.PrecursorResults[dbPrecursor];
