@@ -27,16 +27,20 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/common/cv.hpp"
 #include "pwiz/data/identdata/TextWriter.hpp"
+#include <boost/tokenizer.hpp>
+#include <boost/regex.hpp>
 
-#include "mascotutil.hpp"
+// msparser assumes these are defined
+#ifndef INT64
+#define INT64 __int64_t
+#endif // INT64
+
+#ifndef UINT64
+#define UINT64 __uint64_t
+#endif // UINT64
+
 #include "msparser.hpp"
 
-#include <boost/algorithm/string.hpp>
-#include <boost/tokenizer.hpp>
-#include <boost/foreach.hpp>
-#include <boost/regex.hpp>
-#include <iostream>
-#include <algorithm>
 
 namespace {
 
@@ -854,7 +858,7 @@ string MascotReader::identify(const string& filename,
 {
     ms_datfile file(filename.c_str());
     if (file.isValid())
-        return "Mascot";
+        return getType();
 
     return "";
 }
@@ -899,7 +903,7 @@ void MascotReader::read(const string& filename,
 //
 const char *MascotReader::getType() const
 {
-    return "mzIdentML";
+    return "Mascot DAT";
 }
 
 } // namespace pwiz 
