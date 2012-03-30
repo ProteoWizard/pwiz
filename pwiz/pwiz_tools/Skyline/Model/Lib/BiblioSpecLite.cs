@@ -387,7 +387,7 @@ namespace pwiz.Skyline.Model.Lib
                 }
 
                 var setSequences = new Dictionary<LibSeqKey, bool>(rows);
-                var libraryEntries = new BiblioLiteSpectrumInfo[rows];
+                var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
                 select.CommandText = "SELECT * FROM [RefSpectra]";
@@ -422,14 +422,19 @@ namespace pwiz.Skyline.Model.Lib
                         short numPeaks = reader.GetInt16(iPeaks);
                         int id = reader.GetInt32(iId);
 
+                        // Avoid creating a cache which will just report it is corrupted.
+                        // Older versions of BlibBuild used to create matches with charge 0.
+                        if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                            continue;
+
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
                         LibKey key = new LibKey(sequence, charge);
-                        libraryEntries[rowsRead - 1] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id);
+                        libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id));
                     }
                 }
 
-                Array.Sort(libraryEntries, CompareSpectrumInfo);
+                libraryEntries.Sort(CompareSpectrumInfo);
 
                 if (schemaVer > 0)
                 {
@@ -498,7 +503,7 @@ namespace pwiz.Skyline.Model.Lib
                     outStream.Write(BitConverter.GetBytes(dataRev), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(schemaVer), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(libraryEntries.Length), 0, sizeof (int));
+                    outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
 
                     sm.Finish(outStream);
@@ -642,7 +647,7 @@ namespace pwiz.Skyline.Model.Lib
                         int seqKeyLength = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_length));
                         int charge = GetInt32(specHeader, ((int) SpectrumCacheHeader.charge));
                         if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                            throw new InvalidDataException("Invalid precursor charge found. File may be corrupted.");
+                            throw new InvalidDataException(string.Format("Invalid precursor charge {0} found. File may be corrupted.", charge));
                         int copies = GetInt32(specHeader, ((int) SpectrumCacheHeader.copies));
                         int numPeaks = GetInt32(specHeader, ((int) SpectrumCacheHeader.num_peaks));
                         int id = GetInt32(specHeader, ((int) SpectrumCacheHeader.id));
