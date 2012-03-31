@@ -148,6 +148,8 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<PeptideDocNode> CreateDocNodes(SrmSettings settings, IPeptideFilter filter)
         {
+            int maxModCount = filter.MaxVariableMods ?? settings.PeptideSettings.Modifications.MaxVariableMods;
+
             // Always return the unmodified peptide doc node first
             var nodePepUnmod = new PeptideDocNode(this, new TransitionGroupDocNode[0]);
             bool allowVariableMods;
@@ -155,7 +157,7 @@ namespace pwiz.Skyline.Model
                 yield return nodePepUnmod;
 
             // Stop if no variable modifications are allowed for this peptide.
-            if (!allowVariableMods)
+            if (!allowVariableMods || maxModCount == 0)
                 yield break;
 
             // First build a list of the amino acids in this peptide which can be modified,
@@ -192,7 +194,7 @@ namespace pwiz.Skyline.Model
             if (listListMods == null)
                 yield break;
 
-            int maxModCount = Math.Min(settings.PeptideSettings.Modifications.MaxVariableMods, listListMods.Count);
+            maxModCount = Math.Min(maxModCount, listListMods.Count);
             for (int modCount = 1; modCount <= maxModCount; modCount++)
             {
                 var modStateMachine = new VariableModStateMachine(nodePepUnmod, modCount, listListMods);
@@ -499,7 +501,10 @@ namespace pwiz.Skyline.Model
         public PeptideSequenceModKey(string sequence, ExplicitMods modifications)
         {
             Sequence = sequence;
-            Modifications = modifications;
+            // For consistent keys in peptide matching, clear the variable flag, if it is present.
+            Modifications = modifications != null && modifications.IsVariableStaticMods
+                ? modifications.ChangeIsVariableStaticMods(false)
+                : modifications;
         }
 
         private string Sequence { get; set; }

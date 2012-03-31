@@ -23,6 +23,8 @@ using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.SkylineTestUtil
@@ -128,6 +130,16 @@ namespace pwiz.SkylineTestUtil
                 peptides, tranGroups, tranGroupsHeavy, transitions, transitionsHeavy);
 
             return docResults;
+        }
+
+        public SrmDocument ChangeLibSpecs(List<LibrarySpec> libSpecs)
+        {
+            var doc = Document;
+            var settings = Document.Settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(libSpecs));
+            var docLibraries = doc.ChangeSettings(settings);
+            Assert.IsTrue(SetDocument(docLibraries, doc, true));
+            AssertComplete();
+            return Document;
         }
     }
 

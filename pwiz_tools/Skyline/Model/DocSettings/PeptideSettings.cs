@@ -530,6 +530,11 @@ namespace pwiz.Skyline.Model.DocSettings
         /// acceptable variants of this peptide</param>
         /// <returns>True if the peptide should be included</returns>
         bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods);
+
+        /// <summary>
+        /// Returns a potential override to the maximum number of variable modifcations in the SrmSettings.
+        /// </summary>
+        int? MaxVariableMods { get; }
     }
 
     [XmlRoot("peptide_filter")]
@@ -648,6 +653,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             return true;
+        }
+
+        public int? MaxVariableMods
+        {
+            get { return null; }
         }
 
         #region Implementation of IXmlSerializable
@@ -852,6 +862,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 return true;
             }
 
+            public int? MaxVariableMods
+            {
+                get { return null; }
+            }
+
             #endregion
         }
     }
@@ -1013,6 +1028,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return GetHeavyModifications().Contains(typedMods => typedMods.HasImplicitModifications);
             }
+        }
+
+        public bool HasModification(StaticMod staticMod)
+        {
+            return _modifications.SelectMany(typeModifications => typeModifications.Modifications).Contains(staticMod);
         }
 
         #region Property change methods

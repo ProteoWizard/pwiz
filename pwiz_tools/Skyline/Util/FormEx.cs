@@ -34,12 +34,16 @@ namespace pwiz.Skyline.Util
 
         public static void SetLocation(Form form)
         {
-            // move offscreen if main window is offscreen
-            var mainWindowBounds = Program.MainWindow.DesktopBounds;
-            if (!IntersectsAnyScreen(mainWindowBounds))
+            // Avoid breaking forms in Visual Studio designer
+            if (Program.MainWindow != null)
             {
-                form.StartPosition = FormStartPosition.Manual;
-                form.Location = mainWindowBounds.Location;
+                // move offscreen if main window is offscreen
+                var mainWindowBounds = Program.MainWindow.DesktopBounds;
+                if (!IntersectsAnyScreen(mainWindowBounds))
+                {
+                    form.StartPosition = FormStartPosition.Manual;
+                    form.Location = mainWindowBounds.Location;
+                }
             }
         }
 

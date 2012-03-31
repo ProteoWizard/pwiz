@@ -22,6 +22,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -56,12 +57,16 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
+        private const string ANL_COMBINED = "ANL Combined";
+        private const string PHOSPHO_LIB = "PhosphoLib";
+        private const string YEAST = "Yeast";
+
         private readonly TestLibInfo[] _testLibs = {
                                                        new TestLibInfo("HumanB2MGLib", "human_b2mg-5-06-2009-it.sptxt", "EVDLLK+"),
                                                        new TestLibInfo("HumanCRPLib", "human_crp-5-06-2009-it.sptxt", "TDMSR++"), 
-                                                       new TestLibInfo("ANL Combined", "ANL_combined.blib", ""),
-                                                       new TestLibInfo("PhosphoLib", "phospho_30882_v2.blib", ""),
-                                                       new TestLibInfo("Yeast", "Yeast_atlas.blib", "")
+                                                       new TestLibInfo(ANL_COMBINED, "ANL_combined.blib", ""),
+                                                       new TestLibInfo(PHOSPHO_LIB, "phospho_30882_v2.blib", ""),
+                                                       new TestLibInfo(YEAST, "Yeast_atlas.blib", "")
                                                    };
 
         private PeptideSettingsUI PeptideSettingsUI { get; set; }
@@ -75,6 +80,14 @@ namespace pwiz.SkylineTestFunctional
         }
 
         protected override void DoTest()
+        {
+            SetUpTestLibraries();
+            TestBasicFunctionality();
+            RunDlg<MultiButtonMsgDlg>(SkylineWindow.NewDocument, msgDlg => msgDlg.Btn1Click());
+            TestModificationMatching();
+        }
+
+        private void SetUpTestLibraries()
         {
             PeptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
@@ -94,6 +107,12 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() => Assert.IsFalse(PeptideSettingsUI.IsSettingsChanged));
 
+            RunUI(() => PeptideSettingsUI.OkDialog());
+            WaitForClosedForm(PeptideSettingsUI);
+        }
+
+        private void TestBasicFunctionality()
+        {
             // Launch the Library Explorer dialog
             _viewLibUI = ShowDialog<ViewLibraryDlg>(PeptideSettingsUI.ShowViewLibraryDlg);
 
@@ -115,6 +134,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Initially, peptide with index 0 should be selected
             WaitForConditionUI(() => pepList.SelectedIndex != -1);
+            var modDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(modDlg.Btn1Click);
 
             ViewLibraryPepInfo previousPeptide = new ViewLibraryPepInfo();
             int peptideIndex = -1;
@@ -140,7 +161,8 @@ namespace pwiz.SkylineTestFunctional
                 selPeptide = (ViewLibraryPepInfo)pepList.SelectedItem;
             });
             Assert.IsNotNull(selPeptide);
-            Assert.AreNotEqual(previousPeptide, selPeptide);
+            if (Equals(previousPeptide, selPeptide))
+                Assert.AreNotEqual(previousPeptide, selPeptide);
 
             // Click the "Next" link
             RunUI(() =>
@@ -218,6 +240,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Test selecting a different library
             previousPeptide = selPeptide;
+            RunDlg<MultiButtonMsgDlg>(() => libComboBox.SelectedIndex = 1, dlg => dlg.Btn1Click());
             RunUI(() =>
             {
                 libComboBox.SelectedIndex = 1;
@@ -253,7 +276,18 @@ namespace pwiz.SkylineTestFunctional
             RunUI(SkylineWindow.EditDelete);
 
             // Test unmatched peptides are correct.
-            AddAllPeptides(8);
+            // One unmatched because its precursor m/z is outside the instrument measurement range
+            AddAllPeptides(1, 4, 3);
+
+            // Verify that everything matches, given a wide enough mass range
+            RunUI(() => SkylineWindow.ModifyDocument("Change m/z range",
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionInstrument(inst =>
+                        inst.ChangeMaxMz(TransitionInstrument.MAX_MEASURABLE_MZ)))));
+            WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
+            RunUI(() => SkylineWindow.ModifyDocument("Change m/z range",
+                    doc => doc.ChangeSettings(doc.Settings.ChangeTransitionInstrument(inst =>
+                        inst.ChangeMaxMz(1500)))));
+            WaitForConditionUI(() => _viewLibUI.HasUnmatchedPeptides);
 
             // Test library peptides are merged without duplicates.
             TestForDuplicatePeptides();
@@ -267,19 +301,19 @@ namespace pwiz.SkylineTestFunctional
 
             // Test missing peptides added. 
             RunUI(() =>
-                      {
-                          var sequenceTree = SkylineWindow.SequenceTree;
-                          var nodePeps = sequenceTree.Nodes[0].Nodes;
-                          sequenceTree.SelectedNode = nodePeps[0];
-                          sequenceTree.KeysOverride = Keys.Control;
-                          for (int i = 2; i < 10; i += 2)
-                          {
-                              sequenceTree.SelectedNode = nodePeps[i];
-                          }
-                          sequenceTree.KeysOverride = Keys.None;
-                          SkylineWindow.EditDelete();
-                      });
-            AddAllPeptides(null);
+            {
+                var sequenceTree = SkylineWindow.SequenceTree;
+                var nodePeps = sequenceTree.Nodes[0].Nodes;
+                sequenceTree.SelectedNode = nodePeps[0];
+                sequenceTree.KeysOverride = Keys.Control;
+                for (int i = 2; i < 10; i += 2)
+                {
+                    sequenceTree.SelectedNode = nodePeps[i];
+                }
+                sequenceTree.KeysOverride = Keys.None;
+                SkylineWindow.EditDelete();
+            });
+            AddAllPeptides();
             var docAddBack = SkylineWindow.Document;
             // Peptides will be added back in a different order
             AssertEx.IsDocumentState(docAddBack, null,
@@ -304,7 +338,7 @@ namespace pwiz.SkylineTestFunctional
                 }
                 SkylineWindow.EditDelete();
             });
-            AddAllPeptides(null);
+            AddAllPeptides();
             var docAddBackGroups = SkylineWindow.Document;
             // Check all precursor charges present.
             foreach (PeptideDocNode nodePep in docOriginal.Peptides)
@@ -331,7 +365,8 @@ namespace pwiz.SkylineTestFunctional
                    new[] { new TypedModifications(IsotopeLabelType.heavy, heavyMods15N) }));
                 SkylineWindow.ModifyDocument("Change heavy modifications", doc => doc.ChangeSettings(settings));
             });
-            AddAllPeptides(null);
+            AddAllPeptides();
+
             // All peptides should have a heavy label transition group. 
             // There should be no peptide whose children do not contain a transition group with heavy label type.
             Assert.IsFalse(SkylineWindow.Document.Peptides.Contains(nodePep =>
@@ -342,16 +377,15 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => SkylineWindow.ModifyDocument("Change static modifications", 
                 doc => doc.ChangeSettings(SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(new List<StaticMod>())))));
-            AddAllPeptides(19);
-           
-            // Switch to ANL_Combined library
-            RunUI(() => { libComboBox.SelectedIndex = 2; });
+            AddAllPeptides(1, 8, 3);
+
             // Along with Heavy 15N added earlier in the test, adding this modification means that all library peptides
             // will match to the document settings.
             StaticMod varMetOxidized = new StaticMod("Methionine Oxidized", "M", null, true, "O",
                 LabelAtoms.None, RelativeRT.Matching, null, null, null);
             var metOxidizedSettings = SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
                 mods.ChangeStaticModifications(new[] { varMetOxidized }));
+
             RunUI(() =>
                       {
                           SkylineWindow.SelectAll();
@@ -359,6 +393,10 @@ namespace pwiz.SkylineTestFunctional
                           SkylineWindow.ModifyDocument("Change static mods",
                                                        doc => doc.ChangeSettings(metOxidizedSettings));
                       });
+            
+            // Switch to ANL_Combined library
+            RunDlg<MultiButtonMsgDlg>(() => { libComboBox.SelectedIndex = 2; }, msgDlg => msgDlg.BtnCancelClick());
+
             // User prompted to add library since not in current settings.
             RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(), msgDlg => msgDlg.Btn0Click());
             // Add single peptide to the document.
@@ -375,10 +413,8 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(3, SkylineWindow.Document.PeptideCount);
 
             // Switch to the Phospho Loss Library
-            RunUI(() =>
-            {
-                libComboBox.SelectedIndex = 3;
-            });
+            RunDlg<MultiButtonMsgDlg>(() => libComboBox.SelectedIndex = 3, msgDlg => msgDlg.Btn1Click());
+
             // Add modifications to the document matching the settings of the library. 
             var phosphoLossMod = new StaticMod("Phospho Loss", "S, T", null, true, "HPO3",
                                   LabelAtoms.None, RelativeRT.Matching, null, null, new[] { new FragmentLoss("H3PO4"), });
@@ -387,6 +423,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                 SkylineWindow.ModifyDocument("Change static mods", doc => doc.ChangeSettings(phosphoLossSettings)));
             RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(), msgDlg => msgDlg.Btn0Click());
+
             // Again, we should be able to match all peptides since the document settings match use the peptides found 
             // in the library.
             RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg =>
@@ -420,7 +457,7 @@ namespace pwiz.SkylineTestFunctional
                 transitionSettingsUI.PrecursorCharges = "1,2,3";
                 transitionSettingsUI.OkDialog();
             });
-            
+
             // Test add all with the yeast background proteome connected.
             RunUI(() =>
             {
@@ -453,9 +490,9 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                                   filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 4, 12);
-                        RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
-                                  filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
-            
+            RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
+                      filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());
+
             // Test adding a second charge state - No Duplicates.
             RunUI(() => SkylineWindow.Undo());
             var docPrev = SkylineWindow.Document;
@@ -466,7 +503,7 @@ namespace pwiz.SkylineTestFunctional
                 filterMatchedPeptideDlg.OkDialog();
             });
             Assert.AreEqual(docPrev, SkylineWindow.Document);
-            
+
             // Test adding a second charge state - First Only.
             RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                       filterMatchedPeptideDlg =>
@@ -485,6 +522,7 @@ namespace pwiz.SkylineTestFunctional
                 _viewLibUI.AddPeptide();
                 _viewLibUI.AssociateMatchingProteins = true;
             });
+
             // Add doubly charged state with protein assocation.
             RunDlg<FilterMatchedPeptidesDlg>(_viewLibUI.AddPeptide,
                 filterMatchedPeptideDlg => filterMatchedPeptideDlg.OkDialog());  // First only
@@ -498,7 +536,7 @@ namespace pwiz.SkylineTestFunctional
             int index = peptideGroups.IndexOf(nodeGroup => nodeGroup.IsPeptideList);
             Assert.IsTrue(peptideGroups[index].Children.Count == 1);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 2, 2, 3, 9);
-           
+
             // Test selecting no duplicates prevents any peptide from appearing twice in the document.
             RunUI(() => SkylineWindow.Undo());
             RunUI(() => SkylineWindow.Undo());
@@ -513,7 +551,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() => filterMatchedPeptidesDlg2.DuplicateProteinsFilter = BackgroundProteome.DuplicateProteinsFilter.FirstOccurence);
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg2.OkDialog, messageDlg => messageDlg.Btn1Click());
             TestForDuplicatePeptides();
-            
+
             // Test peptides are added to "Library Peptides" peptide list if this peptide group already exists.
             RunUI(() =>
                       {
@@ -525,19 +563,248 @@ namespace pwiz.SkylineTestFunctional
                       });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 2, 3, 9);
 
+            RunUI(() =>
+            {
+                SkylineWindow.SelectAll();
+                SkylineWindow.EditDelete();
+            });
+
             // Close the Library Explorer dialog
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
+            WaitForClosedForm(_viewLibUI);
         }
 
-        private void AddAllPeptides(int? expectedUnmatched)
+        private ComboBox _libComboBox;
+        private ListBox _pepList;
+
+        private void TestModificationMatching()
+        {
+            var phosphoLossMod = new StaticMod("Phospho Loss", "S, T", null, true, "HPO3",
+                LabelAtoms.None, RelativeRT.Matching, null, null, new[] { new FragmentLoss("H3PO4"), });
+
+            Settings.Default.StaticModList.Clear();
+            Settings.Default.StaticModList.Add(phosphoLossMod.ChangeExplicit(false));
+
+            var phosphoNotVariable = SkylineWindow.Document.Settings.ChangePeptideModifications(
+                mods => mods.ChangeStaticModifications(new[] { phosphoLossMod.ChangeExplicit(false) }));
+            RunUI(() => SkylineWindow.ModifyDocument("Change static mods",
+                                                     doc => doc.ChangeSettings(phosphoNotVariable)));
+
+            RelaunchLibExplorer(false, PHOSPHO_LIB);
+
+            // Test doesn't find variable match if implicit match exists in doc
+            WaitForConditionUI(() => !_viewLibUI.HasUnmatchedPeptides);
+            RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 4, 4, 12);
+            Assert.IsTrue(SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications
+                .Contains(mod => mod.Equivalent(phosphoLossMod)));
+            Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications
+                .Contains(mod => mod.Equivalent(phosphoLossMod) && mod.IsVariable));
+            RunUI(SkylineWindow.Undo);
+
+            // Test creates variable mod if implicit match exists in globals
+            var pepModsNoMods1 =
+                SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
+                    mods.ChangeStaticModifications(new StaticMod[0]));
+            RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc => 
+                doc.ChangeSettings(pepModsNoMods1)));
+
+            RelaunchLibExplorer(false, PHOSPHO_LIB);
+
+            RunDlg<MultiButtonMsgDlg>(_viewLibUI.AddAllPeptides, msgDlg => msgDlg.Btn1Click());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 4, 4, 12);
+            Assert.IsTrue(SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications
+                .Contains(mod => mod.Equivalent(phosphoLossMod) && mod.IsVariable));
+            Assert.IsFalse(SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications
+                .Contains(mod => mod.Equivalent(phosphoLossMod) && !mod.IsVariable));
+
+            // Test implicit mods only created if safe to do so
+            RunUI(() => SkylineWindow.Undo());
+            RunDlg<MultiButtonMsgDlg>(() => _libComboBox.SelectedIndex = 4, msgDlg => msgDlg.Btn1Click());
+            WaitForConditionUI(() => _pepList.SelectedIndex != -1);
+            WaitForConditionUI(() => _viewLibUI.HasMatches);
+            RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(),
+                                      msgDlg => msgDlg.Btn0Click());
+       
+            var fmpDlg0 = ShowDialog<FilterMatchedPeptidesDlg>(() => _viewLibUI.AddAllPeptides());
+            RunUI(() => fmpDlg0.AddFiltered = true);
+            RunDlg<MultiButtonMsgDlg>(fmpDlg0.OkDialog, msgDlg => msgDlg.Btn1Click());
+            AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 82, 96, 282);
+            // Implicit mod is created because there are no conflicting peptides in the current document.
+            Assert.IsTrue(
+                SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Contains(mod =>
+                !mod.IsExplicit && !mod.IsVariable));
+
+            var nodeRemoved = "";
+            RunUI(() =>
+            {
+                Settings.Default.EditFindText = "C";
+                SkylineWindow.FindNext(false);
+                nodeRemoved = ((PeptideTreeNode) SkylineWindow.SelectedNode).DocNode.Peptide.Sequence;
+                SkylineWindow.EditDelete();
+            });
+            Assert.IsFalse(
+                SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Contains(mod =>
+                mod.IsExplicit));
+            var pepModsNoMods2 =
+                SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
+                    mods.ChangeStaticModifications(new StaticMod[0]));
+            RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
+                doc.ChangeSettings(pepModsNoMods2)));
+            RelaunchLibExplorer(false, YEAST);
+            RunUI(() =>
+            {
+                _viewLibUI.ChangeSelectedPeptide(nodeRemoved.Replace("C", "C[+57.0]"));
+                _viewLibUI.AddPeptide();
+            });
+
+            // Explicit mod is created because an implicit mod conflicts with current document settings.
+            Assert.IsFalse(
+                SkylineWindow.Document.Settings.PeptideSettings.Modifications.StaticModifications.Contains(mod =>
+                !mod.IsExplicit));
+            Assert.IsTrue(SkylineWindow.Document.Peptides.Contains(nodePep => 
+                nodePep.Peptide.Sequence == nodeRemoved && nodePep.HasExplicitMods));
+
+            // Implicit modifications only added to document if they apply to the added peptide
+            RunUI(() =>
+                      {
+                          SkylineWindow.SelectAll();
+                          SkylineWindow.EditDelete();
+                      });
+            var pepModsNoMods3 =
+                SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(new StaticMod[0]));
+            RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
+                doc.ChangeSettings(pepModsNoMods3)));
+            Settings.Default.StaticModList.Clear();
+            RelaunchLibExplorer(true, ANL_COMBINED);
+            RunUI(() => _viewLibUI.AddPeptide());
+            Assert.AreEqual(0, Settings.Default.StaticModList.Count);
+
+            // Variable mods not added if conflict with existing peptides.
+            RunUI(() =>
+            {
+                _pepList.SelectedIndex = 1;
+                _viewLibUI.AddPeptide();
+            });
+            Assert.IsFalse(SkylineWindow.Document.Peptides.Contains(nodePep => 
+                nodePep.HasExplicitMods && nodePep.ExplicitMods.IsVariableStaticMods));
+
+            // Test removing mod from globals affects matches
+            var pepModsNoMods4 = SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(Settings.Default.StaticModList.GetDefaults().ToArray()));
+            RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
+                doc.ChangeSettings(pepModsNoMods4)));
+            Settings.Default.StaticModList.Clear();
+            Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults());
+            RelaunchLibExplorer(false, YEAST);
+            Assert.IsFalse(_viewLibUI.HasUnmatchedPeptides);
+
+            // Test removing mod from doc does not remove matches
+            Settings.Default.StaticModList.Clear();
+            var pepModsNone = SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(new StaticMod[0]));
+            RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
+                doc.ChangeSettings(pepModsNone)));
+            RunUI(SkylineWindow.Activate);
+            RunUI(_viewLibUI.Activate);
+            WaitForConditionUI(() => _pepList.Items.Count == 96);
+            WaitForConditionUI(() => _pepList.SelectedIndex != -1);
+            Assert.IsFalse(_viewLibUI.HasUnmatchedPeptides);
+
+            // Relaunch explorer without modification matching
+            RunUI(() => _viewLibUI.CancelDialog());
+            WaitForClosedForm(_viewLibUI);
+            _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(YEAST));
+            var matchedPepModsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(matchedPepModsDlg.BtnCancelClick);
+            WaitForConditionUI(() => _pepList.Items.Count == 96);
+            WaitForConditionUI(() => _pepList.SelectedIndex != -1);
+            Assert.IsTrue(_viewLibUI.HasUnmatchedPeptides);
+
+            // Test adding mod to doc affects matches
+            Settings.Default.StaticModList.AddRange(Settings.Default.StaticModList.GetDefaults());
+            var pepModsDefault = SkylineWindow.Document.Settings.ChangePeptideModifications(mods =>
+                mods.ChangeStaticModifications(Settings.Default.StaticModList.Select(mod =>
+                    mod.ChangeExplicit(false)).ToArray()));
+            RunUI(() => SkylineWindow.ModifyDocument("Change static mods", doc =>
+                doc.ChangeSettings(pepModsDefault)));
+            RunUI(SkylineWindow.Activate);
+            RunUI(_viewLibUI.Activate);
+            WaitForConditionUI(() => _pepList.Items.Count == 96);
+            WaitForConditionUI(() => _pepList.SelectedIndex != -1);
+            Assert.IsFalse(_viewLibUI.HasUnmatchedPeptides);
+
+            RunUI(() => _viewLibUI.CancelDialog());
+            WaitForClosedForm(_viewLibUI);
+        }
+
+        private void RelaunchLibExplorer(bool showModsDlg, string libName)
+        {
+            if (_viewLibUI != null)
+            {
+                RunUI(() => _viewLibUI.CancelDialog());
+                WaitForClosedForm(_viewLibUI);
+            }
+            _viewLibUI = ShowDialog<ViewLibraryDlg>(() => SkylineWindow.OpenLibraryExplorer(libName));
+            if (showModsDlg)
+            {
+                var modDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+                if (modDlg != null)
+                    RunUI(modDlg.Btn1Click);
+                WaitForClosedForm(modDlg);
+            }
+            RunUI(() =>
+            {
+                // Find the libary combobox control
+                _libComboBox = (ComboBox)_viewLibUI.Controls.Find("comboLibrary", true)[0];
+                Assert.IsNotNull(_libComboBox);
+                // Find the peptides list control
+                _pepList = (ListBox)_viewLibUI.Controls.Find("listPeptide", true)[0];
+                Assert.IsNotNull(_pepList);
+            });
+            WaitForConditionUI(() => _pepList.SelectedIndex != -1);
+            WaitForConditionUI(() => _viewLibUI.HasMatches || FindOpenForm<MultiButtonMsgDlg>() != null);
+            Assert.IsNull(FindOpenForm<MultiButtonMsgDlg>());
+            var docLibraries = SkylineWindow.Document.Settings.PeptideSettings.Libraries;
+            if (docLibraries.GetLibrary(libName) == null)
+                RunDlg<MultiButtonMsgDlg>(() => _viewLibUI.CheckLibraryInSettings(), msgDlg => msgDlg.Btn0Click());            
+        }
+
+        private void AddAllPeptides(int? expectedUnmatched = null, int? explicitMods = null, int? variableMods = null)
         {
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(_viewLibUI.AddAllPeptides);
+            var docBefore = SkylineWindow.Document;
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
             {
                 if(expectedUnmatched != null)
                     Assert.AreEqual(expectedUnmatched, (int)addLibraryPepsDlg.Tag);
                 addLibraryPepsDlg.Btn1Click();
             });
+            var docAfter = WaitForDocumentChange(docBefore);
+            if (explicitMods.HasValue)
+                Assert.AreEqual(explicitMods.Value, CountExplicitMods(docAfter) - CountExplicitMods(docBefore));
+            if (variableMods.HasValue)
+                Assert.AreEqual(variableMods.Value, CountVariableMods(docAfter) - CountVariableMods(docBefore));
+        }
+
+        /// <summary>
+        /// Returns a count of peptides in a document with explicit modifications which contain more
+        /// than just variable static mods.
+        /// </summary>
+        private static int CountExplicitMods(SrmDocument doc)
+        {
+            return doc.Peptides.Count(
+                nodePep => nodePep.HasExplicitMods &&
+                           (!nodePep.HasVariableMods || nodePep.ExplicitMods.GetHeavyModifications().Any()));
+        }
+
+        /// <summary>
+        /// Returns a count of peptides in a document with variable modifications.
+        /// </summary>
+        private int CountVariableMods(SrmDocument doc)
+        {
+            return doc.Peptides.Count(nodePep => nodePep.HasVariableMods);
         }
 
         private void AddLibrary(EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec> editListUI, TestLibInfo info)
@@ -564,10 +831,12 @@ namespace pwiz.SkylineTestFunctional
 
         private static void TestForDuplicateTransitionGroups()
         {
-            Assert.AreEqual(SkylineWindow.Document.TransitionGroupCount,
-                (from nodePep in SkylineWindow.Document.TransitionGroups
-                 group nodePep by nodePep.Id into g
-                 select g).Count());
+            foreach (var tranGroup in SkylineWindow.Document.TransitionGroups)
+            {
+                TransitionGroupDocNode @group = tranGroup;
+                Assert.AreEqual(1, SkylineWindow.Document.TransitionGroups.Count(docTranGroup =>
+                                                                                 ReferenceEquals(docTranGroup, group)));
+            }
         }
 
         private static void TestSamePeptides(IEnumerable<PeptideDocNode> peptides)

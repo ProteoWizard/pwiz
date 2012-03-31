@@ -20,6 +20,7 @@
 using System;
 using System.Threading;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
@@ -129,13 +130,19 @@ namespace pwiz.Skyline.Model
             ChromatogramManager = new ChromatogramManager();
             ChromatogramManager.Register(this);
             Register(ChromatogramManager);
+
+            LibraryManager = new LibraryManager();
+            LibraryManager.Register(this);
+            Register(LibraryManager);
         }
 
         public ChromatogramManager ChromatogramManager { get; private set; }
 
+        public LibraryManager LibraryManager { get; private set; }
+
         protected override bool IsComplete(SrmDocument docNew)
         {
-            return !docNew.Settings.HasResults || docNew.Settings.MeasuredResults.IsLoaded;
+            return docNew.Settings.IsLoaded;
         }
     }
 }

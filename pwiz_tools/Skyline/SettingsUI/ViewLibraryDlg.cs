@@ -104,6 +104,8 @@ namespace pwiz.Skyline.SettingsUI
         private ViewLibraryPepInfo[] _peptides;
         private byte[] _lookupPool;
 
+        private LibKeyModificationMatcher _matcher;
+
         private bool _activated;
 
 //        private int _listPeptidePrevSelIndex;
@@ -175,7 +177,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!size.IsEmpty)
                 Size = size;
 
-//            _listPeptidePrevSelIndex = -1;
+            _matcher = new LibKeyModificationMatcher();
         }
 
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip,
@@ -302,6 +304,8 @@ namespace pwiz.Skyline.SettingsUI
         private void ViewLibraryDlg_Shown(object sender, EventArgs e)
         {
             textPeptide.Focus();
+            if (MatchModifications())
+                UpdateListPeptide(0);
         }
 
         private void ViewLibraryDlg_Activated(object sender, EventArgs e)
@@ -325,7 +329,7 @@ namespace pwiz.Skyline.SettingsUI
                         new MultiButtonMsgDlg(
                             string.Format("The library {0} is no longer part of the document settings. Reload the library explorer?",
                             _selectedLibName),
-                            "Yes", "No"))
+                            "Yes", "No", true))
                     {
                         var result = reloadExplorerMsg.ShowDialog(this);
                         if (result == DialogResult.Yes)
@@ -455,6 +459,39 @@ namespace pwiz.Skyline.SettingsUI
             _currentRange = new Range(0, _peptides.Length - 1);
         }
 
+        public bool MatchModifications()
+        {
+            LibKeyModificationMatcher matcher = new LibKeyModificationMatcher();
+            matcher.CreateMatches(Document.Settings, _selectedLibrary.Keys, 
+                Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            if(!string.IsNullOrEmpty(matcher.FoundMatches) || matcher.UnmatchedSequences.Any())
+            {
+                if (string.IsNullOrEmpty(matcher.FoundMatches))
+                {
+                    MessageDlg.Show(this, matcher.UninterpretedMods);
+                    return false;
+                }
+                var dlg =
+                    new MultiButtonMsgDlg(
+                        string.Format("This library appears to contain the following modifications.\n\n{0}\n"
+                            + "{1}"
+                            + "Would you like to use the Unimod definitions for {2} modifications?  "
+                            + "The document will not change until peptides with these modifications are added.",
+                            matcher.FoundMatches,
+                            matcher.UnmatchedSequences.Any() ? (matcher.UninterpretedMods + "\n\n") : "",
+                            matcher.UnmatchedSequences.Any() ? "the matching" : "these"),
+                        "Yes", "No", false);
+                var result = dlg.ShowDialog(this);
+                if (result != DialogResult.Yes)
+                {
+                    _matcher.ClearMatches();
+                    return false;
+                }
+            }
+            _matcher = matcher;
+            return true;
+        }
+
         /// <summary>
         /// Used to update page info when something changes: e.g. library
         /// selection changes, or search results change.
@@ -506,7 +543,7 @@ namespace pwiz.Skyline.SettingsUI
         private void UpdateListPeptide(int selectPeptideIndex)
         {
             var pepMatcher = new ViewLibraryPepMatching(Document,
-                _selectedLibrary, _selectedSpec, _lookupPool, _peptides);
+                _selectedLibrary, _selectedSpec, _lookupPool, _matcher, _peptides);
             listPeptide.BeginUpdate();
             listPeptide.Items.Clear();
             if (_currentRange.Count > 0)
@@ -551,6 +588,10 @@ namespace pwiz.Skyline.SettingsUI
                     if (_selectedLibrary.TryLoadSpectrum(_peptides[index].Key, out spectrum))
                     {
                         SrmSettings settings = Program.ActiveDocumentUI.Settings;
+
+                        if (_matcher.HasMatches)
+                            settings = settings.ChangePeptideModifications(modifications => _matcher.MatcherPepMods);
+
                         TransitionGroup transitionGroup;
 
                         var types = ShowIonTypes;
@@ -818,7 +859,10 @@ namespace pwiz.Skyline.SettingsUI
             // If a matching peptide exists, use the text sequences for that peptide.
             if (pepInfo.HasPeptide)
             {
-                textSequences = PeptideTreeNode.CreateTextSequences(pepInfo.PeptideNode, Document.Settings,
+                var settings = Document.Settings;
+                if (_matcher.HasMatches)
+                    settings = settings.ChangePeptideModifications(mods => _matcher.MatcherPepMods);
+                textSequences = PeptideTreeNode.CreateTextSequences(pepInfo.PeptideNode, settings,
                     pepInfo.GetPlainDisplayString(_lookupPool), null, new ModFontHolder(this));
             }
             // If no modifications, use a single plain test sequence
@@ -936,13 +980,19 @@ namespace pwiz.Skyline.SettingsUI
             // The user has selected a different library. We need to reload 
             // everything in the dialog. 
             if (comboLibrary.SelectedItem.ToString() != _selectedLibName)
+            {
                 ChangeSelectedLibrary(comboLibrary.SelectedItem.ToString());
+                _matcher.ClearMatches();
+                if (MatchModifications())
+                    UpdateListPeptide(0);
+            }
         }
 
         public void ChangeSelectedLibrary(string libName)
         {
             comboLibrary.SelectedItem = libName;
             _selectedLibName = libName;
+            _matcher = new LibKeyModificationMatcher();
             UpdateViewLibraryDlg();
         }
 
@@ -955,16 +1005,24 @@ namespace pwiz.Skyline.SettingsUI
 
         private void OnDocumentChange(object sender, DocumentChangedEventArgs e)
         {
-            // Only need to update if ViewLibraryDlg is already loaded and modifications have changed.
+            var prevDocSet = e.DocumentPrevious.Settings;
+            var curDocSet = Document.Settings;
+            // Only need to update if ViewLibraryDlg is already loaded and transition settings have changed.
             if (_peptides != null
-                && !Equals(e.DocumentPrevious.Settings.PeptideSettings.Modifications, Document.Settings.PeptideSettings.Modifications))
+                && !Equals(prevDocSet.TransitionSettings, curDocSet.TransitionSettings))
+                    UpdateListPeptide(listPeptide.SelectedIndex);
+            if ( !Equals(prevDocSet.PeptideSettings.Modifications, curDocSet.PeptideSettings.Modifications))
+            {
+                if(_matcher.HasMatches)
+                    _matcher.UpdateMatches(prevDocSet.PeptideSettings.Modifications, 
+                        curDocSet.PeptideSettings.Modifications);
                 UpdateListPeptide(listPeptide.SelectedIndex);
+            }    
         }
         
         #endregion
         
         # region Mouse Click Events
-
         private void aionsContextMenuItem_Click(object sender, EventArgs e)
         {
             GraphSettings.ShowAIons = !GraphSettings.ShowAIons;
@@ -1140,7 +1198,8 @@ namespace pwiz.Skyline.SettingsUI
             var pepMatcher = new ViewLibraryPepMatching(startingDocument,
                                                         _selectedLibrary,
                                                         _selectedSpec,
-                                                        _lookupPool,
+                                                        _lookupPool, 
+                                                        _matcher,
                                                         _peptides);
 
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
@@ -1169,12 +1228,31 @@ namespace pwiz.Skyline.SettingsUI
 
             IdentityPath toPath = Program.MainWindow.SelectedPath;
             IdentityPath selectedPath = toPath;
-            
+
             string message = string.Format("Add library peptide {0}", nodePepMatched.Peptide.Sequence);
             Program.MainWindow.ModifyDocument(message, doc =>
-                pepMatcher.AddPeptides(doc, null, toPath, out selectedPath));
+                {
+                    var newDoc = doc;
+                    if (_matcher.HasMatches)
+                    {
+                        var matchingDocument = newDoc;
+                        newDoc = newDoc.ChangeSettings(
+                            newDoc.Settings.ChangePeptideModifications(mods =>
+                                _matcher.SafeMergeImplicitMods(matchingDocument)));
+                    }
+
+                    newDoc = pepMatcher.AddPeptides(newDoc, null, toPath,
+                                      out selectedPath);
+                    if (newDoc.TransitionGroupCount == doc.TransitionGroupCount)
+                        return doc;
+                    if(!_matcher.HasMatches)
+                            return newDoc;
+                    var modsNew = _matcher.GetDocModifications(newDoc); 
+                    return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
+                });
             
             Program.MainWindow.SelectedPath = selectedPath;
+            Document.Settings.UpdateDefaultModifications(true, true);
         }
 
         private bool EnsureBackgroundProteome(SrmDocument document, ViewLibraryPepMatching pepMatcher)
@@ -1207,23 +1285,16 @@ namespace pwiz.Skyline.SettingsUI
                     new MultiButtonMsgDlg(
                         string.Format(
                             "The library {0} is not currently added to your document.\nWould you like to add it?",
-                            _selectedLibName), "Yes", "No"))
+                            _selectedLibName), "Yes", "No", true))
                 {
                     var result = libraryNotAddedMsgDlg.ShowDialog(this);
-                    if (result == DialogResult.Cancel)
+                    if (result == DialogResult.No)
                         return result;
                     if (result == DialogResult.Yes)
                         Program.MainWindow.ModifyDocument("Add Library", doc =>
-                                                                         doc.ChangeSettings(
-                                                                             doc.Settings.ChangePeptideLibraries(
-                                                                                 pepLibraries =>
-                                                                                 pepLibraries.ChangeLibraries(
-                                                                                     new List<LibrarySpec>(
-                                                                                         docLibraries.LibrarySpecs)
-                                                                                         {_selectedSpec},
-                                                                                     new List<Library>(
-                                                                                         docLibraries.Libraries)
-                                                                                         {_selectedLibrary}))));
+                            doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
+                                pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
+                                new List<Library>(docLibraries.Libraries) { _selectedLibrary }))));
                 }
             }
             return DialogResult.OK;
@@ -1244,10 +1315,17 @@ namespace pwiz.Skyline.SettingsUI
             
             var startingDocument = Document;
 
-            var pepMatcher = new ViewLibraryPepMatching(startingDocument,
+            SrmDocument startingDocumentImplicitMods = startingDocument;
+            if(_matcher.HasMatches)
+                startingDocumentImplicitMods = startingDocumentImplicitMods.ChangeSettings(
+                    startingDocument.Settings.ChangePeptideModifications(
+                        mods => _matcher.SafeMergeImplicitMods(startingDocument)));
+
+            var pepMatcher = new ViewLibraryPepMatching(startingDocumentImplicitMods,
                                                         _selectedLibrary,
                                                         _selectedSpec,
                                                         _lookupPool,
+                                                        _matcher,
                                                         _peptides);
 
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
@@ -1307,6 +1385,14 @@ namespace pwiz.Skyline.SettingsUI
                 if (addLibraryPepsDlg.ShowDialog(this) == DialogResult.Cancel)
                     return;
             }
+            PeptideModifications modsNew = null;
+            if (_matcher.HasMatches)
+            {
+                modsNew = _matcher.GetDocModifications(newDocument);
+                newDocument = 
+                    newDocument.ChangeSettings(newDocument.Settings.ChangePeptideModifications(mods => modsNew));
+            }
+
             // If the user chooses to continue with the operation, call AddPeptides again in case the document has changed.
             var toPath = Program.MainWindow.SelectedPath;
             Program.MainWindow.ModifyDocument(string.Format("Add all peptides from {0} library", SelectedLibraryName),
@@ -1319,10 +1405,17 @@ namespace pwiz.Skyline.SettingsUI
                         selectedPath = toPath;
                         throw new InvalidDataException("The document changed during processing.\nPlease retry this operation.");
                     }
-                    return pepMatcher.AddPeptides(doc, null, toPath, out selectedPath);
+                    var newDoc = doc;
+                    newDoc = pepMatcher.AddPeptides(newDoc, null, toPath, out selectedPath);
+                    if (newDoc.TransitionGroupCount == doc.TransitionGroupCount)
+                        return doc;
+                    if (!_matcher.HasMatches)
+                        return newDoc;
+                    return newDoc.ChangeSettings(newDoc.Settings.ChangePeptideModifications(mods => modsNew));
                 });
 
             Program.MainWindow.SelectedPath = selectedPath;
+            Document.Settings.UpdateDefaultModifications(true, true);
         }
 
         // User wants to go to the previous page. Update the page info.
@@ -1594,10 +1687,39 @@ namespace pwiz.Skyline.SettingsUI
             set { textPeptide.Text = value; }            
         }
 
+        public int GetSelectedIndex()
+        {
+            return SelectedIndex;
+        }
+
         public int SelectedIndex
         {
             get { return listPeptide.SelectedIndex; }
             set { listPeptide.SelectedIndex = value; }
+        }
+
+        public int SelectedLibIndex
+        {
+            get { return comboLibrary.SelectedIndex; }
+            set { listPeptide.SelectedIndex = value; }
+        }
+
+        public bool HasMatches
+        {
+            get { return _matcher.HasMatches; }
+        }
+
+        public bool HasUnmatchedPeptides
+        {
+            get
+            {
+                foreach(var item in listPeptide.Items)
+                {
+                    if (!((ViewLibraryPepInfo)item).HasPeptide)
+                        return true;
+                }
+                return false;
+            }
         }
 
         #endregion

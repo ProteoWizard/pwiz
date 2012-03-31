@@ -344,14 +344,20 @@ namespace pwiz.SkylineTestUtil
 
         public static bool WaitForConditionUI(Func<bool> func)
         {
-            for (int i = 0; i < WAIT_CYCLES; i++)
+            return WaitForConditionUI(WAIT_TIME, func);
+        }
+
+        public static bool WaitForConditionUI(int millis, Func<bool> func)
+        {
+            int waitCycles = millis/SLEEP_INTERVAL;
+            for (int i = 0; i < waitCycles; i++)
             {
                 bool isCondition = false;
                 Program.MainWindow.Invoke(new Action(() => isCondition = func()));                
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < WAIT_CYCLES - 1, "Timeout exceeded in WaitForConditionUI");
+                Assert.IsTrue(i < waitCycles - 1, "Timeout exceeded in WaitForConditionUI");
             }
             return false;
         }
@@ -469,16 +475,18 @@ namespace pwiz.SkylineTestUtil
             // Wait for forms to close.
             try
             {
-                WaitForConditionUI(() => Application.OpenForms.Count == 1);
+                // Long wait for library build notifications
+                WaitForConditionUI(() => !Application.OpenForms.Cast<Form>().Any(form => form is BuildLibraryNotification));
+                // Short wait for anything else
+                WaitForConditionUI(1000, () => Application.OpenForms.Count == 1);
             }
             catch (Exception)
             {
-                foreach (var form in Application.OpenForms)
-                {
-                    Assert.IsNotNull(SkylineWindow, "Skyline window is null at end of test");
-                    Assert.IsTrue(form is SkylineWindow,
-                                  string.Format("Form of type {0} left open at end of test", form.GetType()));
-                }
+                // Actually throwing an exception can cause an infinite loop in MSTest
+                _testExceptions.AddRange(from form in Application.OpenForms.Cast<Form>()
+                                         where !(form is SkylineWindow)
+                                         select new AssertFailedException(
+                                             string.Format("Form of type {0} left open at end of test", form.GetType())));
             }
 
             // Clear the clipboard to avoid the appearance of a memory leak.

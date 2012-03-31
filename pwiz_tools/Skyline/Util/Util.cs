@@ -724,7 +724,21 @@ namespace pwiz.Skyline.Util
         /// <returns>The index in the Array of the match, or -1 if not found</returns>
         public static int IndexOf<TItem>(this IList<TItem> values, Predicate<TItem> found)
         {
-            for (int i = 0; i < values.Count; i++)
+            return IndexOf(values, found, 0);
+        }
+
+        /// <summary>
+        /// Searches an Array for an item that matches criteria specified
+        /// through a delegate function. Search starts at the given index.
+        /// </summary>
+        /// <typeparam name="TItem">Type of item in the array</typeparam>
+        /// <param name="values">The Array to search</param>
+        /// <param name="found">Delegate accepting an item, and returning true if it matches</param>
+        /// <param name="startIndex">Starting index of the search.</param>
+        /// <returns>The index in the Array of the match, or -1 if not found</returns>
+        public static int IndexOf<TItem>(this IList<TItem> values, Predicate<TItem> found, int startIndex)
+        {
+            for (int i = startIndex; i < values.Count; i++)
             {
                 if (found(values[i]))
                     return i;

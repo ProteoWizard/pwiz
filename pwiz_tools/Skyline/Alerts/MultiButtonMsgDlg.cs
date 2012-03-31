@@ -25,13 +25,15 @@ namespace pwiz.Skyline.Alerts
 {
     public sealed partial class MultiButtonMsgDlg : FormEx
     {
+        private const int MAX_HEIGHT = 500;
+
         /// <summary>
         /// Show a message box with a Cancel button and one other button.
         /// </summary>
         /// <param name="message">The message to show</param>
         /// <param name="btnText">The text to show in the non-Cancel button (DialogResult.OK)</param>
         public MultiButtonMsgDlg(string message, string btnText)
-            : this(message, null, btnText)
+            : this(message, null, btnText, true)
         {
         }
 
@@ -41,31 +43,39 @@ namespace pwiz.Skyline.Alerts
         /// <param name="message">The message to show</param>
         /// <param name="btn0Text">The text to show in the left-most, default button (DialogResult.Yes)</param>
         /// <param name="btn1Text">The text to show in the second, non-default button (DialogResult.No)</param>
-        public MultiButtonMsgDlg(string message, string btn0Text, string btn1Text)
-            : this(Program.Name, message, btn0Text, btn1Text)
-        {
-        }
-
-        private MultiButtonMsgDlg(string labelText, string message, string btn0Text, string btn1Text)
+        /// <param name="allowCancel">When this is true a Cancel button is the button furthest to the
+        /// right. Otherwise, only the two named buttons are visible.</param>
+        public MultiButtonMsgDlg(string message, string btn0Text, string btn1Text, bool allowCancel)
         {
             InitializeComponent();
 
-            Text = labelText;
-
-            if (btn0Text != null)
+            Text = Program.Name;
+            if (allowCancel)
+                btn1.Text = btn1Text;
+            else
             {
-                btn0.Text = btn0Text;
+                btn1.Text = btn0Text;
+                btnCancel.Text = btn1Text;
             }
+
+            if (allowCancel && btn0Text != null)
+                btn0.Text = btn0Text;
             else
             {
                 btn0.Visible = false;
                 AcceptButton = btn1;
-                btn1.DialogResult = DialogResult.OK;
+                if (allowCancel)
+                    btn1.DialogResult = DialogResult.OK;
+                else
+                {
+                    btn1.DialogResult = DialogResult.Yes;
+                    btnCancel.DialogResult = DialogResult.No;
+                    CancelButton = null;
+                }
             }
-            btn1.Text = btn1Text;
             int height = labelMessage.Height;
             labelMessage.Text = message;
-            Height += Math.Max(0, labelMessage.Height - height * 3);
+            Height += Math.Min(MAX_HEIGHT, Math.Max(0, labelMessage.Height - height * 3));
         }
 
         public void Btn0Click()
@@ -76,6 +86,11 @@ namespace pwiz.Skyline.Alerts
         public void Btn1Click()
         {
             btn1.PerformClick();
+        }
+
+        public void BtnCancelClick()
+        {
+            btnCancel.PerformClick();
         }
     }
 }

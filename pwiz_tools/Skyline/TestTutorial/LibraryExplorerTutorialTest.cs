@@ -70,6 +70,8 @@ namespace pwiz.SkylineTestTutorial
 
             // Go to view menu and click Spectral Libraries
             ViewLibraryDlg viewLibraryDlg = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            var matchedPepsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(matchedPepsDlg.BtnCancelClick);
 
             // Types text in Peptide textbox in the Spectral Library Explorer Window
             RunUI(() =>
@@ -233,6 +235,9 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
 
             ViewLibraryDlg viewLibraryDlg1 = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            var matchedPepModsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(matchedPepModsDlg.BtnCancelClick);
+            
             const int countLabels1 = 15;
             const int countLabels2 = 18;
             RunUI(() =>
@@ -262,6 +267,7 @@ namespace pwiz.SkylineTestTutorial
             string lossText = Math.Round(-phosphoSt.Losses[0].MonoisotopicMass, 1).ToString(CultureInfo.CurrentCulture);
             const int countLossLabels1 = 12;
             const int countLossLabels2 = 15;
+            
             RunUI(() =>
             {
                 // New ions should be labeled, because of the added modification with loss

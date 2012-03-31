@@ -167,6 +167,8 @@
     <None Include="CommandLineTest.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
+    <None Include="modmatch.sky" />
+    <None Include="ModMatch.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\AsymDIA.zip" />
     <None Include="Results\FullScan.zip" />

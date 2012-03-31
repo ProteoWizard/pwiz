@@ -907,6 +907,15 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
         }
 
+        /// <summary>
+        /// Allow the variable modification flag to be cleared for consistent
+        /// <see cref="PeptideSequenceModKey"/> keys.
+        /// </summary>
+        public ExplicitMods ChangeIsVariableStaticMods(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.IsVariableStaticMods = prop);
+        }
+
         #endregion
 
         #region object overrides

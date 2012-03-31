@@ -424,6 +424,9 @@
     <Compile Include="Model\Irt\RCalcIrt.cs" />
     <Compile Include="Model\Irt\SessionFactoryFactory.cs" />
     <Compile Include="Model\IsotopeLabelType.cs" />
+    <Compile Include="Model\LibKeyModificationMatcher.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Model\Lib\BlibData\BlibDb.cs" />
     <Compile Include="Model\Lib\BlibData\DbEntity.cs" />
     <Compile Include="Model\Lib\BlibData\DbLibInfo.cs" />
@@ -435,7 +438,7 @@
     <Compile Include="Model\Lib\BlibData\DbSpectrumSourceFiles.cs" />
     <Compile Include="Model\Lib\LibraryRankedSpectrumInfo.cs" />
     <Compile Include="Model\MemoryDocumentContainer.cs" />
-    <Compile Include="Model\ModificationMatcher.cs" />
+    <Compile Include="Model\AbstractModificationMatcher.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />
     <Compile Include="Model\PeptideGroupDocNode.cs" />
     <Compile Include="Model\RefinementSettings.cs" />
@@ -615,6 +618,7 @@
     <Compile Include="Model\SrmDocument.cs" />
     <Compile Include="Model\SrmDocumentExtensions.cs" />
     <Compile Include="Model\SrmDocumentSharing.cs" />
+    <Compile Include="Model\ModificationMatcher.cs" />
     <Compile Include="Model\Transition.cs" />
     <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionDocNode.cs" />

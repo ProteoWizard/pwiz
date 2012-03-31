@@ -102,6 +102,16 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Searches for A UniMod modification by name.
         /// </summary>
+        public static StaticMod GetModification(string modName, out bool structural)
+        {
+            structural = true;
+            var mod = GetModification(modName, true);
+            if(mod != null)
+                return mod;
+            structural = false;
+            return GetModification(modName, false);
+        }
+
         public static StaticMod GetModification(string modName, bool structural)
         {
             StaticMod mod;
@@ -268,15 +278,16 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod ClosestMatchSpecific(double mass, int roundTo, ModTerminus? terminus)
         {
-            StaticMod match = null;
-            if (terminus != null)
+            // Order of preference: matches that specific amino acids
+            StaticMod match = ClosestMatch(_listMasses, mass, roundTo);
+            // Terminal matches
+            if (match == null && terminus != null)
             {
                 match = ClosestMatch(terminus == ModTerminus.C ? _listCTerminalMasses : _listNTerminalMasses, mass,
                                      roundTo);
             }
-            return match
-                ?? ClosestMatch(_listMasses, mass, roundTo)
-                ?? ClosestMatch(_listAllAAsMasses, mass, roundTo);
+            // Matches that apply to all amino acids
+            return match ?? ClosestMatch(_listAllAAsMasses, mass, roundTo);
         }
 
         public StaticMod ClosestMatchGeneral(double mass, int roundTo, ModTerminus? terminus)

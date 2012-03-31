@@ -1072,7 +1072,7 @@ namespace pwiz.Skyline.Properties
             if (listMissingCalc.Count > 0)
             {
                 using (var dlg = new MultiButtonMsgDlg(String.Format("The regression(s):\n{0}\nwill be deleted because the calculators they depend on have changed. Do you want to continue?",
-                    String.Join("\n", listMissingCalc.Select(reg => reg.Name).ToArray())), "Yes", "No"))
+                    String.Join("\n", listMissingCalc.Select(reg => reg.Name).ToArray())), "Yes", "No", true))
                 {
                     if(dlg.ShowDialog(owner) != DialogResult.Yes)
                         return false;

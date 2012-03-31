@@ -407,11 +407,11 @@ namespace pwiz.Skyline.SettingsUI
                                 + "\n\nClick 'Unimod' to use the name '{0}'."
                                 + "\nClick 'Custom' to use the name '{1}'.",
                                 matchingMod.Name, name),
-                            "Unimod", "Custom"))
+                            "Unimod", "Custom", true))
                     {
                         var result = dlg.ShowDialog(this);
                         if (result == DialogResult.Yes)
-                            newMod = matchingMod;
+                            newMod = matchingMod;   // Unimod
                         if (result == DialogResult.Cancel)
                             return;
                     }

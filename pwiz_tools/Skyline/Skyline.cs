@@ -2946,10 +2946,15 @@ namespace pwiz.Skyline
                         else if (libraries.LibrarySpecs[i] != null)
                             libraryName = libraries.LibrarySpecs[i].Name;
                     }
-                    var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) { Owner = this };
-                    viewLibraryDlg.Show();
+                    OpenLibraryExplorer(libraryName);
                 }
             }
+        }
+
+        public void OpenLibraryExplorer(string libraryName)
+        {
+            var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) { Owner = this };
+            viewLibraryDlg.Show();
         }
 
         private void defaultToolStripMenuItem_Click(object sender, EventArgs e)

@@ -22,6 +22,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -34,6 +35,12 @@ namespace pwiz.SkylineTestA
     [TestClass]
     public class ModificationMatcherTest
     {
+        /// <summary>
+        ///Gets or sets the test context which provides
+        ///information about and functionality for the current test run.
+        ///</summary>
+        public TestContext TestContext { get; set; }
+
         [TestMethod]
         public void TestModificationMatcher()
         {
@@ -74,14 +81,6 @@ namespace pwiz.SkylineTestA
             // If all AAs modified, try for most general modification.
             Assert.IsTrue(MATCHER.GetModifiedNode(STR_HEAVY_15)
                 .ExplicitMods.HeavyModifications.Contains(mod => mod.Modification.Equivalent(LABEL15_N)));
-            // If only specific AA modified, try for most specific modification.
-            Assert.IsTrue(MATCHER.GetModifiedNode(STR_HEAVY_15_F)
-                .ExplicitMods.HeavyModifications.Contains(mod =>
-                    mod.Modification.AminoAcids.Contains(c => c == 'F')));
-            // If only some AAs modified, try for most specific modifications.
-            Assert.IsTrue(MATCHER.GetModifiedNode(STR_HEAVY_15_NOT_ALL)
-                .ExplicitMods.HeavyModifications.Contains(mod =>
-                mod.Modification.AminoAcids.Contains(c => c == 'I')));
             
             // Updating the settings.
             // Peptide settings should change to include new mods.
@@ -185,7 +184,58 @@ namespace pwiz.SkylineTestA
                 "PepGroup1", "", new[] {MATCHER.GetModifiedNode(STR_HEAVY_15_F)})}, true, null, out firstAdded, out nextAdded);
             var settingsNew = MATCHER.GetDocModifications(docNew0);
             Assert.AreEqual(settingsMultiLabel.PeptideSettings.Modifications, settingsNew);
+
+            // Finding specific modifications.
+            // If only specific AA modified, try for most specific modification.
+            UpdateMatcher(null, null, null, null, new[] { STR_HEAVY_15_F});
+            Assert.IsTrue(MATCHER.GetModifiedNode(STR_HEAVY_15_F)
+                .ExplicitMods.HeavyModifications.Contains(mod =>
+                    mod.Modification.AminoAcids.Contains(c => c == 'F')));
+            // If only some AAs modified, try for most specific modifications.
+            UpdateMatcher(null, null, null, null, new[] { STR_HEAVY_15_NOT_ALL });
+            Assert.IsTrue(MATCHER.GetModifiedNode(STR_HEAVY_15_NOT_ALL)
+                .ExplicitMods.HeavyModifications.Contains(mod =>
+                mod.Modification.AminoAcids.Contains(c => c == 'I')));
+
+
+            var testDir = new TestFilesDir(TestContext, ZIP_FILE);
+            var modMatchDocContainer = InitMatchDocContainer(testDir);
+            var libkeyModMatcher = new LibKeyModificationMatcher();
+            var anlLibSpec = new BiblioSpecLiteSpec("ANL_Combo", testDir.GetTestPath("ANL_Combined.blib"));
+            var yeastLibSpec = new BiblioSpecLiteSpec("Yeast", testDir.GetTestPath("Yeast_atlas_small.blib"));
+            modMatchDocContainer.ChangeLibSpecs(new List<LibrarySpec> { anlLibSpec, yeastLibSpec });
+            var docLibraries = modMatchDocContainer.Document.Settings.PeptideSettings.Libraries.Libraries;
+            int anlLibIndex = docLibraries.IndexOf(library => Equals(library.Name, anlLibSpec.Name));
+            int yeastLibIndex = docLibraries.IndexOf(library => Equals(library.Name, yeastLibSpec.Name));
+
+            libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
+                docLibraries[anlLibIndex].Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+
+            // Test can match 15N
+            Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
+                match.HeavyMod != null && match.HeavyMod.Equivalent(LABEL15_N)));
+
+            var uniModMetOx = UniMod.GetModification("Oxidation (M)", true);
+
+            // Test can match Met Ox
+            Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
+                match.StructuralMod != null && match.StructuralMod.Equivalent(uniModMetOx)));
+
+            // Test can match 15N and Met ox!
+            Assert.IsTrue(libkeyModMatcher.Matches.Contains(match => match.Key.Mass == 17
+                && match.Value.StructuralMod != null && match.Value.StructuralMod.Equivalent(uniModMetOx)
+                && match.Value.HeavyMod != null && match.Value.HeavyMod.Equivalent(LABEL15_N)));
+
+            // Test can match Cysteine (Implicit) and Met Ox (variable)
+            libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
+                docLibraries[yeastLibIndex].Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod => 
+                mod.Formula.Equals("C2H3ON") && !mod.IsVariable));
+            Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod => 
+                mod.Formula.Equals("O") && mod.IsVariable));
         }
+
+        private const string ZIP_FILE = @"TestA\ModMatch.zip";
 
         private static void UpdateMatcherFail(string seq)
         {
@@ -199,6 +249,13 @@ namespace pwiz.SkylineTestA
         private static void UpdateMatcher(
             StaticMod[] docStatMods, StaticMod[] docHeavyMods, 
             StaticMod[] globalStatMods, StaticMod[] globalHeavyMods)
+        {
+            UpdateMatcher(docStatMods, docHeavyMods, globalStatMods, globalHeavyMods, SEQS);
+        }
+
+        private static void UpdateMatcher(
+            StaticMod[] docStatMods, StaticMod[] docHeavyMods, 
+            StaticMod[] globalStatMods, StaticMod[] globalHeavyMods, IEnumerable<string> seqs)
         {
             docStatMods = docStatMods ?? new StaticMod[0];
             docHeavyMods = docHeavyMods ?? new StaticMod[0];
@@ -215,14 +272,20 @@ namespace pwiz.SkylineTestA
                     mods.ChangeStaticModifications(docStatMods));
             settings = settings.ChangePeptideModifications(mods =>
                 mods.ChangeHeavyModifications(docHeavyMods));
-            MATCHER.CreateMatches(settings, SEQS, mapGlobalStatMods, mapGlobalHeavyMods);
+            MATCHER.CreateMatches(settings, seqs, mapGlobalStatMods, mapGlobalHeavyMods);
         }
-
 
         private static readonly ModificationMatcher MATCHER = new ModificationMatcher();
 
-        private const string STR_NO_MODS = "ALSIGFETCR";
-        private static readonly string STR_HEAVY_15 = "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R{+4}";
+        private static ResultsTestDocumentContainer InitMatchDocContainer(TestFilesDir testFilesDir)
+        {
+            string docPath = testFilesDir.GetTestPath("modmatch.sky");
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
+            return new ResultsTestDocumentContainer(doc, docPath);
+        }
+
+        private const string STR_NO_MODS = "ALSIGFETCR"; 
+        private const string STR_HEAVY_15 = "A{+1}E{+1}I{+1}D{+1}M{+1}[+15.995]L{+1}D{+1}I{+1}R{+4}";
         private const string STR_HEAVY_15_F = "VAILIPF{+1}R";
         private static readonly string STR_HEAVY_15_NOT_ALL = "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R";
         private const string STR_MOD_BY_NAME = "S[Phospho (ST)]LLYFVYVAPGIVNT[Phospho (ST)]YLFMMQAQGILIR";
@@ -234,13 +297,6 @@ namespace pwiz.SkylineTestA
         private const string STR_CYS_OXI_PHOS = "AFC[+57]AVPWQGTM[+16]T[Phospho (ST)]LSK";
         private static readonly string STR_METOX_LONG_MASS = "AFCSFQIYAVPWQGTM[+" + 15.99 + "49151234567890]TLSK";
         private const string STR_AMMONIA_LOSS = "C[-17]AVPWQGTMTLSK";
-
-        private static readonly List<string> SEQS = new List<string> 
-        {
-            STR_NO_MODS, STR_MOD_BY_NAME, STR_CYS_AND_OXI, STR_HEAVY_15, STR_HEAVY_15_F, STR_HEAVY_15_NOT_ALL, STR_CYS_OXI_PHOS,
-            STR_MOD_BY_NAME_TERMINUS, STR_LIGHT_ONLY, STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
-            STR_AMMONIA_LOSS
-        };
 
         // Fails
         private const string STR_FAIL_MASS = "VAI{+42}LIPFR";
@@ -256,6 +312,13 @@ namespace pwiz.SkylineTestA
         private static readonly StaticMod OXIDATION_M_GLOBAL = new StaticMod("Oxidation (M)", "M", null, "O");
         private static readonly StaticMod OXIDATION_M_C_TERM = new StaticMod("Oxidation (M) C-term", "M", ModTerminus.C, "O");
         private static readonly StaticMod LABEL15_N = new StaticMod("Label:15N", null, null, LabelAtoms.N15);
-        private static readonly StaticMod MET_OX_ROUNDED = new StaticMod("Met Ox Rounded", "M", null, null, LabelAtoms.None, 16.0, 16.0);       
+        private static readonly StaticMod MET_OX_ROUNDED = new StaticMod("Met Ox Rounded", "M", null, null, LabelAtoms.None, 16.0, 16.0);
+
+        private static readonly List<string> SEQS = new List<string> 
+        {
+            STR_NO_MODS, STR_MOD_BY_NAME, STR_CYS_AND_OXI, STR_HEAVY_15, STR_HEAVY_15_F, STR_HEAVY_15_NOT_ALL, STR_CYS_OXI_PHOS,
+            STR_MOD_BY_NAME_TERMINUS, STR_LIGHT_ONLY, STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
+            STR_AMMONIA_LOSS
+        };    
     }
 }

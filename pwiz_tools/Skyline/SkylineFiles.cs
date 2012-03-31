@@ -465,14 +465,15 @@ namespace pwiz.Skyline
         {
             if (Dirty)
             {
-                DialogResult result = MessageBox.Show(this, "Do you want to save changes?",
-                    Program.Name, MessageBoxButtons.YesNoCancel);
-                switch (result)
+                using (var dlg = new MultiButtonMsgDlg("Do you want to save changes?", "Yes", "No", true))
                 {
-                    case DialogResult.Yes:
-                        return SaveDocument();
-                    case DialogResult.Cancel:
-                        return false;
+                    switch (dlg.ShowDialog(this))
+                    {
+                        case DialogResult.Yes:
+                            return SaveDocument();
+                        case DialogResult.Cancel:
+                            return false;
+                    }
                 }
             }
             return true;

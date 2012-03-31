@@ -18,6 +18,7 @@
  */
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec;
 using pwiz.Skyline.Alerts;
@@ -92,6 +93,8 @@ namespace pwiz.SkylineTestFunctional
 
             // Add all but 2 of the peptides in the library to the document
             var libraryExplorer = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
+            var matchedPepsDlg = WaitForOpenForm<MultiButtonMsgDlg>();
+            RunUI(matchedPepsDlg.BtnCancelClick);
             var filterMatchedPeptidesDlg = ShowDialog<FilterMatchedPeptidesDlg>(libraryExplorer.AddAllPeptides);
             RunDlg<MultiButtonMsgDlg>(filterMatchedPeptidesDlg.OkDialog, addLibraryPepsDlg =>
             {

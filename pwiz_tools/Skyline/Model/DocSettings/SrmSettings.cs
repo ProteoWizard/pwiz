@@ -693,6 +693,11 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public int? MaxVariableMods
+        {
+            get { return PeptideSettings.Modifications.MaxVariableMods; }
+        }
+
         #endregion
 
         public void UpdateLists()
@@ -858,6 +863,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void UpdateDefaultModifications(bool overwrite)
         {
+            UpdateDefaultModifications(overwrite, false);
+        }
+
+        public void UpdateDefaultModifications(bool overwrite, bool allowVariableOverwrite)
+        {
             var defSet = Settings.Default;
 
             IList<StaticMod> newStaticMods = new List<StaticMod>();
@@ -865,10 +875,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
             foreach (var mod in PeptideSettings.Modifications.GetModifications(IsotopeLabelType.light))
             {
-                if (!defSet.StaticModList.Contains(mod.ChangeExplicit(true)) && !defSet.StaticModList.Contains(mod.ChangeExplicit(false)) &&
-                        // A variable modification set explicitly, can show up as explicit only in a document.
-                        // This condition makes sure it doesn't overwrite the existing variable mod.
-                        (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
+                if (!defSet.StaticModList.Contains(mod.ChangeExplicit(true)) && 
+                    // If the list contains the mod as an implicit mod, it can be overwritten with a variable mod.
+                    (!defSet.StaticModList.Contains(mod.ChangeExplicit(false)) || (mod.IsVariable && allowVariableOverwrite)) &&
+                    // A variable modification set explicitly, can show up as explicit only in a document.
+                    // This condition makes sure it doesn't overwrite the existing variable mod.
+                    (!mod.IsExplicit || !defSet.StaticModList.Contains(mod.ChangeVariable(true))))
                 {
                     newStaticMods.Add(mod.IsUserSet ? mod.ChangeExplicit(false) : mod);
                     if (!overwrite)
