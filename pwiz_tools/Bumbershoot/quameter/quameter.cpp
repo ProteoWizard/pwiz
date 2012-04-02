@@ -668,11 +668,6 @@ namespace quameter
 
                             // fall back on MS2 TIC
                             scanInfo.precursorIntensity = si.cvParam(MS_total_ion_current).valueAs<double>();
-
-                            // calculate TIC manually if necessary
-                            if (scanInfo.precursorIntensity == 0)
-                                BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
-                                    scanInfo.precursorIntensity += p;
                         }
 
                         CVParam chargeState = si.cvParam(MS_charge_state);
@@ -826,6 +821,17 @@ namespace quameter
                             // it's probably multiply charged
                             if (ticBelowPrecursorMz / TIC < 0.9)
                                 ++multiplyChargedMS2s;
+
+                            // calculate TIC manually if necessary
+                            if (scanInfo.precursorIntensity == 0)
+                                const_cast<MS2ScanInfo&>(scanInfo).precursorIntensity = TIC;
+                        }
+
+                        // calculate TIC manually if necessary
+                        if (scanInfo.precursorIntensity == 0)
+                        {
+                            BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                                const_cast<MS2ScanInfo&>(scanInfo).precursorIntensity += p;
                         }
                     }
                 } // end of spectra loop
@@ -1111,11 +1117,6 @@ namespace quameter
 
                         // fall back on MS2 TIC
                         scanInfo.precursorIntensity = si.cvParam(MS_total_ion_current).valueAs<double>();
-
-                        // calculate TIC manually if necessary
-                        if (scanInfo.precursorIntensity == 0)
-                            BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
-                                scanInfo.precursorIntensity += p;
                     }
 
                     if (precursor.spectrumID.empty())
@@ -1425,6 +1426,12 @@ namespace quameter
                                 ms2Peaks(p);
                             sigNoisMS2(accs::max(ms2Peaks) / accs::percentile(ms2Peaks, accs::percentile_number = 50));
                         }
+                        
+                        // calculate TIC manually if necessary
+                        MS2ScanInfo& scanInfo = const_cast<MS2ScanInfo&>(*ms2ScanMap.get<nativeID>().find(spectrum->id));
+                        if (scanInfo.precursorIntensity == 0)
+                            BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                                scanInfo.precursorIntensity += p;
                     }
                 } // end of spectra loop
 
