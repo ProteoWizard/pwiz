@@ -47,6 +47,10 @@ namespace pwiz.Skyline
         // SkylineOffscreen is set true to move Skyline windows offscreen for stress testing.
         public static bool SkylineOffscreen { get; set; }
 
+        // Some initialization must only be done once per process when stress testing.
+        private static bool _initialized;
+
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -78,10 +82,14 @@ namespace pwiz.Skyline
 
             try
             {
-                Application.EnableVisualStyles();
-                Application.SetCompatibleTextRenderingDefault(false);
-                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += ThreadExceptionEventHandler;
+                if (!_initialized)
+                {
+                    _initialized = true;
+                    Application.EnableVisualStyles();
+                    Application.SetCompatibleTextRenderingDefault(false);
+                    Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                    Application.ThreadException += ThreadExceptionEventHandler;
+                }
 
                 // Make sure the user has agreed to the current license version
                 // or one more recent.
@@ -131,7 +139,10 @@ namespace pwiz.Skyline
 
         public static void CloseSkyline()
         {
-            MainWindow.Invoke(new Action(MainWindow.Close));
+            if (MainWindow != null && !MainWindow.IsDisposed)
+            {
+                MainWindow.Invoke(new Action(MainWindow.Close));
+            }
         }
 
         public static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)

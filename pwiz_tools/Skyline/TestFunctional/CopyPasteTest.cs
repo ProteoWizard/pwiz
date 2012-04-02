@@ -97,7 +97,7 @@ namespace pwiz.SkylineTestFunctional
                 sequenceTree.KeysOverride = Keys.None;
                 sequenceTree.SelectedNode =
                   sequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1];
-                Assert.IsFalse(SkylineWindow.CopyMenuItemEnabled());
+                Assert.IsFalse(SkylineWindow.CopyMenuItemEnabled(), "Copy menu should not be enabled");
                 Assert.IsTrue(SkylineWindow.PasteMenuItemEnabled());
 
                 // Test clipboard HTML contains formatting for modified peptides.

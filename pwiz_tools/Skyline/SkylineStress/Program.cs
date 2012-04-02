@@ -24,7 +24,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using System.Threading;
 
 namespace SkylineStress
 {
@@ -80,27 +79,8 @@ namespace SkylineStress
 
                 var skyline = Assembly.LoadFrom(GetAssemblyPath("Skyline.exe"));
                 _program = skyline.GetType("pwiz.Skyline.Program");
-
-                // Create test thread.
-                var threadTest = new Thread(TestThread);
-                threadTest.Start();
-           
-                // Run Skyline on main thread.
                 _program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { CommandLineArgs.ArgAsBool("offscreen") });
-                _program.GetMethod("Main").Invoke(null, null);
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e.Message);
-                Console.WriteLine(e.StackTrace);
-            }
-        }
 
-        // Run the tests in their own thread.
-        private static void TestThread()
-        {
-            try
-            {
                 RunTests();
             }
             catch (Exception e)
@@ -108,9 +88,6 @@ namespace SkylineStress
                 Console.WriteLine(e.Message);
                 Console.WriteLine(e.StackTrace);
             }
-
-            // Close Skyline.
-            _program.GetMethod("CloseSkyline").Invoke(null, null);
         }
 
         // Run all test passes.
@@ -144,7 +121,6 @@ namespace SkylineStress
             var testDir = Path.Combine(GetProjectPath("TestResults"), testDirName);
             var testContext = new StressTestContext();
             testContext.Properties["TestDir"] = testDir;
-            testContext.Properties["StressTest"] = "true";
             if (CommandLineArgs.ArgAsBool("clipboardcheck"))
             {
                 testContext.Properties["ClipboardCheck"] = "SkylineStress clipboard check";
@@ -219,7 +195,9 @@ namespace SkylineStress
                     // Record information for this test.
                     testNumber++;
                     var testName = test.TestMethod.Name;
-                    var info = string.Format("{0,3}.{1,-3} {2,-40}  ", pass, testNumber, testName);
+                    var time = DateTime.Now;
+                    var info = string.Format("[{0}:{1}] {2,3}.{3,-3} {4,-40}  ",
+                        time.Hour.ToString("D2"), time.Minute.ToString("D2"), pass, testNumber, testName);
                     Console.Write(info);
                     log.Write(info);
                     log.Flush();
@@ -251,11 +229,12 @@ namespace SkylineStress
                     var stopwatch = new Stopwatch();
                     try
                     {
+                        // Run the test and time it.
                         stopwatch.Start();
                         test.TestMethod.Invoke(testObject, null);
                         stopwatch.Stop();
 
-                        // Test success.
+                        // Test succeeded.
                         var memoryUsed = GC.GetTotalMemory(true) / (1024.0 * 1024.0);
                         info = string.Format("{0,3} failures, {1:0.0} MB, {2} sec.", failureCount, memoryUsed, stopwatch.ElapsedMilliseconds / 1000);
                         Console.WriteLine(info);
@@ -434,15 +413,15 @@ namespace SkylineStress
                 }
 
                 // Test information line.
-                else if (parts.Length > 5)
+                else if (parts.Length > 6)
                 {
                     // Save previous memory use to calculate memory used by this test.
                     var lastMemory = memory;
 
-                    pass = Math.Truncate(Double.Parse(parts[0]));
-                    var testParts = parts[1].Split('.');
+                    pass = Math.Truncate(Double.Parse(parts[1]));
+                    var testParts = parts[2].Split('.');
                     test = testParts[testParts.Length - 1];
-                    memory = Double.Parse(parts[4]);
+                    memory = Double.Parse(parts[5]);
 
                     // Only collect memory leak information starting on pass 2.
                     if (pass < 2.0)
@@ -457,10 +436,10 @@ namespace SkylineStress
                 }
             }
 
-            // Print list of errors sorted in descended order of frequency.
+            // Print list of errors sorted in descending order of frequency.
             if (errorList.Count == 0)
             {
-                Console.WriteLine("\n# No failures.\n");
+                Console.WriteLine("# No failures.\n");
             }
             foreach (KeyValuePair<string, int> item in errorList.OrderByDescending(x => x.Value))
             {
@@ -470,18 +449,20 @@ namespace SkylineStress
             }
 
             // Print top memory leaks, unless they are less than 0.1 MB.
-            if (memoryUse.Count > 0 && memoryUse.First().Value.Count > 0)
+            var leaks = "";
+            foreach (var item in memoryUse.OrderByDescending(x => x.Value.Count > 0 ? x.Value.Average() : 0.0))
             {
-                Console.WriteLine("\n# Top leaks (in MB per execution):");
-                foreach (var item in memoryUse.OrderByDescending(x => x.Value.Count > 0 ? x.Value.Average() : 0.0))
-                {
-                    if (item.Value.Count == 0) break;
-                    var min = Math.Max(0, item.Value.Min());
-                    var max = item.Value.Max();
-                    var mean = item.Value.Average();
-                    if (mean < 0.1) break;
-                    Console.WriteLine("  {0,-40} #  min={1:0.00}  max={2:0.00}  mean={3:0.00}", item.Key, min, max, mean);
-                }
+                if (item.Value.Count == 0) break;
+                var min = Math.Max(0, item.Value.Min());
+                var max = item.Value.Max();
+                var mean = item.Value.Average();
+                if (mean < 0.1) break;
+                leaks += string.Format("  {0,-40} #  min={1:0.00}  max={2:0.00}  mean={3:0.00}\n",
+                                       item.Key, min, max, mean);
+            }
+            if (leaks != "")
+            {
+                Console.WriteLine("# Top leaks (in MB per execution):\n{0}", leaks);
             }
         }
 

@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Eliminate extraneous chromatogram data.
-            var minimizedFile = TestFilesDir.GetTestPath(@"MS1Filtering\Template_MS1Filtering_1118_2011_3‐2min.sky");
+            var minimizedFile = TestFilesDir.GetTestPath(@"MS1Filtering\Template_MS1Filtering_1118_2011_3-2min.sky");
             var cacheFile = minimizedFile + "d";
             var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             RunDlg<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults, dlg =>
@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestTutorial
                 dlg.MinimizeToFile(minimizedFile);
             });
             WaitForCondition(() => File.Exists(cacheFile));
-            WaitForCondition(() => manageResultsDlg.IsDisposed);
+            WaitForClosedForm(manageResultsDlg);
 
             // Inclusion list method export for MS1 filtering
             docBefore = SkylineWindow.Document;

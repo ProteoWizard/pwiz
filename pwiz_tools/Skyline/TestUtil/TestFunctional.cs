@@ -378,12 +378,9 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest()
         {
-            var threadTest = new Thread(WaitForSkyline);
+            var threadTest = new Thread(WaitForSkyline) {Name = "Functional test thread"};
             threadTest.Start();
-            if (!TestContext.Properties.Contains("StressTest"))
-            {
-                Program.Main();
-            }
+            Program.Main();
             threadTest.Join();
             if (_testExceptions.Count > 0)
             {
@@ -494,10 +491,7 @@ namespace pwiz.SkylineTestUtil
 
             // Close the Skyline window
             _testCompleted = true;
-            if (!TestContext.Properties.Contains("StressTest"))
-            {
-                skylineWindow.Invoke(new Action(skylineWindow.Close));                        
-            }
+            skylineWindow.Invoke(new Action(skylineWindow.Close));                        
         }
 
         // Restore minimal view layout in order to close extra windows.

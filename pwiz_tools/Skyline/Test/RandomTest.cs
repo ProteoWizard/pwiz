@@ -28,6 +28,8 @@ namespace pwiz.SkylineTest
     [TestClass]
     public class RandomTest
     {
+        private static readonly Random RANDOM = new Random();
+
         /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
@@ -37,16 +39,14 @@ namespace pwiz.SkylineTest
         //[TestMethod]
         public void Fail5Percent()
         {
-            var random = new Random();
-            var x = random.Next(100);
+            var x = RANDOM.Next(100);
             Assert.IsTrue(x >= 5, "5% failure for testing");
         }
 
         //[TestMethod]
         public void Fail3Or7Percent()
         {
-            var random = new Random();
-            var x = random.Next(100);
+            var x = RANDOM.Next(100);
             Assert.IsTrue(x >= 7, "7% failure for testing");
             Assert.IsTrue(x >= 10, "3% failure for testing");
         }

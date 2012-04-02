@@ -1,89 +1,21 @@
-TestScheduleMethodDlg  # 7 failures (8.64%)
-# Assert.Fail failed. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.AreNotEqual failed. Expected any value except:<protein.name,peptide.seq,precursor.mz,precursor.retT,product.m_z,collision_energy,cone_voltage,peptide_unmod.seq,ion_name,library_rank
-# peptides1,IGDYAGIK.2,418.72926,31.48,723.367181,14,35,IGDYAGIK,y7,-1
-# peptides1,IGDYAGIK.2,418.72926,31.48,666.345717,14,35,IGDYAGIK,y6,-1
-# peptides1,AEFVEVTK.2,461.74765,33,722.408317,16,35,AEFVEVTK,y6,-1
-# peptides1,AEFVEVTK.2,461.74765,33,476.271489,16,35,AEFVEVTK,y4,-1
-# peptides1,VIFLENYR.2,527.290016,48.53,841.420279,18,35,VIFLENYR,y6,-1
-# peptides1,VIFLENYR.2,527.290016,48.53,581.267801,18,35,VIFLENYR,y4,-1
-# peptides1,LVNELTEFAK.2,582.318971,47.49,951.478188,20,35,LVNELTEFAK,y8,-1
-# peptides1,LVNELTEFAK.2,582.318971,47.49,595.308603,20,35,LVNELTEFAK,y5,-1
-# peptides1,AVIESENSAER.2,602.793849,22.29,921.390829,21,35,AVIESENSAER,y8,-1
-# peptides1,AVIESENSAER.2,602.793849,22.29,792.348236,21,35,AVIESENSAER,y7,-1
-# peptides1,SFELPALPYAK.2,618.337164,57.54,759.439952,22,35,SFELPALPYAK,y7,-1
-# peptides1,SFELPALPYAK.2,618.337164,57.54,478.26601,22,35,SFELPALPYAK,y4,-1
-# peptides1,IQNAGTEVVEAK.2,629.835516,27.8,1017.521115,22,35,IQNAGTEVVEAK,y10,-1
-# peptides1,IQNAGTEVVEAK.2,629.835516,27.8,832.441074,22,35,IQNAGTEVVEAK,y8,-1
-# peptides1,NVNDVIAPAFVK.2,643.858795,48.73,1073.598972,23,35,NVNDVIAPAFVK,y10,-1
-# peptides1,NVNDVIAPAFVK.2,643.858795,48.73,745.460687,23,35,NVNDVIAPAFVK,y7,-1
-# peptides1,VNQIGTLSESIK.2,644.858991,40.93,947.540788,23,35,VNQIGTLSESIK,y9,-1
-# peptides1,VNQIGTLSESIK.2,644.858991,40.93,834.456724,23,35,VNQIGTLSESIK,y8,-1
-# peptides1,VLYPNDNFFEGK.2,721.851166,50.65,1067.47925,26,35,VLYPNDNFFEGK,y9,-1
-# peptides1,VLYPNDNFFEGK.2,721.851166,50.65,856.383559,26,35,VLYPNDNFFEGK,y7,-1
-# peptides1,VVGLSTLPEIYEK.2,724.405775,53.85,1079.561917,26,35,VVGLSTLPEIYEK,y9,-1
-# peptides1,VVGLSTLPEIYEK.2,724.405775,53.85,778.398146,26,35,VVGLSTLPEIYEK,y6,-1
-# peptides1,AALESTLAAITESLK.2,759.424696,69.31,832.477459,27,35,AALESTLAAITESLK,y8,-1
-# peptides1,AALESTLAAITESLK.2,759.424696,69.31,761.440346,27,35,AALESTLAAITESLK,y7,-1
-# >. Actual:<protein.name,peptide.seq,precursor.mz,precursor.retT,product.m_z,collision_energy,cone_voltage,peptide_unmod.seq,ion_name,library_rank
-# peptides1,IGDYAGIK.2,418.72926,31.48,723.367181,14,35,IGDYAGIK,y7,-1
-# peptides1,IGDYAGIK.2,418.72926,31.48,666.345717,14,35,IGDYAGIK,y6,-1
-# peptides1,AEFVEVTK.2,461.74765,33,722.408317,16,35,AEFVEVTK,y6,-1
-# peptides1,AEFVEVTK.2,461.74765,33,476.271489,16,35,AEFVEVTK,y4,-1
-# peptides1,VIFLENYR.2,527.290016,48.53,841.420279,18,35,VIFLENYR,y6,-1
-# peptides1,VIFLENYR.2,527.290016,48.53,581.267801,18,35,VIFLENYR,y4,-1
-# peptides1,LVNELTEFAK.2,582.318971,47.49,951.478188,20,35,LVNELTEFAK,y8,-1
-# peptides1,LVNELTEFAK.2,582.318971,47.49,595.308603,20,35,LVNELTEFAK,y5,-1
-# peptides1,AVIESENSAER.2,602.793849,22.29,921.390829,21,35,AVIESENSAER,y8,-1
-# peptides1,AVIESENSAER.2,602.793849,22.29,792.348236,21,35,AVIESENSAER,y7,-1
-# peptides1,SFELPALPYAK.2,618.337164,57.54,759.439952,22,35,SFELPALPYAK,y7,-1
-# peptides1,SFELPALPYAK.2,618.337164,57.54,478.26601,22,35,SFELPALPYAK,y4,-1
-# peptides1,IQNAGTEVVEAK.2,629.835516,27.8,1017.521115,22,35,IQNAGTEVVEAK,y10,-1
-# peptides1,IQNAGTEVVEAK.2,629.835516,27.8,832.441074,22,35,IQNAGTEVVEAK,y8,-1
-# peptides1,NVNDVIAPAFVK.2,643.858795,48.73,1073.598972,23,35,NVNDVIAPAFVK,y10,-1
-# peptides1,NVNDVIAPAFVK.2,643.858795,48.73,745.460687,23,35,NVNDVIAPAFVK,y7,-1
-# peptides1,VNQIGTLSESIK.2,644.858991,40.93,947.540788,23,35,VNQIGTLSESIK,y9,-1
-# peptides1,VNQIGTLSESIK.2,644.858991,40.93,834.456724,23,35,VNQIGTLSESIK,y8,-1
-# peptides1,VLYPNDNFFEGK.2,721.851166,50.65,1067.47925,26,35,VLYPNDNFFEGK,y9,-1
-# peptides1,VLYPNDNFFEGK.2,721.851166,50.65,856.383559,26,35,VLYPNDNFFEGK,y7,-1
-# peptides1,VVGLSTLPEIYEK.2,724.405775,53.85,1079.561917,26,35,VVGLSTLPEIYEK,y9,-1
-# peptides1,VVGLSTLPEIYEK.2,724.405775,53.85,778.398146,26,35,VVGLSTLPEIYEK,y6,-1
-# peptides1,AALESTLAAITESLK.2,759.424696,69.31,832.477459,27,35,AALESTLAAITESLK,y8,-1
-# peptides1,AALESTLAAITESLK.2,759.424696,69.31,761.440346,27,35,AALESTLAAITESLK,y7,-1
-# >. 
+TestModificationMatcher  # 6 failures (11.54%)
+# Assert.IsTrue failed. 
 #    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreNotEqual[T](T notExpected, T actual, String message, Object[] parameters)
-#    at pwiz.SkylineTestFunctional.ScheduleMethodDlgTest.VerifyRetentionTimeChange(String csvPath1, String csvPath2) in c:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestFunctional\ScheduleMethodDlgTest.cs:line 214
-#    at pwiz.SkylineTestFunctional.ScheduleMethodDlgTest.DoTest() in c:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestFunctional\ScheduleMethodDlgTest.cs:line 123
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.RunTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 445
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.WaitForSkyline() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 411
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(String message, Object[] parameters)
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.RunFunctionalTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 385
-#    at pwiz.SkylineTestFunctional.ScheduleMethodDlgTest.TestScheduleMethodDlg() in c:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestFunctional\ScheduleMethodDlgTest.cs:line 55
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(Boolean condition)
+#    at pwiz.SkylineTestA.ModificationMatcherTest.TestModificationMatcher() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestA\ModificationMatcherTest.cs:line 221
 
-TestExistingExperimentsTutorial  # 1 failures (1.23%)
-# Assert.Fail failed. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.IsTrue failed. Timeout exceeded in WaitForCondition
+RefineResultsTest  # 4 failures (7.69%)
+# Assert.AreSame failed. 
 #    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(Boolean condition, String message, Object[] parameters)
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.WaitForCondition(Int32 millis, Func`1 func) in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 340
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.ImportResultsFile(String fileName) in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 606
-#    at pwiz.SkylineTestTutorial.ExistingExperimentsTutorialTest.DoTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestTutorial\ExistingExperimentsTutorialTest.cs:line 127
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.RunTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 445
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.WaitForSkyline() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 411
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(String message, Object[] parameters)
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.RunFunctionalTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 385
-#    at pwiz.SkylineTestTutorial.ExistingExperimentsTutorialTest.TestExistingExperimentsTutorial() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestTutorial\ExistingExperimentsTutorialTest.cs:line 50
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame(Object expected, Object actual, String message, Object[] parameters)
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.AreSame(Object expected, Object actual)
+#    at pwiz.SkylineTestA.RefineTest.RefineResultsTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestA\RefineTest.cs:line 126
 
-TestCEOptimizationTutorial  # 1 failures (1.23%)
-# Assert.Fail failed. Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.IsTrue failed. Timeout exceeded in WaitForCondition
+ConsoleMethodTest  # 1 failures (1.92%)
+# Assert.IsTrue failed. 
 #    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(Boolean condition, String message, Object[] parameters)
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.WaitForCondition(Int32 millis, Func`1 func) in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 340
-#    at pwiz.SkylineTestTutorial.CEOptimizationTutorialTest.DoTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestTutorial\CEOptimizationTutorialTest.cs:line 106
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.RunTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 445
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.WaitForSkyline() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 411
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.HandleFail(String assertionName, String message, Object[] parameters)
-#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.Fail(String message, Object[] parameters)
-#    at pwiz.SkylineTestUtil.AbstractFunctionalTest.RunFunctionalTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestUtil\TestFunctional.cs:line 385
-#    at pwiz.SkylineTestTutorial.CEOptimizationTutorialTest.TestCEOptimizationTutorial() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestTutorial\CEOptimizationTutorialTest.cs:line 50
+#    at Microsoft.VisualStudio.TestTools.UnitTesting.Assert.IsTrue(Boolean condition)
+#    at pwiz.SkylineTestA.CommandLineTest.ConsoleMethodTest() in C:\Users\donmarsh\Documents\pwiz\pwiz_tools\Skyline\TestA\CommandLineTest.cs:line 299
+
+
+
