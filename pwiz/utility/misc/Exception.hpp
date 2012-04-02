@@ -27,10 +27,11 @@
 
 #include <stdexcept>
 
-
 // make debug assertions throw exceptions in MSVC
 #ifdef _DEBUG
+#define NOMINMAX
 #include <crtdbg.h>
+#include <winsock2.h>
 #include <iostream>
 #include <locale>
 #include <sstream>
@@ -61,6 +62,7 @@ struct ReportHooker
 {
     ReportHooker()
     {
+        SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
         _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
         _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
         _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, &CrtReportHook);
