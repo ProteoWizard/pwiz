@@ -10,7 +10,7 @@
     <DeploymentItem filename="..\Shared\Lib\$(PLATFORM)\System.Data.SQLite.DLL" />
     <DeploymentItem filename="..\Shared\Lib\$(PLATFORM)\SQLite.Interop.DLL" />
     <!-- Vendor readers -->
-    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\$(PLATFORM)\MassLynxRaw.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0\MassLynxRaw.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(PLATFORM)\MSFileReader.XRawfile2.SxS.manifest" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(PLATFORM)\MSFileReader.XRawfile2.dll" />
     <DeploymentItem filename="Interop.EDAL.SxS.manifest" />

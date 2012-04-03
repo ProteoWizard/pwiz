@@ -46,12 +46,6 @@ constant READER_PATH : "pwiz/data/vendor_readers/Waters" ;
 constant READER_NAME : "Reader_Waters" ;
 
 
-if [ glob $(API_PATH)/vc9_scl-0/MassLynxRaw*.dll ]
-{
-    .hasDLLs = true ;
-}
-
-
 rule vendor-api-requirements ( properties * )
 {
     local result ;
@@ -60,10 +54,10 @@ rule vendor-api-requirements ( properties * )
          <toolset-msvc:version>9.0express in $(properties) ||
          <toolset-msvc:version>10.0 in $(properties) ||
          <toolset-msvc:version>10.0express in $(properties) ) &&
-       ! ( <address-model>64 in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs) && ! [ without-binary-msdata ]
+       [ masslynxraw-dll-location $(API_PATH) : $(properties) ] &&
+	   ! [ without-binary-msdata ]
     {
         result += <source>Reader_Waters_Detail.cpp ;
     }
@@ -78,10 +72,10 @@ rule vendor-api-usage-requirements ( properties * )
          <toolset-msvc:version>9.0express in $(properties) ||
          <toolset-msvc:version>10.0 in $(properties) ||
          <toolset-msvc:version>10.0express in $(properties) ) &&
-       ! ( <address-model>64 in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs)  && ! [ without-binary-msdata ]
+       [ masslynxraw-dll-location $(API_PATH) : $(properties) ]  &&
+	   ! [ without-binary-msdata ]
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
         result += <define>PWIZ_READER_WATERS ;
@@ -97,10 +91,6 @@ rule vendor-api-usage-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if <address-model>64 in $(properties)
-        {
-            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
-        }
         else if <runtime-debugging>on in $(properties)
         {
             echo "[$(READER_PATH)] Debug build: $(READER_NAME) can only identify files, not read them." ;
@@ -109,7 +99,7 @@ rule vendor-api-usage-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME) can only identify files, not read them." ;
         }
-        else if ! $(.hasDLLs)
+        else if ! [ masslynxraw-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
         }
@@ -161,10 +151,6 @@ rule test-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
-        else if <address-model>64 in $(properties)
-        {
-            echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
-        }
         else if <runtime-debugging>on in $(properties)
         {
             echo "[$(READER_PATH)] Debug build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
@@ -173,7 +159,7 @@ rule test-requirements ( properties * )
         {
             echo "[$(READER_PATH)] Missing API: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
-        else if ! $(.hasDLLs)
+        else if ! [ masslynxraw-dll-location $(API_PATH) : $(properties) ]
         {
             echo "[$(READER_PATH)] Missing DLL: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }

@@ -32,37 +32,10 @@ if [ modules.peek : NT ]
 
 import path ;
 
-rule masslynxraw-dll-location ( properties * )
-{
-    local result ;
-    if <toolset>msvc in $(properties) &&
-       <runtime-debugging>off
-    {
-        if <toolset-msvc:version>9.0 in $(properties) ||
-           <toolset-msvc:version>9.0express in $(properties)
-        {
-            if <secure-scl>on in $(properties)
-            {
-                result = $(API_PATH)\\vc9_scl-1 ;
-            }
-            else
-            {
-                result = $(API_PATH)\\vc9_scl-0 ;
-            }
-        }
-        if <toolset-msvc:version>10.0 in $(properties) ||
-           <toolset-msvc:version>10.0express in $(properties)
-        {
-            result = $(API_PATH)\\vc10_scl-0 ;
-        }
-    }
-    return $(result) ;
-}
-
 rule vendor-api-requirements ( properties * )
 {
-    local result = [ masslynxraw-dll-location $(properties) ] ;
-    if $(result) && [ path.exists $(result)\\MassLynxRaw.dll ]
+    local result = [ masslynxraw-dll-location $(API_PATH) : $(properties) ] ;
+    if $(result)
     {
         result = <search>$(result) ;
     }
@@ -75,8 +48,8 @@ rule vendor-api-requirements ( properties * )
 
 rule vendor-api-usage-requirements ( properties * )
 {
-    local result = [ masslynxraw-dll-location $(properties) ] ;
-    if $(result) && [ path.exists $(result)\\MassLynxRaw.dll ]
+    local result = [ masslynxraw-dll-location $(API_PATH) : $(properties) ] ;
+    if $(result)
     {
         result = <assembly-dependency>$(result)\\MassLynxRaw.dll ;
     }
@@ -91,8 +64,9 @@ searched-lib pwiz_vendor_api_waters
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
         <conditional>@vendor-api-requirements
         <conditional>@msvc-requirement
-        <address-model>64:<build>no
         <runtime-debugging>on:<build>no
+        <toolset-msvc:version>9.0,<address-model>64:<build>no
+        <toolset-msvc:version>9.0express,<address-model>64:<build>no
         <toolset-msvc:version>10.0,<secure-scl>on:<build>no
         <toolset-msvc:version>10.0express,<secure-scl>on:<build>no
     : # default-build
@@ -114,8 +88,8 @@ explicit RawDataTest ;
 
 rule install-requirements ( properties * )
 {
-    local result = [ masslynxraw-dll-location $(properties) ] ;
-    if $(result) && [ path.exists $(result)\\MassLynxRaw.dll ]
+    local result = [ masslynxraw-dll-location $(API_PATH) : $(properties) ] ;
+    if $(result)
     {
         return <source>$(result)\\MassLynxRaw.dll ;
     }

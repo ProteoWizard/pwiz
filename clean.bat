@@ -59,6 +59,10 @@ del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-1 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_scl-0 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_x86_scl-0 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9__x86_scl-1 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x64_scl-0 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
 
 if %VERBOSE%==1 echo   Cleaning vendor test data...

@@ -51,7 +51,6 @@ rule vendor-api-requirements ( properties * )
 rule vendor-api-usage-requirements ( properties * )
 {
     local result ;
-    local dll_location = [ mhdac-dll-location $(API_PATH) : $(properties) ] ;
     if <toolset>msvc in $(properties) &&
        ! ( ( <toolset-msvc:version>9.0 in $(properties) || 9.0express in $(properties:G=) ) && [ MATCH (x64) : $(PLATFORM) ] ) &&
        [ project-exists $(API_PATH) ] &&

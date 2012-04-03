@@ -92,8 +92,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return !IsDebugMode &&  // no waters library for debug
-                    !Environment.Is64BitProcess;   // no 64-bit reader yet
+                return !IsDebugMode;  // no waters library for debug
             }
         }
 
