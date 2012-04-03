@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Model.Irt
         private IrtDb(String path)
         {
             _path = path;
-            _sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
+            _sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, GetType(), false);
             _databaseLock = new ReaderWriterLock();
         }
 
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.Model.Irt
 
         public static IrtDb CreateIrtDb(string path)
         {
-            using (SessionFactoryFactory.CreateSessionFactory(path, true))
+            using (SessionFactoryFactory.CreateSessionFactory(path, typeof(IrtDb), true))
             {
             }
             var irtDb = new IrtDb(path).Load(null, null);

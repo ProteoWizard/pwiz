@@ -31,7 +31,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib.BlibData
 {
-    public class BlibDb
+    public class BlibDb : IDisposable
     {
         private static readonly Regex REGEX_LSID =
             new Regex("urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)");
@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         private BlibDb(String path)
         {
             FilePath = path;
-            SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
+            SessionFactory = BlibSessionFactoryFactory.CreateSessionFactory(path, false);
             DatabaseLock = new ReaderWriterLock();
         }
 
@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         private void CreateSessionFactory_Redundant(string path)
         {
-            SessionFactory_Redundant = SessionFactoryFactory.CreateSessionFactory_Redundant(path, true);
+            SessionFactory_Redundant = BlibSessionFactoryFactory.CreateSessionFactory_Redundant(path, true);
             DatabaseLock_Redundant = new ReaderWriterLock();
         }
 
@@ -82,10 +82,24 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
         public static BlibDb CreateBlibDb(String path)
         {
-            using (SessionFactoryFactory.CreateSessionFactory(path, true))
+            using (BlibSessionFactoryFactory.CreateSessionFactory(path, true))
             {
             }
             return OpenBlibDb(path);
+        }
+
+        public void Dispose()
+        {
+            if (SessionFactory != null)
+            {
+                SessionFactory.Dispose();
+                SessionFactory = null;
+            }
+            if (SessionFactory_Redundant != null)
+            {
+                SessionFactory_Redundant.Dispose();
+                SessionFactory_Redundant = null;
+            }
         }
 
         public int GetSpectraCount()
@@ -626,19 +640,21 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                     string baseName = Path.GetFileNameWithoutExtension(librarySpec.FilePath);
                     string fileName = GetUniqueName(baseName, usedNames) + BiblioSpecLiteSpec.EXT;
-                    var blibDb = CreateBlibDb(Path.Combine(pathDirectory, fileName));
-                    blibDb.WaitBroker = waitBroker;
-                    string nameMin = librarySpec.Name;
-                    // Avoid adding the modifier a second time, if it has
-                    // already been done once.
-                    if (!nameMin.EndsWith(nameModifier + ")"))
-                        nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier);
-                    var librarySpecMin = new BiblioSpecLiteSpec(nameMin, blibDb.FilePath);
+                    using (var blibDb = CreateBlibDb(Path.Combine(pathDirectory, fileName)))
+                    {
+                        blibDb.WaitBroker = waitBroker;
+                        string nameMin = librarySpec.Name;
+                        // Avoid adding the modifier a second time, if it has
+                        // already been done once.
+                        if (!nameMin.EndsWith(nameModifier + ")"))
+                            nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier);
+                        var librarySpecMin = new BiblioSpecLiteSpec(nameMin, blibDb.FilePath);
 
-                    listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,
-                        pepLibraries.Libraries[i], document));
-                    listLibrarySpecs.Add(librarySpecMin);
-                    dictOldNameToNew.Add(librarySpec.Name, librarySpecMin.Name);
+                        listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,
+                            pepLibraries.Libraries[i], document));
+                        listLibrarySpecs.Add(librarySpecMin);
+                        dictOldNameToNew.Add(librarySpec.Name, librarySpecMin.Name);
+                    }
                 }
 
                 document = (SrmDocument) document.ChangeAll(node =>

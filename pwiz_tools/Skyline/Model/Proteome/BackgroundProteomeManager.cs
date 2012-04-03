@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model.Proteome
                     using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
                     {
                         File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
-                        var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName);
+                        var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName, true);
                         var digestion = digestHelper.Digest(ref progressStatus);
 
                         if (digestion == null)
@@ -169,6 +169,7 @@ namespace pwiz.Skyline.Model.Proteome
             private readonly SrmDocument _document;
             private readonly string _nameProteome;
             private readonly string _pathProteome;
+            private readonly bool _isTempPath;
 
             private ProgressStatus _progressStatus;
 
@@ -176,28 +177,39 @@ namespace pwiz.Skyline.Model.Proteome
                                 IDocumentContainer container,
                                 SrmDocument document,
                                 string nameProteome,
-                                string pathProteome)
+                                string pathProteome,
+                                bool isTempPath)
             {
                 _manager = manager;
                 _container = container;
                 _document = document;
                 _nameProteome = nameProteome;
                 _pathProteome = pathProteome;
+                _isTempPath = isTempPath;
             }
 
 // ReSharper disable RedundantAssignment
             public Digestion Digest(ref ProgressStatus progressStatus)
 // ReSharper restore RedundantAssignment
             {
-                var proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome);
-                var enzyme = _document.Settings.PeptideSettings.Enzyme;
-                
-                _progressStatus = new ProgressStatus(
-                    string.Format("Digesting {0} proteome with {1}", _nameProteome, enzyme.Name));
-                var digestion = proteomeDb.Digest(new ProteaseImpl(enzyme), Progress);
-                progressStatus = _progressStatus;
+                ProteomeDb proteomeDb = null;
+                try
+                {
+                    proteomeDb = ProteomeDb.OpenProteomeDb(_pathProteome, _isTempPath);
+                    var enzyme = _document.Settings.PeptideSettings.Enzyme;
 
-                return digestion;
+                    _progressStatus = new ProgressStatus(
+                        string.Format("Digesting {0} proteome with {1}", _nameProteome, enzyme.Name));
+                    var digestion = proteomeDb.Digest(new ProteaseImpl(enzyme), Progress);
+                    progressStatus = _progressStatus;
+
+                    return digestion;
+                }
+                finally
+                {
+                    if (proteomeDb != null && _isTempPath)
+                        proteomeDb.Dispose();
+                }
             }
 
             private bool Progress(string taskname, int progress)

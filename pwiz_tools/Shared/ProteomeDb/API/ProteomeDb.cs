@@ -35,33 +35,44 @@ namespace pwiz.ProteomeDatabase.API
     /// <summary>
     /// Public interface to a proteome database.
     /// </summary>
-    public class ProteomeDb
+    public class ProteomeDb : IDisposable
     {
         public const string EXT_PROTDB = ".protdb";
 
+        private static readonly Type TYPE_DB = typeof(DbDigestion);
         private static readonly Dictionary<String, ProteomeDb> PROTEOME_DBS = new Dictionary<string, ProteomeDb>();
         public const int MIN_SEQUENCE_LENGTH = 4;
         public const int MAX_SEQUENCE_LENGTH = 7;
         private ProteomeDb(String path)
         {
             Path = path;
-            SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
+            SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, TYPE_DB, false);
             DatabaseLock = new ReaderWriterLock();
+        }
+
+        public void Dispose()
+        {
+            if (SessionFactory != null)
+            {
+                SessionFactory.Dispose();
+                SessionFactory = null;
+            }
         }
 
         public ISession OpenSession()
         {
             return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
         }
+
         public ISession OpenWriteSession()
         {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
+            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);        
         }
         public ReaderWriterLock DatabaseLock { get; private set; }
         public String Path { get; private set; }
         public void ConfigureMappings(Configuration configuration)
         {
-            SessionFactoryFactory.ConfigureMappings(configuration);
+            SessionFactoryFactory.ConfigureMappings(configuration, TYPE_DB);
         }
 
         private struct ProtIdNames
@@ -159,9 +170,11 @@ namespace pwiz.ProteomeDatabase.API
         /// </summary>
         private static void AnalyzeDb(ISession session)
         {
-            var command = session.Connection.CreateCommand();
-            command.CommandText = "Analyze;";
-            command.ExecuteNonQuery();
+            using(IDbCommand command = session.Connection.CreateCommand())
+            {
+                command.CommandText = "Analyze;";
+                command.ExecuteNonQuery();
+            }
         }
 
         public int GetProteinCount()
@@ -175,13 +188,17 @@ namespace pwiz.ProteomeDatabase.API
         }
         public void AttachDatabase(IDbConnection connection)
         {
-            IDbCommand command = connection.CreateCommand();
-            command.CommandText = "ATTACH DATABASE '" + Path + "' AS ProteomeDb";
-            command.ExecuteNonQuery();
+            using(IDbCommand command = connection.CreateCommand())
+            {
+                command.CommandText = "ATTACH DATABASE '" + Path + "' AS ProteomeDb";
+                command.ExecuteNonQuery();
+            }
         }
         private ISessionFactory SessionFactory { get; set; }
-        public static ProteomeDb OpenProteomeDb(String path)
+        public static ProteomeDb OpenProteomeDb(String path, bool isTempDb = false)
         {
+            if (isTempDb)
+                return new ProteomeDb(path);
             lock (PROTEOME_DBS)
             {
                 ProteomeDb proteomeDb;
@@ -196,10 +213,20 @@ namespace pwiz.ProteomeDatabase.API
 
         public static ProteomeDb CreateProteomeDb(String path)
         {
-            using (SessionFactoryFactory.CreateSessionFactory(path, true))
+            using (SessionFactoryFactory.CreateSessionFactory(path, TYPE_DB, true))
             {
             }
             return OpenProteomeDb(path);
+        }
+
+        public static void ClearCache()
+        {
+            lock (PROTEOME_DBS)
+            {
+                foreach (var proteomeDb in PROTEOME_DBS.Values)
+                    proteomeDb.Dispose();
+                PROTEOME_DBS.Clear();
+            }
         }
 
         public IList<Digestion> ListDigestions()
@@ -325,55 +352,57 @@ namespace pwiz.ProteomeDatabase.API
                         = new Dictionary<string, long>();
                     const String sqlPeptide =
                             "INSERT INTO ProteomeDbDigestedPeptide (Digestion, Sequence) VALUES(?,?);select last_insert_rowid();";
-                    var commandPeptide = session.Connection.CreateCommand();
-                    commandPeptide.CommandText = sqlPeptide;
-                    commandPeptide.Parameters.Add(new SQLiteParameter());
-                    commandPeptide.Parameters.Add(new SQLiteParameter());
-                    const String sqlPeptideProtein =
-                        "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);";
-                    var commandProtein = session.Connection.CreateCommand();
-                    commandProtein.CommandText = sqlPeptideProtein;
-                    commandProtein.Parameters.Add(new SQLiteParameter());
-                    commandProtein.Parameters.Add(new SQLiteParameter());
-                    commandProtein.Parameters.Add(new SQLiteParameter());
-                    for (int i = 0; i < proteins.Count; i++)
+                    using (var commandPeptide = session.Connection.CreateCommand())
                     {
-                        var proteinSequences = new HashSet<string>();
-                        if (!progressMonitor.Invoke("Digesting " + proteins.Count
-                            + " proteins", 100 * i / proteins.Count))
+                        commandPeptide.CommandText = sqlPeptide;
+                        commandPeptide.Parameters.Add(new SQLiteParameter());
+                        commandPeptide.Parameters.Add(new SQLiteParameter());
+                        const String sqlPeptideProtein =
+                            "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);";
+                        var commandProtein = session.Connection.CreateCommand();
+                        commandProtein.CommandText = sqlPeptideProtein;
+                        commandProtein.Parameters.Add(new SQLiteParameter());
+                        commandProtein.Parameters.Add(new SQLiteParameter());
+                        commandProtein.Parameters.Add(new SQLiteParameter());
+                        for (int i = 0; i < proteins.Count; i++)
                         {
-                            return null;
-                        }
-                        Protein protein = new Protein(this, proteins[i]);
+                            var proteinSequences = new HashSet<string>();
+                            if (!progressMonitor.Invoke("Digesting " + proteins.Count
+                                + " proteins", 100 * i / proteins.Count))
+                            {
+                                return null;
+                            }
+                            Protein protein = new Protein(this, proteins[i]);
 
-                        foreach (DigestedPeptide digestedPeptide in protease.Digest(protein))
-                        {
-                            if (digestedPeptide.Sequence.Length < dbDigestion.MinSequenceLength)
+                            foreach (DigestedPeptide digestedPeptide in protease.Digest(protein))
                             {
-                                continue;
+                                if (digestedPeptide.Sequence.Length < dbDigestion.MinSequenceLength)
+                                {
+                                    continue;
+                                }
+                                String truncatedSequence = digestedPeptide.Sequence.Substring(
+                                    0, Math.Min(digestedPeptide.Sequence.Length, dbDigestion.MaxSequenceLength));
+                                if (existingSequences.Contains(truncatedSequence))
+                                {
+                                    continue;
+                                }
+                                if (proteinSequences.Contains(truncatedSequence))
+                                {
+                                    continue;
+                                }
+                                proteinSequences.Add(truncatedSequence);
+                                long digestedPeptideId;
+                                if (!digestedPeptideIds.TryGetValue(truncatedSequence, out digestedPeptideId))
+                                {
+                                    ((SQLiteParameter)commandPeptide.Parameters[0]).Value = dbDigestion.Id;
+                                    ((SQLiteParameter)commandPeptide.Parameters[1]).Value = truncatedSequence;
+                                    digestedPeptideId = Convert.ToInt64(commandPeptide.ExecuteScalar());
+                                    digestedPeptideIds.Add(truncatedSequence, digestedPeptideId);
+                                }
+                                ((SQLiteParameter)commandProtein.Parameters[0]).Value = digestedPeptideId;
+                                ((SQLiteParameter)commandProtein.Parameters[1]).Value = protein.Id;
+                                commandProtein.ExecuteNonQuery();
                             }
-                            String truncatedSequence = digestedPeptide.Sequence.Substring(
-                                0, Math.Min(digestedPeptide.Sequence.Length, dbDigestion.MaxSequenceLength));
-                            if (existingSequences.Contains(truncatedSequence))
-                            {
-                                continue;
-                            }
-                            if (proteinSequences.Contains(truncatedSequence))
-                            {
-                                continue;
-                            }
-                            proteinSequences.Add(truncatedSequence);
-                            long digestedPeptideId;
-                            if (!digestedPeptideIds.TryGetValue(truncatedSequence, out digestedPeptideId))
-                            {
-                                ((SQLiteParameter)commandPeptide.Parameters[0]).Value = dbDigestion.Id;
-                                ((SQLiteParameter)commandPeptide.Parameters[1]).Value = truncatedSequence;
-                                digestedPeptideId = Convert.ToInt64(commandPeptide.ExecuteScalar());
-                                digestedPeptideIds.Add(truncatedSequence, digestedPeptideId);
-                            }
-                            ((SQLiteParameter)commandProtein.Parameters[0]).Value = digestedPeptideId;
-                            ((SQLiteParameter)commandProtein.Parameters[1]).Value = protein.Id;
-                            commandProtein.ExecuteNonQuery();
                         }
                     }
                     if (!progressMonitor.Invoke("Committing transaction", 99))

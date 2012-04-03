@@ -53,6 +53,13 @@ namespace pwiz.Skyline.FileUI
                 listboxReports.SelectedIndex = 0;
         }
 
+        protected override void  DestroyHandle()
+        {
+            if (_database != null)
+                _database.Dispose();
+ 	        base.DestroyHandle();
+        }
+
         public string ReportName
         {
             get { return ListBox.SelectedItem != null ? ListBox.SelectedItem.ToString() : null; }

@@ -38,13 +38,13 @@
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily/</InstallUrl>
-    <SupportUrl>https://brendanx-uw1.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
+    <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3360</ApplicationRevision>
-    <ApplicationVersion>1.2.1.3360</ApplicationVersion>
+    <ApplicationRevision>3437</ApplicationRevision>
+    <ApplicationVersion>1.2.1.3437</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -422,7 +422,6 @@
     <Compile Include="Model\Irt\IrtDb.cs" />
     <Compile Include="Model\Irt\IrtDbManager.cs" />
     <Compile Include="Model\Irt\RCalcIrt.cs" />
-    <Compile Include="Model\Irt\SessionFactoryFactory.cs" />
     <Compile Include="Model\IsotopeLabelType.cs" />
     <Compile Include="Model\LibKeyModificationMatcher.cs">
       <SubType>Code</SubType>
@@ -434,7 +433,7 @@
     <Compile Include="Model\Lib\BlibData\DbRefSpectra.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeaks.cs" />
     <Compile Include="Model\Lib\BlibData\DbRetentionTimes.cs" />
-    <Compile Include="Model\Lib\BlibData\SessionFactoryFactory.cs" />
+    <Compile Include="Model\Lib\BlibData\BlibSessionFactoryFactory.cs" />
     <Compile Include="Model\Lib\BlibData\DbSpectrumSourceFiles.cs" />
     <Compile Include="Model\Lib\LibraryRankedSpectrumInfo.cs" />
     <Compile Include="Model\MemoryDocumentContainer.cs" />

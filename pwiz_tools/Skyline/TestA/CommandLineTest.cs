@@ -148,12 +148,14 @@ namespace pwiz.SkylineTestA
             doc = CommandLine.ImportResults(doc, docPath, "Single", rawPath, out status);
             Assert.IsNull(status);
 
-            Database database = new Database(doc.Settings);
-            database.AddSrmDocument(doc);
-            ResultSet resultSet = report.Execute(database);
+            using(Database database = new Database(doc.Settings))
+            {
+                database.AddSrmDocument(doc);
+                ResultSet resultSet = report.Execute(database);
 
-            ResultSet.WriteReportHelper(resultSet, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture), reportWriter,
-                                              CultureInfo.CurrentCulture);
+                ResultSet.WriteReportHelper(resultSet, TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture), reportWriter,
+                                                  CultureInfo.CurrentCulture);
+            }
 
             reportWriter.Flush();
 

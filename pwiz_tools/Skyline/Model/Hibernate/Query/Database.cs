@@ -34,11 +34,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     /// <summary>
     /// In-memory SQLite database that holds all of the queryable information in the document.
     /// </summary>
-    public class Database
+    public class Database : IDisposable
     {
         private readonly ISessionFactory _sessionFactory;
         private readonly ISession _session;
         private DataSettings _dataSettings;
+        private bool _isDisposed;
 
         public Database()
             : this(null)
@@ -55,6 +56,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             _sessionFactory = configuration.BuildSessionFactory();
             _session = _sessionFactory.OpenSession();
             new SchemaExport(configuration).Execute(false, true, false, _session.Connection, null);
+        }
+
+        public void Dispose()
+        {
+            if (!_isDisposed)
+            {
+                _isDisposed = true;
+                _sessionFactory.Dispose();
+                _session.Dispose();
+            }
         }
 
         public ILongWaitBroker LongWaitBroker { get; set; }

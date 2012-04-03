@@ -1020,18 +1020,19 @@ namespace pwiz.Skyline
                     {
                         Report report = Report.Load(reportSpec);
 
-                        Database database = new Database(_doc.Settings)
+                        using (Database database = new Database(_doc.Settings)
                         {
                             LongWaitBroker = new CommandWaitBroker(_out),
                             PercentOfWait = 100
-                        };
+                        })
+                        {
+                            database.AddSrmDocument(_doc);
 
-                        database.AddSrmDocument(_doc);
+                            ResultSet resultSet = report.Execute(database);
 
-                        ResultSet resultSet = report.Execute(database);
-
-                        ResultSet.WriteReportHelper(resultSet, reportColSeparator, writer,
-                                                          CultureInfo.CurrentCulture);
+                            ResultSet.WriteReportHelper(resultSet, reportColSeparator, writer,
+                                                        CultureInfo.CurrentCulture);
+                        }
 
                         writer.Flush();
 

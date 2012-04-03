@@ -23,6 +23,8 @@ using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Windows.Forms;
+using NHibernate;
+using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Util
@@ -392,6 +394,50 @@ namespace pwiz.Skyline.Util
         /// Used to close the stream when it is not associated with the active
         /// document.
         /// </summary>
+        public void CloseStream()
+        {
+            Disconnect();
+        }
+    }
+
+    public sealed class PooledSessionFactory : ConnectionId<ISessionFactory>, IPooledStream
+    {
+        public PooledSessionFactory(ConnectionPool connectionPool, Type typeDb, string filePath)
+            : base(connectionPool)
+        {
+            TypeDb = typeDb;
+            FilePath = filePath;
+            FileTime = File.GetLastWriteTime(FilePath);
+        }
+
+        private Type TypeDb { get; set; }
+        private string FilePath { get; set; }
+        private DateTime FileTime { get; set; }
+
+        protected override IDisposable Connect()
+        {
+            return SessionFactoryFactory.CreateSessionFactory(FilePath, TypeDb, false);
+        }
+
+        Stream IPooledStream.Stream
+        {
+            get { throw new InvalidOperationException(); }
+        }
+
+        public bool IsModified
+        {
+            get
+            {
+                // If it is still in the pool, then it can't have been modified
+                return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(FilePath));
+            }
+        }
+
+        public bool IsOpen
+        {
+            get { return ConnectionPool.IsInPool(this); }
+        }
+
         public void CloseStream()
         {
             Disconnect();

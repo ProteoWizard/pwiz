@@ -16,17 +16,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System;
 using System.Data.SQLite;
 using System.Reflection;
 using NHibernate;
 using NHibernate.Cfg;
 
-namespace pwiz.ProteomeDatabase.DataModel
+namespace pwiz.ProteomeDatabase.Util
 {
+    // TODO: Move to Common
     public static class SessionFactoryFactory
     {
-        public static ISessionFactory CreateSessionFactory(String path, bool createSchema)
+        private const string DEFAULT_SCHEMA_FILENAME = "mapping.xml";
+
+        public static ISessionFactory CreateSessionFactory(String path, Type typeDb, bool createSchema)
+        {
+            return CreateSessionFactory(path, typeDb, DEFAULT_SCHEMA_FILENAME, createSchema);
+        }
+
+        public static ISessionFactory CreateSessionFactory(String path, Type typeDb, string schemaFilename, bool createSchema)
         {
             Configuration configuration = new Configuration()
                 //.SetProperty("show_sql", "true")
@@ -43,15 +52,16 @@ namespace pwiz.ProteomeDatabase.DataModel
             }
             configuration.SetProperty("connection.provider", 
                 typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
-            ConfigureMappings(configuration);
+            ConfigureMappings(configuration, typeDb, schemaFilename);
             ISessionFactory sessionFactory = configuration.BuildSessionFactory();
             return sessionFactory;
         }
-        public static Configuration ConfigureMappings(Configuration configuration)
+
+        public static Configuration ConfigureMappings(Configuration configuration, Type typeDb, string schemaFilename = DEFAULT_SCHEMA_FILENAME)
         {
-            Assembly assembly = typeof(SessionFactoryFactory).Assembly;
+            Assembly assembly = typeDb.Assembly;
             return configuration.AddInputStream(
-                assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml"));
+                assembly.GetManifestResourceStream(typeDb.Namespace + "." + schemaFilename));
         }
     }
 }
