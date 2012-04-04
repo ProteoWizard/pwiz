@@ -31,7 +31,7 @@
 #ifdef _DEBUG
 #define NOMINMAX
 #include <crtdbg.h>
-#include <winsock2.h>
+#include <windows.h>
 #include <iostream>
 #include <locale>
 #include <sstream>
