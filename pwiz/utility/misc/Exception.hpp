@@ -29,12 +29,15 @@
 
 // make debug assertions throw exceptions in MSVC
 #ifdef _DEBUG
-#define NOMINMAX
 #include <crtdbg.h>
-#include <windows.h>
 #include <iostream>
 #include <locale>
 #include <sstream>
+
+// preprocessed prototype of SetErrorMode so windows.h doesn't have to be included;
+// this requires linking to the shared runtime but pwiz always does that on Windows
+extern "C" __declspec(dllimport) unsigned int __stdcall SetErrorMode(unsigned int uMode);
+
 namespace {
 
 inline std::string narrow(const std::wstring& str)
@@ -62,7 +65,7 @@ struct ReportHooker
 {
     ReportHooker()
     {
-        SetErrorMode(SetErrorMode(0) | SEM_NOGPFAULTERRORBOX);
+        SetErrorMode(SetErrorMode(0) | 0x0002); // SEM_NOGPFAULTERRORBOX
         _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
         _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
         _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, &CrtReportHook);
