@@ -91,12 +91,10 @@ unsigned long ReferenceWrite_mz5::getParamGroupId(
     if (paramGroupMapping_.find(id) != paramGroupMapping_.end())
     {
         unsigned long ret = paramGroupMapping_.find(id)->second;
-        //        cout << "already in list" << endl;
         return ret;
     }
     else
     {
-        //        cout << "add to list" << endl;
         unsigned long ret = paramGroupList_.size();
         paramGroupMapping_.insert(
                 std::pair<std::string, unsigned long>(id, ret));
@@ -108,7 +106,6 @@ unsigned long ReferenceWrite_mz5::getParamGroupId(
         {
             paramGroupList_.push_back(*pg5);
         }
-        //        cout << paramGroupList_[0].id << endl;
         return ret;
     }
     return ULONG_MAX;
@@ -360,11 +357,11 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
     {
         std::vector<unsigned long> sindex;
         sindex.reserve(sl->size());
-        unsigned long accIndex = 0;
+        size_t accIndex = 0;
 
         pwiz::msdata::SpectrumPtr sp;
         pwiz::msdata::BinaryDataArrayPtr bdap;
-        std::vector<double> mz, inten;
+        std::vector<double> mz;
         for (size_t i = 0; i < sl->size(); i++)
         {
             status = pwiz::util::IterationListener::Status_Ok;
@@ -376,28 +373,28 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteSpectra(
                 break;
 
             sp = sl->spectrum(i, true);
-            if (sp.get() && sp->getMZArray().get()
-                    && sp->getIntensityArray().get())
+            mz.clear();
+            if (sp.get())
             {
-                mz = sp->getMZArray().get()->data;
-                inten = sp->getIntensityArray().get()->data;
                 spl.push_back(SpectrumMZ5(*sp.get(), *this));
-                bdl.push_back(BinaryDataMZ5(*sp->getMZArray().get(),
-                        *sp->getIntensityArray().get(), *this));
-                if (inten.size() > 0)
+                if (sp->getMZArray().get() && sp->getIntensityArray().get())
                 {
-                    if (connection.getConfiguration().doFiltering())
+                    mz = sp->getMZArray().get()->data;
+                    bdl.push_back(BinaryDataMZ5(*sp->getMZArray().get(),
+                        *sp->getIntensityArray().get(), *this));
+                    if (mz.size() > 0)
                     {
-                        Translator_mz5::filter(mz, inten);
+                        if (connection.getConfiguration().doTranslating())
+                        {
+                            Translator_mz5::translateMZ(mz);
+                        }
+                        accIndex += mz.size();
+                        connection.extendData(mz, Configuration_mz5::SpectrumMZ);
+                        connection.extendData(sp->getIntensityArray().get()->data,
+                                Configuration_mz5::SpectrumIntensity);
                     }
-                    if (connection.getConfiguration().doTranslating())
-                    {
-                        Translator_mz5::translate(mz, inten);
-                    }
-                    accIndex += static_cast<unsigned long> (inten.size());
-                    connection.extendData(mz, Configuration_mz5::SpectrumMZ);
-                    connection.extendData(inten,
-                            Configuration_mz5::SpectrumIntensity);
+                } else {
+                    bdl.push_back(BinaryDataMZ5());
                 }
             }
             sindex.push_back(accIndex);
@@ -439,21 +436,27 @@ pwiz::util::IterationListener::Status ReferenceWrite_mz5::readAndWriteChromatogr
                 if (status == pwiz::util::IterationListener::Status_Cancel)
                     break;
                 cp = cl->chromatogram(i, true);
-                if (cp.get() && cp->getTimeArray().get()
-                        && cp->getIntensityArray().get())
+                time.clear();
+                inten.clear();
+                if (cp.get())
                 {
-                    time = cp->getTimeArray().get()->data;
-                    inten = cp->getIntensityArray().get()->data;
                     cpl.push_back(ChromatogramMZ5(*cp.get(), *this));
-                    bdl.push_back(BinaryDataMZ5(*cp->getTimeArray().get(),
-                            *cp->getIntensityArray().get(), *this));
-                    if (inten.size() > 0)
+                    if (cp->getTimeArray().get() && cp->getIntensityArray().get())
                     {
-                        accIndex += inten.size();
-                        connection.extendData(time,
-                                Configuration_mz5::ChomatogramTime);
-                        connection.extendData(inten,
-                                Configuration_mz5::ChromatogramIntensity);
+                        time = cp->getTimeArray().get()->data;
+                        inten = cp->getIntensityArray().get()->data;
+                        bdl.push_back(BinaryDataMZ5(*cp->getTimeArray().get(),
+                            *cp->getIntensityArray().get(), *this));
+                        if (inten.size() > 0)
+                        {
+                            accIndex += inten.size();
+                            connection.extendData(time,
+                                    Configuration_mz5::ChomatogramTime);
+                            connection.extendData(inten,
+                                    Configuration_mz5::ChromatogramIntensity);
+                        }
+                    } else {
+                        bdl.push_back(BinaryDataMZ5());
                     }
                 }
                 cindex.push_back(accIndex);

@@ -67,6 +67,8 @@ class Configuration_mz5;
 /**
  * General mz5 file information.
  * This struct contains information about the mz5 version, and how to handle specific data sets.
+ *
+ * The functionality of didFiltering is removed, but it will stay in the FileInformationMZ5Data struct.
  */
 struct FileInformationMZ5Data
 {
@@ -275,6 +277,7 @@ struct ParamListMZ5: ParamListMZ5Data
             const ReferenceWrite_mz5& wref);
     ParamListMZ5& operator=(const ParamListMZ5&);
     ~ParamListMZ5();
+    bool empty();
     void init(const unsigned long cvstart, const unsigned long cvend,
             const unsigned long usrstart, const unsigned long usrend,
             const unsigned long refstart, const unsigned long refend);
@@ -799,6 +802,7 @@ struct BinaryDataMZ5
             const ReferenceWrite_mz5& wref);
     BinaryDataMZ5& operator=(const BinaryDataMZ5&);
     ~BinaryDataMZ5();
+    bool empty();
     void init(const ParamListMZ5& xParams, const ParamListMZ5& yParams,
             const RefMZ5& refDPx, const RefMZ5& refDPy);
     void fill(pwiz::msdata::BinaryDataArray& bdax,

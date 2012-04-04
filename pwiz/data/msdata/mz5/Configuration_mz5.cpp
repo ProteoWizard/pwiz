@@ -43,20 +43,20 @@ Configuration_mz5::Configuration_mz5()
             = pwiz::msdata::BinaryDataEncoder::Precision_64;
     config_.binaryDataEncoderConfig.compression
             = pwiz::msdata::BinaryDataEncoder::Compression_Zlib;
-    init(false, true, true);
+    init(true, true);
 }
 
 Configuration_mz5::Configuration_mz5(const Configuration_mz5& config)
 {
     config_ = config.config_;
-    init(config.doFiltering(), config.doTranslating(), config.doTranslating());
+    init(config.doTranslating(), config.doTranslating());
 }
 
 Configuration_mz5::Configuration_mz5(
         const pwiz::msdata::MSDataFile::WriteConfig& config)
 {
     config_ = config;
-    init(false, true, true);
+    init(true, true);
 }
 
 Configuration_mz5& Configuration_mz5::operator=(const Configuration_mz5& rhs)
@@ -64,12 +64,12 @@ Configuration_mz5& Configuration_mz5::operator=(const Configuration_mz5& rhs)
     if (this != &rhs)
     {
         this->config_ = rhs.config_;
-        init(rhs.doFiltering(), rhs.doTranslating(), rhs.doTranslating());
+        init(rhs.doTranslating(), rhs.doTranslating());
     }
     return *this;
 }
 
-void Configuration_mz5::init(const bool filter, const bool deltamz,
+void Configuration_mz5::init(const bool deltamz,
         const bool translateinten)
 {
     variableNames_.insert(std::pair<MZ5DataSets, std::string>(
@@ -261,7 +261,7 @@ void Configuration_mz5::init(const bool filter, const bool deltamz,
     hsize_t spectrumChunkSize = 5000L; // 1000=faster random read, 10000=better compression
     hsize_t chromatogramChunkSize = 1000L;
     hsize_t spectrumMetaChunkSize = 2000L; // should be modified in case of on demand access
-    //	hsize_t chromatogramMetaChunkSize = 10L; // usually one experiment does not contain a lot of chromatograms, so this chunk size is small in order to save storage space
+    // hsize_t chromatogramMetaChunkSize = 10L; // usually one experiment does not contain a lot of chromatograms, so this chunk size is small in order to save storage space
     hsize_t cvparamChunkSize = 5000L;
     hsize_t userparamChunkSize = 100L;
 
@@ -307,10 +307,10 @@ void Configuration_mz5::init(const bool filter, const bool deltamz,
         variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(
                 SpectrumIndex, spectrumMetaChunkSize));
         // should not affect file size to much, if chromatogram information are not compressed
-        //		variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(ChromatogramMetaData, chromatogramMetaChunkSize));
-        //		variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(ChromatogramBinaryMetaData,
-        //				chromatogramMetaChunkSize));
-        //		variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(ChromatogramIndex, chromatogramMetaChunkSize));
+        //  variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(ChromatogramMetaData, chromatogramMetaChunkSize));
+        //  variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(ChromatogramBinaryMetaData,
+        //   chromatogramMetaChunkSize));
+        //   variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(ChromatogramIndex, chromatogramMetaChunkSize));
         variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(CVParam,
                 cvparamChunkSize));
         variableChunkSizes_.insert(std::pair<MZ5DataSets, hsize_t>(UserParam,
@@ -324,8 +324,6 @@ void Configuration_mz5::init(const bool filter, const bool deltamz,
 
     spectrumLoadPolicy_ = SLP_InitializeAllOnFirstCall;
     chromatogramLoadPolicy_ = CLP_InitializeAllOnFirstCall;
-
-    doFiltering_ = filter;
 }
 
 const std::string& Configuration_mz5::getNameFor(const MZ5DataSets v)
@@ -399,16 +397,6 @@ const Configuration_mz5::SpectrumLoadPolicy& Configuration_mz5::getSpectrumLoadP
 const Configuration_mz5::ChromatogramLoadPolicy& Configuration_mz5::getChromatogramLoadPolicy() const
 {
     return chromatogramLoadPolicy_;
-}
-
-const bool Configuration_mz5::doFiltering() const
-{
-    return doFiltering_;
-}
-
-void Configuration_mz5::setFiltering(const bool flag) const
-{
-    doFiltering_ = flag;
 }
 
 const bool Configuration_mz5::doTranslating() const

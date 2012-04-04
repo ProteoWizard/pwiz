@@ -283,19 +283,6 @@ public:
     const ChromatogramLoadPolicy& getChromatogramLoadPolicy() const;
 
     /**
-     * Getter for filter flag.
-     * Filtering will remove all 0 intensity values in all mass spectra. This requires O(n) time and a extra copy of the filtered mass spectrum.
-     * @return true if filtering is enabled, otherwise false.
-     */
-    const bool doFiltering() const;
-
-    /**
-     * Setter for filter flag.
-     * @param flag true if filtering is enabled
-     */
-    void setFiltering(const bool flag) const;
-
-    /**
      * Getter for translation flag.
      * If this flag is set, mz values of mass spectra are saved as delta mz's. This greatly improves compression rate and significantly reduces file size.
      * @return true of tranlating is enabled, otherwise false.
@@ -334,7 +321,7 @@ private:
     /**
      * Initializes configuration object.
      */
-    void init(const bool filter, const bool deltamz, const bool translateinten);
+    void init(const bool deltamz, const bool translateinten);
 
     /**
      * Internal copy of pwiz configuration object.
@@ -377,9 +364,9 @@ private:
      */
     ChromatogramLoadPolicy chromatogramLoadPolicy_;
     /**
-     * flags for filtering and translation.
+     * flag for translation.
      */
-    mutable bool doFiltering_, doTranslating_;
+    mutable bool doTranslating_;
     /**
      * Compression level. If compression level is > 0, shuffle is enable by default.
      */

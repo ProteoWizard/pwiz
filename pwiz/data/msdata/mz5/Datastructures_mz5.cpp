@@ -30,7 +30,9 @@
 #include <stdexcept>
 #include <cstring>
 
-//TODO get rid of all the unnecessary copy constructor calls of CVParams
+// TODO get rid of all the unnecessary copy constructor calls of CVParams
+// TODO store often used data structures in hdf5
+// TODO get rid of all vlen data types
 
 namespace pwiz {
 namespace msdata {
@@ -55,6 +57,7 @@ char* c_string(const std::string& s)
     return ret;
 }
 
+// get rid of this function
 char* strcpyi(const char* src)
 {
     if (src)
@@ -117,7 +120,7 @@ FileInformationMZ5::FileInformationMZ5()
 {
     this->majorVersion = Configuration_mz5::MZ5_FILE_MAJOR_VERSION;
     this->minorVersion = Configuration_mz5::MZ5_FILE_MINOR_VERSION;
-    this->didFiltering = 1;
+    this->didFiltering = 0;
     this->deltaMZ = 1;
     this->translateInten = 1;
 }
@@ -130,7 +133,7 @@ FileInformationMZ5::FileInformationMZ5(const FileInformationMZ5& rhs)
 
 FileInformationMZ5::FileInformationMZ5(const Configuration_mz5& c)
 {
-    unsigned short didfiltering = c.doFiltering() ? 1 : 0;
+    unsigned short didfiltering = 0;
     unsigned short deltamz = c.doTranslating() ? 1 : 0;
     unsigned short translateinten = c.doTranslating() ? 1 : 0;
     init(Configuration_mz5::MZ5_FILE_MAJOR_VERSION,
@@ -651,17 +654,10 @@ RefListMZ5::~RefListMZ5()
 void RefListMZ5::init(const RefMZ5* list, const size_t len)
 {
     this->len = len;
-    if (this->len > 0)
+    this->list = new RefMZ5[this->len];
+    for (unsigned long i = 0; i < this->len; ++i)
     {
-        this->list = new RefMZ5[this->len];
-        for (unsigned long i = 0; i < this->len; ++i)
-        {
-            this->list[i] = list[i];
-        }
-    }
-    else
-    {
-        this->list = 0;
+        this->list[i] = list[i];
     }
 }
 
@@ -791,6 +787,12 @@ ParamListMZ5& ParamListMZ5::operator=(const ParamListMZ5& rhs)
 
 ParamListMZ5::~ParamListMZ5()
 {
+}
+
+bool ParamListMZ5::empty() {
+    return this->cvParamEndID == 0
+            && this->userParamEndID == 0
+            && this->refParamGroupEndID == 0;
 }
 
 void ParamListMZ5::init(const unsigned long cvstart, const unsigned long cvend,
@@ -1250,14 +1252,10 @@ ParamListsMZ5::~ParamListsMZ5()
 void ParamListsMZ5::init(const ParamListMZ5* list, const size_t len)
 {
     this->len = len;
-    if (this->len != 0) {
-        this->lists = new ParamListMZ5[this->len];
-        for (unsigned long i = 0; i < this->len; ++i)
-        {
-            this->lists[i] = list[i];
-        }
-    } else {
-        this->lists = 0;
+    this->lists = new ParamListMZ5[this->len];
+    for (unsigned long i = 0; i < this->len; ++i)
+    {
+        this->lists[i] = list[i];
     }
 }
 
@@ -1514,17 +1512,10 @@ ComponentListMZ5::~ComponentListMZ5()
 void ComponentListMZ5::init(const ComponentMZ5* list, const size_t& len)
 {
     this->len = len;
-    if (this->len > 0)
+    this->list = new ComponentMZ5[this->len];
+    for (size_t i = 0; i < this->len; ++i)
     {
-        this->list = new ComponentMZ5[this->len];
-        for (size_t i = 0; i < this->len; ++i)
-        {
-            this->list[i] = list[i];
-        }
-    }
-    else
-    {
-        this->list = 0;
+        this->list[i] = list[i];
     }
 }
 
@@ -1900,17 +1891,10 @@ void ProcessingMethodListMZ5::init(const ProcessingMethodMZ5* list,
         const size_t len)
 {
     this->len = len;
-    if (this->len > 0)
+    this->list = new ProcessingMethodMZ5[this->len];
+    for (unsigned long i = 0; i < this->len; ++i)
     {
-        this->list = new ProcessingMethodMZ5[this->len];
-        for (unsigned long i = 0; i < this->len; ++i)
-        {
-            this->list[i] = list[i];
-        }
-    }
-    else
-    {
-        this->list = 0;
+        this->list[i] = list[i];
     }
 }
 
@@ -2190,17 +2174,10 @@ PrecursorListMZ5::~PrecursorListMZ5()
 void PrecursorListMZ5::init(const PrecursorMZ5* list, const size_t len)
 {
     this->len = len;
-    if (this->len > 0)
+    this->list = new PrecursorMZ5[this->len];
+    for (unsigned long i = 0; i < this->len; ++i)
     {
-        this->list = new PrecursorMZ5[this->len];
-        for (unsigned long i = 0; i < this->len; ++i)
-        {
-            this->list[i] = list[i];
-        }
-    }
-    else
-    {
-        this->list = 0;
+        this->list[i] = list[i];
     }
 }
 
@@ -2694,17 +2671,10 @@ ScanListMZ5::~ScanListMZ5()
 void ScanListMZ5::init(const ScanMZ5* list, const size_t len)
 {
     this->len = len;
-    if (this->len > 0)
+    this->list = new ScanMZ5[this->len];
+    for (unsigned long i = 0; i < this->len; ++i)
     {
-        this->list = new ScanMZ5[this->len];
-        for (unsigned long i = 0; i < this->len; ++i)
-        {
-            this->list[i] = list[i];
-        }
-    }
-    else
-    {
-        this->list = 0;
+        this->list[i] = list[i];
     }
 }
 
@@ -3001,6 +2971,13 @@ BinaryDataMZ5& BinaryDataMZ5::operator=(const BinaryDataMZ5& rhs)
 
 BinaryDataMZ5::~BinaryDataMZ5()
 {
+}
+
+bool BinaryDataMZ5::empty() {
+    return this->xParamList.empty()
+            && this->yParamList.empty()
+            && this->xDataProcessingRefID.refID == ULONG_MAX
+            && this->yDataProcessingRefID.refID == ULONG_MAX;
 }
 
 void BinaryDataMZ5::init(const ParamListMZ5& xParams,

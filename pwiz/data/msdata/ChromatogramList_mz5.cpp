@@ -248,14 +248,16 @@ ChromatogramPtr ChromatogramList_mz5Impl::chromatogram(size_t index, bool getBin
         hsize_t start = bounds.first;
         hsize_t end = bounds.second;
         ptr->defaultArrayLength = end - start;
-        if (getBinaryData && ptr.get())
+        if (getBinaryData)
         {
-            std::vector<double> time, inten;
-            conn_->getData(time, Configuration_mz5::ChomatogramTime, start, end);
-            conn_->getData(inten, Configuration_mz5::ChromatogramIntensity, start, end);
-            ptr->setTimeIntensityArrays(time, inten, CVID_Unknown, CVID_Unknown);
-            // time and intensity unit will be set by the following command
-            binaryParamList_[index].fill(*ptr->getTimeArray(), *ptr->getIntensityArray(), *rref_);
+            if (!binaryParamList_[index].empty()) {
+                std::vector<double> time, inten;
+                conn_->getData(time, Configuration_mz5::ChomatogramTime, start, end);
+                conn_->getData(inten, Configuration_mz5::ChromatogramIntensity, start, end);
+                ptr->setTimeIntensityArrays(time, inten, CVID_Unknown, CVID_Unknown);
+                // time and intensity unit will be set by the following command
+                binaryParamList_[index].fill(*ptr->getTimeArray(), *ptr->getIntensityArray(), *rref_);
+            }
         }
         References::resolve(*ptr, msd_);
         return ptr;

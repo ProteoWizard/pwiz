@@ -209,7 +209,7 @@ pwiz::msdata::DataProcessingPtr ReferenceRead_mz5::getDataProcessingPtr(
     }
     else
     {
-		return pwiz::msdata::DataProcessingPtr();
+        return pwiz::msdata::DataProcessingPtr();
     }
 }
 
