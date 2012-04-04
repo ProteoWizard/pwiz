@@ -53,10 +53,10 @@ namespace pwiz.Skyline.Model.Irt
         private ImmutableDictionary<string, double> _dictStandards;
         private ImmutableDictionary<string, double> _dictLibrary;
 
-        private IrtDb(String path)
+        private IrtDb(String path, ISessionFactory sessionFactory)
         {
             _path = path;
-            _sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, GetType(), false);
+            _sessionFactory = sessionFactory;
             _databaseLock = new ReaderWriterLock();
         }
 
@@ -256,50 +256,52 @@ namespace pwiz.Skyline.Model.Irt
 
         public static IrtDb CreateIrtDb(string path)
         {
-            using (SessionFactoryFactory.CreateSessionFactory(path, typeof(IrtDb), true))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, typeof(IrtDb), true))
             {
+                using (var session = new SessionWithLock(sessionFactory.OpenSession(), new ReaderWriterLock(), true))
+                using (var transaction = session.BeginTransaction())
+                {
+                    session.Save(new DbVersionInfo { SchemaVersion = SCHEMA_VERSION_CURRENT });
+                    transaction.Commit();
+                }
             }
-            var irtDb = new IrtDb(path).Load(null, null);
-            using (var session = irtDb.OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
-            {
-                session.Save(new DbVersionInfo {SchemaVersion = SCHEMA_VERSION_CURRENT});
-                transaction.Commit();
-            }
-            return irtDb;
+
+            return GetIrtDb(path, null);
         }
 
-        private static readonly Dictionary<string, string> DICT_PATHS_INTERN = new Dictionary<string, string>();
+        private static readonly Dictionary<string, ISessionFactory> DICT_PATH_SESSION_FACTORY =
+            new Dictionary<string, ISessionFactory>();
 
         /// <summary>
         /// Maintains a single string globally for each path, in order to keep from
         /// having two threads accessing the same database at the same time.
         /// </summary>
-        private static string InternPath(string path)
+        private static ISessionFactory GetSessionFactory(string path)
         {
-            lock (DICT_PATHS_INTERN)
+            lock (DICT_PATH_SESSION_FACTORY)
             {
-                string pathIntern;
-                if (!DICT_PATHS_INTERN.TryGetValue(path, out pathIntern))
+                ISessionFactory sessionFactory;
+                if (!DICT_PATH_SESSION_FACTORY.TryGetValue(path, out sessionFactory))
                 {
-                    DICT_PATHS_INTERN.Add(path, path);
-                    pathIntern = path;
+                    sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, typeof(IrtDb), false);
+                    DICT_PATH_SESSION_FACTORY.Add(path, sessionFactory);
                 }
-                return pathIntern;
+                return sessionFactory;
+            }
+        }
+
+        public static void ClearCache()
+        {
+            lock (DICT_PATH_SESSION_FACTORY)
+            {
+                foreach (var sessionFactory in DICT_PATH_SESSION_FACTORY.Values)
+                    sessionFactory.Dispose();
+                DICT_PATH_SESSION_FACTORY.Clear();
             }
         }
 
         //Throws DatabaseOpeningException
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor)
-        {
-            // Allow only one thread at a time to read from the same path
-            lock(InternPath(path))
-            {
-                return GetIrtDbInternal(path, loadMonitor);
-            }
-        }
-
-        private static IrtDb GetIrtDbInternal(string path, IProgressMonitor loadMonitor)
         {
             var status = new ProgressStatus(string.Format("Loading iRT database {0}", path));
             if (loadMonitor != null)
@@ -317,7 +319,12 @@ namespace pwiz.Skyline.Model.Irt
                 try
                 {
                     //Check for a valid SQLite file and that it has our schema
-                    return new IrtDb(path).Load(loadMonitor, status);
+                    //Allow only one thread at a time to read from the same path
+                    var sessionFactory = GetSessionFactory(path);
+                    lock (sessionFactory)
+                    {
+                        return new IrtDb(path, sessionFactory).Load(loadMonitor, status);
+                    }
                 }
                 catch (UnauthorizedAccessException)
                 {

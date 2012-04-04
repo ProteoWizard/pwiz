@@ -43,27 +43,29 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestGroupByColumns()
         {
-            Database database = new Database();
-            Schema schema = database.GetSchema();
-            foreach (PivotType pivotType in new[]{PivotType.REPLICATE, PivotType.ISOTOPE_LABEL, PivotType.REPLICATE_ISOTOPE_LABEL})
+            using (Database database = new Database())
             {
-                foreach (Type table in schema.GetTables())
+                Schema schema = database.GetSchema();
+                foreach (PivotType pivotType in new[] { PivotType.REPLICATE, PivotType.ISOTOPE_LABEL, PivotType.REPLICATE_ISOTOPE_LABEL })
                 {
-                    var reportColumns = new[] {new ReportColumn(table, "Id")};
-                    var columns = pivotType.GetGroupByColumns(reportColumns);
-                    if (columns.Count == 0)
+                    foreach (Type table in schema.GetTables())
                     {
-                        Assert.AreEqual(0, pivotType.GetCrosstabHeaders(reportColumns).Count,
-                            string.Format("No groupby columns, but crosstab headers for table {0} and pivot type {1}", table, pivotType.GetType()));
-                        continue;
-                    }
-                    foreach (var column in columns)
-                    {
-                        Assert.IsNotNull(schema.GetColumnInfo(column));
-                    }
-                    foreach (var column in pivotType.GetCrosstabHeaders(reportColumns))
-                    {
-                        Assert.IsNotNull(schema.GetColumnInfo(column));
+                        var reportColumns = new[] { new ReportColumn(table, "Id") };
+                        var columns = pivotType.GetGroupByColumns(reportColumns);
+                        if (columns.Count == 0)
+                        {
+                            Assert.AreEqual(0, pivotType.GetCrosstabHeaders(reportColumns).Count,
+                                string.Format("No groupby columns, but crosstab headers for table {0} and pivot type {1}", table, pivotType.GetType()));
+                            continue;
+                        }
+                        foreach (var column in columns)
+                        {
+                            Assert.IsNotNull(schema.GetColumnInfo(column));
+                        }
+                        foreach (var column in pivotType.GetCrosstabHeaders(reportColumns))
+                        {
+                            Assert.IsNotNull(schema.GetColumnInfo(column));
+                        }
                     }
                 }
             }

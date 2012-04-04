@@ -461,6 +461,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public bool MatchModifications()
         {
+            if (_selectedLibrary == null)
+                return false;
+
             LibKeyModificationMatcher matcher = new LibKeyModificationMatcher();
             matcher.CreateMatches(Document.Settings, _selectedLibrary.Keys, 
                 Settings.Default.StaticModList, Settings.Default.HeavyModList);

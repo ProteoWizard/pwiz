@@ -47,23 +47,25 @@ namespace pwiz.SkylineTest.Reporting
         public void TestReportSpecList()
         {
             ReportSpecList reportSpecList = new ReportSpecList();
-            Database database = new Database();
-            ColumnSet columnSet = ColumnSet.GetTransitionsColumnSet(database.GetSchema());
-            TreeView treeView = new TreeView();
-            treeView.Nodes.AddRange(columnSet.GetTreeNodes().ToArray());
-
-            foreach (ReportSpec reportSpec in reportSpecList.GetDefaults())
+            using (Database database = new Database())
             {
-                Report report = Report.Load(reportSpec);
-                ResultSet resultSet = report.Execute(database);
-                List<NodeData> nodeDatas;
-                columnSet.GetColumnInfos(report, treeView, out nodeDatas);
-                Assert.IsFalse(nodeDatas.Contains(null));
-                if (reportSpec.GroupBy == null)
+                ColumnSet columnSet = ColumnSet.GetTransitionsColumnSet(database.GetSchema());
+                TreeView treeView = new TreeView();
+                treeView.Nodes.AddRange(columnSet.GetTreeNodes().ToArray());
+
+                foreach (ReportSpec reportSpec in reportSpecList.GetDefaults())
                 {
-                    SimpleReport simpleReport = (SimpleReport)report;
-                    Assert.AreEqual(simpleReport.Columns.Count, resultSet.ColumnInfos.Count);
-                    Assert.AreEqual(simpleReport.Columns.Count, nodeDatas.Count);
+                    Report report = Report.Load(reportSpec);
+                    ResultSet resultSet = report.Execute(database);
+                    List<NodeData> nodeDatas;
+                    columnSet.GetColumnInfos(report, treeView, out nodeDatas);
+                    Assert.IsFalse(nodeDatas.Contains(null));
+                    if (reportSpec.GroupBy == null)
+                    {
+                        SimpleReport simpleReport = (SimpleReport)report;
+                        Assert.AreEqual(simpleReport.Columns.Count, resultSet.ColumnInfos.Count);
+                        Assert.AreEqual(simpleReport.Columns.Count, nodeDatas.Count);
+                    }
                 }
             }
         }
@@ -106,11 +108,12 @@ namespace pwiz.SkylineTest.Reporting
         public void TestIsotopeLabelPivot()
         {
             SrmDocument srmDocument = ResultsUtil.DeserializeDocument("silac_1_to_4.sky", GetType());
-            Database database = new Database();
-            database.AddSrmDocument(srmDocument);
-            PivotReport pivotReport = new PivotReport
+            using (Database database = new Database())
+            {
+                database.AddSrmDocument(srmDocument);
+                PivotReport pivotReport = new PivotReport
                 {
-                    Columns = new []
+                    Columns = new[]
                                 {
                                     new ReportColumn(typeof(DbTransition), "Precursor", "Peptide",
                                                    "Sequence"),
@@ -118,8 +121,7 @@ namespace pwiz.SkylineTest.Reporting
                                     new ReportColumn(typeof(DbTransition), "FragmentIon"),
                                 },
                     GroupByColumns =
-                              PivotType.ISOTOPE_LABEL.GetGroupByColumns(new[]
-                                    { new ReportColumn(typeof(DbTransitionResult), "Id") }),
+                              PivotType.ISOTOPE_LABEL.GetGroupByColumns(new[] { new ReportColumn(typeof(DbTransitionResult), "Id") }),
                     CrossTabHeaders = new[]
                                         {
                                             new ReportColumn(typeof(DbTransition), "Precursor", "IsotopeLabelType")
@@ -130,14 +132,15 @@ namespace pwiz.SkylineTest.Reporting
                                            new ReportColumn(typeof(DbTransitionResult), "Background")
                                        }
                 };
-            ResultSet resultSet = pivotReport.Execute(database);
-            Assert.AreEqual(7, resultSet.ColumnInfos.Count);
-            // Assert that "light" appears earlier in the crosstab columns than "heavy".
-            Assert.IsTrue(resultSet.ColumnInfos[3].Caption.ToLower().StartsWith("light"));
-            Assert.IsTrue(resultSet.ColumnInfos[4].Caption.ToLower().StartsWith("light"));
-            Assert.IsTrue(resultSet.ColumnInfos[5].Caption.ToLower().StartsWith("heavy"));
-            Assert.IsTrue(resultSet.ColumnInfos[6].Caption.ToLower().StartsWith("heavy"));
-            // TODO(nicksh): write asserts that the rows contain correct data.
+                ResultSet resultSet = pivotReport.Execute(database);
+                Assert.AreEqual(7, resultSet.ColumnInfos.Count);
+                // Assert that "light" appears earlier in the crosstab columns than "heavy".
+                Assert.IsTrue(resultSet.ColumnInfos[3].Caption.ToLower().StartsWith("light"));
+                Assert.IsTrue(resultSet.ColumnInfos[4].Caption.ToLower().StartsWith("light"));
+                Assert.IsTrue(resultSet.ColumnInfos[5].Caption.ToLower().StartsWith("heavy"));
+                Assert.IsTrue(resultSet.ColumnInfos[6].Caption.ToLower().StartsWith("heavy"));
+                // TODO(nicksh): write asserts that the rows contain correct data.
+            }
         }
 
         /// <summary>
@@ -147,11 +150,12 @@ namespace pwiz.SkylineTest.Reporting
         public void TestColumnsFromResultsTables()
         {
             SrmDocument srmDocument = ResultsUtil.DeserializeDocument("silac_1_to_4.sky", GetType());
-            Database database = new Database();
-            database.AddSrmDocument(srmDocument);
-            SimpleReport report = new SimpleReport
-                                      {
-                                          Columns = new []
+            using (Database database = new Database())
+            {
+                database.AddSrmDocument(srmDocument);
+                SimpleReport report = new SimpleReport
+                {
+                    Columns = new[]
                                                         {
                                                             new ReportColumn(typeof (DbTransitionResult),
                                                                 "PrecursorResult", "PeptideResult", "ProteinResult", "ReplicateName"),
@@ -159,15 +163,16 @@ namespace pwiz.SkylineTest.Reporting
                                                             new ReportColumn(typeof (DbTransition),"Precursor","Peptide","Sequence"),
                                                             new ReportColumn(typeof (DbTransitionResult), "Area"),
                                                         },
-                                      };
-            ColumnSet columnSet = ColumnSet.GetTransitionsColumnSet(database.GetSchema());
-            TreeView treeView = new TreeView();
-            treeView.Nodes.AddRange(columnSet.GetTreeNodes().ToArray());
-            List<NodeData> columnInfos;
-            columnSet.GetColumnInfos(report, treeView, out columnInfos);
-            Assert.AreEqual(report.Columns.Count, columnInfos.Count);
-            SimpleReport reportCompare = (SimpleReport) columnSet.GetReport(columnInfos, null);
-            Assert.IsTrue(ArrayUtil.EqualsDeep(report.Columns, reportCompare.Columns));
+                };
+                ColumnSet columnSet = ColumnSet.GetTransitionsColumnSet(database.GetSchema());
+                TreeView treeView = new TreeView();
+                treeView.Nodes.AddRange(columnSet.GetTreeNodes().ToArray());
+                List<NodeData> columnInfos;
+                columnSet.GetColumnInfos(report, treeView, out columnInfos);
+                Assert.AreEqual(report.Columns.Count, columnInfos.Count);
+                SimpleReport reportCompare = (SimpleReport)columnSet.GetReport(columnInfos, null);
+                Assert.IsTrue(ArrayUtil.EqualsDeep(report.Columns, reportCompare.Columns));
+            }
         }
 
         /// <summary>
@@ -177,12 +182,13 @@ namespace pwiz.SkylineTest.Reporting
         public void TestLoadReportFile()
         {
             SrmDocument srmDocument = ResultsUtil.DeserializeDocument("silac_1_to_4.sky", GetType());
-            Database database = new Database();
-            database.AddSrmDocument(srmDocument);                
-
+            using (Database database = new Database())
             using (var streamR = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + ".Study9p_template_0721_2009_v3.skyr"))
             {
                 Assert.IsNotNull(streamR);
+
+                database.AddSrmDocument(srmDocument);
+
                 ReportSpecList reportSpecList = new ReportSpecList();
                 var xmlSerializer = new XmlSerializer(reportSpecList.SerialType);
                 reportSpecList = (ReportSpecList)xmlSerializer.Deserialize(streamR);
@@ -190,7 +196,7 @@ namespace pwiz.SkylineTest.Reporting
                 ResultSet resultSet = report.Execute(database);
                 Assert.AreEqual(26, resultSet.ColumnInfos.Count);
                 // The file contains one transition that does not map to the imported results
-                Assert.AreEqual(srmDocument.TransitionCount/2 - 1, resultSet.RowCount);
+                Assert.AreEqual(srmDocument.TransitionCount / 2 - 1, resultSet.RowCount);
             }
         }
     }

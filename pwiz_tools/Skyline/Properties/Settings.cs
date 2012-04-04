@@ -1225,9 +1225,11 @@ namespace pwiz.Skyline.Properties
         public override RetentionTimeRegression EditItem(Control owner, RetentionTimeRegression item,
             IEnumerable<RetentionTimeRegression> existing, object tag)
         {
-            EditRTDlg editRT = new EditRTDlg(existing ?? this) { Regression = item };
-            if (editRT.ShowDialog() == DialogResult.OK)
-                return editRT.Regression;
+            using (EditRTDlg editRT = new EditRTDlg(existing ?? this) { Regression = item })
+            {
+                if (editRT.ShowDialog() == DialogResult.OK)
+                    return editRT.Regression;
+            }
 
             return null;
         }
@@ -1264,9 +1266,11 @@ namespace pwiz.Skyline.Properties
         public override MeasuredIon EditItem(Control owner, MeasuredIon item,
             IEnumerable<MeasuredIon> existing, object tag)
         {
-            EditMeasuredIonDlg editIon = new EditMeasuredIonDlg(existing ?? this) { MeasuredIon = item };
-            if (editIon.ShowDialog() == DialogResult.OK)
-                return editIon.MeasuredIon;
+            using (EditMeasuredIonDlg editIon = new EditMeasuredIonDlg(existing ?? this) { MeasuredIon = item })
+            {
+                if (editIon.ShowDialog() == DialogResult.OK)
+                    return editIon.MeasuredIon;
+            }
 
             return null;
         }
@@ -1296,9 +1300,11 @@ namespace pwiz.Skyline.Properties
         public override IsotopeEnrichments EditItem(Control owner, IsotopeEnrichments item,
             IEnumerable<IsotopeEnrichments> existing, object tag)
         {
-            EditIsotopeEnrichmentDlg editEnrichment = new EditIsotopeEnrichmentDlg(existing ?? this) { Enrichments = item };
-            if (editEnrichment.ShowDialog() == DialogResult.OK)
-                return editEnrichment.Enrichments;
+            using (EditIsotopeEnrichmentDlg editEnrichment = new EditIsotopeEnrichmentDlg(existing ?? this) { Enrichments = item })
+            {
+                if (editEnrichment.ShowDialog() == DialogResult.OK)
+                    return editEnrichment.Enrichments;
+            }
 
             return null;
         }
