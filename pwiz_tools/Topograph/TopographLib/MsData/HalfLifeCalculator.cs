@@ -559,7 +559,7 @@ namespace pwiz.Topograph.MsData
                 var dataPoints = new List<KeyValuePair<double, double>>();
                 foreach (var rowData in filteredRowDatas)
                 {
-                    double? time = rowData.RawRowData.MsDataFile.TimePoint.Value;
+                    double? time = rowData.RawRowData.MsDataFile.TimePoint;
                     double? y;
                     y = 1-rowData.Turnover;
                     if (!y.HasValue || !time.HasValue)
@@ -577,7 +577,7 @@ namespace pwiz.Topograph.MsData
                                          FilteredRowDatas = filteredRowDatas.ToArray(),
                                          RowDatas = rowDatas.ToArray(),
                                      };
-                if (resultData.RowDatas.Count == 0)
+                if (resultData.RowDatas.Count == 0 || timePoints.Count == 0)
                 {
                     resultData.RateConstant = double.NaN;
                     resultData.YIntercept = double.NaN;
