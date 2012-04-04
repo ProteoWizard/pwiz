@@ -20,7 +20,7 @@
 using System;
 using System.Threading;
 
-namespace SkylineStress
+namespace TestRunner
 {
     class TryLoop
     {

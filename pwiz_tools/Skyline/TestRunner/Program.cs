@@ -25,7 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace SkylineStress
+namespace TestRunner
 {
     internal class Program
     {
@@ -54,7 +54,7 @@ namespace SkylineStress
             {
                 // Parse command line args and initialize default values.
                 CommandLineArgs.ParseArgs(args,
-                                          "?;/?;-?;help;test;skip;filter;clipboardcheck=off;log=SkylineStress.log;report=SkylineStress.log;loop=0;random=on;offscreen=on");
+                                          "?;/?;-?;help;test;skip;filter;clipboardcheck=off;log=TestRunner.log;report=TestRunner.log;loop=0;random=on;offscreen=on");
 
                 switch (CommandLineArgs.SearchArgs("?;/?;-?;help;report"))
                 {
@@ -116,14 +116,14 @@ namespace SkylineStress
 
             // Get test results directory and provide it to tests via TestContext.
             var now = DateTime.Now;
-            var testDirName = string.Format("SkylineStress_{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}-{5:D2}",
+            var testDirName = string.Format("TestRunner_{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}-{5:D2}",
                                             now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
             var testDir = Path.Combine(GetProjectPath("TestResults"), testDirName);
-            var testContext = new StressTestContext();
+            var testContext = new TestRunnerContext();
             testContext.Properties["TestDir"] = testDir;
             if (CommandLineArgs.ArgAsBool("clipboardcheck"))
             {
-                testContext.Properties["ClipboardCheck"] = "SkylineStress clipboard check";
+                testContext.Properties["ClipboardCheck"] = "TestRunner clipboard check";
             }
             var context = new object[] { testContext };
 
@@ -309,9 +309,9 @@ namespace SkylineStress
 
         private static string GetAssemblyPath(string assembly)
         {
-            var stressExeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            if (stressExeDirectory == null) throw new ApplicationException("Can't find path to SkylineStress.exe");
-            return Path.Combine(stressExeDirectory, assembly);
+            var runnerExeDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            if (runnerExeDirectory == null) throw new ApplicationException("Can't find path to TestRunner.exe");
+            return Path.Combine(runnerExeDirectory, assembly);
         }
 
         public static string GetProjectPath(string relativePath)
@@ -470,10 +470,10 @@ namespace SkylineStress
         private static void Help()
         {
             Console.WriteLine(@"
-SkylineStress with no parameters runs all Skyline unit tests (marked [TestMethod])
-in random order until the process is killed.  It produces a log file (SkylineStress.log)
+TestRunner with no parameters runs all Skyline unit tests (marked [TestMethod])
+in random order until the process is killed.  It produces a log file (TestRunner.log)
 in the current directory.  You can get a summary of errors and memory leaks by running
-""SkylineStress report"".
+""TestRunner report"".
 
 Here is a list of recognized arguments:
 
@@ -483,7 +483,7 @@ Here is a list of recognized arguments:
                                     (such as IrtTest.IrtFunctionalTest).  Tests must belong
                                     to a class marked [TestClass], although the method does
                                     not need to be marked [TestMethod] to be included in a
-                                    stress run.  A name prefixed by '@' (such as ""@fail.txt"")
+                                    test run.  A name prefixed by '@' (such as ""@fail.txt"")
                                     refers to a text file containing test names separated by
                                     white space or new lines.  These files can also include
                                     single-line comments starting with a '#' character.
@@ -510,21 +510,21 @@ Here is a list of recognized arguments:
                                     exactly once per loop, regardless of the order.
                                     
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows
-                                    from flashing on the desktop during a stress run.
+                                    from flashing on the desktop during a test run.
 
     log=[file]                      Writes log information to the specified file.  The
-                                    default log file is SkylineStress.log in the current
+                                    default log file is TestRunner.log in the current
                                     directory.
 
     report=[file]                   Displays a summary of the errors and memory leaks
                                     recorded in the log file produced during a prior
-                                    run of SkylineStress.  If you don't specify a file,
-                                    it will use SkylineStress.log in the current directory.
+                                    run of TestRunner.  If you don't specify a file,
+                                    it will use TestRunner.log in the current directory.
                                     The report is formatted so it can be used as an input
                                     file for the ""test"" or ""skip"" options in a subsequent
                                     run.
 
-    clipboardcheck                  When this argument is specified, SkylineStress runs
+    clipboardcheck                  When this argument is specified, TestRunner runs
                                     each test once, and makes sure that it did not use
                                     the system clipboard.  If a test uses the clipboard,
                                     stress testing might be compromised on a computer

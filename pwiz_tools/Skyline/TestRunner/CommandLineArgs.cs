@@ -21,7 +21,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SkylineStress
+namespace TestRunner
 {
     class CommandLineArgs
     {
@@ -79,7 +79,7 @@ namespace SkylineStress
             {
                 if (!_args.ContainsKey(words[0]))
                 {
-                    throw new ArgumentException(string.Format(@"Unrecognized argument: {0}. Run ""SkylineStress help"" to see a list of arguments.", words[0]));
+                    throw new ArgumentException(string.Format(@"Unrecognized argument: {0}. Run ""TestRunner help"" to see a list of arguments.", words[0]));
                 }
 
                 // overwrite default value
