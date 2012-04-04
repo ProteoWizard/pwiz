@@ -743,7 +743,8 @@ namespace IDPicker
                     MessageBox.Show("Headless mode only supports merging idpDB files.");
 
                 // warn if idpDBs already exist
-                bool warnOnce = false;
+                bool warnOnce = false, skipReconvert = false;
+                var skipFiles = new List<string>();
                 foreach (string filepath in xml_filepaths)
                 {
                     string idpDB_filepath = Path.ChangeExtension(filepath, ".idpDB");
@@ -754,11 +755,17 @@ namespace IDPicker
                                                          MessageBoxButtons.YesNo,
                                                          MessageBoxIcon.Exclamation,
                                                          MessageBoxDefaultButton.Button2) != DialogResult.Yes)
-                            return;
+                            skipReconvert = true;
                         warnOnce = true;
-                        File.Delete(idpDB_filepath);
+                        if (skipReconvert)
+                            skipFiles.Add(filepath);
+                        else
+                            File.Delete(idpDB_filepath);
                     }
                 }
+                xml_filepaths = xml_filepaths.Where(o => !skipFiles.Contains(o));
+                idpDB_filepaths = idpDB_filepaths.Union(skipFiles.Select(o => Path.ChangeExtension(o, ".idpDB")));
+
 
                 // determine if merged filepath exists and that it's a valid idpDB
                 string commonFilename = Util.GetCommonFilename(filepaths);
@@ -2231,7 +2238,7 @@ namespace IDPicker
         private void aboutToolStripMenuItem_Click (object sender, EventArgs e)
         {
             MessageBox.Show(String.Format("IDPicker {0}\r\n" +
-                                          "Copyright 2011 Vanderbilt University\r\n" +
+                                          "Copyright 2012 Vanderbilt University\r\n" +
                                           "Developers: Matt Chambers, Jay Holman, Surendra Dasari\r\n" +
                                           "Thanks to: David Tabb",
                                           Util.Version),
@@ -2305,7 +2312,16 @@ namespace IDPicker
             };
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             process.StartInfo.CreateNoWindow = false;
+            //process.StartInfo.UseShellExecute = false;
+            //process.StartInfo.RedirectStandardOutput = process.StartInfo.RedirectStandardError = true;
             process.Start();
+            //process.EnableRaisingEvents = true;
+            /*process.Exited += (x, y) =>
+            {
+                Program.HandleException(new Exception(String.Format("{0}\r\n{1}\r\n",
+                                                  process.StandardOutput.ReadToEnd(),
+                                                  process.StandardError.ReadToEnd())));
+            };*/
         }
     }
 

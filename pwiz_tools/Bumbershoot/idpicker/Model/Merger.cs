@@ -58,6 +58,7 @@ namespace IDPicker.DataModel
         {
             this.mergeTargetFilepath = mergeTargetFilepath;
             this.mergeSourceFilepaths = mergeSourceFilepaths;
+            totalSourceFiles = mergeSourceFilepaths.Count();
         }
 
         /// <summary>
@@ -83,17 +84,19 @@ namespace IDPicker.DataModel
 
         void initializeTarget (SQLiteConnection conn)
         {
+            string biggestSourceFilepath = mergeSourceFilepaths.OrderByDescending(o => new FileInfo(o).Length).First();
+
             if (!SessionFactoryFactory.IsValidFile(mergeTargetFilepath))
             {
-                System.IO.File.Delete(mergeTargetFilepath);
-                SessionFactoryFactory.CreateFile(mergeTargetFilepath);
+                // if the target doesn't exist, the biggest source is copied to the target
+                File.Delete(mergeTargetFilepath);
+                File.Copy(biggestSourceFilepath, mergeTargetFilepath);
+                mergeSourceFilepaths = mergeSourceFilepaths.Where(o => o != biggestSourceFilepath);
             }
-            else
+
+            using (var session = SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath).OpenSession())
             {
-                using (var session = SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath).OpenSession())
-                {
-                    DataFilter.DropFilters(session.Connection);
-                }
+                DataFilter.DropFilters(session.Connection);
             }
 
             conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeTargetFilepath.Replace("'", "''") + "' AS merged");
@@ -155,7 +158,7 @@ namespace IDPicker.DataModel
                     if (OnMergingProgress(null, ++mergedFiles))
                         break;
 
-                    if (!System.IO.File.Exists(mergeSourceFilepath) || mergeSourceFilepath == mergeTargetFilepath)
+                    if (!File.Exists(mergeSourceFilepath) || mergeSourceFilepath == mergeTargetFilepath)
                         continue;
 
                     // skip files that have already been merged
@@ -642,7 +645,7 @@ namespace IDPicker.DataModel
                 var eventArgs = new MergingProgressEventArgs()
                 {
                     MergedFiles = mergedFiles,
-                    TotalFiles = mergeSourceFilepaths.Count(),
+                    TotalFiles = totalSourceFiles,
                     MergingException = ex
                 };
                 MergingProgress(this, eventArgs);
@@ -654,6 +657,7 @@ namespace IDPicker.DataModel
             return false;
         }
 
+        int totalSourceFiles;
         string mergeTargetFilepath;
         IEnumerable<string> mergeSourceFilepaths;
         SQLiteConnection mergeSourceConnection;

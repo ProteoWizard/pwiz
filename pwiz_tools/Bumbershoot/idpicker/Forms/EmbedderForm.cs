@@ -137,10 +137,22 @@ namespace IDPicker.Forms
 
         private void embedAllButton_Click (object sender, EventArgs e)
         {
-            string searchPath = searchPathTextBox.Text;
+            var searchPath = new StringBuilder(searchPathTextBox.Text);
             string extensions = extensionsTextBox.Text;
             Application.UseWaitCursor = true;
             deleteAllButton.Enabled = embedAllButton.Enabled = okButton.Enabled = false;
+
+            try
+            {
+                // add location of original idpDBs to the search path
+                var mergedFilepaths = session.CreateSQLQuery("SELECT DISTINCT Filepath FROM MergedFiles").List<string>();
+                foreach (var filepath in mergedFilepaths)
+                    searchPath.AppendFormat(";{0}", System.IO.Path.GetDirectoryName(filepath));
+            }
+            catch
+            {
+                // ignore if MergedFiles does not exist
+            }
 
             new Thread(() =>
             {
@@ -150,7 +162,7 @@ namespace IDPicker.Forms
                     ilr.addListener(new EmbedderIterationListener(this), 1);
 
                     string idpDbFilepath = session.Connection.GetDataSource();
-                    Embedder.Embed(idpDbFilepath, searchPath, extensions, ilr);
+                    Embedder.Embed(idpDbFilepath, searchPath.ToString(), extensions, ilr);
                 }
                 catch (Exception ex)
                 {
