@@ -577,6 +577,12 @@ namespace pwiz.Topograph.MsData
                                          FilteredRowDatas = filteredRowDatas.ToArray(),
                                          RowDatas = rowDatas.ToArray(),
                                      };
+                if (resultData.RowDatas.Count == 0)
+                {
+                    resultData.RateConstant = double.NaN;
+                    resultData.YIntercept = double.NaN;
+                    return resultData;
+                }
                 NelderMeadSimplex.SimplexConstant[] initialParameters;
                 double convergenceTolerance = 0;
                 int maxEvaluations = 1000;

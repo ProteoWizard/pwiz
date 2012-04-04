@@ -79,7 +79,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>241</ApplicationRevision>
+    <ApplicationRevision>243</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -855,11 +855,6 @@
       <ProductName>.NET Framework 3.5 SP1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-    <BootstrapperPackage Include="Microsoft.Visual.C++.10.0.x86">
-      <Visible>False</Visible>
-      <ProductName>Visual C++ 2010 Runtime Libraries %28x86%29</ProductName>
-      <Install>true</Install>
-    </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
       <Visible>False</Visible>
       <ProductName>Windows Installer 3.1</ProductName>
@@ -868,27 +863,27 @@
   </ItemGroup>
   <ItemGroup>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\Shared\Lib\Microsoft.VC100.CRT\x86\msvcp100.dll">
-      <Link>Microsoft.VC100.CRT\msvcp100.dll</Link>
+      <Link>msvcp100.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcp100.dll">
-      <Link>Microsoft.VC100.CRT\msvcp100.dll</Link>
+      <Link>msvcp100.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\Shared\Lib\Microsoft.VC100.CRT\x86\msvcr100.dll">
-      <Link>Microsoft.VC100.CRT\msvcr100.dll</Link>
+      <Link>msvcr100.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\Shared\Lib\Microsoft.VC100.CRT\x64\msvcr100.dll">
-      <Link>Microsoft.VC100.CRT\msvcr100.dll</Link>
+      <Link>msvcr100.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\Shared\Lib\Microsoft.VC100.MFC\x86\mfc100u.dll">
-      <Link>Microsoft.VC100.MFC\mfc100u.dll</Link>
+      <Link>mfc100u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x64'" Include="..\..\Shared\Lib\Microsoft.VC100.MFC\x64\mfc100u.dll">
-      <Link>Microsoft.VC100.MFC\mfc100u.dll</Link>
+      <Link>mfc100u.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Condition="'$(Platform)' == 'x86'" Include="..\..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0\MassLynxRaw.dll">
