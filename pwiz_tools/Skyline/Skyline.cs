@@ -233,6 +233,14 @@ namespace pwiz.Skyline
             base.OnHandleCreated(e);
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            _timerGraphs.Dispose();
+            _timerProgress.Dispose();
+
+            base.OnClosed(e);
+        }
+
         void IDocumentContainer.Listen(EventHandler<DocumentChangedEventArgs> listener)
         {
             DocumentChangedEvent += listener;
