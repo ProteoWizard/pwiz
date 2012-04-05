@@ -331,30 +331,30 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test BlibFilter
 
-make output/zmerged.filtered.blib : inputs/empty : @common.copy : <location>. ;
-run-if-exists ExecuteBlib.cpp
-  :
-  : ../src//BlibFilter output/xmerged.redundant.blib output/zmerged.filtered.blib
-  : 
-  : build-filter ;
-run-if-exists CompareLibraryContents.cpp compare-src
-  : 
-  : output/zmerged.filtered.blib reference/zmerged.filtered.check
-  : $(compare-reqs)
-    <dependency>build-filter
-  : check-filter ;
+#make output/zmerged.filtered.blib : inputs/empty : @common.copy : <location>. ;
+#run-if-exists ExecuteBlib.cpp
+#  :
+#  : ../src//BlibFilter output/xmerged.redundant.blib output/zmerged.filtered.blib
+#  : <dependency>build-merge 
+#  : build-filter ;
+#run-if-exists CompareLibraryContents.cpp compare-src
+#  : 
+#  : output/zmerged.filtered.blib reference/zmerged.filtered.check
+#  : $(compare-reqs)
+#    <dependency>build-filter
+#  : check-filter ;
 
-make output/filtered.existing.blib : inputs/empty : @common.copy : <location>. ;
-run-if-exists ExecuteBlib.cpp
-  :
-  : ../src//BlibFilter inputs/existing.blib output/filtered.existing.blib
-  : 
-  : build-filter-old ;
-run-if-exists CompareLibraryContents.cpp compare-src
-  : 
-  : output/filtered.existing.blib reference/filtered.existing.check
-  : $(compare-reqs)
-  : check-filter-old ;
+#make output/filtered.existing.blib : inputs/empty : @common.copy : <location>. ;
+#run-if-exists ExecuteBlib.cpp
+#  :
+#  : ../src//BlibFilter inputs/existing.blib output/filtered.existing.blib
+#  : 
+#  : build-filter-old ;
+#run-if-exists CompareLibraryContents.cpp compare-src
+#  : 
+#  : output/filtered.existing.blib reference/filtered.existing.check
+#  : $(compare-reqs)
+#  : check-filter-old ;
 
 # Test adding spectra to existing libraries, new and old formats
 
@@ -396,53 +396,53 @@ run-if-exists CompareTextFiles.cpp
 
 # Test BlibSearch
 
-make inputs/demo.report : inputs/empty : @common.copy : <location>. ;
-run-if-exists ExecuteBlib.cpp
-  : --preserve-order
-  : ../src//BlibSearch inputs/demo.ms2 output/demo.blib
-  : <dependency>build-sqt-ms2
-  : search-demo ;
-run-if-exists CompareTextFiles.cpp
-  :
-  : inputs/demo.report reference/demo.report reference/demo.skip-lines
-  : <dependency>search-demo
-  : check-search-demo ;
+#make inputs/demo.report : inputs/empty : @common.copy : <location>. ;
+#run-if-exists ExecuteBlib.cpp
+#  : --preserve-order
+#  : ../src//BlibSearch inputs/demo.ms2 output/demo.blib
+#  : <dependency>build-sqt-ms2
+#  : search-demo ;
+#run-if-exists CompareTextFiles.cpp
+#  :
+#  : inputs/demo.report reference/demo.report reference/demo.skip-lines
+#  : <dependency>search-demo
+#  : check-search-demo ;
 
-make inputs/demo.decoy.report : inputs/empty : @common.copy : <location>. ;
-run-if-exists ExecuteBlib.cpp
-  : --preserve-order --decoys-per-target_1
-  : ../src//BlibSearch inputs/demo.ms2 output/demo.blib
-  : <dependency>build-sqt-ms2
-  : search-decoy ;
-run-if-exists CompareTextFiles.cpp
-  :
-  : inputs/demo.decoy.report reference/demo.decoy.report reference/demo.skip-lines
-  : <dependency>search-decoy
-  : check-search-decoy ;
+#make inputs/demo.decoy.report : inputs/empty : @common.copy : <location>. ;
+#run-if-exists ExecuteBlib.cpp
+#  : --preserve-order --decoys-per-target_1
+#  : ../src//BlibSearch inputs/demo.ms2 output/demo.blib
+#  : <dependency>build-sqt-ms2
+#  : search-decoy ;
+#run-if-exists CompareTextFiles.cpp
+#  :
+#  : inputs/demo.decoy.report reference/demo.decoy.report reference/demo.skip-lines
+#  : <dependency>search-decoy
+#  : check-search-decoy ;
 
-make inputs/mzsorted.report : inputs/empty : @common.copy : <location>. ;
-run-if-exists ExecuteBlib.cpp
-  :
-  : ../src//BlibSearch inputs/mzsorted.ms2 output/demo.blib
-  : <dependency>build-sqt-ms2
-  : search-mzsorted ;
-run-if-exists CompareTextFiles.cpp
-  :
-  : inputs/mzsorted.report reference/mzsorted.report reference/mzsorted.skip-lines
-  : <dependency>search-mzsorted
-  : check-search-mzsorted ;
+#make inputs/mzsorted.report : inputs/empty : @common.copy : <location>. ;
+#run-if-exists ExecuteBlib.cpp
+#  :
+#  : ../src//BlibSearch inputs/mzsorted.ms2 output/demo.blib
+#  : <dependency>build-sqt-ms2
+#  : search-mzsorted ;
+#run-if-exists CompareTextFiles.cpp
+#  :
+#  : inputs/mzsorted.report reference/mzsorted.report reference/mzsorted.skip-lines
+#  : <dependency>search-mzsorted
+#  : check-search-mzsorted ;
 
-make inputs/binning.report : inputs/empty : @common.copy : <location>. ;
-run-if-exists ExecuteBlib.cpp
-  : --bin-size_1.1 --bin-offset_0.2
-  : ../src//BlibSearch inputs/binning.ms2 output/demo.blib
-  : <dependency>build-sqt-ms2
- : search-binning ;
-run-if-exists CompareTextFiles.cpp
-  :
-  : inputs/binning.report reference/binning.report reference/demo.skip-lines
-  : <dependency>search-binning
-  : check-search-binning ;
+#make inputs/binning.report : inputs/empty : @common.copy : <location>. ;
+#run-if-exists ExecuteBlib.cpp
+#  : --bin-size_1.1 --bin-offset_0.2
+#  : ../src//BlibSearch inputs/binning.ms2 output/demo.blib
+#  : <dependency>build-sqt-ms2
+# : search-binning ;
+#run-if-exists CompareTextFiles.cpp
+#  :
+#  : inputs/binning.report reference/binning.report reference/demo.skip-lines
+#  : <dependency>search-binning
+#  : check-search-binning ;
 
 
 
