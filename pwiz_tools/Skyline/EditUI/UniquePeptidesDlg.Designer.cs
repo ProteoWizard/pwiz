@@ -231,7 +231,6 @@
             this.Name = "UniquePeptidesDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.TabText = "Unique Peptides";
             this.Text = "Unique Peptides";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);

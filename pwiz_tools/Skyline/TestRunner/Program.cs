@@ -29,21 +29,22 @@ namespace TestRunner
 {
     internal class Program
     {
-        private static readonly string[] TestDlls = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll"};
-        private static List<TestInfo> _testList = new List<TestInfo>(); 
+        private static readonly string[] TEST_DLLS = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll"};
+        private static List<TestInfo> _testList = new List<TestInfo>();
+        private static TestInfo _emptyTest;
         private static Type _program;
 
         private class TestInfo
         {
-            public readonly Type TestClass;
-            public readonly MethodInfo TestMethod;
-            public readonly MethodInfo SetTestContext;
+            public readonly Type _testClass;
+            public readonly MethodInfo _testMethod;
+            public readonly MethodInfo _setTestContext;
 
             public TestInfo(Type testClass, MethodInfo testMethod)
             {
-                TestClass = testClass;
-                TestMethod = testMethod;
-                SetTestContext = testClass.GetMethod("set_TestContext");
+                _testClass = testClass;
+                _testMethod = testMethod;
+                _setTestContext = testClass.GetMethod("set_TestContext");
             }
         }
 
@@ -54,7 +55,7 @@ namespace TestRunner
             {
                 // Parse command line args and initialize default values.
                 CommandLineArgs.ParseArgs(args,
-                                          "?;/?;-?;help;test;skip;filter;clipboardcheck=off;log=TestRunner.log;report=TestRunner.log;loop=0;random=on;offscreen=on");
+                                          "?;/?;-?;help;test;skip;filter;clipboardcheck=off;log=TestRunner.log;report=TestRunner.log;loop=0;repeat=1;random=on;offscreen=on");
 
                 switch (CommandLineArgs.SearchArgs("?;/?;-?;help;report"))
                 {
@@ -95,6 +96,7 @@ namespace TestRunner
         {
             var passes = CommandLineArgs.ArgAsLong("loop");
             var randomOrder = CommandLineArgs.ArgAsBool("random");
+            var repeat = CommandLineArgs.ArgAsLong("repeat");
             
             if (CommandLineArgs.ArgAsBool("clipboardcheck"))
             {
@@ -128,7 +130,7 @@ namespace TestRunner
             var context = new object[] { testContext };
 
             // Sort tests alphabetically.
-            _testList.Sort((x, y) => String.CompareOrdinal(x.TestMethod.Name, y.TestMethod.Name));
+            _testList.Sort((x, y) => String.CompareOrdinal(x._testMethod.Name, y._testMethod.Name));
 
             // Filter test list.
             if (CommandLineArgs.HasArg("filter"))
@@ -166,10 +168,15 @@ namespace TestRunner
             var failureList = new Dictionary<string, int>();
             var random = new Random();
             var testOrder = new List<int>();
+            var stopwatch = new Stopwatch();
+            var process = Process.GetCurrentProcess();
+            var emptyTestObject = Activator.CreateInstance(_emptyTest._testClass);
+            _emptyTest._setTestContext.Invoke(emptyTestObject, context);
+            const double mb = 1024*1024;
 
             foreach (var testInfo in _testList)
             {
-                failureList[testInfo.TestMethod.Name] = 0;
+                failureList[testInfo._testMethod.Name] = 0;
             }
 
             // Run all test passes.
@@ -182,6 +189,8 @@ namespace TestRunner
                 var testNumber = 0;
                 while (testOrder.Count > 0)
                 {
+                    testNumber++;
+
                     // Choose next test in sequential or random order (each test executes exactly once per pass).
                     var testOrderIndex = 0;
                     if (randomOrder)
@@ -192,75 +201,91 @@ namespace TestRunner
                     testOrder.RemoveAt(testOrderIndex);
                     var test = _testList[testIndex];
 
-                    // Record information for this test.
-                    testNumber++;
-                    var testName = test.TestMethod.Name;
-                    var time = DateTime.Now;
-                    var info = string.Format("[{0}:{1}] {2,3}.{3,-3} {4,-40}  ",
-                        time.Hour.ToString("D2"), time.Minute.ToString("D2"), pass, testNumber, testName);
-                    Console.Write(info);
-                    log.Write(info);
-                    log.Flush();
-
-                    // Delete test directory.
-                    if (Directory.Exists(testDir))
+                    for (int repeatCounter = 0; repeatCounter < repeat; repeatCounter++)
                     {
+                        // Record information for this test.
+                        var testName = test._testMethod.Name;
+                        var time = DateTime.Now;
+                        var info = string.Format("[{0}:{1}] {2,3}.{3,-3} {4,-40}  ",
+                                                 time.Hour.ToString("D2"), time.Minute.ToString("D2"), pass, testNumber,
+                                                 testName);
+                        Console.Write(info);
+                        log.Write(info);
+                        log.Flush();
+
+                        // Delete test directory.
+                        if (Directory.Exists(testDir))
+                        {
+                            try
+                            {
+                                // Try delete 4 times to give anti-virus software a chance to finish.
+                                TryLoop.Try<IOException>(() => Directory.Delete(testDir, true), 4);
+                            }
+                            catch (Exception e)
+                            {
+                                Console.WriteLine(e.Message);
+                            }
+                        }
+
+                        // Create test class.
+                        var testObject = Activator.CreateInstance(test._testClass);
+
+                        // Set the TestContext.
+                        if (test._setTestContext != null)
+                        {
+                            test._setTestContext.Invoke(testObject, context);
+                        }
+
+                        // Run the test and time it.
+                        Exception exception = null;
+                        stopwatch.Reset();
+                        stopwatch.Start();
                         try
                         {
-                            // Try delete 4 times to give anti-virus software a chance to finish.
-                            TryLoop.Try<IOException>(() => Directory.Delete(testDir, true), 4);
+                            test._testMethod.Invoke(testObject, null);
                         }
                         catch (Exception e)
                         {
-                            Console.WriteLine(e.Message);
+                            exception = e;
                         }
-                    }
-
-                    // Create test class.
-                    var testObject = Activator.CreateInstance(test.TestClass);
-
-                    // Set the TestContext.
-                    if (test.SetTestContext != null)
-                    {
-                        test.SetTestContext.Invoke(testObject, context);
-                    }
-
-                    // Run the test.
-                    var stopwatch = new Stopwatch();
-                    try
-                    {
-                        // Run the test and time it.
-                        stopwatch.Start();
-                        test.TestMethod.Invoke(testObject, null);
                         stopwatch.Stop();
 
-                        // Test succeeded.
-                        var memoryUsed = GC.GetTotalMemory(true) / (1024.0 * 1024.0);
-                        info = string.Format("{0,3} failures, {1:0.0} MB, {2} sec.", failureCount, memoryUsed, stopwatch.ElapsedMilliseconds / 1000);
-                        Console.WriteLine(info);
-                        log.WriteLine(info);
-                        log.Flush();
-                    }
-                    catch (Exception e)
-                    {
-                        // Save failure information to log.
-                        failureCount++;
-                        failureList[testName]++;
-                        info = testName + " {0} failures ({1:0.##}%)\n" +
-                            e.InnerException.Message + "\n" +
-                            e.InnerException.StackTrace;
-                        if (errorList.ContainsKey(info))
+                        // HACK: for some reason, running an empty functional test releases memory used by other functional tests.
+                        _emptyTest._testMethod.Invoke(emptyTestObject, null);
+
+                        var managedMemory = GC.GetTotalMemory(true)/mb;
+                        process.Refresh();
+                        var totalMemory = process.PrivateMemorySize64 / mb;
+
+                        if (exception == null)
                         {
-                            errorList[info]++;
+                            // Test succeeded.
+                            info = string.Format("{0,3} failures, {1:0.0}/{2:0.0} MB, {3} sec.", failureCount, managedMemory, totalMemory,
+                                                 stopwatch.ElapsedMilliseconds/1000);
+                            Console.WriteLine(info);
+                            log.WriteLine(info);
                         }
                         else
                         {
-                            errorList[info] = 1;
+                            // Save failure information.
+                            failureCount++;
+                            failureList[testName]++;
+                            info = testName + " {0} failures ({1:0.##}%)\n" +
+                                   exception.InnerException.Message + "\n" +
+                                   exception.InnerException.StackTrace;
+                            if (errorList.ContainsKey(info))
+                            {
+                                errorList[info]++;
+                            }
+                            else
+                            {
+                                errorList[info] = 1;
+                            }
+                            Console.WriteLine("*** FAILED {0:0.#}% ***", 100.0*failureList[testName]/pass);
+                            log.WriteLine("{0,3} failures, {1:0.0}/{2:0.0} MB\n*** failure {3}\n{4}\n{5}\n***",
+                                          failureCount, managedMemory, totalMemory, errorList[info], exception.InnerException.Message,
+                                          exception.InnerException.StackTrace);
                         }
-                        var memoryUsed = GC.GetTotalMemory(true) / (1024.0 * 1024.0);
-                        Console.WriteLine("*** FAILED {0:0.#}% ***", 100.0 * failureList[testName] / pass);
-                        log.WriteLine("{0,3} failures, {1:0.0} MB\n*** failure {2}\n{3}\n{4}\n***", 
-                            failureCount, memoryUsed, errorList[info], e.InnerException.Message, e.InnerException.StackTrace);
                         log.Flush();
                     }
                 }
@@ -280,7 +305,7 @@ namespace TestRunner
             var skipList = LoadList("skip");
 
             // Find tests in the test dlls.
-            foreach (var testDll in TestDlls)
+            foreach (var testDll in TEST_DLLS)
             {
                 var assembly = Assembly.LoadFrom(GetAssemblyPath(testDll));
                 var types = assembly.GetTypes();
@@ -300,6 +325,10 @@ namespace TestRunner
                                 {
                                     _testList.Add(new TestInfo(type, method));
                                 }
+                            }
+                            if (testName == "EmptyFunctionalTest.EmptyTest")
+                            {
+                                _emptyTest = new TestInfo(type, method);
                             }
                         }
                     }
@@ -377,10 +406,12 @@ namespace TestRunner
         {
             var logStream = new StreamReader(logFile);
             var errorList = new Dictionary<string, int>();
-            var memoryUse = new Dictionary<string, List<double>>();
+            var managedMemoryUse = new Dictionary<string, List<double>>();
+            var totalMemoryUse = new Dictionary<string, List<double>>();
 
             var test = "";
-            var memory = 0.0;
+            var managedMemory = 0.0;
+            var totalMemory = 0.0;
             var pass = 0.0;
 
             while (true)
@@ -416,22 +447,25 @@ namespace TestRunner
                 else if (parts.Length > 6)
                 {
                     // Save previous memory use to calculate memory used by this test.
-                    var lastMemory = memory;
+                    var lastManagedMemory = managedMemory;
+                    var lastTotalMemory = totalMemory;
 
                     pass = Math.Truncate(Double.Parse(parts[1]));
                     var testParts = parts[2].Split('.');
                     test = testParts[testParts.Length - 1];
-                    memory = Double.Parse(parts[5]);
+                    managedMemory = Double.Parse(parts[5].Split('/')[0]);
+                    totalMemory = Double.Parse(parts[5].Split('/')[1]);
 
                     // Only collect memory leak information starting on pass 2.
                     if (pass < 2.0)
                     {
-                        memoryUse[test] = new List<double>();
+                        managedMemoryUse[test] = new List<double>();
+                        totalMemoryUse[test] = new List<double>();
                     }
                     else
                     {
-                        var memoryDiff = memory - lastMemory;
-                        memoryUse[test].Add(memoryDiff);
+                        managedMemoryUse[test].Add(managedMemory - lastManagedMemory);
+                        totalMemoryUse[test].Add(totalMemory - lastTotalMemory);
                     }
                 }
             }
@@ -449,6 +483,12 @@ namespace TestRunner
             }
 
             // Print top memory leaks, unless they are less than 0.1 MB.
+            ReportLeaks(managedMemoryUse, "# Top managed memory leaks (in MB per execution):");
+            ReportLeaks(totalMemoryUse, "# Top total memory leaks (in MB per execution):");
+        }
+
+        private static void ReportLeaks(Dictionary<string, List<double>> memoryUse, string title)
+        {
             var leaks = "";
             foreach (var item in memoryUse.OrderByDescending(x => x.Value.Count > 0 ? x.Value.Average() : 0.0))
             {
@@ -462,7 +502,8 @@ namespace TestRunner
             }
             if (leaks != "")
             {
-                Console.WriteLine("# Top leaks (in MB per execution):\n{0}", leaks);
+                Console.WriteLine(title);
+                Console.WriteLine(leaks);
             }
         }
 
