@@ -566,6 +566,12 @@ ScanFilter::parse(const string& filterLine)
 	    }
 
 
+        faimsOn_ = parseCompensationVoltage(w, compensationVoltage_) ? TriBool_True : TriBool_Unknown;
+
+        if (faimsOn_ == TriBool_True)
+            s >> w;
+
+
 	    // rapid
 	    if (w == "R") {
 		    turboScanOn_ = TriBool_True;
@@ -614,11 +620,6 @@ ScanFilter::parse(const string& filterLine)
 		    s >> w;
 		    advance = false;
 	    }
-
-        faimsOn_ = parseCompensationVoltage(w, compensationVoltage_) ? TriBool_True : TriBool_Unknown;
-
-        if (faimsOn_ == TriBool_True)
-            s >> w;
 
 	    // dependent type
 	    if (w == "!D") {
