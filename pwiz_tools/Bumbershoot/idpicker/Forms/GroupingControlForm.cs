@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
@@ -73,6 +74,8 @@ namespace IDPicker.Forms
                                               }
                                               return ((tlvBranch) x).Text + new string(' ',offsetCorrection*7);
                                           };
+            tlvGroups.AutoCompleteEditor = false;
+
             tlvGroups.ImageGetter += delegate(object x) { return (((tlvBranch)x).Data is SpectrumSourceGroup) ? Properties.Resources.XPfolder_closed : Properties.Resources.file; };
 
             ApplyDefaultGroups(null, null);
@@ -290,8 +293,8 @@ namespace IDPicker.Forms
             {
                 return destNode.Data is SpectrumSourceGroup
                        && dragNode.Data is SpectrumSourceGroup
-                       && destNode.Text
-                              .Contains(dragNode.Text);
+                       && ((SpectrumSourceGroup)destNode.Data).Name
+                              .Contains(((SpectrumSourceGroup)dragNode.Data).Name);
             }
             catch (Exception exc)
             {
@@ -602,7 +605,17 @@ namespace IDPicker.Forms
                     e.Cancel = true;
                     return;
                 }
-            ((tlvBranch)e.RowObject).Text = (string)e.NewValue;
+            var rowObject = ((tlvBranch) e.RowObject);
+            rowObject.Text = ((string)e.NewValue).Trim();
+            
+            if (rowObject.Parent != null 
+                && rowObject.Data is SpectrumSourceGroup
+                && rowObject.Parent.Data is SpectrumSourceGroup)
+            {
+                ((SpectrumSourceGroup) rowObject.Data).Name =
+                    (((SpectrumSourceGroup) rowObject.Parent.Data).Name + "/" +
+                     ((string) e.NewValue).Trim()).Replace("//", "/");
+            }
         }
 
         private void tlvGroupedFiles_CellEditStarting(object sender, CellEditEventArgs e)
@@ -612,6 +625,7 @@ namespace IDPicker.Forms
                 e.Cancel = true;
             }
 
+            e.Control.Text = ((string) e.Value).Trim();
         }
 
         private void ApplyDefaultGroups(object sender, EventArgs e)

@@ -91,7 +91,16 @@ namespace IDPicker.Forms
                 WorkerSupportsCancellation = true
             };
 
-            workerThread.DoWork += setData;
+            workerThread.DoWork += (sender, e) =>
+                                       {
+                                           if (detailDataGridView.InvokeRequired)
+                                           {
+                                               Action<object, DoWorkEventArgs> invokedSetData = setData;
+                                               detailDataGridView.Invoke(invokedSetData, sender, e);
+                                           }
+                                           else
+                                               setData(sender, e);
+                                       };
             workerThread.RunWorkerCompleted += renderData;
         }
 
@@ -204,7 +213,7 @@ namespace IDPicker.Forms
             });
 
             // after setting DataSource, table must be refiltered
-            trimModificationTable();
+            trimModificationGrid();
 
             if (dataGridView.Rows.Count == 0)
                 return; // shouldn't happen
@@ -549,7 +558,7 @@ namespace IDPicker.Forms
             {
                 if (dataFilter.IsBasicFilter || viewFilter.Modifications != null || viewFilter.ModifiedSite != null)
                 {
-                    var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT " + countExpression + ") " +
+                    var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum), COUNT(DISTINCT psm.DistinctMatchKey), COUNT(DISTINCT psm.Peptide) " +
                                                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                                       DataFilter.PeptideSpectrumMatchToPeptideModification) +
                                                     "GROUP BY pm.Site, " + RoundedDeltaMassExpression);
@@ -564,6 +573,7 @@ namespace IDPicker.Forms
                         findDeltaMassAnnotations();
                         deltaMassTable = basicDeltaMassTable;
                         SetUnimodDefaults(queryRows);
+                        PopulateModificationDetailView(queryRows);
                     }
 
                     deltaMassTable = basicDeltaMassTable;
@@ -571,7 +581,7 @@ namespace IDPicker.Forms
                 }
                 else
                 {
-                    var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT " + countExpression + ") " +
+                    var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum), COUNT(DISTINCT psm.DistinctMatchKey), COUNT(DISTINCT psm.Peptide) " +
                                                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                                       DataFilter.PeptideSpectrumMatchToPeptideModification) +
                                                     "GROUP BY pm.Site, " + RoundedDeltaMassExpression);
@@ -581,6 +591,7 @@ namespace IDPicker.Forms
                     IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
                     deltaMassTable = createDeltaMassTableFromQuery(queryRows, out totalModifications, out dummy);
                     SetUnimodDefaults(queryRows);
+                    PopulateModificationDetailView(queryRows);
                 }
             }
             catch (Exception ex)
@@ -589,7 +600,32 @@ namespace IDPicker.Forms
             }
         }
 
-        private void trimModificationTable()
+        private void PopulateModificationDetailView(IEnumerable<object[]> queryRows)
+        {
+            detailDataGridView.Rows.Clear();
+            foreach (var tuple in queryRows)
+            {
+                try
+                {
+                    var mod = (tuple[1] as DataModel.Modification);
+                    var roundedMass = DistinctModificationFormat.Round(mod.MonoMassDelta);
+                    var explanations = _unimodControl.GetPossibleDescriptions((char)tuple[0], roundedMass);
+
+                    var newRow = new object[6];
+                    newRow[0] = tuple[0];
+                    newRow[1] = roundedMass;
+                    newRow[2] = tuple[2];
+                    newRow[3] = tuple[3];
+                    newRow[4] = tuple[4];
+                    newRow[5] = string.Join(" | ", explanations.ToArray());
+
+                    var rowIndex = detailDataGridView.Rows.Add(newRow);
+                }
+                catch{} //if row gives errors dont add it
+            }
+        }
+
+        private void trimModificationGrid()
         {
             int minColumns, minRows;
             if (!Int32.TryParse(MinColumnBox.Text, out minColumns) ||
@@ -666,6 +702,40 @@ namespace IDPicker.Forms
             dataGridView.RowHeadersWidth = (int) Math.Ceiling(maxRowHeaderWidth * 1.3) + 25;
 
             dataGridView.ResumeLayout();
+
+            trimModificationDetailTable();
+        }
+
+        private void trimModificationDetailTable()
+        {
+            if (_unimodControl == null || detailDataGridView == null || detailDataGridView.Rows.Count == 0)
+                return;
+            var pairs = _unimodControl.GetUnimodPairs();
+
+            if (!pairs.Any())
+            {
+                foreach (DataGridViewRow row in detailDataGridView.Rows)
+                {
+                    var peptides = int.Parse(row.Cells[2].Value.ToString());
+                    var minPeptides = int.Parse(tablePeptidesFilterBox.Text);
+                    row.Visible = peptides >= minPeptides; 
+                }
+                return;
+            }
+
+            detailDataGridView.SuspendLayout();
+            foreach (DataGridViewRow row in detailDataGridView.Rows)
+            {
+                var residue = (char)row.Cells[0].Value;
+                var mass = (double)row.Cells[1].Value;
+                var peptides = (int) row.Cells[2].Value;
+                var minPeptides = int.Parse(tablePeptidesFilterBox.Text);
+                if (!pairs.ContainsKey(residue) || !pairs[residue].Contains(mass) || peptides < minPeptides)
+                    row.Visible = false;
+                else
+                    row.Visible = true;
+            }
+            detailDataGridView.ResumeLayout();
         }
 
         private void SetUnimodDefaults(IList<object[]> queryRows)
@@ -691,7 +761,7 @@ namespace IDPicker.Forms
             Text = TabText = String.Format("Modification View: {0} modified {1}", totalModifications, PivotMode.ToLower());
 
             dataGridView.Visible = totalModifications > 0;
-            if (dataGridView.Visible)
+            if (totalModifications > 0 || TablePanel.Visible)
             {
                 dataGridView.DataSource = deltaMassTable;
                 dataGridView.Columns[deltaMassColumnName].Visible = false;
@@ -818,21 +888,25 @@ namespace IDPicker.Forms
 
         private void exportButton_Click (object sender, EventArgs e)
         {
-            exportMenu.Show(Cursor.Position);
+            if (sender == exportButton)
+                exportMenu.Show(Cursor.Position);
+            else
+                exportDetailMenu.Show(Cursor.Position);
         }
 
         #region Export methods
-        public virtual List<List<string>> GetFormTable (bool selected)
+        public virtual List<List<string>> GetFormTable (bool selected, bool detail)
         {
             var exportTable = new List<List<string>>();
             IList<int> exportedRows, exportedColumns;
+            var currentTable = detail ? detailDataGridView : dataGridView;
 
-            if (selected && dataGridView.SelectedCells.Count > 0 && !dataGridView.AreAllCellsSelected(false))
+            if (selected && currentTable.SelectedCells.Count > 0 && !currentTable.AreAllCellsSelected(false))
             {
                 var selectedRows = new Set<int>();
                 var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
 
-                foreach (DataGridViewCell cell in dataGridView.SelectedCells)
+                foreach (DataGridViewCell cell in currentTable.SelectedCells)
                 {
                     selectedRows.Add(cell.RowIndex);
                     selectedColumns[cell.OwningColumn.DisplayIndex] = cell.ColumnIndex;
@@ -843,23 +917,25 @@ namespace IDPicker.Forms
             }
             else
             {
-                exportedRows = dataGridView.Rows.Cast<DataGridViewRow>().Select(o => o.Index).ToList();
-                exportedColumns = dataGridView.GetVisibleColumnsInDisplayOrder().Select(o => o.Index).ToList();
+                exportedRows = currentTable.Rows.Cast<DataGridViewRow>().Select(o => o.Index).ToList();
+                exportedColumns = currentTable.GetVisibleColumnsInDisplayOrder().Select(o => o.Index).ToList();
             }
 
             // add column headers
             exportTable.Add(new List<string>());
-            exportTable.Last().Add(deltaMassColumnName.Replace("Δ", "Delta "));
+            if (currentTable.RowHeadersVisible)
+                exportTable.Last().Add(deltaMassColumnName.Replace("Δ", "Delta "));
             foreach (var columnIndex in exportedColumns)
-                exportTable.Last().Add(dataGridView.Columns[columnIndex].HeaderText);
+                exportTable.Last().Add(currentTable.Columns[columnIndex].HeaderText);
 
             foreach (int rowIndex in exportedRows)
             {
                 var rowText = new List<string>();
-                rowText.Add(dataGridView.Rows[rowIndex].HeaderCell.Value.ToString());
+                if (currentTable.Rows[rowIndex].HeaderCell.Value != null)
+                    rowText.Add(currentTable.Rows[rowIndex].HeaderCell.Value.ToString().Replace("\n"," ; "));
                 foreach (var columnIndex in exportedColumns)
                 {
-                    object value = dataGridView[columnIndex, rowIndex].Value ?? String.Empty;
+                    object value = currentTable[columnIndex, rowIndex].Value ?? String.Empty;
                     rowText.Add(value.ToString());
                 }
 
@@ -940,7 +1016,17 @@ namespace IDPicker.Forms
         {
             var selected = sender == copySelectedCellsToClipboardToolStripMenuItem ||
                            sender == exportSelectedCellsToFileToolStripMenuItem ||
-                           sender == showSelectedCellsInExcelToolStripMenuItem;
+                           sender == showSelectedCellsInExcelToolStripMenuItem ||
+                           sender == copySelectedCellsToClipboardDetailToolStripMenuItem ||
+                           sender == exportSelectedCellsToFileDetailToolStripMenuItem ||
+                           sender == showSelectedCellsInExcelDetailToolStripMenuItem;
+
+            var detail = sender == copyToClipboardDetailToolStripMenuItem ||
+                         sender == exportToFileDetailToolStripMenuItem ||
+                         sender == showInExcelDetailToolStripMenuItem ||
+                         sender == copySelectedCellsToClipboardDetailToolStripMenuItem ||
+                         sender == exportSelectedCellsToFileDetailToolStripMenuItem ||
+                         sender == showSelectedCellsInExcelDetailToolStripMenuItem;
 
             var progressWindow = new Form
             {
@@ -963,14 +1049,20 @@ namespace IDPicker.Forms
             {
                 if (y.Error != null) Program.HandleException(y.Error);
                 progressWindow.Close();
-                if (sender == clipboardToolStripMenuItem ||
-                    sender == copySelectedCellsToClipboardToolStripMenuItem)
+                if (sender == copyToClipboardToolStripMenuItem ||
+                    sender == copySelectedCellsToClipboardToolStripMenuItem ||
+                    sender == copyToClipboardDetailToolStripMenuItem ||
+                    sender == copySelectedCellsToClipboardDetailToolStripMenuItem)
                     TableExporter.CopyToClipboard(tempTable);
-                else if (sender == fileToolStripMenuItem ||
-                         sender == exportSelectedCellsToFileToolStripMenuItem)
+                else if (sender == exportToFileToolStripMenuItem ||
+                         sender == exportSelectedCellsToFileToolStripMenuItem ||
+                         sender == exportToFileDetailToolStripMenuItem ||
+                         sender == exportSelectedCellsToFileDetailToolStripMenuItem)
                     TableExporter.ExportToFile(tempTable);
                 else if (sender == showInExcelToolStripMenuItem ||
-                         sender == showSelectedCellsInExcelToolStripMenuItem)
+                         sender == showSelectedCellsInExcelToolStripMenuItem ||
+                         sender == showInExcelDetailToolStripMenuItem ||
+                         sender == showSelectedCellsInExcelDetailToolStripMenuItem)
                 {
                     var exportWrapper = new Dictionary<string, List<List<string>>> { { Name, tempTable } };
                     TableExporter.ShowInExcel(exportWrapper, false);
@@ -978,7 +1070,7 @@ namespace IDPicker.Forms
             };
             bg.DoWork += (x, y) =>
             {
-                tempTable = GetFormTable(selected);
+                tempTable = GetFormTable(selected, detail);
             };
             bg.RunWorkerAsync();
         }
@@ -997,7 +1089,12 @@ namespace IDPicker.Forms
 
         private void MinCountFilter_KeyPress(object sender, KeyPressEventArgs e)
         {
-            if (!Char.IsDigit(e.KeyChar) && !Char.IsControl(e.KeyChar))
+            if (e.KeyChar == 13)
+            {
+                ModFilter_Leave(sender,e);
+                e.Handled = true;
+            }
+            else if (!Char.IsDigit(e.KeyChar) && !Char.IsControl(e.KeyChar))
                 e.Handled = true;
         }
 
@@ -1015,7 +1112,7 @@ namespace IDPicker.Forms
                     if (!Int32.TryParse(textbox.Text, out value) || value < 1)
                         textbox.Text = "2";
 
-                    trimModificationTable();
+                    trimModificationGrid();
                 }
                 /*catch
                 {
@@ -1048,7 +1145,7 @@ namespace IDPicker.Forms
                 if (!_unimodControl.ChangesMade(true))
                     return;
 
-                trimModificationTable();
+                trimModificationGrid();
             }
             catch (Exception ex)
             {
@@ -1059,17 +1156,45 @@ namespace IDPicker.Forms
         // override the default increment mechanism:
         // increment by multiplying by 10, decrement by dividing by 10
         bool roundToNearestUpDownChanging;
+        private decimal roundToNearestValue = 1;
         private void roundToNearestUpDown_ValueChanged (object sender, EventArgs e)
         {
+            var currentControl = (NumericUpDown)sender;
             if (roundToNearestUpDownChanging || workerThread.IsBusy)
+            {
+                if (!System.Text.RegularExpressions.Regex.IsMatch(currentControl.Value.ToString(), @"^10*\.?0*$") &&
+                !System.Text.RegularExpressions.Regex.IsMatch(currentControl.Value.ToString(), @"^0?\.0*10*$"))
+                    currentControl.Value = roundToNearestValue;
                 return;
+            }
 
+            //make sure not rounding to strange numbers
+            var valueAsString = currentControl.Value.ToString();
             decimal oldValue = DistinctModificationFormat.ModificationMassRoundToNearest.Value;
             roundToNearestUpDownChanging = true;
-            if (roundToNearestUpDown.Value - roundToNearestUpDown.Increment == oldValue)
-                roundToNearestUpDown.Value = Math.Min(roundToNearestUpDown.Maximum, oldValue * 10);
-            else if (roundToNearestUpDown.Value + roundToNearestUpDown.Increment == oldValue)
-                roundToNearestUpDown.Value = Math.Max(roundToNearestUpDown.Minimum, oldValue / 10);
+
+            if (!System.Text.RegularExpressions.Regex.IsMatch(valueAsString, @"^10*\.?0*$") &&
+                !System.Text.RegularExpressions.Regex.IsMatch(valueAsString, @"^0?\.0*10*$") &&
+                (System.Text.RegularExpressions.Regex.IsMatch(oldValue.ToString(), @"^10*\.?0*$") ||
+                System.Text.RegularExpressions.Regex.IsMatch(oldValue.ToString(), @"^0?\.0*10*$")))
+            {
+                currentControl.Value = currentControl.Value < oldValue
+                                           ? Math.Max(currentControl.Minimum, oldValue/10)
+                                           : Math.Min(currentControl.Maximum, oldValue*10);
+            }
+            else
+            {
+                if (currentControl.Value - currentControl.Increment == oldValue)
+                    currentControl.Value = Math.Min(currentControl.Maximum, oldValue * 10);
+                else if (currentControl.Value + currentControl.Increment == oldValue)
+                    currentControl.Value = Math.Max(currentControl.Minimum, oldValue / 10);
+            }
+            roundToNearestValue = currentControl.Value;
+
+            if (sender == roundToNearestUpDown)
+                roundToNearestTableUpDown.Value = roundToNearestUpDown.Value;
+            else
+                roundToNearestUpDown.Value = roundToNearestTableUpDown.Value;
             roundToNearestUpDownChanging = false;
 
             basicDataFilter = null;
@@ -1094,6 +1219,13 @@ namespace IDPicker.Forms
             if (session != null)
                 SetData(session, viewFilter);
         }
+
+        private void switchViewButton_Click(object sender, EventArgs e)
+        {
+            GridPanel.Visible = sender == switchToGridButton;
+            TablePanel.Visible = sender == switchtoTableButton;
+        }
+
     }
 
     public delegate void ModificationViewFilterEventHandler (ModificationTableForm sender, DataFilter modificationViewFilter);

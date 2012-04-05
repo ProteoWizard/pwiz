@@ -72,6 +72,9 @@ namespace CustomDataSourceDialog
             this.ArrowPicture = new System.Windows.Forms.PictureBox();
             this.ForwardPicture = new System.Windows.Forms.PictureBox();
             this.BackPicture = new System.Windows.Forms.PictureBox();
+            this.progressPanel = new System.Windows.Forms.Panel();
+            this.importProgressBar = new System.Windows.Forms.ProgressBar();
+            this.importProgressCancelButton = new System.Windows.Forms.Button();
             this.MenuPanel.SuspendLayout();
             this.VertSplit.Panel1.SuspendLayout();
             this.VertSplit.Panel2.SuspendLayout();
@@ -82,6 +85,7 @@ namespace CustomDataSourceDialog
             ((System.ComponentModel.ISupportInitialize)(this.ArrowPicture)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ForwardPicture)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.BackPicture)).BeginInit();
+            this.progressPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // cancelButton
@@ -221,6 +225,7 @@ namespace CustomDataSourceDialog
             // 
             // VertSplit.Panel2
             // 
+            this.VertSplit.Panel2.Controls.Add(this.progressPanel);
             this.VertSplit.Panel2.Controls.Add(this.RemoveNodeButton);
             this.VertSplit.Panel2.Controls.Add(this.AddNode);
             this.VertSplit.Panel2.Controls.Add(this.FileTreeView);
@@ -329,6 +334,39 @@ namespace CustomDataSourceDialog
             this.BackPicture.Click += new System.EventHandler(this.BackPicture_Click);
             this.BackPicture.MouseEnter += new System.EventHandler(this.BackPicture_MouseEnter);
             // 
+            // progressPanel
+            // 
+            this.progressPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.progressPanel.Controls.Add(this.importProgressCancelButton);
+            this.progressPanel.Controls.Add(this.importProgressBar);
+            this.progressPanel.Location = new System.Drawing.Point(42, 375);
+            this.progressPanel.Name = "progressPanel";
+            this.progressPanel.Size = new System.Drawing.Size(409, 28);
+            this.progressPanel.TabIndex = 3;
+            // 
+            // importProgressBar
+            // 
+            this.importProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.importProgressBar.Location = new System.Drawing.Point(3, 4);
+            this.importProgressBar.Name = "importProgressBar";
+            this.importProgressBar.Size = new System.Drawing.Size(367, 21);
+            this.importProgressBar.Style = System.Windows.Forms.ProgressBarStyle.Continuous;
+            this.importProgressBar.TabIndex = 0;
+            // 
+            // importProgressCancelButton
+            // 
+            this.importProgressCancelButton.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.importProgressCancelButton.Location = new System.Drawing.Point(376, 3);
+            this.importProgressCancelButton.Name = "importProgressCancelButton";
+            this.importProgressCancelButton.Size = new System.Drawing.Size(30, 23);
+            this.importProgressCancelButton.TabIndex = 2;
+            this.importProgressCancelButton.Text = "Ø";
+            this.importProgressCancelButton.UseVisualStyleBackColor = true;
+            this.importProgressCancelButton.Click += new System.EventHandler(this.importProgressCancelButton_Click);
+            // 
             // IDPOpenDialog
             // 
             this.AcceptButton = this.openButton;
@@ -364,6 +402,7 @@ namespace CustomDataSourceDialog
             ((System.ComponentModel.ISupportInitialize)(this.ArrowPicture)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ForwardPicture)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.BackPicture)).EndInit();
+            this.progressPanel.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -389,5 +428,8 @@ namespace CustomDataSourceDialog
         private System.Windows.Forms.Button AddNode;
         private System.Windows.Forms.TreeView FileTreeView;
         private System.Windows.Forms.CheckBox SubfolderBox;
+        private System.Windows.Forms.Panel progressPanel;
+        private System.Windows.Forms.Button importProgressCancelButton;
+        private System.Windows.Forms.ProgressBar importProgressBar;
     }
 }

@@ -92,7 +92,9 @@ namespace IDPicker.Controls
         private Dictionary<TreeNode, TreeNode> _hiddenNodes;
         private Dictionary<double, int> _currentMasses;
         private Dictionary<char, int> _currentSites;
+        private Dictionary<char, HashSet<double>> _currentPairs;
         private Dictionary<TreeNode, int> _categoryChecked;
+        private Dictionary<char, Dictionary<double, List<string>>> _unimodIndex;
         private TreeNode _rootNode;
 
         public UnimodControl()
@@ -106,9 +108,11 @@ namespace IDPicker.Controls
         public void SetUnimodDefaults(HashSet<char> relevantSites, HashSet<double> relevantMasses, DistinctMatchFormat distinctMatchFormat)
         {
             UnimodTree.Nodes.Clear();
+            _unimodIndex = new Dictionary<char, Dictionary<double, List<string>>>();
             _hiddenNodes = new Dictionary<TreeNode, TreeNode>();
             _currentMasses = new Dictionary<double, int>();
             _currentSites = new Dictionary<char, int>();
+            _currentPairs = new Dictionary<char, HashSet<double>>();
             _categoryChecked = new Dictionary<TreeNode, int>();
             _savedMasses = new HashSet<double>();
             _savedSites = new HashSet<char>();
@@ -135,13 +139,24 @@ namespace IDPicker.Controls
                     if (relevantMasses != null && !relevantMasses.Contains(mass))
                         continue;
 
+                    var newText = mod.name + " - " + spec.site;
+                    var newSite = spec.site.ToString();
+                    var newSiteChar = _nameToAbbreviation[spec.site.ToString()];
+                    var isHidden = spec.hidden;
+
                     refDict[spec.classification].Add(new UnimodNode()
                                                          {
-                                                             Text = mod.name + " - " + spec.site,
+                                                             Text = newText,
                                                              Mass = mass,
-                                                             Site = spec.site.ToString(),
-                                                             Hidden = spec.hidden
+                                                             Site = newSite,
+                                                             Hidden = isHidden
                                                          });
+
+                    if (!_unimodIndex.ContainsKey(newSiteChar))
+                        _unimodIndex.Add(newSiteChar, new Dictionary<double, List<string>>());
+                    if (!_unimodIndex[newSiteChar].ContainsKey(mass))
+                        _unimodIndex[newSiteChar].Add(mass, new List<string> { mod.name });
+                    else _unimodIndex[newSiteChar][mass].Add(mod.name);
                 }
             }
 
@@ -258,6 +273,11 @@ namespace IDPicker.Controls
             return _currentMasses.Select(kvp => kvp.Key).ToList();
         }
 
+        public Dictionary<char,HashSet<double>> GetUnimodPairs()
+        {
+            return _currentPairs;
+        }
+
         private void AddNodeToList(UnimodNode baseNode)
         {
             //add mass
@@ -272,6 +292,12 @@ namespace IDPicker.Controls
             else
                 _currentSites.Add(baseNode.SiteChar, 1);
 
+            //add pair
+            if (_currentPairs.ContainsKey(baseNode.SiteChar))
+                    _currentPairs[baseNode.SiteChar].Add(baseNode.Mass);
+            else
+                _currentPairs.Add(baseNode.SiteChar, new HashSet<double>{baseNode.Mass});
+
             _categoryChecked[baseNode.Parent]++;
         }
 
@@ -281,16 +307,31 @@ namespace IDPicker.Controls
                 return;
 
             //remove mass
-            if (_currentMasses[baseNode.Mass] > 1)
-                _currentMasses[baseNode.Mass]--;
-            else
-                _currentMasses.Remove(baseNode.Mass);
+            if (_currentMasses.ContainsKey(baseNode.Mass))
+            {
+                if (_currentMasses[baseNode.Mass] > 1)
+                    _currentMasses[baseNode.Mass]--;
+                else
+                    _currentMasses.Remove(baseNode.Mass);
+            }
 
             //remove site
-            if (_currentSites[baseNode.SiteChar] > 1)
-                _currentSites[baseNode.SiteChar]--;
-            else
-                _currentSites.Remove(baseNode.SiteChar);
+            if (_currentSites.ContainsKey(baseNode.SiteChar))
+            {
+                if (_currentSites[baseNode.SiteChar] > 1)
+                    _currentSites[baseNode.SiteChar]--;
+                else
+                    _currentSites.Remove(baseNode.SiteChar);
+            }
+
+            //remove pair
+            if (_currentPairs.ContainsKey(baseNode.SiteChar))
+            {
+                if (_currentPairs[baseNode.SiteChar].Count > 1)
+                    _currentPairs[baseNode.SiteChar].Remove(baseNode.Mass);
+                else
+                    _currentPairs.Remove(baseNode.SiteChar);
+            }
 
             _categoryChecked[baseNode.Parent]--;
         }
@@ -392,6 +433,13 @@ namespace IDPicker.Controls
         private void FilterEventRaised(object sender, EventArgs e)
         {
             FilterNodes(HiddenModBox.Checked, SiteFilterBox.Text);
+        }
+
+        public List<string> GetPossibleDescriptions(char location, double roundedMass)
+        {
+            if (_unimodIndex == null || !_unimodIndex.ContainsKey(location) || !_unimodIndex[location].ContainsKey(roundedMass))
+                return new List<string>();
+            return _unimodIndex[location][roundedMass];
         }
     }
 }

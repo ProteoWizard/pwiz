@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -480,8 +481,10 @@ namespace CustomDataSourceDialog
 
         }
 
+        private string sourceType;
         private void sourceTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
+            sourceType = sourceTypeComboBox.Text;
             ApplyFilters();
         }
 
@@ -843,10 +846,61 @@ namespace CustomDataSourceDialog
 
         private void AddNode_Click(object sender, EventArgs e)
         {
-            var newNode = CreateNewNode((string)FileTree.SelectedNode.Tag, true);
-            if (newNode == null)
-                return;
+            filesToExamine = 0;
+            filesExamined = 0;
+            AddNode.Enabled = false;
+            RemoveNodeButton.Enabled = false;
 
+            FileTreeView.Size = new Size(FileTreeView.Size.Width,FileTreeView.Size.Height - 30);
+            progressPanel.Visible = true;
+
+            var bgw = new BackgroundWorker {WorkerReportsProgress = true};
+            bgw.DoWork += AddNodeWork;
+            bgw.RunWorkerCompleted += (x, y) =>
+                                          {
+                                              var newNode = (TreeNode)y.Result;
+                                              if (newNode != null)
+                                              {
+                                                  if (InvokeRequired)
+                                                  {
+                                                      Action<TreeNode> invokedPlacement = PlaceNode;
+                                                      invokedPlacement.Invoke(newNode);
+                                                  }
+                                                  else
+                                                      PlaceNode(newNode);
+                                              }
+
+                                              canceled = false;
+                                              FileTreeView.Size = new Size(FileTreeView.Size.Width, FileTreeView.Size.Height + 30);
+                                              progressPanel.Visible = false;
+                                              importProgressBar.Value = 0;
+                                              AddNode.Enabled = true;
+                                              RemoveNodeButton.Enabled = true;
+                                              importProgressCancelButton.Enabled = true;
+                                          };
+            bgw.ProgressChanged += (x, y) =>
+                                       {
+                                           var newPercentage = Math.Floor(((double)filesExamined / filesToExamine) * 100);
+                                           importProgressBar.Value = Convert.ToInt32(newPercentage);
+                                       };
+
+            bgw.RunWorkerAsync(FileTree.SelectedNode.Tag);
+
+        }
+
+        private int filesExamined;
+        private int filesToExamine;
+        private void AddNodeWork(object sender, DoWorkEventArgs e)
+        {
+            var bgw = sender as BackgroundWorker;
+            var filePath = (string)e.Argument;
+            GetTotalFileCount(filePath);
+            var newNode = CreateNewNode(filePath, true, bgw);
+            e.Result = newNode;
+        }
+
+        private void PlaceNode(TreeNode newNode)
+        {
             //remove filters
             var errorNode = (from TreeNode node in FileTreeView.Nodes
                              where node.Name == "IDPDBErrorNode"
@@ -861,7 +915,7 @@ namespace CustomDataSourceDialog
             if (closestRelative != null)
             {
                 //If folder is a super-folder move subs
-                for (var x = closestRelative.Nodes.Count-1; x >= 0; x--)
+                for (var x = closestRelative.Nodes.Count - 1; x >= 0; x--)
                 {
                     var pathList = BreadCrumbControl.PathToDirectoryList(closestRelative.Nodes[x].ToolTipText);
                     var buildingString = string.Empty;
@@ -891,13 +945,26 @@ namespace CustomDataSourceDialog
             _unfilteredNode = FileTreeView.Nodes[0];
             SelectAndPreviewNode(FileTree.SelectedNode);
             if (!DataSources.Contains((string)FileTree.SelectedNode.Tag))
-                DataSources.Add((string) FileTree.SelectedNode.Tag);
+                DataSources.Add((string)FileTree.SelectedNode.Tag);
             ApplyFilters();
-
         }
 
-        private TreeNode CreateNewNode(string folderPath, bool firstLayer)
+        private void GetTotalFileCount(string folderPath)
         {
+            var di = new DirectoryInfo(folderPath);
+            var filecount = di.GetFiles().Length;
+            filesToExamine += filecount;
+            if (SubfolderBox.Checked)
+                foreach (var path in di.GetDirectories())
+                    GetTotalFileCount(path.FullName);
+        }
+
+        private bool canceled;
+        private TreeNode CreateNewNode(string folderPath, bool firstLayer, BackgroundWorker updateStatus)
+        {
+            if (canceled)
+                return null;
+
             var newNode = new TreeNode
             {
                 Text = "Temp",
@@ -921,7 +988,7 @@ namespace CustomDataSourceDialog
                     TreeNode subNode;
                     try
                     {
-                        subNode = CreateNewNode(path.FullName, false);
+                        subNode = CreateNewNode(path.FullName, false, updateStatus);
                         if (subNode == null)
                             continue;
                     }
@@ -935,8 +1002,10 @@ namespace CustomDataSourceDialog
                 if (firstLayer)
                     VertSplit.Enabled = true;
             }
+            //Here is what takes the most time
             foreach (var file in di.GetFiles())
             {
+                if (canceled) return null;
                 try
                 {
                     //have to use slightly odd method of checking extension since
@@ -949,14 +1018,14 @@ namespace CustomDataSourceDialog
                             destructableName = destructableName.Remove(0, 1);
                         if (destructableName.Length == 0)
                             continue;
-                        if (_extensionList != null && 
-                            _extensionList.ContainsKey(sourceTypeComboBox.Text) &&
-                            !_extensionList[sourceTypeComboBox.Text].Contains(destructableName))
+                        if (_extensionList != null &&
+                            _extensionList.ContainsKey(sourceType) &&
+                            !_extensionList[sourceType].Contains(destructableName))
                             continue;
                     }
                     if (_extensionList != null &&
-                            _extensionList.ContainsKey(sourceTypeComboBox.Text) &&
-                            !_extensionList[sourceTypeComboBox.Text].Contains(file.Extension))
+                            _extensionList.ContainsKey(sourceType) &&
+                            !_extensionList[sourceType].Contains(file.Extension))
                         continue;
 
                     HandleItemToAdd(ref newNode, file);
@@ -965,12 +1034,18 @@ namespace CustomDataSourceDialog
                 {
                     throw new Exception("Failed to add file \"" + file.Name + "\"", e);
                 }
+                finally
+                {
+                    filesExamined++;
+                    updateStatus.ReportProgress(0);
+                }
             }
             foreach (var source in newNode.Nodes.Cast<TreeNode>()
                      .Where(node => (string)node.Tag == "Source"))
             {
                 foreach (TreeNode file in source.Nodes)
                 {
+                    if (canceled) return null;
 					if (!file.Text.ToLower().EndsWith(".idpdb"))
                     {
                         var baseName = Path.GetFileNameWithoutExtension(file.Text);
@@ -986,7 +1061,7 @@ namespace CustomDataSourceDialog
                 }
             }
 
-            return newNode.Nodes.Count == 0 ? null : newNode;
+            return newNode.Nodes.Count == 0 || canceled ? null : newNode;
         }
 
         private void HandleItemToAdd(ref TreeNode newNode, FileInfo file)
@@ -1217,6 +1292,12 @@ namespace CustomDataSourceDialog
         {
             if ((string)e.Node.Tag == "Uncheckable")
                 e.Cancel = true;
+        }
+
+        private void importProgressCancelButton_Click(object sender, EventArgs e)
+        {
+            canceled = true;
+            importProgressCancelButton.Enabled = false;
         }
     }
 }

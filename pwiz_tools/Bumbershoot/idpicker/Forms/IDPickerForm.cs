@@ -1405,7 +1405,7 @@ namespace IDPicker
 
                                  if (modificationTableForm != null)
                                  {
-                                     var table = modificationTableForm.GetFormTable(selected);
+                                     var table = modificationTableForm.GetFormTable(selected, false);
                                      if (table.Count > 1)
                                          reportDictionary.Add("Modification Table", table);
                                  }
@@ -1828,7 +1828,7 @@ namespace IDPicker
             }
             if (modificationTableForm != null)
             {
-                var alltables = new List<List<List<string>>> { modificationTableForm.GetFormTable(false) };
+                var alltables = new List<List<List<string>>> { modificationTableForm.GetFormTable(false, false) };
                 if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
                     TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-modificationTable.html"),
                                                       reportName + "- Modification Summary Table",
