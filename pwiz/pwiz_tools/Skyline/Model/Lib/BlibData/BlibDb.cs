@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                                PrecursorMZ = refSpectra.PrecursorMZ,
                                                PrecursorCharge = refSpectra.PrecursorCharge,
                                                PeptideModSeq = refSpectra.PeptideModSeq,
-                                               NumPeaks = (short) peaksInfo.Peaks.Count(),
+                                               NumPeaks = (ushort) peaksInfo.Peaks.Count(),
                                                Copies = refSpectra.Copies
                                            };
 
@@ -496,7 +496,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             var peaksInfo = spectrum.SpectrumPeaksInfo;
 
             refSpectra.Copies = copies;
-            refSpectra.NumPeaks = (short) peaksInfo.Peaks.Length;
+            refSpectra.NumPeaks = (ushort) peaksInfo.Peaks.Length;
 
             refSpectra.Peaks = new DbRefSpectraPeaks
                                    {

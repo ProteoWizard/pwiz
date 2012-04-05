@@ -386,6 +386,7 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
+                var setLibKeys = new Dictionary<LibKey, bool>(rows);
                 var setSequences = new Dictionary<LibSeqKey, bool>(rows);
                 var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
@@ -419,7 +420,13 @@ namespace pwiz.Skyline.Model.Lib
                         string sequence = reader.GetString(iSeq);
                         int charge = reader.GetInt16(iCharge);
                         short copies = reader.GetInt16(iCopies);
-                        short numPeaks = reader.GetInt16(iPeaks);
+                        int numPeaks32 = reader.GetInt32(iPeaks);
+                        if (numPeaks32 > ushort.MaxValue)
+                        {
+                            // CONSIDER: Throw an error instead?
+                            continue;
+                        }
+                        ushort numPeaks = (ushort) numPeaks32;
                         int id = reader.GetInt32(iId);
 
                         // Avoid creating a cache which will just report it is corrupted.
@@ -430,7 +437,11 @@ namespace pwiz.Skyline.Model.Lib
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
                         LibKey key = new LibKey(sequence, charge);
-                        libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id));
+                        if (!setLibKeys.ContainsKey(key))
+                        {
+                            setLibKeys.Add(key, true);
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id));
+                        }
                     }
                 }
 
@@ -659,7 +670,7 @@ namespace pwiz.Skyline.Model.Lib
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
                         LibKey key = new LibKey(specSequence, 0, seqLength, charge);
-                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, (short)copies, (short)numPeaks, id);
+                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, (short)copies, (ushort)numPeaks, id);
                         if (seqKeyLength > 0)
                         {
                             LibSeqKey seqKey = new LibSeqKey(key, seqKeyHash, seqKeyLength);
@@ -730,7 +741,7 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         if (reader.Read())
                         {
-                            short numPeaks = info.NumPeaks;
+                            ushort numPeaks = info.NumPeaks;
                             return ReadPeaks(reader, numPeaks);
                         }
                     }
@@ -763,8 +774,10 @@ namespace pwiz.Skyline.Model.Lib
                     {
                         if (reader.Read())
                         {
-                            short numPeaks = reader.GetInt16(RefSpectra.numPeaks);
-                            return ReadPeaks(reader, numPeaks);
+                            int numPeaks = reader.GetInt32(RefSpectra.numPeaks);
+                            if (numPeaks > ushort.MaxValue)
+                                throw new IOException(string.Format("Spectrum peaks {0} excede the maximum allowed {1}.", numPeaks, ushort.MaxValue));
+                            return ReadPeaks(reader, (ushort) numPeaks);
                         }
                     }
                 }
@@ -777,7 +790,7 @@ namespace pwiz.Skyline.Model.Lib
             return null;
         }
 
-        private static SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, short numPeaks)
+        private static SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, ushort numPeaks)
         {
             const int sizeMz = sizeof(double);
             const int sizeInten = sizeof(float);
@@ -1201,10 +1214,10 @@ namespace pwiz.Skyline.Model.Lib
     {
         private readonly LibKey _key;
         private readonly short _copies;
-        private readonly short _numPeaks;
+        private readonly ushort _numPeaks;
         private readonly int _id;
 
-        public BiblioLiteSpectrumInfo(LibKey key, short copies, short numPeaks, int id)
+        public BiblioLiteSpectrumInfo(LibKey key, short copies, ushort numPeaks, int id)
         {
             _key = key;
             _copies = copies;
@@ -1214,7 +1227,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public LibKey Key { get { return _key;  } }
         public short Copies { get { return _copies; } }
-        public short NumPeaks { get { return _numPeaks; } }
+        public ushort NumPeaks { get { return _numPeaks; } }
         public int Id { get { return _id; } }
     }
 }
