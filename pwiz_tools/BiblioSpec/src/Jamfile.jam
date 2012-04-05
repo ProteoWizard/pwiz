@@ -1,11 +1,11 @@
 #
-# $Id: Jamfile.jam 2824 2011-06-29 18:37:47Z chambm $
+# $Id$
 #
 #
 # Original author: Barbara Frewen <frewen .at. u.washington.edu>,
 #                  MacCoss Lab, Department of Genome Sciences, UW
 #
-# Copyright 2009 University of Washington - Seattle, WA
+# Copyright 2012 University of Washington - Seattle, WA
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); 
 # you may not use this file except in compliance with the License. 

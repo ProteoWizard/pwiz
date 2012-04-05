@@ -15,6 +15,7 @@ if [ -d libraries/libpng-1.5.6 ]; then rm -fr libraries/libpng-1.5.6; fi;
 if [ -d libraries/freetype-2.4.7 ]; then rm -fr libraries/freetype-2.4.7; fi;
 if [ -d libraries/hdf5-1.8.7 ]; then rm -fr libraries/hdf5-1.8.7; fi;
 if [ -d libraries/fftw-3.1.2 ]; then rm -fr libraries/fftw-3.1.2; fi;
+if [ -d libraries/expat-2.0.1 ]; then rm -fr libraries/expat-2.0.1; fi;
 if [ -f libraries/libfftw3-3.def ]; then rm -f libraries/libfftw3-3.def; fi;
 if [ -f libraries/libfftw3-3.dll ]; then rm -f libraries/libfftw3-3.dll; fi;
 
