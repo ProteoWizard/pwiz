@@ -367,8 +367,9 @@ namespace pwiz.Skyline.Model.Lib
                     revision = match.Groups[3].Value;
                 }
             }
-            var libraryEntries = new XHunterSpectrumInfo[size];
+            var setLibKeys = new Dictionary<LibKey, bool>(size);
             var setSequences = new Dictionary<LibSeqKey, bool>(size);
+            var libraryEntries = new List<XHunterSpectrumInfo>(size);
 
             const int countHeader = ((int) SpectrumHeaders2.count)*sizeof (int);
             byte[] specHeader = new byte[1024];
@@ -465,18 +466,17 @@ namespace pwiz.Skyline.Model.Lib
                     stream.Seek(ReadSize(stream) + 4, SeekOrigin.Current);
 
                 // These libraries should not have duplicates, but just in case.
-                // CONSIDER: Emit error about redundancy?
-                // These legacy libraries assume [+57.0] modified Cysteine
-                //LibKey key = new LibKey(sequence, 0, seqLength, charge);
-                //if (!dictLibrary.ContainsKey(key))
-                //dictLibrary.Add(key, new XHunterSpectrumInfo(i2, expect, numPeaks, location));
-
+                // Apparently, GPM libraries do contain redundancies, as we found
+                // when a revision lost this test.
                 var key = new LibKey(sequence, 0, seqLength, charge);
-
-                libraryEntries[i - 1] = new XHunterSpectrumInfo(key, i2, expect, numPeaks, location);
+                if (!setLibKeys.ContainsKey(key))
+                {
+                    setLibKeys.Add(key, true);
+                    libraryEntries.Add(new XHunterSpectrumInfo(key, i2, expect, numPeaks, location));
+                }
             }
            
-            Array.Sort(libraryEntries, CompareSpectrumInfo);
+            libraryEntries.Sort(CompareSpectrumInfo);
 
             using (FileSaver fs = new FileSaver(CachePath, sm))
             using (Stream outStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
@@ -512,7 +512,7 @@ namespace pwiz.Skyline.Model.Lib
                 outStream.Write(BitConverter.GetBytes(revisionBytes.Length), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(idBytes.Length), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
-                outStream.Write(BitConverter.GetBytes(libraryEntries.Length), 0, sizeof (int));
+                outStream.Write(BitConverter.GetBytes(libraryEntries.Count), 0, sizeof (int));
                 outStream.Write(BitConverter.GetBytes((long) 0), 0, sizeof (long));
 
                 sm.Finish(outStream);
@@ -638,9 +638,6 @@ namespace pwiz.Skyline.Model.Lib
                         // Read sequence information
                         ReadComplete(stream, specSequence, seqLength);
                         
-                        // These libraries should not have duplicates, but just in case.
-                        // CONSIDER: Emit error about redundancy?
-                        // These legacy libraries assume [+57.0] modified Cysteine
                         LibKey key = new LibKey(specSequence, 0, seqLength, charge);
                         libraryEntries[i] = new XHunterSpectrumInfo(key, i2, expect, (short)numPeaks, location);
                         

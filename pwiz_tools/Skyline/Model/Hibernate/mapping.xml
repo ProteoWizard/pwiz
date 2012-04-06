@@ -165,6 +165,7 @@
     <property name="IsotopeDistIndex" />
     <property name="IsotopeDistRank" />
     <property name="IsotopeDistProportion" />
+    <property name="FullScanFilterWidth" />
     <property name="IsDecoy" />
     <property name="ProductDecoyMzShift" />
   </class>

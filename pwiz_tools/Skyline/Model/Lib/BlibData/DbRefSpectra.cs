@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual char? PrevAA { get; set; }
         public virtual char? NextAA { get; set; }
         public virtual short Copies { get; set; }
-        public virtual short NumPeaks { get; set; }
+        public virtual ushort NumPeaks { get; set; }
         public virtual DbRefSpectraPeaks Peaks { get; set; }
         public virtual ICollection<DbModification> Modifications { get; set; }
         public virtual ICollection<DbRetentionTimes> RetentionTimes { get; set; }
