@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace TestRunner
 {
@@ -54,8 +55,13 @@ namespace TestRunner
             try
             {
                 // Parse command line args and initialize default values.
-                CommandLineArgs.ParseArgs(args,
-                                          "?;/?;-?;help;test;skip;filter;clipboardcheck=off;log=TestRunner.log;report=TestRunner.log;loop=0;repeat=1;random=on;offscreen=on");
+                const string commandLineOptions =
+                    "?;/?;-?;help;" +
+                    "test;skip;filter;" +
+                    "loop=0;repeat=1;random=on;offscreen=on;" +
+                    "clipboardcheck=off;profile=off;vendors=on;" +
+                    "log=TestRunner.log;report=TestRunner.log";
+                CommandLineArgs.ParseArgs(args, commandLineOptions);
 
                 switch (CommandLineArgs.SearchArgs("?;/?;-?;help;report"))
                 {
@@ -81,6 +87,7 @@ namespace TestRunner
                 var skyline = Assembly.LoadFrom(GetAssemblyPath("Skyline.exe"));
                 _program = skyline.GetType("pwiz.Skyline.Program");
                 _program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { CommandLineArgs.ArgAsBool("offscreen") });
+                _program.GetMethod("set_NoVendorReaders").Invoke(null, new object[] { !CommandLineArgs.ArgAsBool("vendors") });
 
                 RunTests();
             }
@@ -287,6 +294,13 @@ namespace TestRunner
                                           exception.InnerException.StackTrace);
                         }
                         log.Flush();
+
+                        // Pause after first test for profiling.
+                        if (pass == 1 && testNumber == 1 && CommandLineArgs.ArgAsBool("profile"))
+                        {
+                            Console.WriteLine("\nPausing for 10 seconds to allow memory snapshot...\n");
+                            Thread.Sleep(10*1000);
+                        }
                     }
                 }
             }
@@ -295,6 +309,13 @@ namespace TestRunner
             log.Close();
             Console.WriteLine("\n");
             Report(CommandLineArgs.ArgAsString("log"));
+
+            // Pause for profiling
+            if (CommandLineArgs.ArgAsBool("profile"))
+            {
+                Console.WriteLine("\nSleeping to allow memory profiling...\n");
+                Thread.Sleep(24*60*60*1000);    // 24 hours
+            }
         }
 
         // Load list of tests to be run into TestList.
@@ -546,6 +567,10 @@ Here is a list of recognized arguments:
                                     (or until the process is killed).  That is the default
                                     setting if the loop argument is not specified.
 
+    repeat=[n]                      Repeat each test ""n"" times, where n is a positive integer.
+                                    This can help diagnose consistent memory leaks, in contrast
+                                    with a leak that occurs only the first time a test is run.
+
     random=[on|off]                 Run the tests in random order (random=on, the default)
                                     or alphabetic order (random=off).  Each test is run
                                     exactly once per loop, regardless of the order.
@@ -564,6 +589,17 @@ Here is a list of recognized arguments:
                                     The report is formatted so it can be used as an input
                                     file for the ""test"" or ""skip"" options in a subsequent
                                     run.
+
+    profile=[on|off]                Set profile=on to enable memory profiling mode.
+                                    TestRunner will pause for 10 seconds after the first
+                                    test is run to allow you to take a memory snapshot.
+                                    After the test run it will sleep instead of terminating
+                                    to allow you to take a final memory snapshot.
+
+    vendors=[on|off]                If vendors=on, Skyline's tests will use vendor readers to
+                                    read data files.  If vendors=off, tests will read data using
+                                    the mzML format.  This is useful to isolate memory leaks or
+                                    other problems that might occur in the vendor readers.
 
     clipboardcheck                  When this argument is specified, TestRunner runs
                                     each test once, and makes sure that it did not use

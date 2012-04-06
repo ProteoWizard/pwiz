@@ -63,8 +63,9 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                return Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator) &&
-                       Equals(",", CultureInfo.CurrentCulture.TextInfo.ListSeparator);
+                return !Program.NoVendorReaders &&
+                    Equals(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator) &&
+                    Equals(",", CultureInfo.CurrentCulture.TextInfo.ListSeparator);
             }
         }
 
@@ -78,7 +79,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return true;
+                return !Program.NoVendorReaders;
             }
         }
 
@@ -92,7 +93,7 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return !IsDebugMode;  // no waters library for debug
+                return !Program.NoVendorReaders && !IsDebugMode;  // no waters library for debug
             }
         }
 

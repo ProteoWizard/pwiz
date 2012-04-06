@@ -47,6 +47,9 @@ namespace pwiz.Skyline
         // SkylineOffscreen is set true to move Skyline windows offscreen for stress testing.
         public static bool SkylineOffscreen { get; set; }
 
+        // NoVendorReaders is set true to avoid calling vendor readers during stress testing.
+        public static bool NoVendorReaders { get; set; }
+
         // Some initialization must only be done once per process when stress testing.
         private static bool _initialized;
 
