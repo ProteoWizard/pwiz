@@ -72,6 +72,7 @@ namespace IDPicker.DataModel
 
         public void Start ()
         {
+            mergeException = null;
             var workerThread = new Thread(merge);
             workerThread.Start();
 
@@ -80,18 +81,24 @@ namespace IDPicker.DataModel
                 workerThread.Join(100);
                 System.Windows.Forms.Application.DoEvents();
             }
+
+            if (mergeException != null)
+                throw new Exception("", mergeException); // preserve stack trace
         }
 
         void initializeTarget (SQLiteConnection conn)
         {
-            string biggestSourceFilepath = mergeSourceFilepaths.OrderByDescending(o => new FileInfo(o).Length).First();
-
             if (!SessionFactoryFactory.IsValidFile(mergeTargetFilepath))
             {
                 // if the target doesn't exist, the biggest source is copied to the target
                 File.Delete(mergeTargetFilepath);
-                File.Copy(biggestSourceFilepath, mergeTargetFilepath);
-                mergeSourceFilepaths = mergeSourceFilepaths.Where(o => o != biggestSourceFilepath);
+
+                if (!mergeSourceFilepaths.IsNullOrEmpty())
+                {
+                    string biggestSourceFilepath = mergeSourceFilepaths.OrderByDescending(o => new FileInfo(o).Length).First();
+                    File.Copy(biggestSourceFilepath, mergeTargetFilepath);
+                    mergeSourceFilepaths = mergeSourceFilepaths.Where(o => o != biggestSourceFilepath);
+                }
             }
 
             using (var session = SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath).OpenSession())
@@ -100,7 +107,7 @@ namespace IDPicker.DataModel
             }
 
             conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeTargetFilepath.Replace("'", "''") + "' AS merged");
-            conn.ExecuteNonQuery("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA cache_size=" + tempCacheSize);
+            conn.ExecuteNonQuery("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA page_size=32768; PRAGMA cache_size=" + tempCacheSize);
             conn.ExecuteNonQuery("PRAGMA merged.journal_mode=OFF; PRAGMA merged.synchronous=OFF; PRAGMA merged.cache_size=" + mergedCacheSize);
 
             conn.ExecuteNonQuery("CREATE TABLE IF NOT EXISTS merged.MergedFiles (Filepath TEXT PRIMARY KEY)");
@@ -136,10 +143,17 @@ namespace IDPicker.DataModel
 
         void merge ()
         {
-            if (mergeSourceConnection != null)
-                mergeConnection(mergeSourceConnection);
-            else
-                mergeFiles();
+            try
+            {
+                if (mergeSourceConnection != null)
+                    mergeConnection(mergeSourceConnection);
+                else
+                    mergeFiles();
+            }
+            catch (Exception e)
+            {
+                mergeException = e;
+            }
         }
 
         void mergeFiles ()
@@ -147,6 +161,9 @@ namespace IDPicker.DataModel
             using (var conn = new SQLiteConnection("Data Source=:memory:"))
             {
                 conn.Open();
+
+                if (OnMergingProgress(null, 0))
+                    return;
 
                 initializeTarget(conn);
 
@@ -156,7 +173,7 @@ namespace IDPicker.DataModel
                 foreach (string mergeSourceFilepath in mergeSourceFilepaths)
                 {
                     if (OnMergingProgress(null, ++mergedFiles))
-                        break;
+                        return;
 
                     if (!File.Exists(mergeSourceFilepath) || mergeSourceFilepath == mergeTargetFilepath)
                         continue;
@@ -169,7 +186,7 @@ namespace IDPicker.DataModel
                     long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
                     if (ramBytesAvailable > new FileInfo(mergeSourceFilepath).Length)
                     {
-                        using (var fs = new FileStream(mergeSourceFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, (1 << 15), FileOptions.SequentialScan))
+                        using (var fs = new FileStream(mergeSourceFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
                         {
                             var buffer = new byte[UInt16.MaxValue];
                             while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
@@ -662,6 +679,7 @@ namespace IDPicker.DataModel
         IEnumerable<string> mergeSourceFilepaths;
         SQLiteConnection mergeSourceConnection;
         string mergeSourceDatabase = "new";
+        Exception mergeException;
 
         long MaxProteinId = 0;
         long MaxPeptideInstanceId = 0;
@@ -676,8 +694,9 @@ namespace IDPicker.DataModel
         long MaxSpectrumId = 0;
         long MaxAnalysisId = 0;
 
-        static int tempCacheSize = 100000;
-        static int mergedCacheSize = 80000;
-        static int newCacheSize = 50000;
+        // page_size = 32768
+        static int tempCacheSize = 30000; // 1 GB
+        static int mergedCacheSize = 30000; // 1 GB
+        static int newCacheSize = 20000; // 655 MB
     }
 }

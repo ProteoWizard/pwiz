@@ -128,8 +128,9 @@ namespace IDPicker.DataModel
             lock(mutex)
                 sessionFactory = configuration.BuildSessionFactory();
 
-            sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA cache_size=500000;
-                                                                   PRAGMA temp_store=MEMORY").ExecuteUpdate();
+            sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA cache_size=30000;
+                                                                   PRAGMA temp_store=MEMORY;
+                                                                   PRAGMA page_size=32768").ExecuteUpdate();
 
             if (config.CreateSchema)
                 CreateFile(path);
@@ -174,8 +175,9 @@ namespace IDPicker.DataModel
             conn.ExecuteNonQuery(@"PRAGMA journal_mode=OFF;
                                    PRAGMA synchronous=OFF;
                                    PRAGMA automatic_indexing=OFF;
-                                   PRAGMA cache_size=500000;
-                                   PRAGMA temp_store=MEMORY");
+                                   PRAGMA cache_size=30000;
+                                   PRAGMA temp_store=MEMORY;
+                                   PRAGMA page_size=32768");
 
             var transaction = conn.BeginTransaction();
             var cmd = conn.CreateCommand();
@@ -218,16 +220,14 @@ namespace IDPicker.DataModel
         public static void CreateIndexes(System.Data.IDbConnection conn)
         {
             conn.ExecuteNonQuery(@"CREATE UNIQUE INDEX Protein_Accession ON Protein (Accession);
-                                   CREATE INDEX PeptideInstance_Peptide ON PeptideInstance (Peptide);
-                                   CREATE INDEX PeptideInstance_Protein ON PeptideInstance (Protein);
                                    CREATE INDEX PeptideInstance_PeptideProtein ON PeptideInstance (Peptide, Protein);
                                    CREATE UNIQUE INDEX PeptideInstance_ProteinOffsetLength ON PeptideInstance (Protein, Offset, Length);
                                    CREATE UNIQUE INDEX SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);
                                    CREATE INDEX Spectrum_SourceIndex ON Spectrum (Source, Index_);
                                    CREATE UNIQUE INDEX Spectrum_SourceNativeID ON Spectrum (Source, NativeID);
-                                   CREATE INDEX PeptideSpectrumMatch_Analysis ON PeptideSpectrumMatch (Analysis);
-                                   CREATE INDEX PeptideSpectrumMatch_Peptide ON PeptideSpectrumMatch (Peptide);
-                                   CREATE INDEX PeptideSpectrumMatch_Spectrum ON PeptideSpectrumMatch (Spectrum);
+                                   CREATE INDEX PeptideSpectrumMatch_AnalysisPeptideSpectrum ON PeptideSpectrumMatch (Analysis, Peptide, Spectrum);
+                                   CREATE INDEX PeptideSpectrumMatch_PeptideSpectrumAnalysis ON PeptideSpectrumMatch (Peptide, Spectrum, Analysis);
+                                   CREATE INDEX PeptideSpectrumMatch_SpectrumAnalysisPeptide ON PeptideSpectrumMatch (Spectrum, Analysis, Peptide);
                                    CREATE INDEX PeptideSpectrumMatch_QValue ON PeptideSpectrumMatch (QValue);
                                    CREATE INDEX PeptideSpectrumMatch_Rank ON PeptideSpectrumMatch (Rank);
                                    CREATE INDEX PeptideModification_PeptideSpectrumMatch ON PeptideModification (PeptideSpectrumMatch);
@@ -238,16 +238,14 @@ namespace IDPicker.DataModel
         public static void DropIndexes (System.Data.IDbConnection conn)
         {
             conn.ExecuteNonQuery(@"DROP INDEX Protein_Accession;
-                                   DROP INDEX PeptideInstance_Peptide;
-                                   DROP INDEX PeptideInstance_Protein;
                                    DROP INDEX PeptideInstance_PeptideProtein;
                                    DROP INDEX PeptideInstance_ProteinOffsetLength;
                                    DROP INDEX SpectrumSourceGroupLink_SourceGroup;
                                    DROP INDEX Spectrum_SourceIndex;
                                    DROP INDEX Spectrum_SourceNativeID;
-                                   DROP INDEX PeptideSpectrumMatch_Analysis;
-                                   DROP INDEX PeptideSpectrumMatch_Peptide;
-                                   DROP INDEX PeptideSpectrumMatch_Spectrum;
+                                   DROP INDEX PeptideSpectrumMatch_AnalysisPeptideSpectrum;
+                                   DROP INDEX PeptideSpectrumMatch_PeptideSpectrumAnalysis;
+                                   DROP INDEX PeptideSpectrumMatch_SpectrumAnalysisPeptide;
                                    DROP INDEX PeptideSpectrumMatch_QValue;
                                    DROP INDEX PeptideSpectrumMatch_Rank;
                                    DROP INDEX PeptideModification_PeptideSpectrumMatch;

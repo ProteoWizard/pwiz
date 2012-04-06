@@ -110,7 +110,7 @@ namespace IDPicker
             progressUpdate.Message = String.Format("Merging results... ({0}/{1}) - {2} per second, {3}h{4}m{5}s remaining",
                                                    e.MergedFiles,
                                                    e.TotalFiles,
-                                                   Math.Round(progressRate),
+                                                   Math.Round(progressRate, 1),
                                                    timeRemaining.Hours,
                                                    timeRemaining.Minutes,
                                                    timeRemaining.Seconds);

@@ -105,6 +105,8 @@ struct IsNotAnalysisParameter
                parameter.first == "Config: UseMultipleProcessors" ||
                bal::starts_with(parameter.first, "Config: MaxResult") ||
                parameter.first == "Config: OutputSuffix" ||
+               parameter.first == "Config: OutputFormat" ||
+               bal::contains(parameter.first, "Batch") ||
 
                // Mascot
                parameter.first == "USEREMAIL" ||
@@ -339,8 +341,9 @@ struct ParserImpl
         idpDb.execute("PRAGMA journal_mode=OFF;"
                       "PRAGMA synchronous=OFF;"
                       "PRAGMA automatic_indexing=OFF;"
-                      "PRAGMA cache_size=50000;"
-                      "PRAGMA temp_store=MEMORY"
+                      "PRAGMA cache_size=30000;"
+                      "PRAGMA temp_store=MEMORY;"
+                      "PRAGMA page_size=32768"
                      );
 
         sqlite::transaction transaction(idpDb);
@@ -724,16 +727,14 @@ struct ParserImpl
     {
         sqlite::transaction transaction(idpDb);
         idpDb.execute("CREATE UNIQUE INDEX IF NOT EXISTS Protein_Accession ON Protein (Accession);"
-                      "CREATE INDEX IF NOT EXISTS PeptideInstance_Peptide ON PeptideInstance (Peptide);"
-                      "CREATE INDEX IF NOT EXISTS PeptideInstance_Protein ON PeptideInstance (Protein);"
                       "CREATE INDEX IF NOT EXISTS PeptideInstance_PeptideProtein ON PeptideInstance (Peptide, Protein);"
                       "CREATE UNIQUE INDEX IF NOT EXISTS PeptideInstance_ProteinOffsetLength ON PeptideInstance (Protein, Offset, Length);"
                       "CREATE UNIQUE INDEX IF NOT EXISTS SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);"
                       "CREATE INDEX IF NOT EXISTS Spectrum_SourceIndex ON Spectrum (Source, Index_);"
                       "CREATE UNIQUE INDEX IF NOT EXISTS Spectrum_SourceNativeID ON Spectrum (Source, NativeID);"
-                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_Analysis ON PeptideSpectrumMatch (Analysis);"
-                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_Peptide ON PeptideSpectrumMatch (Peptide);"
-                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_Spectrum ON PeptideSpectrumMatch (Spectrum);"
+                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_AnalysisPeptideSpectrum ON PeptideSpectrumMatch (Analysis, Peptide, Spectrum);"
+                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_PeptideSpectrumAnalysis ON PeptideSpectrumMatch (Peptide, Spectrum, Analysis);"
+                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_SpectrumAnalysisPeptide ON PeptideSpectrumMatch (Spectrum, Analysis, Peptide);"
                       "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_QValue ON PeptideSpectrumMatch (QValue);"
                       "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_Rank ON PeptideSpectrumMatch (Rank);"
                       "CREATE INDEX IF NOT EXISTS PeptideModification_PeptideSpectrumMatch ON PeptideModification (PeptideSpectrumMatch);"

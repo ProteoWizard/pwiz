@@ -954,18 +954,25 @@ namespace IDPicker
                     idpDB_filepaths = new List<string>() {commonFilename};
                 }
 
+                // HACK: this needs to be handled more gracefully
+                if (!IsHandleCreated)
+                    return;
+
                 // if the database is on a hard drive and can fit in the available RAM, populate the disk cache
                 long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
                 if (ramBytesAvailable > new FileInfo(commonFilename).Length &&
                     DriveType.Fixed == new DriveInfo(Path.GetPathRoot(commonFilename)).DriveType)
                 {
                     toolStripStatusLabel.Text = "Precaching idpDB...";
-                    using (var fs = new FileStream(commonFilename, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, (1 << 15), FileOptions.SequentialScan))
+                    using (var fs = new FileStream(commonFilename, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
                     {
                         var buffer = new byte[UInt16.MaxValue];
                         while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
                     }
                 }
+
+                if (!IsHandleCreated)
+                    return;
 
                 BeginInvoke(new MethodInvoker(() =>
                 {
@@ -2239,7 +2246,7 @@ namespace IDPicker
         {
             MessageBox.Show(String.Format("IDPicker {0}\r\n" +
                                           "Copyright 2012 Vanderbilt University\r\n" +
-                                          "Developers: Matt Chambers, Jay Holman, Surendra Dasari\r\n" +
+                                          "Developers: Matt Chambers, Jay Holman, Surendra Dasari, Zeqiang Ma\r\n" +
                                           "Thanks to: David Tabb",
                                           Util.Version),
                             "About IDPicker");
@@ -2311,7 +2318,7 @@ namespace IDPicker
                 StartInfo = new ProcessStartInfo(rFilepath, String.Format("\"{0}\" \"{1}\"", quasitelFilepath, idpDbFilepath))
             };
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
-            process.StartInfo.CreateNoWindow = false;
+            process.StartInfo.CreateNoWindow = true;
             //process.StartInfo.UseShellExecute = false;
             //process.StartInfo.RedirectStandardOutput = process.StartInfo.RedirectStandardError = true;
             process.Start();

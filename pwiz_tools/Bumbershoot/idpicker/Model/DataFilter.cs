@@ -1297,44 +1297,6 @@ namespace IDPicker.DataModel
             return additionalPeptidesByProteinId;
         }
 
-        void recursivelyAssignProteinToCluster (long proteinId,
-                                                long clusterId,
-                                                Set<long> spectrumSet,
-                                                Map<long, Set<long>> spectrumSetByProteinId,
-                                                Map<long, Set<long>> proteinSetBySpectrumId,
-                                                Map<long, long> clusterByProteinId)
-        {
-            // try to assign the protein to the current cluster
-            var insertResult = clusterByProteinId.Insert(proteinId, clusterId);
-            if (!insertResult.WasInserted)
-            {
-                // error if the protein was already assigned to a DIFFERENT cluster
-                if (insertResult.Element.Value != clusterId)
-                    throw new InvalidOperationException("error calculating protein clusters");
-
-                // early exit if the protein was already assigned to the CURRENT cluster
-                return;
-            }
-
-            // recursively add all "cousin" proteins to the current cluster
-            foreach (long spectrumId in spectrumSet)
-                foreach (var cousinProteinId in proteinSetBySpectrumId[spectrumId])
-                {
-                    if (proteinId != cousinProteinId)
-                    {
-                        Set<long> cousinSpectrumSet = spectrumSetByProteinId[cousinProteinId];
-                        recursivelyAssignProteinToCluster(cousinProteinId,
-                                                          clusterId,
-                                                          cousinSpectrumSet,
-                                                          spectrumSetByProteinId,
-                                                          proteinSetBySpectrumId,
-                                                          clusterByProteinId);
-                    }
-                    //else if (cousinProGroup.cluster != c.id)
-                    //    throw new InvalidDataException("protein groups that are connected are assigned to different clusters");
-                }
-        }
-
         Map<long, long> calculateProteinClusters (NHibernate.ISession session)
         {
             var spectrumSetByProteinId = new Map<long, Set<long>>();
@@ -1354,22 +1316,32 @@ namespace IDPicker.DataModel
 
             var clusterByProteinId = new Map<long, long>();
             int clusterId = 0;
+            var clusterStack = new Stack<KeyValuePair<long, Set<long>>>();
 
             foreach (var pair in spectrumSetByProteinId)
             {
                 long proteinId = pair.Key;
 
-                // for each protein without a cluster assignment, make a new cluster
-                if (!clusterByProteinId.Contains(proteinId))
-                {
-                    ++clusterId;
+                if (clusterByProteinId.Contains(proteinId))
+                    continue;
 
-                    recursivelyAssignProteinToCluster(proteinId,
-                                                      clusterId,
-                                                      pair.Value,
-                                                      spectrumSetByProteinId,
-                                                      proteinSetBySpectrumId,
-                                                      clusterByProteinId);
+                // for each protein without a cluster assignment, make a new cluster
+                ++clusterId;
+                clusterStack.Push(new KeyValuePair<long, Set<long>>(proteinId, spectrumSetByProteinId[proteinId]));
+                while (clusterStack.Count > 0)
+                {
+                    var kvp = clusterStack.Pop();
+
+                    // try to assign the protein to the current cluster
+                    var insertResult = clusterByProteinId.Insert(kvp.Key, clusterId);
+                    if (!insertResult.WasInserted)
+                        continue;
+
+                    // add all "cousin" proteins to the current cluster
+                    foreach (long spectrumId in kvp.Value)
+                        foreach (var cousinProteinId in proteinSetBySpectrumId[spectrumId])
+                            if (!clusterByProteinId.Contains(cousinProteinId))
+                                clusterStack.Push(new KeyValuePair<long, Set<long>>(cousinProteinId, spectrumSetByProteinId[cousinProteinId]));
                 }
             }
 
