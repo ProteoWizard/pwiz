@@ -64,6 +64,32 @@ rule choose-dl ( properties * )
 local compare-reqs = <include>../libraries/sqlite <include>../src/ ; 
 alias compare-src : ../libraries/sqlite//sqlite [ choose-dl ] ;
 
+rule mascot-installed ( properties * )
+{
+    local result  = <build>no ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        result = <build>yes ;
+    }
+
+    return $(result) ;
+}
+
+rule mascot-not-installed ( properties * )
+{
+    local result  = <build>yes ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        result = <build>no ;
+    }
+
+    return $(result) ;
+}
+
+
+
 # Test building with sqt files
 
 make output/demo.blib : inputs/empty : @common.copy : <location>.  <conditional>@test-data ;
@@ -301,16 +327,48 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test building with Mascot .dat files, contingent on Mascot support
 
-# TODO make dependent on msparser
-#run-if-exists ExecuteBlib.cpp : -o : ../src//BlibBuild inputs/F027319.dat output/mascot.blib : 
-#  : build-mascot ;
-#run-if-exists CompareLibraryContents.cpp compare-src : : output/mascot.blib reference/mascot.check : $(compare-reqs)
-#  : check-mascot ;
+# Test if msparser installed
+make output/mascot.blib : inputs/empty : @common.copy : <location>. ;
+run-if-exists ExecuteBlib.cpp 
+  : -o
+  : ../src//BlibBuild inputs/F027319.dat output/mascot.blib
+  : <conditional>@mascot-installed
+  : build-mascot ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/mascot.blib reference/mascot.check
+  : $(compare-reqs)
+    <dependency>build-mascot
+    <conditional>@mascot-installed
+  : check-mascot ;
 
-#run-if-exists ExecuteBlib.cpp : -o : ../src//BlibBuild inputs/F027752.dat output/mascot-15N.blib : 
-#  : build-mascot-15N ;
-#run-if-exists CompareLibraryContents.cpp compare-src : : output/mascot-15N.blib reference/mascot-15N.check : $(compare-reqs)
-#  : check-mascot-15N ;
+make output/mascot-15N.blib : inputs/empty : @common.copy : <location>. ;
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/F027752.dat output/mascot-15N.blib
+  : <conditional>@mascot-installed
+  : build-mascot-15N ;
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/mascot-15N.blib reference/mascot-15N.check
+  : $(compare-reqs)
+    <dependency>build-mascot-15N
+    <conditional>@mascot-installed
+  : check-mascot-15N ;
+
+# Check that the tests fails if not installed
+run-fail-if-exists ExecuteBlib.cpp 
+  : -o
+  : ../src//BlibBuild inputs/F027319.dat output/mascot.blib
+  : <conditional>@mascot-not-installed
+  : build-mascot-fail ;
+
+run-fail-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/F027752.dat output/mascot-15N.blib
+  : <conditional>@mascot-not-installed
+  : build-mascot-15N-fail ;
+
 
 # Test merging existing libraries
 

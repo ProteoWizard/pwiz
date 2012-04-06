@@ -494,6 +494,17 @@ rule run-if-exists ( sources + : args * : input-files * : requirements * : targe
     }
 }
 
+rule run-fail-if-exists ( sources + : args * : input-files * : requirements * : target-name ? : default-build * )
+{
+    local project = [ project.current ] ;
+    local full-path = [ path.native [ path.join [ $(project).location ] $(project-path) $(sources[1]) ] ] ;
+    if [ path.exists $(full-path) ]
+    {
+        return [ run-fail $(sources) : $(args) : $(input-files) : $(requirements) : $(target-name) : $(default-build) ] ;
+    }
+}
+
+
 rule unit-test-if-exists ( target : sources + : properties * )
 {
     local project = [ project.current ] ;
