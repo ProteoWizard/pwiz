@@ -70,11 +70,15 @@ enum PWIZ_API_DECL InstrumentModelType
 
     // Thermo Scientific
     InstrumentModelType_LTQ,
+    InstrumentModelType_LTQ_Velos,
+    InstrumentModelType_LTQ_Velos_Plus,
     InstrumentModelType_LTQ_FT,
     InstrumentModelType_LTQ_FT_Ultra,
     InstrumentModelType_LTQ_Orbitrap,
     InstrumentModelType_LTQ_Orbitrap_Discovery,
     InstrumentModelType_LTQ_Orbitrap_XL,
+    InstrumentModelType_LTQ_Orbitrap_Velos,
+    InstrumentModelType_LTQ_Orbitrap_Elite,
     InstrumentModelType_LXQ,
     InstrumentModelType_LCQ_Fleet,
     InstrumentModelType_ITQ_700,
@@ -85,6 +89,7 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_LTQ_Orbitrap_XL_ETD,
     InstrumentModelType_DFS,
     InstrumentModelType_DSQ_II,
+    InstrumentModelType_ISQ,
     InstrumentModelType_MALDI_LTQ_XL,
     InstrumentModelType_MALDI_LTQ_Orbitrap,
     InstrumentModelType_TSQ_Quantum,
@@ -96,10 +101,9 @@ enum PWIZ_API_DECL InstrumentModelType
     InstrumentModelType_Element_GD,
     InstrumentModelType_GC_IsoLink,
     InstrumentModelType_Exactive,
+    InstrumentModelType_Q_Exactive,
     InstrumentModelType_Surveyor_PDA,
     InstrumentModelType_Accela_PDA,
-    InstrumentModelType_LTQ_Velos,
-    InstrumentModelType_LTQ_Orbitrap_Velos,
 
     InstrumentModelType_Count,
 };
@@ -139,8 +143,11 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "LTQ ORBITRAP")            return InstrumentModelType_LTQ_Orbitrap;
     else if (type == "LTQ ORBITRAP DISCOVERY")  return InstrumentModelType_LTQ_Orbitrap_Discovery;
     else if (type == "LTQ ORBITRAP XL")         return InstrumentModelType_LTQ_Orbitrap_XL;
+    else if (bal::contains(type, "ORBITRAP VELOS")) return InstrumentModelType_LTQ_Orbitrap_Velos;
+    else if (bal::contains(type, "ORBITRAP ELITE")) return InstrumentModelType_LTQ_Orbitrap_Elite;
+    else if (bal::contains(type, "VELOS PLUS")) return InstrumentModelType_LTQ_Velos_Plus;
+    else if (bal::contains(type, "VELOS PRO"))  return InstrumentModelType_LTQ_Velos_Plus;
     else if (type == "LTQ VELOS")               return InstrumentModelType_LTQ_Velos;
-    else if (type == "LTQ ORBITRAP VELOS")      return InstrumentModelType_LTQ_Orbitrap_Velos;
     else if (type == "LXQ")                     return InstrumentModelType_LXQ;
     else if (type == "LCQ FLEET")               return InstrumentModelType_LCQ_Fleet;
     else if (type == "ITQ 700")                 return InstrumentModelType_ITQ_700;
@@ -151,6 +158,7 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "LTQ ORBITRAP XL ETD")     return InstrumentModelType_LTQ_Orbitrap_XL_ETD;
     else if (type == "DFS")                     return InstrumentModelType_DFS;
     else if (type == "DSQ II")                  return InstrumentModelType_DSQ_II;
+    else if (type == "ISQ")                     return InstrumentModelType_ISQ;
     else if (type == "MALDI LTQ XL")            return InstrumentModelType_MALDI_LTQ_XL;
     else if (type == "MALDI LTQ ORBITRAP")      return InstrumentModelType_MALDI_LTQ_Orbitrap;
     else if (type == "TSQ QUANTUM")             return InstrumentModelType_TSQ_Quantum;
@@ -161,7 +169,8 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "ELEMENT XR")              return InstrumentModelType_Element_XR;
     else if (type == "ELEMENT GD")              return InstrumentModelType_Element_GD;
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
-    else if (bal::contains(type, "EXACTIVE"))   return InstrumentModelType_Exactive;
+    else if (type == "EXACTIVE")                return InstrumentModelType_Exactive;
+    else if (type == "Q EXACTIVE")              return InstrumentModelType_Q_Exactive;
     else if (type == "SURVEYOR PDA")            return InstrumentModelType_Surveyor_PDA;
     else if (type == "ACCELA PDA")              return InstrumentModelType_Accela_PDA;
     else
@@ -193,27 +202,30 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
     {
         case InstrumentModelType_SSQ_7000:
         case InstrumentModelType_TSQ_7000:
-        case InstrumentModelType_TSQ:
+        case InstrumentModelType_Surveyor_MSQ:
         case InstrumentModelType_LCQ_Advantage:
         case InstrumentModelType_LCQ_Classic:
         case InstrumentModelType_LCQ_Deca:
         case InstrumentModelType_LCQ_Deca_XP_Plus:
-        case InstrumentModelType_Surveyor_MSQ:
+        case InstrumentModelType_LCQ_Fleet:
+        case InstrumentModelType_LXQ:
         case InstrumentModelType_LTQ:
+        case InstrumentModelType_LTQ_XL_ETD:
+        case InstrumentModelType_LTQ_Velos:
+        case InstrumentModelType_LTQ_Velos_Plus:
         case InstrumentModelType_LTQ_FT:
         case InstrumentModelType_LTQ_FT_Ultra:
         case InstrumentModelType_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Discovery:
         case InstrumentModelType_LTQ_Orbitrap_XL:
-        case InstrumentModelType_LXQ:
-        case InstrumentModelType_LCQ_Fleet:
-        case InstrumentModelType_LTQ_XL_ETD:
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
+        case InstrumentModelType_LTQ_Orbitrap_Velos:
+        case InstrumentModelType_LTQ_Orbitrap_Elite:
+        case InstrumentModelType_Exactive:
+        case InstrumentModelType_Q_Exactive:
+        case InstrumentModelType_TSQ:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
-        case InstrumentModelType_Exactive:
-        case InstrumentModelType_LTQ_Velos:
-        case InstrumentModelType_LTQ_Orbitrap_Velos:
         case InstrumentModelType_TSQ_Quantum_Ultra:
         case InstrumentModelType_TSQ_Quantum_Ultra_AM:
         case InstrumentModelType_TSQ_Vantage_Standard:
@@ -229,6 +241,7 @@ inline std::vector<IonizationType> getIonSourcesForInstrumentModel(InstrumentMod
         case InstrumentModelType_GC_Quantum:
         case InstrumentModelType_DFS:
         case InstrumentModelType_DSQ_II:
+        case InstrumentModelType_ISQ:
         case InstrumentModelType_GC_IsoLink:
             ionSources.push_back(IonizationType_EI);
             break;
@@ -303,6 +316,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
     switch (instrumentModel)
     {
         case InstrumentModelType_Exactive:
+        case InstrumentModelType_Q_Exactive:
             return MassAnalyzerType_Orbitrap;
 
         case InstrumentModelType_LTQ_Orbitrap:
@@ -311,6 +325,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
+        case InstrumentModelType_LTQ_Orbitrap_Elite:
             if (scanFilterType == ScanFilterMassAnalyzerType_FTMS)
                 return MassAnalyzerType_Orbitrap;
             else 
@@ -327,6 +342,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_Surveyor_MSQ:
         case InstrumentModelType_DSQ:
         case InstrumentModelType_DSQ_II:
+        case InstrumentModelType_ISQ:
         case InstrumentModelType_Trace_DSQ:
         case InstrumentModelType_GC_IsoLink:
             return MassAnalyzerType_Single_Quadrupole;
@@ -357,6 +373,7 @@ inline MassAnalyzerType convertScanFilterMassAnalyzer(ScanFilterMassAnalyzerType
         case InstrumentModelType_ITQ_1100:
         case InstrumentModelType_MALDI_LTQ_XL:
         case InstrumentModelType_LTQ_Velos:
+        case InstrumentModelType_LTQ_Velos_Plus:
             return MassAnalyzerType_Linear_Ion_Trap;
 
         case InstrumentModelType_DFS:
@@ -395,6 +412,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
     switch (type)
     {
         case InstrumentModelType_Exactive:
+        case InstrumentModelType_Q_Exactive:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             break;
 
@@ -403,6 +421,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_LTQ_Orbitrap_XL:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
+        case InstrumentModelType_LTQ_Orbitrap_Elite:
             massAnalyzers.push_back(MassAnalyzerType_Orbitrap);
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
@@ -417,6 +436,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_Surveyor_MSQ:
         case InstrumentModelType_DSQ:
         case InstrumentModelType_DSQ_II:
+        case InstrumentModelType_ISQ:
         case InstrumentModelType_Trace_DSQ:
         case InstrumentModelType_GC_IsoLink:
             massAnalyzers.push_back(MassAnalyzerType_Single_Quadrupole);
@@ -451,6 +471,7 @@ inline std::vector<MassAnalyzerType> getMassAnalyzersForInstrumentModel(Instrume
         case InstrumentModelType_ITQ_1100:
         case InstrumentModelType_MALDI_LTQ_XL:
         case InstrumentModelType_LTQ_Velos:
+        case InstrumentModelType_LTQ_Velos_Plus:
             massAnalyzers.push_back(MassAnalyzerType_Linear_Ion_Trap);
             break;
 
@@ -504,6 +525,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
     switch (type)
     {
         case InstrumentModelType_Exactive:
+        case InstrumentModelType_Q_Exactive:
             detectors.push_back(DetectorType_Inductive);
             break;
 
@@ -515,6 +537,7 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
+        case InstrumentModelType_LTQ_Orbitrap_Elite:
             detectors.push_back(DetectorType_Inductive);
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
@@ -532,6 +555,8 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_LXQ:
         case InstrumentModelType_LCQ_Fleet:
         case InstrumentModelType_LTQ_XL_ETD:
+        case InstrumentModelType_LTQ_Velos:
+        case InstrumentModelType_LTQ_Velos_Plus:
         case InstrumentModelType_TSQ_Quantum:
         case InstrumentModelType_TSQ_Quantum_Access:
         case InstrumentModelType_TSQ_Quantum_Ultra:
@@ -546,8 +571,8 @@ inline std::vector<DetectorType> getDetectorsForInstrumentModel(InstrumentModelT
         case InstrumentModelType_GC_Quantum:
         case InstrumentModelType_DFS:
         case InstrumentModelType_DSQ_II:
+        case InstrumentModelType_ISQ:
         case InstrumentModelType_GC_IsoLink:
-        case InstrumentModelType_LTQ_Velos:
             detectors.push_back(DetectorType_Electron_Multiplier);
             break;
 

@@ -73,7 +73,9 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_LTQ_Orbitrap_Discovery:    return MS_LTQ_Orbitrap_Discovery;
         case InstrumentModelType_LTQ_Orbitrap_XL:           return MS_LTQ_Orbitrap_XL;
         case InstrumentModelType_LTQ_Velos:                 return MS_LTQ_Velos;
+        case InstrumentModelType_LTQ_Velos_Plus:            return MS_Velos_Plus;
         case InstrumentModelType_LTQ_Orbitrap_Velos:        return MS_LTQ_Orbitrap_Velos;
+        case InstrumentModelType_LTQ_Orbitrap_Elite:        return MS_LTQ_Orbitrap_Elite;
         case InstrumentModelType_LXQ:                       return MS_LXQ;
         case InstrumentModelType_ITQ_700:                   return MS_ITQ_700;
         case InstrumentModelType_ITQ_900:                   return MS_ITQ_900;
@@ -83,6 +85,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:       return MS_LTQ_Orbitrap_XL_ETD;
         case InstrumentModelType_DFS:                       return MS_DFS;
         case InstrumentModelType_DSQ_II:                    return MS_DSQ_II;
+        case InstrumentModelType_ISQ:                       return MS_ISQ;
         case InstrumentModelType_MALDI_LTQ_XL:              return MS_MALDI_LTQ_XL;
         case InstrumentModelType_MALDI_LTQ_Orbitrap:        return MS_MALDI_LTQ_Orbitrap;
         case InstrumentModelType_TSQ_Quantum:               return MS_TSQ_Quantum;
@@ -94,6 +97,7 @@ PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModelType instrumentMode
         case InstrumentModelType_Element_GD:                return MS_Element_GD;
         case InstrumentModelType_GC_IsoLink:                return MS_GC_IsoLink;
         case InstrumentModelType_Exactive:                  return MS_Exactive;
+        case InstrumentModelType_Q_Exactive:                return MS_Q_Exactive;
         case InstrumentModelType_Surveyor_PDA:              return MS_Surveyor_PDA;
         case InstrumentModelType_Accela_PDA:                return MS_Accela_PDA;
 
@@ -135,6 +139,14 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
     
     switch (model)
     {
+        case InstrumentModelType_Q_Exactive:
+            configurations.push_back(InstrumentConfiguration());
+            configurations.back().componentList.push_back(commonSource);
+            configurations.back().componentList.push_back(Component(MS_quadrupole, 2));
+            configurations.back().componentList.push_back(Component(MS_orbitrap, 3));
+            configurations.back().componentList.push_back(Component(MS_inductive_detector, 4));
+            break;
+
         case InstrumentModelType_Exactive:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
@@ -161,6 +173,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_LTQ_Orbitrap_XL_ETD:
         case InstrumentModelType_MALDI_LTQ_Orbitrap:
         case InstrumentModelType_LTQ_Orbitrap_Velos:
+        case InstrumentModelType_LTQ_Orbitrap_Elite:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_orbitrap, 2));
@@ -192,6 +205,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_ITQ_1100:
         case InstrumentModelType_MALDI_LTQ_XL:
         case InstrumentModelType_LTQ_Velos:
+        case InstrumentModelType_LTQ_Velos_Plus:
             configurations.push_back(InstrumentConfiguration());
             configurations.back().componentList.push_back(commonSource);
             configurations.back().componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 2));
@@ -202,6 +216,7 @@ vector<InstrumentConfiguration> createInstrumentConfigurations(const Component& 
         case InstrumentModelType_Surveyor_MSQ:
         case InstrumentModelType_DSQ:
         case InstrumentModelType_DSQ_II:
+        case InstrumentModelType_ISQ:
         case InstrumentModelType_Trace_DSQ:
         case InstrumentModelType_GC_IsoLink:
             configurations.push_back(InstrumentConfiguration());

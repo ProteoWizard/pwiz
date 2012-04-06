@@ -450,6 +450,8 @@ double RawFileImpl::rt(long scanNumber)
 
 InstrumentModelType RawFileImpl::getInstrumentModel()
 {
+    setCurrentController(Controller_MS, 1);
+
     if (instrumentModel_ == InstrumentModelType_Unknown)
     {
         string modelString = value(InstModel);
