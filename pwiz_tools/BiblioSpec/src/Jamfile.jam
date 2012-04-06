@@ -206,3 +206,6 @@ exe LibToSqlite3
     <library>/ext/zlib//z
     <library>blib_v_1
  ;
+
+# required file for running BlibBuild with mascot support
+make unimod_2.xsd : ./unimod_2.xsd : @common.copy : ;

@@ -66,11 +66,11 @@ alias compare-src : ../libraries/sqlite//sqlite [ choose-dl ] ;
 
 rule mascot-installed ( properties * )
 {
-    local result  = <build>no ;
+    local result ;
     local msparser_path = [ msparser-path $(properties) ] ;
-    if $(msparser_path)
+    if ! $(msparser_path)
     {
-        result = <build>yes ;
+        result = <build>no ;
     }
 
     return $(result) ;
@@ -78,7 +78,7 @@ rule mascot-installed ( properties * )
 
 rule mascot-not-installed ( properties * )
 {
-    local result  = <build>yes ;
+    local result ;
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
@@ -330,7 +330,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 # Test if msparser installed
 make output/mascot.blib : inputs/empty : @common.copy : <location>. ;
 run-if-exists ExecuteBlib.cpp 
-  : -o
+  : -o 
   : ../src//BlibBuild inputs/F027319.dat output/mascot.blib
   : <conditional>@mascot-installed
   : build-mascot ;
@@ -444,7 +444,7 @@ make output/demo.lms2 : inputs/empty : @common.copy : <location>. ;
 run-if-exists ExecuteBlib.cpp
   : -f
   : ../src//BlibToMs2 output/demo.blib output/demo.lms2
-  : 
+  : <dependency>build-sqt-ms2 
   : convert-lms2 ;
 run-if-exists CompareTextFiles.cpp
   :
