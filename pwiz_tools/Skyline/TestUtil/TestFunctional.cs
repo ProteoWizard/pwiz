@@ -457,25 +457,34 @@ namespace pwiz.SkylineTestUtil
         private void EndTest()
         {
             var skylineWindow = Program.MainWindow;
-            if (skylineWindow == null || !IsFormOpen(skylineWindow))
+            if (skylineWindow == null || skylineWindow.IsDisposed || !IsFormOpen(skylineWindow))
                 return;
 
-            // Release all resources by setting the document to something that
-            // holds no file handles.
-            var docNew = new SrmDocument(SrmSettingsList.GetDefault());
-            RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
-            WaitForGraphs();
-
-            // Restore minimal View to close dock windows.
-            RestoreMinimalView();
-
-            // Wait for forms to close.
             try
             {
+                // Release all resources by setting the document to something that
+                // holds no file handles.
+                var docNew = new SrmDocument(SrmSettingsList.GetDefault());
+                RunUI(() => SkylineWindow.SwitchDocument(docNew, null));
+                WaitForGraphs();
+
+                // Restore minimal View to close dock windows.
+                RestoreMinimalView();
+
+                // Wait for forms to close.
                 // Long wait for library build notifications
-                WaitForConditionUI(() => !Application.OpenForms.Cast<Form>().Any(form => form is BuildLibraryNotification));
+                WaitForConditionUI(
+                    () => !Application.OpenForms.Cast<Form>().Any(form => form is BuildLibraryNotification));
                 // Short wait for anything else
                 WaitForConditionUI(1000, () => Application.OpenForms.Count == 1);
+
+                // Clear the clipboard to avoid the appearance of a memory leak.
+                RunUI(ClipboardEx.Clear);
+
+                _testCompleted = true;
+
+                // Close the Skyline window
+                RunUI(SkylineWindow.Close);
             }
             catch (Exception)
             {
@@ -485,13 +494,6 @@ namespace pwiz.SkylineTestUtil
                                          select new AssertFailedException(
                                              string.Format("Form of type {0} left open at end of test", form.GetType())));
             }
-
-            // Clear the clipboard to avoid the appearance of a memory leak.
-            RunUI(ClipboardEx.Clear);
-
-            // Close the Skyline window
-            _testCompleted = true;
-            skylineWindow.Invoke(new Action(skylineWindow.Close));                        
         }
 
         // Restore minimal view layout in order to close extra windows.
