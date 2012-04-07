@@ -324,17 +324,35 @@ double PeakProcessor::topNpeaks(vector<PEAK_T>& peaks,
 
 bool PeakProcessor::compPeakMz(PEAK_T a, PEAK_T b)
 {
-    return (a.mz < b.mz);
+    if (a.mz < b.mz){
+        return true;
+    } else if (a.mz == b.mz){
+        return (a.intensity < b.intensity);
+    }
+    // else
+    return false;
 }
 
 bool PeakProcessor::compPeakIntDesc(PEAK_T a, PEAK_T b)
 {
-    return (a.intensity > b.intensity);
+    if (a.intensity > b.intensity){
+        return true;
+    } else if(a.intensity == b.intensity){
+        return (a.mz > b.mz);
+    }
+    // else
+    return false;
 }
 
 bool PeakProcessor::compPeakInt(PEAK_T a, PEAK_T b)
 {
-    return (a.intensity < b.intensity);
+    if (a.intensity < b.intensity){
+        return true;
+    } else if(a.intensity == b.intensity){
+        return (a.mz < b.mz);
+    }
+    // else
+    return false;
 }
 
 } // namespace

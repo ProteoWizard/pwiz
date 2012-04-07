@@ -239,7 +239,13 @@ template<class T> ostream& operator<<(ostream& os, const vector<T>& v)
  */
 template <class T1, class T2> bool compareSecond(const pair<T1,T2>& left,
                                                  const pair<T1,T2>& right){
-    return left.second < right.second;
+    if( left.second < right.second ){
+        return true;
+    } else if( left.second == right.second ){
+        return (left.first < right.first );
+    }
+    // else
+    return false;
 }
 
 /*

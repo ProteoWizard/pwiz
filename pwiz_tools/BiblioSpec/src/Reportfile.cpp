@@ -119,7 +119,7 @@ string Reportfile::optionsHeaderString(const ops::variables_map& options_table){
 
     // Start with date, filenames 
     strBuilder << "# Search results from BilbSearch" << endl //version?
-         << "# " << date << endl
+         << "# Date: " << date << endl
          << "# query file: " << queryFileName << endl;
     
     strBuilder << "# Library file list:"<<endl;
@@ -160,6 +160,10 @@ string Reportfile::optionsHeaderString(const ops::variables_map& options_table){
  */
 void Reportfile::writeMatches(const vector<Match>& results)
 {
+#ifdef _MSC_VER
+    _set_output_format(_TWO_DIGIT_EXPONENT);
+#endif
+
     if(! file_.is_open()){
         return;
     }

@@ -461,7 +461,13 @@ void SearchLibrary::getWeibullHistogram(int hist[], int numElements)
 
 bool SearchLibrary::compMatchDotScore(Match m1, Match m2)
 {
-    return (m1.getScore(DOTP) > m2.getScore(DOTP));
+    if (m1.getScore(DOTP) > m2.getScore(DOTP)){
+        return true;
+    } else if (m1.getScore(DOTP) == m2.getScore(DOTP)){
+        return (m1.getRefSpec()->getLibSpecID() > m2.getRefSpec()->getLibSpecID() );
+    }
+    // else
+    return false;
 }
 
 /* NOTE: Even though the p-values are not currently accurate, we will

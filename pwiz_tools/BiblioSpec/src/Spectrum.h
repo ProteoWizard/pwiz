@@ -58,17 +58,44 @@ struct PEAK_T
 
 struct PeakIntLessThan : public binary_function<PEAK_T, PEAK_T, bool>
 {
-  bool operator()(PEAK_T p1, PEAK_T p2) {return p1.intensity < p2.intensity;}
+  bool operator()(PEAK_T p1, PEAK_T p2) 
+  {
+      if( p1.intensity < p2.intensity ){
+          return true;
+      } else if( p1.intensity == p2.intensity ){
+          return (p1.mz < p2.intensity);
+      }
+      // else
+      return false;
+  }
 };
 
 struct compPeakInt : public binary_function<PEAK_T, PEAK_T, bool>
 {
-  bool operator()(PEAK_T p1, PEAK_T p2) {return p1.intensity > p2.intensity;}
+  bool operator()(PEAK_T p1, PEAK_T p2) 
+  { 
+      if( p1.intensity > p2.intensity ){
+          return true;
+      } else if( p1.intensity > p2.intensity ){
+          return (p1.mz > p2.mz );
+      } 
+      // else
+      return false;
+  }
 };
 
 struct compPeakMz : public binary_function<PEAK_T, PEAK_T, bool>
 {
-  bool operator()(PEAK_T p1, PEAK_T p2) {return p1.mz <  p2.mz;}
+  bool operator()(PEAK_T p1, PEAK_T p2) 
+  {
+      if ( p1.mz <  p2.mz ){
+          return true;
+      } else if ( p1.mz ==  p2.mz ){ 
+          return (p1.intensity < p2.intensity);
+      }
+      // else
+      return false;
+  }
 };
 
 float addIntensityToF(float n, PEAK_T p);
@@ -138,11 +165,29 @@ class Spectrum
  
 struct compSpecMz : public binary_function<Spectrum, Spectrum, bool>
 {
-    bool operator()(Spectrum s1, Spectrum s2) {return s1.getMz() <  s2.getMz();}
+    bool operator()(Spectrum s1, Spectrum s2) 
+    {
+        if( s1.getMz() <  s2.getMz() ){
+            return true;
+        } else if( s1.getMz() ==  s2.getMz() ){// just anything to break the tie
+            return (s1.getScanNumber() <  s2.getScanNumber());
+        } 
+        // else
+        return false;
+    }
 };
 
 struct compSpecPtrMz : public binary_function<Spectrum*, Spectrum*, bool>{
-    bool operator()(Spectrum* s1, Spectrum* s2) { return s1->getMz() <  s2->getMz();}
+    bool operator()(Spectrum* s1, Spectrum* s2) 
+    {
+        if( s1->getMz() <  s2->getMz() ){
+            return true;
+        } else if( s1->getMz() ==  s2->getMz() ){// just anything to break the tie
+            return (s1->getScanNumber() <  s2->getScanNumber());
+        } 
+        // else
+        return false;
+    }
 };
 
 struct compSpecScanNum : public binary_function<Spectrum, Spectrum, bool>
