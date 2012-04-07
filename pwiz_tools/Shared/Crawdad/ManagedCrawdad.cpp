@@ -21,6 +21,17 @@
 namespace pwiz {
 namespace Crawdad {
 
+    // Yes, this is a strange place to have this class, but it is very useful
+    // for debugging ProteoWizard .NET applications while working in Visual Studio.
+    void CrtDebugHeap::Init()
+    {
+#ifdef _DEBUG
+        // Add memory dump on exit
+        _CrtSetDbgFlag(_CrtSetDbgFlag(_CRTDBG_REPORT_FLAG) | _CRTDBG_LEAK_CHECK_DF);
+//        _crtBreakAlloc = 139502;
+#endif
+    }
+
     void CrawdadPeakFinder::SetChromatogram(IList<double>^ times, IList<double>^ intensities)
     {
         // TODO: Check times to make sure they are evenly spaced

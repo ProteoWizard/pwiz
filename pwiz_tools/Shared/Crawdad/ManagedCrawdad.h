@@ -159,5 +159,13 @@ namespace Crawdad {
 
         CAutoNativePtr<StackCrawPeakFinder> _pPeakFinder;
 	};
+
+    // Yes, this is a strange place to have this class, but it is very useful
+    // for debugging ProteoWizard .NET applications while working in Visual Studio.
+    public ref class CrtDebugHeap
+    {
+    public:
+        static void Init();
+    };
 }
 }

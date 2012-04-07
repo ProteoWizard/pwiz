@@ -25,6 +25,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using pwiz.Crawdad;
 
 namespace TestRunner
 {
@@ -52,6 +53,8 @@ namespace TestRunner
         [STAThread]
         static void Main(string[] args)
         {
+            CrtDebugHeap.Init();
+
             try
             {
                 // Parse command line args and initialize default values.
