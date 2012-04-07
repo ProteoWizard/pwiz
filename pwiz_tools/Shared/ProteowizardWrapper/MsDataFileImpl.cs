@@ -56,13 +56,13 @@ namespace pwiz.ProteowizardWrapper
 
         public static string[] ReadIds(string path)
         {
-            return ReaderList.FullReaderList.readIds(path);
+            return FULL_READER_LIST.readIds(path);
         }
 
         public static MsDataFileImpl[] ReadAll(string path)
         {
             var listAll = new MSDataList();
-            ReaderList.FullReaderList.read(path, listAll);
+            FULL_READER_LIST.read(path, listAll);
             var listAllImpl = new List<MsDataFileImpl>();
             foreach (var msData in listAll)
                 listAllImpl.Add(new MsDataFileImpl(msData));
