@@ -28,6 +28,8 @@ namespace pwiz.ProteowizardWrapper
 {
     public class MsDataFileImpl : IDisposable
     {
+        private static readonly ReaderList FULL_READER_LIST = ReaderList.FullReaderList;
+
         // Cached disposable objects
         private MSData _msDataFile;
         private SpectrumList _spectrumList;
@@ -54,13 +56,13 @@ namespace pwiz.ProteowizardWrapper
 
         public static string[] ReadIds(string path)
         {
-            return ReaderList.FullReaderList.readIds(path);
+            return FULL_READER_LIST.readIds(path);
         }
 
         public static MsDataFileImpl[] ReadAll(string path)
         {
             var listAll = new MSDataList();
-            ReaderList.FullReaderList.read(path, listAll);
+            FULL_READER_LIST.read(path, listAll);
             var listAllImpl = new List<MsDataFileImpl>();
             foreach (var msData in listAll)
                 listAllImpl.Add(new MsDataFileImpl(msData));
@@ -80,7 +82,7 @@ namespace pwiz.ProteowizardWrapper
         public MsDataFileImpl(string path, int sampleIndex)
         {
             _msDataFile = new MSData();
-            ReaderList.FullReaderList.read(path, _msDataFile, sampleIndex);            
+            FULL_READER_LIST.read(path, _msDataFile, sampleIndex);
         }
 
         public string RunId { get { return _msDataFile.run.id; } }
