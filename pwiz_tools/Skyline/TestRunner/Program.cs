@@ -91,13 +91,22 @@ namespace TestRunner
                 _program = skyline.GetType("pwiz.Skyline.Program");
                 _program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { CommandLineArgs.ArgAsBool("offscreen") });
                 _program.GetMethod("set_NoVendorReaders").Invoke(null, new object[] { !CommandLineArgs.ArgAsBool("vendors") });
+                _program.GetMethod("set_NoSaveSettings").Invoke(null, new object[] { true });
+                _program.GetMethod("get_Name").Invoke(null, null);
+                _program.GetMethod("Init").Invoke(null, null);
 
                 RunTests();
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine("\n\n" + e.Message);
                 Console.WriteLine(e.StackTrace);
+                if (e.InnerException != null)
+                {
+                    Console.WriteLine("\nInner exception:");
+                    Console.WriteLine(e.InnerException.Message);
+                    Console.WriteLine(e.InnerException.StackTrace);
+                }
             }
         }
 
@@ -107,7 +116,11 @@ namespace TestRunner
             var passes = CommandLineArgs.ArgAsLong("loop");
             var randomOrder = CommandLineArgs.ArgAsBool("random");
             var repeat = CommandLineArgs.ArgAsLong("repeat");
+            var process = Process.GetCurrentProcess();
             
+            Console.WriteLine("\n" + CommandLineArgs.CommandLine);
+            Console.WriteLine("Process: {0}\n", process.Id);
+
             if (CommandLineArgs.ArgAsBool("clipboardcheck"))
             {
                 Console.WriteLine("Checking clipboard use for {0} tests...\n", _testList.Count);
@@ -128,8 +141,8 @@ namespace TestRunner
 
             // Get test results directory and provide it to tests via TestContext.
             var now = DateTime.Now;
-            var testDirName = string.Format("TestRunner_{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}-{5:D2}",
-                                            now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
+            var testDirName = string.Format("TestRunner-{0}_{1}-{2:D2}-{3:D2}_{4:D2}-{5:D2}-{6:D2}",
+                                            process.Id, now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
             var testDir = Path.Combine(GetProjectPath("TestResults"), testDirName);
             var testContext = new TestRunnerContext();
             testContext.Properties["TestDir"] = testDir;
@@ -179,9 +192,6 @@ namespace TestRunner
             var random = new Random();
             var testOrder = new List<int>();
             var stopwatch = new Stopwatch();
-            var process = Process.GetCurrentProcess();
-            var emptyTestObject = Activator.CreateInstance(_emptyTest._testClass);
-            _emptyTest._setTestContext.Invoke(emptyTestObject, context);
             const double mb = 1024*1024;
 
             foreach (var testInfo in _testList)
@@ -233,7 +243,7 @@ namespace TestRunner
                             }
                             catch (Exception e)
                             {
-                                Console.WriteLine(e.Message);
+                                Console.WriteLine("\n\n" + e.Message);
                             }
                         }
 
@@ -261,7 +271,16 @@ namespace TestRunner
                         stopwatch.Stop();
 
                         // HACK: for some reason, running an empty functional test releases memory used by other functional tests.
-                        _emptyTest._testMethod.Invoke(emptyTestObject, null);
+                        try
+                        {
+                            var emptyTestObject = Activator.CreateInstance(_emptyTest._testClass);
+                            _emptyTest._setTestContext.Invoke(emptyTestObject, context);
+                            _emptyTest._testMethod.Invoke(emptyTestObject, null);
+                        }
+                        catch (Exception)
+                        {
+                            Console.Write("^"); // hint for now that something is failing
+                        }
 
                         var managedMemory = GC.GetTotalMemory(true)/mb;
                         process.Refresh();

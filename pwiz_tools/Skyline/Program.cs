@@ -44,15 +44,12 @@ namespace pwiz.Skyline
     {
         private const int LICENSE_VERSION_CURRENT = 3;
         
-        // SkylineOffscreen is set true to move Skyline windows offscreen for stress testing.
-        public static bool SkylineOffscreen { get; set; }
-
-        // NoVendorReaders is set true to avoid calling vendor readers during stress testing.
-        public static bool NoVendorReaders { get; set; }
-
-        // Some initialization must only be done once per process when stress testing.
-        private static bool _initialized;
-
+        // Parameters for stress testing.
+        public static bool SkylineOffscreen { get; set; }   // Set true to move Skyline windows offscreen.
+        public static bool NoVendorReaders { get; set; }    // Set true to avoid calling vendor readers.
+        public static bool NoSaveSettings { get; set; }     // Set true to use separate settings file.
+        private static bool _initialized;                   // Flag to do some initialization just once per process.
+        private static string _name;                        // Program name.
 
         /// <summary>
         /// The main entry point for the application.
@@ -85,19 +82,12 @@ namespace pwiz.Skyline
 
             try
             {
-                if (!_initialized)
-                {
-                    _initialized = true;
-                    Application.EnableVisualStyles();
-                    Application.SetCompatibleTextRenderingDefault(false);
-                    Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                    Application.ThreadException += ThreadExceptionEventHandler;
-                }
+                Init();
 
                 // Make sure the user has agreed to the current license version
                 // or one more recent.
                 int licenseVersion = Settings.Default.LicenseVersionAccepted;
-                if (licenseVersion < LICENSE_VERSION_CURRENT)
+                if (licenseVersion < LICENSE_VERSION_CURRENT && !NoSaveSettings)
                 {
                     // If the user has never used the application before, then
                     // they must have agreed to the current license agreement during
@@ -110,10 +100,20 @@ namespace pwiz.Skyline
 //                        if (dlg.ShowDialog() == DialogResult.Cancel)
 //                            return;
 //                    }
+
+                    try
+                    {
+                        // Make sure the user never sees this again for this license version
+                        Settings.Default.LicenseVersionAccepted = LICENSE_VERSION_CURRENT;
+                        Settings.Default.Save();
+                    }
+// ReSharper disable EmptyGeneralCatchClause
+                    catch (Exception)
+// ReSharper restore EmptyGeneralCatchClause
+                    {
+                        // Just try to update the license version next time.
+                    }
                 }
-                // Make sure the user never sees this again for this license version
-                Settings.Default.LicenseVersionAccepted = LICENSE_VERSION_CURRENT;
-                Settings.Default.Save();
 
                 MainWindow = new SkylineWindow();
 
@@ -137,6 +137,18 @@ namespace pwiz.Skyline
                 // Send unhandled exceptions to the console.
                 Console.WriteLine(x.Message);
                 Console.Write(x.StackTrace);
+            }
+        }
+
+        public static void Init()
+        {
+            if (!_initialized)
+            {
+                _initialized = true;
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                Application.ThreadException += ThreadExceptionEventHandler;
             }
         }
 
@@ -167,7 +179,12 @@ namespace pwiz.Skyline
         /// </summary>
         public static string Name
         {
-            get { return Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? "-daily" : ""); }
+            get
+            {
+                return _name ??
+                       (_name =
+                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? "-daily" : ""));
+            }
         }
     }
 

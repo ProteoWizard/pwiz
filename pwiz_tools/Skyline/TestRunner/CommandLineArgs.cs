@@ -64,6 +64,14 @@ namespace TestRunner
             return Convert.ToDouble(_args[argName]);
         }
 
+        public static string CommandLine
+        {
+            get
+            {
+                return "TestRunner " + _originalArgs.Aggregate("", (current, arg) => current + (arg + " "));
+            }
+        }
+
         public static void ParseArgs(string[] args, string defaultArgs)
         {
             _originalArgs = new List<string>();

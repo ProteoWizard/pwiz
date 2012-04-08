@@ -647,13 +647,16 @@ namespace pwiz.Skyline
                 return;
             }
 
-            try
+            if (!Program.NoSaveSettings)
             {
-                Settings.Default.Save();
-            }
-            catch (Exception)
-            {
-                MessageDlg.Show(this, "An unexpected error has prevented global settings changes from this session from being saved.");
+                try
+                {
+                    Settings.Default.Save();
+                }
+                catch (Exception)
+                {
+                    MessageDlg.Show(this, "An unexpected error has prevented global settings changes from this session from being saved.");
+                }
             }
 
             _closing = true;

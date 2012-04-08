@@ -30,6 +30,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -378,6 +379,7 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest()
         {
+            Program.Init();
             var threadTest = new Thread(WaitForSkyline) {Name = "Functional test thread"};
             threadTest.Start();
             Program.Main();
@@ -480,20 +482,25 @@ namespace pwiz.SkylineTestUtil
 
                 // Clear the clipboard to avoid the appearance of a memory leak.
                 RunUI(ClipboardEx.Clear);
-
-                _testCompleted = true;
-
-                // Close the Skyline window
-                RunUI(SkylineWindow.Close);
             }
             catch (Exception)
             {
+                foreach (var messageDlg in Application.OpenForms.OfType<MessageDlg>())
+                {
+                    Console.WriteLine("\n\nOpen MessageDlg: {0}\n", messageDlg.Message);
+                }
+
                 // Actually throwing an exception can cause an infinite loop in MSTest
                 _testExceptions.AddRange(from form in Application.OpenForms.Cast<Form>()
                                          where !(form is SkylineWindow)
                                          select new AssertFailedException(
                                              string.Format("Form of type {0} left open at end of test", form.GetType())));
             }
+
+            _testCompleted = true;
+
+            // Close the Skyline window
+            RunUI(SkylineWindow.Close);
         }
 
         // Restore minimal view layout in order to close extra windows.
