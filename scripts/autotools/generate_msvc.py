@@ -491,7 +491,7 @@ for shipdir in shipdirs :
 		f = shipdir+"\\"+file
 		ext = file.partition(".")[2]
 		if (not stat.S_ISDIR(os.stat(f).st_mode)) and ext in exts or ext=="":
-			z.write(f)
+			z.write(f,replace_pwizroot(f,"pwiz"))
 			
 testfiles = set()
 for test in testargs : # grab data files
@@ -505,4 +505,4 @@ for test in testargs : # grab data files
 			if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
 				testfiles.add(ff)
 for f in testfiles :
-	z.write(f)
+	z.write(f,replace_pwizroot(f,"pwiz"))
