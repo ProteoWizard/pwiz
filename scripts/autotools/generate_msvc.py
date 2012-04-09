@@ -25,23 +25,35 @@ import autotools_common as ac
 
 configs=["Debug|Win32","Release|Win32"]
 
-if (len(sys.argv) == 1) :
-	print "usage: %s <pwizroot> [<msvc_build_log> <msvc_ver(8,9 or 10)]"%sys.argv[0]
+dbug = False
+
+args = sys.argv
+
+if "-d" in args :
+	dbug = True
+	print "-d debug option enabled"
+	for i in range(1,len(args)) :
+		if "-d"==args[i] :
+			for j in range(i,len(args)-1) :
+				args[j] = args[j+1]
+	args = args[:len(args)-1]
+
+if (len(args) == 1) :
+	print "usage: %s <pwizroot> [-d] [<msvc_build_log> <msvc_ver(8,9 or 10)]"%sys.argv[0]
 	print " if build log isn't provided we'll make one by doing a clean bjam build."
 	print " if msvc version isn't provided we'll produce msvc8, msvc9 and msvc10 projects."
 	print " pwizroot is usually \ProteoWizard\pwiz (not \ProteoWizard or \ProteoWizard\pwiz\pwiz)."
 	quit(1)
 	
-
-ac.set_pwizroot(sys.argv[1])
+set_pwizroot(args[1])
 
 msvc_versions = range(10,7,-1) # build 10,9,8
 
-if (len(sys.argv) >= 3) :
-	buildlog = sys.argv[2]
+if (len(args) >= 3) :
+	buildlog = args[2]
 	print "using build log %s\n"%buildlog
-	if (len(sys.argv) >= 4) :
-		v = int(sys.argv[3])
+	if (len(args) >= 4) :
+		v = int(args[3])
 		msvc_versions = range(v,v+1)
 else : # no build log provided, go make one
 	tf = tempfile.mkstemp()
@@ -109,21 +121,23 @@ def absname(infname) :
 		return "%s\\%s"%(ac.get_pwizroot(),fname)
 
 def addShipDir(d,addTree=False) :
-	shipdirs.add(os.path.abspath(d.replace(relroot,ac.get_pwizroot())))
-	if addTree:
-		for dd in os.listdir(d) :
-			ddd = d+"\\"+dd
-			if stat.S_ISDIR(os.stat(ddd).st_mode) :
-				addShipDir(ddd,addTree)
+	if not ".svn" in d :
+		shipdirs.add(os.path.abspath(d.replace(relroot,ac.get_pwizroot())))
+		if addTree:
+			for dd in os.listdir(d) :
+				ddd = d+"\\"+dd
+				if stat.S_ISDIR(os.stat(ddd).st_mode) :
+					addShipDir(ddd,addTree)
 
 def addFile(file) :
-	addShipDir(os.path.dirname(file))
-	if ac.isTestFile(file) or ac.isExampleFile(file) :
-		projects.add(file)
-	elif ("ramp\\" in file or "TestHarness" in file) :
-		testhelpers.add(file)
-	else :
-		srcs.add(file)
+	if not ".svn" in file :
+		addShipDir(os.path.dirname(file))
+		if ac.isTestFile(file) or ac.isExampleFile(file) :
+			projects.add(file)
+		elif ("ramp\\" in file or "TestHarness" in file) :
+			testhelpers.add(file)
+		else :
+			srcs.add(file)
 
 def addProjectReference(vcprojDoc,projectName) :
 	projectGUID = GUIDs[projectName]
@@ -272,6 +286,8 @@ zlibPath = ""
 
 for line in open(buildlog):
 	line = line.rstrip('\r\n')
+	if dbug :
+		print line
 	if ("file " in line and "obj.rsp" in line) : # beginning of a repsonse file
 		in_rsp = True
 	elif ("call " in line) : # end of a response file
@@ -478,7 +494,7 @@ readmeMSVC.close()
 fz="libpwiz_msvc.zip"
 print "creating MSVC source build distribution kit %s"%(fz)
 z = zipfile.ZipFile(fz,"w",zipfile.ZIP_DEFLATED)
-exts = ["h","hpp","c","cpp","cxx","sln","vcproj.user","vcxproj.user","vcproj","vcxproj","txt"]
+exts = ["h","hpp","c","cpp","cxx","sln","vcproj.user","vcxproj.user","vcproj","vcxproj","txt","inl"]
 # include the whole boost_aux tree
 for shipdir in shipdirs :
 	if "boost_aux" in shipdir :
