@@ -45,7 +45,7 @@ if (len(args) == 1) :
 	print " pwizroot is usually \ProteoWizard\pwiz (not \ProteoWizard or \ProteoWizard\pwiz\pwiz)."
 	quit(1)
 	
-set_pwizroot(args[1])
+ac.set_pwizroot(args[1])
 
 msvc_versions = range(10,7,-1) # build 10,9,8
 
