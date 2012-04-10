@@ -137,9 +137,14 @@
 <Component Feature="MainFeature"><File Id="_CompassXtractMS.dll" Name="CompassXtractMS.dll" Source="msvc-release\CompassXtractMS.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_EULA.MHDAC" Name="EULA.MHDAC" Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_EULA.MSFileReader" Name="EULA.MSFileReader" Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Id="_fileio.dll" Name="fileio.dll" Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
+<?if $(env.ADDRESS_MODEL)=64 ?>
+    <Component Feature="MainFeature"><File Id="_fileio_x64.dll" Name="fileio_x64.dll" Source="D:\pwiz-src\build-nt-x86/msvc-release-x86_64\fileio_x64.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_fregistry_x64.dll" Name="fregistry_x64.dll" Source="D:\pwiz-src\build-nt-x86/msvc-release-x86_64\fregistry_x64.dll" KeyPath="yes"/></Component>
+<?else?>
+    <Component Feature="MainFeature"><File Id="_fileio.dll" Name="fileio.dll" Source="D:\pwiz-src\build-nt-x86/msvc-release\fileio.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_fregistry.dll" Name="fregistry.dll" Source="D:\pwiz-src\build-nt-x86/msvc-release\fregistry.dll" KeyPath="yes"/></Component>
+<?endif?>
 <Component Feature="MainFeature"><File Id="_FlexVariableTable.xml" Name="FlexVariableTable.xml" Source="msvc-release\FlexVariableTable.xml" KeyPath="yes"/></Component>
-<Component Feature="MainFeature"><File Id="_fregistry.dll" Name="fregistry.dll" Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_HSReadWrite.dll" Name="HSReadWrite.dll" Source="msvc-release\HSReadWrite.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_ICRVariableTable.xml" Name="ICRVariableTable.xml" Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_idcat.exe" Name="idcat.exe" Source="msvc-release\idcat.exe" KeyPath="yes"/></Component>
