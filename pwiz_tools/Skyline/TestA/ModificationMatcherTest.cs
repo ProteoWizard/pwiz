@@ -285,7 +285,7 @@ namespace pwiz.SkylineTestA
         }
 
         private const string STR_NO_MODS = "ALSIGFETCR"; 
-        private const string STR_HEAVY_15 = "A{+1}E{+1}I{+1}D{+1}M{+1}[+15.995]L{+1}D{+1}I{+1}R{+4}";
+        private static readonly string STR_HEAVY_15 = "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R{+4}";
         private const string STR_HEAVY_15_F = "VAILIPF{+1}R";
         private static readonly string STR_HEAVY_15_NOT_ALL = "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R";
         private const string STR_MOD_BY_NAME = "S[Phospho (ST)]LLYFVYVAPGIVNT[Phospho (ST)]YLFMMQAQGILIR";

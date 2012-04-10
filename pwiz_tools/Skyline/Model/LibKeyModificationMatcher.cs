@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -152,7 +153,7 @@ namespace pwiz.Skyline.Model
                                 AA = (char)prevAA,
                                 Terminus = terminus,
                                 AppearsToBeSpecificMod = isSpecificHeavy,
-                                Mass = double.Parse(Encoding.Default.GetString(modArr)),
+                                Mass = double.Parse(Encoding.Default.GetString(modArr), CultureInfo.InvariantCulture),
                                 RoundedTo = 1
                             }
                         };

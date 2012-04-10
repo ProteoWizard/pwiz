@@ -109,7 +109,8 @@ namespace pwiz.Skyline.Model
                         modTerminus = ModTerminus.N;
                     if (indexAA == aas.Length - 1)
                         modTerminus = ModTerminus.C;
-                    int decPlace = mod.IndexOf('.');
+                    int decPlace = mod.IndexOf(CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator,
+                        StringComparison.Ordinal);
                     string name = null;
                     var roundedTo = Math.Min(decPlace == -1 ? 0 : mod.Length - decPlace - 1,
                         DEFAULT_ROUNDING_DIGITS);

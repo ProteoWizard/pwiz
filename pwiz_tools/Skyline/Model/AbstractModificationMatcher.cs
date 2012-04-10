@@ -628,7 +628,7 @@ namespace pwiz.Skyline.Model
             }
             public override string ToString()
             {
-                return string.Format(UserIndicatedHeavy ? "{0}{{{1}}}" : "{0}[{1}]", AA, Mass);
+                return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? "{0}{{{1}}}" : "{0}[{1}]", AA, Mass);
             }
         }
 

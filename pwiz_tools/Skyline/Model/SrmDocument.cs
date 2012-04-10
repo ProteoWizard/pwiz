@@ -2213,20 +2213,13 @@ namespace pwiz.Skyline.Model
                 if (scoreCalc.HasValue)
                 {
                     writer.WriteAttribute(ATTR.rt_calculator_score, scoreCalc);
-                    double? rt = rtPredictor.GetRetentionTime(scoreCalc.Value);
-                    if (rt.HasValue)
-                    {
-                        writer.WriteAttribute(ATTR.predicted_retention_time, rt);
-                    }
+                    writer.WriteAttributeNullable(ATTR.predicted_retention_time,
+                        rtPredictor.GetRetentionTime(scoreCalc.Value));
                 } 
             }
             
+            writer.WriteAttributeNullable(ATTR.avg_measured_retention_time, node.AverageMeasuredRetentionTime);
 
-            double? avgMeasuredRt = node.AverageMeasuredRetentionTime;
-            if(avgMeasuredRt.HasValue)
-            {
-                writer.WriteAttribute(ATTR.avg_measured_retention_time, avgMeasuredRt);
-            }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);
             WriteExplicitMods(writer, node);
@@ -2348,7 +2341,7 @@ namespace pwiz.Skyline.Model
                 double massDiff = massCalc.GetModMass(sequence[mod.IndexAA], mod.Modification);
 
                 writer.WriteAttribute(ATTR.mass_diff,
-                                      String.Format("{0}{1}", (massDiff < 0 ? "" : "+"), Math.Round(massDiff, 1)));
+                                      string.Format("{0}{1}", (massDiff < 0 ? "" : "+"), Math.Round(massDiff, 1)));
 
                 writer.WriteEndElement();
             }
@@ -2528,14 +2521,14 @@ namespace pwiz.Skyline.Model
                 nodePep, nodeGroup, nodeTransition, optimizationMethod, dpRegression, GetDeclusteringPotential);
             }
 
-            if (ce != null)
+            if (ce.HasValue)
             {
-                writer.WriteElementString(EL.collision_energy, ce);
+                writer.WriteElementString(EL.collision_energy, ce.Value);
             }
 
-            if (dp != null)
+            if (dp.HasValue)
             {
-                writer.WriteElementString(EL.declustering_potential, dp);
+                writer.WriteElementString(EL.declustering_potential, dp.Value);
             }
         }
 
