@@ -25,15 +25,19 @@ import uuid
 import glob
 import ntpath
 
-if (len(sys.argv) < 5):
-	print("usage: %s <template path> <build path> <install path> <version string>" % ntpath.basename(sys.argv[0]))
-	print("# normally this is called by the WiX Jamfile")
-	quit(1)
+if (len(sys.argv) < 6):
+    print("usage: %s <template path> <build path> <install path> <version string> <address-model>" % ntpath.basename(sys.argv[0]))
+    print("# normally this is called by the WiX Jamfile")
+    quit(1)
 
 templatePath = sys.argv[1]
 buildPath = sys.argv[2]
 installPath = sys.argv[3]
 version = sys.argv[4]
+
+installerSuffix = "-x86"
+if sys.argv[5] == "64":
+    installerSuffix = "-x86_64"
 
 # a unique ProductGuid every time allows multiple parallel installations of pwiz
 guid = str(uuid.uuid4())
@@ -49,6 +53,6 @@ for filepath in glob.glob(buildPath + "/*.wxs"):
 for filepath in glob.glob(buildPath + "/*.wixObj"):
     os.remove(filepath)
 
-wxsFilepath = buildPath + "/pwiz-setup-" + version + ".wxs"
+wxsFilepath = buildPath + "/pwiz-setup-" + version + installerSuffix + ".wxs"
 wxsFile = open(wxsFilepath, 'w')
 wxsFile.write(wxsTemplate)

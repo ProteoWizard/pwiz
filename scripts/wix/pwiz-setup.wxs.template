@@ -23,15 +23,15 @@
 -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:netfx="http://schemas.microsoft.com/wix/NetFxExtension">
    <Product Id="{ProductGuid}"
-            Name="ProteoWizard {version}"
+            Name="ProteoWizard {version} $(var.AddressModel)-bit"
             Language="1033"
             Version="{version}"
             Manufacturer="ProteoWizard"
-            UpgradeCode="644795C6-012A-49B7-A47F-E46E164D3689">
+            UpgradeCode="$(var.AddressModel)4795C6-012A-49B7-A47F-E46E164D3689">
 
-      <Package Description="ProteoWizard {version} Installer" Manufacturer="ProteoWizard" InstallerVersion="300" Compressed="yes" />
+      <Package Description="ProteoWizard {version} $(var.AddressModel)-bit Installer" Manufacturer="ProteoWizard" InstallerVersion="300" Compressed="yes" />
       <Media Id="1" Cabinet="ProteoWizard.cab" EmbedCab="yes" />
-      <?if $(env.TOOLSET)=10.0 or $(env.TOOLSET)=10.0express ?>
+      <?if $(var.Toolset)=10.0 or $(var.Toolset)=10.0express ?>
           <Icon Id="seems_Icon.exe" SourceFile="msvc-release\seems.exe" />
           <Property Id="ARPPRODUCTICON" Value="seems_Icon.exe" />
       <?endif?>
@@ -39,6 +39,12 @@
       <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONROOTDIRECTORY" />
       <!--<WixVariable Id="WixUIBannerBmp" Value="..\Resources\SetupBanner.bmp" />
       <WixVariable Id="WixUIDialogBmp" Value="..\Resources\SetupBackground.bmp" />-->
+
+      <?if $(var.AddressModel)=64 ?>
+          <?define ProgramFilesFolder="ProgramFiles64Folder"?>
+      <?else?>
+          <?define ProgramFilesFolder="ProgramFilesFolder"?>
+      <?endif?>
 
       <PropertyRef Id='NETFRAMEWORK35'/>
       <PropertyRef Id='NETFRAMEWORK35_SP_LEVEL'/>
@@ -63,24 +69,35 @@
             <Merge Id="CRT" Language="0" SourceFile="C:\Users\chambem2\Downloads\Microsoft_VC80_CRT_x86.msm" DiskId="1" />
             <Merge Id="MFC" Language="0" SourceFile="C:\Users\chambem2\Downloads\Microsoft_VC80_MFC_x86.msm" DiskId="1" />
          -->
-         
-         <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
-         <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
-         <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86.msm" DiskId="1" />
-         <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86.msm" DiskId="1" />
-         
-         <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" />
-         <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x86.msm" DiskId="1" />
 
-         <?if $(env.TOOLSET)=10.0 or $(env.TOOLSET)=10.0express ?>
+         <?if $(var.AddressModel)=64 ?>
+            <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
+            <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
+            <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
+            <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
+
+            <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x64.msm" DiskId="1" />
+            <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x64.msm" DiskId="1" />
+         <?else?>
+            <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+            <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+            <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+            <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+
+            <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" />
+            <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x86.msm" DiskId="1" />
+         <?endif?>
+
+         <?if $(var.Toolset)=10.0 or $(var.Toolset)=10.0express ?>
          <Directory Id="ProgramMenuFolder">
-            <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {version}" />
+            <Directory Id="ProteoWizardStartMenuFolder" Name="ProteoWizard {version} $(var.AddressModel)-bit" />
          </Directory>
          <?endif?>
-         <Directory Id="ProgramFilesFolder" Name="PFiles">
+
+         <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
             <Directory Id="ProteoWizardFolder" Name="ProteoWizard">
                 <Directory Id="APPLICATIONROOTDIRECTORY" Name="ProteoWizard {version}">
-                    <?if $(env.TOOLSET)=10.0 or $(env.TOOLSET)=10.0express ?>
+                    <?if $(var.Toolset)=10.0 or $(var.Toolset)=10.0express ?>
                         <Component Feature="MainFeature">
                             <File Id="_seems.exe" Name="seems.exe" Source="msvc-release\seems.exe" KeyPath="yes"/>
                             <Shortcut Id="SeeMSShortcut" Directory="ProteoWizardStartMenuFolder" Name="SeeMS" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="seems_Icon.exe" IconIndex="0" Advertise="yes" />
@@ -129,7 +146,7 @@
 <Component Feature="MainFeature"><File Id="_Clearcore2.ProjectUtilities.dll" Name="Clearcore2.ProjectUtilities.dll" Source="msvc-release\Clearcore2.ProjectUtilities.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.StructuredStorage.dll" Name="Clearcore2.StructuredStorage.dll" Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Clearcore2.Utility.dll" Name="Clearcore2.Utility.dll" Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
-<?if $(env.TOOLSET)=10.0 or $(env.TOOLSET)=10.0express ?>
+<?if $(var.Toolset)=10.0 or $(var.Toolset)=10.0express ?>
     <Component Feature="MainFeature"><File Id="_Clearcore2.Muni.dll" Name="Clearcore2.Muni.dll" Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Id="_Clearcore2.RawXYProcessing.dll" Name="Clearcore2.RawXYProcessing.dll" Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
 <?endif?>
@@ -137,7 +154,7 @@
 <Component Feature="MainFeature"><File Id="_CompassXtractMS.dll" Name="CompassXtractMS.dll" Source="msvc-release\CompassXtractMS.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_EULA.MHDAC" Name="EULA.MHDAC" Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_EULA.MSFileReader" Name="EULA.MSFileReader" Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
-<?if $(env.ADDRESS_MODEL)=64 ?>
+<?if $(var.AddressModel)=64 ?>
     <Component Feature="MainFeature"><File Id="_fileio_x64.dll" Name="fileio_x64.dll" Source="msvc-release\fileio_x64.dll" KeyPath="yes"/></Component>
     <Component Feature="MainFeature"><File Id="_fregistry_x64.dll" Name="fregistry_x64.dll" Source="msvc-release\fregistry_x64.dll" KeyPath="yes"/></Component>
 <?else?>
@@ -177,7 +194,7 @@
          </Directory>
       </Directory>
 
-      <Feature Id="MainFeature" Title="ProteoWizard {version}" Level="1">
+      <Feature Id="MainFeature" Title="ProteoWizard {version} $(var.AddressModel)-bit" Level="1">
          <MergeRef Id="CRT9" />
          <MergeRef Id="MFC9" />
          <MergeRef Id="CRT9_policy" />
