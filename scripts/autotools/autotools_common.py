@@ -67,3 +67,14 @@ def isTestFile(filestr) :
     return isNotForbidden(file)  and ("Test." in file or "test." in file)
 
 
+def replace_pwizroot(str,repl) : # case insensitive
+	if contains_pwizroot(str) :
+		import re
+		pattern = re.compile(get_pwizroot().replace("\\","\\\\"), re.IGNORECASE)
+		ret = pattern.sub(repl,str)
+		if repl in ret :
+			if not ret.startswith(repl) : # perhaps a stray drive letter
+				if ret[1] == ":" :
+					ret = ret[2:]
+		return ret
+	return str

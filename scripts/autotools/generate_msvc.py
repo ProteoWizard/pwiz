@@ -65,11 +65,12 @@ else : # no build log provided, go make one
 	print "performing clean build\n"
 	here = os.getcwd()
 	os.chdir(ac.get_pwizroot())
-	os.system("clean.bat")
+	#os.system("clean.bat")
 	buildcmd="quickbuild.bat --without-binary-msdata -d+2"
 	print "performing build: %s\n"%buildcmd
 	p=subprocess.Popen(buildcmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-	buildlog_lines, errors = p.communicate()
+	outs, errors = p.communicate()
+	buildlog_lines = outs.split("\r\n")
 	print errors
 	os.chdir(here)
 
@@ -97,22 +98,10 @@ GUIDs[testhelpers_projectname]="{C44C75B2-43AA-1043-A66D-543EC3181143}"
 writers=set()
 testGUIDs=set()
 
-def replace_pwizroot(str,repl) : # case insensitive
-	if ac.contains_pwizroot(str) :
-		import re
-		pattern = re.compile(ac.get_pwizroot().replace("\\","\\\\"), re.IGNORECASE)
-		ret = pattern.sub(repl,str)
-		if repl in ret :
-			if not ret.startswith(repl) : # perhaps a stray drive letter
-				if ret[1] == ":" :
-					ret = ret[2:]
-		return ret
-	return str
-
 relroot = "$(ProjectDir).."
 def relname(fname) : # c:\ProteoWizard\pwiz\foo\bar\baz
 	if ac.contains_pwizroot(fname) :
-		return replace_pwizroot(fname,relroot) # $(ProjectDir)\..\foo\bar\baz
+		return ac.replace_pwizroot(fname,relroot) # $(ProjectDir)\..\foo\bar\baz
 	if fname.startswith("\\") :
 		return relroot+fname
 	return relroot+"\\"+fname
@@ -514,7 +503,7 @@ for shipdir in shipdirs :
 		f = shipdir+"\\"+file
 		ext = file.partition(".")[2]
 		if (not stat.S_ISDIR(os.stat(f).st_mode)) and ext in exts or ext=="":
-			z.write(f,replace_pwizroot(f,"pwiz"))
+			z.write(f,ac.replace_pwizroot(f,"pwiz"))
 			
 testfiles = set()
 for test in testargs : # grab data files
@@ -528,4 +517,4 @@ for test in testargs : # grab data files
 			if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
 				testfiles.add(ff)
 for f in testfiles :
-	z.write(f,replace_pwizroot(f,"pwiz"))
+	z.write(f,ac.replace_pwizroot(f,"pwiz"))

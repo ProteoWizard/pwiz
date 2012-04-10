@@ -37,6 +37,8 @@ compiler_defines.append("WITHOUT_MZ5") # let's not worry about the mz5 thing at 
 
 import os
 import sys
+import stat
+import tarfile
 
 if (len(sys.argv) < 3) :
 	print "usage: %s <pwizroot> <dir_with_build_log>"%sys.argv[0]
@@ -67,32 +69,38 @@ testargs=dict()
 libnames=set()
 examples=set()
 includes=set()
+shipdirs=set() # set of directories of interest
+
 
 def isTestFile(file) :
 	return "Test." in file or "test." in file
 
-def addShipDir(d,addTree=False) :
-	shipdirs.add(os.path.abspath(d.replace(relroot,ac.get_pwizroot())))
-	if addTree:
-		for dd in os.listdir(d) :
-			ddd = d+"\\"+dd
-			if stat.S_ISDIR(os.stat(ddd).st_mode) :
-				addShipDir(ddd,addTree)
+def addShipDir(in_d,addTree=False) :
+	if not ".svn" in in_d :
+		d = os.path.abspath(in_d)
+		shipdirs.add(d)
+		if addTree:
+			for dd in os.listdir(d) :
+				ddd = d+"/"+dd
+				if stat.S_ISDIR(os.stat(ddd).st_mode) :
+					addShipDir(ddd,addTree)
 
 def addFile(file) :
-	if ("/pwiz/libraries/libsvm" in file):
-		if ("libsvm" in file):
-			srcs.add(file)
-			includes.add(relname(file.rpartition("/")[0]))
-	elif ac.isExampleFile(file) : 
-		if ("/pwiz_tools/examples/" in file) : # need a full path
-			examples.add(file)
+	if not ".svn" in file :
+		addShipDir(os.path.dirname(file))
+		if ("/pwiz/libraries/libsvm" in file):
+			if ("libsvm" in file):
+				srcs.add(file)
+				includes.add(relname(file.rpartition("/")[0]))
+		elif ac.isExampleFile(file) : 
+			if ("/pwiz_tools/examples/" in file) : # need a full path
+				examples.add(file)
+			else :
+				examples.add(file.replace("pwiz_tools/examples/","%s/pwiz_tools/examples/"%ac.get_pwizroot()))
+		elif isTestFile(file) :
+			tests.add(file)
 		else :
-			examples.add(file.replace("pwiz_tools/examples/","%s/pwiz_tools/examples/"%ac.get_pwizroot()))
-	elif isTestFile(file) :
-		tests.add(file)
-	else :
-		srcs.add(file)
+			srcs.add(file)
 
 
 
@@ -216,7 +224,43 @@ for example in examples :
 	
 makefileam.close()
 
+# create a source tarball 
+for ipath in includes :
+	addShipDir(ipath)
+addShipDir(workdir)
+addShipDir(ac.get_pwizroot())
 
+# include the whole boost_aux tree
+for shipdir in shipdirs :
+	if "boost_aux" in shipdir :
+		addShipDir(shipdir,addTree=True)
+		break
+for d in ["pwiz_aux"] : # any others not mentioned?
+	addShipDir(ac.get_pwizroot()+"/"+d,addTree=True)
 
+fz="libpwiz_src.tgz"
+print "creating autotools source build distribution kit %s"%(fz)
+z = tarfile.open(fz,"w|gz")
+exts = ["h","hpp","c","cpp","cxx","am","inl"]
 
+for shipdir in shipdirs :
+	for file in os.listdir(shipdir) :
+		f = shipdir+"\\"+file
+		ext = file.partition(".")[2]
+		if (not stat.S_ISDIR(os.stat(f).st_mode)) and ext in exts or ext=="":
+			z.add(f,ac.replace_pwizroot(f,"pwiz"))
+testfiles = set()
+for test in testargs : # grab data files
+	f = absname(testargs[test])
+	if (os.path.exists(f)) :
+		ext = f.rpartition(".")[2]
+		d = os.path.dirname(f) # go ahead and grab anything else with same .ext
+		for file in os.listdir(d) :
+			ff = d+"\\"+file
+			ext2 = ff.rpartition(".")[2]
+			if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
+				testfiles.add(ff)
+for f in testfiles :
+	z.add(f,ac.replace_pwizroot(f,"pwiz"))
+z.close()
 
