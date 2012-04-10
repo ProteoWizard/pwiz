@@ -1,10 +1,13 @@
-# This is about producing a Visual Studio standard library project for pwiz
-# with no bjam involved.  We do this by observing a bjam -d+2 build in operation
+# This is about producing a Visual Studio standard library project for 
+# using pwiz in non-Proteowizard projects that don't use bjam.
+# We do this by observing a bjam -d+2 build in operation
 # and making MSVC config files from that.
 #
 # args are:
 #   full_path_to_pwiz_root (where scripts, pwiz_tools, pwiz etc are found)
-#   full_path_to_msvcbuild_log
+#   optional -d flag for debug
+#   optional full_path_to_msvcbuild_log
+#   optional list of msvc versions to build for
 #
 # places resulting build files in <full_path_to_pwiz_root>/msvc
 #
@@ -19,7 +22,7 @@ import shutil
 import xml.dom.minidom
 import zipfile
 import stat
-import tempfile
+import subprocess
 
 import autotools_common as ac
 
@@ -49,21 +52,25 @@ ac.set_pwizroot(args[1])
 
 msvc_versions = range(10,7,-1) # build 10,9,8
 
+buildlog_lines = []
+
 if (len(args) >= 3) :
 	buildlog = args[2]
 	print "using build log %s\n"%buildlog
+	buildlog_lines = open(buildlog).readlines()
 	if (len(args) >= 4) :
 		v = int(args[3])
 		msvc_versions = range(v,v+1)
 else : # no build log provided, go make one
-	tf = tempfile.mkstemp()
-	os.close(tf[0])
-	buildlog = tf[1]
-	print "creating build log %s\n"%buildlog
+	print "performing clean build\n"
 	here = os.getcwd()
 	os.chdir(ac.get_pwizroot())
 	os.system("clean.bat")
-	os.system("quickbuild.bat --without-binary-msdata -d+2 > %s"%buildlog)
+	buildcmd="quickbuild.bat --without-binary-msdata -d+2"
+	print "performing build: %s\n"%buildcmd
+	p=subprocess.Popen(buildcmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	buildlog_lines, errors = p.communicate()
+	print errors
 	os.chdir(here)
 
 srcs=set()
@@ -284,7 +291,7 @@ in_rsp = False
 
 zlibPath = ""
 
-for line in open(buildlog):
+for line in buildlog_lines:
 	line = line.rstrip('\r\n')
 	if dbug :
 		print line
