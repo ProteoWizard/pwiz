@@ -606,7 +606,8 @@ namespace quameter
             MS2ScanMap ms2ScanMap;
             size_t missingPrecursorIntensities = 0;
             map<int, int> scanCountByChargeState;
-            
+            string lastMS1NativeId;
+
             // For each spectrum
             size_t curIndex;
             try
@@ -631,7 +632,7 @@ namespace quameter
                     if (msLevel == 1)
                     {
                         MS1ScanInfo scanInfo;
-                        scanInfo.nativeID = spectrum->id;
+                        lastMS1NativeId = scanInfo.nativeID = spectrum->id;
                         scanInfo.totalIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
 
                         if (spectrum->scanList.scans.empty())
@@ -680,8 +681,13 @@ namespace quameter
                             scanInfo.precursorCharge = 0;
 
                         if (precursor.spectrumID.empty())
-                            throw runtime_error("No precursor spectrum ID for " + spectrum->id);
-                        scanInfo.precursorNativeID = precursor.spectrumID;
+                        {
+                            if (lastMS1NativeId.empty())
+                                throw runtime_error("No MS1 spectrum found before " + spectrum->id);
+                            scanInfo.precursorNativeID = lastMS1NativeId;
+                        }
+                        else
+                            scanInfo.precursorNativeID = precursor.spectrumID;
 
                         if (spectrum->scanList.scans.empty())
                             throw runtime_error("No scan start time for " + spectrum->id);
@@ -936,6 +942,7 @@ namespace quameter
             // XIC peak metrics
             double peakWidthMedian = 0;
             double peakHeightMedian = 0;
+            double peakHeightIQR = 0;
             double peakTimeIQR = 0;
             {
                 accs::accumulator_set<double, accs::stats<accs::tag::percentile> > peakWidths, peakTimes, peakHeights;
@@ -948,6 +955,8 @@ namespace quameter
                     }
                 peakWidthMedian = accs::percentile(peakWidths, accs::percentile_number = 50);
                 peakHeightMedian = accs::percentile(peakHeights, accs::percentile_number = 50);
+                peakHeightIQR = accs::percentile(peakTimes, accs::percentile_number = 75) -
+                                accs::percentile(peakTimes, accs::percentile_number = 25);
                 peakTimeIQR = accs::percentile(peakTimes, accs::percentile_number = 75) -
                               accs::percentile(peakTimes, accs::percentile_number = 25);
             }
@@ -972,7 +981,7 @@ namespace quameter
             qout << "\t" << peakWidthMedian;
             qout << "\t" << peakTimeIQR;
             qout << "\t" << chargeStateMetric;
-            qout << "\t" << peakHeightMedian;
+            qout << "\t" << (peakHeightIQR / peakHeightMedian);
             qout << "\t" << ms1StabilityOfTIC;
             qout << "\t" << ms1ScanMap.size();
             qout << "\t" << accs::percentile(ms1PeakCounts, accs::percentile_number = 50);
@@ -1053,6 +1062,7 @@ namespace quameter
             const vector<size_t>& distinctMatchCountBySpecificity = idpReader.distinctMatchCountBySpecificity();
             const vector<size_t>& distinctPeptideCountBySpecificity = idpReader.distinctPeptideCountBySpecificity();
 
+            string lastMS1NativeId;
             double lastMS1IonInjectionTime = 0;
             size_t missingPrecursorIntensities = 0;
 
@@ -1078,7 +1088,7 @@ namespace quameter
                 if (msLevel == 1)
                 {
                     MS1ScanInfo scanInfo;
-                    scanInfo.nativeID = spectrum->id;
+                    lastMS1NativeId = scanInfo.nativeID = spectrum->id;
                     scanInfo.totalIonCurrent = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
 
                     if (spectrum->scanList.scans.empty())
@@ -1120,8 +1130,13 @@ namespace quameter
                     }
 
                     if (precursor.spectrumID.empty())
-                        throw runtime_error("No precursor spectrum ID for " + spectrum->id);
-                    scanInfo.precursorNativeID = precursor.spectrumID;
+                    {
+                        if (lastMS1NativeId.empty())
+                            throw runtime_error("No MS1 spectrum found before " + spectrum->id);
+                        scanInfo.precursorNativeID = lastMS1NativeId;
+                    }
+                    else
+                        scanInfo.precursorNativeID = precursor.spectrumID;
 
                     if (spectrum->scanList.scans.empty())
                         throw runtime_error("No scan start time for " + spectrum->id);
