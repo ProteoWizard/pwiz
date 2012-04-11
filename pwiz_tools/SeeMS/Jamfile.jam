@@ -21,7 +21,7 @@
 
 
 import modules ;
-if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+if [ modules.peek : NT ]
 {
     import path feature svnrev sequence ;
     path-constant SEEMS_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS ;
