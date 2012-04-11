@@ -343,6 +343,7 @@
     <None Include="Resources\Centroider.png" />
     <None Include="Resources\back.png" />
     <None Include="Resources\DataProcessing.png" />
+    <None Include="Resources\folder.png" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -388,17 +389,6 @@
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x64\MSFileReader.XRawfile2.SxS.manifest</HintPath>
     </NativeReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.MHDAC">
-      <Link>EULA.MHDAC</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Thermo\EULA.MSFileReader">
-      <Link>EULA.MSFileReader</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="Resources\folder.png" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Shared\Common\CommonUtil.csproj">
