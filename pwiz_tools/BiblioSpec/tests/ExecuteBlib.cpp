@@ -46,6 +46,7 @@ int main(int argc, char** argv){
     string options; // must start with '-'
     vector<string> libNames; // collect so we can sort them
     const char* libExt = ".blib";
+	const char* pdbExt = ".pdb";
     string inputs;  // all else
 
     for(int i = 1; i < argc; i++){
@@ -62,6 +63,11 @@ int main(int argc, char** argv){
                    token.find("BlibFilter") != string::npos ||
                    token.find("BlibToMs2") != string::npos ||
                    token.find("BlibSearch") != string::npos ){
+            // Ignore the .pdb if it ends up in the command line.
+		    if ( token.compare(token.length() - strlen(pdbExt),
+                               strlen(pdbExt), pdbExt) == 0 ) {
+                continue;
+			}
             command = token; // check that only one token matches?
             command += " ";
         } else if ( token.compare(token.length() - strlen(libExt),
