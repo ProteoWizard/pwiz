@@ -426,7 +426,8 @@ namespace IDPicker.Forms
             // TODO: fix child rows so they have their own pivot data
             if (pivotColumns.Count > 0 && columnIndex >= pivotColumns.First().Index)
             {
-                var stats = treeDataGridView.Columns[columnIndex].Tag as Map<long, PivotData>;
+                var pivotColumn = pivotColumns[columnIndex - pivotColumns.First().Index];
+                var stats = pivotColumn.Tag as Map<long, PivotData>;
                 if (stats == null)
                     return 0;
 
@@ -443,7 +444,7 @@ namespace IDPicker.Forms
 
                 if (itr.IsValid)
                 {
-                    if (treeDataGridView.Columns[columnIndex].HeaderText.EndsWith("/"))
+                    if (pivotColumn.HeaderText.EndsWith("/"))
                     {
                         if (checkedPivots.Count(o => o.Mode == PivotBy.SpectraByGroup) > 0)
                             return itr.Current.Value.Spectra;
@@ -504,6 +505,9 @@ namespace IDPicker.Forms
 
         protected override RowFilterState getRowFilterState (Row parentRow)
         {
+            if (viewFilter.PeptideGroup == null && viewFilter.Peptide == null && viewFilter.DistinctMatchKey == null)
+                return RowFilterState.In;
+
             bool result = false;
             if (parentRow is PeptideGroupRow)
             {
@@ -519,7 +523,6 @@ namespace IDPicker.Forms
                 if (viewFilter.DistinctMatchKey != null) result = viewFilter.DistinctMatchKey.Contains((parentRow as DistinctMatchRow).DistinctMatch);
                 if (!result && viewFilter.Peptide != null) result = viewFilter.Peptide.Contains((parentRow as DistinctMatchRow).Peptide);
                 if (!result && viewFilter.PeptideGroup != null) result = viewFilter.PeptideGroup.Contains((parentRow as DistinctMatchRow).Peptide.PeptideGroup);
-                result = result || viewFilter.PeptideGroup == null && viewFilter.Peptide == null && viewFilter.DistinctMatchKey == null;
             }
             if (result) return RowFilterState.In;
             if (parentRow.ChildRows == null) return RowFilterState.Out;

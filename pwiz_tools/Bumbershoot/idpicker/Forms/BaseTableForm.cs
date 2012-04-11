@@ -246,6 +246,9 @@ namespace IDPicker.Forms
 
         public void Sort(int columnIndex)
         {
+            if (treeDataGridView.RowCount == 0)
+                return;
+
             SortColumn sortColumn;
 
             // if already sorting by the clicked column, reverse sort order
