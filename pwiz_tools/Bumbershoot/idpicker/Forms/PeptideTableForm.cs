@@ -424,7 +424,9 @@ namespace IDPicker.Forms
         protected override object getCellValue (int columnIndex, Row baseRow)
         {
             // TODO: fix child rows so they have their own pivot data
-            if (pivotColumns.Count > 0 && columnIndex >= pivotColumns.First().Index)
+            if (pivotColumns.Count > 0 &&
+                pivotColumns.First().Index > 0 &&
+                columnIndex >= pivotColumns.First().Index)
             {
                 var pivotColumn = pivotColumns[columnIndex - pivotColumns.First().Index];
                 var stats = pivotColumn.Tag as Map<long, PivotData>;
