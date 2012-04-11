@@ -22,7 +22,7 @@
 
 lib sqlite 
   : sqlite3.c
-  : <link>static <linkflags>-ldl
+  : <link>static
   :
-  : <include>.
+  : <include>. <linkflags>-ldl
   ;
