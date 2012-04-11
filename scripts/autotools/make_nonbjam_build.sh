@@ -37,11 +37,15 @@ echo "Please visit http://proteowizard.sourceforge.net/team.shtml for a list of 
 echo "Please visit http://proteowizard.sourceforge.net/news.shtml for ProteoWizard news" > NEWS
 echo "Please visit http://proteowizard.svn.sourceforge.net/viewvc/proteowizard/trunk/pwiz/ for change histories" >ChangeLog 
 echo "grab the boost autotools support stuff..."
-wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4
+# sigh... which version of wget is present?
+FOO= wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4
+if [ "1" = "$FOO" ]; then
+	wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4 --no-check-certificate
+fi
 echo "autoconf..."
 libtoolize --copy &>/dev/null; aclocal  &>/dev/null; autoscan $PWIZROOT/pwiz  &>/dev/null ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR &>/dev/null
 # yes, doing this twice, solves a chicken vs egg problem that first invocation barks about
-libtoolize  --copy ; aclocal ; cat boost.m4 >> aclocal.m4 ; autoscan $PWIZROOT/pwiz ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR
+libtoolize  --copy ; aclocal ; cat boost.m4 >> aclocal.m4 ; autoscan $PWIZROOT/pwiz ; python $PWIZROOT/scripts/autotools/generate_autoconf.py -d $PWIZROOT $TMPDIR
 
 autoconf configure.ac > configure
 chmod a+x configure

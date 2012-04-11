@@ -62,10 +62,10 @@ if (len(args) >= 3) :
 		v = int(args[3])
 		msvc_versions = range(v,v+1)
 else : # no build log provided, go make one
-	print "performing clean build\n"
+	print "performing clean: clean.bat\n"
 	here = os.getcwd()
 	os.chdir(ac.get_pwizroot())
-	#os.system("clean.bat")
+	os.system("clean.bat")
 	buildcmd="quickbuild.bat --without-binary-msdata -d+2"
 	print "performing build: %s\n"%buildcmd
 	p=subprocess.Popen(buildcmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
