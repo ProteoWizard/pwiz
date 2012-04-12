@@ -223,8 +223,10 @@ void testIdentifyFileFormat()
         examples::initializeTiny(msd);
         MSDataFile::WriteConfig config;
         config.format = MSDataFile::Format_MZ5;
+#ifndef WITHOUT_MZ5
         MSDataFile::write(msd, "testSpectraDataFile.Mz5", config);
         unit_assert_operator_equal(MS_mz5_file, identifyFileFormat(readers, "testSpectraDataFile.Mz5"));
+#endif
     }
     bfs::remove("testSpectraDataFile.Mz5");
 

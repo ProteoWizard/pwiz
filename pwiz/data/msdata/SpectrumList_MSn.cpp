@@ -26,6 +26,7 @@
 #include "SpectrumList_MSn.hpp"
 #include "References.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "zlib.h"
 
 
@@ -35,6 +36,7 @@ namespace msdata {
 
 using boost::iostreams::stream_offset;
 using boost::iostreams::offset_to_position;
+using namespace pwiz::chemistry;
 
 
 namespace {
@@ -212,7 +214,6 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     spectrum.precursors.push_back(Precursor());
     Precursor& precursor = spectrum.precursors.back();
     precursor.selectedIons.push_back(SelectedIon());
-    SelectedIon& selectedIon = precursor.selectedIons.back();
 
     string lineStr;
     bool inPeakList = false;
@@ -248,7 +249,8 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         size_t last_num_pos = lineStr.find_last_of("0123456789");
         size_t last_space_pos = lineStr.find_last_of(" \t", last_num_pos);
         precursor_mz = lexical_cast<double>(lineStr.substr(last_space_pos, last_num_pos-last_space_pos+1));
-        selectedIon.set(MS_selected_ion_m_z, precursor_mz, MS_m_z);
+        // store precursor in the first selected ion if we do not have accurate mass data (below)
+        precursor.isolationWindow.set(MS_isolation_window_target_m_z, precursor_mz, MS_m_z);
     }
     else // eof, exit
     {
@@ -380,23 +382,15 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
        is_->seekg(0);
     }
     
-    // if no accurate masses, set charge only
+    // if no accurate masses, set charge as possible
     if (chargeMassPairs.empty())
     {
-      // If we have only ONE charge state, we read it in as "MS_charge_state";
-      // otherwise, the charge states are all read as "MS_possible_charge_state"
       size_t numCharges = charges.size();
-      if (1 == numCharges)
+      for (size_t i = 0; i < numCharges; i++)
       {
-          selectedIon.set(MS_charge_state, charges[0]);
+        precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges[i]));
       }
-      else
-      {
-          for (size_t i = 0; i < numCharges; i++)
-          {
-             precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges[i]));
-          }
-      }
+      precursor.selectedIons.back().set(MS_selected_ion_m_z, precursor_mz, MS_m_z);
     }
     else // create a new selected ion for each charge,mass pair
     {
@@ -405,6 +399,10 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         const pair<int, double>& chargeMass = chargeMassPairs.at(i);
         precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, chargeMass.first));
         precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, chargeMass.second));
+        precursor.selectedIons.back().set(MS_selected_ion_m_z, 
+                                          calculateMassOverCharge(chargeMass.second, chargeMass.first,
+                                                                  1), // this is a singly charged mass
+                                          MS_m_z);
         precursor.selectedIons.push_back(SelectedIon());
       }
       // last ion added has no data
@@ -418,7 +416,15 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     spectrum.set(MS_base_peak_intensity, basePeakIntensity);
 
   }
-  
+
+  // Calcualte m/z given mass (neutral or charged) and charge
+  double calculateMassOverCharge(double mass, int charge, int charges_on_mass /* = 0 for neutral mass */) const
+  {
+    double neutralMass = mass - (charges_on_mass * Proton);
+    double mz = (neutralMass + ((charge - 1) * Proton)) / charge;
+    return mz;
+  }
+
   void parseSpectrumBinary(Spectrum& spectrum, bool getBinaryData) const
   {
     // Every MSn spectrum is assumed to be:
@@ -434,13 +440,12 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     spectrum.precursors.push_back(Precursor());
     Precursor& precursor = spectrum.precursors.back();
     precursor.selectedIons.push_back(SelectedIon());
-    SelectedIon& selectedIon = precursor.selectedIons.back();
     
     MSnScanInfo scanInfo;
     scanInfo.readSpectrumHeader(is_, version_);
+    precursor.isolationWindow.set(MS_isolation_window_target_m_z, scanInfo.mz, MS_m_z);
 
     spectrum.id = "scan=" + lexical_cast<string>(scanInfo.scanNumber);
-    selectedIon.set(MS_selected_ion_m_z, scanInfo.mz, MS_m_z);
 
     // read in all the charge state information before adding it to the spectrum
     // get charge states from equivalent of Z lines
@@ -458,17 +463,11 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     // if there is no extended charge information, add the (possible) charges
     if( scanInfo.numEzStates == 0 )
     {
-        if (1 == scanInfo.numChargeStates)
-        {
-            selectedIon.set(MS_charge_state, charges.back());
-        }
-        else
-        {
-            for(int i=0; i<scanInfo.numChargeStates; i++)
-            {
-              precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges.at(i)));
-            }
-        }
+      for(int i=0; i<scanInfo.numChargeStates; i++)
+      {
+        precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges.at(i)));
+      }
+      precursor.selectedIons.back().set(MS_selected_ion_m_z, scanInfo.mz, MS_m_z);
     }
     else  // get extended charge informationfrom equivalent of EZ lines
     {
@@ -485,6 +484,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
           // store each charge and accurate mass as a separate selected ion
           precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, eCharge));
           precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, eMass));
+          precursor.selectedIons.back().set(MS_selected_ion_m_z, calculateMassOverCharge(eMass, eCharge, 1), MS_m_z);
           precursor.selectedIons.push_back(SelectedIon());
         }
         // last ion added was not populated

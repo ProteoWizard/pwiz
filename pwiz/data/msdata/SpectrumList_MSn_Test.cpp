@@ -371,7 +371,7 @@ void test(SpectrumListPtr sl)
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor0 = s->precursors[0];
     unit_assert(precursor0.selectedIons.size() == 1);
-    unit_assert_equal(precursor0.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 536.39, 5e-2);
+    unit_assert_equal(precursor0.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>(), 536.39, 5e-2);
 
     // This test spectrum only has possible charge states (2 total, values 2,3)
     unit_assert(precursor0.selectedIons[0].cvParam(MS_charge_state).value.empty());
@@ -427,7 +427,7 @@ void test(SpectrumListPtr sl)
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor1 = s->precursors[0];
     unit_assert(precursor1.selectedIons.size() == 1);
-    unit_assert_equal(precursor1.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 464.98, 1e-5);
+    unit_assert_equal(precursor1.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>(), 464.98, 1e-5);
 
     // This test spectrum only has possible charge states (2 total, values 2,3)
     unit_assert(precursor1.selectedIons[0].cvParam(MS_charge_state).value.empty());
@@ -494,7 +494,10 @@ void test_v3(SpectrumListPtr sl)
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor0 = s->precursors[0];
     unit_assert(precursor0.selectedIons.size() == 1);
-    unit_assert_equal(precursor0.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 612.19, 5e-2);
+    // isolated precursor m/z on S line
+    unit_assert_equal(precursor0.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>(), 612.19, 5e-2);
+    // m/z of calculated accurate mass
+    unit_assert_equal(precursor0.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 610.18, 5e-2);
 
     // This test spectrum one charge state, so no possible charge states
     unit_assert(precursor0.selectedIons[0].cvParam(MS_possible_charge_state).value.empty());
@@ -558,7 +561,10 @@ void test_v3(SpectrumListPtr sl)
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor1 = s->precursors[0];
     unit_assert(precursor1.selectedIons.size() == 2);
-    unit_assert_equal(precursor1.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 441.23, 1e-5);
+    // precursor m/z on S line
+    unit_assert_equal(precursor1.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>(), 441.23, 5e-2);
+    // m/z computed from accurate mass on Z line
+    unit_assert_equal(precursor1.selectedIons[0].cvParam(MS_selected_ion_m_z).valueAs<double>(), 439.91142, 1e-4);
 
     // This test spectrum has two charge states, both known so no possible charges
     unit_assert(precursor1.selectedIons[0].cvParam(MS_possible_charge_state).value.empty());

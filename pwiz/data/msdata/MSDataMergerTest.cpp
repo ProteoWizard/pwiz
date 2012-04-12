@@ -38,7 +38,7 @@ void test()
     MSData tinyReference;
     examples::initializeTiny(tinyReference);
 
-    const int tinyCopyCount = 3;
+    const size_t tinyCopyCount = 3;
 
     vector<MSDataPtr> tinyExamples;
     for (size_t i=0; i < tinyCopyCount; ++i)

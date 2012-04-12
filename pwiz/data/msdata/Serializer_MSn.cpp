@@ -90,7 +90,7 @@ namespace
           msd.fileDescription.sourceFilePtrs.at(0)->name ) << endl;
     }
 
-    // Could be one charge state, with our without accurate mass
+    // Could be one charge state, with or without accurate mass
     // or could be multiple possible charge states without accurate mass
     // if no accurate mass, compute it from mz and charge
     double calculateMass(double mz, int charge)
@@ -100,7 +100,7 @@ namespace
 
     size_t getChargeStates(const SelectedIon& si, vector<int>& charges, vector<double>& masses)
     {
-      int startingChargesCount = charges.size();
+        int startingChargesCount = charges.size();
         CVParam chargeParam = si.cvParam(MS_charge_state);
         CVParam massParam = si.cvParam(MS_accurate_mass);
         double mz = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
@@ -145,7 +145,7 @@ namespace
 
     void writeSpectrumText(SpectrumPtr s, ostream& os)
     {
-        os << std::setprecision(7); // 124.4567
+        os << std::setprecision(7); // 123.4567
         
         // Write the scan numbers 
         os << "S\t";
@@ -155,7 +155,7 @@ namespace
         // Write the precursor mz
         Precursor& precur = s->precursors[0];
         SelectedIon& si = precur.selectedIons[0];
-        double mz = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
+        double mz = precur.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>();
         os << mz << "\n";
         
         // Write the scan time, if available
@@ -263,7 +263,7 @@ namespace
 
         Precursor& precur = s->precursors[0];
         SelectedIon& si = precur.selectedIons[0];
-        double mz = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
+        double mz = precur.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>();
         os.write(reinterpret_cast<char *>(&mz), sizeDoubleMSn);
 
         float rt = (float) s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds()/60;

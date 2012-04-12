@@ -71,7 +71,8 @@ void initializeTinyMSn(MSData& msd)
     Precursor& precursor = s20.precursors.front();
     precursor.selectedIons.resize(1);
     precursor.selectedIons[0].set(MS_selected_ion_m_z, 445.34, MS_m_z);
-    precursor.selectedIons[0].set(MS_charge_state, 2);
+    precursor.selectedIons[0].set(MS_possible_charge_state, 2);
+    precursor.isolationWindow.set(MS_isolation_window_target_m_z, 445.34, MS_m_z);
 
     s20.scanList.scans.push_back(Scan());
     Scan& s20scan = s20.scanList.scans.back();
