@@ -512,6 +512,8 @@ void write_peaks(XMLWriter& xmlWriter, const vector<MZIntensityPair>& mzIntensit
     if (!mzIntensityPairs.empty())
         encoder.encode(reinterpret_cast<const double*>(&mzIntensityPairs[0]), 
                        mzIntensityPairs.size()*2, encoded, &binaryByteCount);
+    else
+        binaryByteCount = 0;
 
     XMLWriter::Attributes attributes;
     string precision = bdeConfig.precision == BinaryDataEncoder::Precision_32 ? "32" : "64";
