@@ -51,18 +51,8 @@ rule test-data
 
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 
-lib dl : : <name>dl ;
-
-rule choose-dl ( properties * )
-{
-    if ( [ MATCH (LINUX) : $(.os) ] )
-    {
-       return dl ;
-    }
-}
-
 local compare-reqs = <include>../libraries/sqlite <include>../src/ ; 
-alias compare-src : ../libraries/sqlite//sqlite [ choose-dl ] ;
+alias compare-src : ../libraries/sqlite//sqlite ;
 
 rule mascot-installed ( properties * )
 {
@@ -89,10 +79,17 @@ rule mascot-not-installed ( properties * )
 }
 
 
+# Put the test output here
+make output : : @common.mkdir : <location>. <conditional>@test-data ;
+
+# every test that creates an output file will have these requirements
+local test_output_req = <location>. <dependency>output ;
+
+# The tests
 
 # Test building with sqt files
 
-make output/demo.blib : inputs/empty : @common.copy : <location>.  <conditional>@test-data ;
+make output/demo.blib : inputs/empty : @common.copy : $(test_output_req) <conditional>@test-data ;
 run-if-exists ExecuteBlib.cpp 
   : -o 
   : ../src//BlibBuild inputs/demo.sqt output/demo.blib 
@@ -105,7 +102,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-sqt-ms2
   : check-sqt-ms2 ;
 
-make output/demo-copy.blib : inputs/empty : @common.copy : <location>. ;
+make output/demo-copy.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp 
   : -o 
   : ../src//BlibBuild inputs/demo-copy.sqt output/demo-copy.blib
@@ -118,7 +115,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-sqt-cms2
   : check-sqt-cms2 ;
 
-make output/sqt-ez.blib : inputs/empty : @common.copy : <location>. ;
+make output/sqt-ez.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/wormy4raw-1.select.sqt output/sqt-ez.blib
@@ -133,7 +130,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test with the tab-delimited input format
 
-make output/ssl.blib : inputs/empty : @common.copy : <location>. ;
+make output/ssl.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/demo.ssl output/ssl.blib
@@ -146,7 +143,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-ssl
   : check-ssl ;
 
-make output/ssl-ex.blib : inputs/empty : @common.copy : <location>. ;
+make output/ssl-ex.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/extra-cols.ssl output/ssl-ex.blib
@@ -159,7 +156,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-ssl-ex
   : check-ssl-ex ;
 
-make output/duplicates.blib : inputs/empty : @common.copy : <location>. ;
+make output/duplicates.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/three-duplicates.ssl output/duplicates.blib
@@ -174,7 +171,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test building with percolator XML files
 
-make output/perc.blib : inputs/empty : @common.copy : <location>. ;
+make output/perc.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/smaller.perc.xml output/perc.blib
@@ -189,7 +186,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test building with .pep.xml from various pipelines
 
-make output/omssa.blib : inputs/empty : @common.copy : <location>. ;
+make output/omssa.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/OMSSA.pep.xml output/omssa.blib
@@ -202,7 +199,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-omssa
   : check-omssa ;
 
-make output/pep-proph.blib : inputs/empty : @common.copy : <location>. ;
+make output/pep-proph.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/CAexample.pep.xml output/pep-proph.blib
@@ -215,7 +212,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-pep-proph
   : check-pep-proph ;
 
-make output/prospector.blib : inputs/empty : @common.copy : <location>. ;
+make output/prospector.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/V20120113-01_ITMSms2cid.pep.xml output/prospector.blib
@@ -228,7 +225,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-prospector
   : check-prospector ;
 
-make output/smill.blib : inputs/empty : @common.copy : <location>. ;
+make output/smill.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML output/smill.blib
@@ -241,7 +238,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-smill
   : check-smill ;
 
-make output/bad-index.blib : inputs/empty : @common.copy : <location>. ;
+make output/bad-index.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/interact-prob-three-spec.pep.xml output/bad-index.blib
@@ -256,7 +253,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test other xml formats (idpicker, xtandem)
 
-make output/idpicker.blib : inputs/empty : @common.copy : <location>. ;
+make output/idpicker.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/orbi-small-eg.idpXML output/idpicker.blib
@@ -269,7 +266,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-idpicker
   : check-idpicker ;
 
-make output/tandem.blib : inputs/empty : @common.copy : <location>. ;
+make output/tandem.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/out_260_1_step01.2009_09_02_10_55_23.xtan.xml output/tandem.blib
@@ -282,7 +279,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-tandem
   : check-tandem ;
 
-make output/pilot.blib : inputs/empty : @common.copy : <location>. ;
+make output/pilot.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/MB1_98_03.group.xml output/pilot.blib
@@ -297,7 +294,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test mzid format from scaffold
 
-make output/scaffold.blib : inputs/empty : @common.copy : <location>. ;
+make output/scaffold.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/scaffold.mzid output/scaffold.blib
@@ -312,7 +309,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test waters csv format
 
-make output/mse.blib : inputs/empty : @common.copy : <location>. ;
+make output/mse.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/tiny_final_fragment.csv output/mse.blib
@@ -328,7 +325,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 # Test building with Mascot .dat files, contingent on Mascot support
 
 # Test if msparser installed
-make output/mascot.blib : inputs/empty : @common.copy : <location>. ;
+make output/mascot.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp 
   : -o 
   : ../src//BlibBuild inputs/F027319.dat output/mascot.blib
@@ -342,7 +339,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <conditional>@mascot-installed
   : check-mascot ;
 
-make output/mascot-15N.blib : inputs/empty : @common.copy : <location>. ;
+make output/mascot-15N.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o
   : ../src//BlibBuild inputs/F027752.dat output/mascot-15N.blib
@@ -372,7 +369,7 @@ run-fail-if-exists ExecuteBlib.cpp
 
 # Test merging existing libraries
 
-make output/xmerged.redundant.blib : inputs/empty : @common.copy : <location>. ;
+make output/xmerged.redundant.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -o 
   : ../src//BlibBuild output/demo-copy.blib output/demo.blib output/pep-proph.blib output/xmerged.redundant.blib
@@ -389,7 +386,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test BlibFilter
 
-make output/zmerged.filtered.blib : inputs/empty : @common.copy : <location>. ;
+make output/zmerged.filtered.blib : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   :
   : ../src//BlibFilter output/xmerged.redundant.blib output/zmerged.filtered.blib
@@ -402,7 +399,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
     <dependency>build-filter
   : check-filter ;
 
-#make output/filtered.existing.blib : inputs/empty : @common.copy : <location>. ;
+#make output/filtered.existing.blib : inputs/empty : @common.copy : $(test_output_req) ;
 #run-if-exists ExecuteBlib.cpp
 #  :
 #  : ../src//BlibFilter inputs/existing.blib output/filtered.existing.blib
@@ -418,21 +415,21 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # TODO: these tests are broken
 # requires a clean copy of inputs/existing.blib to output/z.old.blib before running
-#make output/z.old.blib : inputs/existing.blib : @common.copy : <location>. ;
+#make output/z.old.blib : inputs/existing.blib : @common.copy : $(test_output_req) ;
 #run-if-exists ExecuteBlib.cpp :  
 #  : ../src//BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.old.blib : 
 #  : build-into-old ;
 #run-if-exists CompareLibraryContents.cpp compare-src : : output/z.old.blib reference/old.check : $(compare-reqs)
 #  : check-old ;
 
-#make output/z.new.blib : output/scaffold.blib : @common.copy : <location>. ;
+#make output/z.new.blib : output/scaffold.blib : @common.copy : $(test_output_req) ;
 #run-if-exists ExecuteBlib.cpp : 
 #  : ../src//BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.new.blib : 
 #  : build-into-new ;
 #run-if-exists CompareLibraryContents.cpp compare-src : : output/z.new.blib reference/new.check : $(compare-reqs)
 #  : check-new ;
 
-#make output/z.mixed.blib : inputs/empty : @common.copy : <location>. ;
+#make output/z.mixed.blib : inputs/empty : @common.copy : $(test_output_req) ;
 #run-if-exists ExecuteBlib.cpp : -o : ../src//BlibBuild inputs/existing.blib output/scaffold.blib output/z.mixed.blib : 
 #  : build-mixed ;
 #run-if-exists CompareLibraryContents.cpp compare-src : : output/z.mixed.blib reference/mixed.check : $(compare-reqs)
@@ -440,7 +437,7 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # Test conversion to text
 
-make output/demo.lms2 : inputs/empty : @common.copy : <location>. ;
+make output/demo.lms2 : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : -f
   : ../src//BlibToMs2 output/demo.blib output/demo.lms2
@@ -454,7 +451,7 @@ run-if-exists CompareTextFiles.cpp
 
 # Test BlibSearch
 
-make inputs/demo.report : inputs/empty : @common.copy : <location>. ;
+make inputs/demo.report : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : --preserve-order
   : ../src//BlibSearch inputs/demo.ms2 output/demo.blib
@@ -466,7 +463,7 @@ run-if-exists CompareTextFiles.cpp
   : <dependency>search-demo
   : check-search-demo ;
 
-make inputs/demo.decoy.report : inputs/empty : @common.copy : <location>. ;
+make inputs/demo.decoy.report : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : --preserve-order --decoys-per-target_1
   : ../src//BlibSearch inputs/demo.ms2 output/demo.blib
@@ -478,7 +475,7 @@ run-if-exists CompareTextFiles.cpp
   : <dependency>search-decoy
   : check-search-decoy ;
 
-make inputs/mzsorted.report : inputs/empty : @common.copy : <location>. ;
+make inputs/mzsorted.report : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   :
   : ../src//BlibSearch inputs/mzsorted.ms2 output/demo.blib
@@ -490,7 +487,7 @@ run-if-exists CompareTextFiles.cpp
   : <dependency>search-mzsorted
   : check-search-mzsorted ;
 
-make inputs/binning.report : inputs/empty : @common.copy : <location>. ;
+make inputs/binning.report : inputs/empty : @common.copy : $(test_output_req) ;
 run-if-exists ExecuteBlib.cpp
   : --bin-size_1.1 --bin-offset_0.2
   : ../src//BlibSearch inputs/binning.ms2 output/demo.blib

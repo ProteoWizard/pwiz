@@ -218,6 +218,13 @@ void getObserved(const char* libName, vector<string>& outputLines){
     sqlite3_close(db);
 }
 
+// remove the output of printObserved from any prior runs
+void removeObservedFiles(const string& libName){
+    string outName = libName;
+    outName += ".observed";
+    remove(outName.c_str());
+}
+
 // When the output does not match the expected, print the observed output
 // to a file named <libName>.observed
 void printObserved(vector<string>& outputLines, string& libName){
@@ -264,6 +271,9 @@ int main(int argc, char** argv){
     if( argc > 3 ){
         getSkipLines(tokens[2].c_str(), skipLines, compareDetails);
     }
+
+    // clean up from previous tests
+    removeObservedFiles(libName);
 
     // extract what is in the library
     cerr << "Extracting the contents of " << libName << endl;
