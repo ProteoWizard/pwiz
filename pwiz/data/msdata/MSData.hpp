@@ -479,7 +479,7 @@ struct PWIZ_API_DECL SpectrumIdentity
 	boost::iostreams::stream_offset sourceFilePosition;
 
  
-    SpectrumIdentity() : index(0), sourceFilePosition((boost::iostreams::stream_offset)-1) {}
+    SpectrumIdentity() : index((size_t)-1), sourceFilePosition((boost::iostreams::stream_offset)-1) {}
 };
 
 /// Identifying information for a chromatogram
@@ -494,7 +494,7 @@ struct PWIZ_API_DECL ChromatogramIdentity
     /// for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
 	boost::iostreams::stream_offset sourceFilePosition;
 
-    ChromatogramIdentity() : index(0), sourceFilePosition(-1) {}
+    ChromatogramIdentity() : index((size_t)-1), sourceFilePosition(-1) {}
 };
 
 
