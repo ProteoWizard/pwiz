@@ -476,15 +476,14 @@ namespace pwiz.SkylineTestUtil
                 // Restore minimal View to close dock windows.
                 RestoreMinimalView();
 
-                // Wait for forms to close.
-                // Long wait for library build notifications
-                WaitForConditionUI(
-                    () => !Application.OpenForms.Cast<Form>().Any(form => form is BuildLibraryNotification));
-                // Short wait for anything else
-                WaitForConditionUI(5000, () => Application.OpenForms.Count == 1);
-
-                // Clear the clipboard to avoid the appearance of a memory leak.
-                RunUI(ClipboardEx.Clear);
+                if (_testExceptions.Count == 0)
+                {
+                    // Long wait for library build notifications
+                    WaitForConditionUI(
+                        () => !Application.OpenForms.Cast<Form>().Any(form => form is BuildLibraryNotification));
+                    // Short wait for anything else
+                    WaitForConditionUI(5000, () => Application.OpenForms.Count == 1);
+                }
             }
             catch (Exception x)
             {
@@ -503,6 +502,9 @@ namespace pwiz.SkylineTestUtil
                                         select new AssertFailedException(
                                             string.Format("Form of type {0} left open at end of test", form.GetType())));
 
+            // Clear the clipboard to avoid the appearance of a memory leak.
+            RunUI(ClipboardEx.Clear);
+            
             _testCompleted = true;
 
             // Close the Skyline window

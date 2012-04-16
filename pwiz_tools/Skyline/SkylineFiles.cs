@@ -716,14 +716,14 @@ namespace pwiz.Skyline
         {
             try
             {
-                using (var longWaitDlg = new LongWaitDlg
+                Helpers.TryTwice(() =>
                 {
-                    Text = "Compressing Files",
-                })
-                {
-                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, completeSharing);
-                    longWaitDlg.PerformWork(this, 1000, sharing.Share);
-                }
+                    using (var longWaitDlg = new LongWaitDlg { Text = "Compressing Files", })
+                    {
+                        var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest,  completeSharing);
+                        longWaitDlg.PerformWork(this, 1000, sharing.Share);
+                    }
+                });
             }
             catch (Exception x)
             {

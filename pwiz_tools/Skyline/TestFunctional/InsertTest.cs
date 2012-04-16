@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -51,6 +53,7 @@ namespace pwiz.SkylineTestFunctional
                     buildBackgroundProteomeDlg.OkDialog();
                 });
             RunUI(peptideSettingsUI.OkDialog);
+            WaitForClosedForm(peptideSettingsUI);
             WaitForCondition(() =>
             {
                 var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
@@ -94,6 +97,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MessageDlg>(insertPeptidesDlg1.PastePeptides, messageDlg => messageDlg.OkDialog());
             Assert.AreEqual(1, insertPeptidesDlg1.PeptideRowCount);
             RunUI(insertPeptidesDlg1.Close);
+            WaitForClosedForm(insertPeptidesDlg);
 
             // Test pasting a transition list.
             SetClipboardTextUI(TRANSITIONS_CLIPBOARD_TEXT);
@@ -106,8 +110,10 @@ namespace pwiz.SkylineTestFunctional
                 insertTransitionListDlg.ValidateCells();
                 insertTransitionListDlg.OkDialog();
                 insertTransitionListDlg.OkDialog();
+                Assert.IsTrue(insertTransitionListDlg.DialogResult == DialogResult.None, "Second call to PasteDlg.OkDialog succeeded unexpectedly");
                 insertTransitionListDlg.ClearRows();
                 insertTransitionListDlg.OkDialog();
+                Assert.IsTrue(insertTransitionListDlg.DialogResult == DialogResult.OK, "Third call to PastDlg.OkDialog did not succeed");
             });
             WaitForClosedForm(insertTransitionListDlg);
         }
