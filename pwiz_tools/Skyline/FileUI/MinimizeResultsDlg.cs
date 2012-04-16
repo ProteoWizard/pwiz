@@ -63,7 +63,7 @@ namespace pwiz.Skyline.FileUI
             if (DocumentUIContainer != null)
             {
                 DocumentUIContainer.ListenUI(OnDocumentChanged);
-                SetDocument(DocumentUIContainer.DocumentUI);
+                SetDocument(DocumentUIContainer.Document);
             }
         }
 

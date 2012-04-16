@@ -306,7 +306,7 @@ namespace pwiz.SkylineTestTutorial
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg0.OkDialog);
             RunUI(importResultsNameDlg.NoDialog);
-            WaitForCondition(300*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(() => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             
             var docCurrent = SkylineWindow.Document;
             RunUI(SkylineWindow.RemoveMissingResults);
@@ -369,7 +369,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsNameDlg0.Prefix = "Scheduled_";
                 importResultsNameDlg0.YesDialog();
             });
-            WaitForCondition(180*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(() => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             Assert.AreEqual(5, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden));
             RunUI(() =>
             {

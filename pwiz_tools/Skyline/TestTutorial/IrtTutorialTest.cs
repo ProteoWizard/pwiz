@@ -545,7 +545,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.NamedPathSets = listNamedPathSets.ToArray();
                 importResultsDlg.OkDialog();
             });
-            WaitForCondition(120 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);
         }
 

@@ -141,8 +141,8 @@ namespace TestRunner
 
             // Get test results directory and provide it to tests via TestContext.
             var now = DateTime.Now;
-            var testDirName = string.Format("TestRunner-{0}_{1}-{2:D2}-{3:D2}_{4:D2}-{5:D2}-{6:D2}",
-                                            process.Id, now.Year, now.Month, now.Day, now.Hour, now.Minute, now.Second);
+            var testDirName = string.Format("TestRunner_{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}_{5}",
+                                            now.Year, now.Month, now.Day, now.Hour, now.Minute, process.Id);
             var testDir = Path.Combine(GetProjectPath("TestResults"), testDirName);
             var testContext = new TestRunnerContext();
             testContext.Properties["TestDir"] = testDir;

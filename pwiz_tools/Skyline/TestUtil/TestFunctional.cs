@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestUtil
     public abstract class AbstractFunctionalTest
     {
         private const int SLEEP_INTERVAL = 100;
-        private const int WAIT_TIME = 60000;    // 60 seconds
+        private const int WAIT_TIME = 5*60*1000;    // 5 minutes
         private const int WAIT_CYCLES = WAIT_TIME/SLEEP_INTERVAL;
 
         /// <summary>
@@ -413,15 +413,20 @@ namespace pwiz.SkylineTestUtil
                         TestFilesDirs[i] = new TestFilesDir(TestContext, TestFilesZipPaths[i], TestDirectoryName);
                     }
                     RunTest();
-                    foreach(TestFilesDir dir in TestFilesDirs)
-                        dir.Dispose();
                 }
             }
             catch (Exception x)
             {
                 // An exception occurred outside RunTest
                 _testExceptions.Add(x);
-                EndTest();
+            }
+
+            EndTest();
+
+            if (TestFilesDirs != null)
+            {
+                foreach(TestFilesDir dir in TestFilesDirs)
+                    dir.Dispose();
             }
         }
 
@@ -452,8 +457,6 @@ namespace pwiz.SkylineTestUtil
             {
                 RunUI(() => Assert.AreEqual(clipboardCheckText, Clipboard.GetText()));
             }
-            
-            EndTest();
         }
 
         private void EndTest()
@@ -478,24 +481,27 @@ namespace pwiz.SkylineTestUtil
                 WaitForConditionUI(
                     () => !Application.OpenForms.Cast<Form>().Any(form => form is BuildLibraryNotification));
                 // Short wait for anything else
-                WaitForConditionUI(1000, () => Application.OpenForms.Count == 1);
+                WaitForConditionUI(5000, () => Application.OpenForms.Count == 1);
 
                 // Clear the clipboard to avoid the appearance of a memory leak.
                 RunUI(ClipboardEx.Clear);
             }
-            catch (Exception)
+            catch (Exception x)
             {
-                foreach (var messageDlg in Application.OpenForms.OfType<MessageDlg>())
-                {
-                    Console.WriteLine("\n\nOpen MessageDlg: {0}\n", messageDlg.Message);
-                }
-
-                // Actually throwing an exception can cause an infinite loop in MSTest
-                _testExceptions.AddRange(from form in Application.OpenForms.Cast<Form>()
-                                         where !(form is SkylineWindow)
-                                         select new AssertFailedException(
-                                             string.Format("Form of type {0} left open at end of test", form.GetType())));
+                // An exception occurred outside RunTest
+                _testExceptions.Add(x);
             }
+
+            foreach (var messageDlg in Application.OpenForms.OfType<MessageDlg>())
+            {
+                Console.WriteLine("\n\nOpen MessageDlg: {0}\n", messageDlg.Message);
+            }
+
+            // Actually throwing an exception can cause an infinite loop in MSTest
+            _testExceptions.AddRange(from form in Application.OpenForms.Cast<Form>()
+                                        where !(form is SkylineWindow)
+                                        select new AssertFailedException(
+                                            string.Format("Form of type {0} left open at end of test", form.GetType())));
 
             _testCompleted = true;
 
@@ -614,8 +620,7 @@ namespace pwiz.SkylineTestUtil
                });
             WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
             RunUI(importResultsDlg.OkDialog);
-            WaitForCondition(180 * 1000,
-                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
+            WaitForCondition(() => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
         }
 
         #endregion

@@ -305,7 +305,7 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(peptideSettingsUI3, peptideSettingsUI3.OkDialog);
             
-            Assert.IsTrue(WaitForCondition(100 * 1000, () =>
+            Assert.IsTrue(WaitForCondition(() =>
             {
                 var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;

@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -49,6 +50,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            SrmDocument doc = SkylineWindow.Document;
+
             // Configure the peptide settings for your new document.
             var peptideSettingsUI = ShowPeptideSettings();
             const string carbamidomethylCysteineName = "Carbamidomethyl Cysteine";
@@ -91,6 +94,7 @@ namespace pwiz.SkylineTestTutorial
                 peptideSettingsUI.PickedLibraries = new[] {libraryName};
             });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
+            WaitForDocumentChange(doc);
 
             // Check library existence and loading.
             WaitForCondition(() => File.Exists(libraryPath) && File.Exists(redundantLibraryPath));
@@ -103,6 +107,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Configuring appropriate transition settings and configuring full-scan settings for
             // MS1 chromatogram extraction.
+            doc = SkylineWindow.Document;
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
                 transitionSettingsUI.PrecursorCharges = "2,3,4";
@@ -112,12 +117,16 @@ namespace pwiz.SkylineTestTutorial
                 transitionSettingsUI.UseLibraryPick = false;
                 transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
                 transitionSettingsUI.Peaks = "3";
+                Assert.AreEqual(MassType.Monoisotopic, transitionSettingsUI.PrecursorMassType);
                 transitionSettingsUI.OkDialog();
             });
+            WaitForDocumentChange(doc);
 
             // Populating the Skyline peptide tree.
+            doc = SkylineWindow.Document;
             RunUI(
                 () => SkylineWindow.ImportFastaFile(TestFilesDir.GetTestPath(@"MS1Filtering\12_proteins.062011.fasta")));
+            WaitForDocumentChange(doc);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 40, 40, 120);
 
             // Select the first transition group.
@@ -136,10 +145,11 @@ namespace pwiz.SkylineTestTutorial
             WaitForCondition(() => File.Exists(documentPath));
 
             // MS1 filtering of raw data imported into Skyline.
-            SrmDocument docBefore = SkylineWindow.Document;
+            doc = SkylineWindow.Document;
             ImportResultsFile("100803_0005b_MCF7_TiTip3.wiff");
-            WaitForDocumentChange(docBefore);
+            WaitForDocumentChange(doc);
 
+            doc = SkylineWindow.Document;
             RunUI(() =>
             {
                 SkylineWindow.IntegrateAll();
@@ -150,6 +160,7 @@ namespace pwiz.SkylineTestTutorial
                 Settings.Default.ShowLibraryPeakArea = true;
                 SkylineWindow.AutoZoomNone();
             });
+            WaitForDocumentChange(doc);
 
             // Jump to another peptide.
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findDlg =>
@@ -160,21 +171,23 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // Limiting the chromatogram extraction time range.
+            doc = SkylineWindow.Document;
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
                 transitionSettingsUI.MinTime = "10";
                 transitionSettingsUI.MaxTime = "100";
                 transitionSettingsUI.OkDialog();
             });
+            WaitForDocumentChange(doc);
 
             // Re-importing raw data.
-            docBefore = SkylineWindow.Document;
+            doc = SkylineWindow.Document;
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {
                 dlg.ReimportResults();
                 dlg.OkDialog();
             });
-            SrmDocument docAfter = WaitForDocumentChangeLoaded(docBefore);
+            SrmDocument docAfter = WaitForDocumentChangeLoaded(doc);
             AssertEx.IsDocumentState(docAfter, null, 11, 40, 40, 120);
 
             RunUI(SkylineWindow.AutoZoomNone);
@@ -193,6 +206,7 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Eliminate extraneous chromatogram data.
+            doc = SkylineWindow.Document;
             var minimizedFile = TestFilesDir.GetTestPath(@"MS1Filtering\Template_MS1Filtering_1118_2011_3-2min.sky");
             var cacheFile = minimizedFile + "d";
             var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
@@ -204,16 +218,17 @@ namespace pwiz.SkylineTestTutorial
             });
             WaitForCondition(() => File.Exists(cacheFile));
             WaitForClosedForm(manageResultsDlg);
+            WaitForDocumentChange(doc);
 
             // Inclusion list method export for MS1 filtering
-            docBefore = SkylineWindow.Document;
+            doc = SkylineWindow.Document;
             RunDlg<PeptideSettingsUI>(() => SkylineWindow.ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Prediction), dlg =>
             {
                 dlg.UseMeasuredRT(true);
                 dlg.TimeWindow = 10;
                 dlg.OkDialog();
             });
-            WaitForDocumentChangeLoaded(docBefore);
+            WaitForDocumentChangeLoaded(doc);
 
             // Now deviating from the tutorial script for a moment to make sure we can choose a Scheduled export method.
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>

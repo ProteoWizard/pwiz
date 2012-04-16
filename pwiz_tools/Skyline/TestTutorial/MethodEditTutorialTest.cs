@@ -93,7 +93,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
 
-            Assert.IsTrue(WaitForCondition(100 * 1000, () =>
+            Assert.IsTrue(WaitForCondition(() =>
             {
                 var peptideSettings = Program.ActiveDocument.Settings.PeptideSettings;
                 var backgroundProteome = peptideSettings.BackgroundProteome;
