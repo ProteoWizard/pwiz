@@ -462,6 +462,7 @@ struct PWIZ_API_DECL TimeIntensityPair
 
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const TimeIntensityPair& ti);
 
+const size_t IDENTITY_INDEX_NONE = (size_t)-1;
 
 /// Identifying information for a spectrum
 struct PWIZ_API_DECL SpectrumIdentity
@@ -479,7 +480,7 @@ struct PWIZ_API_DECL SpectrumIdentity
 	boost::iostreams::stream_offset sourceFilePosition;
 
  
-    SpectrumIdentity() : index((size_t)-1), sourceFilePosition((boost::iostreams::stream_offset)-1) {}
+    SpectrumIdentity() : index(IDENTITY_INDEX_NONE), sourceFilePosition((boost::iostreams::stream_offset)-1) {}
 };
 
 /// Identifying information for a chromatogram
@@ -494,7 +495,7 @@ struct PWIZ_API_DECL ChromatogramIdentity
     /// for file-based MSData implementations, this attribute may refer to the chromatogram's position in the file
 	boost::iostreams::stream_offset sourceFilePosition;
 
-    ChromatogramIdentity() : index((size_t)-1), sourceFilePosition(-1) {}
+    ChromatogramIdentity() : index(IDENTITY_INDEX_NONE), sourceFilePosition(-1) {}
 };
 
 

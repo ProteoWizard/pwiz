@@ -614,7 +614,7 @@ string abbreviate(const string& id, char delimiter /*= '.'*/)
 
 PWIZ_API_DECL bool Spectrum::empty() const
 {
-    return index==0 &&
+    return index==IDENTITY_INDEX_NONE &&
            id.empty() &&
            defaultArrayLength==0 &&
            (!dataProcessingPtr.get() || dataProcessingPtr->empty()) && 
@@ -833,7 +833,7 @@ PWIZ_API_DECL void Spectrum::setMZIntensityArrays(const std::vector<double>& mzA
 
 PWIZ_API_DECL bool Chromatogram::empty() const
 {
-    return index==0 &&
+    return index==IDENTITY_INDEX_NONE &&
            id.empty() &&
            defaultArrayLength==0 &&
            (!dataProcessingPtr.get() || dataProcessingPtr->empty()) &&

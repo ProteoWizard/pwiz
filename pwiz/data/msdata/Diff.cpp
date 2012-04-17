@@ -401,6 +401,25 @@ void diff(const vector<BinaryDataArrayPtr>& a,
     }
 }
 
+static void diff_index(const size_t& a, 
+                   const size_t& b, 
+                   size_t& a_b, 
+                   size_t& b_a)
+{
+    
+    if (a != b)
+    {
+        a_b = a;
+        b_a = b;
+    }
+    else
+    {
+        a_b = IDENTITY_INDEX_NONE;
+        b_a = IDENTITY_INDEX_NONE;
+    }
+}
+
+
 
 PWIZ_API_DECL
 void diff(const Spectrum& a,
@@ -415,7 +434,7 @@ void diff(const Spectrum& a,
     if (!config.ignoreIdentity)
     {
         diff(a.id, b.id, a_b.id, b_a.id, config);
-        diff_integral(a.index, b.index, a_b.index, b_a.index, config);
+        diff_index(a.index, b.index, a_b.index, b_a.index);
     }
 
     // important scan metadata
@@ -482,7 +501,7 @@ void diff(const Chromatogram& a,
     if (!config.ignoreIdentity)
     {
         diff(a.id, b.id, a_b.id, b_a.id, config);
-        diff_integral(a.index, b.index, a_b.index, b_a.index, config);
+        diff_index(a.index, b.index, a_b.index, b_a.index);
     }
 
     // important scan metadata
@@ -825,6 +844,17 @@ std::ostream& os_write_spectra(std::ostream& os, const SpectrumListPtr a_b, cons
 std::ostream& os_write_chromatograms(std::ostream& os, const ChromatogramListPtr a_b, const ChromatogramListPtr b_a)
 {
     TextWriter write(os,1);
+
+    if((a_b==NULL) != (b_a==NULL))
+    {
+        os<<"in ChromatogramList diff: one of two ChromatogramList pointers is NULL"<<endl;
+        return os;
+    }
+
+    if((a_b==NULL) && (b_a==NULL))
+    {
+        return os;
+    }
 
     if(a_b->size()!=b_a->size())
     {
