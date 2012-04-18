@@ -1,10 +1,12 @@
 //
-// $Id$
+// $Id: ExtraZeroSamplesFilterTest.cpp  $
 //
 //
-// Original author: Matt Chambers <matt.chambers <a.t> vanderbilt.edu>
+// Original author: Brian Pratt <brian.pratt <a.t> insilicos.com>
+// cribbing heavily from Matt Chambers' work in ZeroSampleFillerTest.cpp
 //
-// Copyright 2008 Vanderbilt University - Nashville, TN 37232
+// Copyright 2012  Spielberg Family Center for Applied Proteomics
+//   University of Southern California, Los Angeles, California  90033
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -19,555 +21,20 @@
 // limitations under the License.
 //
 
-#include "pwiz/data/msdata/MSData.hpp"
-#include "PrecursorMassFilter.hpp"
-#include "ThresholdFilter.hpp"
-#include "MS2Deisotoper.hpp"
-#include "MS2NoiseFilter.hpp"
-#include "SpectrumList_PeakFilter.hpp"
-#include "SpectrumList_ZeroSamplesFilter.hpp"
+
+#include "ExtraZeroSamplesFilter.hpp"
 #include "pwiz/utility/misc/unit.hpp"
-#include "pwiz/data/msdata/examples.hpp"
-#include "pwiz/data/msdata/TextWriter.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
 using namespace pwiz::util;
-using namespace pwiz::cv;
-using namespace pwiz::msdata;
 using namespace pwiz::analysis;
+
 
 ostream* os_ = 0;
 
-ostream& operator<< (ostream& os, const vector<double>& v)
-{
-    os << "(";
-    for (size_t i=0; i < v.size(); ++i)
-        os << " " << v[i];
-    os << " )";
-    return os;
-}
-
-vector<double> parseDoubleArray(const string& doubleArray)
-{
-    vector<double> doubleVector;
-    vector<string> tokens;
-    bal::split(tokens, doubleArray, bal::is_space());
-    if (!tokens.empty() && !tokens[0].empty())
-        for (size_t i=0; i < tokens.size(); ++i)
-            doubleVector.push_back(lexical_cast<double>(tokens[i]));
-    return doubleVector;
-}
-
-
-////////////////////////////////////////////////////////////////////////////
-//  ETD/ECD Filter test
-////////////////////////////////////////////////////////////////////////////
-struct TestETDMassFilter
-{
-    // space-delimited doubles
-    const char* inputMZArray;
-    const char* inputIntensityArray;
-    const char* outputMZArray;
-    const char* outputIntensityArray;
-
-    double matchingTolerance;
-    bool usePPM;
-    bool hasCharge;
-    bool removePrecursor;
-    bool removeReducedChargePrecursors;
-    bool removeNeutralLossPrecursors;
-    bool blanketRemovalofNeutralLoss;
-};
-
-#define PRECURSOR_CHARGE 3
-#define PRECURSOR_MZ 445.34
-
-TestETDMassFilter testETDMassFilterData[] =
-{
-    {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        0.1234, false, false, false, false, false, false
-    }, // do nothing
-
-    {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 445.35 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280 290", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 170 180 190 200 210 220 230 240 250 260 270 280 290", 
-        0.1234, false, true, true, false, false, false
-    }, // remove precursor only
-
-    {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 445.35 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280 290", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 170 180 190 200 210 220 230 240 250 260 270 280 290", 
-        0.1234, false, false, true, false, false, false
-    }, // remove precursor without charge state
-
-    {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 668.01 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 155 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        0.1234, false, true, false, true, false, false
-    }, // remove charge reduced precursors only
-
-    {    
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 445.34 668.01 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 155 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        "100 110 120 130 415.8215 422.337 422.8295 423.3215 427.3295 427.8215 428.3135 429.327 431.3425 436.3345 831.632 844.674 845.659 846.643 854.659 855.643 856.627 858.654 862.685 872.669 873.653 890.68 1000.0", 
-        "10 20 30 40 50 60 70 80 90 100 110 120 130 140 160 170 180 190 200 210 220 230 240 250 260 270 280", 
-        0.1234, false, true, true, true, false, false
-    }, // remove precursor and charge reduced precursors
-
-    {    
-        "100 120 445.34 667.51 668.01 1335.02 1336.02 1400.", 
-        "10 20 30 40 50 60 70 80", 
-        "100 120", 
-        "10 20", 
-        0.01, false, true, true, true, true, false
-    }, // remove precursor charge reduced precursors, and neutral losses
-
-    {    
-        "100 120 445.34 667.51 668.01 1335.02 1336.02 1400.", 
-        "10 20 30 40 50 60 70 80", 
-        "100 120", 
-        "10 20", 
-        0.01, false, true, true, true, true, true
-    }, // remove precursor charge reduced precursors, and neutral losses -- blanket removal of neutral losses (60 Da window)
-
-};
-
-const size_t testETDMassFilterDataSize = sizeof(testETDMassFilterData) / sizeof(TestETDMassFilter);
-
-void testPrecursorMassRemoval()
-{
-    for (size_t i=0; i < testETDMassFilterDataSize; ++i)
-    {
-        SpectrumListSimple* sl = new SpectrumListSimple;
-        SpectrumListPtr originalList(sl);
-        SpectrumPtr s(new Spectrum);
-        sl->spectra.push_back(s);
-
-        TestETDMassFilter& t = testETDMassFilterData[i];
-
-        vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
-        vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->set(MS_MSn_spectrum);
-        s->set(MS_ms_level, 2);
-
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
-        s->precursors.resize(1);
-        s->precursors[0].activation.set(MS_electron_transfer_dissociation);
-        s->precursors[0].selectedIons.resize(1);
-        s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, PRECURSOR_MZ, MS_m_z);
-
-        if (t.hasCharge)
-            s->precursors[0].selectedIons[0].set(MS_charge_state, PRECURSOR_CHARGE);
-
-        MZTolerance tol(t.matchingTolerance, t.usePPM ? MZTolerance::PPM : MZTolerance::MZ);
-        SpectrumDataFilterPtr filter;
-        if (t.removeNeutralLossPrecursors)
-        {
-            PrecursorMassFilter::Config params(tol, t.removePrecursor, t.removeReducedChargePrecursors, t.blanketRemovalofNeutralLoss);
-            filter.reset(new PrecursorMassFilter(params));
-        }
-        else
-        {
-            PrecursorMassFilter::Config params(tol, t.removePrecursor, t.removeReducedChargePrecursors, t.blanketRemovalofNeutralLoss, 0);
-            filter.reset(new PrecursorMassFilter(params));
-        }
-        SpectrumListPtr peakFilter(new SpectrumList_PeakFilter(originalList, filter));
-
-        SpectrumPtr pFiltered = peakFilter->spectrum(0, true);
-
-        vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
-        vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);
-
-        vector<double>& resultMZArray = pFiltered->getMZArray()->data;
-        vector<double>& resultIntensityArray = pFiltered->getIntensityArray()->data;
-
-        unit_assert(resultMZArray.size() == outputMZArray.size());
-        unit_assert(resultIntensityArray.size() == outputIntensityArray.size());
-        for (size_t ii=0; ii < outputMZArray.size(); ++ii)
-        {
-            unit_assert_equal(resultMZArray[ii], outputMZArray[ii], 0.001);
-            unit_assert_equal(resultIntensityArray[ii], outputIntensityArray[ii], 0.001);
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////
-//  Thresholder test
-////////////////////////////////////////////////////////////////////////////
-
-struct TestThresholder
-{
-    // space-delimited doubles
-    const char* inputMZArray;
-    const char* inputIntensityArray;
-    const char* outputMZArray;
-    const char* outputIntensityArray;
-
-    ThresholdFilter::ThresholdingBy_Type byType;
-    double threshold;
-    ThresholdFilter::ThresholdingOrientation orientation;
-};
-
-TestThresholder testThresholders[] =
-{
-    // test empty spectrum
-    { "", "", "", "", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "", "", "", "", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "", "", "", "", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "", "", "", "", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.99, ThresholdFilter::Orientation_MostIntense },
-    { "", "", "", "", ThresholdFilter::ThresholdingBy_Count, 5, ThresholdFilter::Orientation_MostIntense },
-
-    // test one peak spectrum
-    { "1", "10", "1", "10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "1", "10", "1", "10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "1", "10", "1", "10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "1", "10", "1", "10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.99, ThresholdFilter::Orientation_MostIntense },
-    { "1", "10", "1", "10", ThresholdFilter::ThresholdingBy_Count, 5, ThresholdFilter::Orientation_MostIntense },
-
-    // test two peak spectrum with a zero data point
-    { "1 2", "10 0", "1", "10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "1 2", "10 0", "1", "10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "1 2", "10 0", "1", "10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "1 2", "10 0", "1", "10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.99, ThresholdFilter::Orientation_MostIntense },
-    { "1 2", "10 0", "1 2", "10 0", ThresholdFilter::ThresholdingBy_Count, 5, ThresholdFilter::Orientation_MostIntense },
-
-    // absolute thresholding, keeping the most intense points
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 5, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 10, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 15, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 30, ThresholdFilter::Orientation_MostIntense },
-
-    // absolute thresholding, keeping the least intense points
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 5, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 10, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 15, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 30, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_AbsoluteIntensity, 50, ThresholdFilter::Orientation_LeastIntense },
-
-    // relative thresholding to the base peak, keeping the most intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.34, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.65, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.67, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 1.0, ThresholdFilter::Orientation_MostIntense },
-
-    // relative thresholding to the base peak, keeping the least intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.1, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.32, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.34, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 0.67, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_FractionOfBasePeakIntensity, 1.0, ThresholdFilter::Orientation_LeastIntense },
-
-    // relative thresholding to total intensity, keeping the most intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.12, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.21, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.23, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.34, ThresholdFilter::Orientation_MostIntense },
-
-    // relative thresholding to total intensity, keeping the least intense peaks
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.1, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.12, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.21, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.23, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensity, 0.34, ThresholdFilter::Orientation_LeastIntense },
-
-    // threshold against cumulative total intensity fraction, keeping the most intense peaks (ties are included)
-    // intensities:     12  2   2   1   1   1   1   0   0  (TIC 20)
-    // cumulative:      12  14  16  17  18  19  20  20  20
-    // fraction:        .60 .70 .80 .85 .90 .95 1.0 1.0 1.0
-    // at threshold 1.0 ---------------------------^ cut here
-    // at threshold .99 ---------------------------^ cut here
-    // at threshold .90 ---------------------------^ cut here
-    // at threshold .80 -----------^ cut here
-    // at threshold .65 -----------^ cut here
-    // at threshold .60 ---^ cut here
-    // at threshold .15 ---^ cut here
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "2 3 4 6 7 8 9", "1 2 1 1 2 12 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "2 3 4 6 7 8 9", "1 2 1 1 2 12 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.99, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "2 3 4 6 7 8 9", "1 2 1 1 2 12 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.90, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "3 7 8", "2 2 12", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.80, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "3 7 8", "2 2 12", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.65, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "8", "12", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.60, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "8", "12", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.15, ThresholdFilter::Orientation_MostIntense },
-
-    // threshold against cumulative total intensity fraction, keeping the least intense peaks (ties are included)
-    // intensities:     0   0   1   1   1   1   2   2   12 (TIC 20)
-    // cumulative:      0   0   1   2   3   4   6   8   20
-    // fraction:        0   0   .05 .10 .15 .20 .30 .40 1.0
-    // at threshold 1.0 -----------------------------------^ cut here
-    // at threshold .45 -----------------------------------^ cut here
-    // at threshold .40 -------------------------------^ cut here
-    // at threshold .35 -------------------------------^ cut here
-    // at threshold .25 -------------------------------^ cut here
-    // at threshold .20 -----------------------^ cut here
-    // at threshold .01 -----------------------^ cut here
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 1.0, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.45, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "1 2 3 4 5 6 7 9", "0 1 2 1 0 1 2 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.40, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "1 2 3 4 5 6 7 9", "0 1 2 1 0 1 2 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.35, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "1 2 3 4 5 6 7 9", "0 1 2 1 0 1 2 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.25, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "1 2 4 5 6 9", "0 1 1 0 1 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.20, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5 6 7 8 9", "0 1 2 1 0 1 2 12 1", "1 2 4 5 6 9", "0 1 1 0 1 1", ThresholdFilter::ThresholdingBy_FractionOfTotalIntensityCutoff, 0.15, ThresholdFilter::Orientation_LeastIntense },
-
-    // keep the <threshold> most intense points, excluding ties
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_Count, 1, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_Count, 2, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_Count, 3, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_Count, 4, ThresholdFilter::Orientation_MostIntense },
-
-    // keep the <threshold> least intense points, excluding ties
-    { "1 2 3 4 5", "10 20 30 20 10", "", "", ThresholdFilter::ThresholdingBy_Count, 1, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_Count, 2, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_Count, 3, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_Count, 4, ThresholdFilter::Orientation_LeastIntense },
-
-    // keep the <threshold> most intense points, including ties
-    { "1 2 3 4 5", "10 20 30 20 10", "3", "30", ThresholdFilter::ThresholdingBy_CountAfterTies, 1, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_CountAfterTies, 2, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "2 3 4", "20 30 20", ThresholdFilter::ThresholdingBy_CountAfterTies, 3, ThresholdFilter::Orientation_MostIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 3 4 5", "10 20 30 20 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 4, ThresholdFilter::Orientation_MostIntense },
-
-    // keep the <threshold> least intense points, including ties
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 1, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 5", "10 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 2, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 3, ThresholdFilter::Orientation_LeastIntense },
-    { "1 2 3 4 5", "10 20 30 20 10", "1 2 4 5", "10 20 20 10", ThresholdFilter::ThresholdingBy_CountAfterTies, 4, ThresholdFilter::Orientation_LeastIntense }
-};
-
-const size_t testThresholdersSize = sizeof(testThresholders) / sizeof(TestThresholder);
-
-void testIntensityThresholding()
-{
-    // default msLevelsToThreshold should include all levels
-    for (size_t i=0; i < testThresholdersSize; ++i)
-    {
-        SpectrumListSimple* sl = new SpectrumListSimple;
-        SpectrumListPtr originalList(sl);
-        SpectrumPtr s(new Spectrum);
-        s->set(MS_ms_level, 2);
-        sl->spectra.push_back(s);
-
-        TestThresholder& t = testThresholders[i];
-
-        vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
-        vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
-
-        SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new ThresholdFilter(t.byType, t.threshold, t.orientation));
-        SpectrumListPtr thresholder(new SpectrumList_PeakFilter(originalList, pFilter));
-
-        vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
-        vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);
-
-        SpectrumPtr thresholdedSpectrum = thresholder->spectrum(0, true);
-        //if (os_) cout << s1->defaultArrayLength << ": " << s1->getMZArray()->data << " " << s1->getIntensityArray()->data << endl;
-        unit_assert(thresholdedSpectrum->defaultArrayLength == outputMZArray.size());
-        for (size_t i=0; i < outputMZArray.size(); ++i)
-        {
-            unit_assert(thresholdedSpectrum->getMZArray()->data[i] == outputMZArray[i]);
-            unit_assert(thresholdedSpectrum->getIntensityArray()->data[i] == outputIntensityArray[i]);
-        }
-    }
-
-    // test that msLevelsToThreshold actually works
-    for (size_t i=0; i < testThresholdersSize; ++i)
-    {
-        SpectrumListSimple* sl = new SpectrumListSimple;
-        SpectrumListPtr originalList(sl);
-        SpectrumPtr s(new Spectrum);
-        s->set(MS_ms_level, 1);
-        sl->spectra.push_back(s);
-
-        TestThresholder& t = testThresholders[i];
-
-        vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
-        vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
-
-        SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new ThresholdFilter(t.byType, t.threshold, t.orientation, IntegerSet(2)));
-        SpectrumListPtr thresholder(new SpectrumList_PeakFilter(originalList, pFilter));
-
-        SpectrumPtr unthresholdedSpectrum = thresholder->spectrum(0, true);
-        //if (os_) cout << s1->defaultArrayLength << ": " << s1->getMZArray()->data << " " << s1->getIntensityArray()->data << endl;
-        unit_assert(unthresholdedSpectrum->defaultArrayLength == inputMZArray.size());
-        for (size_t i=0; i < inputMZArray.size(); ++i)
-        {
-            unit_assert(unthresholdedSpectrum->getMZArray()->data[i] == inputMZArray[i]);
-            unit_assert(unthresholdedSpectrum->getIntensityArray()->data[i] == inputIntensityArray[i]);
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////
-//  Markey Deisotoper test
-////////////////////////////////////////////////////////////////////////////
-
-struct TestDeisotoper
-{
-    // space-delimited doubles
-    const char* inputMZArray;
-    const char* inputIntensityArray;
-    const char* outputMZArray;
-    const char* outputIntensityArray;
-
-    MZTolerance tol;
-    bool hires;
-};
-
-TestDeisotoper TestDeisotopers[] =
-{
-    // Markey method
-    {   
-        "101 102 103 104 105", 
-        "10 20 30 20 10", 
-        "101 102 103", 
-        "10 20 30", 
-        0.5,
-        false
-    },
-};
-
-const size_t testDeisotopersSize = sizeof(TestDeisotopers) / sizeof(TestDeisotoper);
-
-void testDeisotoping()
-{
-    for (size_t i=0; i < testDeisotopersSize; ++i)
-    {
-
-        SpectrumListSimple* sl = new SpectrumListSimple;
-        SpectrumListPtr originalList(sl);
-        SpectrumPtr s(new Spectrum);
-        sl->spectra.push_back(s);
-
-        TestDeisotoper& t = TestDeisotopers[i];
-
-        vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
-        vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
-        s->set(MS_MSn_spectrum);
-        s->set(MS_ms_level, 2);
-        s->precursors.resize(1);
-        s->precursors[0].activation.set(MS_electron_transfer_dissociation);
-        s->precursors[0].selectedIons.resize(1);
-        s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, PRECURSOR_MZ, MS_m_z);
-        s->precursors[0].selectedIons[0].set(MS_charge_state, PRECURSOR_CHARGE);
-
-        SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new MS2Deisotoper(MS2Deisotoper::Config(t.tol, t.hires)));
-        SpectrumListPtr deisotopedList(new SpectrumList_PeakFilter(originalList, pFilter));
-
-        vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
-        vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);
-
-        SpectrumPtr deisotopedSpectrum = deisotopedList->spectrum(0, true);
-        unit_assert(deisotopedSpectrum->defaultArrayLength == outputMZArray.size());
-        for (size_t i=0; i < outputMZArray.size(); ++i)
-        {
-            unit_assert(deisotopedSpectrum->getMZArray()->data[i] == outputMZArray[i]);
-            unit_assert(deisotopedSpectrum->getIntensityArray()->data[i] == outputIntensityArray[i]);
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////
-//  Moving Window MS2 Denoise test
-////////////////////////////////////////////////////////////////////////////
-
-struct TestMS2Denoise
-{
-    // space-delimited doubles
-    const char* inputMZArray;
-    const char* inputIntensityArray;
-    const char* outputMZArray;
-    const char* outputIntensityArray;
-
-    double precursorMass;
-    int precursorCharge;
-    double windowSize;
-    int keepTopN;
-    bool relaxLowMass;
-};
-
-TestMS2Denoise TestMS2DenoiseArr[] =
-{
-    {   // basic test
-        "101 102 103 104 105", 
-        "10 20 30 20 10", 
-        "102 103 104", 
-        "20 30 20", 
-        500.0,
-        2,
-        10.0,
-        3,
-        false
-    },
-    {   // verify removal of precursor and masses above parent mass minus glycine
-        "101 102 103 104 105 500 945", 
-        "10 20 30 20 10 10 10", 
-        "102 103 104", 
-        "20 30 20", 
-        500.0,
-        2,
-        10.0,
-        3,
-        false
-    },
-};
-
-const size_t testMS2DenoiseSize = sizeof(TestMS2DenoiseArr) / sizeof(TestMS2Denoise);
-
-void testMS2Denoising()
-{
-    for (size_t i=0; i < testMS2DenoiseSize; ++i)
-    {
-
-        SpectrumListSimple* sl = new SpectrumListSimple;
-        SpectrumListPtr originalList(sl);
-        SpectrumPtr s(new Spectrum);
-        sl->spectra.push_back(s);
-
-        TestMS2Denoise& t = TestMS2DenoiseArr[i];
-
-        vector<double> inputMZArray = parseDoubleArray(t.inputMZArray);
-        vector<double> inputIntensityArray = parseDoubleArray(t.inputIntensityArray);
-        s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
-        s->set(MS_MSn_spectrum);
-        s->set(MS_ms_level, 2);
-        s->precursors.resize(1);
-        s->precursors[0].activation.set(MS_electron_transfer_dissociation);
-        s->precursors[0].selectedIons.resize(1);
-        s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, t.precursorMass, MS_m_z);
-        s->precursors[0].selectedIons[0].set(MS_charge_state, t.precursorCharge);
-
-        SpectrumDataFilterPtr pFilter = SpectrumDataFilterPtr(new MS2NoiseFilter(MS2NoiseFilter::Config(t.keepTopN, t.windowSize, t.relaxLowMass)));
-        SpectrumListPtr filteredList(new SpectrumList_PeakFilter(originalList, pFilter));
-
-        vector<double> outputMZArray = parseDoubleArray(t.outputMZArray);
-        vector<double> outputIntensityArray = parseDoubleArray(t.outputIntensityArray);
-
-        SpectrumPtr filteredSpectrum = filteredList->spectrum(0, true);
-        unit_assert(filteredSpectrum->defaultArrayLength == outputMZArray.size());
-        for (size_t i=0; i < outputMZArray.size(); ++i)
-        {
-            unit_assert(filteredSpectrum->getMZArray()->data[i] == outputMZArray[i]);
-            unit_assert(filteredSpectrum->getIntensityArray()->data[i] == outputIntensityArray[i]);
-        }
-    }
-    
-}
-
-void testZeroSamplesFilter() {
-    const char* RawX =
+// test a full spectrum
+const char* fullSpectrumRawX =
     "300.000066203793 300.000611626572 300.001157051333 300.001702478078 300.058437690186 300.058983325233 300.059528962264 300.06007460128 300.06062024228 300.061165885264 300.061711530233 300.062257177186 300.062802826123 300.063348477046 300.063894129952 300.064439784843 300.064985441719 300.065531100579 300.066076761424 301.055887660805 301.056436929468 301.056986200136 301.057535472809 301.058084747485 301.058634024166 301.059183302851 301.059732583541 301.060281866235 301.060831150933 301.061380437635 301.061929726342 301.062479017053 301.063028309769 301.063577604489 311.869088211176 311.869677645283 311.870267081618 311.870856520182 311.871445960974 311.872035403993 311.872624849241 311.873214296717 311.873803746421 311.874393198353 311.874982652514 311.875572108902 311.876161567519 311.876751028364 311.877340491437 311.877929956739 311.878519424268 311.879108894026 311.879698366013 311.880287840227 311.88087731667 311.881466795341 311.882056276241 315.73174362051 315.732347745926 315.732951873654 315.733556003694 315.734160136047 315.734764270711 315.735368407687 315.735972546974 315.736576688574 315.737180832486 315.73778497871 315.738389127246 316.901416544052 316.902025153901 316.902633766087 316.90324238061 316.903850997471 316.90445961667 316.905068238207 316.905676862081 316.906285488293 316.906894116843 316.907502747731 316.908111380957 316.90872001652 316.909328654421 326.293591849569 326.294237069432 326.294882291847 326.295527516814 326.296172744332 326.296817974402 326.297463207024 326.298108442198 326.298753679923 326.299398920201 326.30004416303 327.074882186811 327.075530500256 327.076178816272 327.076827134858 327.077475456014 327.07812377974 327.078772106036 327.079420434903 327.080068766339 327.080717100346 327.081365436923 327.082013776071 327.082662117789 327.083310462077 327.083958808935 341.007109159311 341.007813880848 341.008518605298 341.00922333266 341.009928062936 341.010632796124 341.011337532225 341.012042271238 341.012747013165 "
     "341.013451758004 341.014156505757 341.014861256422 341.01556601 341.016270766491 341.016975525895 341.017680288212 341.018385053442 341.019089821585 341.019794592642 341.020499366611 341.021204143493 341.021908923288 341.022613705997 341.023318491618 341.024023280153 341.024728071601 342.01359244987 342.014301337525 342.015010228119 342.015719121651 342.016428018122 342.017136917532 342.01784581988 342.018554725167 342.019263633392 342.019972544557 342.02068145866 342.021390375702 342.022099295682 342.022808218602 342.02351714446 342.873501341248 342.874213798035 342.874926257782 342.87563872049 342.876351186159 342.877063654789 342.87777612638 342.878488600932 342.879201078445 342.879913558918 342.880626042353 342.881338528749 344.97306118134 344.9737823902 344.974503602076 344.975224816967 344.975946034874 344.976667255797 344.977388479735 344.978109706689 344.978830936658 344.979552169644 344.980273405644 344.980994644661 344.981715886693 355.063935356091 355.064699374529 355.065463396255 355.066227421269 355.066991449572 355.067755481162 355.06851951604 355.069283554207 355.070047595661 355.070811640404 355.071575688435 355.072339739754 355.073103794361 355.073867852257 355.074631913441 355.075395977913 355.076160045673 355.076924116722 355.077688191059 355.078452268685 356.064553240471 356.065321571195 356.066089905234 356.06685824259 356.067626583261 356.068394927249 356.069163274552 356.069931625172 356.070699979107 356.071468336359 356.072236696926 356.07300506081 356.073773428009 356.074541798525 356.075310172357 356.076078549505 356.076846929969 356.07761531375 356.078383700846 356.079152091259 356.079920484988 356.080688882034 357.062327559534 357.063100202372 357.063872848555 357.064645498081 357.065418150951 357.066190807165 357.066963466723 357.067736129625 357.068508795871 357.069281465461 357.070054138395 357.070826814673 357.071599494295 357.072372177261 357.073144863571 357.073917553225 357.074690246224 357.075462942566 357.076235642253 "
     "357.077008345284 357.077781051659 357.078553761379 357.079326474442 357.08009919085 359.023183355092 359.023964507385 359.024745663078 359.02552682217 359.026307984661 359.027089150551 359.027870319841 359.028651492531 359.029432668619 359.030213848107 359.030995030994 359.031776217281 359.032557406967 359.033338600053 359.034119796538 359.034900996422 359.035682199706 360.023491974674 360.024277485921 360.025063000597 360.0258485187 360.02663404023 360.027419565189 360.028205093575 360.028990625389 360.029776160632 360.030561699301 360.031347241399 360.032132786925 360.032918335879 360.03370388826 360.03448944407 361.021491400285 361.02228127251 361.023071148191 361.023861027329 361.024650909923 361.025440795974 361.026230685481 361.027020578444 361.027810474864 361.02860037474 361.029390278072 361.030180184861 361.030970095107 361.031760008809 371.095690561049 371.096525130684 371.097359704072 371.098194281215 371.099028862111 371.099863446762 371.100698035166 371.101532627324 371.102367223236 371.103201822902 371.104036426322 371.104871033497 371.105705644425 371.106540259107 371.107374877543 371.108209499734 371.109044125678 371.109878755377 371.11071338883 372.078066820464 372.078905814551 372.079744812421 372.080583814075 372.081422819513 372.082261828735 372.083100841741 372.08393985853 372.084778879103 372.08561790346 372.086456931601 372.087295963526 372.095686490895 372.096525564444 372.097364641778 372.098203722896 372.099042807799 372.099881896485 372.100720988956 372.101560085211 372.102399185251 372.103238289075 372.104077396683 372.104916508076 372.105755623254 372.106594742216 372.107433864962 372.108272991493 373.076623237254 373.077466740653 373.078310247866 373.079153758894 373.079997273735 373.080840792391 373.081684314862 373.082527841147 373.083371371246 373.084214905159 373.085058442887 373.08590198443 373.086745529787 373.101086384495 373.101929998517 373.102773616354 373.103617238007 373.104460863474 373.105304492756 373.106148125853 "
@@ -595,7 +62,7 @@ void testZeroSamplesFilter() {
     "1439.82548173949 1439.83804531576 1439.85060911129 1439.86317312607 1439.87573736013 1439.88830181346 1439.90086648606 1439.91343137795 1439.92599648913 1439.93856181961 1439.97625912687 1439.98882533458 1440.00139176163 1440.013958408 1440.0265252737 1440.03909235875 1440.05165966315 1440.0642271869 1440.07679493 1440.08936289247 1440.10193107432 1456.39679555874 1456.40964999523 1456.42250465864 1456.43535954896 1456.44821466621 1456.46107001039 1456.47392558151 1456.48678137957 1456.49963740459 1456.51249365655 1456.52535013548 1456.53820684138 1456.55106377425 1456.5639209341 1456.57677832093 1469.49643693345 1469.5095236508 1469.52261060125 1469.5356977848 1469.54878520145 1469.56187285121 1469.57496073409 1469.58804885009 1469.60113719922 1469.61422578149 1469.6273145969 1469.64040364545 1477.46994793765 1477.48317705841 1477.49640641608 1477.50963601066 1477.52286584217 1477.53609591059 1477.54932621596 1477.56255675826 1477.5757875375 1477.58901855369 1477.60224980685 1477.61548129696 1477.62871302405 1477.64194498811 1477.65517718916 1477.6684096272 1477.68164230223 1477.69487521426 1477.7081083633 1477.72134174936 1478.91331787051 1478.9265728516 1478.93982807029 1478.9530835266 1478.96633922051 1478.97959515204 1478.99285132121 1479.006107728 1479.01936437244 1479.03262125452 1479.04587837426 1480.17360285036 1480.18688043216 1480.20015825217 1480.2134363104 1480.22671460685 1480.23999314153 1480.25327191444 1480.2665509256 1480.279830175 1480.29310966266 1480.30638938858 1480.31966935276 1480.33294955522 1480.34622999596 1480.35951067499 1480.37279159231 1480.38607274793 1480.39935414185 1480.41263577409 1480.42591764464 1480.73146645809 1480.74475405022 1480.75804188082 1480.77132994991 1480.78461825749 1480.79790680357 1480.81119558816 1480.82448461126 1480.83777387287 1480.85106337301 1480.86435311168 1480.87764308888 1480.89093330463 1480.90422375893 1480.91751445178 1480.9308053832 1480.94409655318 1480.95738796174 1480.97067960888 1480.983971494 "
     "1480.99726361894 1481.01055598187 1481.0238485834 1481.03714142355 1481.05043450231 1481.06372781971 1481.07702137574 1481.34294261915 1481.35624118796 1481.36953999554 1481.38283904191 1481.39613832706 1481.409437851 1481.42273761375 1481.4360376153 1481.44933785567 1481.46263833486 1481.47593905287 1481.48924000971 1481.50254120539 1481.51584263992 1481.5291443133 1481.54244622554 1481.55574837664 1481.56905076662 1481.58235339547 1481.5956562632 1481.60895936983 1481.62226271535 1481.63556629978 1481.64887012311 1481.66217418536 1481.67547848654 1482.36763154258 1482.38094851586 1482.39426572841 1482.40758318025 1482.42090087136 1482.43421880177 1482.44753697147 1482.46085538047 1482.47417402879 1482.48749291642 1482.50081204337 1482.51413140965 1482.52745101526 1482.54077086022 1493.62532276273 1493.63884277381 1493.65236302966 1493.66588353027 1493.67940427566 1493.69292526583 1493.70644650079 1493.71996798055 1493.73348970511 1493.74701167448 1493.76053388867 1493.77405634768 1511.59045068974 1511.60429789207 1511.6181453481 1511.63199305785 1511.64584102131 1511.65968923849 1511.6735377094 1511.68738643405 1511.70123541244 1511.71508464459 1511.72893413049 1599.95476419777 1599.97027768381 1599.98579147069 1600.00130555844";
 
-    const char* RawY =
+const char* fullSpectrumRawY =
     "0 0 0 0 0 0 0 0 0 193.855026245117 641.106506347656 877.26220703125 700.196716308594 274.883911132813 0 0 0 0 0 0 0 0 0 0 224.89469909668 511.670349121094 595.136657714844 452.148010253906 234.596389770508 74.6820220947266 0 0 0 0 0 0 0 0 119.225784301758 185.543075561523 200.134750366211 188.900192260742 160.073196411133 0 0 0 0 0 0 0 172.296859741211 200.144027709961 165.512985229492 0 0 0 0 0 0 0 0 83.4415893554688 208.525405883789 177.816024780273 100.466018676758 0 0 0 0 0 0 0 0 93.3426513671875 177.81330871582 221.383926391602 233.153823852539 185.899673461914 84.1839904785156 0 0 0 0 0 0 0 0 126.048049926758 184.371139526367 97.8295288085938 0 0 0 0 0 0 0 0 25.8681793212891 261.258850097656 531.637878417969 574.53076171875 413.904724121094 218.982650756836 112.732650756836 0 0 0 0 0 0 0 0 94.0497131347656 191.148391723633 161.991897583008 0 0 0 0 0 0 0 402.995788574219 1600.27600097656 3017.67749023438 3685.970703125 3078.0078125 1699.85888671875 531.254028320313 44.9793395996094 0 0 0 0 0 0 0 0 3.05120849609375 326.982971191406 918.194396972656 1295.37927246094 1141.49755859375 577.818969726563 26.3272705078125 0 0 0 0 0 0 0 0 125.907791137695 264.531921386719 266.280029296875 158.506088256836 0 0 0 0 0 0 0 0 45.1534271240234 245.012252807617 337.062133789063 230.558639526367 35.3934326171875 0 0 0 0 0 0 0 0 21.4011077880859 269.609924316406 302.905334472656 3843.85766601563 9906.61328125 14627.65625 14086.5751953125 8667.4873046875 2666.59497070313 152.549850463867 452.571411132813 21.2885437011719 0 0 0 0 0 0 0 0 0 242.630386352539 1476.34033203125 2982.52856445313 3656.2958984375 2926.99194335938 1440.77648925781 378.651611328125 617.814758300781 1036.13317871094 1038.09765625 677.166748046875 273.266662597656 106.01123046875 0 0 0 0 0 0 0 0 0 644.765441894531 1669.39282226563 2428.14697265625 2279.11108398438 1350.7001953125 456.782958984375 195.992416381836 144.774459838867 138.42707824707 203.370742797852 302.340209960938 350.181884765625 "
     "314.466613769531 225.259658813477 125.442489624023 0 0 0 0 0 0 0 0 0 229.676986694336 1286.525390625 3076.466796875 4448.58984375 4288.94775390625 2695.29956054688 856.980102539063 0 0 0 0 0 0 0 0 0 0 297.09423828125 790.947937011719 1078.3701171875 895.997009277344 377.297119140625 0 0 0 0 0 0 0 0 0 54.2761840820313 380.800170898438 604.678894042969 530.256896972656 239.020004272461 14.5890960693359 0 0 0 0 0 0 0 0 0 315.951721191406 1584.78002929688 3584.27490234375 4964.8896484375 4550.10595703125 2648.34790039063 761.737854003906 336.893249511719 327.000427246094 103.404342651367 0 0 0 0 0 0 0 0 137.308151245117 232.669479370117 225.336959838867 131.02082824707 0 0 0 0 0 0 0 0 0 309.901550292969 806.588073730469 1159.07531738281 1105.30993652344 695.416931152344 245.27473449707 13.4951171875 0 0 0 0 0 0 0 0 114.433959960938 215.006851196289 272.628845214844 187.665817260742 12.0498352050781 0 0 0 0 0 0 0 0 127.550247192383 182.018173217773 211.423233032227 191.385147094727 141.782333374023 0 0 0 0 0 0 0 0 0 745.767456054688 2422.9541015625 3720.92529296875 3568.47998046875 2088.86743164063 510.764953613281 183.886978149414 136.265151977539 0 0 0 0 0 0 0 0 171.257888793945 188.640060424805 192.395614624023 154.632247924805 0 0 0 0 0 0 0 0 130.887710571289 642.11865234375 1160.51184082031 1294.43505859375 977.964050292969 544.39794921875 308.192199707031 211.437362670898 76.1909332275391 0 0 0 0 0 0 0 0 0 229.855178833008 543.525207519531 586.220275878906 314.952575683594 0 0 0 0 0 0 0 0 0 154.422073364258 196.758010864258 149.831283569336 0 0 0 0 0 0 0 0 123.318832397461 188.429489135742 169.386795043945 0 0 0 0 0 0 0 0 2959.08642578125 8616.0419921875 13691.96484375 14140.76953125 9577.6708984375 3752.03759765625 393.419616699219 324.138061523438 232.52278137207 0 0 0 0 0 0 0 0 0 133.11164855957 205.964584350586 199.730422973633 139.437789916992 0 0 0 0 0 0 0 0 101.496200561523 185.133193969727 259.655029296875 244.710922241211 160.866897583 0 0 0 0 0 0 0 0 "
     "171.158157348633 209.737930297852 216.904006958008 153.206130981445 0 0 0 0 0 0 0 0 0 1064.01928710938 2744.22631835938 3925.62744140625 3728.50854492188 2484.57104492188 1484.09924316406 1184.474609375 801.294799804688 276.304870605469 0 0 0 0 0 0 0 0 0 0 300.0966796875 1263.98876953125 2300.80615234375 2527.240234375 1658.1162109375 416.934509277344 362.052856445313 510.349609375 422.890075683594 293.749877929688 96.1615142822266 0 0 0 0 0 0 0 0 277.112182617188 552.278137207031 634.911743164063 465.758728027344 230.118118286133 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 338.728454589844 100.444885253906 1113.40734863281 4002.13525390625 6734.62841796875 7179.69189453125 4943.12939453125 1888.85778808594 87.8339996337891 0 0 0 0 0 0 0 0 166.607498168945 203.203231811523 88.5599517822266 0 0 134.797103881836 252.799118041992 321.236206054688 317.407653808594 177.626174926758 0 0 0 0 0 0 0 0 420.235168457031 1400.63110351563 2127.62890625 2036.72399902344 1375.9619140625 1018.35345458984 909.901550292969 528.322021484375 118.658309936523 0 0 0 0 0 0 0 0 6.52516174316406 184.584854125977 399.570495605469 472.823852539063 311.700012207031 67.0648040771484 0 0 0 0 0 0 0 0 4.97833251953125 518.760131835938 1195.45788574219 1522.00109863281 1192.40087890625 457.996826171875 236.555740356445 455.735107421875 494.134094238281 419.947204589844 169.757431030273 0 0 0 0 0 0 0 0 158.202651977539 249.356582641602 255.182876586914 181.06364440918 0 0 0 0 0 0 0 0 173.365737915039 243.861038208008 222.755081176758 104.503341674805 0 0 0 0 0 0 0 0 127.732864379883 184.066452026367 159.648910522461 0 0 0 0 0 0 0 0 0 216.264389038086 564.540100097656 758.490661621094 593.172241210938 186.406509399414 0 0 0 0 0 0 0 0 0 57.8870544433594 189.093154907227 180.032363891602 0 0 0 0 0 0 0 0 107.181259155273 588.624389648438 3296.2294921875 6859.40966796875 8629.48046875 6954.76904296875 3204.29370117188 530.406066894531 701.101257324219 446.318359375 172.379989624023 0 0 0 0 0 0 0 0 "
@@ -610,64 +77,58 @@ void testZeroSamplesFilter() {
     "164.043045043945 0 0 0 0 0 0 0 0 101.22346496582 199.961135864258 181.580459594727 0 0 0 0 0 0 0 0 171.627029418945 216.893325805664 165.188735961914 0 0 0 0 0 0 0 0 184.577438354492 315.924865722656 400.736938476563 401.748779296875 309.456359863281 177.526077270508 0 0 0 0 0 0 0 0 71.3968505859375 196.379440307617 317.622741699219 323.017578125 218.84977722168 108.977661132813 0 0 0 0 0 0 0 0 143.710311889648 248.819686889648 318.435913085938 338.807861328125 306.490661621094 239.977798461914 197.418716430664 128.426620483398 0 0 0 0 0 0 0 0 126.655654907227 226.479202270508 229.53288269043 179.628677368164 0 0 0 0 0 0 0 0 144.30647277832 214.861099243164 189.256454467773 0 0 0 0 0 0 0 0 188.085342407227 308.395935058594 374.08056640625 337.305053710938 193.459030151367 33.2561950683594 0 0 0 0 0 0 0 0 101.20735168457 200.764785766602 247.183944702148 206.08268737793 87.9416961669922 0 0 0 0 0 0 0 0 95.3595581054688 225.91584777832 248.077072143555 250.59260559082 257.277648925781 180.943740844727 0 0 0 0 0 0 0 0 155.655776977539 238.868362426758 250.283981323242 157.468978881836 0 0 0 0 0 0 0 0 165.849624633789 341.285217285156 449.087829589844 465.197448730469 414.669006347656 350.80908203125 287.216369628906 202.29280090332 102.295700073242 0 0 0 0 0 0 0 0 122.961654663086 216.524826049805 227.398483276367 197.743057250977 252.932815551758 368.044921875 412.497924804688 332.376770019531 189.94221496582 0 0 0 0 0 0 0 0 110.821487426758 205.431838989258 197.784744262695 165.351150512695 0 0 0 0 0 0 0 0 148.747482299805 197.384048461914 222.412368774414 130.84407043457 0 0 0 0 0 0 0 0 186.619369506836 231.119979858398 185.139663696289 0 0 0 0 0 0 0 0 129.717819213867 224.055252075195 180.142196655273 0 0 0 0 0 0 0 0 176.265243530273 223.66975402832 295.446105957031 361.572326660156 360.102111816406 244.047714233398 41.8561553955078 0 0 0 0 0 0 0 0 160.23698425293 238.57145690918 249.646987915039 191.794631958008 0 0 0 0 0 0 0 0 177.559341430664 308.058898925781 "
     "348.306823730469 288.753173828125 157.469802856445 0 0 50.9171905517578 233.195449829102 366.537780761719 333.827880859375 112.628784179688 0 0 0 0 0 0 0 0 146.29948425293 221.006973266602 185.588424682617 0 0 0 0 0 0 0 0 169.829788208008 298.886840820313 375.022705078125 349.165283203125 326.073608398438 321.16162109375 301.307739257813 280.400939941406 268.34130859375 250.299697875977 206.922592163086 161.804183959961 0 0 0 0 0 0 0 0 106.515991210938 216.509872436523 174.441055297852 0 47.4068908691406 197.185470581055 263.215942382813 352.870300292969 434.091491699219 407.799926757813 297.367797851563 209.839736938477 246.22785949707 378.100463867188 491.783874511719 505.840270996094 403.557006835938 229.298934936523 54.6394348144531 0 0 0 0 0 0 0 0 50.5400085449219 198.851058959961 280.1474609375 285.830627441406 210.564895629883 50.8290405273438 0 0 0 0 0 170.184860229492 335.466613769531 475.362731933594 547.797119140625 496.642517089844 292.609191894531 4.42018127441406 0 0 0 0 0 0 0 0 386.298461914063 549.150512695313 612.910278320313 599.075317382813 479.97314453125 260.072143554688 0 0 0 0 0 0 0 0 157.101547241211 216.543563842773 210.621841430664 151.346878051758 0 0 0 0 0 0 0 0 163.830764770508 225.50910949707 155.86100769043 0 0 0 0 0 0 0 0";
 
-    SpectrumListSimple* sl = new SpectrumListSimple;
-    SpectrumListPtr originalList(sl);
-    SpectrumPtr s(new Spectrum);
-    sl->spectra.push_back(s);
 
-    vector<double> inputMZArray = parseDoubleArray(RawX);
-    vector<double> inputIntensityArray = parseDoubleArray(RawY);
-    s->setMZIntensityArrays(inputMZArray, inputIntensityArray, MS_number_of_counts);
-    s->set(MS_MSn_spectrum);
-    s->set(MS_ms_level, 2);
-    s->precursors.resize(1);
-    s->precursors[0].activation.set(MS_electron_transfer_dissociation);
-    s->precursors[0].selectedIons.resize(1);
-    s->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, 1000, MS_m_z);
-    s->precursors[0].selectedIons[0].set(MS_charge_state, 2);
-
-    // should be no change if we specify MS3
-    SpectrumListPtr filteredList2(new 
-        SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(3),SpectrumList_ZeroSamplesFilter::REMOVE_ZEROS,0));
-    SpectrumPtr filteredSpectrum2 = filteredList2->spectrum(0, true);
-    unit_assert(filteredSpectrum2->getIntensityArray()->data[9] == inputIntensityArray[9]); 
-
-
-    SpectrumListPtr filteredList(new 
-            SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(2),SpectrumList_ZeroSamplesFilter::REMOVE_ZEROS,0));
-
-    SpectrumPtr filteredSpectrum = filteredList->spectrum(0, true);
-
-    unit_assert(filteredSpectrum->getIntensityArray()->data.size() == filteredSpectrum->getMZArray()->data.size());
-    unit_assert(filteredSpectrum->getIntensityArray()->data[0]==0);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[1]!=0);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[filteredSpectrum->getIntensityArray()->data.size()-1]==0);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[filteredSpectrum->getIntensityArray()->data.size()-2]!=0);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[1] == inputIntensityArray[9]);
-
-    // now add missing zeros
-    int nzeros=10;
-    SpectrumListPtr filteredList3(new 
-            SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(2),SpectrumList_ZeroSamplesFilter::ADD_MISSING_ZEROS,nzeros));
-    filteredSpectrum = filteredList3->spectrum(0, true);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[0]==0);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[1]==0);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[filteredSpectrum->getIntensityArray()->data.size()-1]==0);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[filteredSpectrum->getIntensityArray()->data.size()-2]==0);
-    unit_assert(filteredSpectrum->getIntensityArray()->data[nzeros] == inputIntensityArray[9]);
-
-
+vector<double> parseDoubleArray(const string& doubleArray)
+{
+    vector<double> doubleVector;
+    vector<string> tokens;
+    bal::split(tokens, doubleArray, bal::is_space(), bal::token_compress_on);
+    if (!tokens.empty() && !tokens[0].empty())
+        for (size_t i=0; i < tokens.size(); ++i)
+            doubleVector.push_back(lexical_cast<double>(tokens[i]));
+    return doubleVector;
 }
-    
+
 
 void test()
 {
-    testIntensityThresholding();
-    testPrecursorMassRemoval();
-    testDeisotoping();
-    testMS2Denoising();
-    testZeroSamplesFilter();
+
+    vector<double> xRaw = parseDoubleArray(fullSpectrumRawX);
+    vector<double> yRaw = parseDoubleArray(fullSpectrumRawY);
+
+    // sanity check
+    unit_assert(xRaw.size() == yRaw.size());
+
+    try
+    {
+        vector<double> xProcessed, yProcessed;
+        ExtraZeroSamplesFilter::remove_zeros(xRaw, yRaw, xProcessed, yProcessed,true);
+        unit_assert(xProcessed.size() == yProcessed.size());
+        unit_assert(yProcessed[0]==0);
+        unit_assert(yProcessed[1]!=0);
+        unit_assert(yProcessed[yProcessed.size()-1]==0);
+        unit_assert(yProcessed[yProcessed.size()-2]!=0);
+        unit_assert(xProcessed[1] == xRaw[9]);
+        // now verify that an already processed set doesn't change
+        vector<double> xRaw2(xProcessed), yRaw2(yProcessed);
+        ExtraZeroSamplesFilter::remove_zeros(xRaw2, yRaw2, xProcessed, yProcessed,true);
+        unit_assert(xProcessed == xRaw2);
+        unit_assert(yProcessed == yRaw2);
+        // now verify removal of all zeros
+        ExtraZeroSamplesFilter::remove_zeros(xRaw, yRaw, xProcessed, yProcessed,false);
+        unit_assert(xProcessed.size() == yProcessed.size());
+        unit_assert(yProcessed[0]!=0);
+        unit_assert(yProcessed[1]!=0);
+        unit_assert(yProcessed[yProcessed.size()-1]!=0);
+        unit_assert(yProcessed[yProcessed.size()-2]!=0);
+        unit_assert(xProcessed[0] == xRaw[9]);
+    }
+    catch (exception& e)
+    {
+        throw runtime_error(std::string("ExtraZeroSamplesFilter test case failed: ") + e.what());
+    }
 }
+
 
 int main(int argc, char* argv[])
 {
@@ -679,11 +140,7 @@ int main(int argc, char* argv[])
     }
     catch (exception& e)
     {
-        cerr << "Caught exception: " << e.what() << endl;
-    }
-    catch (...)
-    {
-        cerr << "Caught unknown exception" << endl;
+        cerr << e.what() << endl;
     }
     
     return 1;

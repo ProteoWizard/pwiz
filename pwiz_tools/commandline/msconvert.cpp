@@ -291,6 +291,15 @@ Config parseCommandLine(int argc, const char* argv[])
           << "# apply ETD precursor mass filter\n"
           << "msconvert data.RAW --filter ETDFilter\n"
           << endl
+          << "# remove non-flanking zero value samples\n"
+          << "msconvert data.RAW --filter \"zeroSamples removeExtra\"\n"
+          << endl
+          << "# remove non-flanking zero value samples in MS2 and MS3 only\n"
+          << "msconvert data.RAW --filter \"zeroSamples removeExtra 2 3\"\n"
+          << endl
+          << "# add missing zero value samples (with 5 flanking zeros) in MS2 and MS3 only\n"
+          << "msconvert data.RAW --filter \"zeroSamples addMissing=5 2 3\"\n"
+          << endl
           << "# keep only HCD spectra from a decision tree data file\n"
           << "msconvert data.RAW --filter \"activation HCD\"\n"
           << endl

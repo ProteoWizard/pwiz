@@ -37,6 +37,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_ZeroSamplesFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2NoiseFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2Deisotoper.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -139,6 +140,36 @@ SpectrumListPtr filterCreator_nativeCentroid(const MSData& msd, const string& ar
                                 PeakDetectorPtr(new LocalMaximumPeakDetector(3)),
                                 preferVendor,
                                 msLevelsToCentroid));
+}
+
+/**
+ *  Handler for --filter zeroSamples removeExtra|addMissing[=FlankingZeroCount] [mslevels]
+ *
+ **/
+SpectrumListPtr filterCreator_ZeroSamples(const MSData& msd, const string& arg)
+{
+    istringstream parser(arg);
+    string action;
+    parser >> action;
+    bool bRemover = ("removeExtra"==action);
+    int FlankingZeroCount=-1;
+    if (string::npos!=action.rfind('=')) 
+    {
+        FlankingZeroCount = atoi(action.substr(action.rfind('=')+1).c_str());
+        action = action.substr(0,action.rfind('='));
+    }
+    if (!bRemover && ("addMissing"!=action))
+        throw runtime_error("[SpectrumListFactory::filterCreator_ZeroSamples()] unknown mode \"" + action + "\"");
+    string msLevelSets;
+    getline(parser, msLevelSets);
+    if (""==msLevelSets) msLevelSets="0-99"; // default is all msLevels
+
+    IntegerSet msLevelsToFilter;
+    msLevelsToFilter.parse(msLevelSets);
+    return SpectrumListPtr(new 
+        SpectrumList_ZeroSamplesFilter(msd.run.spectrumListPtr,msLevelsToFilter,
+        bRemover ? SpectrumList_ZeroSamplesFilter::REMOVE_ZEROS : SpectrumList_ZeroSamplesFilter::ADD_MISSING_ZEROS,
+        FlankingZeroCount));
 }
 
 /**
@@ -563,6 +594,7 @@ JumpTableEntry jumpTable_[] =
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
 	{"mzPrecursors", "[mz1,mz2, ... mzn] zero for no precursor m/z", filterCreator_mzPrecursors},
     {"defaultArrayLength", "int_set", filterCreator_defaultArrayLength},
+    {"zeroSamples", "<removeExtra|addMissing[=flankingZeroCount]> <MS levels> (remove extra, or add missing, zeros)", filterCreator_ZeroSamples},
 
     // MSn Spectrum Processing/Filtering
     {"MS2Denoise", "moving window filter for MS2: num peaks to select in window:int_val(default 6) window width (Da):val (default 30) multicharge fragment relaxation: <true|false> (default true)", filterCreator_MS2Denoise},
