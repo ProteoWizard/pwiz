@@ -89,6 +89,14 @@ namespace MSConvertGUI
             this.PeakMSLevelSeperator = new System.Windows.Forms.Label();
             this.PeakMSLevelBox2 = new System.Windows.Forms.TextBox();
             this.PeakMSLevelBox1 = new System.Windows.Forms.TextBox();
+            this.ZeroSamplesPanel = new System.Windows.Forms.Panel();
+            this.ZeroSamplesRemove = new System.Windows.Forms.RadioButton();
+            this.ZeroSamplesAddMissing = new System.Windows.Forms.RadioButton();
+            this.ZeroSamplesAddMissingFlankCountBox = new System.Windows.Forms.TextBox();
+            this.ZeroSamplesMSLevelLabel = new System.Windows.Forms.Label();
+            this.ZeroSamplesMSLevelSeperator = new System.Windows.Forms.Label();
+            this.ZeroSamplesMSLevelBox2 = new System.Windows.Forms.TextBox();
+            this.ZeroSamplesMSLevelBox1 = new System.Windows.Forms.TextBox();
             this.ETDFilterPanel = new System.Windows.Forms.Panel();
             this.ETDBlanketRemovalBox = new System.Windows.Forms.CheckBox();
             this.ETDRemoveChargeReducedBox = new System.Windows.Forms.CheckBox();
@@ -132,6 +140,9 @@ namespace MSConvertGUI
             this.SubsetPanel.SuspendLayout();
             this.MSLevelPanel.SuspendLayout();
             this.PeakPickingPanel.SuspendLayout();
+            this.ZeroSamplesPanel.SuspendLayout();
+            this.ZeroSamplesRemove = new System.Windows.Forms.RadioButton();
+            this.ZeroSamplesAddMissing = new System.Windows.Forms.RadioButton();
             this.ETDFilterPanel.SuspendLayout();
             this.ChargeStatePredictorPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize) (this.ChaSingleBox)).BeginInit();
@@ -250,6 +261,7 @@ namespace MSConvertGUI
             this.FilterGB.Controls.Add(this.SubsetPanel);
             this.FilterGB.Controls.Add(this.MSLevelPanel);
             this.FilterGB.Controls.Add(this.PeakPickingPanel);
+            this.FilterGB.Controls.Add(this.ZeroSamplesPanel);
             this.FilterGB.Controls.Add(this.ETDFilterPanel);
             this.FilterGB.Controls.Add(this.ChargeStatePredictorPanel);
             this.FilterGB.Location = new System.Drawing.Point(322, 83);
@@ -266,6 +278,7 @@ namespace MSConvertGUI
             this.FilterBox.Items.AddRange(new object[] {
             "MS Level",
             "Peak Picking",
+            "Zero Samples",
             "ETD Peak Filter",
             "Charge State Predictor",
             "Activation",
@@ -548,6 +561,93 @@ namespace MSConvertGUI
             this.PeakMSLevelBox1.Text = "1";
             this.PeakMSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
+            // ZeroSamplesPanel
+            // 
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesAddMissing);
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesAddMissingFlankCountBox);
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesRemove);
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelLabel);
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelSeperator);
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelBox2);
+            this.ZeroSamplesPanel.Controls.Add(this.ZeroSamplesMSLevelBox1);
+            this.ZeroSamplesPanel.Location = new System.Drawing.Point(22, 46);
+            this.ZeroSamplesPanel.Name = "ZeroSamplesPanel";
+            this.ZeroSamplesPanel.Size = new System.Drawing.Size(283, 91);
+            this.ZeroSamplesPanel.TabIndex = 24;
+            this.ZeroSamplesPanel.Visible = false;
+            // 
+            // ZeroSamplesRemove
+            // 
+            this.ZeroSamplesRemove.AutoSize = true;
+            this.ZeroSamplesRemove.Checked = true;
+            this.ZeroSamplesRemove.Location = new System.Drawing.Point(20, 12);
+            this.ZeroSamplesRemove.Name = "ZeroSamplesRemove";
+            this.ZeroSamplesRemove.Size = new System.Drawing.Size(51, 17);
+            this.ZeroSamplesRemove.TabIndex = 29;
+            this.ZeroSamplesRemove.Text = "Remove";
+            this.ZeroSamplesRemove.UseVisualStyleBackColor = true;
+            this.ZeroSamplesRemove.Click += new System.EventHandler(this.ZeroSamples_ModeChanged);
+
+            // 
+            // ZeroSamplesAddMissing
+            // 
+            this.ZeroSamplesAddMissing.AutoSize = true;
+            this.ZeroSamplesAddMissing.Checked = false;
+            this.ZeroSamplesAddMissing.Location = new System.Drawing.Point(93, 12);
+            this.ZeroSamplesAddMissing.Name = "ZeroSamplesAddMissing";
+            this.ZeroSamplesAddMissing.Size = new System.Drawing.Size(51, 17);
+            this.ZeroSamplesAddMissing.TabIndex = 30;
+            this.ZeroSamplesAddMissing.TabStop = true;
+            this.ZeroSamplesAddMissing.Text = "Add missing, flank by:";
+            this.ZeroSamplesAddMissing.UseVisualStyleBackColor = true;
+            this.ZeroSamplesAddMissing.Click += new System.EventHandler(this.ZeroSamples_ModeChanged);
+
+            // 
+            // AddMissingFlankCountBox
+            // 
+            this.ZeroSamplesAddMissingFlankCountBox.Location = new System.Drawing.Point(221, 12);
+            this.ZeroSamplesAddMissingFlankCountBox.Enabled = this.ZeroSamplesAddMissing.Checked;
+            this.ZeroSamplesAddMissingFlankCountBox.Name = "ZeroSamplesAddMissingFlankCountBox";
+            this.ZeroSamplesAddMissingFlankCountBox.Size = new System.Drawing.Size(37, 20);
+            this.ZeroSamplesAddMissingFlankCountBox.Text = "5";
+            this.ZeroSamplesAddMissingFlankCountBox.TabIndex = 31;
+            this.ZeroSamplesAddMissingFlankCountBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+
+            // 
+            // ZeroSamplesMSLevelLabel
+            // 
+            this.ZeroSamplesMSLevelLabel.AutoSize = true;
+            this.ZeroSamplesMSLevelLabel.Location = new System.Drawing.Point(113, 41);
+            this.ZeroSamplesMSLevelLabel.Name = "ZeroSamplesMSLevelLabel";
+            this.ZeroSamplesMSLevelLabel.Size = new System.Drawing.Size(60, 13);
+            this.ZeroSamplesMSLevelLabel.TabIndex = 25;
+            this.ZeroSamplesMSLevelLabel.Text = "MS Levels:";
+            // 
+            // ZeroSamplesMSLevelSeperator
+            // 
+            this.ZeroSamplesMSLevelSeperator.AutoSize = true;
+            this.ZeroSamplesMSLevelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.ZeroSamplesMSLevelSeperator.Location = new System.Drawing.Point(134, 55);
+            this.ZeroSamplesMSLevelSeperator.Name = "ZeroSamplesMSLevelSeperator";
+            this.ZeroSamplesMSLevelSeperator.Size = new System.Drawing.Size(15, 20);
+            this.ZeroSamplesMSLevelSeperator.TabIndex = 26;
+            this.ZeroSamplesMSLevelSeperator.Text = "-";
+            // 
+            // ZeroSamplesMSLevelBox2
+            // 
+            this.ZeroSamplesMSLevelBox2.Location = new System.Drawing.Point(151, 57);
+            this.ZeroSamplesMSLevelBox2.Name = "ZeroSamplesMSLevelBox2";
+            this.ZeroSamplesMSLevelBox2.Size = new System.Drawing.Size(37, 20);
+            this.ZeroSamplesMSLevelBox2.TabIndex = 28;
+            this.ZeroSamplesMSLevelBox2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            // 
+            // ZeroSamplesMSLevelBox1
+            // 
+            this.ZeroSamplesMSLevelBox1.Location = new System.Drawing.Point(95, 57);
+            this.ZeroSamplesMSLevelBox1.Name = "ZeroSamplesMSLevelBox1";
+            this.ZeroSamplesMSLevelBox1.Size = new System.Drawing.Size(37, 20);
+            this.ZeroSamplesMSLevelBox1.TabIndex = 27;
+            this.ZeroSamplesMSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);            // 
             // ETDFilterPanel
             // 
             this.ETDFilterPanel.Controls.Add(this.ETDBlanketRemovalBox);
@@ -892,6 +992,7 @@ namespace MSConvertGUI
             this.UseZlibBox.Name = "UseZlibBox";
             this.UseZlibBox.Size = new System.Drawing.Size(128, 17);
             this.UseZlibBox.TabIndex = 6;
+            this.UseZlibBox.Checked = true;
             this.UseZlibBox.Text = "Use zlib compression:";
             this.UseZlibBox.UseVisualStyleBackColor = true;
             // 
@@ -1001,6 +1102,8 @@ namespace MSConvertGUI
             this.MSLevelPanel.PerformLayout();
             this.PeakPickingPanel.ResumeLayout(false);
             this.PeakPickingPanel.PerformLayout();
+            this.ZeroSamplesPanel.ResumeLayout(false);
+            this.ZeroSamplesPanel.PerformLayout();
             this.ETDFilterPanel.ResumeLayout(false);
             this.ETDFilterPanel.PerformLayout();
             this.ChargeStatePredictorPanel.ResumeLayout(false);
@@ -1055,6 +1158,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.ComboBox FilterBox;
         private System.Windows.Forms.Panel ChargeStatePredictorPanel;
         private System.Windows.Forms.Panel PeakPickingPanel;
+        private System.Windows.Forms.Panel ZeroSamplesPanel;
         private System.Windows.Forms.Panel ETDFilterPanel;
         private System.Windows.Forms.Panel ActivationPanel;
         private System.Windows.Forms.Label MSLabelSeperator;
@@ -1065,6 +1169,13 @@ namespace MSConvertGUI
         private System.Windows.Forms.Label PeakMSLevelSeperator;
         private System.Windows.Forms.TextBox PeakMSLevelBox2;
         private System.Windows.Forms.TextBox PeakMSLevelBox1;
+        private System.Windows.Forms.RadioButton ZeroSamplesRemove;
+        private System.Windows.Forms.RadioButton ZeroSamplesAddMissing;
+        private System.Windows.Forms.TextBox ZeroSamplesAddMissingFlankCountBox;
+        private System.Windows.Forms.Label ZeroSamplesMSLevelLabel;
+        private System.Windows.Forms.Label ZeroSamplesMSLevelSeperator;
+        private System.Windows.Forms.TextBox ZeroSamplesMSLevelBox2;
+        private System.Windows.Forms.TextBox ZeroSamplesMSLevelBox1;
         private System.Windows.Forms.CheckBox ETDBlanketRemovalBox;
         private System.Windows.Forms.CheckBox ETDRemoveChargeReducedBox;
         private System.Windows.Forms.CheckBox ETDRemoveNeutralLossBox;

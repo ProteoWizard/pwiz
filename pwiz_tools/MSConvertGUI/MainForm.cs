@@ -72,6 +72,7 @@ namespace MSConvertGUI
         {
             MSLevelPanel.Visible = false;
             PeakPickingPanel.Visible = false;
+            ZeroSamplesPanel.Visible = false;
             ETDFilterPanel.Visible = false;
             ChargeStatePredictorPanel.Visible = false;
             ActivationPanel.Visible = false;
@@ -84,6 +85,9 @@ namespace MSConvertGUI
                     break;
                 case "Peak Picking":
                     PeakPickingPanel.Visible = true;
+                    break;
+                case "Zero Samples":
+                    ZeroSamplesPanel.Visible = true;
                     break;
                 case "ETD Peak Filter":
                     ETDFilterPanel.Visible = true;
@@ -214,6 +218,11 @@ namespace MSConvertGUI
             }
         }
 
+        private void ZeroSamples_ModeChanged(object sender, EventArgs e)
+        {
+            ZeroSamplesAddMissingFlankCountBox.Enabled = ZeroSamplesAddMissing.Checked;
+        }
+
         private void NumTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             if (!char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar))
@@ -245,6 +254,21 @@ namespace MSConvertGUI
                                                                  PeakPreferVendorBox.Checked.ToString().ToLower(),
                                                                  PeakMSLevelBox1.Text, PeakMSLevelBox2.Text)
                                                });
+                    break; 
+                case "Zero Samples":
+                    String args = ZeroSamplesAddMissing.Checked ? "addMissing" : "removeExtra";
+                    if ( ZeroSamplesAddMissing.Checked && (!String.IsNullOrEmpty(ZeroSamplesAddMissingFlankCountBox.Text)))
+                        args+=String.Format("={0}",ZeroSamplesAddMissingFlankCountBox.Text);
+                    if (!String.IsNullOrEmpty(ZeroSamplesMSLevelBox1.Text) ||
+                        !String.IsNullOrEmpty(ZeroSamplesMSLevelBox2.Text))
+                        args += String.Format(" {0}-{1}",ZeroSamplesMSLevelBox1.Text,ZeroSamplesMSLevelBox2.Text);
+                    else // no mslevels specified means all mslevels
+                        args += " 1-";
+                    FilterDGV.Rows.Add(new[]
+                                           {
+                                               "zeroSamples",
+                                                args
+                                           });
                     break; 
                 case "ETD Peak Filter":
                     var tempObject = new[] {"ETDFilter", String.Empty};

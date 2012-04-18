@@ -305,6 +305,20 @@ namespace Test
         }
 
         /// <summary>
+        /// Test that we can read any format, run non-flanking zero removal on it, filter by MS level, and write as mzML.
+        /// </summary>
+        [TestMethod]
+        public void FilterZeroSamplesTest()
+        {
+            var logicAccessor = new MainLogic(new ProgressForm.JobInfo());
+            var extension = RunFile(_testPaths,
+                                    logicAccessor,
+                                    new string[] { "--filter|\"zeroSamples removeExtra 1-3\"", "--filter|\"msLevel 1\"" },
+                                    "mzML");
+            CompareFiles(extension);
+        }
+
+        /// <summary>
         /// Test that we can read any mzML, filter by activation type, and write as mzML.
         /// </summary>
         [TestMethod]
