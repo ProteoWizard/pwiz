@@ -21,13 +21,11 @@
 //
 
 
-#ifndef _ExtraZeroSamplesFilter_HPP_ 
-#define _ExtraZeroSamplesFilter_HPP_
+#ifndef _EXTRAZEROSAMPLESFILTER_HPP_ 
+#define _EXTRAZEROSAMPLESFILTER_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <vector>
-#include <memory>
-#include <cstddef>
 
 
 namespace pwiz {
@@ -39,8 +37,8 @@ namespace analysis {
 struct PWIZ_API_DECL ExtraZeroSamplesFilter 
 {
     static void remove_zeros(const std::vector<double>& x, const std::vector<double>& y,
-                     std::vector<double>& xProcessed, std::vector<double>& yProcessed,
-                     bool preserveFlankingZeros);
+                             std::vector<double>& xProcessed, std::vector<double>& yProcessed,
+                             bool preserveFlankingZeros);
 };
 
 
@@ -48,4 +46,4 @@ struct PWIZ_API_DECL ExtraZeroSamplesFilter
 } // namespace pwiz
 
 
-#endif // _ExtraZeroSamplesFilter_HPP_
+#endif // _EXTRAZEROSAMPLESFILTER_HPP_

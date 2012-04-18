@@ -628,13 +628,13 @@ void testZeroSamplesFilter() {
 
     // should be no change if we specify MS3
     SpectrumListPtr filteredList2(new 
-        SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(3),SpectrumList_ZeroSamplesFilter::REMOVE_ZEROS,0));
+        SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(3),SpectrumList_ZeroSamplesFilter::Mode_RemoveExtraZeros,0));
     SpectrumPtr filteredSpectrum2 = filteredList2->spectrum(0, true);
     unit_assert(filteredSpectrum2->getIntensityArray()->data[9] == inputIntensityArray[9]); 
 
 
     SpectrumListPtr filteredList(new 
-            SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(2),SpectrumList_ZeroSamplesFilter::REMOVE_ZEROS,0));
+            SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(2),SpectrumList_ZeroSamplesFilter::Mode_RemoveExtraZeros,0));
 
     SpectrumPtr filteredSpectrum = filteredList->spectrum(0, true);
 
@@ -648,7 +648,7 @@ void testZeroSamplesFilter() {
     // now add missing zeros
     int nzeros=10;
     SpectrumListPtr filteredList3(new 
-            SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(2),SpectrumList_ZeroSamplesFilter::ADD_MISSING_ZEROS,nzeros));
+            SpectrumList_ZeroSamplesFilter(originalList,IntegerSet(2),SpectrumList_ZeroSamplesFilter::Mode_AddMissingZeros,nzeros));
     filteredSpectrum = filteredList3->spectrum(0, true);
     unit_assert(filteredSpectrum->getIntensityArray()->data[0]==0);
     unit_assert(filteredSpectrum->getIntensityArray()->data[1]==0);

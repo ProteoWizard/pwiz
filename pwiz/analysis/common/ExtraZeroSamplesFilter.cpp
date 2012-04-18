@@ -24,9 +24,8 @@
 #define PWIZ_SOURCE
 
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "ExtraZeroSamplesFilter.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include <cmath>
 
 
 namespace pwiz {
@@ -35,27 +34,33 @@ namespace analysis {
 /// removes zero samples in signal profiles, except those flanking nonzero samples
 /// simply looks for runs of 0 values, removes all but start and end of run
 
-
 void ExtraZeroSamplesFilter::remove_zeros(const vector<double>& x, const vector<double>& y,
-                            vector<double>& xProcessed, vector<double>& yProcessed, bool bPreserveFlamkingZeros)
+                                          vector<double>& xProcessed, vector<double>& yProcessed,
+                                          bool preserveFlankingZeros)
 {
+    if (x.size() != y.size())
+        throw runtime_error("[ExtraZeroSamplesFilter::remove_zeros()] x and y arrays must be the same size");
+
     xProcessed.resize(0);
     yProcessed.resize(0);
-    if (bPreserveFlamkingZeros)
+    if (preserveFlankingZeros)
     {
-        if (x.size() > 3) {
+        if (y.size() > 3)
+        {
             xProcessed.reserve(x.size());
             yProcessed.reserve(y.size());
             // leave flanking zeros around non-zero data points
-            int i;
-            for (i=0; i < (int)y.size()-1;i++)
+            int i, end = y.size()-1;
+            for (i=0; i < end; ++i)
             {
-                if (y[i] || y[i+1] || (i && y[i-1])) {
+                if (y[i] || y[i+1] || (i && y[i-1]))
+                {
                     xProcessed.push_back(x[i]);
                     yProcessed.push_back(y[i]);
                 }
             }
-            if (y[i] || y[i-1]) {
+            if (y[i] || y[i-1])
+            {
                 xProcessed.push_back(x[i]);
                 yProcessed.push_back(y[i]);
             }
@@ -72,10 +77,10 @@ void ExtraZeroSamplesFilter::remove_zeros(const vector<double>& x, const vector<
     {
         xProcessed.reserve(x.size());
         yProcessed.reserve(y.size());
-        int i;
-        for (i=0; i < (int)y.size();i++)
+        for (size_t i=0; i < y.size(); ++i)
         {
-            if (y[i]) {
+            if (y[i])
+            {
                 xProcessed.push_back(x[i]);
                 yProcessed.push_back(y[i]);
             }

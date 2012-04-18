@@ -21,8 +21,8 @@
 //
 
 
-#ifndef _SPECTRUMLIST_ZeroSamplesFilter_HPP_ 
-#define _SPECTRUMLIST_ZeroSamplesFilter_HPP_ 
+#ifndef _SPECTRUMLIST_ZEROSAMPLESFILTER_HPP_ 
+#define _SPECTRUMLIST_ZEROSAMPLESFILTER_HPP_ 
 
 
 #include "pwiz/utility/misc/Export.hpp"
@@ -34,14 +34,17 @@ namespace pwiz {
 namespace analysis {
 
 
-/// SpectrumList implementation to return smoothed spectral data
+/// SpectrumList implementation to return spectra with or without extra zero samples
 class PWIZ_API_DECL SpectrumList_ZeroSamplesFilter : public msdata::SpectrumListWrapper
 {
     public:
 
-    enum mode_t {REMOVE_ZEROS,ADD_MISSING_ZEROS};
-    SpectrumList_ZeroSamplesFilter(const msdata::SpectrumListPtr& inner,const util::IntegerSet& msLevelsToFilter,
-        mode_t mode, size_t FlankingZeroCount);
+    enum Mode {Mode_RemoveExtraZeros, Mode_AddMissingZeros};
+
+    SpectrumList_ZeroSamplesFilter(const msdata::SpectrumListPtr& inner,
+                                   const util::IntegerSet& msLevelsToFilter,
+                                   Mode mode,
+                                   size_t FlankingZeroCount);
 
 
     static bool accept(const msdata::SpectrumListPtr& inner);
@@ -49,7 +52,7 @@ class PWIZ_API_DECL SpectrumList_ZeroSamplesFilter : public msdata::SpectrumList
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
 
     private:
-    const mode_t mode_; // REMOVE_ZEROS or ADD_MISSING_ZEROS
+    const Mode mode_; // Mode_RemoveExtraZeros or Mode_AddMissingZeros
     const size_t flankingZeroCount_; // used if adding missing zeros
     const util::IntegerSet msLevelsToFilter_;
 };
@@ -59,5 +62,4 @@ class PWIZ_API_DECL SpectrumList_ZeroSamplesFilter : public msdata::SpectrumList
 } // namespace pwiz
 
 
-#endif // _SPECTRUMLIST_ZeroSamplesFilter_HPP_ 
-
+#endif // _SPECTRUMLIST_ZEROSAMPLESFILTER_HPP_ 

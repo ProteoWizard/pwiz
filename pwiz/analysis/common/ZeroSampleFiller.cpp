@@ -22,8 +22,8 @@
 #define PWIZ_SOURCE
 
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "ZeroSampleFiller.hpp"
-#include "pwiz/utility/misc/Container.hpp"
 #include <cmath>
 
 
@@ -35,6 +35,9 @@ void ZeroSampleFiller::fill(const vector<double>& x, const vector<double>& y,
                             vector<double>& xFilled, vector<double>& yFilled,
                             size_t zeroSampleCount)
 {
+    if (x.size() != y.size())
+        throw runtime_error("[ZeroSampleFiller::fill()] x and y arrays must be the same size");
+
     // adjacent samples are expected to be within this tolerance
     const static double EPSILON = 1e-5;
 

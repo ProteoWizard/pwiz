@@ -162,13 +162,13 @@ SpectrumListPtr filterCreator_ZeroSamples(const MSData& msd, const string& arg)
         throw runtime_error("[SpectrumListFactory::filterCreator_ZeroSamples()] unknown mode \"" + action + "\"");
     string msLevelSets;
     getline(parser, msLevelSets);
-    if (""==msLevelSets) msLevelSets="0-99"; // default is all msLevels
+    if (""==msLevelSets) msLevelSets="1-"; // default is all msLevels
 
     IntegerSet msLevelsToFilter;
     msLevelsToFilter.parse(msLevelSets);
     return SpectrumListPtr(new 
         SpectrumList_ZeroSamplesFilter(msd.run.spectrumListPtr,msLevelsToFilter,
-        bRemover ? SpectrumList_ZeroSamplesFilter::REMOVE_ZEROS : SpectrumList_ZeroSamplesFilter::ADD_MISSING_ZEROS,
+        bRemover ? SpectrumList_ZeroSamplesFilter::Mode_RemoveExtraZeros : SpectrumList_ZeroSamplesFilter::Mode_AddMissingZeros,
         FlankingZeroCount));
 }
 

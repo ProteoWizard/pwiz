@@ -42,7 +42,7 @@ PWIZ_API_DECL
 SpectrumList_ZeroSamplesFilter::SpectrumList_ZeroSamplesFilter(
         const msdata::SpectrumListPtr& inner,
         const IntegerSet& msLevelsToFilter,
-        SpectrumList_ZeroSamplesFilter::mode_t mode, 
+        Mode mode, 
         size_t flankingZeroCount)
 :   SpectrumListWrapper(inner), mode_(mode), 
       flankingZeroCount_(flankingZeroCount), msLevelsToFilter_(msLevelsToFilter)
@@ -50,7 +50,7 @@ SpectrumList_ZeroSamplesFilter::SpectrumList_ZeroSamplesFilter(
     // add processing methods to the copy of the inner SpectrumList's data processing
     ProcessingMethod method;
     method.order = dp_->processingMethods.size();
-    if (SpectrumList_ZeroSamplesFilter::REMOVE_ZEROS == mode)
+    if (Mode_RemoveExtraZeros == mode)
     {
         method.userParams.push_back(UserParam("removed extra zero samples"));
     } 
@@ -74,8 +74,6 @@ PWIZ_API_DECL bool SpectrumList_ZeroSamplesFilter::accept(const msdata::Spectrum
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_ZeroSamplesFilter::spectrum(size_t index, bool getBinaryData) const
 {
-
-
     SpectrumPtr s = inner_->spectrum(index, true);
 
     if (!msLevelsToFilter_.contains(s->cvParam(MS_ms_level).valueAs<int>()))
@@ -86,7 +84,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ZeroSamplesFilter::spectrum(size_t index,
         vector<double>& mzs = s->getMZArray()->data;
         vector<double>& intensities = s->getIntensityArray()->data;
         vector<double> FilteredMZs, FilteredIntensities;
-        if (ADD_MISSING_ZEROS == mode_)
+        if (Mode_AddMissingZeros == mode_)
             ZeroSampleFiller().fill(mzs, intensities, FilteredMZs, FilteredIntensities, flankingZeroCount_);
         else
             ExtraZeroSamplesFilter().remove_zeros(mzs, intensities, FilteredMZs, FilteredIntensities,
