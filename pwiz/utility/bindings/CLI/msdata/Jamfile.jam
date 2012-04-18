@@ -42,6 +42,6 @@ unit-test-if-exists MSDataTest : MSDataTest.cpp : <conditional>@unit-test-requir
 unit-test-if-exists DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
 
 # MCC HACK: "The string binding is invalid" on exit; don't know how to fix it.
-unit-test-if-exists MSDataFileTest : MSDataFileTest.cpp : <conditional>@unit-test-requirements <toolset>msvc-10.0,<variant>debug:<build>no ;
+unit-test-if-exists MSDataFileTest : MSDataFileTest.cpp : <conditional>@unit-test-requirements <toolset>msvc-10.0,<variant>debug:<build>no <toolset>msvc-10.0express,<variant>debug:<build>no ;
 
 }
