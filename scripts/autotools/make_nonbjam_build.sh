@@ -1,6 +1,6 @@
 #!/bin/bash 
 #
-# makemake.sh uses autotools to create a GNU standard ("./configure ; make ; make install")
+# uses autotools to create a GNU standard ("./configure ; make ; make install")
 # build system for developers that just want to use pwiz without learning too much about it and bjam
 # this is achieved by examining the results of a "bjam d+2" Proteowizard build.
 #

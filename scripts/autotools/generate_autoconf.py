@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#  this is called by the script "makemake.sh"
+#  this is called by the script "make_nonbjam_build.sh"
 #
 # args are:
 #   full_path_to_pwiz_root (where scripts, pwiz_tools, pwiz etc are found)
@@ -56,13 +56,14 @@ if "-d" in args :
 
 if (len(args) < 3) :
 	print "usage: %s <pwizroot> <dir_with_build_log>"%args[0]
-	print "# normally this is called by the script makemake.sh"
+	print "# normally this is called by the script make_nonbjam_build.sh"
 	quit(1)
 	
 
 ac.set_pwizroot(args[1])
-workdir = args[2]
-logfile = "%s/build.log"%workdir
+workdir = ac.get_pwizroot()+"/autotools"
+logdir = args[2]
+logfile = "%s/build.log"%logdir
 print "using log file %s\n"%logfile
 
 def make_testname(testpath) : # /foo/bar/baz.cpp
@@ -91,10 +92,15 @@ def isTestFile(file) :
 
 def addShipDir(in_d,addTree=False) :
 	if not ".svn" in in_d :
+		if dbug :
+			print "addShipDir "+in_d
 		if not os.path.exists(in_d) :
-			if dbug :
-				print "addShipDir skipping nonexistent path %s"%in_d
-			return
+			d = ac.get_pwizroot() + "/" + in_d
+			if not os.path.exists(d) :
+				if dbug :
+					print "addShipDir skipping nonexistent path %s"%in_d
+				return
+			in_d = d;
 		d = os.path.abspath(in_d)
 		shipdirs.add(d)
 		if addTree:
@@ -268,6 +274,8 @@ for shipdir in shipdirs :
 		f = shipdir+"\\"+file
 		ext = file.partition(".")[2]
 		if (not stat.S_ISDIR(os.stat(f).st_mode)) and ext in exts or ext=="":
+			if dbug :
+				print "add "+f
 			z.add(f,ac.replace_pwizroot(f,"pwiz"))
 testfiles = set()
 for test in testargs : # grab data files
@@ -281,6 +289,8 @@ for test in testargs : # grab data files
 			if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
 				testfiles.add(ff)
 for f in testfiles :
+	if dbug:
+		print "add test "+f
 	z.add(f,ac.replace_pwizroot(f,"pwiz"))
 z.close()
 
