@@ -41,29 +41,47 @@ void ExtraZeroSamplesFilter::remove_zeros(const vector<double>& x, const vector<
 {
     xProcessed.resize(0);
     yProcessed.resize(0);
-    if (x.size() > 3) {
+    if (bPreserveFlamkingZeros)
+    {
+        if (x.size() > 3) {
+            xProcessed.reserve(x.size());
+            yProcessed.reserve(y.size());
+            // leave flanking zeros around non-zero data points
+            int i;
+            for (i=0; i < (int)y.size()-1;i++)
+            {
+                if (y[i] || y[i+1] || (i && y[i-1])) {
+                    xProcessed.push_back(x[i]);
+                    yProcessed.push_back(y[i]);
+                }
+            }
+            if (y[i] || y[i-1]) {
+                xProcessed.push_back(x[i]);
+                yProcessed.push_back(y[i]);
+            }
+            xProcessed.resize(xProcessed.size()); // offer to trim excess capacity
+            yProcessed.resize(yProcessed.size()); // offer to trim excess capacity
+        }
+        else
+        {
+            xProcessed = x;
+            yProcessed = y;
+        }
+    }
+    else
+    {
         xProcessed.reserve(x.size());
         yProcessed.reserve(y.size());
-        // leave flanking zeros around non-zero data points
         int i;
-        for (i=0; i < (int)y.size()-1;i++)
+        for (i=0; i < (int)y.size();i++)
         {
-            if (y[i] || y[i+1] || (i && y[i-1])) {
+            if (y[i]) {
                 xProcessed.push_back(x[i]);
                 yProcessed.push_back(y[i]);
             }
         }
-        if (y[i] || y[i-1]) {
-            xProcessed.push_back(x[i]);
-            yProcessed.push_back(y[i]);
-        }
         xProcessed.resize(xProcessed.size()); // offer to trim excess capacity
         yProcessed.resize(yProcessed.size()); // offer to trim excess capacity
-    }
-    else
-    {
-        xProcessed = x;
-        yProcessed = y;
     }
 }
 
