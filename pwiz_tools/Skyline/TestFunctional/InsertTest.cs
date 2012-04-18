@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(insertPeptidesDlg);
 
             // Test pasting a transition list.
-            SetClipboardTextUI(TRANSITIONS_CLIPBOARD_TEXT);
+            SetClipboardTextUI(TransitionsClipboardText);
             var insertTransitionListDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             PasteTransitions(insertTransitionListDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
             Assert.AreEqual(25, insertTransitionListDlg.TransitionRowCount);
@@ -147,6 +147,15 @@ namespace pwiz.SkylineTestFunctional
                 filterMatchedPeptidesDlg.AddFiltered = addFiltered;
                 filterMatchedPeptidesDlg.OkDialog();
             });
+        }
+
+        private string TransitionsClipboardText
+        {
+            get
+            {
+                return TRANSITIONS_CLIPBOARD_TEXT.Replace(".",
+                    CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator);
+            }
         }
 
         private const string PEPTIDES_CLIPBOARD_TEXT =
