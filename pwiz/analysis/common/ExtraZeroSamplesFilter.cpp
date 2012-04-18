@@ -1,5 +1,5 @@
 //
-// $Id: ZeroSamplesFilter.cpp  $
+// $Id$
 //
 //
 //

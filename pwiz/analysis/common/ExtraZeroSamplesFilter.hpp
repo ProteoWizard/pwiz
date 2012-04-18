@@ -1,5 +1,5 @@
 //
-// $Id: ExtraZeroSamplesFilter.hpp 3116 2011-11-11 23:02:31Z chambm $
+// $Id$
 //
 //
 // Original author: Brian Pratt <brian.pratt <a.t> insilicos.com>

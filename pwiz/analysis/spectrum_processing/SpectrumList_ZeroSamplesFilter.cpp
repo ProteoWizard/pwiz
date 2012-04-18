@@ -1,5 +1,5 @@
 //
-// $Id: SpectrumList_ZeroSamplesFilter.cpp 3180 2011-12-19 23:17:13Z chambm $
+// $Id$
 //
 //
 // Original author: Brian Pratt <brian.pratt <a.t> insilicos.com>
