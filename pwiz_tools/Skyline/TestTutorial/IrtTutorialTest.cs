@@ -545,8 +545,8 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.NamedPathSets = listNamedPathSets.ToArray();
                 importResultsDlg.OkDialog();
             });
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
-            WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);
+            WaitForConditionUI(5 * 60 * 1000, () => SkylineWindow.DocumentUI.Settings.HasResults &&
+                SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);    // 5 minutes
         }
 
         private static void VerifyRTRegression(double slope, double intercept, double r)

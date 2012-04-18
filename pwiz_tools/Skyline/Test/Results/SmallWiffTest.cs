@@ -74,8 +74,11 @@ namespace pwiz.SkylineTest.Results
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
+            string extWiff = ExtensionTestContext.ExtAbWiff;
+            string suffix = ExtensionTestContext.CanImportAbWiff ? "" : "-test";
+
             // Do file type checks
-            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion.wiff"));
+            MsDataFileImpl msData = new MsDataFileImpl(testFilesDir.GetTestPath("051309_digestion" + suffix + extWiff));
             Assert.IsTrue(msData.IsABFile);
             msData.Dispose();
 
@@ -95,17 +98,28 @@ namespace pwiz.SkylineTest.Results
                 testFilesDir.GetTestPath("SimpleWiffTest.sky"));
             File.Delete(ChromatogramCache.FinalPathForName(docContainer.DocumentFilePath, null));
 
-            string pathWiff = testFilesDir.GetTestPath("051309_digestion.wiff");
-            string[] dataIds = MsDataFileImpl.ReadIds(pathWiff);
-
             var listChromatograms = new List<ChromatogramSet>();
-            for (int i = 0; i < dataIds.Length; i++)
+
+            if (ExtensionTestContext.CanImportAbWiff)
             {
-                string nameSample = dataIds[i];
-                if (!Equals(nameSample, "test") && listChromatograms.Count == 0)
-                    continue;
-                string pathSample = SampleHelp.EncodePath(pathWiff, nameSample, i);
-                listChromatograms.Add(new ChromatogramSet(nameSample, new[] { pathSample }));
+                string pathWiff = testFilesDir.GetTestPath("051309_digestion.wiff");
+                string[] dataIds = MsDataFileImpl.ReadIds(pathWiff);
+
+                for (int i = 0; i < dataIds.Length; i++)
+                {
+                    string nameSample = dataIds[i];
+                    if (!Equals(nameSample, "test") && listChromatograms.Count == 0)
+                        continue;
+                    string pathSample = SampleHelp.EncodePath(pathWiff, nameSample, i);
+                    listChromatograms.Add(new ChromatogramSet(nameSample, new[] { pathSample }));
+                }
+            }
+            else
+            {
+                listChromatograms.Add(new ChromatogramSet("test",
+                    new[] { testFilesDir.GetTestPath("051309_digestion-test.mzML") }));
+                listChromatograms.Add(new ChromatogramSet("rfp9,before,h,1",
+                    new[] { testFilesDir.GetTestPath("051309_digestion-rfp9,before,h,1.mzML") }));
             }
 
             // Should have added test and one after

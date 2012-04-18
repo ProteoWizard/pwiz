@@ -81,7 +81,12 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         public void Dispose()
         {
+            // Move to a new name within the same directory
             string guidName = Guid.NewGuid().ToString();
+            string parentPath = Path.GetDirectoryName(FullPath);
+            if (parentPath != null)
+                guidName = Path.Combine(parentPath, guidName);
+
             try
             {
                 Helpers.TryTwice(() => Directory.Move(FullPath, guidName));

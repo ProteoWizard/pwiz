@@ -46,7 +46,9 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestExistingExperimentsTutorial()
         {
-            TestFilesZip = "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip";
+            TestFilesZip = ExtensionTestContext.CanImportAbWiff
+                               ? "https://skyline.gs.washington.edu/tutorials/ExistingQuant.zip"
+                               : "https://skyline.gs.washington.edu/tutorials/ExistingQuantMzml.zip";
             RunFunctionalTest();
         }
 
@@ -55,6 +57,8 @@ namespace pwiz.SkylineTestTutorial
 
         protected override void DoTest()
         {
+            var folderExistQuant = ExtensionTestContext.CanImportAbWiff ? "ExistingQuant" : "ExistingQuantMzml";
+
             // Preparing a Document to Accept a Transition List, p. 2
             var peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editListUI =
@@ -63,7 +67,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 editLibraryDlg.LibrarySpec =
                     new BiblioSpecLibSpec("Yeast_mini",
-                        TestFilesDir.GetTestPath(@"ExistingQuant\MRMer\Yeast_MRMer_min.blib"));
+                        TestFilesDir.GetTestPath(folderExistQuant + @"\MRMer\Yeast_MRMer_min.blib"));
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI, editListUI.OkDialog);
@@ -74,7 +78,7 @@ namespace pwiz.SkylineTestTutorial
                     buildBackgroundProteomeDlg.BuildNew = false;
                     buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast_mini";
                     buildBackgroundProteomeDlg.BackgroundProteomePath =
-                        TestFilesDir.GetTestPath(@"ExistingQuant\MRMer\Yeast_MRMer_mini.protdb");
+                        TestFilesDir.GetTestPath(folderExistQuant + @"\MRMer\Yeast_MRMer_mini.protdb");
                     buildBackgroundProteomeDlg.OkDialog();
                 });
             var modHeavyK = new StaticMod(HEAVY_K, "K", ModTerminus.C, false, null, LabelAtoms.C13 | LabelAtoms.N15,
@@ -95,7 +99,7 @@ namespace pwiz.SkylineTestTutorial
             // Inserting a Transition List With Associated Proteins, p. 6
             RunUI(() =>
             {
-                var filePath = TestFilesDir.GetTestPath(@"ExistingQuant\MRMer\silac_1_to_4.xls");
+                var filePath = TestFilesDir.GetTestPath(folderExistQuant + @"\MRMer\silac_1_to_4.xls");
                 SetExcelFileClipboardText(filePath, "Fixed", 3, false);
             });
             RunDlg<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg, pasteDlg =>
@@ -123,7 +127,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // Importing Data, p. 10.
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(@"ExistingQuant\MRMer\MRMer.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(folderExistQuant + @"\MRMer\MRMer.sky")));
             ImportResultsFile("silac_1_to_4.mzXML");
             FindNode("ETFP");
             RunUI(() =>
@@ -152,7 +156,7 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // Adjusting Peak Boundaries to Exclude Interference, p. 14.
-           RunUI(() => SkylineWindow.Undo());
+            RunUI(() => SkylineWindow.Undo());
             FindNode("ETFP");
             RunUI(() =>
             {  
@@ -196,7 +200,7 @@ namespace pwiz.SkylineTestTutorial
             // Pasting a Transition List into the Document, p. 18.
             RunUI(() =>
             {
-                var filePath = TestFilesDir.GetTestPath(@"ExistingQuant\Study 7\Study7 transition list.xls");
+                var filePath = TestFilesDir.GetTestPath(folderExistQuant + @"\Study 7\Study7 transition list.xls");
                 SetExcelFileClipboardText(filePath, "Simple", 6, false);
             });
             
@@ -217,7 +221,7 @@ namespace pwiz.SkylineTestTutorial
             AdjustModifications("AGLCQTFVYGGCR", true, 'V', 747.348);
             AdjustModifications("IVGGWECEK", true, 'V', 541.763);
             AdjustModifications("YEVQGEVFTKPQLWP", false, 'L', 913.974);
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(@"ExistingQuant\MRMer\Study7.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(folderExistQuant + @"\Study 7\Study7.sky")));
 
             // Importing Data from a Multiple Sample WIFF file, p. 23.
             var importResultsDlg1 = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
@@ -225,16 +229,23 @@ namespace pwiz.SkylineTestTutorial
                                                                         importResultsDlg1.GetDataSourcePathsFile(null));
             RunUI(() =>
             {
-               openDataSourceDialog1.CurrentDirectory = TestFilesDir.GetTestPath(@"ExistingQuant\Study 7");
-               openDataSourceDialog1.SelectAllFileType(".wiff");
+               openDataSourceDialog1.CurrentDirectory = TestFilesDir.GetTestPath(folderExistQuant + @"\Study 7");
+               openDataSourceDialog1.SelectAllFileType(ExtensionTestContext.ExtAbWiff);
             });
-            RunDlg<ImportResultsSamplesDlg>(openDataSourceDialog1.Open, importResultsSamplesDlg =>
+            if (ExtensionTestContext.CanImportAbWiff)
             {
-                importResultsSamplesDlg.CheckAll(false);
-                importResultsSamplesDlg.IncludeSample(1);
-                importResultsSamplesDlg.IncludeSample(12);
-                importResultsSamplesDlg.OkDialog();
-            });
+                RunDlg<ImportResultsSamplesDlg>(openDataSourceDialog1.Open, importResultsSamplesDlg =>
+                {
+                    importResultsSamplesDlg.CheckAll(false);
+                    importResultsSamplesDlg.IncludeSample(1);
+                    importResultsSamplesDlg.IncludeSample(12);
+                    importResultsSamplesDlg.OkDialog();
+                });
+            }
+            else
+            {
+                RunUI(openDataSourceDialog1.Open);
+            }
             RunDlg<ImportResultsNameDlg>(importResultsDlg1.OkDialog,
                 importResultsNameDlg => importResultsNameDlg.YesDialog());
             WaitForCondition(() =>
@@ -292,7 +303,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.OpenFile(
-                  TestFilesDir.GetTestPath(@"ExistingQuant\Study 7\Study II\Study 7ii (site 52).sky"));
+                  TestFilesDir.GetTestPath(folderExistQuant + @"\Study 7\Study II\Study 7ii (site 52).sky"));
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 NormalizeGraphToHeavy();
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);

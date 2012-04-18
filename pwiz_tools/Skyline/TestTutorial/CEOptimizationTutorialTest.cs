@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(5*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);    // 5 minutes
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 7, 27, 30, 120);
             var docUnsched = SkylineWindow.Document;
             AssertResult.IsDocumentResultsState(SkylineWindow.Document,
@@ -150,7 +150,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ArrangeGraphsTiled();
 
             });
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
 
             RemovePeptide("EGIHAQQK");
             RemovePeptide("IDALNENK");

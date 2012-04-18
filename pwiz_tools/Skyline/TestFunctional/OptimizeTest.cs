@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
             // First make sure the first settings change occurs
             WaitForDocumentChange(docCurrent);
             // Wait until everything is loaded
-            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(300*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
 
             RunUI(() => SkylineWindow.SaveDocument());
 

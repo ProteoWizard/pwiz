@@ -209,7 +209,7 @@ namespace pwiz.SkylineTestA
             int yeastLibIndex = docLibraries.IndexOf(library => Equals(library.Name, yeastLibSpec.Name));
 
             libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
-                docLibraries[anlLibIndex].Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+                docLibraries[anlLibIndex].Keys, defSetSetLight, defSetHeavy);
 
             // Test can match 15N
             Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
@@ -228,7 +228,7 @@ namespace pwiz.SkylineTestA
 
             // Test can match Cysteine (Implicit) and Met Ox (variable)
             libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
-                docLibraries[yeastLibIndex].Keys, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+                docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy);
             Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod => 
                 mod.Formula.Equals("C2H3ON") && !mod.IsVariable));
             Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod => 

@@ -108,6 +108,9 @@ namespace TestRunner
                     Console.WriteLine(e.InnerException.StackTrace);
                 }
             }
+
+//            Console.WriteLine("Press enter to continue...");
+//            Console.ReadLine();
         }
 
         // Run all test passes.
@@ -271,16 +274,16 @@ namespace TestRunner
                         stopwatch.Stop();
 
                         // HACK: for some reason, running an empty functional test releases memory used by other functional tests.
-                        try
-                        {
-                            var emptyTestObject = Activator.CreateInstance(_emptyTest._testClass);
-                            _emptyTest._setTestContext.Invoke(emptyTestObject, context);
-                            _emptyTest._testMethod.Invoke(emptyTestObject, null);
-                        }
-                        catch (Exception)
-                        {
-                            Console.Write("^"); // hint for now that something is failing
-                        }
+//                        try
+//                        {
+//                            var emptyTestObject = Activator.CreateInstance(_emptyTest._testClass);
+//                            _emptyTest._setTestContext.Invoke(emptyTestObject, context);
+//                            _emptyTest._testMethod.Invoke(emptyTestObject, null);
+//                        }
+//                        catch (Exception)
+//                        {
+//                            Console.Write("^"); // hint for now that something is failing
+//                        }
 
                         var managedMemory = GC.GetTotalMemory(true)/mb;
                         process.Refresh();

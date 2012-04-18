@@ -83,6 +83,20 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ExtAbWiff
+        {
+            get { return CanImportAbWiff ? ".wiff" : ".mzML"; }
+        }
+
+        public static bool CanImportAbWiff
+        {
+            get
+            {
+                // return false to import mzML
+                return !Program.NoVendorReaders;
+            }
+        }
+
         public static string ExtAgilentRaw
         {
             get { return CanImportAgilentRaw ? ".d" : ".mzML"; }

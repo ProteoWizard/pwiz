@@ -45,11 +45,14 @@ namespace pwiz.Skyline.Model.Results
 
     internal sealed class ChromCacheBuilder : ChromCacheWriter
     {
+        // Lock on this to access these variables
         private readonly SrmDocument _document;
         private LibraryRetentionTimes _libraryRetentionTimes;
         private int _currentFileIndex = -1;
         private FileBuildInfo _currentFileInfo;
         private string _tempFileSubsitute;
+
+        // Lock on _chromDataSets to access these variables
         private readonly List<PeptideChromDataSets> _chromDataSets = new List<PeptideChromDataSets>();
         private bool _writerStarted;
         private bool _readCompleted;
@@ -106,158 +109,187 @@ namespace pwiz.Skyline.Model.Results
         {
             lock (this)
             {
-                // If there is a temp file, rewind and retry last file
-                if (_tempFileSubsitute != null)
-                {
-                    _listCachedFiles.RemoveAt(--_currentFileIndex);
-                    if (_outStream != null)
-                    {
-                        try { _loader.StreamManager.Finish(_outStream); }
-                        catch (IOException) { }
-
-                        _outStream = null;
-                    }
-                }
-
-                if (_currentFileIndex >= MSDataFilePaths.Count)
-                {
-                    Complete(null);
-                    return;
-                }
-
-                // Check for cancellation on every chromatogram, because there
-                // have been some files that load VERY slowly, and appear to hang
-                // on a single file.
-                if (_loader.IsCanceled)
-                {
-                    _loader.UpdateProgress(_status = _status.Cancel());
-                    Complete(null);
-                    return;
-                }
-
-                // If not cancelled, update progress.
-                string dataFilePath = MSDataFilePaths[_currentFileIndex];
-
-                if (_tempFileSubsitute == null)
-                {
-                    string message = String.Format("Caching file {0}", dataFilePath);
-                    int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
-                    _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
-                    _loader.UpdateProgress(_status);
-                }
-
                 try
                 {
-                    string dataFilePathPart;
-                    dataFilePath = ChromatogramSet.GetExistingDataFilePath(CachePath, dataFilePath, out dataFilePathPart);                        
-                    if (dataFilePath == null)
-                        throw new FileNotFoundException(String.Format("The file {0} does not exist.", dataFilePathPart), dataFilePathPart);
-                    MSDataFilePaths[_currentFileIndex] = dataFilePath;
-
-                    if (_tempFileSubsitute != null)
-                        dataFilePath = dataFilePathPart = _tempFileSubsitute;
-
-                    // HACK: Force the thread that the writer will use into existence
-                    // This allowed teh DACServer Reader_Waters to function normally the first time through.
-                    // It is no longer necessary for the MassLynxRaw version of Reader_Waters,
-                    // but is kept to avoid destabilizing code changes.
-                    //
-                    // This does not actually start the loop, but calling the function once,
-                    // seems to reserve a thread somehow, so that the next call works.
-                    Action<int, bool> writer = WriteLoop;
-                    writer.BeginInvoke(_currentFileIndex, true, null, null);
-
-                    // Read the instrument data indexes
-                    int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
-                    if (sampleIndex == -1)
-                        sampleIndex = 0;
-
-                    // Once a ChromDataProvider is created, it owns disposing of the MSDataFileImpl.
-                    MsDataFileImpl inFile = null;
-                    ChromDataProvider provider = null;
-                    try
+                    BuildNextFileInner();
+                }
+                finally
+                {
+                    lock (_chromDataSets)
                     {
-                        inFile = new MsDataFileImpl(dataFilePathPart, sampleIndex);
-
-                        // Check for cancelation);
-                        if (_loader.IsCanceled)
-                        {
-                            _loader.UpdateProgress(_status = _status.Cancel());
-                            Complete(null);
-                            return;
-                        }
-                        if (_outStream == null)
-                            _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
-
-                        _currentFileInfo = new FileBuildInfo(inFile);
-
-                        _libraryRetentionTimes = null;
-
-                        // Read and write the mass spec data)
-                        if (ChromatogramDataProvider.HasChromatogramData(inFile))
-                            provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
-                        else if (SpectraChromDataProvider.HasSpectrumData(inFile))
-                        {                            
-                            if (_document.Settings.TransitionSettings.FullScan.IsEnabled)
-                                _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePathPart);
-
-                            provider = CreateSpectraChromProvider(inFile, _document);
-                        }
-                        else
-                        {
-                            throw new InvalidDataException(String.Format("The sample {0} contains no usable data.",
-                                                                         SampleHelp.GetFileSampleName(dataFilePath)));
-                        }
-
-                        Read(provider);
-
-                        _status = provider.Status;
-
-                        if (_status.IsCanceled)
-                            Complete(null);
-
-                        RemoveTempFile();
-                    }
-                    catch (LoadingTooSlowlyException x)
-                    {
-                        _status = x.Status;
-                        _tempFileSubsitute = VendorIssueHelper.CreateTempFileSubstitute(dataFilePathPart,
-                            sampleIndex, x, _loader, ref _status);
-                        // Trigger next call to BuildNextFile from the write thread
-                        PostChromDataSet(null, true);
-                    }
-                    finally
-                    {
-                        if (provider != null)
-                            provider.Dispose();
-                        else if (inFile != null)
-                            inFile.Dispose();
+                        // Release any writer thread.
+                        if (!_writerStarted)
+                            Monitor.Pulse(_chromDataSets);
                     }
                 }
-                catch (LoadCanceledException x)
+            }
+        }
+
+        private void BuildNextFileInner()
+        {
+            // If there is a temp file, rewind and retry last file
+            if (_tempFileSubsitute != null)
+            {
+                _listCachedFiles.RemoveAt(--_currentFileIndex);
+                if (_outStream != null)
+                {
+                    try { _loader.StreamManager.Finish(_outStream); }
+                    catch (IOException) { }
+
+                    _outStream = null;
+                }
+            }
+
+            if (_currentFileIndex >= MSDataFilePaths.Count)
+            {
+                ExitRead(null);
+                return;
+            }
+
+            // Check for cancellation on every chromatogram, because there
+            // have been some files that load VERY slowly, and appear to hang
+            // on a single file.
+            if (_loader.IsCanceled)
+            {
+                _loader.UpdateProgress(_status = _status.Cancel());
+                ExitRead(null);
+                return;
+            }
+
+            // If not cancelled, update progress.
+            string dataFilePath = MSDataFilePaths[_currentFileIndex];
+
+            if (_tempFileSubsitute == null)
+            {
+                string message = String.Format("Importing {0}", dataFilePath);
+                int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
+                _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
+                _loader.UpdateProgress(_status);
+            }
+
+            try
+            {
+                string dataFilePathPart;
+                dataFilePath = ChromatogramSet.GetExistingDataFilePath(CachePath, dataFilePath, out dataFilePathPart);                        
+                if (dataFilePath == null)
+                    throw new FileNotFoundException(String.Format("The file {0} does not exist.", dataFilePathPart), dataFilePathPart);
+                MSDataFilePaths[_currentFileIndex] = dataFilePath;
+
+                if (_tempFileSubsitute != null)
+                    dataFilePath = dataFilePathPart = _tempFileSubsitute;
+
+                // HACK: Force the thread that the writer will use into existence
+                // This allowed teh DACServer Reader_Waters to function normally the first time through.
+                // It is no longer necessary for the MassLynxRaw version of Reader_Waters,
+                // but is kept to avoid destabilizing code changes.
+                //
+                // This does not actually start the loop, but calling the function once,
+                // seems to reserve a thread somehow, so that the next call works.
+                Action<int, bool> writer = WriteLoop;
+                writer.BeginInvoke(_currentFileIndex, true, null, null);
+
+                // Read the instrument data indexes
+                int sampleIndex = SampleHelp.GetPathSampleIndexPart(dataFilePath);
+                if (sampleIndex == -1)
+                    sampleIndex = 0;
+
+                // Once a ChromDataProvider is created, it owns disposing of the MSDataFileImpl.
+                MsDataFileImpl inFile = null;
+                ChromDataProvider provider = null;
+                try
+                {
+                    inFile = new MsDataFileImpl(dataFilePathPart, sampleIndex);
+
+                    // Check for cancelation);
+                    if (_loader.IsCanceled)
+                    {
+                        _loader.UpdateProgress(_status = _status.Cancel());
+                        ExitRead(null);
+                        return;
+                    }
+                    if (_outStream == null)
+                        _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
+
+                    _currentFileInfo = new FileBuildInfo(inFile);
+
+                    _libraryRetentionTimes = null;
+
+                    // Read and write the mass spec data)
+                    if (ChromatogramDataProvider.HasChromatogramData(inFile))
+                        provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
+                    else if (SpectraChromDataProvider.HasSpectrumData(inFile))
+                    {                            
+                        if (_document.Settings.TransitionSettings.FullScan.IsEnabled)
+                            _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePathPart);
+
+                        provider = CreateSpectraChromProvider(inFile, _document);
+                    }
+                    else
+                    {
+                        throw new InvalidDataException(String.Format("The sample {0} contains no usable data.",
+                                                                        SampleHelp.GetFileSampleName(dataFilePath)));
+                    }
+
+                    Read(provider);
+
+                    _status = provider.Status;
+
+                    if (_status.IsCanceled)
+                        ExitRead(null);
+
+                    RemoveTempFile();
+                }
+                catch (LoadingTooSlowlyException x)
                 {
                     _status = x.Status;
-                    Complete(null);
+                    _tempFileSubsitute = VendorIssueHelper.CreateTempFileSubstitute(dataFilePathPart,
+                        sampleIndex, x, _loader, ref _status);
+                    // Trigger next call to BuildNextFile from the write thread
+                    PostChromDataSet(null, true);
                 }
-                catch (NoSrmDataException)
+                finally
                 {
-                    Complete(new InvalidDataException(String.Format("No SRM/MRM data found in {0}.",
-                        SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex]))));
+                    if (provider != null)
+                        provider.Dispose();
+                    else if (inFile != null)
+                        inFile.Dispose();
                 }
-                catch (Exception x)
-                {
-                    // Add a more generic message to an exception message that may
-                    // be fairly unintelligible to the user, but keep the exception
-                    // message, because ProteoWizard "Unsupported file format" comes
-                    // in on this channel.
-                    Complete(x);
-                }
+            }
+            catch (LoadCanceledException x)
+            {
+                _status = x.Status;
+                ExitRead(null);
+            }
+            catch (NoSrmDataException)
+            {
+                ExitRead(new InvalidDataException(String.Format("No SRM/MRM data found in {0}.",
+                    SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex]))));
+            }
+            catch (Exception x)
+            {
+                // Add a more generic message to an exception message that may
+                // be fairly unintelligible to the user, but keep the exception
+                // message, because ProteoWizard "Unsupported file format" comes
+                // in on this channel.
+                ExitRead(x);
+            }
+        }
+
+        private void ExitRead(Exception x)
+        {
+            Complete(x);
+            lock (_chromDataSets)
+            {
+                _writerStarted = false;
             }
         }
 
         private void Read(ChromDataProvider provider)
         {
-            _readCompleted = false;
+            lock (_chromDataSets)
+            {
+                _readCompleted = false;
+            }
 
             var dictPeptideChromData = new Dictionary<int, PeptideChromDataSets>();
             var listChromData = new List<PeptideChromDataSets>();
@@ -610,15 +642,15 @@ namespace pwiz.Skyline.Model.Results
                             do
                             {
                                 countSets = _chromDataSets.Count;
-                                // Wait 5 seconds for some work to complete.  In debug mode,
+                                // Wait 10 seconds for some work to complete.  In debug mode,
                                 // a shorter time may not be enough to load DLLs necessary
                                 // for the first iteration.
-                                completed = Monitor.Wait(_chromDataSets, 5000);
+                                completed = Monitor.Wait(_chromDataSets, 10*1000);
                             }
                             while (!completed && countSets != _chromDataSets.Count);
 
                             // Try calling the write loop directly on this thread.
-                            if (!completed)
+                            if (!completed && _chromDataSets.Count > 0)
                                 WriteLoop(_currentFileIndex, false);                                
                         }
 
@@ -628,6 +660,11 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
         }
+
+        /// <summary>
+        /// List of write threads for debugging write thread leaks.
+        /// </summary>
+        private static readonly List<Thread> WRITE_THREADS = new List<Thread>() ;
 
         private void WriteLoop(int currentFileIndex, bool primeThread)
         {
@@ -645,36 +682,49 @@ namespace pwiz.Skyline.Model.Results
                     PeptideChromDataSets chromDataSetNext;
                     lock (_chromDataSets)
                     {
-                        while (!_readCompleted && _chromDataSets.Count == 0)
-                            Monitor.Wait(_chromDataSets);
-
-                        // If reading is complete, and there are no more sets to process,
-                        // begin next file.
-                        if (_readCompleted && _chromDataSets.Count == 0)
+                        try
                         {
-                            // Write loop completion may have already been executed
-                            if (_currentFileIndex != currentFileIndex)
+                            if (WRITE_THREADS.Count > 0 && !_readCompleted)
+                                Console.WriteLine("Existing write threads: {0}", string.Join(", ", WRITE_THREADS.Select(t => t.ManagedThreadId)));
+                            WRITE_THREADS.Add(Thread.CurrentThread);
+                            while (_writerStarted && !_readCompleted && _chromDataSets.Count == 0)
+                                Monitor.Wait(_chromDataSets);
+
+                            if (!_writerStarted)
                                 return;
 
-                            string dataFilePath = MSDataFilePaths[_currentFileIndex];
-                            DateTime fileWriteTime = ChromCachedFile.GetLastWriteTime(dataFilePath);
-                            DateTime? runStartTime = _currentFileInfo.StartTime;
-                            _listCachedFiles.Add(new ChromCachedFile(dataFilePath, fileWriteTime, runStartTime, _currentFileInfo.InstrumentInfoList));
-                            _currentFileIndex++;
-
-                            // Allow the reader thread to exit
-                            lock (_chromDataSets)
+                            // If reading is complete, and there are no more sets to process,
+                            // begin next file.
+                            if (_readCompleted && _chromDataSets.Count == 0)
                             {
+                                // Once inside here, the thread is going to exit.
+                                _writerStarted = false;
+
+                                // Write loop completion may have already been executed
+                                if (_currentFileIndex != currentFileIndex)
+                                    return;
+
+                                string dataFilePath = MSDataFilePaths[_currentFileIndex];
+                                DateTime fileWriteTime = ChromCachedFile.GetLastWriteTime(dataFilePath);
+                                DateTime? runStartTime = _currentFileInfo.StartTime;
+                                _listCachedFiles.Add(new ChromCachedFile(dataFilePath, fileWriteTime, runStartTime, _currentFileInfo.InstrumentInfoList));
+                                _currentFileIndex++;
+
+                                // Allow the reader thread to exit
                                 Monitor.Pulse(_chromDataSets);
+
+                                Action build = BuildNextFile;
+                                build.BeginInvoke(null, null);
+                                return;
                             }
 
-                            Action build = BuildNextFile;
-                            build.BeginInvoke(null, null);
-                            return;
+                            chromDataSetNext = _chromDataSets[0];
+                            _chromDataSets.RemoveAt(0);
                         }
-
-                        chromDataSetNext = _chromDataSets[0];
-                        _chromDataSets.RemoveAt(0);
+                        finally
+                        {
+                            WRITE_THREADS.Remove(Thread.CurrentThread);
+                        }
                     }
 
                     chromDataSetNext.PickChromatogramPeaks();

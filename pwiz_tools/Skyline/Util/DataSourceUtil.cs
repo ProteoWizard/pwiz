@@ -27,12 +27,20 @@ namespace pwiz.Skyline.Util
 {
     public static class DataSourceUtil
     {
+        public const string EXT_THERMO_RAW = ".raw";
+        public const string EXT_WIFF = ".wiff";
+        public const string EXT_MZXML =  ".mzxml";
+        public const string EXT_MZDATA = ".mzdata";
+        public const string EXT_MZML = ".mzml";
+        public const string EXT_XML = ".xml";
+
         public const string TYPE_WIFF = "ABSciex WIFF";
         public const string TYPE_AGILENT = "Agilent Data";
         public const string TYPE_THERMO_RAW = "Thermo RAW";
         public const string TYPE_WATERS_RAW = "Waters RAW";
         public const string TYPE_MZML = "mzML";
         public const string TYPE_MZXML = "mzXML";
+        public const string TYPE_MZDATA = "mzData";
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
 
@@ -73,19 +81,24 @@ namespace pwiz.Skyline.Util
 
             switch (fileInfo.Extension.ToLower())
             {
-                case ".raw": return TYPE_THERMO_RAW;
-                case ".wiff": return TYPE_WIFF;
+                case EXT_THERMO_RAW: return TYPE_THERMO_RAW;
+                case EXT_WIFF: return TYPE_WIFF;
                 //case ".mgf": return "Mascot Generic";
                 //case ".dta": return "Sequest DTA";
                 //case ".yep": return "Bruker YEP";
                 //case ".baf": return "Bruker BAF";
                 //case ".ms2": return "MS2";
-                case ".mzxml": return TYPE_MZXML;
-                case ".mzdata": return "mzData";
-                case ".mzml": return TYPE_MZML;
-                case ".xml": return GetSourceTypeFromXML(fileInfo.FullName);
+                case EXT_MZXML: return TYPE_MZXML;
+                case EXT_MZDATA: return TYPE_MZDATA;
+                case EXT_MZML: return TYPE_MZML;
+                case EXT_XML: return GetSourceTypeFromXML(fileInfo.FullName);
                 default: return UNKNOWN_TYPE;
             }
+        }
+
+        public static bool IsWiffFile(string fileName)
+        {
+            return fileName.ToLower().EndsWith(EXT_WIFF);
         }
 
         public static bool IsFolderType(string type)
@@ -103,7 +116,7 @@ namespace pwiz.Skyline.Util
             XmlReaderSettings settings = new XmlReaderSettings
             {
                 ValidationType = ValidationType.None,
-                DtdProcessing = System.Xml.DtdProcessing.Prohibit,
+                DtdProcessing = DtdProcessing.Prohibit,
                 XmlResolver = null
             };
             using (XmlReader reader = XmlReader.Create(new StreamReader(filepath, true), settings))
@@ -205,7 +218,7 @@ namespace pwiz.Skyline.Util
                         string dataSource = dataFileInfo.FullName;
                         // Only .wiff files currently support multiple samples per file.
                         // Keep from doing the extra work on other types.
-                        if (dataSource.ToLower().EndsWith(".wiff"))
+                        if (IsWiffFile(dataSource))
                         {
                             string[] paths = GetWiffSubPaths(dataSource);
                             if (paths == null)

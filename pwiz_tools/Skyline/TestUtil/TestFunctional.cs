@@ -43,7 +43,7 @@ namespace pwiz.SkylineTestUtil
     public abstract class AbstractFunctionalTest
     {
         private const int SLEEP_INTERVAL = 100;
-        private const int WAIT_TIME = 5*60*1000;    // 5 minutes
+        private const int WAIT_TIME = 60*1000;    // 1 minute
         private const int WAIT_CYCLES = WAIT_TIME/SLEEP_INTERVAL;
 
         /// <summary>
@@ -275,7 +275,7 @@ namespace pwiz.SkylineTestUtil
                     return tForm;
 
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < WAIT_CYCLES - 1, "Timeout exceeded in WaitForOpenForm");
+                Assert.IsTrue(i < WAIT_CYCLES - 1, string.Format("Timeout {0} seconds exceeded in WaitForOpenForm", WAIT_TIME/1000));
             }
             return null;
         }
@@ -302,7 +302,7 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
-            Assert.Fail("Timeout exceeded in WaitForClosedForm");
+            Assert.Fail(string.Format("Timeout {0} seconds exceeded in WaitForClosedForm", WAIT_TIME/1000));
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
@@ -313,16 +313,16 @@ namespace pwiz.SkylineTestUtil
             return SkylineWindow.Document;
         }
 
-        public static SrmDocument WaitForDocumentLoaded()
+        public static SrmDocument WaitForDocumentLoaded(int millis = WAIT_TIME)
         {
-            WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.IsLoaded);
+            WaitForConditionUI(millis, () => SkylineWindow.DocumentUI.Settings.IsLoaded);
             return SkylineWindow.Document;
         }
 
-        public static SrmDocument WaitForDocumentChangeLoaded(SrmDocument docCurrent)
+        public static SrmDocument WaitForDocumentChangeLoaded(SrmDocument docCurrent, int millis = WAIT_TIME)
         {
             WaitForDocumentChange(docCurrent);
-            return WaitForDocumentLoaded();
+            return WaitForDocumentLoaded(millis);
         }
 
         public static bool WaitForCondition(Func<bool> func)
@@ -338,7 +338,7 @@ namespace pwiz.SkylineTestUtil
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, "Timeout exceeded in WaitForCondition");
+                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForCondition", millis/1000));
             }
             return false;
         }
@@ -358,7 +358,7 @@ namespace pwiz.SkylineTestUtil
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, "Timeout exceeded in WaitForConditionUI");
+                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForConditionUI", millis/1000));
             }
             return false;
         }
@@ -380,10 +380,12 @@ namespace pwiz.SkylineTestUtil
         protected void RunFunctionalTest()
         {
             Program.Init();
-            var threadTest = new Thread(WaitForSkyline) {Name = "Functional test thread"};
+            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+            var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread" };
             threadTest.Start();
             Program.Main();
             threadTest.Join();
+            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
             if (_testExceptions.Count > 0)
             {
                 Assert.Fail(_testExceptions[0].ToString());
@@ -426,19 +428,23 @@ namespace pwiz.SkylineTestUtil
             if (TestFilesDirs != null)
             {
                 foreach(TestFilesDir dir in TestFilesDirs)
-                    dir.Dispose();
+                {
+                    try
+                    {
+                        dir.Dispose();
+                    }
+                    catch (Exception x)
+                    {
+                        _testExceptions.Add(x);
+                    }
+                }
             }
         }
 
         private void RunTest()
         {
             // Clean-up before running the test
-            RunUI(() => 
-                {
-                    SkylineWindow.SequenceTree.UseKeysOverride = true;
-                    SkylineWindow.ModifyDocument("Set test settings",
-                                                 doc => doc.ChangeSettings(SrmSettingsList.GetDefault()));
-                });
+            RunUI(() => SkylineWindow.SequenceTree.UseKeysOverride = true);
             
             // Use internal clipboard for testing so that we don't collide with other processes
             // using the clipboard during a test run.
@@ -622,7 +628,8 @@ namespace pwiz.SkylineTestUtil
                });
             WaitForConditionUI(() => importResultsDlg.NamedPathSets != null);
             RunUI(importResultsDlg.OkDialog);
-            WaitForCondition(() => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
+            WaitForCondition(420 * 1000,
+                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
         }
 
         #endregion

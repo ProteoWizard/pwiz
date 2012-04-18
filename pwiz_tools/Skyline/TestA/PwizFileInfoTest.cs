@@ -16,7 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Collections.Generic;
+
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
@@ -44,75 +44,48 @@ namespace pwiz.SkylineTestA
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Waters file (.raw directory)
-            string path = testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw");
-            MsDataFileImpl msDataFile;
-            List<MsInstrumentConfigInfo> instrumentInfoList;
-            MsInstrumentConfigInfo instrument;
             if (ExtensionTestContext.CanImportWatersRaw)
             {
-                msDataFile = new MsDataFileImpl(path);
-                instrumentInfoList = msDataFile.GetInstrumentConfigInfoList().ToList();
-                Assert.AreEqual(1, instrumentInfoList.Count);
-                instrument = instrumentInfoList[0];
-                Assert.IsFalse(instrument.IsEmpty);
-                Assert.AreEqual("Waters instrument model", instrument.Model);
-                Assert.AreEqual("", instrument.Ionization);
-                Assert.AreEqual("", instrument.Analyzer);
-                Assert.AreEqual("", instrument.Detector);
-                msDataFile.Dispose();
+                VerifyInstrumentInfo(testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"),
+                    "Waters instrument model", "", "", "");
             }
 
             // ABI .wiff file
-            path = testFilesDir.GetTestPath("051309_digestion.wiff");
-            msDataFile = new MsDataFileImpl(path);
-            instrumentInfoList = msDataFile.GetInstrumentConfigInfoList().ToList();
-            Assert.AreEqual(1, instrumentInfoList.Count);
-            instrument = instrumentInfoList[0];
-            Assert.IsFalse(instrument.IsEmpty);
-            Assert.AreEqual("Applied Biosystems instrument model", instrument.Model);          
-            Assert.AreEqual("", instrument.Ionization);
-            Assert.AreEqual("", instrument.Analyzer);
-            Assert.AreEqual("", instrument.Detector);
-            msDataFile.Dispose();
+            if (ExtensionTestContext.CanImportAbWiff)
+            {
+                VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion.wiff"),
+                    "Applied Biosystems instrument model", "", "", "");
+            }
 
             // MzWiff generated mzXML files
-            path = testFilesDir.GetTestPath("051309_digestion-s3.mzXML");
-            msDataFile = new MsDataFileImpl(path);
-            instrumentInfoList = msDataFile.GetInstrumentConfigInfoList().ToList();
-            Assert.AreEqual(1, instrumentInfoList.Count);
-            instrument = instrumentInfoList[0];
-            Assert.IsFalse(instrument.IsEmpty);
-            Assert.AreEqual("4000 Q Trap", instrument.Model);
-            Assert.AreEqual("electrospray ionization", instrument.Ionization);
-            Assert.AreEqual("TOFMS", instrument.Analyzer);
-            Assert.AreEqual("", instrument.Detector);
-            msDataFile.Dispose();
+            VerifyInstrumentInfo(testFilesDir.GetTestPath("051309_digestion-s3.mzXML"),
+                "4000 Q Trap", "electrospray ionization", "TOFMS", "");
 
             // Agilent file (.d directory)
-            path = testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d");
-            msDataFile = new MsDataFileImpl(path);
-            instrumentInfoList = msDataFile.GetInstrumentConfigInfoList().ToList();
-            Assert.AreEqual(1, instrumentInfoList.Count);
-            instrument = instrumentInfoList[0];
-            Assert.IsFalse(instrument.IsEmpty);
-            Assert.AreEqual("Agilent instrument model", instrument.Model);
-            Assert.AreEqual("nanoelectrospray", instrument.Ionization);
-            Assert.AreEqual("quadrupole/quadrupole/quadrupole", instrument.Analyzer);
-            Assert.AreEqual("electron multiplier", instrument.Detector);
-            msDataFile.Dispose();
+            if (ExtensionTestContext.CanImportAgilentRaw)
+            {
+                VerifyInstrumentInfo(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d"),
+                    "Agilent instrument model", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
+            }
 
             // Thermo .raw|mzML file
-            path = testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ExtensionTestContext.ExtThermoRaw);
-            msDataFile = new MsDataFileImpl(path);
-            instrumentInfoList = msDataFile.GetInstrumentConfigInfoList().ToList();
-            Assert.AreEqual(1, instrumentInfoList.Count);
-            instrument = instrumentInfoList[0];
-            Assert.IsFalse(instrument.IsEmpty);
-            Assert.AreEqual("TSQ Vantage", instrument.Model);
-            Assert.AreEqual("nanoelectrospray", instrument.Ionization);
-            Assert.AreEqual("quadrupole/quadrupole/quadrupole", instrument.Analyzer);
-            Assert.AreEqual("electron multiplier", instrument.Detector);
-            msDataFile.Dispose();
+            VerifyInstrumentInfo(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ExtensionTestContext.ExtThermoRaw),
+                "TSQ Vantage", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
+        }
+
+        private static void VerifyInstrumentInfo(string path, string model, string ionization, string analyzer, string detector)
+        {
+            using (var msDataFile = new MsDataFileImpl(path))
+            {
+                var instrumentInfoList = msDataFile.GetInstrumentConfigInfoList().ToList();
+                Assert.AreEqual(1, instrumentInfoList.Count);
+                var instrument = instrumentInfoList[0];
+                Assert.IsFalse(instrument.IsEmpty);
+                Assert.AreEqual(model, instrument.Model);
+                Assert.AreEqual(ionization, instrument.Ionization);
+                Assert.AreEqual(analyzer, instrument.Analyzer);
+                Assert.AreEqual(detector, instrument.Detector);
+            }
         }
     }
 }

@@ -281,7 +281,7 @@ namespace pwiz.Skyline.FileUI
             {
                 // Only .wiff files currently support multiple samples per file.
                 // Keep from doing the extra work on other types.
-                if (dataSource.ToLower().EndsWith(".wiff"))
+                if (DataSourceUtil.IsWiffFile(dataSource))
                 {
                     string[] paths = GetWiffSubPaths(dataSource);
                     if (paths == null)
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.FileUI
             {
                 // Only .wiff files currently support multiple samples per file.
                 // Keep from doing the extra work on other types.
-                if (dataSource.ToLower().EndsWith(".wiff"))
+                if (DataSourceUtil.IsWiffFile(dataSource))
                 {
                     string[] paths = GetWiffSubPaths(dataSource);
                     if (paths == null)

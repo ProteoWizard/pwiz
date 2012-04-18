@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.Globalization;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -104,10 +105,14 @@ namespace pwiz.SkylineTestFunctional
             var insertTransitionListDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPasteTransitionListDlg);
             PasteTransitions(insertTransitionListDlg, BackgroundProteome.DuplicateProteinsFilter.AddToAll, true, true);
             Assert.AreEqual(25, insertTransitionListDlg.TransitionRowCount);
+            RunUI(insertTransitionListDlg.ValidateCells);
+            WaitForConditionUI(() => insertTransitionListDlg.ErrorText != null);
+            RunUI(() => Assert.IsTrue(insertTransitionListDlg.ErrorText.Contains((506.7821).ToString(CultureInfo.CurrentCulture)), 
+                string.Format("Unexpected error: {0}", insertTransitionListDlg.ErrorText)));
+
             RunUI(() =>
             {
                 // Test validation, OkDialog. This used to throw an exception.
-                insertTransitionListDlg.ValidateCells();
                 insertTransitionListDlg.OkDialog();
                 insertTransitionListDlg.OkDialog();
                 Assert.IsTrue(insertTransitionListDlg.DialogResult == DialogResult.None, "Second call to PasteDlg.OkDialog succeeded unexpectedly");

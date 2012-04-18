@@ -44,12 +44,16 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestMs1Tutorial()
         {
-            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/MS1Filtering.zip";
+            TestFilesZip = ExtensionTestContext.CanImportAbWiff
+                ? @"https://skyline.gs.washington.edu/tutorials/MS1Filtering.zip"
+                : @"https://skyline.gs.washington.edu/tutorials/MS1FilteringMzml.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            var folderMs1Filtering = ExtensionTestContext.CanImportAbWiff ? "Ms1Filtering" : "Ms1FilteringMzml";
+
             SrmDocument doc = SkylineWindow.Document;
 
             // Configure the peptide settings for your new document.
@@ -82,12 +86,12 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.OkWizardPage();
                 IList<string> inputPaths = new List<string>
                  {
-                     TestFilesDir.GetTestPath(@"MS1Filtering\100803_0005b_MCF7_TiTip3.group.xml")
+                     TestFilesDir.GetTestPath(folderMs1Filtering + @"\100803_0005b_MCF7_TiTip3.group.xml")
                  };
                 buildLibraryDlg.AddInputFiles(inputPaths);
                 buildLibraryDlg.OkWizardPage();
             });
-            Assert.IsTrue(WaitForCondition(() =>
+            Assert.IsTrue(WaitForConditionUI(() =>
                 peptideSettingsUI.AvailableLibraries.Contains(libraryName)));
             RunUI(() =>
             {
@@ -125,12 +129,12 @@ namespace pwiz.SkylineTestTutorial
             // Populating the Skyline peptide tree.
             doc = SkylineWindow.Document;
             RunUI(
-                () => SkylineWindow.ImportFastaFile(TestFilesDir.GetTestPath(@"MS1Filtering\12_proteins.062011.fasta")));
+                () => SkylineWindow.ImportFastaFile(TestFilesDir.GetTestPath(folderMs1Filtering + @"\12_proteins.062011.fasta")));
             WaitForDocumentChange(doc);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 40, 40, 120);
 
             // Select the first transition group.
-            var documentPath = TestFilesDir.GetTestPath(@"MS1Filtering\Template_MS1 Filtering_1118_2011_3.sky");
+            var documentPath = TestFilesDir.GetTestPath(folderMs1Filtering + @"\Template_MS1 Filtering_1118_2011_3.sky");
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedPath =
@@ -146,7 +150,7 @@ namespace pwiz.SkylineTestTutorial
 
             // MS1 filtering of raw data imported into Skyline.
             doc = SkylineWindow.Document;
-            ImportResultsFile("100803_0005b_MCF7_TiTip3.wiff");
+            ImportResultsFile("100803_0005b_MCF7_TiTip3" + ExtensionTestContext.ExtAbWiff);
             WaitForDocumentChange(doc);
 
             doc = SkylineWindow.Document;
@@ -207,7 +211,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Eliminate extraneous chromatogram data.
             doc = SkylineWindow.Document;
-            var minimizedFile = TestFilesDir.GetTestPath(@"MS1Filtering\Template_MS1Filtering_1118_2011_3-2min.sky");
+            var minimizedFile = TestFilesDir.GetTestPath(folderMs1Filtering + @"\Template_MS1Filtering_1118_2011_3-2min.sky");
             var cacheFile = minimizedFile + "d";
             var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             RunDlg<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults, dlg =>

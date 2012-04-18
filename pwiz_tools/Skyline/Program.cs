@@ -138,6 +138,9 @@ namespace pwiz.Skyline
                 Console.WriteLine(x.Message);
                 Console.Write(x.StackTrace);
             }
+
+            // Release main window memory during tests
+            MainWindow = null;
         }
 
         public static void Init()
