@@ -28,6 +28,8 @@ import autotools_common as ac
 
 configs=["Debug|Win32","Release|Win32"]
 
+files_not_to_be_shipped=["pwiz.vcproj","pwiz.sln"] # these are just confusing bjam wrappers
+
 dbug = False
 
 args = sys.argv
@@ -126,7 +128,7 @@ def addShipDir(d,addTree=False) :
 					addShipDir(ddd,addTree)
 
 def addFile(file) :
-	if not ".svn" in file :
+	if not ".svn" in file and not file in files_not_to_be_shipped :
 		addShipDir(os.path.dirname(file))
 		if ac.isTestFile(file) or ac.isExampleFile(file) :
 			projects.add(file)

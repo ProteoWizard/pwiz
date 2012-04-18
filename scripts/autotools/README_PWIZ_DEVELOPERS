@@ -2,7 +2,7 @@ GNU Autotools and native MSVC Projects for ProteoWizard
 
 The idea here is to make it easier for projects that aren't part of ProteoWizard to use the pwiz libraries by providing familiar MSVC and GNU autotools build files for their use.
 
-The hope is to increase uptake of ProteoWizard in existing projects that don't use(and/or don't want to use) bjam, and that may use already-installed Boost versions different than that used in the bjam build.
+The hope is to increase uptake of ProteoWizard in existing projects that don't use (and/or don't want to use) bjam, and that may use already-installed Boost versions different than that used in the bjam build.
 
 Rather than maintain three different build systems, we have Python scripts that observe the operation of the bjam based gcc and msvc builds and create native build files from that.  In this way as the bjam build evolves the other builds will too, with minimal intervention.
 

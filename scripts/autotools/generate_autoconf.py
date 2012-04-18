@@ -267,13 +267,13 @@ for d in ["pwiz_aux"] : # any others not mentioned?
 fz=ac.get_pwizroot()+"/scripts/autotools/libpwiz_src.tgz"
 print "creating autotools source build distribution kit %s"%(fz)
 z = tarfile.open(fz,"w|gz")
-exts = ["h","hpp","c","cpp","cxx","am","inl"]
+exts = ["h","hpp","c","cpp","cxx","am","inl",""]
 
 for shipdir in shipdirs :
 	for file in os.listdir(shipdir) :
-		f = shipdir+"\\"+file
+		f = shipdir+"/"+file
 		ext = file.partition(".")[2]
-		if (not stat.S_ISDIR(os.stat(f).st_mode)) and ext in exts or ext=="":
+		if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts)) :
 			if dbug :
 				print "add "+f
 			z.add(f,ac.replace_pwizroot(f,"pwiz"))
@@ -284,7 +284,7 @@ for test in testargs : # grab data files
 		ext = f.rpartition(".")[2]
 		d = os.path.dirname(f) # go ahead and grab anything else with same .ext
 		for file in os.listdir(d) :
-			ff = d+"\\"+file
+			ff = d+"/"+file
 			ext2 = ff.rpartition(".")[2]
 			if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
 				testfiles.add(ff)

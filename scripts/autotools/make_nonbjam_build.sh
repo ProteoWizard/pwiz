@@ -10,10 +10,10 @@
 # note ProteoWizard sprinkles its header files throughout the code tree
 # so we'll probably always do a full source install
 #
-
+#
 # assume we're in ProteoWizard/pwiz/scripts/autotools
 export HERE=`pwd`
-pushd ../..
+pushd $HERE/../..
 export PWIZROOT=`pwd`
 export TMPDIR=`mktemp -d`
 if [ $# -eq 0 ] ; then
