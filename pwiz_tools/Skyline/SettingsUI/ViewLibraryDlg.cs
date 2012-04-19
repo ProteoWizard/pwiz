@@ -362,12 +362,12 @@ namespace pwiz.Skyline.SettingsUI
                 listPeptide.Invalidate(listPeptide.GetItemRectangle(listPeptide.SelectedIndex));
         }
 
-        protected override void OnClosed(EventArgs e)
+        protected override void OnHandleDestroyed(EventArgs e)
         {
             if (_selectedLibrary != null)
                 _selectedLibrary.ReadStream.CloseStream();
             _documentUiContainer.UnlistenUI(OnDocumentChange);
-            base.OnClosed(e);
+            base.OnHandleDestroyed(e);
         }
 
         protected override void OnClosing(CancelEventArgs e)
