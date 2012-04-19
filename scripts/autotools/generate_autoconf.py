@@ -55,16 +55,20 @@ if "-d" in args :
 
 
 if (len(args) < 3) :
-	print "usage: %s <pwizroot> <dir_with_build_log>"%args[0]
+	print "usage: %s <pwizroot> <dir_with_build_log> [dryrun]"%args[0]
 	print "# normally this is called by the script make_nonbjam_build.sh"
 	quit(1)
 	
 
 ac.set_pwizroot(args[1])
-workdir = ac.get_pwizroot()+"/autotools"
-logdir = args[2]
+logdir = os.path.abspath(args[2])
 logfile = "%s/build.log"%logdir
 print "using log file %s\n"%logfile
+
+dryrun = False
+if (len(args) > 3) :
+	if (args[3]=='dryrun') :
+		dryrun = true
 
 def make_testname(testpath) : # /foo/bar/baz.cpp
 	noext = os.path.basename(testpath).rpartition(".")[0] # baz
@@ -171,7 +175,7 @@ versionDotted = "%s.%s.%s"%(version[0],version[1],version[2])
 # boost libs stuff -  putting "threads" first matters
 boostlibs=["THREADS","FILESYSTEM","REGEX","SERIALIZATION","SYSTEM","IOSTREAMS","DATE_TIME","PROGRAM_OPTIONS"]
 
-f = open('%s/configure.ac'%workdir, 'w')
+f = open('%s/configure.ac'%logdir, 'w')
 for configac in open("%s/pwiz/configure.scan"%ac.get_pwizroot()) :
 	configac=configac.replace("FULL-PACKAGE-NAME",pkgname)
 	configac=configac.replace("VERSION",versionDotted)
@@ -195,7 +199,7 @@ for configac in open("%s/pwiz/configure.scan"%ac.get_pwizroot()) :
 	f.write(configac)
 f.close()
 
-makefileam = open('%s/Makefile.am'%workdir, 'w')
+makefileam = open('%s/Makefile.am'%logdir, 'w')
 # subdir-objects avoids trouble with multiple Version.cpp files etc
 makefileam.write('AUTOMAKE_OPTIONS = subdir-objects\n')
 libname = '%s.la'%(pkgname)
@@ -250,47 +254,58 @@ for example in examples :
 	
 makefileam.close()
 
-# create a source tarball 
-for ipath in includes :
-	addShipDir(ipath)
-addShipDir(workdir)
-addShipDir(ac.get_pwizroot())
+if (not dryrun) :
+	os.system("autoconf configure.ac > configure")
+	os.system("chmod a+x configure")
+	os.system("automake --add-missing  --copy")
 
-# include the whole boost_aux tree
-for shipdir in shipdirs :
-	if "boost_aux" in shipdir : # recurse into this one
-		addShipDir(shipdir,addTree=True)
-		break
-for d in ["pwiz_aux"] : # any others not mentioned?
-	addShipDir(ac.get_pwizroot()+"/"+d,addTree=True)
+	# create a source tarball 
+	for ipath in includes :
+		addShipDir(ipath)
+	addShipDir(ac.get_pwizroot())
 
-fz=ac.get_pwizroot()+"/scripts/autotools/libpwiz_src.tgz"
-print "creating autotools source build distribution kit %s"%(fz)
-z = tarfile.open(fz,"w|gz")
-exts = ["h","hpp","c","cpp","cxx","am","inl",""]
+	# include the whole boost_aux tree
+	for shipdir in shipdirs :
+		if "boost_aux" in shipdir : # recurse into this one
+			addShipDir(shipdir,addTree=True)
+			break
+	for d in ["pwiz_aux"] : # any others not mentioned?
+		addShipDir(ac.get_pwizroot()+"/"+d,addTree=True)
 
-for shipdir in shipdirs :
-	for file in os.listdir(shipdir) :
-		f = shipdir+"/"+file
+	fz=ac.get_pwizroot()+"/scripts/autotools/libpwiz_src.tgz"
+	print "creating autotools source build distribution kit %s"%(fz)
+	z = tarfile.open(fz,"w|gz")
+	exts = ["h","hpp","c","cpp","cxx","am","inl",""]
+
+	for shipdir in shipdirs :
+		for file in os.listdir(shipdir) :
+			f = shipdir+"/"+file
+			ext = file.partition(".")[2]
+			if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts)) :
+				if dbug :
+					print "add "+f
+				z.add(f,ac.replace_pwizroot(f,"pwiz"))
+	for file in os.listdir(logdir) :
+		f = logdir+"/"+file
 		ext = file.partition(".")[2]
 		if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts)) :
 			if dbug :
 				print "add "+f
-			z.add(f,ac.replace_pwizroot(f,"pwiz"))
-testfiles = set()
-for test in testargs : # grab data files
-	f = absname(testargs[test])
-	if (os.path.exists(f)) :
-		ext = f.rpartition(".")[2]
-		d = os.path.dirname(f) # go ahead and grab anything else with same .ext
-		for file in os.listdir(d) :
-			ff = d+"/"+file
-			ext2 = ff.rpartition(".")[2]
-			if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
-				testfiles.add(ff)
-for f in testfiles :
-	if dbug:
-		print "add test "+f
-	z.add(f,ac.replace_pwizroot(f,"pwiz"))
-z.close()
+			z.add(f,f.replace(logdir,"pwiz/autotools"))
+	testfiles = set()
+	for test in testargs : # grab data files
+		f = absname(testargs[test])
+		if (os.path.exists(f)) :
+			ext = f.rpartition(".")[2]
+			d = os.path.dirname(f) # go ahead and grab anything else with same .ext
+			for file in os.listdir(d) :
+				ff = d+"/"+file
+				ext2 = ff.rpartition(".")[2]
+				if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
+					testfiles.add(ff)
+	for f in testfiles :
+		if dbug:
+			print "add test "+f
+		z.add(f,ac.replace_pwizroot(f,"pwiz"))
+	z.close()
 
