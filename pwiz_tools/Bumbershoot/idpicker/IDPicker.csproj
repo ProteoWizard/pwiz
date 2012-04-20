@@ -31,6 +31,7 @@
     <ApplicationIcon>
     </ApplicationIcon>
     <Win32Resource>Resources\Resources.res</Win32Resource>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -104,6 +105,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Remotion.Data.Linq.dll</HintPath>
     </Reference>
+    <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>Lib\SharpSvn\SharpSvn.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
     <Reference Include="System.Core">
@@ -157,6 +162,12 @@
     </Compile>
     <Compile Include="Forms\EmbedderForm.Designer.cs">
       <DependentUpon>EmbedderForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\NewVersionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\NewVersionForm.Designer.cs">
+      <DependentUpon>NewVersionForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\PeakStatisticsForm.cs">
       <SubType>Form</SubType>
@@ -331,6 +342,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\EmbedderForm.resx">
       <DependentUpon>EmbedderForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\NewVersionForm.resx">
+      <DependentUpon>NewVersionForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\PeakStatisticsForm.resx">
       <DependentUpon>PeakStatisticsForm.cs</DependentUpon>
@@ -515,8 +529,8 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
+    <PostBuildEvent>call "$(DevEnvDir)..\tools\vsvars32.bat"
+editbin.exe /nologo /LARGEADDRESSAWARE "$(TargetPath)"</PostBuildEvent>
     <PreBuildEvent>rc.exe /nologo $(ProjectDir)/Resources/Resources.rc</PreBuildEvent>
   </PropertyGroup>
 </Project>

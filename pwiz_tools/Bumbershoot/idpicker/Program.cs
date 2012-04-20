@@ -32,6 +32,7 @@ using System.Threading;
 using System.Net;
 using System.Text.RegularExpressions;
 using IDPicker.Forms;
+using SharpSvn;
 
 namespace IDPicker
 {
@@ -103,6 +104,11 @@ namespace IDPicker
                 return;
             }
 
+            // for certain exception types, the InnerException is a better representative of the real error
+            if (e is NHibernate.ADOException &&
+                e.InnerException != null)
+                e = e.InnerException;
+
             using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.choice))
             {
                 if (IsHeadless)
@@ -114,12 +120,12 @@ namespace IDPicker
                 if (MainWindow.IsDisposed)
                 {
                     if (reportForm.ShowDialog() == DialogResult.OK)
-                        SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email);
+                        SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email, reportForm.Username);
                     System.Diagnostics.Process.GetCurrentProcess().Kill();
                 }
 
                 if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
-                    SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email);
+                    SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email, reportForm.Username);
                 if (reportForm.ForceClose)
                     System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
@@ -159,6 +165,15 @@ namespace IDPicker
             new Thread(() => { try { CheckForUpdates(); } catch {/* TODO: log warning */} }).Start();
         }
 
+        /// <summary>
+        /// Filters out log lines that do not start with '-'
+        /// </summary>
+        private static string filterRevisionLog (string log)
+        {
+            var lines = log.Split("\n".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+            return String.Join("\r\n", lines.Where(o=> o.TrimStart().StartsWith("-")).Select(o=> o.TrimEnd('\r')).ToArray());
+        }
+
         public static bool CheckForUpdates ()
         {
             Properties.GUI.Settings.Default.LastCheckForUpdates = DateTime.UtcNow;
@@ -189,21 +204,49 @@ namespace IDPicker
 
             if (currentVersion < latestVersion)
             {
-                string updateMessage = String.Format("There is a newer version of {0} available.\r\n" +
-                                                     "You are using version {1}.\r\n" +
-                                                     "The latest version is {2}.\r\n" +
-                                                     "\r\n" +
-                                                     "Download it now?",
-                                                     Application.ProductName,
-                                                     currentVersion,
-                                                     latestVersion);
+                System.Collections.ObjectModel.Collection<SvnLogEventArgs> logItems = null;
 
-                var result = MessageBox.Show(updateMessage, "Newer Version Available",
-                                             MessageBoxButtons.YesNo,
-                                             MessageBoxIcon.Information,
-                                             MessageBoxDefaultButton.Button2);
+                using (var client = new SvnClient())
+                {
+                    try
+                    {
+                        client.GetLog(new Uri("http://forge.fenchurch.mc.vanderbilt.edu/svn/idpicker/branches/IDPicker-3/"),
+                                      new SvnLogArgs(new SvnRevisionRange(currentVersion.Build, latestVersion.Build)),
+                                      out logItems);
+                    }
+                    catch
+                    {
+                    }
+                }
 
-                if (result == DialogResult.Yes)
+                IEnumerable<SvnLogEventArgs> filteredLogItems = logItems;
+
+                string changeLog;
+                if (logItems.IsNullOrEmpty())
+                    changeLog = "<unable to get change log>";
+                else
+                {
+                    // return if no important revisions have happened
+                    filteredLogItems = logItems.Where(o => !filterRevisionLog(o.LogMessage).Trim().IsNullOrEmpty());
+                    if (filteredLogItems.IsNullOrEmpty())
+                        return false;
+
+                    var logEntries = filteredLogItems.Select(o => String.Format("Revision {0}:\r\n{1}",
+                                                                                o.Revision,
+                                                                                filterRevisionLog(o.LogMessage)));
+                    changeLog = String.Join("\r\n\r\n", logEntries.ToArray());
+                }
+
+                var form = new NewVersionForm(Application.ProductName,
+                                              currentVersion.ToString(),
+                                              latestVersion.ToString(),
+                                              changeLog)
+                                              {
+                                                  Owner = MainWindow,
+                                                  StartPosition = FormStartPosition.CenterParent
+                                              };
+
+                if (form.ShowDialog() == DialogResult.Yes)
                 {
                     string installerURL = String.Format("{0}/IDPicker-{1}.msi?guest=1", latestArtifactURL, latestVersion);
                     System.Diagnostics.Process.Start(installerURL);
@@ -213,7 +256,7 @@ namespace IDPicker
             return false;
         }
 
-        private static void SendErrorReport (string messageBody, string exceptionType, string email)
+        private static void SendErrorReport (string messageBody, string exceptionType, string email, string username)
         {
             const string address = "http://forge.fenchurch.mc.vanderbilt.edu/tracker/index.php?func=add&group_id=10&atid=149";
 
@@ -228,11 +271,16 @@ namespace IDPicker
                     return;
                 }
 
+                exceptionType = exceptionType.Replace("System.", "");
+                string errorMessage = Regex.Match(messageBody, "Error message: (.+?)\\r").Groups[1].Value;
+                errorMessage = errorMessage.Length > 60 ? errorMessage.Substring(0, 60) + "..." : errorMessage;
+                username = String.IsNullOrEmpty(username) ? "unknown" : username;
+
                 NameValueCollection form = new NameValueCollection
                                                {
                                                    {"form_key", m.Groups["key"].Value},
                                                    {"func", "postadd"},
-                                                   {"summary", "Unhandled " + exceptionType},
+                                                   {"summary", exceptionType + " (User: " + username + "; Message: " + errorMessage + ")"},
                                                    {"details", messageBody},
                                                    {"user_email", email},
                                                };

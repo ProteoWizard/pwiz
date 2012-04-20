@@ -475,7 +475,6 @@ actions msbuild_IDPicker
     IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
     echo Building IDPicker in $(CONFIGURATION:L) configuration...
     msbuild $(ROOT_PATH)/IDPicker.csproj /p:Configuration=$(CONFIGURATION);Platform=x86;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
-    editbin.exe /LargeAddressAware "$(OUTPUT_PATH)IDPicker.exe"
 }
 
 
