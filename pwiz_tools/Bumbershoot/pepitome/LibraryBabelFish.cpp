@@ -203,7 +203,8 @@ namespace freicore
             // Get insertion commands
             sqlite::command insertMetaData(libraryIndex, "INSERT INTO LibMetaData ( Id, Peptide, LibraryMass, MonoMass, AvgMass, Charge) VALUES (?,?,?,?,?,?)");
             sqlite::command insertSpectrumData(libraryIndex, "INSERT INTO LibSpectrumData ( Id, NumPeaks, SpectrumData) VALUES (?,?,?)");
-            sqlite::transaction transaction(libraryIndex);
+            shared_ptr<sqlite::transaction> transactionPtr;
+            transactionPtr.reset(new sqlite::transaction(libraryIndex));
 
             library.loadLibrary(libraryName);
             size_t totalSpectra = library.size();
@@ -220,9 +221,10 @@ namespace freicore
                     << library[index]->monoisotopicMass
                     << library[index]->averageMass
                     << library[index]->id.charge;
+                //cout << index << "," << library[index]->matchedPeptide->sequence() << "," << library[index]->libraryMass
+                //     << "," << library[index]->monoisotopicMass << "," << library[index]->averageMass << "," << library[index]->id.charge << endl;
                 insertMetaData.execute();
                 insertMetaData.reset();
-
                 // Archive the peptide, peaks, and proteins data.
                 stringstream packStream(stringstream::binary|stringstream::in|stringstream::out);
                 // This library offer binary portability. boost::binary_oarchive is not protable
@@ -237,10 +239,14 @@ namespace freicore
                 insertSpectrumData.execute();
                 insertSpectrumData.reset();
                 library[index]->clearSpectrum();
+                // Commit the transcation and create a fresh one.
                 if(!(index % 10000)) 
-                    transaction.commit();
+                {
+                    transactionPtr->commit();
+                    transactionPtr.reset(new sqlite::transaction(libraryIndex));
+                }
             }
-            transaction.commit();
+            transactionPtr->commit();
             libraryIndex.execute("VACUUM");   
         }
     }
