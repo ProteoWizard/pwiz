@@ -529,7 +529,7 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>call "$(DevEnvDir)..\tools\vsvars32.bat"
+    <PostBuildEvent>call "$(VS90COMNTOOLS)vsvars32.bat" &gt;nul
 editbin.exe /nologo /LARGEADDRESSAWARE "$(TargetPath)"</PostBuildEvent>
     <PreBuildEvent>rc.exe /nologo $(ProjectDir)/Resources/Resources.rc</PreBuildEvent>
   </PropertyGroup>
