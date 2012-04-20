@@ -546,14 +546,6 @@ namespace IDPicker.Forms
 
         void setData (object sender, DoWorkEventArgs e)
         {
-            string countExpression;
-            if (PivotMode == "Spectra")
-                countExpression = "psm.Spectrum";
-            else if (PivotMode == "Distinct Matches")
-                countExpression = "psm.DistinctMatchKey";
-            else
-                countExpression = "psm.Peptide";
-
             try
             {
                 if (dataFilter.IsBasicFilter || viewFilter.Modifications != null || viewFilter.ModifiedSite != null)

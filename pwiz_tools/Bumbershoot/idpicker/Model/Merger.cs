@@ -88,25 +88,39 @@ namespace IDPicker.DataModel
 
         void initializeTarget (SQLiteConnection conn)
         {
+            tempMergeTargetFilepath = mergeTargetFilepath;
+            // for non-fixed drives, merge to a temporary file
+            if (DriveType.Fixed != new DriveInfo(Path.GetPathRoot(mergeTargetFilepath)).DriveType)
+                tempMergeTargetFilepath = Path.GetTempFileName();
+            else
+                tempMergeTargetFilepath = mergeTargetFilepath;
+
             if (!SessionFactoryFactory.IsValidFile(mergeTargetFilepath))
             {
                 // if the target doesn't exist, the biggest source is copied to the target
                 File.Delete(mergeTargetFilepath);
+                File.Delete(tempMergeTargetFilepath);
 
                 if (!mergeSourceFilepaths.IsNullOrEmpty())
                 {
                     string biggestSourceFilepath = mergeSourceFilepaths.OrderByDescending(o => new FileInfo(o).Length).First();
-                    File.Copy(biggestSourceFilepath, mergeTargetFilepath);
+                    File.Copy(biggestSourceFilepath, tempMergeTargetFilepath);
                     mergeSourceFilepaths = mergeSourceFilepaths.Where(o => o != biggestSourceFilepath);
                 }
             }
+            else if (tempMergeTargetFilepath != mergeTargetFilepath)
+            {
+                // if the target does exist on a non-fixed drive, copy it to the temporary file
+                File.Delete(tempMergeTargetFilepath);
+                File.Copy(mergeTargetFilepath, tempMergeTargetFilepath);
+            }
 
-            using (var session = SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath).OpenSession())
+            using (var session = SessionFactoryFactory.CreateSessionFactory(tempMergeTargetFilepath).OpenSession())
             {
                 DataFilter.DropFilters(session.Connection);
             }
 
-            conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeTargetFilepath.Replace("'", "''") + "' AS merged");
+            conn.ExecuteNonQuery("ATTACH DATABASE '" + tempMergeTargetFilepath.Replace("'", "''") + "' AS merged");
             conn.ExecuteNonQuery("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA page_size=32768; PRAGMA cache_size=" + tempCacheSize);
             conn.ExecuteNonQuery("PRAGMA merged.journal_mode=OFF; PRAGMA merged.synchronous=OFF; PRAGMA merged.cache_size=" + mergedCacheSize);
 
@@ -182,11 +196,22 @@ namespace IDPicker.DataModel
                     if (conn.ExecuteQuery("SELECT * FROM merged.MergedFiles WHERE Filepath = '" + mergeSourceFilepath.Replace("'", "''") + "'").Count() > 0)
                         continue;
 
+                    // for non-fixed drives, copy source to a temporary file
+                    string tempMergeSourceFilepath;
+                    if (DriveType.Fixed != new DriveInfo(Path.GetPathRoot(mergeTargetFilepath)).DriveType)
+                    {
+                        tempMergeSourceFilepath = Path.GetTempFileName();
+                        File.Delete(tempMergeSourceFilepath);
+                        File.Copy(mergeSourceFilepath, tempMergeSourceFilepath);
+                    }
+                    else
+                        tempMergeSourceFilepath = mergeSourceFilepath;
+
                     // if the database can fit in the available RAM, populate the disk cache
                     long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
-                    if (ramBytesAvailable > new FileInfo(mergeSourceFilepath).Length)
+                    if (ramBytesAvailable > new FileInfo(tempMergeSourceFilepath).Length)
                     {
-                        using (var fs = new FileStream(mergeSourceFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
+                        using (var fs = new FileStream(tempMergeSourceFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
                         {
                             var buffer = new byte[UInt16.MaxValue];
                             while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
@@ -199,7 +224,7 @@ namespace IDPicker.DataModel
                         DataFilter.DropFilters(newConn);
                     }
 
-                    conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeSourceFilepath.Replace("'", "''") + "' AS new");
+                    conn.ExecuteNonQuery("ATTACH DATABASE '" + tempMergeSourceFilepath.Replace("'", "''") + "' AS new");
                     conn.ExecuteNonQuery("PRAGMA new.cache_size=" + newCacheSize);
 
                     transaction = conn.BeginTransaction();
@@ -243,6 +268,10 @@ namespace IDPicker.DataModel
                         transaction.Commit();
                         getNewMaxIds(conn);
                         conn.ExecuteNonQuery("DETACH DATABASE new");
+
+                        // delete temporary file
+                        if(tempMergeSourceFilepath != mergeSourceFilepath)
+                            File.Delete(tempMergeSourceFilepath);
                     }
                 }
 
@@ -256,7 +285,11 @@ namespace IDPicker.DataModel
                 {
                     transaction.Commit();
                 }
-            }
+            } // conn.Dispose()
+
+            // if merging to a temporary file, move it back to the real target
+            if (tempMergeTargetFilepath != mergeTargetFilepath)
+                File.Move(tempMergeTargetFilepath, mergeTargetFilepath);
         }
 
         void mergeConnection (SQLiteConnection conn)
@@ -296,12 +329,18 @@ namespace IDPicker.DataModel
                     addIntegerSet(conn);
 
                     transaction.Commit();
+
+                    conn.ExecuteNonQuery("DETACH DATABASE merged");
                 }
                 catch (Exception ex)
                 {
                     OnMergingProgress(ex, 1);
                 }
             }
+
+            // if merging to a temporary file, move it back to the real target
+            if (tempMergeTargetFilepath != mergeTargetFilepath)
+                File.Move(tempMergeTargetFilepath, mergeTargetFilepath);
         }
 
         static string mergeProteinsSql =
@@ -676,6 +715,7 @@ namespace IDPicker.DataModel
 
         int totalSourceFiles;
         string mergeTargetFilepath;
+        string tempMergeTargetFilepath;
         IEnumerable<string> mergeSourceFilepaths;
         SQLiteConnection mergeSourceConnection;
         string mergeSourceDatabase = "new";
@@ -695,7 +735,7 @@ namespace IDPicker.DataModel
         long MaxAnalysisId = 0;
 
         // page_size = 32768
-        static int tempCacheSize = 30000; // 1 GB
+        static int tempCacheSize = 10000; // 328 MB
         static int mergedCacheSize = 30000; // 1 GB
         static int newCacheSize = 20000; // 655 MB
     }

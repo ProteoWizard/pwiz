@@ -2319,16 +2319,17 @@ namespace IDPicker
             };
             process.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             process.StartInfo.CreateNoWindow = true;
-            //process.StartInfo.UseShellExecute = false;
-            //process.StartInfo.RedirectStandardOutput = process.StartInfo.RedirectStandardError = true;
+            process.StartInfo.UseShellExecute = false;
+            process.StartInfo.RedirectStandardOutput = process.StartInfo.RedirectStandardError = true;
             process.Start();
-            //process.EnableRaisingEvents = true;
-            /*process.Exited += (x, y) =>
+            process.EnableRaisingEvents = true;
+            process.Exited += (x, y) =>
             {
-                Program.HandleException(new Exception(String.Format("{0}\r\n{1}\r\n",
-                                                  process.StandardOutput.ReadToEnd(),
-                                                  process.StandardError.ReadToEnd())));
-            };*/
+                if (process.ExitCode != 0)
+                    Program.HandleException(new Exception(String.Format("Output:\r\n{0}\r\n\r\nError:\r\n{1}",
+                                                          process.StandardOutput.ReadToEnd(),
+                                                          process.StandardError.ReadToEnd())));
+            };
         }
     }
 

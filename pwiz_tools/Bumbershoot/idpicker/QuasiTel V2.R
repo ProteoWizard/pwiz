@@ -1,7 +1,7 @@
-if (!require(tcltk2)) {install.packages('tcltk2', repos="http://cran.us.r-project.org"); require(tcltk2)}
-if (!require(reshape)) {install.packages('reshape', repos="http://cran.us.r-project.org"); require(reshape)}
-if (!require(RSQLite)) {install.packages('RSQLite', repos="http://cran.us.r-project.org"); require(RSQLite)}
-if (!require(stats)) {install.packages('stats', repos="http://cran.us.r-project.org"); require(stats)}
+if (!require(tcltk)) {install.packages('tcltk', repos="http://cran.us.r-project.org"); require(tcltk) || stop("tcltk support is missing")}
+if (!require(reshape)) {install.packages('reshape', repos="http://cran.us.r-project.org"); require(reshape) || stop("reshape package is missing")}
+if (!require(RSQLite)) {install.packages('RSQLite', repos="http://cran.us.r-project.org"); require(RSQLite)|| stop("RSQLite package is missing")}
+if (!require(stats)) {install.packages('stats', repos="http://cran.us.r-project.org"); require(stats)|| stop("stats package is missing")}
 
 quasitel <- function(data, group1, group2, weight=NULL, rm.SID=TRUE, rm.zero=FALSE, minavgcount=NULL)
 {
@@ -133,6 +133,7 @@ datafile.readSpectraPerProteinGroupBySourceGroup <- function(filepath)
     dbDisconnect(con)
 
     proteinGroupSourceGroupCounts <- cast(proteinGroupSourceGroupCounts, ProteinGroup ~ SourceGroup, value="Spectra")
+    proteinGroupSourceGroupCounts[is.na(proteinGroupSourceGroupCounts)] <- 0
     return(cbind(proteinGroupMetadata, proteinGroupSourceGroupCounts))
 }
 
@@ -140,9 +141,6 @@ base <- NULL
 done <- tclVar(0)
 
 quasitelgui <- function(inputfile = NULL) {
-    require(tcltk) || stop("tcltk support is missing")
-    require(tcltk2) || stop("tcltk2 support is missing")
-    require(stats) || stop("stats package is missing")
 
     namelist <- tclVar()
     if (length(inputfile) > 0)
@@ -344,7 +342,7 @@ quasitelgui <- function(inputfile = NULL) {
     # Bottom
     bott.frm <- tkframe(base, borderwidth=2)
     filter.lbl <- tklabel(bott.frm, text="Minimum Average Count Across Groups")
-    filter.entry <- tk2spinbox(bott.frm, values=c(seq(from=1, to=5, by=0.25), seq(from=0, to=0.75, by=0.25)), textvariable=minavgcount, wrap=TRUE)
+    filter.entry <- tkwidget(bott.frm, "spinbox", values=c(seq(from=1, to=5, by=0.25), seq(from=0, to=0.75, by=0.25)), textvariable=minavgcount, wrap=TRUE)
     ok.btn <- tkbutton(bott.frm, text="Compute",
         command=function() {
             tkconfigure(ok.btn, state="disabled")
@@ -380,4 +378,3 @@ if (length(cmd.args) > 0) {
 }
 
 tkwait.variable(done)
-tkdestroy(base)

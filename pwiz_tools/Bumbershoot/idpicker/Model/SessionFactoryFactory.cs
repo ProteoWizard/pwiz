@@ -128,7 +128,7 @@ namespace IDPicker.DataModel
             lock(mutex)
                 sessionFactory = configuration.BuildSessionFactory();
 
-            sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA cache_size=30000;
+            sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA cache_size=10000;
                                                                    PRAGMA temp_store=MEMORY;
                                                                    PRAGMA page_size=32768").ExecuteUpdate();
 
