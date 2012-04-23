@@ -44,6 +44,7 @@
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/member.hpp>
 #include <boost/multi_index/ordered_index.hpp>
+#include <boost/multi_index/random_access_index.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/cstdint.hpp>
@@ -126,6 +127,7 @@ namespace quameter
 
     typedef bmi::multi_index_container<MS1ScanInfo,
                                        bmi::indexed_by<
+                                           bmi::random_access<>,
                                            bmi::ordered_unique<bmi::tag<nativeID>, bmi::member<MS1ScanInfo, string, &MS1ScanInfo::nativeID> >,
                                            bmi::ordered_unique<bmi::tag<time>, bmi::member<MS1ScanInfo, double, &MS1ScanInfo::scanStartTime> >
                                        >
@@ -133,6 +135,7 @@ namespace quameter
 
     typedef bmi::multi_index_container<MS2ScanInfo,
                                        bmi::indexed_by<
+                                           bmi::random_access<>,
                                            bmi::ordered_unique<bmi::tag<nativeID>, bmi::member<MS2ScanInfo, string, &MS2ScanInfo::nativeID> >,
                                            bmi::ordered_unique<bmi::tag<time>, bmi::member<MS2ScanInfo, double, &MS2ScanInfo::scanStartTime> >,
                                            bmi::ordered_non_unique<bmi::tag<identified>, bmi::member<MS2ScanInfo, bool, &MS2ScanInfo::identified> >

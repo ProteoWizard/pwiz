@@ -265,11 +265,86 @@ namespace quameter
 
         BOOST_FOREACH(const UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
         {
+            const LocalChromatogram& window = info.chromatogram;
+
 		    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
 		    Chromatogram& c = *chromatogramListSimple->chromatograms.back();
 		    c.index = chromatogramListSimple->size()-1;
-		    c.id = info.chromatogram.id;
-		    c.setTimeIntensityArrays(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity, UO_second, MS_number_of_counts);
+            ostringstream oss;
+            oss << "precursor m/z: " << info.mzWindow << "; time: " << info.scanTimeWindow;
+		    c.id = "Raw SIC for " + oss.str();
+		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_counts);
+
+
+            // for idfree metrics, show peaks
+            if (g_rtConfig->MetricsType == "idfree")
+            {
+                CrawdadPeakFinder crawdadPeakFinder;
+                crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
+
+	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+	            Chromatogram& c3 = *chromatogramListSimple->chromatograms.back();
+	            c3.index = chromatogramListSimple->size()-1;
+	            c3.id = "Smoothed SIC for " + oss.str();
+                c3.set(MS_SIC_chromatogram);
+                double sampleRate = window.MS1RT[1] - window.MS1RT[0];
+                size_t wingSize = crawdadPeakFinder.getWingData().size();
+                vector<double> newRT(wingSize, 0);
+                for(size_t i=0; i < wingSize; ++i) newRT[i] = window.MS1RT[0] - (wingSize-i)*sampleRate;
+                newRT.insert(newRT.end(), window.MS1RT.begin(), window.MS1RT.end());
+                for(size_t i=1; i <= wingSize; ++i) newRT.push_back(window.MS1RT.back() + i*sampleRate);
+                const vector<float>& tmp = crawdadPeakFinder.getSmoothedIntensities();
+                if (tmp.size() != newRT.size())
+                    cerr << "Warning: smoothed intensities vector has different size than MS1RT: " << tmp.size() << " vs. " << newRT.size() << endl;
+                else
+                    c3.setTimeIntensityArrays(newRT, vector<double>(tmp.begin(), tmp.end()), UO_second, MS_number_of_counts);
+
+                float baselineIntensity = crawdadPeakFinder.getBaselineIntensity();
+                double scaleForMS2Score = baselineIntensity;
+
+                // output all Crawdad peaks
+                {
+	                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+	                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+	                c2.index = chromatogramListSimple->size()-1;
+	                c2.id = "Crawdad peaks for " + oss.str();
+                    c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+
+                    BOOST_FOREACH(const Peak& peak, window.peaks)
+                    {
+                        simulateGaussianPeak(peak.startTime, peak.endTime,
+                                             peak.intensity, baselineIntensity,
+                                             peak.peakTime, peak.fwhm / 2.35482,
+                                             50,
+                                             c2.getTimeArray()->data, c2.getIntensityArray()->data);
+
+                        /*if (peak.startTime < window.maxScoreScanStartTime && window.maxScoreScanStartTime < peak.endTime)
+                            //scaleForMS2Score = (double) peak->getHeight();
+                            scaleForMS2Score = ms2ScanMap.get<time>().find(window.maxScoreScanStartTime)->precursorIntensity;
+                        else if (window.bestPeak && peak.peakTime == window.bestPeak->peakTime)
+                            scaleForMS2Score = window.bestPeak->intensity;*/
+                    }
+                }
+
+                // output only the best peak
+                if (window.bestPeak)
+                {
+	                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+	                Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
+	                c2.index = chromatogramListSimple->size()-1;
+	                c2.id = "Best Crawdad peak for " + oss.str();
+                    c2.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+
+                    const Peak& peak = *window.bestPeak;
+                    simulateGaussianPeak(peak.startTime, peak.endTime,
+                                         peak.intensity, baselineIntensity,
+                                         peak.peakTime, peak.fwhm / 2.35482,
+                                         50,
+                                         c2.getTimeArray()->data, c2.getIntensityArray()->data);
+                }
+            }
+            else // for idfree metrics the "unidentified" prefix is pointless
+                c.id = "unidentified " + c.id;
 	    }
 	    string chromFilename = bfs::change_extension(sourceFilename, "-quameter_chromatograms.mz5").string();
         MSDataFile::write(chromData, chromFilename, MSDataFile::WriteConfig(MSDataFile::Format_MZ5));
@@ -645,7 +720,7 @@ namespace quameter
 
                         scanInfo.scanStartTime = scanTime.timeInSeconds();
 
-                        ms1ScanMap.insert(scanInfo);
+                        ms1ScanMap.push_back(scanInfo);
                     }
                     else if (msLevel == 2) 
                     {
@@ -706,7 +781,7 @@ namespace quameter
 
                         scanInfo.precursorScanStartTime = ms1ScanMap.get<nativeID>().find(scanInfo.precursorNativeID)->scanStartTime;
 
-                        ms2ScanMap.insert(scanInfo);
+                        ms2ScanMap.push_back(scanInfo);
                     }
                 } // finished cycling through all metadata
             }
@@ -740,6 +815,7 @@ namespace quameter
             accs::accumulator_set<double, accs::stats<accs::tag::percentile> > xicBestPeakTimes;
             vector<double> ms1TICs;
             ms1TICs.reserve(ms1ScanMap.size());
+            double totalTIC = 0;
 
             int multiplyChargedMS2s = 0;
 
@@ -799,6 +875,7 @@ namespace quameter
                         
                         double TIC = accumulate(intensV.begin(), intensV.end(), 0);
                         ms1TICs.push_back(TIC);
+                        totalTIC += TIC;
                     }
                     else if (msLevel == 2)
                     {
@@ -933,32 +1010,62 @@ namespace quameter
 		    if (g_rtConfig->ChromatogramOutput)
                 writeChromatograms(sourceFilename, ms2ScanMap, dummyPepWindows, unidentifiedPrecursors);
 
-            // TIC stability metrics
+            // TIC metrics
             accs::accumulator_set<double, accs::stats<accs::tag::max, accs::tag::percentile> > ms1DeltaTICs;
+            vector<double> cumulativeTIC(ms1TICs.size());
+            cumulativeTIC[0] = ms1TICs[0] / totalTIC;
             for (size_t i=1; i < ms1TICs.size(); ++i)
+            {
                 ms1DeltaTICs(fabs(ms1TICs[i] - ms1TICs[i-1]));
+                cumulativeTIC[i] = cumulativeTIC[i-1] + ms1TICs[i] / totalTIC;
+            }
             double ms1StabilityOfTIC = accs::max(ms1DeltaTICs) / accs::percentile(ms1DeltaTICs, accs::percentile_number = 50);
+
+            vector<double>::const_iterator cumulativeTIC_Q1 = boost::lower_bound(cumulativeTIC, 0.25);
+            vector<double>::const_iterator cumulativeTIC_Q3 = boost::lower_bound(cumulativeTIC, 0.75);
+            size_t cumulativeTIC_Q1_Index = cumulativeTIC_Q1 - cumulativeTIC.begin();
+            size_t cumulativeTIC_Q3_Index = cumulativeTIC_Q3 - cumulativeTIC.begin();
+            double timeRangeOfCumulativeTIC_IQR = ms1ScanMap[cumulativeTIC_Q3_Index].scanStartTime -
+                                                  ms1ScanMap[cumulativeTIC_Q1_Index].scanStartTime;
 
             // XIC peak metrics
             double peakWidthMedian = 0;
             double peakHeightMedian = 0;
             double peakHeightIQR = 0;
             double peakTimeIQR = 0;
+            double halfOfTotalPeakWidthFraction = 0;
+            double halfOfTotalPeakWidthMedian = 0;
             {
-                accs::accumulator_set<double, accs::stats<accs::tag::percentile> > peakWidths, peakTimes, peakHeights;
+                accs::accumulator_set<double, accs::stats<accs::tag::percentile> > peakHeights;
+                vector<double> peakWidths;
+                double peakWidthTotal = 0;
                 BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
                     if (info.chromatogram.bestPeak)
                     {
-                        peakWidths(info.chromatogram.bestPeak->fwhm);
-                        peakTimes(info.chromatogram.bestPeak->peakTime);
                         peakHeights(info.chromatogram.bestPeak->intensity);
+                        peakWidths.push_back(info.chromatogram.bestPeak->fwhm);
+                        peakWidthTotal += peakWidths.back();
                     }
-                peakWidthMedian = accs::percentile(peakWidths, accs::percentile_number = 50);
                 peakHeightMedian = accs::percentile(peakHeights, accs::percentile_number = 50);
-                peakHeightIQR = accs::percentile(peakTimes, accs::percentile_number = 75) -
-                                accs::percentile(peakTimes, accs::percentile_number = 25);
-                peakTimeIQR = accs::percentile(peakTimes, accs::percentile_number = 75) -
-                              accs::percentile(peakTimes, accs::percentile_number = 25);
+                peakHeightIQR = accs::percentile(peakHeights, accs::percentile_number = 75) -
+                                accs::percentile(peakHeights, accs::percentile_number = 25);
+
+                // determine the set of peak widths that account for 50% of the total peak width;
+                // within those, find the median
+                sort(peakWidths.rbegin(), peakWidths.rend()); // sort descending
+                double peakWidthFraction = 0;
+                accs::accumulator_set<double, accs::stats<accs::tag::percentile> > peakWidthsInHalfTotal;
+                for (size_t i=0; i < peakWidths.size(); ++i)
+                {
+                    peakWidthFraction += peakWidths[i] / peakWidthTotal;
+                    peakWidthsInHalfTotal(peakWidths[i]);
+                    if (peakWidthFraction > 0.5)
+                    {
+                        halfOfTotalPeakWidthFraction = (double) i / peakWidths.size();
+                        break;
+                    }
+                }
+                halfOfTotalPeakWidthMedian = accs::percentile(peakWidthsInHalfTotal, accs::percentile_number = 50);
             }
             
             // File for quameter output, default is to save to same directory as input file
@@ -968,27 +1075,39 @@ namespace quameter
 
             bool needsHeader = !bfs::exists(outputFilepath);
 
+            guard.lock();
             ofstream qout(outputFilepath.c_str(), ios::out | ios::app);
 
             // Tab delimited output header
             if (needsHeader)
-                qout << "Filename\tStartTimeStamp\t1\t2\t3\t4\t5\t6\t7\t8\t9";
+                qout << "Filename\t"
+                        "StartTimeStamp\t"
+                        "XIC-WideFrac\t"
+                        "XIC-FWHM\t"
+                        "XIC-Plus2Frac\t"
+                        "XIC-HeightSpread\t"
+                        "TIC-Duration\t"
+                        "MS1-TIC-MaxChange\t"
+                        "MS1-Count\t"
+                        "MS1-Density\t"
+                        "MS2-Count\t"
+                        "MS2-Density";
             qout << "\n";
 
             // Tab delimited metrics
             qout << bfs::path(sourceFilename).filename();
             qout << "\t" << startTimeStamp;
-            qout << "\t" << peakWidthMedian;
-            qout << "\t" << peakTimeIQR;
+            qout << "\t" << halfOfTotalPeakWidthFraction;
+            qout << "\t" << halfOfTotalPeakWidthMedian;
             qout << "\t" << chargeStateMetric;
             qout << "\t" << (peakHeightIQR / peakHeightMedian);
+            qout << "\t" << timeRangeOfCumulativeTIC_IQR;
             qout << "\t" << ms1StabilityOfTIC;
             qout << "\t" << ms1ScanMap.size();
             qout << "\t" << accs::percentile(ms1PeakCounts, accs::percentile_number = 50);
             qout << "\t" << ms2ScanMap.size();
             qout << "\t" << accs::percentile(ms2PeakCounts, accs::percentile_number = 50);
 
-            guard.lock();
             cout << endl << sourceFilename << " took " << processingTimer.elapsed() << " seconds to analyze.\n";
             guard.unlock();
 
@@ -1104,7 +1223,7 @@ namespace quameter
                     if (scan.hasCVParam(MS_ion_injection_time))
                         lastMS1IonInjectionTime = scan.cvParam(MS_ion_injection_time).valueAs<double>();
 
-                    ms1ScanMap.insert(scanInfo);
+                    ms1ScanMap.push_back(scanInfo);
                     ++MS1Count;
                 }
                 else if (msLevel == 2) 
@@ -1184,7 +1303,7 @@ namespace quameter
                         scanInfo.identified = false;
                         scanInfo.distinctModifiedPeptideID = 0;
                     }
-                    ms2ScanMap.insert(scanInfo);
+                    ms2ScanMap.push_back(scanInfo);
                 }
 
             } // finished cycling through all spectra
