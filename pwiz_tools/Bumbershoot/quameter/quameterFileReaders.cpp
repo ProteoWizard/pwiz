@@ -32,8 +32,9 @@ namespace quameter
 IDPDBReader::IDPDBReader(const string& file, const string& spectrumSourceId)
     : idpDBFile(file), spectrumSourceId(spectrumSourceId)
 {
-    sqlite::database db(idpDBFile);
-    
+    sqlite::database db(idpDBFile, sqlite::no_mutex);
+    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA cache_size=50000");
+
     /**
     * For metric MS1-5A: Median real value of precursor m/z errors for +2 spectra
     * For metric MS1-5B: Mean of the absolute precursor m/z errors for +2 spectra
@@ -329,7 +330,7 @@ XICWindowList IDPDBReader::MZRTWindows(MS2ScanMap& ms2ScanMap)
         row.getter() >> peptide >> id >> precursorMZ >> charge >> modif >> score >> exactMZ >> peptideSequence;
 
         MS2ScanMap::index<nativeID>::type::const_iterator itr = ms2ScanMap.get<nativeID>().find(id);
-        ms2ScanMap.modify(itr, ModifyPrecursorMZ(precursorMZ)); // prefer corrected monoisotopic m/z
+        ms2ScanMap.get<nativeID>().modify(itr, ModifyPrecursorMZ(precursorMZ)); // prefer corrected monoisotopic m/z
         const MS2ScanInfo& scanInfo = *itr;
 
         if (peptide != lastPeptide || charge != lastCharge || modif != lastModif) 
