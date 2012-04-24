@@ -82,7 +82,7 @@ namespace IDPicker.Forms
             this.gbGroups.SuspendLayout();
             this.pnlBgGroups.SuspendLayout();
             this.msGroups.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.tlvGroupedFiles)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize) (this.tlvGroupedFiles)).BeginInit();
             this.gbFiles.SuspendLayout();
             this.pnlUngroupedFiles.SuspendLayout();
             this.msUngroupedFiles.SuspendLayout();
@@ -95,12 +95,12 @@ namespace IDPicker.Forms
             // 
             // gbGroups
             // 
-            this.gbGroups.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.gbGroups.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.gbGroups.BackColor = System.Drawing.Color.Transparent;
             this.gbGroups.Controls.Add(this.pnlBgGroups);
-            this.gbGroups.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.gbGroups.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.gbGroups.Location = new System.Drawing.Point(12, 10);
             this.gbGroups.Name = "gbGroups";
             this.gbGroups.Size = new System.Drawing.Size(340, 465);
@@ -110,7 +110,7 @@ namespace IDPicker.Forms
             // 
             // pnlBgGroups
             // 
-            this.pnlBgGroups.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.pnlBgGroups.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlBgGroups.BackColor = System.Drawing.SystemColors.InactiveCaption;
@@ -124,7 +124,7 @@ namespace IDPicker.Forms
             // 
             // pnlGroupsSpacer
             // 
-            this.pnlGroupsSpacer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.pnlGroupsSpacer.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlGroupsSpacer.BackColor = System.Drawing.SystemColors.Window;
             this.pnlGroupsSpacer.Location = new System.Drawing.Point(1, 26);
@@ -134,7 +134,7 @@ namespace IDPicker.Forms
             // 
             // msGroups
             // 
-            this.msGroups.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.msGroups.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.msGroups.AutoSize = false;
             this.msGroups.Dock = System.Windows.Forms.DockStyle.None;
@@ -187,7 +187,7 @@ namespace IDPicker.Forms
             // 
             this.tlvGroupedFiles.AllColumns.Add(this.tlvGroups);
             this.tlvGroupedFiles.AlternateRowBackColor = System.Drawing.Color.White;
-            this.tlvGroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.tlvGroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.tlvGroupedFiles.CellEditActivation = BrightIdeasSoftware.ObjectListView.CellEditActivateMode.F2Only;
@@ -223,11 +223,11 @@ namespace IDPicker.Forms
             // 
             // gbFiles
             // 
-            this.gbFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.gbFiles.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.gbFiles.Controls.Add(this.pnlUngroupedFiles);
-            this.gbFiles.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.gbFiles.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.gbFiles.Location = new System.Drawing.Point(3, 10);
             this.gbFiles.Name = "gbFiles";
             this.gbFiles.Size = new System.Drawing.Size(338, 465);
@@ -237,7 +237,7 @@ namespace IDPicker.Forms
             // 
             // pnlUngroupedFiles
             // 
-            this.pnlUngroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.pnlUngroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlUngroupedFiles.BackColor = System.Drawing.SystemColors.InactiveCaption;
@@ -252,7 +252,7 @@ namespace IDPicker.Forms
             // 
             // pnlUngroupedSpacer
             // 
-            this.pnlUngroupedSpacer.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.pnlUngroupedSpacer.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.pnlUngroupedSpacer.BackColor = System.Drawing.SystemColors.Window;
             this.pnlUngroupedSpacer.Location = new System.Drawing.Point(1, 26);
@@ -263,11 +263,11 @@ namespace IDPicker.Forms
             // tbStartHere
             // 
             this.tbStartHere.AllowDrop = true;
-            this.tbStartHere.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbStartHere.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
             this.tbStartHere.BackColor = System.Drawing.SystemColors.Window;
             this.tbStartHere.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.tbStartHere.Enabled = false;
-            this.tbStartHere.Font = new System.Drawing.Font("Tahoma", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.tbStartHere.Font = new System.Drawing.Font("Tahoma", 8F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.tbStartHere.ForeColor = System.Drawing.Color.Gray;
             this.tbStartHere.Location = new System.Drawing.Point(16, 153);
             this.tbStartHere.Multiline = true;
@@ -281,7 +281,7 @@ namespace IDPicker.Forms
             // 
             // msUngroupedFiles
             // 
-            this.msUngroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.msUngroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.msUngroupedFiles.AutoSize = false;
             this.msUngroupedFiles.Dock = System.Windows.Forms.DockStyle.None;
@@ -307,7 +307,7 @@ namespace IDPicker.Forms
             // lvNonGroupedFiles
             // 
             this.lvNonGroupedFiles.AllowDrop = true;
-            this.lvNonGroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.lvNonGroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.lvNonGroupedFiles.BorderStyle = System.Windows.Forms.BorderStyle.None;
@@ -329,7 +329,7 @@ namespace IDPicker.Forms
             // 
             // saveButton
             // 
-            this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.saveButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.saveButton.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.saveButton.Location = new System.Drawing.Point(543, 483);
             this.saveButton.Name = "saveButton";
@@ -341,7 +341,7 @@ namespace IDPicker.Forms
             // 
             // cancelButton
             // 
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.cancelButton.Location = new System.Drawing.Point(624, 483);
             this.cancelButton.Name = "cancelButton";
@@ -352,58 +352,58 @@ namespace IDPicker.Forms
             // 
             // cmRightClickGroupNode
             // 
-            this.cmRightClickGroupNode.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cmRightClickGroupNode.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.cmRightClickGroupNode.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.addGroupToolStripMenuItem,
             this.removeGroupToolStripMenuItem1,
             this.renameGroupToolStripMenuItem});
             this.cmRightClickGroupNode.Name = "cmRightClickGroupNode";
-            this.cmRightClickGroupNode.Size = new System.Drawing.Size(125, 70);
+            this.cmRightClickGroupNode.Size = new System.Drawing.Size(114, 70);
             // 
             // addGroupToolStripMenuItem
             // 
             this.addGroupToolStripMenuItem.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
-            this.addGroupToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.addGroupToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.addGroupToolStripMenuItem.Name = "addGroupToolStripMenuItem";
-            this.addGroupToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.addGroupToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
             this.addGroupToolStripMenuItem.Text = "Add";
             this.addGroupToolStripMenuItem.Click += new System.EventHandler(this.addGroupToolStripMenuItem_Click);
             // 
             // removeGroupToolStripMenuItem1
             // 
-            this.removeGroupToolStripMenuItem1.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.removeGroupToolStripMenuItem1.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.removeGroupToolStripMenuItem1.Name = "removeGroupToolStripMenuItem1";
-            this.removeGroupToolStripMenuItem1.Size = new System.Drawing.Size(124, 22);
+            this.removeGroupToolStripMenuItem1.Size = new System.Drawing.Size(113, 22);
             this.removeGroupToolStripMenuItem1.Text = "Remove";
             this.removeGroupToolStripMenuItem1.Click += new System.EventHandler(this.removeGroupToolStripMenuItem_Click);
             // 
             // renameGroupToolStripMenuItem
             // 
-            this.renameGroupToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.renameGroupToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.renameGroupToolStripMenuItem.Name = "renameGroupToolStripMenuItem";
-            this.renameGroupToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.renameGroupToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
             this.renameGroupToolStripMenuItem.Text = "Rename";
             this.renameGroupToolStripMenuItem.Click += new System.EventHandler(this.renameGroupToolStripMenuItem_Click);
             // 
             // cmRightClickFileNode
             // 
-            this.cmRightClickFileNode.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cmRightClickFileNode.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.cmRightClickFileNode.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.removeFileNodeToolStripMenuItem});
             this.cmRightClickFileNode.Name = "cmRightClickFileNode";
-            this.cmRightClickFileNode.Size = new System.Drawing.Size(125, 26);
+            this.cmRightClickFileNode.Size = new System.Drawing.Size(114, 26);
             // 
             // removeFileNodeToolStripMenuItem
             // 
-            this.removeFileNodeToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.removeFileNodeToolStripMenuItem.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.removeFileNodeToolStripMenuItem.Name = "removeFileNodeToolStripMenuItem";
-            this.removeFileNodeToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.removeFileNodeToolStripMenuItem.Size = new System.Drawing.Size(113, 22);
             this.removeFileNodeToolStripMenuItem.Text = "Remove";
             this.removeFileNodeToolStripMenuItem.Click += new System.EventHandler(this.removeFileNodeToolStripMenuItem_Click);
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.splitContainer1.Location = new System.Drawing.Point(0, 2);
@@ -423,20 +423,22 @@ namespace IDPicker.Forms
             // 
             // GroupingControlForm
             // 
+            this.AcceptButton = this.saveButton;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.CancelButton = this.cancelButton;
             this.ClientSize = new System.Drawing.Size(706, 518);
-            this.ControlBox = false;
             this.Controls.Add(this.saveButton);
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.splitContainer1);
+            this.MinimizeBox = false;
             this.Name = "GroupingControlForm";
             this.Text = "Source Grouping";
             this.gbGroups.ResumeLayout(false);
             this.pnlBgGroups.ResumeLayout(false);
             this.msGroups.ResumeLayout(false);
             this.msGroups.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.tlvGroupedFiles)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.tlvGroupedFiles)).EndInit();
             this.gbFiles.ResumeLayout(false);
             this.pnlUngroupedFiles.ResumeLayout(false);
             this.pnlUngroupedFiles.PerformLayout();

@@ -250,6 +250,12 @@
     <Compile Include="Forms\TextInputPrompt.designer.cs">
       <DependentUpon>TextInputPrompt.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\UserErrorForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\UserErrorForm.Designer.cs">
+      <DependentUpon>UserErrorForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="LayoutManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProgressMonitor.cs" />
@@ -377,6 +383,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TextInputPrompt.resx">
       <DependentUpon>TextInputPrompt.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\UserErrorForm.resx">
+      <DependentUpon>UserErrorForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

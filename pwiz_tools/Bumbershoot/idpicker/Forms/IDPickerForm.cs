@@ -932,11 +932,24 @@ namespace IDPicker
 
                     Invoke(new MethodInvoker(() => progressForm.Show(this)));
 
-                    parser.Parse(xml_filepaths, ilr);
+                    try
+                    {
+                        parser.Parse(xml_filepaths, ilr);
+                    }
+                    catch (Exception ex)
+                    {
+                        importCancelled = true;
 
-                    importCancelled |= progressForm.Cancelled;
-
-                    Invoke(new MethodInvoker(() => progressForm.Close()));
+                        if (ex.Message.Contains("no peptides found mapping to a decoy protein"))
+                            Program.HandleUserError(ex);
+                        else
+                            throw;
+                    }
+                    finally
+                    {
+                        importCancelled |= progressForm.Cancelled;
+                        Invoke(new MethodInvoker(() => progressForm.Close()));
+                    }
 
                     if (importCancelled)
                         return;
@@ -2301,15 +2314,24 @@ namespace IDPicker
             else if (Directory.Exists(Path.Combine(programFilesRoot, "Program Files (x86)/R")))
                 rPath = Path.Combine(programFilesRoot, "Program Files (x86)/R");
             else
-                throw new FileNotFoundException("unable to find an installation of R in Program Files");
+            {
+                Program.HandleUserError(new FileNotFoundException("unable to find an installation of R in Program Files"));
+                return;
+            }
 
             string rFilepath = Directory.GetFiles(rPath, "Rscript.exe", SearchOption.AllDirectories).LastOrDefault();
             if (rFilepath == null)
-                throw new FileNotFoundException("unable to find an installation of R in Program Files");
+            {
+                Program.HandleUserError(new FileNotFoundException("unable to find an installation of R in Program Files"));
+                return;
+            }
 
             string quasitelFilepath = Path.Combine(Application.StartupPath, "QuasiTel V2.R");
             if (!File.Exists(quasitelFilepath))
-                throw new FileNotFoundException("unable to find QuasiTel R script");
+            {
+                Program.HandleUserError(new FileNotFoundException("unable to find QuasiTel R script"));
+                return;
+            }
 
             string idpDbFilepath = session.Connection.GetDataSource();
 

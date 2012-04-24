@@ -131,7 +131,7 @@ namespace IDPicker.Forms
                                      !g.Name.Remove(0,fullPath.Length+1).Contains("/")
                                      select g).ToList();
 
-            foreach (SpectrumSourceGroup ssg in potentialChildren)
+            foreach (SpectrumSourceGroup ssg in potentialChildren.OrderBy(o => o.Name))
             {
                 var newNode = new tlvBranch
                                   {
@@ -485,7 +485,10 @@ namespace IDPicker.Forms
 
         private void miCollapseGroups_Click(object sender, EventArgs e)
         {
-            tlvGroupedFiles.CollapseAll();
+            tlvGroupedFiles.BeginUpdate();
+            foreach(var node in _rootNode.Children)
+                tlvGroupedFiles.Collapse(node);
+            tlvGroupedFiles.EndUpdate();
         }
 
         private void tlvGroupedFiles_CanDrop(object sender, OlvDropEventArgs e)

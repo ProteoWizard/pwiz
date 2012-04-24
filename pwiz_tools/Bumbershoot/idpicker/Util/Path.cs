@@ -141,5 +141,17 @@ namespace IDPicker
 
             return matches[0];
         }
+
+        /// <summary>
+        /// Returns the root element (i.e. drive letter) of a path.
+        /// If the path is relative, returns the root element of Environment.CurrentDirectory.
+        /// </summary>
+        public static string GetPathRoot (string path)
+        {
+            string root = Path.GetPathRoot(path);
+            if (String.IsNullOrEmpty(root))
+                return Path.GetPathRoot(Environment.CurrentDirectory);
+            return root;
+        }
     }
 }

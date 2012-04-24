@@ -90,11 +90,44 @@ namespace IDPicker
         }
 
         #region Exception handling
+        public static void HandleUserError (Exception e)
+        {
+            if (IsHeadless)
+            {
+                Console.Error.WriteLine("Error: {0}\r\n\r\nDetails:\r\n{1}", e.Message, e.ToString());
+                System.Diagnostics.Process.GetCurrentProcess().Kill();
+            }
+
+            if (MainWindow == null)
+            {
+                MessageBox.Show(e.ToString(), "Error");
+                return;
+            }
+
+            if (MainWindow.InvokeRequired)
+            {
+                MainWindow.Invoke(new MethodInvoker(() => HandleUserError(e)));
+                return;
+            }
+
+            using (var userErrorForm = new UserErrorForm(e.Message))
+            {
+                userErrorForm.StartPosition = FormStartPosition.CenterParent;
+                userErrorForm.ShowDialog(MainWindow);
+            }
+        }
+
         public static void HandleException (Exception e)
         {
             if (MainWindow == null)
             {
-                MessageBox.Show(e.ToString(), "Error");
+                if (IsHeadless)
+                {
+                    Console.Error.WriteLine("Error: {0}\r\n\r\nDetails:\r\n{1}", e.Message, e.ToString());
+                    System.Diagnostics.Process.GetCurrentProcess().Kill();
+                }
+                else
+                    MessageBox.Show(e.ToString(), "Error");
                 return;
             }
 
@@ -111,6 +144,8 @@ namespace IDPicker
 
             using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.choice))
             {
+                reportForm.StartPosition = FormStartPosition.CenterParent;
+
                 if (IsHeadless)
                 {
                     Console.Error.WriteLine("Error: {0}\r\n\r\nDetails:\r\n{1}", reportForm.ExceptionType, reportForm.MessageBody);
