@@ -702,7 +702,7 @@ namespace IDPicker.DataModel
 
         public static bool IsChildOf (this SpectrumSourceGroup childGroup, SpectrumSourceGroup parentGroup)
         {
-            return childGroup.Name.StartsWith(parentGroup.Name);
+            return childGroup.Name.StartsWith(parentGroup.Name == "/" ? "/" : (parentGroup.Name + "/"));
         }
 
         public static bool IsImmediateChildOf (this SpectrumSourceGroup childGroup, SpectrumSourceGroup parentGroup)

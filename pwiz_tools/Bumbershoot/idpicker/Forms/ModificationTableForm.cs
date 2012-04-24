@@ -720,7 +720,7 @@ namespace IDPicker.Forms
             {
                 var residue = (char)row.Cells[0].Value;
                 var mass = (double)row.Cells[1].Value;
-                var peptides = (int) row.Cells[2].Value;
+                var peptides = int.Parse(row.Cells[2].Value.ToString());
                 var minPeptides = int.Parse(tablePeptidesFilterBox.Text);
                 if (!pairs.ContainsKey(residue) || !pairs[residue].Contains(mass) || peptides < minPeptides)
                     row.Visible = false;

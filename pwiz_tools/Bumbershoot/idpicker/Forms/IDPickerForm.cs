@@ -2097,12 +2097,9 @@ namespace IDPicker
 
                 //get peptides in protein
                 var usedPeptides = new HashSet<PeptideTableForm.DistinctPeptideRow>();
-                var allGroupedProteins = session.CreateQuery(String.Format(
-                    "SELECT pro FROM Protein pro WHERE pro.Accession IN ('{0}')",
-                    proteinGroup.Proteins.Replace(",", "','")))
-                    .List<Protein>();
+                var allGroupedProteins = proteinGroup.Proteins.Split(",".ToCharArray());
                 foreach (var protein in allGroupedProteins)
-                    foreach (var peptideIndex in proteinAccessionToPeptideList[protein.Accession])
+                    foreach (var peptideIndex in proteinAccessionToPeptideList[protein])
                         usedPeptides.Add(peptideList[peptideIndex]);
 
                 foreach (var peptide in usedPeptides)

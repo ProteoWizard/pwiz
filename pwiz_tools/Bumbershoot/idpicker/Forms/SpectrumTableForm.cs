@@ -1583,7 +1583,7 @@ namespace IDPicker.Forms
             var groupNodes = new List<TreeNode>();
             var groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
                                                      dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                         DataFilter.PeptideSpectrumMatchToPeptideInstance,
+                                                                                         DataFilter.PeptideSpectrumMatchToProtein,
                                                                                          DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
                                                      "GROUP BY ssgl.Group.id")
                         .List<object[]>()
@@ -1608,8 +1608,8 @@ namespace IDPicker.Forms
                 };
                 var sources = session.CreateQuery(AggregateRow.Selection + ", s.Source " +
                                                       groupFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                                          DataFilter.PeptideSpectrumMatchToPeptideInstance,
-                                                                                          DataFilter.PeptideSpectrumMatchToSpectrum) +
+                                                                                         DataFilter.PeptideSpectrumMatchToProtein,
+                                                                                         DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
                                                       "GROUP BY s.Source.id")
                         .List<object[]>()
                         .Select(o => new SpectrumSourceRow(o, groupFilter));
