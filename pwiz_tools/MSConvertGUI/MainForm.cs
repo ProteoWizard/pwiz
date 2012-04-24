@@ -34,13 +34,21 @@ namespace MSConvertGUI
 {
     public partial class MainForm : Form
     {
-        public MainForm()
+        string[] cmdline_args;
+        public MainForm(string[] args)
         {
+            cmdline_args = args;
             InitializeComponent();
         }
 
         private void MainForm_Load (object sender, EventArgs e)
         {
+            for (int i = 0; i < cmdline_args.Length; i++)
+            {
+                // mimic user adding file via filebox
+                FileBox.Text = cmdline_args[i];
+                AddFileButton_Click(sender, e);
+            }
             OutputFormatBox.Text = "mzML";
             FilterBox.Text = "MS Level";
             ActivationTypeBox.Text = "CID";
