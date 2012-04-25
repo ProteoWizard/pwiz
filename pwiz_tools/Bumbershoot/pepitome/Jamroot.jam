@@ -250,6 +250,7 @@ rule gcc-install-dll-path ( properties * )
 exe $(application-name:L)
   : # sources
       [ glob pepitome*.cpp ]
+       LibraryBabelFish.cpp
   : # requirements
       <library>freicore
       <library>sqlite//sqlite3pp
@@ -261,6 +262,7 @@ exe librarybabelfish
    : # requirements
        <library>freicore
        <library>sqlite//sqlite3pp
+       <define>LIBRARYBABELFISH_EXE
    ;
 
 install install

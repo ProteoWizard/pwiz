@@ -115,7 +115,7 @@ namespace pepitome
         string filename;
         bool isOpen;
         
-        NativeFileReader(string name)
+        NativeFileReader(string name) : buffer_(1024, ' ')
         {
            handle = fopen(name.c_str(), "rb");
             isOpen = (handle == NULL) ? false : true;
@@ -129,34 +129,46 @@ namespace pepitome
                fclose(handle);
             isOpen = false;
         }
-        
+
         int getline(string& out)
         {
-            stringstream s;
-            char currChar;
+            out.clear();
+
+            if (feof(handle))
+                return 0;
+
             while(true)
             {
-                currChar = fgetc(handle);
-                if(currChar == EOF)
+                char* result = fgets(&buffer_[0], 1024, handle);
+
+                if (ferror(handle))
+                    throw runtime_error("[NativeFileReader] error reading file");
+
+                size_t newline = buffer_.find('\n');
+                if (newline != string::npos)
                 {
-                    if(ferror(handle))
-                        throw runtime_error("[NativeFileReader] Failed while reading a file.");
-                    else
-                        break;
-                } else if(currChar == '\n')
-                    break;
-                s << currChar;
+                    out.insert(out.end(), buffer_.begin(), buffer_.begin()+newline);
+                    return 1;
+                }
+
+                size_t terminator = buffer_.find('\0');
+                if (terminator == string::npos)
+                    throw runtime_error("[NativeFileReader] no null terminator from fgets");
+                out.insert(out.end(), buffer_.begin(), buffer_.begin()+terminator-1);
+
+                // EOF or error
+                if (result == NULL)
+                    return 1;
             }
-            out = s.str();
-            if(s.str().size()==0)
-                return 0;
-            return 1;
         }
 
         void seek(stream_offset pos)
         {
             file_seek(handle, pos, SEEK_SET);
         }
+
+        private:
+        string buffer_;
     };
 
     struct UnpackingTimers
@@ -193,7 +205,7 @@ namespace pepitome
         }
     };
 
-    UnpackingTimers unpackingTimers;
+    //UnpackingTimers unpackingTimers;
 
     struct BaseLibrarySpectrum
     {
@@ -299,11 +311,8 @@ namespace pepitome
             ar >> peakAnns;
             //unpackingTimers.peakAnns.End();
             //unpackingTimers.peptide.Begin(false);
-            // Nasty hack to accomplish non-intrusive serialize of 
-            // objects containing no default constructors.
-            DigestedPeptide tmp("A");
-            ar >> tmp;
-            matchedPeptide.reset(new DigestedPeptide(tmp));
+            matchedPeptide.reset(new DigestedPeptide("A"));
+            ar >> *matchedPeptide;
             //unpackingTimers.peptide.End();
         }
         BOOST_SERIALIZATION_SPLIT_MEMBER()
@@ -921,11 +930,11 @@ namespace pepitome
         void loadLibrary(const string& libName)
         {
             libraryName = libName;
-            if(bal::ends_with(libraryName,".msp"))
+            if(bal::iends_with(libraryName,".msp"))
                 loadNISTLibraryFromMSP();
-            else if(bal::ends_with(libraryName,".sptxt"))
+            else if(bal::iends_with(libraryName,".sptxt"))
                 loadSpectraSTLibraryFromSptxt();
-            else if(bal::ends_with(libraryName, ".index"))
+            else if(bal::iends_with(libraryName, ".index"))
                 loadIndexedLibrary();
         }
 

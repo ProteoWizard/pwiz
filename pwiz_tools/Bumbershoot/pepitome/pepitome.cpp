@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "PTMVariantList.h"
 #include "WuManber.h"
+#include "LibraryBabelFish.h"
 #include "boost/tuple/tuple.hpp"
 #include "boost/lockfree/fifo.hpp"
 #include "pepitomeVersion.hpp"
@@ -873,199 +874,201 @@ namespace freicore
             // Get the database name
             g_dbFilename = g_rtConfig->ProteinDatabase;
             int numSpectra = 0;
-            // Get the associated spectral library
-            g_spectralLibName = g_rtConfig->SpectralLibrary;
 
             INIT_PROFILERS(13)
 
-                // If this is a parent process then read the input spectral data and 
-                // protein database files
-                if( g_pid == 0 )
+            for( size_t i=1; i < args.size(); ++i )
+            {
+                //cout << g_hostString << " is reading spectra from files matching mask \"" << args[i] << "\"" << endl;
+                FindFilesByMask( args[i], g_inputFilenames );
+            }
+
+            if( g_inputFilenames.empty() )
+            {
+                cout << "No data sources found with the given filemasks." << endl;
+                return 1;
+            }
+
+            if( !TestFileType( g_dbFilename, "fasta" ) )
+                return 1;
+
+            // Read the protein database
+			cout << "Reading \"" << g_dbFilename << "\"" << endl;
+            Timer readTime(true);
+            try
+            {
+                proteins = proteinStore( g_rtConfig->DecoyPrefix );
+                proteins.readFASTA( g_dbFilename );
+            }
+            catch (std::exception& e)
+            {
+                cout << "Error loading protein database: " << e.what() << endl;
+                return 1;
+            }
+            cout << "Read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
+
+            if (bal::iends_with(g_rtConfig->SpectralLibrary, ".msp") ||
+                bal::iends_with(g_rtConfig->SpectralLibrary, ".sptxt"))
+            {
+                if (!bfs::exists(g_rtConfig->SpectralLibrary + ".index"))
                 {
-                    for( size_t i=1; i < args.size(); ++i )
-                    {
-                        //cout << g_hostString << " is reading spectra from files matching mask \"" << args[i] << "\"" << endl;
-                        FindFilesByMask( args[i], g_inputFilenames );
-                    }
-
-                    if( g_inputFilenames.empty() )
-                    {
-                        cout << "No data sources found with the given filemasks." << endl;
-                        return 1;
-                    }
-
-                    if( !TestFileType( g_dbFilename, "fasta" ) )
-                        return 1;
-
-                    // Read the protein database
-			        cout << "Reading \"" << g_dbFilename << "\"" << endl;
-                    Timer readTime(true);
+                    // index the library if it's not already indexed
                     try
                     {
-                        proteins = proteinStore( g_rtConfig->DecoyPrefix );
-                        proteins.readFASTA( g_dbFilename );
-                    } catch( std::exception& e )
+                        LibraryBabelFish converter(g_rtConfig->SpectralLibrary);
+                        converter.initializeDatabase();
+                        converter.indexLibrary();
+                    }
+                    catch (std::exception& e)
                     {
-                        cout << "Encountered an error: " << e.what() << endl;
+                        cout << "Error indexing spectral library: " << e.what() << endl;
                         return 1;
                     }
-                    cout << "Read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
+                }
+                else
+                    cout << "Using existing index for \"" << g_rtConfig->SpectralLibrary << "\"" << endl;
 
-                    fileList_t finishedFiles;
-                    fileList_t::iterator fItr;
-                    // For each input spectra file
-                    for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
-                    {
-                        // Read the associated spectral library. Repetitive reading is necessary to keep
-                        // the memory bounds in check.
-                        try
-                        {
-                            librarySpectra.loadLibrary(g_spectralLibName);
-                        } catch( std::exception& e)
-                        {
-                            cout << "Encountered an error: " << e.what() << endl;
-                            return 1;
-                        }
+                g_rtConfig->SpectralLibrary += ".index";
+            }
 
-                        if(g_rtConfig->RecalculateLibPepMasses)
-                        {
-                            // Recalcuate the precusor masses for all spectra in the library
-                            cout << "Recalculating precursor masses for library spectra." << endl;
-                            Timer recalTime(true);
-                            try
-                            {
-                                librarySpectra.recalculatePrecursorMasses();
-                            } catch( std::exception& e)
-                            {
-                                cout << g_hostString << "Encountered an error: " << e.what() << endl;
-                                return 1;
-                            }
-                            cout << "Finished recalcuation; " <<  recalTime.End() << " seconds elapsed." << endl;
-                        }
-                        // randomize order of the spectra to optimize work 
-                        // distribution in the multi-threading mode.
-                        //librarySpectra.random_shuffle();
-
-                        Timer fileTime(true);
-
-                        // Hold the spectra objects
-                        spectra.clear();
-                        // Holds the map of parent mass to corresponding spectra
-                        avgSpectraByChargeState.clear();
-                        monoSpectraByChargeState.clear();
-                        searchStatistics = SearchStatistics();
-
-                        cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
-                        finishedFiles.insert( *fItr );
-
-                        Timer readTime(true);
-
-                        // Read the spectra
-                        try
-                        {
-                            spectra.readPeaks( *fItr,
-                                       0, -1,
-                                                2, // minMsLevel
-                                                g_rtConfig->SpectrumListFilters );
-                        } catch( std::exception& e )
-                        {
-                            cerr << "Encountered an error: " << e.what() << endl;
-                            return 1;
-                        }
-
-                        // Compute the peak counts
-                        int totalPeakCount = 0;
-                        numSpectra = (int) spectra.size();
-                        for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-                            totalPeakCount += (*sItr)->peakPreCount;
-
-                        cout << "Read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.End() << " seconds elapsed." << endl;
-
-                        int skip = 0;
-                        if( numSpectra == 0 )
-                        {
-                            cout << "Skipping a file with no spectra." << endl;
-                            skip = 1;
-                        }
-
-                        Timer searchTime;
-                        string startTime;
-                        string startDate;
-                        vector< size_t > opcs; // original peak count statistics
-                        vector< size_t > fpcs; // filtered peak count statistics
-
-                        // If the file has spectra
-                        if( !skip )
-                        {
-                            // prepare the spectra
-                            cout << "Preparing " << numSpectra << " spectra." << endl;
-                            Timer prepareTime(true);
-                            PrepareSpectra();
-                            cout << "Finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
-                            numSpectra = (int) spectra.size();
-
-                            skip = 0;
-                            if( numSpectra == 0 )
-                            {
-                                cout << "Skipping a file with no suitable spectra." << endl;
-                                skip = 1;
-                            }
-                            // If the file has spectra to search
-                            if( !skip )
-                            {
-                                opcs = spectra.getOriginalPeakCountStatistics();
-                                fpcs = spectra.getFilteredPeakCountStatistics();
-                                cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
-                                cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-                                cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
-                                    opcs[2] << " (" << fpcs[2] << "), " <<
-                                    opcs[3] << " (" << fpcs[3] << "), " <<
-                                    opcs[4] << " (" << fpcs[4] << ")" << endl;
-                                float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-                                cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
-
-                                InitWorkerGlobals();
-                                // Start the search
-                                if( !g_rtConfig->EstimateSearchTimeOnly )
-                                {
-                                    cout << "Commencing library search on " << numSpectra << " spectra." << endl;
-                                    startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
-                                    ExecuteSearch();
-                                    cout << "Finished library search; " << searchTime.End() << " seconds elapsed." << endl;
-								    cout << "Overall stats: " << (string) searchStatistics << endl;
-                                } else
-                                {
-                                    cout << "Estimating the count of sequence comparisons to be done." << endl;
-                                    ExecuteSearch();
-                                    double estimatedComparisonsPerSpectrum = searchStatistics.numComparisonsDone / (double) searchStatistics.numSpectraQueried;
-                                    boost::int64_t estimatedTotalComparisons = (boost::int64_t) (estimatedComparisonsPerSpectrum * librarySpectra.size());
-                                    cout << "Will make an estimated total of " << estimatedTotalComparisons << " spectrum comparisons." << endl;
-                                    skip = 1;
-                                }
-                            }
-
-                            DestroyWorkerGlobals();
-                            // Write the output
-                            if( !skip ) {
-                                if ( g_rtConfig->FASTARefreshResults )
-                                {
-                                    Timer mapTimer(true);
-                                    cout << "Mapping library peptide matches to fasta database." << endl;
-                                    findProteinMatches();
-                                    purgeOrphanResults();
-                                    cout << "Finished mapping; " << mapTimer.End() << " seconds elapsed." << endl;
-                                }
-                                WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, searchStatistics );
-                                cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
-                                //PRINT_PROFILERS(cout,"old");
-                            }
-
-                        }
-
-                    }
+            fileList_t finishedFiles;
+            fileList_t::iterator fItr;
+            // For each input spectra file
+            for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
+            {
+                // Read the associated spectral library. Repetitive reading is necessary to keep
+                // the memory bounds in check.
+                try
+                {
+                    librarySpectra.loadLibrary(g_rtConfig->SpectralLibrary);
+                }
+                catch (std::exception& e)
+                {
+                    cout << "Encountered an error loading spectral library: " << e.what() << endl;
+                    return 1;
                 }
 
-                return 0;
+                // randomize order of the spectra to optimize work 
+                // distribution in the multi-threading mode.
+                //librarySpectra.random_shuffle();
+
+                Timer fileTime(true);
+
+                // Hold the spectra objects
+                spectra.clear();
+                // Holds the map of parent mass to corresponding spectra
+                avgSpectraByChargeState.clear();
+                monoSpectraByChargeState.clear();
+                searchStatistics = SearchStatistics();
+
+                cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
+                finishedFiles.insert( *fItr );
+
+                Timer readTime(true);
+
+                // Read the spectra
+                try
+                {
+                    spectra.readPeaks( *fItr, 0, -1, 2, g_rtConfig->SpectrumListFilters );
+                }
+                catch (std::exception& e )
+                {
+                    cerr << "Error reading experimental spectra: " << e.what() << endl;
+                    return 1;
+                }
+
+                // Compute the peak counts
+                int totalPeakCount = 0;
+                numSpectra = (int) spectra.size();
+                for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+                    totalPeakCount += (*sItr)->peakPreCount;
+
+                cout << "Read " << numSpectra << " experimental spectra with " << totalPeakCount << " peaks; " << readTime.End() << " seconds elapsed." << endl;
+
+                int skip = 0;
+                if( numSpectra == 0 )
+                {
+                    cout << "Skipping a file with no experimental spectra." << endl;
+                    skip = 1;
+                }
+
+                Timer searchTime;
+                string startTime;
+                string startDate;
+                vector< size_t > opcs; // original peak count statistics
+                vector< size_t > fpcs; // filtered peak count statistics
+
+                // If the file has spectra
+                if( !skip )
+                {
+                    // prepare the spectra
+                    cout << "Preparing " << numSpectra << " experimental spectra." << endl;
+                    Timer prepareTime(true);
+                    PrepareSpectra();
+                    cout << "Finished preparing experimental spectra; " << prepareTime.End() << " seconds elapsed." << endl;
+                    numSpectra = (int) spectra.size();
+
+                    skip = 0;
+                    if( numSpectra == 0 )
+                    {
+                        cout << "Skipping a file with no suitable experimental spectra." << endl;
+                        skip = 1;
+                    }
+                    // If the file has spectra to search
+                    if( !skip )
+                    {
+                        opcs = spectra.getOriginalPeakCountStatistics();
+                        fpcs = spectra.getFilteredPeakCountStatistics();
+                        cout << "Mean original (filtered) experimental peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+                        cout << "Min/max original (filtered) experimental peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+                        cout << "Original (filtered) experimental peak count at 1st/2nd/3rd quartiles: " <<
+                            opcs[2] << " (" << fpcs[2] << "), " <<
+                            opcs[3] << " (" << fpcs[3] << "), " <<
+                            opcs[4] << " (" << fpcs[4] << ")" << endl;
+                        float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
+                        cout << "Filtered out " << filter * 100.0f << "% of experimental peaks." << endl;
+
+                        InitWorkerGlobals();
+                        // Start the search
+                        if( !g_rtConfig->EstimateSearchTimeOnly )
+                        {
+                            cout << "Commencing library search on " << numSpectra << " spectra." << endl;
+                            startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
+                            ExecuteSearch();
+                            cout << "Finished library search; " << searchTime.End() << " seconds elapsed." << endl;
+							cout << "Overall stats: " << (string) searchStatistics << endl;
+                        } else
+                        {
+                            cout << "Estimating the count of sequence comparisons to be done." << endl;
+                            ExecuteSearch();
+                            double estimatedComparisonsPerSpectrum = searchStatistics.numComparisonsDone / (double) searchStatistics.numSpectraQueried;
+                            boost::int64_t estimatedTotalComparisons = (boost::int64_t) (estimatedComparisonsPerSpectrum * librarySpectra.size());
+                            cout << "Will make an estimated total of " << estimatedTotalComparisons << " spectrum comparisons." << endl;
+                            skip = 1;
+                        }
+                    }
+
+                    DestroyWorkerGlobals();
+                    // Write the output
+                    if( !skip ) {
+                        if ( g_rtConfig->FASTARefreshResults )
+                        {
+                            Timer mapTimer(true);
+                            cout << "Mapping library peptide matches to fasta database." << endl;
+                            findProteinMatches();
+                            purgeOrphanResults();
+                            cout << "Finished mapping; " << mapTimer.End() << " seconds elapsed." << endl;
+                        }
+                        WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, searchStatistics );
+                        cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+                        //PRINT_PROFILERS(cout,"old");
+                    }
+
+                }
+
+            }
+
+            return 0;
         }
     }
 }

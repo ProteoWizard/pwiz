@@ -35,6 +35,7 @@ namespace freicore
             libraryIndex.execute("PRAGMA journal_mode=OFF;"
                 "PRAGMA synchronous=OFF;"
                 "PRAGMA automatic_indexing=OFF;"
+                "PRAGMA page_size=32768;"
                 "PRAGMA cache_size=5000;"
                 "PRAGMA temp_store=MEMORY"
                 );
@@ -124,13 +125,13 @@ namespace freicore
         inline string shufflePeptideSequence(const DigestedPeptide& peptide)
         {
             // Amino acids containing modifications and also proline are not movable.
-            size_t peptideLength = peptide.sequence().length();
+            int peptideLength = (int) peptide.sequence().length();
             ModificationMap& mods = const_cast<ModificationMap&>(peptide.modifications());
             int firstMovableAAIndex = 200;
             int lastMovableAAIndex = -1;
             vector<bool> immutable(peptideLength,false);
             vector<char> movableAAs;
-            for(size_t position = 0; position < peptideLength -1; ++position)
+            for(int position = 0; position < peptideLength -1; ++position)
             {
                 if(peptide.sequence()[position] == 'P' || mods.find(position) != mods.end())
                     immutable[position] = true;
@@ -150,7 +151,7 @@ namespace freicore
                 stringstream shuffledPeptide;    
                 std::random_shuffle(movableAAs.begin(),movableAAs.end());
                 size_t randomAAIndex = 0;
-                for(size_t position = 0; position < peptideLength-1; ++position)
+                for(int position = 0; position < peptideLength-1; ++position)
                 {
                     if(!immutable[position])
                     {
@@ -207,14 +208,20 @@ namespace freicore
             transactionPtr.reset(new sqlite::transaction(libraryIndex));
 
             library.loadLibrary(libraryName);
+            NativeFileReader nativeReader(libraryName);
+
             size_t totalSpectra = library.size();
-            cout << "Indexing  " << totalSpectra << " found in the library." << endl;
+            cout << "Indexing " << totalSpectra << " spectra found in the library." << endl;
             for(sqlite3_int64 index = 0; index < totalSpectra; ++index)
             {
                 if(!(index % 1000)) 
                     cout << totalSpectra << ": " << index << '\r' << flush;
                 // Read the library spectrum metadata and insert it into the DB
-                library[index]->readSpectrumForIndexing();
+                library[index]->readHeader(nativeReader);
+                library[index]->averageMass = library[index]->matchedPeptide->molecularWeight();
+                library[index]->monoisotopicMass = library[index]->matchedPeptide->monoisotopicMass();
+                library[index]->readPeaks(nativeReader);
+
                 insertMetaData.binder() << ("scan="+boost::lexical_cast<string>(index)) 
                     << library[index]->matchedPeptide->sequence()
                     << library[index]->libraryMass
@@ -226,10 +233,10 @@ namespace freicore
                 insertMetaData.execute();
                 insertMetaData.reset();
                 // Archive the peptide, peaks, and proteins data.
-                stringstream packStream(stringstream::binary|stringstream::in|stringstream::out);
+                stringstream packStream(ios::binary|ios::out);
                 // This library offer binary portability. boost::binary_oarchive is not protable
                 eos::portable_oarchive packArchive( packStream );
-                packArchive  & *library[index];
+                packArchive & *library[index];
                 sqlite3_int64 numPeaks = library[index]->peakPreData.size();
                 // Insert the spectrum data into library
                 string tmpStr = packStream.str();
@@ -252,6 +259,7 @@ namespace freicore
     }
 }
 
+#ifdef LIBRARYBABELFISH_EXE
 int main( int argc, char* argv[] )
 {
     // Get the command line arguments and process them
@@ -267,5 +275,7 @@ int main( int argc, char* argv[] )
     freicore::pepitome::LibraryBabelFish converter(args[1]);
     converter.initializeDatabase();
     converter.indexLibrary();
-}
 
+    return 0;
+}
+#endif

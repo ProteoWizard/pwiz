@@ -64,7 +64,7 @@ using namespace pwiz::math;
 	RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		0.98			) \
 	RTCONFIG_VARIABLE( double,			LibTicCutoffPercentage,		0.98			) \
 	RTCONFIG_VARIABLE( int,			    LibMaxPeakCount,    		100 			) \
-    RTCONFIG_VARIABLE( int,			    LibraryBatchSize,    		100 			) \
+    RTCONFIG_VARIABLE( size_t,		    LibraryBatchSize,    		100 			) \
 	RTCONFIG_VARIABLE( bool,			CleanLibSpectra,    		true			) \
 	RTCONFIG_VARIABLE( bool,			PreferIntenseComplements,	true			) \
 	RTCONFIG_VARIABLE( int,				ProteinSamplingTime,		15				) \
