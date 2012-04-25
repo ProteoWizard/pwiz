@@ -2661,7 +2661,7 @@ namespace pwiz.Skyline
                 transitionsContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                 {
                     allTranContextMenuItem,
-                    precursorsTranMenuItem,
+                    precursorsTranContextMenuItem,
                     productsTranContextMenuItem,
                     singleTranContextMenuItem,
                     totalTranContextMenuItem

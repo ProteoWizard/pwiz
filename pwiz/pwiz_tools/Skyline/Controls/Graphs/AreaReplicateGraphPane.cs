@@ -534,13 +534,14 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private string GetDotProductResultsText(TransitionGroupDocNode nodeTran, int indexResult)
+        private string GetDotProductResultsText(TransitionGroupDocNode nodeGroup, int indexResult)
         {
             switch (ExpectedVisible)
             {
                 case AreaExpectedValue.library:
+                    return GetDotProductText(nodeGroup.GetLibraryDotProduct(IndexOfReplicate(indexResult)));
                 case AreaExpectedValue.isotope_dist:
-                    return GetDotProductText(nodeTran.GetIsotopeDotProduct(IndexOfReplicate(indexResult)));
+                    return GetDotProductText(nodeGroup.GetIsotopeDotProduct(IndexOfReplicate(indexResult)));
                 default:
                     return null;
             }
