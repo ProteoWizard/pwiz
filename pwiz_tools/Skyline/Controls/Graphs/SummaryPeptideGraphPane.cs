@@ -275,10 +275,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else if (peptideOrder == SummaryPeptideOrder.area)
                 {
-                    if (displayTotals)
-                        listPoints.Sort(ComparePeptideAreas);
-                    else
-                        listPoints.Sort(CompareGroupAreas);
+                    listPoints.Sort(CompareGroupAreas);
                 }
 
                 // Init calculated values
@@ -413,12 +410,14 @@ namespace pwiz.Skyline.Controls.Graphs
                 return Comparer.Default.Compare(p1.TimeGroup, p2.TimeGroup);
             }
 
+/*
             private static int ComparePeptideAreas(GraphPointData p1, GraphPointData p2)
             {
                 if (ReferenceEquals(p2.NodePep, p1.NodePep))
                     return Peptide.CompareGroups(p2.NodeGroup, p1.NodeGroup);
                 return Comparer.Default.Compare(p2.AreaPepCharge, p1.AreaPepCharge);
             }
+*/
 
             private static int CompareGroupAreas(GraphPointData p1, GraphPointData p2)
             {
@@ -604,7 +603,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public TransitionGroupDocNode NodeGroup { get; private set; }
             public IdentityPath IdentityPath { get; private set; }
             public double AreaGroup { get; private set; }
-            public double AreaPepCharge { get; private set; }
+//            public double AreaPepCharge { get; private set; }
             public double TimeGroup { get; private set; }
             public double TimePepCharge { get; private set; }
 
@@ -630,7 +629,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         TimeGroup = meanTime ?? 0;
                     }
                 }
-                AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
+//                AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
                 TimePepCharge = (times.Count > 0 ? new Statistics(times).Mean() : 0);
             }
 
@@ -647,7 +646,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 meanArea = null;
                 if (areas.Count > 0)
-                    new Statistics(areas).Mean();
+                    meanArea = new Statistics(areas).Mean();
                 meanTime = null;
                 if (times.Count > 0)
                     meanTime = new Statistics(times).Mean();
