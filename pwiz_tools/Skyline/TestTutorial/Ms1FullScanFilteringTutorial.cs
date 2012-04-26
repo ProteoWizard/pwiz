@@ -114,6 +114,7 @@ namespace pwiz.SkylineTestTutorial
             doc = SkylineWindow.Document;
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
+                Assert.AreEqual(MassType.Monoisotopic, transitionSettingsUI.PrecursorMassType);
                 transitionSettingsUI.PrecursorCharges = "2,3,4";
                 transitionSettingsUI.ProductCharges = "1,2,3";
                 transitionSettingsUI.FragmentTypes = "p";
