@@ -63,7 +63,7 @@ struct PeakIntLessThan : public binary_function<PEAK_T, PEAK_T, bool>
       if( p1.intensity < p2.intensity ){
           return true;
       } else if( p1.intensity == p2.intensity ){
-          return (p1.mz < p2.intensity);
+          return (p1.mz < p2.mz);
       }
       // else
       return false;
