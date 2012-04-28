@@ -34,14 +34,24 @@ rule define-os ( properties * )
   }
 }
 
-rule mascot-api-requirements ( properties * )
+rule mascot-define ( properties * )
 {
     local result ;
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        result += <source>MascotResultsReader.cpp ;
         result += <define>USE_MASCOT_PARSER ;
+    }
+    return $(result) ;
+}
+
+rule mascot-api-requirements ( properties * )
+{
+    local result = [ mascot-define $(properties) ] ;
+    local msparser_path = [ msparser-path $(properties) ] ;
+    if $(msparser_path)
+    {
+        result += <source>MascotResultsReader.cpp ;
     }
     else
     {
@@ -72,38 +82,20 @@ project
 ;
 
 # the main BiblioSpec library
-lib blib
+lib blibbuild
   : # sources
-    AminoAcidMasses.cpp
     BlibBuilder.cpp
-    BlibMaker.cpp
-    BlibUtils.cpp
     BuildParser.cpp
-    CommandLine.cpp
-    DotProduct.cpp
     IdpXMLreader.cpp
-    LibReader.cpp
-    Match.cpp
     MzIdentMLReader.cpp
-    Options.cpp
-    PeakProcess.cpp
     PepXMLreader.cpp
     PercolatorXmlReader.cpp
     ProteinPilotReader.cpp
-    PsmFile.cpp
-    PwizReader.cpp
-    RefSpectrum.cpp
-    Reportfile.cpp
     saxhandler.cpp
-    SearchLibrary.cpp
-    Spectrum.cpp
-    SqliteRoutine.cpp
     SQTreader.cpp
     SslReader.cpp
     TandemNativeParser.cpp
-    Verbosity.cpp
     WatersMseReader.cpp
-    WeibullPvalue.cpp
   : # requirements
     <link>static
     <conditional>@mascot-api-requirements
@@ -111,6 +103,34 @@ lib blib
   : # default-build
   : # usage-requirements
     <conditional>@mascot-api-usage-requirements
+    <library>../libraries/sqlite//sqlite
+ ;
+
+lib blib
+  : # sources
+    AminoAcidMasses.cpp
+    BlibMaker.cpp
+    BlibUtils.cpp
+    CommandLine.cpp
+    DotProduct.cpp
+    LibReader.cpp
+    Match.cpp
+    Options.cpp
+    PeakProcess.cpp
+    PsmFile.cpp
+    PwizReader.cpp
+    RefSpectrum.cpp
+    Reportfile.cpp
+    SearchLibrary.cpp
+    Spectrum.cpp
+    SqliteRoutine.cpp
+    Verbosity.cpp
+    WeibullPvalue.cpp
+  : # requirements
+    <link>static
+    <library>../libraries/sqlite//sqlite
+  : # default-build
+  : # usage-requirements
     <library>../libraries/sqlite//sqlite
  ;
 
@@ -135,9 +155,11 @@ exe BlibBuild
   : # sources
     BlibBuild.cpp
     blib
+    blibbuild
     pwiz-boost-libraries
   : # requirements
     <link>static
+    <conditional>@mascot-define
 ;
 
 exe BlibFilter
