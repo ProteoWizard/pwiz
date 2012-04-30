@@ -97,6 +97,16 @@ namespace pwiz.Skyline.Model
                 seen.Add(c);
             }
         }
+
+        public static int ToIndex(char c)
+        {
+            return c - 'A';
+        }
+
+        public static int Count(string seq, params char[] aas)
+        {
+            return seq.Count(aas.Contains);            
+        }
     }
 
     /// <summary>

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -34,6 +35,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Esp;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
@@ -759,6 +761,51 @@ namespace pwiz.Skyline
             using (ExportReportDlg dlg = new ExportReportDlg(this))
             {
                 dlg.ShowDialog(this);
+            }
+        }
+
+        private void espFeaturesMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowExportEspFeaturesDialog();
+        }
+
+        public void ShowExportEspFeaturesDialog()
+        {
+            if (DocumentUI.PeptideCount == 0)
+            {
+                MessageDlg.Show(this, "The document must contain peptides for which to export features.");
+                return;
+            }
+
+            using (var dlg = new SaveFileDialog
+            {
+                Title = "Export ESP Features",
+                OverwritePrompt = true,
+                DefaultExt = EspFeatureCalc.EXT,
+                Filter = string.Join("|", new[]
+                    {
+                        "ESP Feature Files (*." + EspFeatureCalc.EXT + ")|*." + EspFeatureCalc.EXT,
+                        "All Files (*.*)|*.*"
+                    })
+            })
+            {
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                {
+                    dlg.InitialDirectory = Path.GetDirectoryName(DocumentFilePath);
+                    dlg.FileName = Path.GetFileNameWithoutExtension(DocumentFilePath) + "." + EspFeatureCalc.EXT;
+                }
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+
+                try
+                {
+                    EspFeatureCalc.WriteFeatures(dlg.FileName,
+                        DocumentUI.Peptides.Select(nodePep => nodePep.Peptide.Sequence), CultureInfo.CurrentCulture);
+                }
+                catch (IOException x)
+                {
+                    MessageDlg.Show(this, string.Format("Failed attempting to save ESP features to {0}.\n{1}", dlg.FileName, x.Message));
+                }
             }
         }
 

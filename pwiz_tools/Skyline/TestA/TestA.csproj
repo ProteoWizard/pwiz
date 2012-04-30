@@ -107,6 +107,7 @@
     <Compile Include="AnnotationUnitTest.cs" />
     <Compile Include="CommandLineTest.cs" />
     <Compile Include="DecoysTest.cs" />
+    <Compile Include="EspTest.cs" />
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
