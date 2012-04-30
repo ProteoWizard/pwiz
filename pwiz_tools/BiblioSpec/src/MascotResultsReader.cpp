@@ -50,11 +50,13 @@ MascotResultsReader::MascotResultsReader(BlibBuilder& maker,
                                     cacheFlag,
                                     cachePath);
 
-    int error = ms_file_->getLastError();
-    if( error !=  ms_mascotresfile::ERR_NO_ERROR ) {
-        string msg = getErrorMessage(error);
-        throw BlibException(true, "Error with '%s'. %s", 
-                            datFileName, msg.c_str());
+    if (!ms_file_->isValid()) {
+        int error = ms_file_->getLastError();
+        if( error !=  ms_mascotresfile::ERR_NO_ERROR ) {
+            string msg = getErrorMessage(error);
+            throw BlibException(true, "Error with '%s'. %s", 
+                                datFileName, msg.c_str());
+        }
     }
 
     // set score threshold

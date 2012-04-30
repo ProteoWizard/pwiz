@@ -123,7 +123,13 @@ void ProteinPilotReader::startElement(const XML_Char* name,
         if(state_ == SPECTRUM_STATE){
             parseMatchModElement(attr);
         }
-        
+    } else if (isElement("TERM_MOD_FEATURE", name)) {
+        // two kinds of term-mod-feature elements, in params and out
+        // for now only do out of params.
+        // (separate from mod-feature for debugging)
+        if(state_ == SPECTRUM_STATE){
+            parseMatchModElement(attr);
+        }
     } else if (isElement("MSMSPEAKS", name)) {
         state_ = PEAKS_STATE;
         expectedNumPeaks_ = getIntRequiredAttrValue("size", attr);

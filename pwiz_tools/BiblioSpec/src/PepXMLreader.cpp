@@ -113,7 +113,14 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            analysisType_ = PROTEIN_PROSPECTOR_ANALYSIS;
            scoreType_ = PROTEIN_PROSPECTOR_EXPECT;
            probCutOff = getScoreThreshold(PROT_PROSPECT);
-       } // else assume peptide prophet or inter prophet 
+       } else if(analysisType_ != PEPTIDE_PROPHET_ANALYSIS &&
+               strncmp("X! Tandem", search_engine,
+                       strlen("X! Tandem")) == 0) {
+           Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
+           analysisType_ = XTANDEM_ANALYSIS;
+           scoreType_ = TANDEM_EXPECTATION_VALUE;
+           probCutOff = getScoreThreshold(TANDEM);
+       }// else assume peptide prophet or inter prophet 
        
        if(strcmp("monoisotopic",getAttrValue("fragment_mass_type",attr)) == 0)
            massType = 1;
@@ -137,7 +144,8 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        if( analysisType_ == PEPTIDE_PROPHET_ANALYSIS ||
            analysisType_ == INTER_PROPHET_ANALYSIS ||
            analysisType_ == OMSSA_ANALYSIS ||
-           analysisType_ == PROTEIN_PROSPECTOR_ANALYSIS) {
+           analysisType_ == PROTEIN_PROSPECTOR_ANALYSIS ||
+           analysisType_ == XTANDEM_ANALYSIS) {
            scanNumber = getIntRequiredAttrValue("start_scan",attr);
        }
        // if spectrum mill type
@@ -206,7 +214,8 @@ void PepXMLreader::endElement(const XML_Char* name)
         if( analysisType_ == UNKNOWN_ANALYSIS ){
             throw BlibException(false, "The .pep.xml file is not from one of "
                                 "the recognized sources (PeptideProphet, "
-                                "iProphet, SpectrumMill, OMSSA, Protein Prospector).");
+                                "iProphet, SpectrumMill, OMSSA, Protein Prospector, "
+                                "X! Tandem).");
         }
         // if we are using pep.xml from Spectrum mill, we still don't have
         // scan numbers/indexes, here's a hack to get them
@@ -300,6 +309,7 @@ bool PepXMLreader::scorePasses(double score){
 
     case OMSSA_ANALYSIS:
     case PROTEIN_PROSPECTOR_ANALYSIS:
+    case XTANDEM_ANALYSIS:
         if(score < probCutOff){
             return true;
         }
