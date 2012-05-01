@@ -70,8 +70,8 @@ rule blib-test ( name : tool : args * : output-name : reference-names + : inputs
 {
     local output = output/$(output-name).blib ;
     local references = reference/$(reference-names) ;
-    return [ make $(output) : inputs/empty : @common.copy : <location>.  <conditional>@test-data $(requirements) ]
-           [ run-if-exists ExecuteBlib.cpp : $(args) : [ SORT $(tool) $(inputs) $(output) ] : $(requirements) : build-$(name) ]
+    return [ make $(output) : inputs/empty : @common.copy : <location>. <conditional>@test-data $(requirements) ]
+           [ run-if-exists ExecuteBlib.cpp : $(args) : [ SORT $(tool) $(inputs) $(output) ] : $(requirements) <dependency>$(output) : build-$(name) ]
            [ run-if-exists CompareLibraryContents.cpp compare-src : : [ SORT $(output) $(references) ]
                            : $(compare-reqs) <dependency>build-$(name) $(requirements) : check-$(name) ] ;
 }
