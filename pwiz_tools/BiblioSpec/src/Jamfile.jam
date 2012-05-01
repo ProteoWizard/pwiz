@@ -171,10 +171,7 @@ exe BlibFilter
     blib
     pwiz-boost-libraries
   : # requirements
-    <link>static
-  : # default-build
-  : # usage-requirements
-    <conditional>@mascot-api-usage-requirements
+    <link>static  
 ;
 
 exe BlibSearch
@@ -183,10 +180,7 @@ exe BlibSearch
     blib
     pwiz-boost-libraries
   : # requirements
-    <link>static
-  : # default-build
-  : # usage-requirements
-    <conditional>@mascot-api-usage-requirements
+    <link>static  
 ;
 
 exe BlibToMs2
