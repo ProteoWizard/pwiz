@@ -66,7 +66,7 @@ rule mascot-api-usage-requirements ( properties * )
     local msparser_path = [ msparser-path $(properties) ] ;
     if $(msparser_path)
     {
-        result += <library>$(PWIZ_ROOT_PATH)//msparser ;
+        result += <library>$(PWIZ_ROOT_PATH)//msparser <dependency>unimod_2.xsd ;
     }
 
     return $(result) ;
@@ -160,6 +160,9 @@ exe BlibBuild
   : # requirements
     <link>static
     <conditional>@mascot-define
+  : # default-build
+  : # usage-requirements
+    <conditional>@mascot-api-usage-requirements
 ;
 
 exe BlibFilter
@@ -168,7 +171,10 @@ exe BlibFilter
     blib
     pwiz-boost-libraries
   : # requirements
-    <link>static  
+    <link>static
+  : # default-build
+  : # usage-requirements
+    <conditional>@mascot-api-usage-requirements
 ;
 
 exe BlibSearch
@@ -177,7 +183,10 @@ exe BlibSearch
     blib
     pwiz-boost-libraries
   : # requirements
-    <link>static  
+    <link>static
+  : # default-build
+  : # usage-requirements
+    <conditional>@mascot-api-usage-requirements
 ;
 
 exe BlibToMs2
