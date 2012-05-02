@@ -48,6 +48,12 @@ namespace MSConvertGUI
                 // mimic user adding file via filebox
                 FileBox.Text = cmdline_args[i];
                 AddFileButton_Click(sender, e);
+                if (FileBox.Text.Length > 0)
+                {
+                    // if it didn't get added, field will still contain file or dir name
+                    MessageBox.Show("Don't know how to read \"" + FileBox.Text + "\", ignored");
+                    FileBox.Text = "";
+                }
             }
             OutputFormatBox.Text = "mzML";
             FilterBox.Text = "MS Level";
