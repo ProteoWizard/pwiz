@@ -37,16 +37,14 @@
 #pragma managed
 #include "pwiz/utility/misc/cpp_cli_utilities.hpp"
 using namespace pwiz::util;
-
-
-using System::String;
-using System::Math;
-using System::Console;
+using namespace System;
 using namespace Clearcore2::Data;
 using namespace Clearcore2::Data::AnalystDataProvider;
 using namespace Clearcore2::Data::DataAccess::SampleData;
-using namespace System;
 
+#if __CLR_VER > 40000000 // .NET 4
+using namespace Clearcore2::RawXYProcessing;
+#endif
 
 namespace pwiz {
 namespace vendor_api {
@@ -161,7 +159,7 @@ struct SpectrumImpl : public Spectrum
 
     virtual double getStartTime() const;
 
-    virtual bool getDataIsContinuous() const;
+    virtual bool getDataIsContinuous() const {return pointsAreContinuous;}
     size_t getDataSize(bool doCentroid) const;
     virtual void getData(bool doCentroid, std::vector<double>& mz, std::vector<double>& intensities) const;
 
@@ -174,6 +172,11 @@ struct SpectrumImpl : public Spectrum
     ExperimentImplPtr experiment;
     gcroot<MassSpectrumInfo^> spectrumInfo;
     mutable gcroot<MassSpectrum^> spectrum;
+
+#if __CLR_VER > 40000000 // .NET 4
+    mutable gcroot<cli::array<PeakClass^>^> peakList;
+#endif
+
     int cycle;
 
     // data points
@@ -194,7 +197,7 @@ WiffFileImpl::WiffFileImpl(const string& wiffpath)
 {
     try
     {
-#if _MSC_VER > 1500
+#if __CLR_VER > 40000000 // .NET 4
         Clearcore2::Licensing::LicenseKeys::Keys = gcnew array<String^> {ABI_BETA_LICENSE_KEY};
 #else
         Licenser::LicenseKey = ABI_BETA_LICENSE_KEY;
@@ -498,7 +501,7 @@ SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
     {
         spectrumInfo = experiment->msExperiment->GetMassSpectrumInfo(cycle-1);
 
-        //pointsAreContinuous = !spectrumInfo->CentroidMode;
+        pointsAreContinuous = !spectrumInfo->CentroidMode;
 
         sumY = experiment->cycleIntensities()[cycle-1];
         //minX = experiment->; // TODO Mass range?
@@ -547,22 +550,27 @@ double SpectrumImpl::getStartTime() const
     return spectrumInfo->StartRT;
 }
 
-bool SpectrumImpl::getDataIsContinuous() const
-{
-    try
-    {
-        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-        return spectrum->ContinuumData;
-    }
-    CATCH_AND_FORWARD
-}
-
 size_t SpectrumImpl::getDataSize(bool doCentroid) const
 {
     try
     {
-        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-        return spectrum->NumDataPoints;
+#if __CLR_VER > 40000000 // .NET 4
+        if (doCentroid)
+        {
+            if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
+            return (size_t) peakList->Length;
+        }
+        else
+#endif
+        {
+            if ((MassSpectrum^) spectrum == nullptr)
+            {
+                spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
+                // TODO: enable this when it's more efficient:
+                // experiment->msExperiment->AddZeros((MassSpectrum^) spectrum);
+            }
+            return (size_t) spectrum->NumDataPoints;
+        }
     }
     CATCH_AND_FORWARD
 }
@@ -571,26 +579,29 @@ void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector
 {
     try
     {
-        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-
-        /*if (doCentroid)
-            doCentroid = pointsAreContinuous && spectrum->AllPeakCount > 0;
-
-        if (doCentroid)
+#if __CLR_VER > 40000000 // .NET 4
+        if (doCentroid && pointsAreContinuous)
         {
-            size_t numPoints = spectrum->AllPeakCount;
+            if ((cli::array<PeakClass^>^) peakList == nullptr) peakList = experiment->msExperiment->GetPeakArray(cycle-1);
+            size_t numPoints = peakList->Length;
             mz.resize(numPoints);
             intensities.resize(numPoints);
-            PeakCollection^ peaks = spectrum->AllPeaks;
             for (size_t i=0; i < numPoints; ++i)
             {
-                Peak^ peak = peaks[(int)i];
-                mz[i] = peak->ApexX;
-                intensities[i] = peak->ApexY;
+                PeakClass^ peak = peakList[(int)i];
+                mz[i] = peak->apexX;
+                intensities[i] = peak->apexY;
             }
         }
-        else*/
+        else
+#endif
         {
+            if ((MassSpectrum^) spectrum == nullptr)
+            {
+                spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
+                // TODO: enable this when it's more efficient:
+                //experiment->msExperiment->AddZeros((MassSpectrum^) spectrum);
+            }
             ToStdVector(spectrum->GetActualXValues(), mz);
             ToStdVector(spectrum->GetActualYValues(), intensities);
         }
