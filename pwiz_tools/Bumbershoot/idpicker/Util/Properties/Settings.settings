@@ -24,7 +24,7 @@
       <Value Profile="(Default)">1</Value>
     </Setting>
     <Setting Name="SourceExtensions" Type="System.String" Scope="User">
-      <Value Profile="(Default)">mzML;RAW;mzXML;MGF</Value>
+      <Value Profile="(Default)">mz5;mzML;RAW;mzXML;MGF;MS2;WIFF;d</Value>
     </Setting>
     <Setting Name="FastaPaths" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
@@ -81,6 +81,9 @@
     </Setting>
     <Setting Name="DefaultMaxFDR" Type="System.Double" Scope="User">
       <Value Profile="(Default)">0.25</Value>
+    </Setting>
+    <Setting Name="DefaultIgnoreUnmappedPeptides" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
     </Setting>
   </Settings>
 </SettingsFile>

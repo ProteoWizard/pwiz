@@ -940,7 +940,8 @@ namespace IDPicker
                     {
                         importCancelled = true;
 
-                        if (ex.Message.Contains("no peptides found mapping to a decoy protein"))
+                        if (ex.Message.Contains("no peptides found mapping to a decoy protein") ||
+                            ex.Message.Contains("peptides did not map to the database"))
                             Program.HandleUserError(ex);
                         else
                             throw;

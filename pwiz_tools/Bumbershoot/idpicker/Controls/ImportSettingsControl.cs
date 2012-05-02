@@ -118,6 +118,7 @@ namespace IDPicker.Controls
                 row.Cells[decoyPrefixColumn.Index].Value = Properties.Settings.Default.DecoyPrefix;
                 row.Cells[maxRankColumn.Index].Value = Properties.Settings.Default.DefaultMaxRank;
                 row.Cells[maxFDRColumn.Index].Value = Properties.Settings.Default.DefaultMaxFDR;
+                row.Cells[ignoreUnmappedPeptidesColumn.Index].Value = Properties.Settings.Default.DefaultIgnoreUnmappedPeptides;
 
                 if (a.parameters.ContainsKey("Config: DecoyPrefix"))
                     row.Cells[decoyPrefixColumn.Index].Value = a.parameters["Config: DecoyPrefix"];
@@ -135,6 +136,7 @@ namespace IDPicker.Controls
                 analysis.importSettings.maxResultRank = Convert.ToInt32(row.Cells[maxRankColumn.Index].Value);
                 analysis.importSettings.maxQValue = Convert.ToDouble(row.Cells[maxFDRColumn.Index].Value);
                 analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
+                analysis.importSettings.ignoreUnmappedPeptides = (bool) row.Cells[ignoreUnmappedPeptidesColumn.Index].Value;
             }
 
             dataGridView.CellBeginEdit += dataGridView_CellBeginEdit;
@@ -194,6 +196,8 @@ namespace IDPicker.Controls
                 analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[qonverterSettingsColumn.Index].Value].ToQonverterSettings();
                 analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
             }
+            else if (e.ColumnIndex == ignoreUnmappedPeptidesColumn.Index)
+                analysis.importSettings.ignoreUnmappedPeptides = (bool) row.Cells[ignoreUnmappedPeptidesColumn.Index].Value;
         }
 
         void dataGridView_CurrentCellDirtyStateChanged (object sender, EventArgs e)
@@ -203,6 +207,9 @@ namespace IDPicker.Controls
 
             dataGridView.EndEdit();
             dataGridView.NotifyCurrentCellDirty(false);
+
+            if (cell.ColumnIndex != qonverterSettingsColumn.Index)
+                return;
 
             if ((string) cell.EditedFormattedValue == "Edit..." || (string) cell.Value == "Edit...")
             {

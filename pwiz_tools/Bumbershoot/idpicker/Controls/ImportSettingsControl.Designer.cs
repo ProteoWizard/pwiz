@@ -54,6 +54,7 @@ namespace IDPicker.Controls
         {
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewFileBrowseColumn1 = new CustomFileCell.DataGridViewFileBrowseColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -63,8 +64,9 @@ namespace IDPicker.Controls
             this.decoyPrefixColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.maxRankColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.maxFDRColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ignoreUnmappedPeptidesColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.qonverterSettingsColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView
@@ -80,6 +82,7 @@ namespace IDPicker.Controls
             this.decoyPrefixColumn,
             this.maxRankColumn,
             this.maxFDRColumn,
+            this.ignoreUnmappedPeptidesColumn,
             this.qonverterSettingsColumn});
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
@@ -96,6 +99,15 @@ namespace IDPicker.Controls
             this.dataGridViewTextBoxColumn1.ReadOnly = true;
             this.dataGridViewTextBoxColumn1.Width = 150;
             // 
+            // dataGridViewFileBrowseColumn1
+            // 
+            this.dataGridViewFileBrowseColumn1.HeaderText = "Database";
+            this.dataGridViewFileBrowseColumn1.Name = "dataGridViewFileBrowseColumn1";
+            this.dataGridViewFileBrowseColumn1.OpenFileDialog = null;
+            this.dataGridViewFileBrowseColumn1.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewFileBrowseColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.dataGridViewFileBrowseColumn1.Width = 200;
+            // 
             // dataGridViewTextBoxColumn2
             // 
             this.dataGridViewTextBoxColumn2.HeaderText = "Database";
@@ -106,6 +118,8 @@ namespace IDPicker.Controls
             // 
             this.dataGridViewTextBoxColumn3.HeaderText = "Decoy Prefix";
             this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
+            this.dataGridViewTextBoxColumn3.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewTextBoxColumn3.Width = 80;
             // 
             // dataGridViewTextBoxColumn4
             // 
@@ -131,6 +145,7 @@ namespace IDPicker.Controls
             // 
             this.databaseColumn.HeaderText = "Database";
             this.databaseColumn.Name = "databaseColumn";
+            this.databaseColumn.OpenFileDialog = null;
             this.databaseColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.databaseColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.databaseColumn.Width = 200;
@@ -153,6 +168,14 @@ namespace IDPicker.Controls
             this.maxFDRColumn.Name = "maxFDRColumn";
             this.maxFDRColumn.Width = 80;
             // 
+            // ignoreUnmappedPeptidesColumn
+            // 
+            this.ignoreUnmappedPeptidesColumn.HeaderText = "Unmapped";
+            this.ignoreUnmappedPeptidesColumn.Name = "ignoreUnmappedPeptidesColumn";
+            this.ignoreUnmappedPeptidesColumn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.ignoreUnmappedPeptidesColumn.ToolTipText = "Ignore Unmapped Peptides";
+            this.ignoreUnmappedPeptidesColumn.Width = 65;
+            // 
             // qonverterSettingsColumn
             // 
             this.qonverterSettingsColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -165,7 +188,7 @@ namespace IDPicker.Controls
             this.Controls.Add(this.dataGridView);
             this.Name = "ImportSettingsControl";
             this.Size = new System.Drawing.Size(977, 144);
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -173,16 +196,18 @@ namespace IDPicker.Controls
         #endregion
 
         private System.Windows.Forms.DataGridView dataGridView;
-        private System.Windows.Forms.DataGridViewTextBoxColumn analysisNameColumn;
-        private CustomFileCell.DataGridViewFileBrowseColumn databaseColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn decoyPrefixColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn maxRankColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn maxFDRColumn;
-        private System.Windows.Forms.DataGridViewComboBoxColumn qonverterSettingsColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
+        private System.Windows.Forms.DataGridViewTextBoxColumn analysisNameColumn;
+        private CustomFileCell.DataGridViewFileBrowseColumn databaseColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn decoyPrefixColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn maxRankColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn maxFDRColumn;
+        private System.Windows.Forms.DataGridViewCheckBoxColumn ignoreUnmappedPeptidesColumn;
+        private System.Windows.Forms.DataGridViewComboBoxColumn qonverterSettingsColumn;
+        private CustomFileCell.DataGridViewFileBrowseColumn dataGridViewFileBrowseColumn1;
     }
 }
