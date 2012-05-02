@@ -7,12 +7,12 @@
   <Description><!--_locID_text="Description1"-->These are default test settings for a local test run.</Description>
   <Deployment>
     <!-- SQLite -->
-    <DeploymentItem filename="..\Shared\Lib\$(PLATFORM)\System.Data.SQLite.DLL" />
-    <DeploymentItem filename="..\Shared\Lib\$(PLATFORM)\SQLite.Interop.DLL" />
+    <DeploymentItem filename="..\Shared\Lib\x86\System.Data.SQLite.DLL" />
+    <DeploymentItem filename="..\Shared\Lib\x86\SQLite.Interop.DLL" />
     <!-- Vendor readers -->
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0\MassLynxRaw.dll" />
-    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(PLATFORM)\MSFileReader.XRawfile2.SxS.manifest" />
-    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\$(PLATFORM)\MSFileReader.XRawfile2.dll" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.SxS.manifest" />
+    <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\x86\MSFileReader.XRawfile2.dll" />
     <DeploymentItem filename="Interop.EDAL.SxS.manifest" />
     <DeploymentItem filename="Interop.HSREADWRITELib.SxS.manifest" />
     <DeploymentItem filename="EULA.MHDAC" />
