@@ -241,10 +241,10 @@ namespace freicore
 		    mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
 
             result.mvh = 0.0;
-            result.mzSSE = 0.0;
+            //result.mzSSE = 0.0;
             result.mzFidelity = 0.0;
-            result.newMZFidelity = 0.0;
-            result.mzMAE = 0.0;
+            //result.newMZFidelity = 0.0;
+            //result.mzMAE = 0.0;
             result.matchedIons.clear();
 
             result.hgt = 0.0;
@@ -281,17 +281,17 @@ namespace freicore
                         mzError = (mzError/fragIonMass)*1.0e6;
                     ++mvhKey[ peakItr->second.intenClass-1 ];
                     ++mzFidelityKey[ ClassifyError( mzError, mzFidelityThresholds ) ];
-                    result.mzSSE += pow( mzError, 2.0 );
-                    result.mzMAE += fabs(mzError);
+                    //result.mzSSE += pow( mzError, 2.0 );
+                    //result.mzMAE += fabs(mzError);
                     int mzFidelityClass = ClassifyError( fabs( mzError ), g_rtConfig->massErrors );
-                    result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
+                    //result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
                     matchedIntensityPairs.insert(make_pair(peakItr->second.intensityRank , peakInfo.intensityRank));
                 } else
                 {
                     ++mvhKey[ g_rtConfig->NumIntensityClasses ];
                     ++mzFidelityKey[ g_rtConfig->NumMzFidelityClasses ];
-                    result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance.value, 2.0 );
-                    result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance.value;
+                    //result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance.value, 2.0 );
+                    //result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance.value;
                 }
             }
             STOP_PROFILER(6);
@@ -314,11 +314,11 @@ namespace freicore
                 result.kendallPVal = -1*log(cdf(complement(tauDist, result.kendallTau)));
             }
 
-            result.mzSSE /= totalPeaks;
-            result.mzMAE /= totalPeaks;
+            //result.mzSSE /= totalPeaks;
+            //result.mzMAE /= totalPeaks;
 
             // Convert the new mzFidelity score into normal domain.
-            result.newMZFidelity = exp(result.newMZFidelity);
+            //result.newMZFidelity = exp(result.newMZFidelity);
 
             double mvh = 0.0;
 

@@ -45,12 +45,6 @@ namespace pepitome
 {
 	struct PeakInfo
 	{
-		template< class Archive >
-		void serialize( Archive& ar, const int unsigned version )
-		{
-			ar & intenClass & rawIntensity & intensityRank & normIntensity;
-		}
-
         int     intenClass;
         float   rawIntensity;
         int     intensityRank;
@@ -79,12 +73,12 @@ namespace pepitome
         bool isDecoy() const {return _isDecoy;}
 
 		double mvh;
-		double massError;
-		double mzSSE;
+		//double massError;
+		//double mzSSE;
         double mzFidelity;
-		double newMZFidelity;
+		//double newMZFidelity;
 		// Mean absolute error
-		double mzMAE;
+		//double mzMAE;
 		
         // Computes the p-value of matching more peaks by random chance
         double hgt;
@@ -107,10 +101,10 @@ namespace pepitome
 			scoreList.push_back( SearchScore( "mvh", mvh, MS_MyriMatch_MVH ) );
             scoreList.push_back( SearchScore( "mzFidelity", mzFidelity, MS_MyriMatch_mzFidelity ) );
 
-			scoreList.push_back( SearchScore( "massError", massError ) );
-			scoreList.push_back( SearchScore( "mzSSE", mzSSE ) );
-			scoreList.push_back( SearchScore( "newMZFidelity" , newMZFidelity ) );
-			scoreList.push_back( SearchScore( "mzMAE", mzMAE ) );
+			//scoreList.push_back( SearchScore( "massError", massError ) );
+			//scoreList.push_back( SearchScore( "mzSSE", mzSSE ) );
+			//scoreList.push_back( SearchScore( "newMZFidelity" , newMZFidelity ) );
+			//scoreList.push_back( SearchScore( "mzMAE", mzMAE ) );
 
             scoreList.push_back( SearchScore( "hgt", hgt ) ); 
             scoreList.push_back( SearchScore( "kendallTau", kendallTau ) );
@@ -143,13 +137,6 @@ namespace pepitome
 		{
 			return rankingScore == rhs.rankingScore;
 		}
-
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & boost::serialization::base_object< BaseSearchResult >( *this );
-			ar & mvh & massError & mzSSE & mzFidelity & newMZFidelity & mzMAE & hgt;
-		}
 	};
 
 	struct Spectrum : public PeakSpectrum< PeakInfo >, SearchSpectrum< SearchResult >
@@ -169,21 +156,6 @@ namespace pepitome
         void ScoreSpectrumVsSpectrum( SearchResult& result, const PeakData& libPeaks );
 
         void computeSecondaryScores();
-
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & boost::serialization::base_object< BaseSpectrum >( *this );
-			ar & boost::serialization::base_object< PeakSpectrum< PeakInfo > >( *this );
-			ar & boost::serialization::base_object< SearchSpectrum< SearchResult > >( *this );
-
-			ar & intenClassCounts;
-            ar & mzFidelityThresholds;
-            ar & fragmentTypes;
-
-			ar & mvhScoreDistribution;
-			ar & mzFidelityDistribution;
-		}
 
 		vector< int >		    intenClassCounts;
         vector< double >		mzFidelityThresholds;
@@ -207,11 +179,5 @@ namespace pepitome
 	};
 }
 }
-
-// eliminate serialization overhead at the cost of never being able to increase the version.
-BOOST_CLASS_IMPLEMENTATION( freicore::pepitome::Spectrum, boost::serialization::object_serializable )
-
-// eliminate object tracking at the risk of a programming error creating duplicate objects.
-BOOST_CLASS_TRACKING( freicore::pepitome::Spectrum, boost::serialization::track_never )
 
 #endif

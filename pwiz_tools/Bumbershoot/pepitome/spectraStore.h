@@ -62,15 +62,95 @@
 #include <boost/iostreams/filter/base64.hpp>
 
 #include <boost/lexical_cast.hpp>
+#include <boost/foreach_field.hpp>
+#include <boost/interprocess/containers/container/flat_map.hpp>
 
 #include <iostream>
 #include <ctype.h>
 #include <fstream>
+#include <strstream>
 
 using namespace boost::assign;
 using namespace boost::algorithm;
-
+using std::strstream;
+using boost::container::flat_map;
+using boost::container::flat_multimap;
 namespace sqlite = sqlite3pp;
+
+
+namespace boost { namespace serialization {
+
+template<class Archive, class Type, class Key, class Compare, class Allocator>
+inline void save(
+    Archive & ar,
+    const flat_map<Key, Type, Compare, Allocator> &t,
+    const unsigned int /* file_version */
+){
+    boost::serialization::stl::save_collection<Archive, flat_map<Key, Type, Compare, Allocator> >(ar, t);
+}
+
+template<class Archive, class Type, class Key, class Compare, class Allocator>
+inline void load(
+    Archive & ar,
+    flat_map<Key, Type, Compare, Allocator> &t,
+    const unsigned int /* file_version */
+){
+    boost::serialization::stl::load_collection<
+        Archive,
+        flat_map<Key, Type, Compare, Allocator>,
+        boost::serialization::stl::archive_input_map<Archive, flat_map<Key, Type, Compare, Allocator> >,
+        boost::serialization::stl::no_reserve_imp<flat_map<Key, Type, Compare, Allocator> >
+    >(ar, t);
+}
+
+// split non-intrusive serialization function member into separate
+// non intrusive save/load member functions
+template<class Archive, class Type, class Key, class Compare, class Allocator>
+inline void serialize(
+    Archive & ar,
+    flat_map<Key, Type, Compare, Allocator> &t,
+    const unsigned int file_version
+){
+    boost::serialization::split_free(ar, t, file_version);
+}
+
+// flat_multimap
+template<class Archive, class Type, class Key, class Compare, class Allocator>
+inline void save(
+    Archive & ar,
+    const flat_multimap<Key, Type, Compare, Allocator> &t,
+    const unsigned int /* file_version */
+){
+    boost::serialization::stl::save_collection<Archive, flat_multimap<Key, Type, Compare, Allocator> >(ar, t);
+}
+
+template<class Archive, class Type, class Key, class Compare, class Allocator>
+inline void load(
+    Archive & ar,
+    flat_multimap<Key, Type, Compare, Allocator> &t,
+    const unsigned int /* file_version */
+){
+    boost::serialization::stl::load_collection<
+        Archive,
+        flat_multimap<Key, Type, Compare, Allocator>,
+        boost::serialization::stl::archive_input_map<Archive, flat_multimap<Key, Type, Compare, Allocator> >,
+        boost::serialization::stl::no_reserve_imp<flat_multimap<Key, Type, Compare, Allocator> >
+    >(ar, t);
+}
+
+// split non-intrusive serialization function member into separate
+// non intrusive save/load member functions
+template<class Archive, class Type, class Key, class Compare, class Allocator>
+inline void serialize(
+    Archive & ar,
+    flat_multimap<Key, Type, Compare, Allocator> &t,
+    const unsigned int file_version
+){
+    boost::serialization::split_free(ar, t, file_version);
+}
+
+} } // namespace boost::serialization
+
 
 namespace freicore
 {
@@ -89,8 +169,8 @@ namespace pepitome
 
 
     typedef boost::tokenizer<boost::char_separator<char> > tokenizer;
-    typedef multimap<double,float> Peaks;
-    typedef multimap<int,double> ModMap;
+    typedef multimap<double, float> Peaks;
+    typedef multimap<int, double> ModMap;
     typedef multimap<string, unsigned int> ProteinMap;
 
     typedef BasePeakData< PeakInfo > PeakData;
@@ -214,6 +294,7 @@ namespace pepitome
         ProteinMap matchedProteins;
 
         // Spectrum info
+        sqlite3_int64 index; // primary key
         SpectrumId id;
         PeakPreData peakPreData;
         PeakData    peakData;
@@ -262,18 +343,16 @@ namespace pepitome
         virtual void readSpectrum()
         {
             //cout << "querying " << id.source << "," << id.index << endl;
-            sqlite3* db;
-            sqlite3_open_v2(id.source.c_str(), &db, SQLITE_OPEN_NOMUTEX|SQLITE_OPEN_READONLY, NULL);
-            sqlite::database library(db);
-            string queryStr = "SELECT NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id = '" + (string) id.nativeID + "'";
-            sqlite::query qry(library, queryStr.c_str() );
+            sqlite::database library(id.source.c_str(), sqlite::no_mutex, sqlite::read_only);
+            string queryStr = "SELECT NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id=" + lexical_cast<string>(index);
+            sqlite::query qry(library, queryStr.c_str());
             sqlite3_int64 numPeaks;
             string data;
             for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
             {
                 (*qItr).getter() >> numPeaks >> data;
-                stringstream dataStream(data);
-                eos::portable_iarchive packArchive( dataStream );
+                strstream dataStream(&data[0], data.length());
+                eos::portable_iarchive packArchive(dataStream);
                 packArchive & *this;
             }
         }
@@ -413,34 +492,32 @@ namespace pepitome
 
         void preprocessSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 150, bool cleanSpectrum = false)
         {
-            if(cleanSpectrum && peakAnns.size()>0)
+            if(cleanSpectrum && !peakAnns.empty())
             {
-                typedef pair<float,string> PeakAnnotation;
-                BOOST_FOREACH(const PeakAnnotation& p, peakAnns)
-                {
-                    if(icontains(p.second, "i") || icontains(p.second, "?"))
-                    {
-                        PeakPreData::iterator begin = peakPreData.lower_bound(p.first);
-                        PeakPreData::iterator end = peakPreData.upper_bound(p.first);
-                        peakPreData.erase(begin, end);
-                    }
-                }
+                map<float, string> newAnnotations;
+                BOOST_FOREACH_FIELD((float mz)(string& annotation), peakAnns)
+                    if(annotation.find_first_of("i?") == string::npos)
+                        swap(newAnnotations[mz], annotation);
+                swap(peakAnns, newAnnotations);
             }
 
-            double parentIonEraseWindow = 3.0;
-            if( !peakPreData.empty() )
+            if(peakPreData.empty())
+                return;
+
+            double precursorIonEraseWindow = 3.0;
             {
-                double maxPeakMass = libraryMass + PROTON + parentIonEraseWindow;
+                double maxPeakMass = libraryMass + PROTON + precursorIonEraseWindow;
                 PeakPreData::iterator itr = peakPreData.upper_bound( maxPeakMass );
                 peakPreData.erase( itr, peakPreData.end() );
             }
 
-            BOOST_FOREACH(const double& parentIon, getPrecursorIons())
+            vector<double> precursorIons; getPrecursorIons(precursorIons);
+            BOOST_FOREACH(double precursorIon, precursorIons)
             {
-                PeakPreData::iterator begin = peakPreData.lower_bound(parentIon - parentIonEraseWindow);
-                PeakPreData::iterator end = peakPreData.upper_bound(parentIon + parentIonEraseWindow);
+                PeakPreData::iterator begin = peakPreData.lower_bound(precursorIon - precursorIonEraseWindow);
+                PeakPreData::iterator end = peakPreData.upper_bound(precursorIon + precursorIonEraseWindow);
                 peakPreData.erase(begin, end);
-            }    
+            }
 
             FilterByTIC(TICCutoff);
             FilterByPeakCount(maxPeakCount);
@@ -479,21 +556,19 @@ namespace pepitome
             peakAnns.clear();
         }
 
-        set<double> getPrecursorIons()
+        void getPrecursorIons(vector<double>& precursorIons)
         {
-            set<double> precursorIons;
             double precursorMZ = (libraryMass+id.charge*PROTON)/(double) id.charge;
             // Water, double water, and ammonia loss
-            precursorIons.insert(precursorMZ - WATER_MONO/id.charge);
-            precursorIons.insert(precursorMZ - 2.0*WATER_MONO/id.charge);
-            precursorIons.insert(precursorMZ - AMMONIA_MONO/id.charge);
-            precursorIons.insert(precursorMZ);
-            return precursorIons;
+            precursorIons.push_back(precursorMZ - WATER_MONO/id.charge);
+            precursorIons.push_back(precursorMZ - 2.0*WATER_MONO/id.charge);
+            precursorIons.push_back(precursorMZ - AMMONIA_MONO/id.charge);
+            precursorIons.push_back(precursorMZ);
         }
     };
 
-    struct SpectraSTSpectrum : public virtual BaseLibrarySpectrum {
-
+    struct SpectraSTSpectrum : public BaseLibrarySpectrum
+    {
         size_t numPeaks;
 
         SpectraSTSpectrum() : BaseLibrarySpectrum() { numPeaks = 0;}
@@ -532,9 +607,9 @@ namespace pepitome
                     peakAnn = *itr;
                 if(isdigit(attribute[0]))
                 {
-                    float peakMass = lexical_cast<float>(attribute);
+                    double peakMass = lexical_cast<double>(attribute);
                     float intensity = lexical_cast<float>(value);
-                    peakPreData.insert(pair<float,float>(peakMass,intensity));
+                    peakPreData[peakMass] = intensity;
                     peakAnns.insert(pair<float,string>(peakMass,peakAnn));
                 }
             }
@@ -556,11 +631,10 @@ namespace pepitome
             library.seek(headerOffset);
             string buffer;
             matchedProteins.clear();
-            ModMap mods;
             // First parse out the peptide FullName: -.n[43]AASC[160]VLLHTGQK.M/2
             library.getline(buffer);
             if(!boost::starts_with(buffer,"FullName:"))
-                throw runtime_error("[SpectraStore::readHeader]: Invalid header offset");
+                throw runtime_error("[SpectraStore::readHeader]: Invalid header offset; points at \"" + buffer + "\" instead of FullName");
             
             bal::trim_right_if(buffer, bal::is_any_of(" \r"));
             string::size_type pepStart = buffer.find(".");
@@ -722,7 +796,7 @@ namespace pepitome
         }
     };
 
-    struct NISTSpectrum : public virtual BaseLibrarySpectrum {
+    struct NISTSpectrum : public BaseLibrarySpectrum {
 
         size_t numPeaks;
 
@@ -768,16 +842,6 @@ namespace pepitome
                     peakAnns.insert(pair<float,string>(peakMass,peakAnn));
                 }
             }
-        }
-        
-        void clearHeader()
-        {
-            BaseLibrarySpectrum::clearHeader();
-        }
-
-        void clearSpectrum()
-        {
-            BaseLibrarySpectrum::clearSpectrum();
         }
 
         void readHeader(NativeFileReader& library)
@@ -945,30 +1009,32 @@ namespace pepitome
             cout << "Reading \"" << libraryName << "\"" << endl;
             Timer libReadTime(true);
             size_t spectrumIndex = 0;
-            library.reset(new sqlite::database(libraryName.c_str()));
+            library.reset(new sqlite::database(libraryName.c_str(), sqlite::no_mutex, sqlite::read_only));
             library->execute("PRAGMA journal_mode=OFF;"
-                                  "PRAGMA synchronous=OFF;"
-                                  "PRAGMA automatic_indexing=OFF;"
-                                  "PRAGMA cache_size=5000;"
-                                  "PRAGMA temp_store=MEMORY"
-                                 );
+                             "PRAGMA synchronous=OFF;"
+                             "PRAGMA automatic_indexing=OFF;"
+                             "PRAGMA cache_size=5000;"
+                             "PRAGMA temp_store=MEMORY"
+                            );
 
-            sqlite::query qry(*library, "SELECT Id, Peptide, LibraryMass, MonoMass, AvgMass, Charge FROM LibMetaData");
+            sqlite::query qry(*library, "SELECT Id, LibraryId, Peptide, LibraryMass, MonoMass, AvgMass, Charge FROM LibMetaData ORDER BY LibraryMass");
             for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
             {
                 ++spectrumIndex;
                 if(!(spectrumIndex % 10000)) 
                     cout << ">> " << spectrumIndex << '\r' << flush;
 
+                sqlite3_int64 id;
                 int charge;
-                string peptide,id;
+                string peptide, libraryId;
                 double libMass, monoMass, avgMass;
-                (*qItr).getter() >> id >> peptide >> libMass >> monoMass >> avgMass >> charge;
+                (*qItr).getter() >> id >> libraryId >> peptide >> libMass >> monoMass >> avgMass >> charge;
                 
                 shared_ptr<SpectraSTSpectrum> spectrum(new SpectraSTSpectrum);
+                spectrum->index = id;
                 spectrum->id.charge = charge; 
                 spectrum->id.source = libraryName;
-                spectrum->id.nativeID = id;
+                spectrum->id.nativeID = libraryId;
                 spectrum->libraryMass = libMass;
                 spectrum->monoisotopicMass = monoMass;
                 spectrum->averageMass = avgMass;
@@ -988,72 +1054,71 @@ namespace pepitome
             stream_offset headerOffset = 0;
             stream_offset peakOffset = 0;
             stream_offset dataOffset = 0;
-            if(library)
+            string buf;
+            double parentMass;
+            int charge;
+            size_t numPeaks;
+            vector<string> tokens;
+
+            while(getline(library, buf)) 
             {
-                string buf;
-                double parentMass;
-                int charge;
-                size_t numPeaks;
-                while(getline(library,buf)) 
+                size_t bufLength = buf.length()+1;
+                dataOffset += bufLength;
+                bal::trim_right_if(buf, bal::is_any_of(" \r"));
+                // Skip empty lines and comments
+                if (boost::starts_with(buf, "#") )
+                    continue;
+
+                if(buf.empty() && headerOffset != 0 && peakOffset != 0)
                 {
-                    size_t bufLength = buf.length()+1;
-                    dataOffset += bufLength;
-                    bal::trim_right_if(buf, bal::is_any_of(" \r"));
-                    // Skip empty lines and comments
-                    if (boost::starts_with(buf, "#") )
-                        continue;
+                    shared_ptr<SpectraSTSpectrum> spectrum(new SpectraSTSpectrum);
+                    spectrum->id.charge = charge; 
+                    spectrum->id.source = libraryName;
+                    spectrum->id.nativeID = "scan="+boost::lexical_cast<string>(spectrumIndex);
+                    spectrum->libraryMass = (parentMass * charge) - (charge * 1.00727);
+                    spectrum->peakDataOffset = peakOffset;
+                    spectrum->headerOffset = headerOffset;
+                    push_back(spectrum);
+                    continue;
+                }
 
-                    if(buf.empty() && headerOffset != 0 && peakOffset != 0)
-                    {
-                        shared_ptr<SpectraSTSpectrum> spectrum(new SpectraSTSpectrum);
-                        spectrum->id.charge = charge; 
-                        spectrum->id.source = libraryName;
-                        spectrum->id.nativeID = "scan="+boost::lexical_cast<string>(spectrumIndex);
-                        spectrum->libraryMass = (parentMass * charge) - (charge * 1.00727);
-                        spectrum->peakDataOffset = peakOffset;
-                        spectrum->headerOffset = headerOffset;
-                        push_back(spectrum);
-                        continue;
-                    }
+                if(buf.empty())
+                    continue;
 
-                    if(buf.empty())
-                        continue;
+                tokens.clear();
 
-                    if(boost::starts_with(buf, "Name:"))
-                    {
-                        tokenizer parser(buf, colon);
-                        tokenizer::iterator itr = parser.begin();
-                        string attribute = *(itr);
-                        string value = *(++itr);
-                        ++spectrumIndex;
-                        if(!(spectrumIndex % 10000)) 
-                            cout << spectrumIndex << ": " << dataOffset << '\r' << flush;
-                        tokenizer splitter(value, backslash);
-                        tokenizer::iterator pItr = splitter.begin();
-                        ++pItr;
-                        charge = lexical_cast<int>(*pItr);
-                    } else if(boost::starts_with(buf, "NumPeaks"))
-                    {
-                        tokenizer parser(buf, colon);
-                        tokenizer::iterator itr = parser.begin();
-                        string attribute = *(itr);
-                        string value = *(++itr);
-                        numPeaks = lexical_cast<size_t>(value);
-                    } else if(boost::starts_with(buf, "PrecursorMZ"))
-                    {
-                        tokenizer parser(buf, colon);
-                        tokenizer::iterator itr = parser.begin();
-                        string attribute = *(itr);
-                        string value = *(++itr);
-                        parentMass = lexical_cast<double>(value);
-                    } else if(boost::starts_with(buf, "FullName"))
-                    {
-                        headerOffset = dataOffset - bufLength ;
-                        peakOffset = 0;
-                    } else if(!buf.empty() && isdigit(buf[0]) && peakOffset == 0)
-                    {
-                        peakOffset = dataOffset-bufLength;
-                    }
+                if(bal::starts_with(buf, "Name:"))
+                {
+                    ++spectrumIndex;
+                    if(!(spectrumIndex % 10000)) 
+                        cout << spectrumIndex << ": " << dataOffset << '\r' << flush;
+
+                    bal::split(tokens, buf, bal::is_any_of(":"));
+                    string value = tokens[1];
+                        
+                    tokens.clear();
+
+                    bal::split(tokens, value, bal::is_any_of("/"));
+                    charge = lexical_cast<int>(tokens[1]);
+                }
+                else if(bal::starts_with(buf, "NumPeaks"))
+                {
+                    bal::split(tokens, buf, bal::is_any_of(":"));
+                    numPeaks = lexical_cast<size_t>(tokens[1]);
+                }
+                else if(bal::starts_with(buf, "PrecursorMZ"))
+                {
+                    bal::split(tokens, buf, bal::is_any_of(":"));
+                    parentMass = lexical_cast<double>(tokens[1]);
+                }
+                else if(bal::starts_with(buf, "FullName"))
+                {
+                    headerOffset = dataOffset - bufLength ;
+                    peakOffset = 0;
+                }
+                else if(!buf.empty() && isdigit(buf[0]) && peakOffset == 0)
+                {
+                    peakOffset = dataOffset-bufLength;
                 }
             }
             cout << "Read " << (spectrumIndex+1) << " spectra from library; " << libReadTime.End() << " seconds elapsed." << endl;
@@ -1143,62 +1208,61 @@ namespace pepitome
         {
             if(bal::ends_with(libraryName,".index"))
             {
-                map<string, size_t> libraryIndexToArrayIndex;
+                flat_map<sqlite3_int64, size_t> libraryIndexToArrayIndex;
                 stringstream batchedIndicesStream;
                 BOOST_FOREACH(size_t arrayIndex, indices)
                 {
-                    string libraryIndex = at(arrayIndex)->id.nativeID;
-                    batchedIndicesStream << "'" << libraryIndex << "'" << ",";
-                    libraryIndexToArrayIndex.insert(make_pair(libraryIndex,arrayIndex));
+                    sqlite3_int64 libraryIndex = (*this)[arrayIndex]->index;
+                    batchedIndicesStream << libraryIndex << ",";
+                    libraryIndexToArrayIndex.insert(make_pair(libraryIndex, arrayIndex));
                 }
 
                 string batchedIndices = batchedIndicesStream.str();
                 bal::trim_right_if(batchedIndices, bal::is_any_of(" ,"));
-                bal::trim_left_if(batchedIndices, bal::is_any_of(" ,"));
-                
+
                 string queryStr = "SELECT Id, NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id IN (" + batchedIndices + ")";
-                
-                map<string, shared_ptr<string> > spectraData;
+
+                sqlite::database db(libraryName.c_str(), sqlite::no_mutex, sqlite::read_only);
+
+                flat_map<sqlite3_int64, shared_ptr<string> > spectraData;
+                try
                 {
-                    boost::unique_lock<boost::mutex> guard(libMutex,boost::defer_lock);
-                    guard.lock();
                     //cout << boost::this_thread::get_id() << "fetching data" << endl;
                     START_PROFILER(0)
-                    sqlite::query qry(*library, queryStr.c_str() );
+                    sqlite::query qry(db, queryStr.c_str());
                     for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
                     {
-                        try {
-                            string index;
-                            int numPeaks;
-                            (*qItr).getter() >> index >> numPeaks;
-                            shared_ptr<string> data(new string(static_cast<const char*>((*qItr).get<void const*>(2)), (*qItr).column_bytes(2)));
-                            spectraData.insert(make_pair(index,data));
-                        }catch(exception& e) { cout << "Spectral data reading error."; cout << e.what(); }
+                        sqlite3_int64 index;
+                        int numPeaks;
+                        qItr->getter() >> index >> numPeaks;
+                        const void* data = qItr->get<const void*>(2);
+                        int dataLength = qItr->column_bytes(2);
+                        char* dataString = const_cast<char*>(static_cast<const char*>(data));
+                        spectraData[index] = shared_ptr<string>(new string(dataString, dataLength));
                     }
                     STOP_PROFILER(0)
                     //cout << boost::this_thread::get_id() << "finished fetching data :" << spectraData.size() << endl;
-                    guard.unlock();
+                }
+                catch(exception& e)
+                {
+                    cout << "Error reading library index: " << e.what();
                 }
 
                 START_PROFILER(1)
-                typedef pair<const string, shared_ptr<string> > SpectrumData;
-                BOOST_FOREACH(SpectrumData& sd, spectraData)
+                BOOST_FOREACH_FIELD((sqlite3_int64 index)(shared_ptr<string>& data), spectraData)
                 {
-                    shared_ptr<BaseLibrarySpectrum> spectrum = at(libraryIndexToArrayIndex[sd.first]);
-                    START_PROFILER(2)    
-                    stringstream encoded(*sd.second.get());
-                    STOP_PROFILER(2)
-                    eos::portable_iarchive packArchive( encoded );
+                    const shared_ptr<BaseLibrarySpectrum>& spectrum = (*this)[libraryIndexToArrayIndex[index]];
+                    strstream dataStream(&(*data)[0], data->length());
+                    eos::portable_iarchive packArchive(dataStream);
                     packArchive & *spectrum;
-                    sd.second.reset();
                 }
-                deallocate(spectraData);
                 STOP_PROFILER(1)
-            } else if(bal::ends_with(libraryName,".sptxt"))
+            }
+            else if(bal::ends_with(libraryName,".sptxt"))
             {
                 BOOST_FOREACH(const size_t& arrayIndex, indices)
                 {
-                    shared_ptr<BaseLibrarySpectrum> spectrum = at(arrayIndex);
+                    const shared_ptr<BaseLibrarySpectrum>& spectrum = (*this)[arrayIndex];
                     spectrum->readSpectrum();
                 }
             }

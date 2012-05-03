@@ -28,23 +28,43 @@ namespace freicore
 {
     namespace pepitome
     {
+        LibraryBabelFish::LibraryBabelFish(const string& name)
+            : libraryName (name), 
+              libraryIndexName(name + ".index"),
+              libraryIndex(libraryIndexName),
+              error(false)
+        {}
+
+        LibraryBabelFish::~LibraryBabelFish()
+        {
+            libraryIndex.disconnect();
+            if (error)
+                bfs::remove(libraryIndexName);
+        }
 
         void LibraryBabelFish::initializeDatabase()
         {
-            // optimized for bulk insertion
-            libraryIndex.execute("PRAGMA journal_mode=OFF;"
-                "PRAGMA synchronous=OFF;"
-                "PRAGMA automatic_indexing=OFF;"
-                "PRAGMA page_size=32768;"
-                "PRAGMA cache_size=5000;"
-                "PRAGMA temp_store=MEMORY"
-                );
-            // Create tables
-            sqlite::transaction transaction(libraryIndex);
-            libraryIndex.execute("CREATE TABLE LibMetaData ( Id TEXT PRIMARY KEY, Peptide TEXT, LibraryMass REAL, MonoMass REAL, AvgMass REAL, Charge INTEGER);"
-                "CREATE TABLE LibSpectrumData (Id TEXT PRIMARY KEY, NumPeaks INTEGER, SpectrumData BLOB, FOREIGN KEY (Id) REFERENCES LibMetaData(Id));"
-                );
-            transaction.commit();
+            try
+            {
+                // optimized for bulk insertion
+                libraryIndex.execute("PRAGMA journal_mode=OFF;"
+                    "PRAGMA synchronous=OFF;"
+                    "PRAGMA automatic_indexing=OFF;"
+                    "PRAGMA page_size=32768;"
+                    "PRAGMA cache_size=5000;"
+                    );
+                // Create tables
+                sqlite::transaction transaction(libraryIndex);
+                libraryIndex.execute("CREATE TABLE LibMetaData (Id INTEGER PRIMARY KEY, LibraryId TEXT, Peptide TEXT, LibraryMass REAL, MonoMass REAL, AvgMass REAL, Charge INTEGER);"
+                                     "CREATE TABLE LibSpectrumData (Id INTEGER PRIMARY KEY, NumPeaks INTEGER, SpectrumData BLOB);"
+                                    );
+                transaction.commit();
+            }
+            catch(...)
+            {
+                error = true;
+                throw;
+            }
         }
 
         inline bool checkForHomology(const string& firstPeptide, const string& secondPeptide, double threshold)
@@ -201,60 +221,71 @@ namespace freicore
 
         void LibraryBabelFish::indexLibrary()
         {
-            // Get insertion commands
-            sqlite::command insertMetaData(libraryIndex, "INSERT INTO LibMetaData ( Id, Peptide, LibraryMass, MonoMass, AvgMass, Charge) VALUES (?,?,?,?,?,?)");
-            sqlite::command insertSpectrumData(libraryIndex, "INSERT INTO LibSpectrumData ( Id, NumPeaks, SpectrumData) VALUES (?,?,?)");
-            shared_ptr<sqlite::transaction> transactionPtr;
-            transactionPtr.reset(new sqlite::transaction(libraryIndex));
-
-            library.loadLibrary(libraryName);
-            NativeFileReader nativeReader(libraryName);
-
-            size_t totalSpectra = library.size();
-            cout << "Indexing " << totalSpectra << " spectra found in the library." << endl;
-            for(sqlite3_int64 index = 0; index < totalSpectra; ++index)
+            try
             {
-                if(!(index % 1000)) 
-                    cout << totalSpectra << ": " << index << '\r' << flush;
-                // Read the library spectrum metadata and insert it into the DB
-                library[index]->readHeader(nativeReader);
-                library[index]->averageMass = library[index]->matchedPeptide->molecularWeight();
-                library[index]->monoisotopicMass = library[index]->matchedPeptide->monoisotopicMass();
-                library[index]->readPeaks(nativeReader);
+                // Get insertion commands
+                sqlite::command insertMetaData(libraryIndex, "INSERT INTO LibMetaData (Id, LibraryId, Peptide, LibraryMass, MonoMass, AvgMass, Charge) VALUES (?,?,?,?,?,?,?)");
+                sqlite::command insertSpectrumData(libraryIndex, "INSERT INTO LibSpectrumData (Id, NumPeaks, SpectrumData) VALUES (?,?,?)");
+                shared_ptr<sqlite::transaction> transactionPtr;
+                transactionPtr.reset(new sqlite::transaction(libraryIndex));
 
-                insertMetaData.binder() << ("scan="+boost::lexical_cast<string>(index)) 
-                    << library[index]->matchedPeptide->sequence()
-                    << library[index]->libraryMass
-                    << library[index]->monoisotopicMass
-                    << library[index]->averageMass
-                    << library[index]->id.charge;
-                //cout << index << "," << library[index]->matchedPeptide->sequence() << "," << library[index]->libraryMass
-                //     << "," << library[index]->monoisotopicMass << "," << library[index]->averageMass << "," << library[index]->id.charge << endl;
-                insertMetaData.execute();
-                insertMetaData.reset();
-                // Archive the peptide, peaks, and proteins data.
-                stringstream packStream(ios::binary|ios::out);
-                // This library offer binary portability. boost::binary_oarchive is not protable
-                eos::portable_oarchive packArchive( packStream );
-                packArchive & *library[index];
-                sqlite3_int64 numPeaks = library[index]->peakPreData.size();
-                // Insert the spectrum data into library
-                string tmpStr = packStream.str();
-                insertSpectrumData.bind(1, ("scan="+boost::lexical_cast<string>(index)) );
-                insertSpectrumData.bind(2, numPeaks);
-                insertSpectrumData.bind(3, static_cast<const void*>(tmpStr.data()), tmpStr.length());
-                insertSpectrumData.execute();
-                insertSpectrumData.reset();
-                library[index]->clearSpectrum();
-                // Commit the transcation and create a fresh one.
-                if(!(index % 10000)) 
+                library.loadLibrary(libraryName);
+                NativeFileReader nativeReader(libraryName);
+
+                size_t totalSpectra = library.size();
+                cout << "Indexing " << totalSpectra << " spectra found in the library." << endl;
+                for(sqlite3_int64 index = 0; index < totalSpectra; ++index)
                 {
-                    transactionPtr->commit();
-                    transactionPtr.reset(new sqlite::transaction(libraryIndex));
+                    if(!(index % 1000)) 
+                        cout << totalSpectra << ": " << index << '\r' << flush;
+                    // Read the library spectrum metadata and insert it into the DB
+                    library[index]->readHeader(nativeReader);
+                    library[index]->averageMass = library[index]->matchedPeptide->molecularWeight();
+                    library[index]->monoisotopicMass = library[index]->matchedPeptide->monoisotopicMass();
+                    library[index]->readPeaks(nativeReader);
+
+                    insertMetaData.binder() << (index+1)
+                                            << ("scan="+boost::lexical_cast<string>(index))
+                                            << library[index]->matchedPeptide->sequence()
+                                            << library[index]->libraryMass
+                                            << library[index]->monoisotopicMass
+                                            << library[index]->averageMass
+                                            << library[index]->id.charge;
+                    //cout << index << "," << library[index]->matchedPeptide->sequence() << "," << library[index]->libraryMass
+                    //     << "," << library[index]->monoisotopicMass << "," << library[index]->averageMass << "," << library[index]->id.charge << endl;
+                    insertMetaData.execute();
+                    insertMetaData.reset();
+                    // Archive the peptide, peaks, and proteins data.
+                    stringstream packStream(ios::binary|ios::out);
+                    // This library offer binary portability. boost::binary_oarchive is not protable
+                    eos::portable_oarchive packArchive( packStream );
+                    packArchive & *library[index];
+                    sqlite3_int64 numPeaks = library[index]->peakPreData.size();
+                    // Insert the spectrum data into library
+                    string tmpStr = packStream.str();
+                    insertSpectrumData.bind(1, index+1);
+                    insertSpectrumData.bind(2, numPeaks);
+                    insertSpectrumData.bind(3, static_cast<const void*>(tmpStr.data()), tmpStr.length());
+                    insertSpectrumData.execute();
+                    insertSpectrumData.reset();
+                    library[index]->clearSpectrum();
+                    // Commit the transcation and create a fresh one.
+                    if(!(index % 10000)) 
+                    {
+                        transactionPtr->commit();
+                        transactionPtr.reset(new sqlite::transaction(libraryIndex));
+                    }
                 }
+                transactionPtr->commit();
+
+                libraryIndex.execute("CREATE INDEX LibMetaData_LibraryMass ON LibMetaData (LibraryMass);"
+                                     "VACUUM");
             }
-            transactionPtr->commit();
-            libraryIndex.execute("VACUUM");   
+            catch(...)
+            {
+                error = true;
+                throw;
+            }
         }
     }
 }

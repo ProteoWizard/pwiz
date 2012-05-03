@@ -32,6 +32,7 @@
 #include "LibraryBabelFish.h"
 #include "boost/tuple/tuple.hpp"
 #include "boost/lockfree/fifo.hpp"
+#include "boost/exception/all.hpp"
 #include "pepitomeVersion.hpp"
 
 namespace freicore
@@ -527,9 +528,8 @@ namespace freicore
                     
                     START_PROFILER(4);
                     {
-                        boost::unique_lock<boost::mutex> guard(spectrum->mutex,boost::defer_lock);
-                        guard.lock();
-                        
+                        boost::unique_lock<boost::mutex> guard(spectrum->mutex);
+
                         ++spectrum->numTargetComparisons;
 
                         if( result.mvh >= g_rtConfig->MinResultScore )
@@ -540,23 +540,26 @@ namespace freicore
                             ++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
                             spectrum->resultsByCharge[z].add( resultPtr );   
                         }
-                        guard.unlock();
                     }
                     STOP_PROFILER(4);
                 }
             }
             // Clear the spectra to keep memory in bounds
             BOOST_FOREACH(size_t index, libBatchValues[libBatchIndex])
-            {
-                librarySpectra[index]->clearSpectrum();
                 librarySpectra[index].reset();
-            }
             return numComparisonsDone;
         }
 
-        int ExecuteSearchThread()
+        struct ThreadStatus
         {
+            boost::exception_ptr exception;
 
+            ThreadStatus() {}
+            ThreadStatus(const boost::exception_ptr& e) : exception(e) {}
+        };
+
+        void ExecuteSearchThread(ThreadStatus& status)
+        {
             try
             {
                 size_t libraryTask;
@@ -568,18 +571,17 @@ namespace freicore
                     boost::int64_t numComps = QueryLibraryBatch(libraryTask);
                     searchStatistics.numComparisonsDone += numComps;
                 }
-            } catch( std::exception& e )
-            {
-                cerr << " terminated with an error: " << e.what() << endl;
-            } catch(...)
-            {
-                cerr << " terminated with an unknown error." << endl;
             }
+            catch (std::exception& e)
+            {
+                status = boost::copy_exception(runtime_error(string("[ExecuteSearchThread] error: ") + e.what()));
+            }
+            catch(...)
+            {
+                status = boost::copy_exception(runtime_error("[ExecuteSearchThread] unknown error"));
+            }
+        }
 
-            return 0;
-        } 
-
-        
         void ExecuteSearch()
         {
             size_t numProcessors = (size_t) g_numWorkers;
@@ -620,38 +622,51 @@ namespace freicore
 
             bpt::ptime start = bpt::microsec_clock::local_time();
 
-            boost::thread_group workerThreadGroup;
-            vector<boost::thread*> workerThreads;
+            typedef boost::shared_ptr<boost::thread> shared_thread;
+
+            // use list so iterators and references stay valid
+            list<pair<shared_thread, ThreadStatus> > workerThreads;
 
             for (size_t i = 0; i < numProcessors; ++i)
-                workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteSearchThread));
+            {
+                workerThreads.push_back(make_pair(shared_thread(), ThreadStatus()));
+                workerThreads.back().first.reset(new boost::thread(ExecuteSearchThread, boost::ref(workerThreads.back().second)));
+            }
             
             bpt::ptime lastUpdate = start;
-            for (size_t i=0; i < numProcessors; ++i)
-            {
-                // returns true if the thread finished before the timeout;
-                // (each thread index is joined until it finishes)
-                if (!workerThreads[i]->timed_join(bpt::seconds(round(g_rtConfig->StatusUpdateFrequency))))
-                    --i;
+            
+            set<shared_thread> finishedThreads;
+            while (finishedThreads.size() < workerThreads.size())
+                BOOST_FOREACH_FIELD((shared_thread& t)(ThreadStatus& status), workerThreads)
+                {
+                    if (t->timed_join(bpt::milliseconds(round(g_rtConfig->StatusUpdateFrequency * 1000))))
+                        finishedThreads.insert(t);
 
-                bpt::ptime current = bpt::microsec_clock::local_time();
+                    if (status.exception.get())
+                    {
+                        //boost::rethrow_exception(status.exception);
+                        cerr << boost::to_string(status.exception) << endl;
+                        _exit(1); // HACK: necessary to avoid runtime errors?
+                    }
 
-                // only make one update per StatusUpdateFrequency seconds
-                if ((current - lastUpdate).total_microseconds() / 1e6 < g_rtConfig->StatusUpdateFrequency)
-                    continue;
+                    bpt::ptime current = bpt::microsec_clock::local_time();
 
-                lastUpdate = current;
-                bpt::time_duration elapsed = current - start;
+                    // only make one update per StatusUpdateFrequency seconds
+                    if ((current - lastUpdate).total_microseconds() / 1e6 < g_rtConfig->StatusUpdateFrequency)
+                        continue;
 
-                float spectraPerSec = static_cast<float>(searchStatistics.numSpectraSearched) / elapsed.total_microseconds() * 1e6;
-                bpt::time_duration estimatedTimeRemaining(0, 0, round((numLibSpectra - searchStatistics.numSpectraSearched) / spectraPerSec));
+                    lastUpdate = current;
+                    bpt::time_duration elapsed = current - start;
 
-                cout << "Searched " << searchStatistics.numSpectraSearched << " of " << numLibSpectra << " spectra; "
-                    << round(spectraPerSec) << " per second, "
-                    << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
-                    << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
-                PRINT_PROFILERS(cout,"profile:");
-            }
+                    float spectraPerSec = static_cast<float>(searchStatistics.numSpectraSearched) / elapsed.total_microseconds() * 1e6;
+                    bpt::time_duration estimatedTimeRemaining(0, 0, round((numLibSpectra - searchStatistics.numSpectraSearched) / spectraPerSec));
+
+                    cout << "Searched " << searchStatistics.numSpectraSearched << " of " << numLibSpectra << " spectra; "
+                        << round(spectraPerSec) << " per second, "
+                        << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
+                        << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
+                    PRINT_PROFILERS(cout,"profile:");
+                }
         }
 
         // A tuple to hold the NTerminusIsSpecific, CTerminusIsSpecific,

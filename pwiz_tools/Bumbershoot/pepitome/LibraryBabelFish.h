@@ -35,12 +35,11 @@ struct LibraryBabelFish
     string              libraryName;
     string              libraryIndexName;
     sqlite::database    libraryIndex;
+    bool                error;
 
-    LibraryBabelFish(string name) : libraryName (name), 
-                                    libraryIndexName(name + ".index"),
-                                    libraryIndex(libraryIndexName)
-    {}
-    
+    LibraryBabelFish(const string& name);
+    ~LibraryBabelFish();
+
     void initializeDatabase();
     void decoyLibrary();
     void indexLibrary();
