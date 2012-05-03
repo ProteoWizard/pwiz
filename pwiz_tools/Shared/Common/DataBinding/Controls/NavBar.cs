@@ -32,6 +32,7 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private IViewContext _viewContext;
         private BindingSource _bindingSource;
+        private string _waitingMsg = "Waiting for data...";
         public NavBar()
         {
             InitializeComponent();
@@ -79,6 +80,16 @@ namespace pwiz.Common.DataBinding.Controls
             }
         }
 
+        public string WaitingMessage
+        {
+            get { return _waitingMsg; }
+            set
+            {
+                _waitingMsg = value;
+                RefreshUi();
+            }
+        }
+
         private BindingListView BindingListView 
         { 
             get
@@ -109,7 +120,7 @@ namespace pwiz.Common.DataBinding.Controls
                 {
                     if (queryResults.Parameters.Rows == null)
                     {
-                        lblFilterApplied.Text = "(Waiting for data...)";
+                        lblFilterApplied.Text = string.Format("({0})", WaitingMessage);
                         lblFilterApplied.Visible = true;
                     }
                     else
@@ -134,6 +145,8 @@ namespace pwiz.Common.DataBinding.Controls
             else
             {
                 tbxFind.Enabled = false;
+                lblFilterApplied.Text = string.Format("({0})", WaitingMessage);
+                lblFilterApplied.Visible = true;
             }
         }
 

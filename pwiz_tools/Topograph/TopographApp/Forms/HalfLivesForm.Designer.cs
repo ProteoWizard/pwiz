@@ -38,10 +38,10 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxByProtein = new System.Windows.Forms.CheckBox();
             this.btnRequery = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.cbxBySample = new System.Windows.Forms.CheckBox();
             this.label7 = new System.Windows.Forms.Label();
             this.checkedListBoxTimePoints = new System.Windows.Forms.CheckedListBox();
+            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
             this.halfLifeSettingsControl = new pwiz.Topograph.ui.Controls.HalfLifeSettingsControl();
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
@@ -63,9 +63,9 @@ namespace pwiz.Topograph.ui.Forms
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(574, 3);
+            this.btnRequery.Location = new System.Drawing.Point(573, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(183, 19);
+            this.btnRequery.Size = new System.Drawing.Size(184, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -78,14 +78,14 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 122F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 188F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 189F));
             this.tableLayoutPanel1.Controls.Add(this.btnRequery, 4, 0);
             this.tableLayoutPanel1.Controls.Add(this.cbxByProtein, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.cbxBySample, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label7, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.checkedListBoxTimePoints, 3, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 205);
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 434);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
             this.tableLayoutPanel1.RowCount = 2;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -107,7 +107,7 @@ namespace pwiz.Topograph.ui.Forms
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(265, 0);
+            this.label7.Location = new System.Drawing.Point(264, 0);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(82, 13);
             this.label7.TabIndex = 28;
@@ -116,7 +116,7 @@ namespace pwiz.Topograph.ui.Forms
             // checkedListBoxTimePoints
             // 
             this.checkedListBoxTimePoints.FormattingEnabled = true;
-            this.checkedListBoxTimePoints.Location = new System.Drawing.Point(384, 0);
+            this.checkedListBoxTimePoints.Location = new System.Drawing.Point(383, 0);
             this.checkedListBoxTimePoints.Margin = new System.Windows.Forms.Padding(0);
             this.checkedListBoxTimePoints.Name = "checkedListBoxTimePoints";
             this.tableLayoutPanel1.SetRowSpan(this.checkedListBoxTimePoints, 2);
@@ -147,7 +147,7 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 284);
+            this.dataGridView1.Location = new System.Drawing.Point(0, 512);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -159,7 +159,7 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView1.RowSource = null;
-            this.dataGridView1.Size = new System.Drawing.Size(760, 292);
+            this.dataGridView1.Size = new System.Drawing.Size(760, 64);
             this.dataGridView1.TabIndex = 3;
             // 
             // halfLifeSettingsControl
@@ -170,18 +170,20 @@ namespace pwiz.Topograph.ui.Forms
             this.halfLifeSettingsControl.IsExpanded = true;
             this.halfLifeSettingsControl.Location = new System.Drawing.Point(0, 0);
             this.halfLifeSettingsControl.Name = "halfLifeSettingsControl";
-            this.halfLifeSettingsControl.Size = new System.Drawing.Size(760, 205);
+            this.halfLifeSettingsControl.Size = new System.Drawing.Size(760, 434);
             this.halfLifeSettingsControl.TabIndex = 13;
             // 
             // navBar1
             // 
+            this.navBar1.AutoSize = true;
             this.navBar1.BindingSource = this.bindingSource1;
             this.navBar1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.navBar1.Location = new System.Drawing.Point(0, 258);
+            this.navBar1.Location = new System.Drawing.Point(0, 487);
             this.navBar1.Name = "navBar1";
-            this.navBar1.Size = new System.Drawing.Size(760, 26);
+            this.navBar1.Size = new System.Drawing.Size(760, 25);
             this.navBar1.TabIndex = 31;
             this.navBar1.ViewContext = null;
+            this.navBar1.WaitingMessage = "Press \"Recalculate\" button to see data.";
             // 
             // HalfLivesForm
             // 

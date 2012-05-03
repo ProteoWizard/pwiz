@@ -232,40 +232,51 @@ namespace pwiz.Topograph.MsData
             }
             if (!result.CurrentPrecursorPool.HasValue)
             {
-                result.RejectReason = RejectReason.NoPrecursorPool;
-                return result;
-            }
-            switch (HalfLifeSettings.NewlySynthesizedTracerQuantity)
-            {
-                case TracerQuantity.PartialLabelDistribution:
-                    {
-                        var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
-                        double? turnover;
-                        double? turnoverScore;
-                        turnoverCalculator.ComputeTurnover(result.CurrentPrecursorPool.Value, rowData.PeakAreas, out turnover, out turnoverScore);
-                        result.Turnover = turnover;
-                        result.TurnoverScore = turnoverScore;
-                    }
-                    break;
-                case TracerQuantity.LabeledAminoAcid:
-                    result.Turnover = (100 * result.RawValue - result.InitialPrecursorPool)/
-                                      (result.CurrentPrecursorPool - result.InitialPrecursorPool);
-                    break;
-                case TracerQuantity.UnlabeledPeptide:
-                    {
-                        var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
-                        var initialRawValue = turnoverCalculator.ExpectedUnlabeledFraction(result.InitialPrecursorPool);
-                        var finalRawValue = turnoverCalculator.ExpectedUnlabeledFraction(result.CurrentPrecursorPool.Value);
-                        result.Turnover = (result.RawValue - initialRawValue)/(finalRawValue - initialRawValue);
-                    }
-                    break;
-            }
-
-            if (null == result.RejectReason && ValidationStatus.accept != result.RawRowData.ValidationStatus)
-            {
-                if (0 < MinTurnoverScore && result.TurnoverScore < MinTurnoverScore)
+                if (rowData.TracerPercent == result.InitialPrecursorPool)
                 {
-                    result.RejectReason = RejectReason.LowTurnoverScore;
+                    // In an experiment with no labeling, we don't want to reject this item.
+                    // Even if we don't know the CurrentPrecursorPool, we do know that the turnover is 0
+                    result.Turnover = 0;
+                }
+                else
+                {
+                    result.RejectReason = RejectReason.NoPrecursorPool;
+                    return result;
+                }
+            }
+            else
+            {
+                switch (HalfLifeSettings.NewlySynthesizedTracerQuantity)
+                {
+                    case TracerQuantity.PartialLabelDistribution:
+                        {
+                            var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
+                            double? turnover;
+                            double? turnoverScore;
+                            turnoverCalculator.ComputeTurnover(result.CurrentPrecursorPool.Value, rowData.PeakAreas, out turnover, out turnoverScore);
+                            result.Turnover = turnover;
+                            result.TurnoverScore = turnoverScore;
+                        }
+                        break;
+                    case TracerQuantity.LabeledAminoAcid:
+                        result.Turnover = (100 * result.RawValue - result.InitialPrecursorPool) /
+                                          (result.CurrentPrecursorPool - result.InitialPrecursorPool);
+                        break;
+                    case TracerQuantity.UnlabeledPeptide:
+                        {
+                            var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
+                            var initialRawValue = turnoverCalculator.ExpectedUnlabeledFraction(result.InitialPrecursorPool);
+                            var finalRawValue = turnoverCalculator.ExpectedUnlabeledFraction(result.CurrentPrecursorPool.Value);
+                            result.Turnover = (result.RawValue - initialRawValue) / (finalRawValue - initialRawValue);
+                        }
+                        break;
+                }
+                if (null == result.RejectReason && ValidationStatus.accept != result.RawRowData.ValidationStatus)
+                {
+                    if (0 < MinTurnoverScore && result.TurnoverScore < MinTurnoverScore)
+                    {
+                        result.RejectReason = RejectReason.LowTurnoverScore;
+                    }
                 }
             }
             return result;
@@ -407,6 +418,7 @@ namespace pwiz.Topograph.MsData
             {
                 var applicableRowDatas = new List<ProcessedRowData>();
                 var values = new Dictionary<double, List<double>>();
+                var filteredRowDataList = new List<ProcessedRowData>();
                 foreach (var rowData in rowDatas)
                 {
                     Debug.Assert(RejectReason.EvviesFilter != rowData.RejectReason);
@@ -422,6 +434,7 @@ namespace pwiz.Topograph.MsData
                     var timePoint = GetTimePoint(rowData.RawRowData);
                     if (!timePoint.HasValue)
                     {
+                        filteredRowDataList.Add(rowData);
                         continue;
                     }
                     List<double> list;
@@ -477,18 +490,21 @@ namespace pwiz.Topograph.MsData
                     }
                     cutoffs.Add(entry.Key, new KeyValuePair<double, double>(mean - cutoff, mean + cutoff));
                 }
-                var filteredRowDataList = new List<ProcessedRowData>();
                 foreach (var rowData in applicableRowDatas)
                 {
                     var cutoff = cutoffs[GetTimePoint(rowData.RawRowData).Value];
                     var value = rowData.Turnover;
                     rowData.EvviesFilterMin = cutoff.Key;
                     rowData.EvviesFilterMax = cutoff.Value;
-                    if (value.Value < cutoff.Key || value.Value > cutoff.Value)
+                    // Only apply Evvie's Filter to rows that has a time point.
+                    if (GetTimePoint(rowData.RawRowData).HasValue)
                     {
-                        Debug.Assert(null == rowData.RejectReason);
-                        rowData.RejectReason = RejectReason.EvviesFilter;
-                        continue;
+                        if (value.Value < cutoff.Key || value.Value > cutoff.Value)
+                        {
+                            Debug.Assert(null == rowData.RejectReason);
+                            rowData.RejectReason = RejectReason.EvviesFilter;
+                            continue;
+                        }
                     }
                     filteredRowDataList.Add(rowData);
                 }

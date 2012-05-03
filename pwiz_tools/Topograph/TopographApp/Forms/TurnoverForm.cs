@@ -1132,5 +1132,13 @@ namespace pwiz.Topograph.ui.Forms
         {
             new AnalyzePeptidesForm(Workspace).Show(this);
         }
+
+        private void aboutTopographToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new AboutDlg())
+            {
+                dlg.ShowDialog(this);
+            }
+        }
     }
 }

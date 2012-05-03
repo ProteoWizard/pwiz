@@ -183,9 +183,9 @@
             this.label7.AutoSize = true;
             this.label7.Location = new System.Drawing.Point(11, 98);
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(69, 13);
+            this.label7.Size = new System.Drawing.Size(119, 13);
             this.label7.TabIndex = 6;
-            this.label7.Text = "Evvie\'s Filter:";
+            this.label7.Text = "Outlier Filter (unreliable):";
             // 
             // tbxMinTurnoverScore
             // 
@@ -265,7 +265,7 @@
             this.radioIndividualPrecursorPool.TabIndex = 7;
             this.radioIndividualPrecursorPool.TabStop = true;
             this.radioIndividualPrecursorPool.Text = "Calculate a different precursor pool for each peptide.  Only include peptides wit" +
-                "h multiple potentially labeled amino acids";
+    "h multiple potentially labeled amino acids";
             this.radioIndividualPrecursorPool.UseVisualStyleBackColor = true;
             this.radioIndividualPrecursorPool.CheckedChanged += new System.EventHandler(this.UpdateSettings);
             // 
@@ -278,7 +278,7 @@
             this.radioUseMedianPrecursorPool.TabIndex = 6;
             this.radioUseMedianPrecursorPool.TabStop = true;
             this.radioUseMedianPrecursorPool.Text = "Use the median percursor pool computed for all peptides in the sample with multip" +
-                "le potentially labeled amino acid";
+    "le potentially labeled amino acid";
             this.radioUseMedianPrecursorPool.UseVisualStyleBackColor = true;
             this.radioUseMedianPrecursorPool.CheckedChanged += new System.EventHandler(this.UpdateSettings);
             // 
@@ -336,7 +336,7 @@
             this.label9.Size = new System.Drawing.Size(689, 13);
             this.label9.TabIndex = 0;
             this.label9.Text = "In order to calculate the fraction of peptide that is newly synthesized, Topograp" +
-                "h needs to know the fraction of free amino acids that were labeled";
+    "h needs to know the fraction of free amino acids that were labeled";
             // 
             // groupBoxNewlySynthesizedCalculation
             // 
@@ -396,7 +396,7 @@
             this.label8.Size = new System.Drawing.Size(494, 13);
             this.label8.TabIndex = 0;
             this.label8.Text = "Which quantity should Topograph use to calculate the fraction of the peptide that" +
-                " is newly synthesized?";
+    " is newly synthesized?";
             // 
             // HalfLifeSettingsControl
             // 

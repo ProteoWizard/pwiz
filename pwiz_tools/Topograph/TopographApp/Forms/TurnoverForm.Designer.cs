@@ -73,6 +73,8 @@
             this.databaseSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorPoolSimulatorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.aboutTopographToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -91,7 +93,8 @@
             this.fileToolStripMenuItem,
             this.viewToolStripMenuItem,
             this.settingsToolStripMenuItem,
-            this.debuggingToolStripMenuItem1});
+            this.debuggingToolStripMenuItem1,
+            this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
             this.menuStrip1.Size = new System.Drawing.Size(984, 24);
@@ -391,8 +394,8 @@
             this.databaseSizeToolStripMenuItem,
             this.precursorPoolSimulatorToolStripMenuItem});
             this.debuggingToolStripMenuItem1.Name = "debuggingToolStripMenuItem1";
-            this.debuggingToolStripMenuItem1.Size = new System.Drawing.Size(78, 20);
-            this.debuggingToolStripMenuItem1.Text = "Debugging";
+            this.debuggingToolStripMenuItem1.Size = new System.Drawing.Size(107, 20);
+            this.debuggingToolStripMenuItem1.Text = "Troubleshooting";
             // 
             // runningJobsToolStripMenuItem
             // 
@@ -446,6 +449,21 @@
             this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
             this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
             this.debuggingToolStripMenuItem.Text = "Debugging";
+            // 
+            // helpToolStripMenuItem
+            // 
+            this.helpToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.aboutTopographToolStripMenuItem});
+            this.helpToolStripMenuItem.Name = "helpToolStripMenuItem";
+            this.helpToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.helpToolStripMenuItem.Text = "Help";
+            // 
+            // aboutTopographToolStripMenuItem
+            // 
+            this.aboutTopographToolStripMenuItem.Name = "aboutTopographToolStripMenuItem";
+            this.aboutTopographToolStripMenuItem.Size = new System.Drawing.Size(178, 22);
+            this.aboutTopographToolStripMenuItem.Text = "About Topograph...";
+            this.aboutTopographToolStripMenuItem.Click += new System.EventHandler(this.aboutTopographToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -511,5 +529,7 @@
         private System.Windows.Forms.ToolStripMenuItem acceptanceCriteriaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorPoolSimulatorToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem dashboardToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem helpToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem aboutTopographToolStripMenuItem;
     }
 }

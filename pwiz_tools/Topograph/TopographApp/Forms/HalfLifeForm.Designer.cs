@@ -80,11 +80,13 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.validationStatusColumn1 = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.halfLifeSettingsControl = new pwiz.Topograph.ui.Controls.HalfLifeSettingsControl();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewStats)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
@@ -316,9 +318,9 @@ namespace pwiz.Topograph.ui.Forms
             this.gridViewStats.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.gridViewStats.Size = new System.Drawing.Size(449, 246);
             this.gridViewStats.TabIndex = 22;
-            this.gridViewStats.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewStats_CellValueChanged);
             this.gridViewStats.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewStats_CellBeginEdit);
             this.gridViewStats.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewStats_CellEndEdit);
+            this.gridViewStats.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewStats_CellValueChanged);
             // 
             // colStatsTime
             // 
@@ -429,8 +431,8 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
             this.dataGridView1.Size = new System.Drawing.Size(948, 144);
             this.dataGridView1.TabIndex = 0;
-            this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             // 
             // colPeptide
             // 
@@ -538,7 +540,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // colEvviesFilter
             // 
-            this.colEvviesFilter.HeaderText = "Evvies Filter";
+            this.colEvviesFilter.HeaderText = "Outlier Filter (experimental, untested)";
             this.colEvviesFilter.Name = "colEvviesFilter";
             this.colEvviesFilter.ReadOnly = true;
             // 
@@ -592,6 +594,7 @@ namespace pwiz.Topograph.ui.Forms
             this.TabText = "HalfLifeForm";
             this.Text = "HalfLifeForm";
             this.splitContainer1.Panel1.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
@@ -599,6 +602,7 @@ namespace pwiz.Topograph.ui.Forms
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
             this.splitContainer2.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();

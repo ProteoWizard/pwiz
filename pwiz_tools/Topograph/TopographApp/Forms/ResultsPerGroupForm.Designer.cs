@@ -65,6 +65,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -76,7 +77,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.ColumnCount = 5;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 122F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 218F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.Controls.Add(this.label4, 0, 2);
@@ -121,7 +122,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxGroupByCohort.AutoSize = true;
             this.cbxGroupByCohort.Checked = true;
             this.cbxGroupByCohort.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxGroupByCohort.Location = new System.Drawing.Point(410, 53);
+            this.cbxGroupByCohort.Location = new System.Drawing.Point(351, 53);
             this.cbxGroupByCohort.Name = "cbxGroupByCohort";
             this.cbxGroupByCohort.Size = new System.Drawing.Size(57, 17);
             this.cbxGroupByCohort.TabIndex = 13;
@@ -145,7 +146,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxGroupBySample.AutoSize = true;
             this.cbxGroupBySample.Checked = true;
             this.cbxGroupBySample.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxGroupBySample.Location = new System.Drawing.Point(510, 53);
+            this.cbxGroupBySample.Location = new System.Drawing.Point(569, 53);
             this.cbxGroupBySample.Name = "cbxGroupBySample";
             this.cbxGroupBySample.Size = new System.Drawing.Size(61, 17);
             this.cbxGroupBySample.TabIndex = 15;
@@ -156,11 +157,11 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.label2.AutoSize = true;
             this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(410, 0);
+            this.label2.Location = new System.Drawing.Point(351, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(94, 25);
+            this.label2.Size = new System.Drawing.Size(212, 25);
             this.label2.TabIndex = 20;
-            this.label2.Text = "Evvie\'s Filter";
+            this.label2.Text = "Outlier Filter (experimental, untested)";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // comboEvviesFilter
@@ -168,18 +169,18 @@ namespace pwiz.Topograph.ui.Forms
             this.comboEvviesFilter.Dock = System.Windows.Forms.DockStyle.Fill;
             this.comboEvviesFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboEvviesFilter.FormattingEnabled = true;
-            this.comboEvviesFilter.Location = new System.Drawing.Point(510, 3);
+            this.comboEvviesFilter.Location = new System.Drawing.Point(569, 3);
             this.comboEvviesFilter.Name = "comboEvviesFilter";
-            this.comboEvviesFilter.Size = new System.Drawing.Size(279, 21);
+            this.comboEvviesFilter.Size = new System.Drawing.Size(220, 21);
             this.comboEvviesFilter.TabIndex = 34;
             // 
             // label3
             // 
             this.label3.AutoSize = true;
             this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label3.Location = new System.Drawing.Point(410, 25);
+            this.label3.Location = new System.Drawing.Point(351, 25);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(94, 25);
+            this.label3.Size = new System.Drawing.Size(212, 25);
             this.label3.TabIndex = 35;
             this.label3.Text = "Minimum AUC";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -187,9 +188,9 @@ namespace pwiz.Topograph.ui.Forms
             // tbxMinAuc
             // 
             this.tbxMinAuc.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxMinAuc.Location = new System.Drawing.Point(510, 28);
+            this.tbxMinAuc.Location = new System.Drawing.Point(569, 28);
             this.tbxMinAuc.Name = "tbxMinAuc";
-            this.tbxMinAuc.Size = new System.Drawing.Size(279, 20);
+            this.tbxMinAuc.Size = new System.Drawing.Size(220, 20);
             this.tbxMinAuc.TabIndex = 36;
             // 
             // btnRequery
@@ -228,7 +229,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinScore.Location = new System.Drawing.Point(125, 3);
             this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(279, 20);
+            this.tbxMinScore.Size = new System.Drawing.Size(220, 20);
             this.tbxMinScore.TabIndex = 3;
             this.tbxMinScore.Text = "0";
             // 
@@ -259,7 +260,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMinTurnoverScore.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinTurnoverScore.Location = new System.Drawing.Point(125, 28);
             this.tbxMinTurnoverScore.Name = "tbxMinTurnoverScore";
-            this.tbxMinTurnoverScore.Size = new System.Drawing.Size(279, 20);
+            this.tbxMinTurnoverScore.Size = new System.Drawing.Size(220, 20);
             this.tbxMinTurnoverScore.TabIndex = 39;
             // 
             // dataGridView1
@@ -331,6 +332,7 @@ namespace pwiz.Topograph.ui.Forms
             this.navBar1.Size = new System.Drawing.Size(892, 25);
             this.navBar1.TabIndex = 2;
             this.navBar1.ViewContext = null;
+            this.navBar1.WaitingMessage = "Press \"Run Query\" button to see data";
             // 
             // dataGridViewSummary
             // 
@@ -413,6 +415,7 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel1.PerformLayout();
             this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewSummary)).EndInit();
             this.ResumeLayout(false);
