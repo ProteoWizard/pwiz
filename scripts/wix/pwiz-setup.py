@@ -42,7 +42,45 @@ if sys.argv[5] == "64":
 # a unique ProductGuid every time allows multiple parallel installations of pwiz
 guid = str(uuid.uuid4())
 
+# apps the user can add to the explorer rightclick menu if they want
+appNames = ["MSConvertGUI","SeeMS"]
+
+def contextMenuProperties() :
+    txt = ""
+    for n in appNames :
+        txt = txt + '<Property Id="INSTALL%sMENU" Value="0" />\n    '%n.upper()
+    return txt
+
+def contextMenuOptions() :
+    t = ""
+    y = 100
+    for n in appNames :
+        N = n.upper()
+        t = t + '<Control Id="%sCheckBox" Type="CheckBox" X="20" Y="%d" Width="290" Height="17" Property="INSTALL%sMENU" CheckBoxValue="0" Text="Add %s to the Windows Explorer right-click menu" />\n\t\t\t'%(n,y,N,n)
+        y = y+20
+    return t
+
+def contextMenuRegistries() :
+    componentText = ' \
+    <Component Feature="MainFeature">\n \
+       <Condition>INSTALL_MY_APPU_MENU</Condition>\n \
+       <RegistryValue Root="HKCR" Key="*\shell\__MY_APP__\command" Value="&quot;__MY_PATH__&quot; &quot;%1&quot;" Type="string"/>\n \
+       <RegistryKey Root="HKCR" Key="*\shell\__MY_APP__\command" Action="createAndRemoveOnUninstall" />\n \
+       <RegistryValue Root="HKCR" Key="Directory\shell\__MY_APP__\command" Value="&quot;__MY_PATH__&quot; &quot;%1&quot;" Type="string"/>\n \
+       <RegistryKey Root="HKCR" Key="Directory\shell\__MY_APP__\command"  Action="createAndRemoveOnUninstall" />\n \
+    </Component>\n '
+    registries = ""
+    for appName in appNames :
+        txt = componentText.replace("_MY_APPU_",appName.upper())
+        txt = txt.replace("__MY_APP__","Open with "+appName)
+        txt = txt.replace("__MY_PATH__","[APPLICATIONROOTDIRECTORY]"+appName+".exe")
+        registries = registries + txt
+    return registries
+
 wxsTemplate = open(templatePath + "/pwiz-setup.wxs.template").read()
+wxsTemplate = wxsTemplate.replace("__CONTEXTMENU_PROPERTIES__",contextMenuProperties())
+wxsTemplate = wxsTemplate.replace("__CONTEXTMENU_REGISTRY__",contextMenuRegistries())
+wxsTemplate = wxsTemplate.replace("__CONTEXTMENU_CHECKBOXEN__",contextMenuOptions())
 wxsTemplate = wxsTemplate.replace("{ProductGuid}", guid)
 wxsTemplate = wxsTemplate.replace("{version}", version)
 wxsTemplate = wxsTemplate.replace("msvc-release", installPath)
