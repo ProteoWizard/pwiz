@@ -33,9 +33,9 @@ namespace pwiz.Skyline.Util
         // same values as the system clipboard.
         private static bool CHECK_VALUES = false;
 
-        public static void UseInternalClipboard()
+        public static void UseInternalClipboard(bool useInternal = true)
         {
-            _useSystemClipboard = false;
+            _useSystemClipboard = !useInternal;
             _dataObject = new DataObject();
         }
 

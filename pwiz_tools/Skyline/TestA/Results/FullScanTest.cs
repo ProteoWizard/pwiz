@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestA.Results
 
             // Refilter allowing multiple precursors per spectrum
             SrmDocument docMulti = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(
-                fs => fs.ChangePrecursorFilter(FullScanPrecursorFilterType.Multiple, 2)));
+                fs => fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, new IsolationScheme("Test", 2, null))));
             AssertEx.Serializable(docMulti, AssertEx.DocumentCloned);
             // Release data cache file
             Assert.IsTrue(docContainer.SetDocument(docMulti, docResults));
@@ -117,7 +117,7 @@ namespace pwiz.SkylineTestA.Results
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             var docBoth = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                fs.ChangePrecursorFilter(FullScanPrecursorFilterType.Single, null)
+                fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.Targeted, null)
                   .ChangePrecursorResolution(FullScanMassAnalyzerType.qit, TransitionFullScan.DEFAULT_RES_QIT, null)));
             AssertEx.Serializable(docBoth, AssertEx.DocumentCloned);
             Assert.IsTrue(docContainer.SetDocument(docBoth, docContainer.Document));

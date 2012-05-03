@@ -152,11 +152,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 Instrument = reader.DeserializeElement<TransitionInstrument>();
                 FullScan = reader.DeserializeElement<TransitionFullScan>();
                 // Backward compatibility with v0.7.1
-                if (FullScan == null && Instrument != null && Instrument.PrecursorFilterType != FullScanPrecursorFilterType.None)
+                if (FullScan == null && Instrument != null && Instrument.PrecursorAcquisitionMethod != FullScanAcquisitionMethod.None)
                 {
-                    FullScan = new TransitionFullScan(Instrument.PrecursorFilterType,
-                                                      Instrument.PrecursorFilter,
-                                                      null,
+                    FullScan = new TransitionFullScan(Instrument.PrecursorAcquisitionMethod,
+                                                      TransitionFullScan.CreateIsolationSchemeForFilter(Instrument.PrecursorAcquisitionMethod, Instrument.PrecursorFilter, null),
                                                       FullScanMassAnalyzerType.qit,
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
@@ -1222,7 +1221,8 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
 // ReSharper disable InconsistentNaming
-    public enum FullScanPrecursorFilterType { None, Single, Multiple }
+    public enum LegacyAcquisitionMethod   { None, Single, Multiple }    // Skyline 1.2 and earlier
+    public enum FullScanAcquisitionMethod { None, Targeted, DIA }
     public enum FullScanPrecursorIsotopes { None, Count, Percent }
 // ReSharper restore InconsistentNaming
 
@@ -1306,7 +1306,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         // Backward compatibility with 0.7.1
 
-        public FullScanPrecursorFilterType PrecursorFilterType { get; private set; }
+        public FullScanAcquisitionMethod PrecursorAcquisitionMethod { get; private set; }
 
         public double? PrecursorFilter { get; private set; }
 
@@ -1357,7 +1357,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im =>
                                                  {
-                                                     im.PrecursorFilterType = FullScanPrecursorFilterType.None;
+                                                     im.PrecursorAcquisitionMethod = FullScanAcquisitionMethod.None;
                                                      im.PrecursorFilter = null;
                                                      im.ProductFilterType = null;
                                                      im.ProductFilter = null;
@@ -1438,12 +1438,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(string.Format("The allowable retention time range {0} to {1} must be at least {2} minutes apart.",
                     MinTime, MaxTime, MIN_TIME_RANGE));
             }
-            if (PrecursorFilterType == FullScanPrecursorFilterType.None)
+            if (PrecursorAcquisitionMethod == FullScanAcquisitionMethod.None)
             {
                 if (ProductFilterType != null || PrecursorFilter.HasValue || ProductFilter.HasValue)
                     throw new InvalidDataException(string.Format("No other full-scan MS/MS filter settings are allowed when precursor filter is none."));
             }
-            else if (PrecursorFilterType == FullScanPrecursorFilterType.Multiple)
+            else if (PrecursorAcquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
                 const double minFilter = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
                 const double maxFilter = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
@@ -1475,11 +1475,11 @@ namespace pwiz.Skyline.Model.DocSettings
             MaxTransitions = reader.GetNullableIntAttribute(ATTR.max_transitions);
 
             // Full-scan filter parameters (backward compatibility w/ 0.7.1)
-            PrecursorFilterType = reader.GetEnumAttribute(ATTR.precursor_filter_type,
-                                                          FullScanPrecursorFilterType.None);
-            if (PrecursorFilterType != FullScanPrecursorFilterType.None)
+            var legacyFilterType = reader.GetEnumAttribute(ATTR.precursor_filter_type, LegacyAcquisitionMethod.None);
+            PrecursorAcquisitionMethod = TransitionFullScan.TranslateLegacyFilterType(legacyFilterType);
+            if (PrecursorAcquisitionMethod != FullScanAcquisitionMethod.None)
             {
-                if (PrecursorFilterType == FullScanPrecursorFilterType.Multiple)
+                if (PrecursorAcquisitionMethod == FullScanAcquisitionMethod.DIA)
                 {
                     PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter,
                                                                 TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER);
@@ -1522,7 +1522,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 other.MinTime.Equals(MinTime) &&
                 other.MaxTime.Equals(MaxTime) &&
                 other.MaxTransitions.Equals(MaxTransitions) &&
-                Equals(other.PrecursorFilterType, PrecursorFilterType) &&
+                Equals(other.PrecursorAcquisitionMethod, PrecursorAcquisitionMethod) &&
                 other.PrecursorFilter.Equals(PrecursorFilter) &&
                 Equals(other.ProductFilterType, ProductFilterType) &&
                 other.ProductFilter.Equals(ProductFilter);
@@ -1547,7 +1547,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (MinTime.HasValue ? MinTime.Value : 0);
                 result = (result*397) ^ (MaxTime.HasValue ? MaxTime.Value : 0);
                 result = (result*397) ^ (MaxTransitions.HasValue ? MaxTransitions.Value : 0);
-                result = (result*397) ^ PrecursorFilterType.GetHashCode();
+                result = (result*397) ^ PrecursorAcquisitionMethod.GetHashCode();
                 result = (result*397) ^ (PrecursorFilter.HasValue ? PrecursorFilter.Value.GetHashCode() : 0);
                 result = (result*397) ^ (ProductFilterType != null ? ProductFilterType.GetHashCode() : 0);
                 result = (result*397) ^ (ProductFilter.HasValue ? ProductFilter.Value.GetHashCode() : 0);
@@ -1605,9 +1605,8 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        public TransitionFullScan(FullScanPrecursorFilterType precursorFilterType,
-                                    double? precursorFilter,
-                                    double? precursorRightFilter,
+        public TransitionFullScan(FullScanAcquisitionMethod acquisitionMethod,
+                                    IsolationScheme isolationScheme,
                                     FullScanMassAnalyzerType productMassAnalyzer,
                                     double? productRes,
                                     double? productResMz,
@@ -1619,9 +1618,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                     IsotopeEnrichments isotopeEnrichments,
                                     bool isScheduledFilter)
         {
-            PrecursorFilterType = precursorFilterType;
-            PrecursorFilter = precursorFilter;
-            PrecursorRightFilter = precursorRightFilter;
+            AcquisitionMethod = acquisitionMethod;
+            IsolationScheme = isolationScheme;
             ProductMassAnalyzer = productMassAnalyzer;
             ProductRes = productRes;
             ProductResMz = productResMz;
@@ -1640,13 +1638,45 @@ namespace pwiz.Skyline.Model.DocSettings
 
         // MS/MS filtering
 
-        public FullScanPrecursorFilterType PrecursorFilterType { get; private set; }
+        public FullScanAcquisitionMethod AcquisitionMethod { get; private set; }
 
-        public double? PrecursorFilter { get; private set; }
+        public IsolationScheme IsolationScheme { get; private set; }
 
-        public double? PrecursorRightFilter { get; private set; }
+        public double? PrecursorFilter
+        {
+            get { return IsolationScheme == null ? null : IsolationScheme.PrecursorFilter; }
+        }
 
-        public bool IsAsymPrecursorFilter { get { return PrecursorRightFilter.HasValue; } }
+        public double? PrecursorRightFilter
+        {
+            get { return IsolationScheme == null ? null : IsolationScheme.PrecursorRightFilter; }
+        }
+
+        public static IsolationScheme CreateIsolationSchemeForFilter(FullScanAcquisitionMethod acquisitionMethod, double? precursorFilter, double? precursorRightFilter)
+        {
+            switch (acquisitionMethod)
+            {
+                case FullScanAcquisitionMethod.None:
+                    throw new InvalidDataException("Tried to create an isolation scheme for non-DIA mode");
+                
+                case FullScanAcquisitionMethod.DIA:
+                    if (!precursorFilter.HasValue)
+                    {
+                        throw new InvalidDataException("Tried to create an isolation scheme without precursor filter");
+                    }
+                    else
+                    {
+                        string name = precursorRightFilter.HasValue
+                            ? string.Format("Results {0:0.##},{1:0.##} Th", precursorFilter.Value,
+                                precursorRightFilter.Value)
+                            : string.Format("Results {0:0.##} Th", precursorFilter.Value);
+                        return new IsolationScheme(name, precursorFilter, precursorRightFilter);
+                    }
+            }
+
+            // No scheme for Targeted acquisition mode.
+            return null;
+        }
 
         public FullScanMassAnalyzerType ProductMassAnalyzer { get; private set; }
 
@@ -1687,7 +1717,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool IsEnabledMsMs
         {
-            get { return PrecursorFilterType != FullScanPrecursorFilterType.None; }
+            get { return AcquisitionMethod != FullScanAcquisitionMethod.None; }
         }
 
         public bool IsHighResPrecursor { get { return IsHighResAnalyzer(PrecursorMassAnalyzer); } }
@@ -1791,21 +1821,15 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Property change methods
 
-        public TransitionFullScan ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double? prop)
-        {
-            return ChangePrecursorFilter(typeProp, prop, null);
-        }
-
-        public TransitionFullScan ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double? prop, double? propRight)
+        public TransitionFullScan ChangeAcquisitionMethod(FullScanAcquisitionMethod typeProp, IsolationScheme isolationScheme)
         {
             return ChangeProp(ImClone(this), im =>
             {
-                im.PrecursorFilterType = typeProp;
-                im.PrecursorFilter = prop;
-                im.PrecursorRightFilter = propRight;
+                im.AcquisitionMethod = typeProp;
+                im.IsolationScheme = isolationScheme;
                 // Make sure the change results in a valid object, or an exception
                 // will be thrown.
-                if (im.PrecursorFilterType == FullScanPrecursorFilterType.None)
+                if (im.AcquisitionMethod == FullScanAcquisitionMethod.None)
                 {
                     im.ProductMassAnalyzer = FullScanMassAnalyzerType.none;
                     im.ProductRes = im.ProductResMz = null;
@@ -1827,8 +1851,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 im.ProductResMz = mzProp;
                 // Make sure the change results in a valid object, or an exception
                 // will be thrown.
-                if (im.PrecursorFilterType == FullScanPrecursorFilterType.None)
-                    im.PrecursorFilterType = FullScanPrecursorFilterType.Single;
+                if (im.AcquisitionMethod == FullScanAcquisitionMethod.None)
+                    im.AcquisitionMethod = FullScanAcquisitionMethod.Targeted;
             });
         }
 
@@ -1891,7 +1915,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private enum ATTR
         {
-            precursor_filter_type,
+            acquisition_method,
+            precursor_filter_type,  // Skyline 1.2 and earlier
             precursor_filter,
             precursor_left_filter,
             precursor_right_filter,
@@ -1945,24 +1970,22 @@ namespace pwiz.Skyline.Model.DocSettings
                 _cachedPrecursorRes = ValidateRes(PrecursorMassAnalyzer, PrecursorRes, PrecursorResMz);
             }
 
-            if (PrecursorFilterType == FullScanPrecursorFilterType.None)
+            if (AcquisitionMethod == FullScanAcquisitionMethod.None)
             {
-                if (ProductMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorFilter.HasValue || ProductRes.HasValue || ProductResMz.HasValue)
+                if (ProductMassAnalyzer != FullScanMassAnalyzerType.none || IsolationScheme != null || ProductRes.HasValue || ProductResMz.HasValue)
                     throw new InvalidDataException("No other full-scan MS/MS filter settings are allowed when precursor filter is none.");
             }
             else
             {
-                if (PrecursorFilterType == FullScanPrecursorFilterType.Single)
+                if (AcquisitionMethod == FullScanAcquisitionMethod.Targeted)
                 {
-                    if (PrecursorFilter.HasValue)
-                        throw new InvalidDataException("An isolation window width value is not allowed when filtering MS/MS in single precursor mode.");
+                    if (IsolationScheme != null)
+                        throw new InvalidDataException("An isolation window width value is not allowed in Targeted mode.");
                 }
                 else
                 {
-                    if (!PrecursorFilter.HasValue)
-                        throw new InvalidDataException("An isolation window width value is required when filtering MS/MS in multiple precursor mode.");
-                    ValidateRange(PrecursorFilter, MIN_PRECURSOR_MULTI_FILTER, MAX_PRECURSOR_MULTI_FILTER,
-                                  "The precursor m/z filter must be between {0} and {1}");
+                    if (IsolationScheme == null)
+                        throw new InvalidDataException("An isolation window width value is required in DIA mode.");
                 }
 
                 _cachedProductRes = ValidateRes(ProductMassAnalyzer, ProductRes, ProductResMz);
@@ -2018,24 +2041,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void ReadXml(XmlReader reader)
         {
-            // Read start tag attributes
-            PrecursorFilterType = reader.GetEnumAttribute(ATTR.precursor_filter_type,
-                                                          FullScanPrecursorFilterType.None);
-            if (PrecursorFilterType != FullScanPrecursorFilterType.None)
-            {
-                if (PrecursorFilterType == FullScanPrecursorFilterType.Multiple)
-                {
-                    PrecursorFilter = reader.GetNullableDoubleAttribute(ATTR.precursor_filter);
-                    if (!PrecursorFilter.HasValue)
-                    {
-                        PrecursorFilter = reader.GetNullableDoubleAttribute(ATTR.precursor_left_filter);
-                        if (PrecursorFilter.HasValue)
-                            PrecursorRightFilter = reader.GetDoubleAttribute(ATTR.precursor_right_filter, PrecursorFilter.Value);
-                        else
-                            PrecursorFilter = DEFAULT_PRECURSOR_MULTI_FILTER;
-                    }
-                }
+            // Get precursor filter types from Skyline 1.2 and earlier, or acquisition method from later releases.
+            AcquisitionMethod = reader.GetAttribute(ATTR.precursor_filter_type) != null
+                ? TranslateLegacyFilterType(reader.GetEnumAttribute(ATTR.precursor_filter_type, LegacyAcquisitionMethod.None))
+                : reader.GetEnumAttribute(ATTR.acquisition_method, FullScanAcquisitionMethod.None);
 
+            if (AcquisitionMethod != FullScanAcquisitionMethod.None)
+            {
                 ProductMassAnalyzer = reader.GetEnumAttribute(ATTR.product_mass_analyzer, FullScanMassAnalyzerType.qit);
                 ProductRes = reader.GetDoubleAttribute(ATTR.product_res,
                     DEFAULT_RES_VALUES[(int) ProductMassAnalyzer]);
@@ -2073,14 +2085,44 @@ namespace pwiz.Skyline.Model.DocSettings
 
             IsScheduledFilter = reader.GetBoolAttribute(ATTR.scheduled_filter);
 
+            // Create isolation scheme for backward compatibility.
+            if (AcquisitionMethod == FullScanAcquisitionMethod.DIA)
+            {
+                double? precursorFilter = reader.GetNullableDoubleAttribute(ATTR.precursor_filter);
+                double? precursorRightFilter = null;
+                if (!precursorFilter.HasValue)
+                {
+                    precursorFilter = reader.GetNullableDoubleAttribute(ATTR.precursor_left_filter);
+                    if (precursorFilter.HasValue)
+                        precursorRightFilter = reader.GetDoubleAttribute(ATTR.precursor_right_filter, precursorFilter.Value);
+                    else
+                        precursorFilter = DEFAULT_PRECURSOR_MULTI_FILTER;
+                }
+                // May get overwritten below
+                IsolationScheme = CreateIsolationSchemeForFilter(AcquisitionMethod, precursorFilter, precursorRightFilter);
+            }
+
+            bool hasInnerTags = !reader.IsEmptyElement;
+
             // Consume tag
             reader.Read();
 
-            // Read enrighment tags, if present.
-            var readHelper = new XmlElementHelper<IsotopeEnrichments>();
-            if (reader.IsStartElement(readHelper.ElementNames))
+            if (hasInnerTags)
             {
-                IsotopeEnrichments = readHelper.Deserialize(reader);
+                // Read enrichment tags, if present.
+                var readHelper = new XmlElementHelper<IsotopeEnrichments>();
+                if (reader.IsStartElement(readHelper.ElementNames))
+                {
+                    IsotopeEnrichments = readHelper.Deserialize(reader);
+                }
+
+                // Read isolation window tags, if present.
+                var readIsolationHelper = new XmlElementHelper<IsolationScheme>();
+                if (reader.IsStartElement(readIsolationHelper.ElementNames))
+                {
+                    IsolationScheme = readIsolationHelper.Deserialize(reader);
+                }
+
                 // If there is an inner tag, there must be an end tag.
                 reader.ReadEndElement();
             }
@@ -2088,19 +2130,22 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
+        public static FullScanAcquisitionMethod TranslateLegacyFilterType(LegacyAcquisitionMethod legacyFilterType)
+        {
+            switch (legacyFilterType)
+            {
+                case LegacyAcquisitionMethod.Single:    return FullScanAcquisitionMethod.Targeted;
+                case LegacyAcquisitionMethod.Multiple:  return FullScanAcquisitionMethod.DIA;
+                default:                                return FullScanAcquisitionMethod.None;
+            }
+        }
+
         public void WriteXml(XmlWriter writer)
         {
             // Write attributes
-            if (PrecursorFilterType != FullScanPrecursorFilterType.None)
+            if (AcquisitionMethod != FullScanAcquisitionMethod.None)
             {
-                writer.WriteAttribute(ATTR.precursor_filter_type, PrecursorFilterType);
-                if (!IsAsymPrecursorFilter)
-                    writer.WriteAttributeNullable(ATTR.precursor_filter, PrecursorFilter);
-                else
-                {
-                    writer.WriteAttributeNullable(ATTR.precursor_left_filter, PrecursorFilter);
-                    writer.WriteAttributeNullable(ATTR.precursor_right_filter, PrecursorRightFilter);
-                }
+                writer.WriteAttribute(ATTR.acquisition_method, AcquisitionMethod);
                 writer.WriteAttribute(ATTR.product_mass_analyzer, ProductMassAnalyzer);
                 writer.WriteAttributeNullable(ATTR.product_res, ProductRes);
                 writer.WriteAttributeNullable(ATTR.product_res_mz, ProductResMz);
@@ -2116,6 +2161,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.scheduled_filter, IsScheduledFilter);
             if (IsotopeEnrichments != null)
                 writer.WriteElement(IsotopeEnrichments);
+            if (AcquisitionMethod == FullScanAcquisitionMethod.DIA && IsolationScheme != null)
+                writer.WriteElement(IsolationScheme);
         }
 
         #endregion
@@ -2126,9 +2173,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.PrecursorFilterType, PrecursorFilterType) &&
-                other.PrecursorFilter.Equals(PrecursorFilter) &&
-                other.PrecursorRightFilter.Equals(PrecursorRightFilter) &&
+            return Equals(other.AcquisitionMethod, AcquisitionMethod) &&
+                Equals(other.IsolationScheme, IsolationScheme) &&
                 Equals(other.ProductMassAnalyzer, ProductMassAnalyzer) &&
                 other.ProductRes.Equals(ProductRes) &&
                 other.ProductResMz.Equals(ProductResMz) &&
@@ -2153,9 +2199,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = PrecursorFilterType.GetHashCode();
-                result = (result*397) ^ (PrecursorFilter.HasValue ? PrecursorFilter.Value.GetHashCode() : 0);
-                result = (result*397) ^ (PrecursorRightFilter.HasValue ? PrecursorRightFilter.Value.GetHashCode() : 0);
+                int result = AcquisitionMethod.GetHashCode();
+                result = (result * 397) ^ (IsolationScheme != null ? IsolationScheme.GetHashCode() : 0);
                 result = (result*397) ^ ProductMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (ProductRes.HasValue ? ProductRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (ProductResMz.HasValue ? ProductResMz.Value.GetHashCode() : 0);

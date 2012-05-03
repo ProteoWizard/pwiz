@@ -398,6 +398,9 @@
     <Compile Include="Model\Esp\EspFeatureDb.cs" />
     <Compile Include="Model\Esp\GasPhaseBasicityCalc.cs" />
     <Compile Include="Model\Esp\PiCalc.cs" />
+
+    <Compile Include="Model\DocSettings\IsolationScheme.cs" />
+    <Compile Include="Model\DocSettings\IsolationWindow.cs" />
     <Compile Include="Model\OptimizationStep.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
     <Compile Include="Model\DocSettings\Loss.cs" />
@@ -631,6 +634,19 @@
     <Compile Include="Controls\UndoRedoButtons.cs" />
     <Compile Include="Model\V01\Sequence.cs" />
     <Compile Include="Model\V01\XmlExport.cs" />
+    <Compile Include="SettingsUI\EditIsolationWindow.cs" />
+    <Compile Include="SettingsUI\CalculateIsolationSchemeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\CalculateIsolationSchemeDlg.Designer.cs">
+      <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\EditIsolationSchemeDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditIsolationSchemeDlg.Designer.cs">
+      <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\Irt\AddIrtCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -849,6 +865,9 @@
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.resx">
+      <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditCEDlg.resx">
       <DependentUpon>EditCEDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -856,6 +875,9 @@
     <EmbeddedResource Include="SettingsUI\EditEnzymeDlg.resx">
       <DependentUpon>EditEnzymeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditIsolationSchemeDlg.resx">
+      <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditListDlg.resx">
       <DependentUpon>EditListDlg.cs</DependentUpon>

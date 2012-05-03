@@ -136,6 +136,7 @@
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
     <Compile Include="IrtTest.cs" />
+    <Compile Include="IsolationSchemeTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="ManageResultsTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
@@ -226,9 +227,6 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

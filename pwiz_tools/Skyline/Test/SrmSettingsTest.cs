@@ -764,20 +764,21 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.001\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" dynamic_min=\"true\"/>");
             // Backward compatibility with v0.7.1
-            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"None\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\"/>");  // Use defaults
+                LegacyAcquisitionMethod.None + "\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\"/>");  // Use defaults
+                LegacyAcquisitionMethod.Single + "\"/>");  // Use defaults
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\""+
+                LegacyAcquisitionMethod.Multiple + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
+                LegacyAcquisitionMethod.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
                 LEGACY_LOW_ACCURACY + "\" product_filter=\"1\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_filter_type=\"" +
+                LegacyAcquisitionMethod.Multiple + "\" precursor_filter=\"2\" product_filter_type=\"" +
                 LEGACY_HIGH_ACCURACY + "\" product_filter=\"10\"/>");
             // Ignore extra filter values when None specified for precursor filter type
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.None + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
+                LegacyAcquisitionMethod.None + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
                 LEGACY_LOW_ACCURACY + "\" product_filter=\"1\"/>");
 
             // Empty element
@@ -806,29 +807,29 @@ namespace pwiz.SkylineTest
                 "precursor_res=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
                 "precursor_res=\"" + validHiRes + "\"/>");
-            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\"/>");  // Use defaults
-            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\"/>");  // Use defaults
-            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\"  product_mass_analyzer=\"" +
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.DIA + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" precursor_filter=\"0.11\"  product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes+ "\"/>");
-            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
-            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_left_filter=\"5\" precursor_right_filter=\"20\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.DIA + "\" precursor_left_filter=\"5\" precursor_right_filter=\"20\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
-            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\"/>");   // Use default res mz
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" precursor_res_mz=\"" + validHiResMz + "\" " +
-                "precursor_filter_type=\"" + FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                "acquisition_method=\"" + FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" " +
-                "precursor_filter_type=\"" + FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                "acquisition_method=\"" + FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");  // Use default res mz
             // Isotope enrichments
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
@@ -844,37 +845,81 @@ namespace pwiz.SkylineTest
             string underMinResMz = ToXml(TransitionFullScan.MIN_RES_MZ / 2);
             string defaultResMz = ToXml(TransitionFullScan.DEFAULT_RES_MZ);
 
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"Unknown\" " +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"Unknown\" " +
                 "product_resolution=\"" + validLoRes + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
                 "Unknown" + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + overMaxMulti + "\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"" + overMaxMulti + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + underMinMulti + "\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"" + underMinMulti + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_left_filter=\"5\" precursor_right_filter=\"fail\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.DIA + "\" precursor_left_filter=\"5\" precursor_right_filter=\"fail\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + underMinLoRes + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + overMaxLoRes + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + underMinHiRes + "\" product_res_mz=\"" + defaultResMz + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan acquisition_method=\"" +
+                FullScanAcquisitionMethod.Targeted + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.orbitrap + "\" product_res=\"" + overMaxHiRes + "\" product_res_mz=\"" + defaultResMz + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" precursor_res_mz=\"" + underMinResMz + "\" " +
-                "precursor_filter_type=\"" + FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                "acquisition_method=\"" + FullScanAcquisitionMethod.DIA + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");
+
+            // With new isolation scheme tag.
+            AssertEx.DeserializeError<TransitionFullScan>(string.Format(@"
+                <transition_full_scan product_mass_analyzer=""{0}"" product_resoltion=""{1}"" acquisition_method=""{2}"">
+                    <isolation_scheme name=""test"" precursor_filter=""{3}""/>
+                </transition_full_scan>",
+                FullScanMassAnalyzerType.qit, validLoRes, FullScanAcquisitionMethod.DIA, overMaxMulti));
+            AssertEx.DeserializeError<TransitionFullScan>(string.Format(@"
+                <transition_full_scan product_mass_analyzer=""{0}"" product_resoltion=""{1}"" acquisition_method=""{2}"">
+                    <isolation_scheme name=""test"" precursor_filter=""{3}""/>
+                </transition_full_scan>",
+                FullScanMassAnalyzerType.qit, validLoRes, FullScanAcquisitionMethod.DIA, underMinMulti));
+            AssertEx.DeserializeError<TransitionFullScan>(string.Format(@"
+                <transition_full_scan product_mass_analyzer=""{0}"" product_res=""{1}"" product_res_mz=""{2}"" acquisition_method=""{3}"">
+                    <isolation_scheme name=""test"" precursor_left_filter=""5"" precursor_right_filter=""fail""/>
+                </transition_full_scan>",
+                FullScanMassAnalyzerType.ft_icr, validHiRes, validHiResMz, FullScanAcquisitionMethod.DIA));
+
+            // Check backward compatibility reading old "Single" and "Multiple" filter types.
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                LegacyAcquisitionMethod.Single + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                LegacyAcquisitionMethod.Multiple + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                LegacyAcquisitionMethod.Multiple + "\" precursor_filter=\"0.11\"  product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                LegacyAcquisitionMethod.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                LegacyAcquisitionMethod.Multiple + "\" precursor_left_filter=\"5\" precursor_right_filter=\"20\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                LegacyAcquisitionMethod.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\"/>");   // Use default res mz
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" precursor_res_mz=\"" + validHiResMz + "\" " +
+                "precursor_filter_type=\"" + LegacyAcquisitionMethod.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" " +
+                "precursor_filter_type=\"" + LegacyAcquisitionMethod.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");  // Use default res mz
+
             // Isotope enrichments with low res
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.qit + "\" " +
                 "precursor_res=\"" + validLoRes + "\">" + VALID_ISOTOPE_ENRICHMENT_XML + "</transition_full_scan>");

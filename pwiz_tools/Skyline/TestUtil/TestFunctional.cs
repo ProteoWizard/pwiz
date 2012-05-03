@@ -368,6 +368,13 @@ namespace pwiz.SkylineTestUtil
             WaitForConditionUI(() => !SkylineWindow.IsGraphUpdatePending);
         }
 
+        // Pause a test so we can play with the UI manually.
+        public static void PauseTest()
+        {
+            ClipboardEx.UseInternalClipboard(false);
+            Thread.Sleep(-1);
+        }
+
         public static void OkDialog(Form form, Action okAction)
         {
             RunUI(okAction);

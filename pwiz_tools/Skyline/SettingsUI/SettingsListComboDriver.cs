@@ -79,6 +79,8 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (Combo.SelectedIndex < 0)
                     Combo.SelectedIndex = 0;
+
+                ComboHelper.AutoSizeDropDown(Combo);
             }
             finally
             {

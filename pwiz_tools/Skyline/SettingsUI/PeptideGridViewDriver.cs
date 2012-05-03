@@ -78,7 +78,7 @@ namespace pwiz.Skyline.SettingsUI
             return null;
         }
 
-        public static bool ValidateRow(object[] columns)
+        public static bool ValidateRow(object[] columns, int lineNumber)
         {
             double x;
             if (columns.Length != 2)

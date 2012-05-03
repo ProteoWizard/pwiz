@@ -198,7 +198,8 @@ namespace pwiz.SkylineTestUtil
                         expected = sb.ToString();
                     else
                         NoDiff(expected, sb.ToString());
-                    using (TextReader reader = new StringReader(sb.ToString()))
+                    var s = sb.ToString();
+                    using (TextReader reader = new StringReader(s))
                     {
                         TObj copy = (TObj)ser.Deserialize(reader);
                         return copy;
@@ -346,7 +347,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Assert.AreEqual(expected, actual);
             }
-            if (!ReferenceEquals(defaultObj, actual))
+            if (!ReferenceEquals(expected, actual))
             {
                 Assert.AreNotSame(expected, actual);
             }

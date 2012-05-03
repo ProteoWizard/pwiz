@@ -113,19 +113,16 @@
             this.comboPrecursorAnalyzerType = new System.Windows.Forms.ComboBox();
             this.label32 = new System.Windows.Forms.Label();
             this.groupBoxMS2 = new System.Windows.Forms.GroupBox();
-            this.textRightPrecursorFilterMz = new System.Windows.Forms.TextBox();
-            this.cbAsymIsolation = new System.Windows.Forms.CheckBox();
+            this.comboIsolationScheme = new System.Windows.Forms.ComboBox();
             this.labelProductAt = new System.Windows.Forms.Label();
             this.textProductAt = new System.Windows.Forms.TextBox();
             this.labelProductTh = new System.Windows.Forms.Label();
-            this.label27 = new System.Windows.Forms.Label();
             this.textProductRes = new System.Windows.Forms.TextBox();
             this.labelProductRes = new System.Windows.Forms.Label();
             this.comboProductAnalyzerType = new System.Windows.Forms.ComboBox();
             this.label22 = new System.Windows.Forms.Label();
-            this.textPrecursorFilterMz = new System.Windows.Forms.TextBox();
-            this.labelIsolationWidth = new System.Windows.Forms.Label();
-            this.comboPrecursorFilterType = new System.Windows.Forms.ComboBox();
+            this.labelIsolationScheme = new System.Windows.Forms.Label();
+            this.comboAcquisitionMethod = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
             this.tabControl1.SuspendLayout();
@@ -164,9 +161,9 @@
             // 
             // tabControl1
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl1.Controls.Add(this.tabGeneral);
             this.tabControl1.Controls.Add(this.tabFilter);
             this.tabControl1.Controls.Add(this.tabLibrary);
@@ -222,7 +219,7 @@
             this.comboOptimizeType.Size = new System.Drawing.Size(121, 21);
             this.comboOptimizeType.TabIndex = 10;
             this.helpTip.SetToolTip(this.comboOptimizeType, "Specifies if optimization is to be done either for all transitions\r\nin each precu" +
-                    "rsor totaled or for each transition separately");
+        "rsor totaled or for each transition separately");
             this.comboOptimizeType.Visible = false;
             // 
             // cbUseOptimized
@@ -234,8 +231,8 @@
             this.cbUseOptimized.TabIndex = 8;
             this.cbUseOptimized.Text = "&Use optimization values when present";
             this.helpTip.SetToolTip(this.cbUseOptimized, "If checked, the any measured CE or DP optimization values will\r\nbe used to select" +
-                    " the value exported in methods and transition\r\nlists.  The value producing the m" +
-                    "aximum total peak area will be\r\nchosen.");
+        " the value exported in methods and transition\r\nlists.  The value producing the m" +
+        "aximum total peak area will be\r\nchosen.");
             this.cbUseOptimized.UseVisualStyleBackColor = true;
             this.cbUseOptimized.CheckedChanged += new System.EventHandler(this.cbUseOptimized_CheckedChanged);
             // 
@@ -268,8 +265,8 @@
             this.comboCollisionEnergy.Size = new System.Drawing.Size(121, 21);
             this.comboCollisionEnergy.TabIndex = 5;
             this.helpTip.SetToolTip(this.comboCollisionEnergy, "A linear equation used to predict the optimal collsion energy (CE)\r\nfor each prec" +
-                    "ursor from its mass-to-charge ratio.  Isotope labeled\r\npeptides use the predicte" +
-                    "d CE for the unlabeled form.");
+        "ursor from its mass-to-charge ratio.  Isotope labeled\r\npeptides use the predicte" +
+        "d CE for the unlabeled form.");
             this.comboCollisionEnergy.SelectedIndexChanged += new System.EventHandler(this.comboCollisionEnergy_SelectedIndexChanged);
             // 
             // label7
@@ -293,7 +290,7 @@
             this.comboIonMass.Size = new System.Drawing.Size(121, 21);
             this.comboIonMass.TabIndex = 3;
             this.helpTip.SetToolTip(this.comboIonMass, "Molecular mass calculation strategy (monoisotopic or average)\r\nto use in calculat" +
-                    "ing all product ion masses");
+        "ing all product ion masses");
             // 
             // label2
             // 
@@ -316,7 +313,7 @@
             this.comboPrecursorMass.Size = new System.Drawing.Size(121, 21);
             this.comboPrecursorMass.TabIndex = 1;
             this.helpTip.SetToolTip(this.comboPrecursorMass, "Molecular mass calculation strategy (monoisotopic or average)\r\nto use in calculat" +
-                    "ing all precursor masses");
+        "ing all precursor masses");
             // 
             // label1
             // 
@@ -352,7 +349,7 @@
             this.textIonTypes.Size = new System.Drawing.Size(76, 20);
             this.textIonTypes.TabIndex = 5;
             this.helpTip.SetToolTip(this.textIonTypes, "A list of comma separated product ion types (a, b, c, x, y, z, p for precursor) t" +
-                    "o use\r\nfor calculating potential product ions");
+        "o use\r\nfor calculating potential product ions");
             // 
             // label8
             // 
@@ -372,8 +369,8 @@
             this.cbAutoSelect.TabIndex = 7;
             this.cbAutoSelect.Text = "&Auto-select all matching transitions";
             this.helpTip.SetToolTip(this.cbAutoSelect, "If checked, tranitions are automatically chosen for peptides\r\nusing specified fil" +
-                    "ter and library settings.  Otherwise, all transition\r\nselection must be done by " +
-                    "manual document editing.");
+        "ter and library settings.  Otherwise, all transition\r\nselection must be done by " +
+        "manual document editing.");
             this.cbAutoSelect.UseVisualStyleBackColor = true;
             // 
             // groupBox1
@@ -411,8 +408,8 @@
             this.textExclusionWindow.Size = new System.Drawing.Size(76, 20);
             this.textExclusionWindow.TabIndex = 8;
             this.helpTip.SetToolTip(this.textExclusionWindow, "A m/z window around the precursor m/z within which transitions\r\nare excluded, or " +
-                    "blank.  A window of 20 will exclude all transitions\r\nwithin 10 on either side of" +
-                    " the precursor m/z.");
+        "blank.  A window of 20 will exclude all transitions\r\nwithin 10 on either side of" +
+        " the precursor m/z.");
             // 
             // label19
             // 
@@ -452,7 +449,7 @@
             this.listAlwaysAdd.Size = new System.Drawing.Size(187, 64);
             this.listAlwaysAdd.TabIndex = 5;
             this.helpTip.SetToolTip(this.listAlwaysAdd, "Set of special product ions to measure when present, even outside\r\nthe filtered r" +
-                    "ange");
+        "ange");
             // 
             // comboRangeFrom
             // 
@@ -500,7 +497,7 @@
             this.textIonCharges.Size = new System.Drawing.Size(76, 20);
             this.textIonCharges.TabIndex = 3;
             this.helpTip.SetToolTip(this.textIonCharges, "A list of comma separated charge states to use for calculating\r\nproduct ion mass-" +
-                    "to-charge ratios");
+        "to-charge ratios");
             // 
             // textPrecursorCharges
             // 
@@ -509,7 +506,7 @@
             this.textPrecursorCharges.Size = new System.Drawing.Size(76, 20);
             this.textPrecursorCharges.TabIndex = 1;
             this.helpTip.SetToolTip(this.textPrecursorCharges, "A list of comma separated charge states to use for calculating\r\nprecursur mass-to" +
-                    "-charge ratios");
+        "-charge ratios");
             // 
             // label6
             // 
@@ -588,7 +585,7 @@
             this.radioFiltered.TabStop = true;
             this.radioFiltered.Text = "From filtered pro&duct ions";
             this.helpTip.SetToolTip(this.radioFiltered, "Apply parameters from the Filter tab to the selection of MS/MS\r\npeaks matching io" +
-                    "ns for ranking");
+        "ns for ranking");
             this.radioFiltered.UseVisualStyleBackColor = true;
             // 
             // radioAll
@@ -601,7 +598,7 @@
             this.radioAll.TabStop = true;
             this.radioAll.Text = "From filtered ion &charges and types";
             this.helpTip.SetToolTip(this.radioAll, "Apply only the ion charges and types from the Filter tab to\r\nthe selection of MS/" +
-                    "MS peaks matching ions for ranking");
+        "MS peaks matching ions for ranking");
             this.radioAll.UseVisualStyleBackColor = true;
             // 
             // label14
@@ -629,7 +626,7 @@
             this.textIonCount.Size = new System.Drawing.Size(67, 20);
             this.textIonCount.TabIndex = 1;
             this.helpTip.SetToolTip(this.textIonCount, "Pick this many transitions for each precursor by library spectrum\r\npeak intensity" +
-                    " ranking");
+        " ranking");
             // 
             // textTolerance
             // 
@@ -638,7 +635,7 @@
             this.textTolerance.Size = new System.Drawing.Size(67, 20);
             this.textTolerance.TabIndex = 1;
             this.helpTip.SetToolTip(this.textTolerance, "Maximum delta allowed when matching predicted product ion\r\nm/z values with measur" +
-                    "ed MS/MS spectral library peak m/z values");
+        "ed MS/MS spectral library peak m/z values");
             // 
             // cbLibraryPick
             // 
@@ -649,7 +646,7 @@
             this.cbLibraryPick.TabIndex = 3;
             this.cbLibraryPick.Text = "If a library &spectrum is available, pick its most intense ions";
             this.helpTip.SetToolTip(this.cbLibraryPick, "If checked, the transition filter is based on MS/MS spectral library peaks\r\nwhene" +
-                    "ver peptides are matched to library spectrum.");
+        "ver peptides are matched to library spectrum.");
             this.cbLibraryPick.UseVisualStyleBackColor = true;
             this.cbLibraryPick.CheckedChanged += new System.EventHandler(this.cbLibraryPick_CheckedChanged);
             // 
@@ -732,8 +729,8 @@
             this.textMaxTime.Size = new System.Drawing.Size(68, 20);
             this.textMaxTime.TabIndex = 17;
             this.helpTip.SetToolTip(this.textMaxTime, "Maximum time allowed in chromatograms regardless of how\r\nthey were acquired.  Set" +
-                    "ting this can save memory and disk space\r\nthat might be used on uninteresting pa" +
-                    "rts of the gradient.");
+        "ting this can save memory and disk space\r\nthat might be used on uninteresting pa" +
+        "rts of the gradient.");
             // 
             // textMinTime
             // 
@@ -742,8 +739,8 @@
             this.textMinTime.Size = new System.Drawing.Size(68, 20);
             this.textMinTime.TabIndex = 13;
             this.helpTip.SetToolTip(this.textMinTime, "Minimum time allowed in chromatograms regardless of how\r\nthey were acquired.  Set" +
-                    "ting this can save memory and disk space\r\nthat might be used on uninteresting pa" +
-                    "rts of the gradient.");
+        "ting this can save memory and disk space\r\nthat might be used on uninteresting pa" +
+        "rts of the gradient.");
             // 
             // label26
             // 
@@ -781,8 +778,8 @@
             this.cbDynamicMinimum.TabIndex = 3;
             this.cbDynamicMinimum.Text = "&Dynamic min product m/z";
             this.helpTip.SetToolTip(this.cbDynamicMinimum, "If checked, minimum m/z value for product ions is calculate\r\ndynamically from the" +
-                    " precursor m/z using a specific equation\r\nprovided by Thermo-Scientific for LTQ " +
-                    "instruments");
+        " precursor m/z using a specific equation\r\nprovided by Thermo-Scientific for LTQ " +
+        "instruments");
             this.cbDynamicMinimum.UseVisualStyleBackColor = true;
             // 
             // textMaxTrans
@@ -792,7 +789,7 @@
             this.textMaxTrans.Size = new System.Drawing.Size(68, 20);
             this.textMaxTrans.TabIndex = 11;
             this.helpTip.SetToolTip(this.textMaxTrans, "Maximum total number of transitions measurable by the target\r\ninstrument in a sin" +
-                    "gle injection or blank if no maximum applies");
+        "gle injection or blank if no maximum applies");
             // 
             // label17
             // 
@@ -810,7 +807,7 @@
             this.textMzMatchTolerance.Size = new System.Drawing.Size(68, 20);
             this.textMzMatchTolerance.TabIndex = 8;
             this.helpTip.SetToolTip(this.textMzMatchTolerance, "Maximum delta for matching measured transition m/z values\r\nwith predicted transit" +
-                    "ion m/z values");
+        "ion m/z values");
             // 
             // label16
             // 
@@ -1032,19 +1029,16 @@
             // 
             // groupBoxMS2
             // 
-            this.groupBoxMS2.Controls.Add(this.textRightPrecursorFilterMz);
-            this.groupBoxMS2.Controls.Add(this.cbAsymIsolation);
+            this.groupBoxMS2.Controls.Add(this.comboIsolationScheme);
             this.groupBoxMS2.Controls.Add(this.labelProductAt);
             this.groupBoxMS2.Controls.Add(this.textProductAt);
             this.groupBoxMS2.Controls.Add(this.labelProductTh);
-            this.groupBoxMS2.Controls.Add(this.label27);
             this.groupBoxMS2.Controls.Add(this.textProductRes);
             this.groupBoxMS2.Controls.Add(this.labelProductRes);
             this.groupBoxMS2.Controls.Add(this.comboProductAnalyzerType);
             this.groupBoxMS2.Controls.Add(this.label22);
-            this.groupBoxMS2.Controls.Add(this.textPrecursorFilterMz);
-            this.groupBoxMS2.Controls.Add(this.labelIsolationWidth);
-            this.groupBoxMS2.Controls.Add(this.comboPrecursorFilterType);
+            this.groupBoxMS2.Controls.Add(this.labelIsolationScheme);
+            this.groupBoxMS2.Controls.Add(this.comboAcquisitionMethod);
             this.groupBoxMS2.Controls.Add(this.label20);
             this.groupBoxMS2.Location = new System.Drawing.Point(18, 257);
             this.groupBoxMS2.Name = "groupBoxMS2";
@@ -1053,25 +1047,17 @@
             this.groupBoxMS2.TabStop = false;
             this.groupBoxMS2.Text = "M&S/MS filtering";
             // 
-            // textRightPrecursorFilterMz
+            // comboIsolationScheme
             // 
-            this.textRightPrecursorFilterMz.Location = new System.Drawing.Point(60, 111);
-            this.textRightPrecursorFilterMz.Name = "textRightPrecursorFilterMz";
-            this.textRightPrecursorFilterMz.Size = new System.Drawing.Size(40, 20);
-            this.textRightPrecursorFilterMz.TabIndex = 4;
-            this.textRightPrecursorFilterMz.Visible = false;
-            // 
-            // cbAsymIsolation
-            // 
-            this.cbAsymIsolation.AutoSize = true;
-            this.cbAsymIsolation.Enabled = false;
-            this.cbAsymIsolation.Location = new System.Drawing.Point(14, 137);
-            this.cbAsymIsolation.Name = "cbAsymIsolation";
-            this.cbAsymIsolation.Size = new System.Drawing.Size(79, 17);
-            this.cbAsymIsolation.TabIndex = 6;
-            this.cbAsymIsolation.Text = "Asymmetric";
-            this.cbAsymIsolation.UseVisualStyleBackColor = true;
-            this.cbAsymIsolation.CheckedChanged += new System.EventHandler(this.cbAsymIsolation_CheckedChanged);
+            this.comboIsolationScheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboIsolationScheme.FormattingEnabled = true;
+            this.comboIsolationScheme.Location = new System.Drawing.Point(14, 110);
+            this.comboIsolationScheme.Name = "comboIsolationScheme";
+            this.comboIsolationScheme.Size = new System.Drawing.Size(111, 21);
+            this.comboIsolationScheme.TabIndex = 14;
+            this.helpTip.SetToolTip(this.comboIsolationScheme, "Single - match a single precursor closest to the center of the isolation window\r\n" +
+        "Multiple - match any precursor within the isolation window");
+            this.comboIsolationScheme.SelectedIndexChanged += new System.EventHandler(this.comboIsolationScheme_SelectedIndexChanged);
             // 
             // labelProductAt
             // 
@@ -1098,15 +1084,6 @@
             this.labelProductTh.Size = new System.Drawing.Size(20, 13);
             this.labelProductTh.TabIndex = 13;
             this.labelProductTh.Text = "Th";
-            // 
-            // label27
-            // 
-            this.label27.AutoSize = true;
-            this.label27.Location = new System.Drawing.Point(102, 114);
-            this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(20, 13);
-            this.label27.TabIndex = 5;
-            this.label27.Text = "Th";
             // 
             // textProductRes
             // 
@@ -1146,43 +1123,35 @@
             this.label22.TabIndex = 7;
             this.label22.Text = "Product &mass analyzer:";
             // 
-            // textPrecursorFilterMz
+            // labelIsolationScheme
             // 
-            this.textPrecursorFilterMz.Enabled = false;
-            this.textPrecursorFilterMz.Location = new System.Drawing.Point(14, 111);
-            this.textPrecursorFilterMz.Name = "textPrecursorFilterMz";
-            this.textPrecursorFilterMz.Size = new System.Drawing.Size(40, 20);
-            this.textPrecursorFilterMz.TabIndex = 3;
+            this.labelIsolationScheme.AutoSize = true;
+            this.labelIsolationScheme.Location = new System.Drawing.Point(11, 94);
+            this.labelIsolationScheme.Name = "labelIsolationScheme";
+            this.labelIsolationScheme.Size = new System.Drawing.Size(89, 13);
+            this.labelIsolationScheme.TabIndex = 2;
+            this.labelIsolationScheme.Text = "Iso&lation scheme:";
             // 
-            // labelIsolationWidth
+            // comboAcquisitionMethod
             // 
-            this.labelIsolationWidth.AutoSize = true;
-            this.labelIsolationWidth.Location = new System.Drawing.Point(11, 94);
-            this.labelIsolationWidth.Name = "labelIsolationWidth";
-            this.labelIsolationWidth.Size = new System.Drawing.Size(77, 13);
-            this.labelIsolationWidth.TabIndex = 2;
-            this.labelIsolationWidth.Text = "Isolation &width:";
-            // 
-            // comboPrecursorFilterType
-            // 
-            this.comboPrecursorFilterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboPrecursorFilterType.FormattingEnabled = true;
-            this.comboPrecursorFilterType.Location = new System.Drawing.Point(14, 45);
-            this.comboPrecursorFilterType.Name = "comboPrecursorFilterType";
-            this.comboPrecursorFilterType.Size = new System.Drawing.Size(111, 21);
-            this.comboPrecursorFilterType.TabIndex = 1;
-            this.helpTip.SetToolTip(this.comboPrecursorFilterType, "Single - match a single precursor closest to the center of the isolation window\r\n" +
-                    "Multiple - match any precursor within the isolation window");
-            this.comboPrecursorFilterType.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorFilterType_SelectedIndexChanged);
+            this.comboAcquisitionMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboAcquisitionMethod.FormattingEnabled = true;
+            this.comboAcquisitionMethod.Location = new System.Drawing.Point(14, 45);
+            this.comboAcquisitionMethod.Name = "comboAcquisitionMethod";
+            this.comboAcquisitionMethod.Size = new System.Drawing.Size(111, 21);
+            this.comboAcquisitionMethod.TabIndex = 1;
+            this.helpTip.SetToolTip(this.comboAcquisitionMethod, "Single - match a single precursor closest to the center of the isolation window\r\n" +
+        "Multiple - match any precursor within the isolation window");
+            this.comboAcquisitionMethod.SelectedIndexChanged += new System.EventHandler(this.comboAcquisitionMethod_SelectedIndexChanged);
             // 
             // label20
             // 
             this.label20.AutoSize = true;
             this.label20.Location = new System.Drawing.Point(11, 28);
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(101, 13);
+            this.label20.Size = new System.Drawing.Size(99, 13);
             this.label20.TabIndex = 0;
-            this.label20.Text = "Pr&ecursor matching:";
+            this.label20.Text = "A&cquisition method:";
             // 
             // helpTip
             // 
@@ -1295,14 +1264,12 @@
         private System.Windows.Forms.TabPage tabFullScan;
         private System.Windows.Forms.GroupBox groupBoxMS2;
         private System.Windows.Forms.Label labelProductTh;
-        private System.Windows.Forms.Label label27;
         private System.Windows.Forms.TextBox textProductRes;
         private System.Windows.Forms.Label labelProductRes;
         private System.Windows.Forms.ComboBox comboProductAnalyzerType;
         private System.Windows.Forms.Label label22;
-        private System.Windows.Forms.TextBox textPrecursorFilterMz;
-        private System.Windows.Forms.Label labelIsolationWidth;
-        private System.Windows.Forms.ComboBox comboPrecursorFilterType;
+        private System.Windows.Forms.Label labelIsolationScheme;
+        private System.Windows.Forms.ComboBox comboAcquisitionMethod;
         private System.Windows.Forms.Label label20;
         private System.Windows.Forms.GroupBox groupBoxMS1;
         private System.Windows.Forms.Label labelPrecursorTh;
@@ -1328,7 +1295,6 @@
         private System.Windows.Forms.TextBox textMaxTime;
         private System.Windows.Forms.TextBox textMinTime;
         private System.Windows.Forms.CheckBox cbFilterScheduling;
-        private System.Windows.Forms.TextBox textRightPrecursorFilterMz;
-        private System.Windows.Forms.CheckBox cbAsymIsolation;
+        private System.Windows.Forms.ComboBox comboIsolationScheme;
     }
 }

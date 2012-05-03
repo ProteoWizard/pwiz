@@ -1265,6 +1265,12 @@ namespace pwiz.Skyline.Util
             return label;
         }
 
+        public static string TruncateString(string s, int length)
+        {
+            return s.Length <= length ? s : s.Substring(0, length - ELIPSIS.Length) + ELIPSIS;
+        }
+
+
         /// <summary>
         /// Try an action that might throw an exception.  If it does, sleep for a little while and
         /// try the action one more time.  This oddity is necessary because certain file system

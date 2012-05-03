@@ -114,7 +114,7 @@ namespace pwiz.SkylineTestFunctional
         private void TestBasicFunctionality()
         {
             // Launch the Library Explorer dialog
-            _viewLibUI = ShowDialog<ViewLibraryDlg>(PeptideSettingsUI.ShowViewLibraryDlg);
+            _viewLibUI = ShowDialog<ViewLibraryDlg>(SkylineWindow.ViewSpectralLibraries);
 
             // Ensure the appropriate default library is selected
             ComboBox libComboBox = null;

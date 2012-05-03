@@ -762,6 +762,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     defSet.IsotopeEnrichmentsList.Add(TransitionSettings.FullScan.IsotopeEnrichments);
                 }
             }
+            if (TransitionSettings.FullScan.IsolationScheme != null)
+            {
+                if (!defSet.IsolationSchemeList.ContainsKey(TransitionSettings.FullScan.IsolationScheme.Name))
+                {
+                    defSet.IsolationSchemeList.Add(TransitionSettings.FullScan.IsolationScheme);
+                }
+            }
             foreach (var annotationDef in DataSettings.AnnotationDefs)
             {
                 if (!defSet.AnnotationDefList.ContainsKey(annotationDef.Name))

@@ -27,9 +27,11 @@ namespace pwiz.SkylineTestUtil
 {
     public static class ExtensionTestContext
     {
+        public static string TestDir { get { return "c:\\users\\donmarsh\\documents\\testresults"; } }
+
         public static string GetTestPath(this TestContext testContext, string relativePath)
         {
-            return Path.Combine(testContext.TestDir, relativePath);
+            return Path.Combine(TestDir, relativePath);
         }
 
         public static String GetProjectDirectory(this TestContext testContext, string relativePath)
@@ -46,7 +48,7 @@ namespace pwiz.SkylineTestUtil
 
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip)
         {
-            testContext.ExtractTestFiles(relativePathZip, testContext.TestDir);
+            testContext.ExtractTestFiles(relativePathZip, TestDir);
         }
 
         public static void ExtractTestFiles(this TestContext testContext, string relativePathZip, string destDir)

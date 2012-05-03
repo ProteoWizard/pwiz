@@ -234,35 +234,30 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private bool ValidateRegressionCellValues(string[] values)
+        private bool ValidateRegressionCellValues(string[] values, int lineNumber)
         {
-            // Parse charge
             int tempInt;
+            double tempDouble;
+            string message;
+
+            // Parse charge
             if (!int.TryParse(values[0].Trim(), out tempInt))
-            {
-                string message = string.Format("The value {0} is not a valid charge.  " +
+                message = string.Format("the value {0} is not a valid charge.  " +
                     "Charges must be integer values between 1 and 5.", values[0]);
-                MessageBox.Show(this, message, Program.Name);
-                return false;
-            }
 
             // Parse slope
-            double tempDouble;
-            if (!double.TryParse(values[1].Trim(), out tempDouble))
-            {
-                string message = string.Format("The value {0} is not a valid slope.", values[1]);
-                MessageBox.Show(this, message, Program.Name);
-                return false;
-            }
+            else if (!double.TryParse(values[1].Trim(), out tempDouble))
+                message = string.Format("the value {0} is not a valid slope.", values[1]);
 
             // Parse intercept
-            if (!double.TryParse(values[2].Trim(), out tempDouble))
-            {
-                string message = string.Format("The value {0} is not a valid intercept.", values[2]);
-                MessageBox.Show(this, message, Program.Name);
-                return false;
-            }
-            return true;
+            else if (!double.TryParse(values[2].Trim(), out tempDouble))
+                message = string.Format("the value {0} is not a valid intercept.", values[2]);
+
+            else
+                return true;
+
+            MessageDlg.Show(this, string.Format("On line {0}, {1}", lineNumber, message));
+            return false;
         }
 
         private void btnUseCurrent_Click(object sender, EventArgs e)

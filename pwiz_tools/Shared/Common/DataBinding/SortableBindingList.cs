@@ -193,10 +193,19 @@ namespace pwiz.Common.DataBinding
             private static int CompareAscending(object xValue, object yValue)
             {
                 int result;
-                if (xValue is IComparable)
+                // Null sorts before objects with values.
+                if (xValue == null)
+                {
+                    result = (yValue == null) ? 0 : -1;
+                }
+                else if (yValue == null)
+                {
+                    result = 1;
+                }
+                else if (xValue is IComparable)
                 {
                     /* If values implement IComparer */
-                    result = ((IComparable) xValue).CompareTo(yValue);
+                    result = ((IComparable)xValue).CompareTo(yValue);
                 }
                 else if (xValue.Equals(yValue))
                 {

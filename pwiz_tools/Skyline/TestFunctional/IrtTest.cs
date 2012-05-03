@@ -339,7 +339,7 @@ namespace pwiz.SkylineTestFunctional
 
             //Peptide settings dialog -> Add a regression
             var peptideSettingsDlg2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var editRT2 = ShowDialog<EditRTDlg>(peptideSettingsDlg1.AddRTRegression);
+            var editRT2 = ShowDialog<EditRTDlg>(peptideSettingsDlg2.AddRTRegression);
 
             //Set regression name
             RunUI(() => editRT2.SetRegressionName("iRT Document Regression"));

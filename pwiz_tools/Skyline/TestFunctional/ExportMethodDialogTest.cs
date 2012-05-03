@@ -378,13 +378,13 @@ namespace pwiz.SkylineTestFunctional
         private static void EnableMS2Filtering()
         {
             SetDocument(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                fs.ChangePrecursorFilter(FullScanPrecursorFilterType.Single, null))));
+                fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.Targeted, null))));
         }
 
         private static void DisableMS2Filtering()
         {
             SetDocument(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                fs.ChangePrecursorFilter(FullScanPrecursorFilterType.None, null))));
+                fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.None, null))));
         }
     }
 }

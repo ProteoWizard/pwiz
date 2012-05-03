@@ -130,6 +130,7 @@
     <Compile Include="Results\FullScanTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
     <Compile Include="StringHelpersTest.cs" />
+    <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TransitionSettings07Test.cs" />
     <Compile Include="UniModTest.cs" />
     <Compile Include="VariableModTest.cs" />

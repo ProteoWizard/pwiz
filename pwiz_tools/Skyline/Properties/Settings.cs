@@ -477,6 +477,26 @@ namespace pwiz.Skyline.Properties
         }
 
         [System.Configuration.UserScopedSettingAttribute]
+        public IsolationSchemeList IsolationSchemeList
+        {
+            get
+            {
+                IsolationSchemeList list = (IsolationSchemeList)this[typeof(IsolationSchemeList).Name];
+                if (list == null)
+                {
+                    list = new IsolationSchemeList();
+                    list.AddDefaults();
+                    IsolationSchemeList = list;
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(IsolationSchemeList).Name] = value;
+            }
+        }
+
+        [System.Configuration.UserScopedSettingAttribute]
         public SrmSettingsList SrmSettingsList
         {
             get
@@ -1317,6 +1337,35 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return "Edit Isotope Labeling Enrichments"; } }
 
         public override string Label { get { return "&Isotope labeling entrichment:"; } }        
+    }
+
+    public sealed class IsolationSchemeList : SettingsList<IsolationScheme>
+    {
+        public override IEnumerable<IsolationScheme> GetDefaults(int revisionIndex)
+        {
+            yield break;
+        }
+
+        public override IsolationScheme EditItem(Control owner, IsolationScheme item,
+            IEnumerable<IsolationScheme> existing, object tag)
+        {
+            using (var editIsolationScheme = new EditIsolationSchemeDlg(existing ?? this) { IsolationScheme = item })
+            {
+                if (editIsolationScheme.ShowDialog() == DialogResult.OK)
+                    return editIsolationScheme.IsolationScheme;
+            }
+
+            return null;
+        }
+
+        public override IsolationScheme CopyItem(IsolationScheme item)
+        {
+            return (IsolationScheme)item.ChangeName(string.Empty);
+        }
+
+        public override string Title { get { return "Edit Isolation Scheme"; } }
+
+        public override string Label { get { return "&Isolation scheme:"; } }
     }
 
     public sealed class SrmSettingsList : SettingsListBase<SrmSettings>, IListSerializer<SrmSettings>
