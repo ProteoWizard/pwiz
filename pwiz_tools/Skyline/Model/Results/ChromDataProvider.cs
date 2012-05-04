@@ -642,7 +642,8 @@ namespace pwiz.Skyline.Model.Results
                 _minTime = _instrument.MinTime;
                 _maxTime = _instrument.MaxTime;
                 bool canSchedule = _fullScan.IsScheduledFilter &&
-                    document.Settings.PeptideSettings.Prediction.CanSchedule(document, false);
+                    document.Settings.PeptideSettings.Prediction.CanSchedule(document,
+                        PeptidePrediction.SchedulingStrategy.any);
                 _isSharedTime = !canSchedule;
                 int? replicateNum = null;
                 if (document.Settings.HasResults)

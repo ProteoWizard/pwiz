@@ -334,16 +334,25 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
+        /// Scheduling strategies include:
+        /// - single_window - methods only allow for a single retention time window for all scheduling
+        /// - all_variable_window - methods allow variable windows, but all peptides must be scheduled
+        /// - any - anything goes, as long as any peptide may be scheduled
+        /// </summary>
+        public enum SchedulingStrategy { single_window, all_variable_window, any }
+
+        /// <summary>
         /// Tells whether a document can be scheduled, given certain scheduling restrictions.
         /// </summary>
         /// <param name="document">The document to schedule</param>
-        /// <param name="singleWindow">True if the instrument supports only a single global
+        /// <param name="schedulingStrategy">True if the instrument supports only a single global
         /// retention time window, or false if the instrument can set the window for each transition</param>
         /// <returns>True if a scheduled method may be created from this document</returns>
-        public bool CanSchedule(SrmDocument document, bool singleWindow)
+        public bool CanSchedule(SrmDocument document, SchedulingStrategy schedulingStrategy)
         {
             // Check if results information can be used for retention times
             bool resultsAvailable = (UseMeasuredRTs && document.Settings.HasResults);
+            bool singleWindow = (schedulingStrategy == SchedulingStrategy.single_window);
 
             //  If the user has assigned a retention time predictor and the calculator is usable
             if (RetentionTime != null && RetentionTime.IsUsable)
@@ -360,16 +369,19 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Otherwise, if every precursor has enough result information
             // to predict a retention time, then this document can be scheduled.
+            bool anyTimes = false;
             foreach (var nodePep in document.Peptides)
             {
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     double windowRT;
-                    if (!PredictRetentionTime(document, nodePep, nodeGroup, null, ExportSchedulingAlgorithm.Average, singleWindow, out windowRT).HasValue)
+                    if (PredictRetentionTime(document, nodePep, nodeGroup, null, ExportSchedulingAlgorithm.Average, singleWindow, out windowRT).HasValue)
+                        anyTimes = true;
+                    else if (schedulingStrategy != SchedulingStrategy.any)
                         return false;
                 }
             }
-            return true;
+            return anyTimes;
         }
 
         #region Property change methods

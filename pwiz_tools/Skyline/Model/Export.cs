@@ -135,7 +135,9 @@ namespace pwiz.Skyline.Model
         {
             return CanScheduleInstrumentType(instrumentType, doc) &&
                    doc.Settings.PeptideSettings.Prediction.CanSchedule(doc,
-                                                                       IsSingleWindowInstrumentType(instrumentType));
+                                                                       IsSingleWindowInstrumentType(instrumentType)
+                                                                           ? PeptidePrediction.SchedulingStrategy.single_window
+                                                                           : PeptidePrediction.SchedulingStrategy.all_variable_window);
         }
 
         public static bool IsSingleWindowInstrumentType(string type)
