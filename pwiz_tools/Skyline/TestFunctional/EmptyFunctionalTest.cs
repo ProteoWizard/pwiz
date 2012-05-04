@@ -22,7 +22,7 @@ using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
 {
-    [TestClass]
+    //[TestClass]
     public class EmptyFunctionalTest : AbstractFunctionalTest
     {
         //[TestMethod]
