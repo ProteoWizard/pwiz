@@ -54,9 +54,13 @@ libtoolize  --copy ; aclocal ; cat boost.m4 >> aclocal.m4 ; autoscan $PWIZROOT/p
 popd
 
 echo "now test our work..."
-pushd $PWIZROOT
-autotools/configure
+cd $PWIZROOT
+rm -rf autotools_test
+mkdir -p autotools_test
+cd autotools_test
+tar -xzf $PWIZROOT/scripts/autotools/libpwiz_src.tgz
+cd pwiz
+bash autotools/configure
 make check
-popd
 rm -rf $TMPDIR
 

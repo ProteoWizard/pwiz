@@ -282,16 +282,18 @@ if (not dryrun) :
 			f = shipdir+"/"+file
 			ext = file.partition(".")[2]
 			if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts)) :
+				tarname = ac.replace_pwizroot(f,"pwiz")
 				if dbug :
-					print "add "+f
-				z.add(f,ac.replace_pwizroot(f,"pwiz"))
+					print "add "+f+" as "+tarname
+				z.add(f,tarname)
 	for file in os.listdir(logdir) :
 		f = logdir+"/"+file
 		ext = file.partition(".")[2]
 		if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts)) :
+			tarname = f.replace(logdir,"pwiz/autotools")
 			if dbug :
-				print "add "+f
-			z.add(f,f.replace(logdir,"pwiz/autotools"))
+				print "add "+f+" as "+tarname
+			z.add(f,tarname)
 	testfiles = set()
 	for test in testargs : # grab data files
 		f = absname(testargs[test])
@@ -304,8 +306,9 @@ if (not dryrun) :
 				if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
 					testfiles.add(ff)
 	for f in testfiles :
+		tarname = ac.replace_pwizroot(f,"pwiz")
 		if dbug:
-			print "add test "+f
-		z.add(f,ac.replace_pwizroot(f,"pwiz"))
+			print "add test "+f+" as "+tarname
+		z.add(f,tarname)
 	z.close()
 
