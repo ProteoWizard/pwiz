@@ -416,22 +416,12 @@ run-if-exists CompareLibraryContents.cpp compare-src
 
 # TODO: these tests are broken
 # requires a clean copy of inputs/existing.blib to output/z.old.blib before running
-make output/z.old.blib : inputs/existing.blib : @common.copy : $(test_output_req) ;
-run-if-exists ExecuteBlib.cpp 
-  :  
-  : ../src//BlibBuild 
-    inputs/CPTAC_Set4_725_091509.pep.XML 
-    inputs/old-demo.blib 
-    output/sqt-ez.blib 
-    output/z.old.blib
-  : <dependency>build-sqt-ez
-  : build-into-old ;
-run-if-exists CompareLibraryContents.cpp compare-src 
-  : 
-  : output/z.old.blib reference/old.check
-  : $(compare-reqs)
-    <dependency>build-into-old
-  : check-old ;
+#make output/z.old.blib : inputs/existing.blib : @common.copy : $(test_output_req) ;
+#run-if-exists ExecuteBlib.cpp :  
+#  : ../src//BlibBuild inputs/CPTAC_Set4_725_091509.pep.XML inputs/old-demo.blib output/sqt-ez.blib output/z.old.blib : 
+#  : build-into-old ;
+#run-if-exists CompareLibraryContents.cpp compare-src : : output/z.old.blib reference/old.check : $(compare-reqs)
+#  : check-old ;
 
 #make output/z.new.blib : output/scaffold.blib : @common.copy : $(test_output_req) ;
 #run-if-exists ExecuteBlib.cpp : 
