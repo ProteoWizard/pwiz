@@ -80,16 +80,19 @@ namespace pwiz.Skyline.Alerts
 
         public void Btn0Click()
         {
+            CheckDisposed();
             btn0.PerformClick();
         }
 
         public void Btn1Click()
         {
+            CheckDisposed();
             btn1.PerformClick();
         }
 
         public void BtnCancelClick()
         {
+            CheckDisposed();
             btnCancel.PerformClick();
         }
     }

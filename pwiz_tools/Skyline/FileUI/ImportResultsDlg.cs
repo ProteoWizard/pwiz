@@ -239,6 +239,7 @@ namespace pwiz.Skyline.FileUI
 
         public KeyValuePair<string, string[]>[] GetDataSourcePathsFile(string name)
         {
+            CheckDisposed();
             OpenDataSourceDialog dlgOpen = new OpenDataSourceDialog
                                                {
                                                    Text = "Import Results Files"

@@ -45,11 +45,13 @@ namespace pwiz.Skyline
         private const int LICENSE_VERSION_CURRENT = 3;
         
         // Parameters for stress testing.
-        public static bool SkylineOffscreen { get; set; }   // Set true to move Skyline windows offscreen.
-        public static bool NoVendorReaders { get; set; }    // Set true to avoid calling vendor readers.
-        public static bool NoSaveSettings { get; set; }     // Set true to use separate settings file.
-        private static bool _initialized;                   // Flag to do some initialization just once per process.
-        private static string _name;                        // Program name.
+        public static bool StressTest { get; set; }                 // Set true when doing stress testing.
+        public static bool SkylineOffscreen { get; set; }           // Set true to move Skyline windows offscreen.
+        public static bool NoVendorReaders { get; set; }            // Set true to avoid calling vendor readers.
+        public static bool NoSaveSettings { get; set; }             // Set true to use separate settings file.
+        public static int UnitTestTimeoutMultiplier { get; set; }   // Set to positive multiplier for multi-process stress runs.
+        private static bool _initialized;                           // Flag to do some initialization just once per process.
+        private static string _name;                                // Program name.
 
         /// <summary>
         /// The main entry point for the application.
@@ -150,8 +152,11 @@ namespace pwiz.Skyline
                 _initialized = true;
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
-                Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += ThreadExceptionEventHandler;
+                if (!StressTest)
+                {
+                    Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+                    Application.ThreadException += ThreadExceptionEventHandler;
+                }
             }
         }
 

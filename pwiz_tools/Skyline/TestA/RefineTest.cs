@@ -17,10 +17,13 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -118,6 +121,7 @@ namespace pwiz.SkylineTestA
         public void RefineResultsTest()
         {
             TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Refine.zip");
+            Settings.Default.RTCalculatorName = Settings.Default.RTScoreCalculatorList.GetDefaults().First().Name;
 
             var document = InitRefineDocument(testFilesDir);
 

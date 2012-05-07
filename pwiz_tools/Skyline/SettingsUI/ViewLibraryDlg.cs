@@ -1313,7 +1313,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddAllPeptides()
         {
-            if(CheckLibraryInSettings() == DialogResult.Cancel)
+            CheckDisposed();
+
+            if (CheckLibraryInSettings() == DialogResult.Cancel)
                 return;
             
             var startingDocument = Document;

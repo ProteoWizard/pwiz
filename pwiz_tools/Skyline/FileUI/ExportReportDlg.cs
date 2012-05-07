@@ -256,6 +256,7 @@ namespace pwiz.Skyline.FileUI
 
         public void EditList()
         {
+            CheckDisposed();
             IEnumerable<ReportSpec> listNew = List.EditList(this, this);
             if (listNew != null)
             {
@@ -324,6 +325,7 @@ namespace pwiz.Skyline.FileUI
 
         public void ShowShare()
         {
+            CheckDisposed();
             using (var dlg = new ShareListDlg<ReportSpecList, ReportSpec>(Settings.Default.ReportSpecList)
                           {
                               Label = "Report Definitions",

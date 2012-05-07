@@ -138,11 +138,11 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                return Interlocked.Exchange(ref _data, _data);
+                return _data;
             }
             set
             {
-                Interlocked.Exchange(ref _data, value);
+                _data = value;
             }
         }
 

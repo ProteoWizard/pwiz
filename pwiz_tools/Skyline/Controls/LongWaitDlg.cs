@@ -60,14 +60,14 @@ namespace pwiz.Skyline.Controls
 
         public string Message
         {
-            get { return Interlocked.Exchange(ref _message, _message); }
-            set { Interlocked.Exchange(ref _message, value); }
+            get { return _message; }
+            set { _message = value; }
         }
 
         public int ProgressValue
         {
-            get { return Interlocked.Exchange(ref _progressValue, _progressValue); }
-            set { Interlocked.Exchange(ref _progressValue, value); }
+            get { return _progressValue; }
+            set { _progressValue = value; }
         }
 
         public bool IsDocumentChanged(SrmDocument docOrig)

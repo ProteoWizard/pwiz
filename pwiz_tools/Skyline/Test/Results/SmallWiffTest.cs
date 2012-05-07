@@ -126,7 +126,7 @@ namespace pwiz.SkylineTest.Results
             Assert.AreEqual(2, listChromatograms.Count);
 
             var docResults = doc.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-            docContainer.SetDocument(docResults, doc, true);
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
             docContainer.AssertComplete();
 
             docResults = docContainer.Document;
@@ -151,7 +151,7 @@ namespace pwiz.SkylineTest.Results
             listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { testFilesDir.GetTestPath("051309_digestion-s3.mzXML") }));
 
             var docMzxml = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
-            docContainer.SetDocument(docMzxml, docResults, true);
+            Assert.IsTrue(docContainer.SetDocument(docMzxml, docResults, true));
             docContainer.AssertComplete();
             docMzxml = docContainer.Document;
             // Verify mzXML and native contained same results
@@ -160,7 +160,7 @@ namespace pwiz.SkylineTest.Results
             // its mzWiff mzXML file will never be the same.
             AssertResult.MatchChromatograms(docMzxml, 0, 1, -1, 0);
             // Release all file handels
-            docContainer.SetDocument(doc, docContainer.Document);
+            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
 
             // TODO: Switch to a using clause when PWiz is fixed, and this assertion fails
 //            AssertEx.ThrowsException<IOException>(() => testFilesDir.Dispose());

@@ -31,7 +31,11 @@ namespace pwiz.Skyline.Util
 
         // Set this true to check that the internal clipboard returns the
         // same values as the system clipboard.
-        private static bool CHECK_VALUES = false;
+// ReSharper disable ConvertToConstant.Local
+// ReSharper disable RedundantDefaultFieldInitializer
+        private static readonly bool CHECK_VALUES = false;
+// ReSharper restore RedundantDefaultFieldInitializer
+// ReSharper restore ConvertToConstant.Local
 
         public static void UseInternalClipboard(bool useInternal = true)
         {

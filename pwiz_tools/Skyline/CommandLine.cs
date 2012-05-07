@@ -893,9 +893,19 @@ namespace pwiz.Skyline
 
             //This function will also detect whether the replicate exists in the document
             ProgressStatus status;
-            SrmDocument newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile, out status);
-            status = status ?? new ProgressStatus("").Complete();
+            SrmDocument newDoc;
+            try
+            {
+                newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile, out status);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine("Error: Failed importing the results file {0}.", replicateFile);
+                _out.WriteLine(x.Message);
+                return false;
+            }
 
+            status = status ?? new ProgressStatus("").Complete();
             if (status.IsError && status.ErrorException != null)
             {
                 if (status.ErrorException is InvalidDataException)
@@ -1318,7 +1328,10 @@ namespace pwiz.Skyline
 
             var docAdded = doc.ChangeMeasuredResults(results);
 
-            docContainer.SetDocument(docAdded, doc, true);
+            if (!docContainer.SetDocument(docAdded, doc, true))
+            {
+                throw new ApplicationException("Threading error while setting document after importing");
+            }
 
             status = docContainer.LastProgress;
 

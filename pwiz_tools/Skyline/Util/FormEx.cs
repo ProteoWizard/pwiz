@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
@@ -26,10 +27,18 @@ namespace pwiz.Skyline.Util
 {
     public class FormEx : Form
 	{
-        protected override void OnLoad(System.EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
             SetLocation(this);
+        }
+
+        public void CheckDisposed()
+        {
+            if (IsDisposed)
+            {
+                throw new ObjectDisposedException("Form disposed");
+            }
         }
 
         public static void SetLocation(Form form)
@@ -69,12 +78,20 @@ namespace pwiz.Skyline.Util
 
     public class DockableFormEx : DockableForm
     {
-        protected override void OnParentChanged(System.EventArgs e)
+        protected override void OnParentChanged(EventArgs e)
         {
             base.OnParentChanged(e);
             if (ParentForm != null)
             {
                 FormEx.SetLocation(ParentForm);
+            }
+        }
+
+        public void CheckDisposed()
+        {
+            if (IsDisposed)
+            {
+                throw new ObjectDisposedException("Form disposed");
             }
         }
     }

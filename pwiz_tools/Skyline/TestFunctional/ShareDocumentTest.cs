@@ -357,7 +357,9 @@ namespace pwiz.SkylineTestFunctional
         {
             var doc = SkylineWindow.Document;
             var docNew = changeDoc(doc);
-            SkylineWindow.SetDocument(docNew, doc);
+            Assert.IsTrue(SkylineWindow.SetDocument(docNew, doc));
+            Assert.IsFalse(ReferenceEquals(SkylineWindow.Document, doc));
+            Assert.IsTrue(ReferenceEquals(SkylineWindow.Document, docNew));
         }
 
         private static void DisableMS1Filtering()

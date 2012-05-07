@@ -396,6 +396,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void Calibrate()
         {
+            CheckDisposed();
             using (var calibrateDlg = new CalibrateIrtDlg())
             {
                 if (calibrateDlg.ShowDialog(this) == DialogResult.OK)
@@ -473,6 +474,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void AddLibrary()
         {
+            CheckDisposed();
             _gridViewLibraryDriver.AddSpectralLibrary();
         }
 

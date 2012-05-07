@@ -348,7 +348,10 @@ namespace pwiz.SkylineTestFunctional
         {
             var doc = SkylineWindow.Document;
             var docNew = changeDoc(doc);
-            SkylineWindow.SetDocument(docNew, doc);
+            Assert.IsFalse(ReferenceEquals(docNew, doc), "Document change was expected");
+            Assert.IsTrue(SkylineWindow.SetDocument(docNew, doc));
+            Assert.IsFalse(ReferenceEquals(SkylineWindow.Document, doc), "SetDocument failed to set the new document");
+            Assert.IsTrue(ReferenceEquals(SkylineWindow.Document, docNew), "Unexpected document set after SetDocument");
         }
 
         private static void DeselectDummyRTRegression()

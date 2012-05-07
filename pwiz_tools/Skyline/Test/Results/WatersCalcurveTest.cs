@@ -377,7 +377,7 @@ namespace pwiz.SkylineTest.Results
             }
 
             // Release file handles
-            docContainer.SetDocument(doc, docContainer.Document);
+            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
             testFilesDir.Dispose();
         }
 
@@ -396,7 +396,7 @@ namespace pwiz.SkylineTest.Results
                                             testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzXML"),
                                             -1, 0);
             // Release file handles
-            docContainer.SetDocument(doc, docContainer.Document);
+            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
             testFilesDir.Dispose();
         }
 
@@ -419,7 +419,7 @@ namespace pwiz.SkylineTest.Results
             docContainer.AssertComplete();
             docReload = docContainer.Document;
             // Release file handles to cache files created during load
-            docContainer.SetDocument(doc, docReload);
+            Assert.IsTrue(docContainer.SetDocument(doc, docReload));
             // Delete the cache
             string cachePath = Path.ChangeExtension(docPath, ".skyd");
             File.Delete(cachePath);
@@ -530,7 +530,7 @@ namespace pwiz.SkylineTest.Results
             docContainer.AssertComplete();
             docReload = docContainer.Document;
             // Release file handles to cache files created during load
-            docContainer.SetDocument(doc, docReload);
+            Assert.IsTrue(docContainer.SetDocument(doc, docReload));
             // Delete the cache
             cachePath = Path.ChangeExtension(docPath, ".skyd");
             File.Delete(cachePath);
@@ -579,7 +579,7 @@ namespace pwiz.SkylineTest.Results
                 Assert.IsFalse(File.Exists(testFilesDir.GetTestPath(cacheName)));
 
             // Release file handles
-            docContainer.SetDocument(doc, docContainer.Document);
+            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
             testFilesDir.Dispose();
         }
 

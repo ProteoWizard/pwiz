@@ -71,6 +71,7 @@ namespace pwiz.Skyline.Controls
 
         public void ChooseColumns()
         {
+            CheckDisposed();
             using (var columnChooserForm = new ColumnChooser())
             {
                 var columns = resultsGrid.GetAvailableColumns();

@@ -62,7 +62,7 @@ namespace pwiz.Skyline
     /// become either MDI or multiple-SDI per process.
     /// </summary>
     public partial class SkylineWindow
-        : Form,
+        : FormEx,
             IUndoable,
             IDocumentUIContainer,
             IProgressMonitor,
@@ -268,7 +268,7 @@ namespace pwiz.Skyline
         {
             get
             {
-                return Interlocked.Exchange(ref _document, _document);
+                return _document;
             }
         }
 
@@ -292,8 +292,8 @@ namespace pwiz.Skyline
         /// </summary>
         public string DocumentFilePath
         {
-            get { return Interlocked.Exchange(ref _savedPath, _savedPath); }
-            set { Interlocked.Exchange(ref _savedPath, value); }
+            get { return _savedPath; }
+            set { _savedPath = value; }
         }
 
         public SequenceTree SequenceTree
@@ -2718,7 +2718,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private List<ProgressStatus> ListProgress { get { return Interlocked.Exchange(ref _listProgress, _listProgress); } }
+        private List<ProgressStatus> ListProgress { get { return _listProgress; } }
 
         private bool SetListProgress(List<ProgressStatus> listNew, List<ProgressStatus> listOriginal)
         {

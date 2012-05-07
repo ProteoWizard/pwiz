@@ -116,7 +116,7 @@ namespace pwiz.SkylineTestUtil
             get { return CanImportWatersRaw ? ".raw" : ".mzML"; }
         }
 
-        private static bool IsDebugMode
+        public static bool IsDebugMode
         {
             get
             {

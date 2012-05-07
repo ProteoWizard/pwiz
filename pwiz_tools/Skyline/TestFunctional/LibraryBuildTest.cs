@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -346,9 +347,9 @@ namespace pwiz.SkylineTestFunctional
             params string[] messageParts)
         {
             string redundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT_REDUNDANT);
-            File.Delete(redundantBuildPath);
+            Helpers.TryTwice(() => File.Delete(redundantBuildPath));
             string nonredundantBuildPath = TestFilesDir.GetTestPath(_libraryName + BiblioSpecLiteSpec.EXT);
-            File.Delete(nonredundantBuildPath);
+            Helpers.TryTwice(() => File.Delete(nonredundantBuildPath));
 
             BuildLibrary(TestFilesDir.GetTestPath("library_errors"), new[] { inputFile },
                 libraryPath, libraryAuth, false, false);

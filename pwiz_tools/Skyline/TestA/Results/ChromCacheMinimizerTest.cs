@@ -222,13 +222,13 @@ namespace pwiz.SkylineTestA.Results
                 writer.Close();
             }
             var container = new ResultsTestDocumentContainer(document, skyFilePath, false);
-            container.SetDocument(ResultsUtil.DeserializeDocument(skyFilePath), document, true);
+            Assert.IsTrue(container.SetDocument(ResultsUtil.DeserializeDocument(skyFilePath), document, true));
             return container;
         }
 
         private static void CloseDocumentContainer(IDocumentContainer container)
         {
-            container.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), container.Document);
+            Assert.IsTrue(container.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), container.Document));
         }
     }
 }

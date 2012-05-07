@@ -310,6 +310,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowGraph()
         {
+            CheckDisposed();
             CERegressionData[] arrayData = GetRegressionDatas();
             if (arrayData == null)
                 return;

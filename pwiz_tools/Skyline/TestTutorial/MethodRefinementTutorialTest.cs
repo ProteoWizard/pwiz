@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestTutorial
                     new[] {new KeyValuePair<string, string[]>(replicateName, namedPathSets[0].Value.Take(15).ToArray())};
                 importResultsDlg.OkDialog();
             });
-            WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 10 minutes
+            WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);  // 15 minutes
 
             Assert.IsTrue(SkylineWindow.Document.Settings.HasResults);
             Assert.AreEqual(15, SkylineWindow.Document.Settings.MeasuredResults.CachedFilePaths.ToArray().Length);
@@ -369,7 +369,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsNameDlg0.Prefix = "Scheduled_";
                 importResultsNameDlg0.YesDialog();
             });
-            WaitForCondition(10*60*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
+            WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes
             Assert.AreEqual(5, SkylineWindow.GraphChromatograms.Count(graphChrom => !graphChrom.IsHidden));
             RunUI(() =>
             {

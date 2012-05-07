@@ -72,7 +72,9 @@ namespace pwiz.SkylineTestFunctional
 
             // Allow results to be removed
             RunUI(messageDlg.OkDialog);
+            WaitForClosedForm(messageDlg);
             RunUI(importDlg.OkDialog);
+            WaitForClosedForm(importDlg);
             var docFirstAttempt = WaitForDocumentChange(docEmpty);
             // Results state should not have changed
             state.AreEqual(docFirstAttempt);

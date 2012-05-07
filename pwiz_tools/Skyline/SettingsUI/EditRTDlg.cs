@@ -637,11 +637,13 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddCalculator()
         {
+            CheckDisposed();
             _driverCalculators.AddItem();
         }
 
         public void EditCalculatorList()
         {
+            CheckDisposed();
             _driverCalculators.EditList();
         }
 

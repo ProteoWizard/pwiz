@@ -880,6 +880,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditCEList()
         {
+            CheckDisposed();
             _driverCE.EditList();
         }
 

@@ -131,6 +131,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddItem()
         {
+            CheckDisposed();
             TItem item = _editor.NewItem(this, GetAll(), TagEx);
             if (!Equals(item, default(TItem)))
             {
@@ -149,6 +150,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void CopyItem()
         {
+            CheckDisposed();
             int i = listBox.SelectedIndex;
             TItem item = _editor.EditItem(this, _editor.CopyItem(_list[i]), GetAll(), TagEx);
             if (!Equals(item, default(TItem)))
@@ -168,6 +170,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditItem()
         {
+            CheckDisposed();
             int i = listBox.SelectedIndex;
             if (i == -1)
                 return;

@@ -25,6 +25,8 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
+using System.Windows.Forms;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Crawdad;
 
 namespace TestRunner
@@ -33,7 +35,6 @@ namespace TestRunner
     {
         private static readonly string[] TEST_DLLS = {"Test.dll", "TestA.dll", "TestFunctional.dll", "TestTutorial.dll"};
         private static List<TestInfo> _testList = new List<TestInfo>();
-        private static TestInfo _emptyTest;
         private static Type _program;
 
         private class TestInfo
@@ -50,10 +51,19 @@ namespace TestRunner
             }
         }
 
+        private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
+        {
+            Console.WriteLine(e.Exception.Message);
+            Console.WriteLine(e.Exception.StackTrace);
+        }
+
         [STAThread]
         static void Main(string[] args)
         {
             CrtDebugHeap.Init();
+
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += ThreadExceptionEventHandler;
 
             try
             {
@@ -61,7 +71,7 @@ namespace TestRunner
                 const string commandLineOptions =
                     "?;/?;-?;help;" +
                     "test;skip;filter;" +
-                    "loop=0;repeat=1;random=on;offscreen=on;" +
+                    "loop=0;repeat=1;random=on;offscreen=on;multi=1;" +
                     "clipboardcheck=off;profile=off;vendors=on;" +
                     "log=TestRunner.log;report=TestRunner.log";
                 CommandLineArgs.ParseArgs(args, commandLineOptions);
@@ -89,9 +99,11 @@ namespace TestRunner
 
                 var skyline = Assembly.LoadFrom(GetAssemblyPath("Skyline.exe"));
                 _program = skyline.GetType("pwiz.Skyline.Program");
+                _program.GetMethod("set_StressTest").Invoke(null, new object[] { true });
                 _program.GetMethod("set_SkylineOffscreen").Invoke(null, new object[] { CommandLineArgs.ArgAsBool("offscreen") });
                 _program.GetMethod("set_NoVendorReaders").Invoke(null, new object[] { !CommandLineArgs.ArgAsBool("vendors") });
                 _program.GetMethod("set_NoSaveSettings").Invoke(null, new object[] { true });
+                _program.GetMethod("set_UnitTestTimeoutMultiplier").Invoke(null, new object[] { (int)CommandLineArgs.ArgAsLong("multi") });
                 _program.GetMethod("get_Name").Invoke(null, null);
                 _program.GetMethod("Init").Invoke(null, null);
 
@@ -143,12 +155,9 @@ namespace TestRunner
             var log = new StreamWriter(CommandLineArgs.ArgAsString("log"));
 
             // Get test results directory and provide it to tests via TestContext.
-            var now = DateTime.Now;
-            var testDirName = string.Format("TestRunner_{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}_{5}",
-                                            now.Year, now.Month, now.Day, now.Hour, now.Minute, process.Id);
-            var testDir = Path.Combine(GetProjectPath("TestResults"), testDirName);
+            var testDirectoryCount = 1;
             var testContext = new TestRunnerContext();
-            testContext.Properties["TestDir"] = testDir;
+            var testDir = SetTestDir(testContext, testDirectoryCount, process);
             if (CommandLineArgs.ArgAsBool("clipboardcheck"))
             {
                 testContext.Properties["ClipboardCheck"] = "TestRunner clipboard check";
@@ -237,16 +246,19 @@ namespace TestRunner
                         log.Flush();
 
                         // Delete test directory.
-                        if (Directory.Exists(testDir))
+                        while (Directory.Exists(testDir))
                         {
                             try
                             {
                                 // Try delete 4 times to give anti-virus software a chance to finish.
+// ReSharper disable AccessToModifiedClosure
                                 TryLoop.Try<IOException>(() => Directory.Delete(testDir, true), 4);
+// ReSharper restore AccessToModifiedClosure
                             }
                             catch (Exception e)
                             {
                                 Console.WriteLine("\n\n" + e.Message);
+                                testDir = SetTestDir(testContext, ++testDirectoryCount, process);
                             }
                         }
 
@@ -272,18 +284,6 @@ namespace TestRunner
                             exception = e;
                         }
                         stopwatch.Stop();
-
-                        // HACK: for some reason, running an empty functional test releases memory used by other functional tests.
-//                        try
-//                        {
-//                            var emptyTestObject = Activator.CreateInstance(_emptyTest._testClass);
-//                            _emptyTest._setTestContext.Invoke(emptyTestObject, context);
-//                            _emptyTest._testMethod.Invoke(emptyTestObject, null);
-//                        }
-//                        catch (Exception)
-//                        {
-//                            Console.Write("^"); // hint for now that something is failing
-//                        }
 
                         var managedMemory = GC.GetTotalMemory(true)/mb;
                         process.Refresh();
@@ -343,6 +343,16 @@ namespace TestRunner
             }
         }
 
+        private static string SetTestDir(TestContext testContext, int testDirectoryCount, Process process)
+        {
+            var now = DateTime.Now;
+            var testDirName = string.Format("TestRunner_{0}-{1:D2}-{2:D2}_{3:D2}-{4:D2}_{5}-{6}",
+                                            now.Year, now.Month, now.Day, now.Hour, now.Minute, process.Id, testDirectoryCount);
+            var testDir = Path.Combine(GetProjectPath("TestResults"), testDirName);
+            testContext.Properties["TestDir"] = testDir;
+            return testDir;
+        }
+
         // Load list of tests to be run into TestList.
         private static void LoadTestList()
         {
@@ -371,10 +381,6 @@ namespace TestRunner
                                 {
                                     _testList.Add(new TestInfo(type, method));
                                 }
-                            }
-                            if (testName == "EmptyFunctionalTest.EmptyTest")
-                            {
-                                _emptyTest = new TestInfo(type, method);
                             }
                         }
                     }
@@ -536,13 +542,14 @@ namespace TestRunner
         private static void ReportLeaks(Dictionary<string, List<double>> memoryUse, string title)
         {
             var leaks = "";
+            int leakCount = 0;
             foreach (var item in memoryUse.OrderByDescending(x => x.Value.Count > 0 ? x.Value.Average() : 0.0))
             {
                 if (item.Value.Count == 0) break;
                 var min = Math.Max(0, item.Value.Min());
                 var max = item.Value.Max();
                 var mean = item.Value.Average();
-                if (mean < 0.1) break;
+                if (++leakCount > 5 || mean < 0.1) break;
                 leaks += string.Format("  {0,-40} #  min={1:0.00}  max={2:0.00}  mean={3:0.00}\n",
                                        item.Key, min, max, mean);
             }
@@ -602,6 +609,10 @@ Here is a list of recognized arguments:
                                     
     offscreen=[on|off]              Set offscreen=on (the default) to keep Skyline windows
                                     from flashing on the desktop during a test run.
+
+    multi=[n]                       Multiply timeouts in unit tests by a factor of ""n"".
+                                    This is necessary when running multiple instances of 
+                                    TestRunner simultaneously.
 
     log=[file]                      Writes log information to the specified file.  The
                                     default log file is TestRunner.log in the current

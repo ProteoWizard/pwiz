@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model
 
         public SrmDocument Document
         {
-            get { return Interlocked.Exchange(ref _document, _document); }
+            get { return _document; }
         }
 
         public string DocumentFilePath { get; set; }

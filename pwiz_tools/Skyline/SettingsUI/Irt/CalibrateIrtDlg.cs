@@ -124,6 +124,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
         public void UseResults()
         {
+            CheckDisposed();
             var document = Program.ActiveDocumentUI;
 
             if(!document.Settings.HasResults)

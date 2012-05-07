@@ -358,6 +358,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddCalculator()
         {
+            CheckDisposed();
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(this, null, list, null);
             if (calcNew != null)
@@ -429,6 +430,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditLibraryList()
         {
+            CheckDisposed();
             _driverLibrary.EditList();
 
             panelPick.Visible = listLibraries.CheckedIndices.Count > 0;
@@ -442,6 +444,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowBuildLibraryDlg()
         {
+            CheckDisposed();
+
             // Libraries built for full-scan filtering can have important retention time information,
             // and the redundant libraries are more likely to be desirable for showing spectra.
             bool isFullScanEnabled = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
@@ -621,6 +625,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowViewLibraryDlg()
         {
+            CheckDisposed();
+
             // Validate new settings without showing message boxes
             PeptideSettings settings = ValidateNewSettings(false);
             // Only update, if anything changed
@@ -674,6 +680,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditLabelTypeList ()
         {
+            CheckDisposed();
             _driverLabelType.EditList();
         }
 
@@ -716,16 +723,19 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowBuildBackgroundProteomeDlg()
         {
+            CheckDisposed();
             _driverBackgroundProteome.AddItem();
         }
 
         public void AddRTRegression()
         {
+            CheckDisposed();
             _driverRT.AddItem();
         }
 
         public void EditRegressionList()
         {
+            CheckDisposed();
             _driverRT.EditList();
         }
 

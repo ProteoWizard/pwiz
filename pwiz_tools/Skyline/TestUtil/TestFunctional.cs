@@ -44,7 +44,6 @@ namespace pwiz.SkylineTestUtil
     {
         private const int SLEEP_INTERVAL = 100;
         private const int WAIT_TIME = 60*1000;    // 1 minute
-        private const int WAIT_CYCLES = WAIT_TIME/SLEEP_INTERVAL;
 
         /// <summary>
         ///Gets or sets the test context which provides
@@ -266,16 +265,43 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        private static int GetWaitCycles(int millis = WAIT_TIME)
+        {
+            int waitCycles = millis/SLEEP_INTERVAL;
+            
+            // Wait a little longer for stress test.
+            if (Program.StressTest)
+            {
+                waitCycles = waitCycles*150/100;
+            }
+
+            // Wait longer if running multiple processes simultaneously.
+            if (Program.UnitTestTimeoutMultiplier != 0)
+            {
+                waitCycles *= Program.UnitTestTimeoutMultiplier;
+            }
+
+            // Wait a little longer for debug build.
+            if (ExtensionTestContext.IsDebugMode)
+            {
+                waitCycles = waitCycles*150/100;
+
+            }
+
+            return waitCycles;
+        }
+
         public static TDlg WaitForOpenForm<TDlg>() where TDlg : Form
         {
-            for (int i = 0; i < WAIT_CYCLES; i ++ )
+            int waitCycles = GetWaitCycles();
+            for (int i = 0; i < waitCycles; i++)
             {
                 TDlg tForm = FindOpenForm<TDlg>();
                 if (tForm != null)
                     return tForm;
 
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < WAIT_CYCLES - 1, string.Format("Timeout {0} seconds exceeded in WaitForOpenForm", WAIT_TIME/1000));
+                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles*SLEEP_INTERVAL/1000));
             }
             return null;
         }
@@ -294,7 +320,8 @@ namespace pwiz.SkylineTestUtil
 
         public static void WaitForClosedForm(Form formClose)
         {
-            for (int i = 0; i < WAIT_CYCLES; i++)
+            int waitCycles = GetWaitCycles();
+            for (int i = 0; i < waitCycles; i++)
             {
                 bool isOpen = true;
                 Program.MainWindow.Invoke(new Action(() => isOpen = IsFormOpen(formClose)));
@@ -302,7 +329,7 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
-            Assert.Fail(string.Format("Timeout {0} seconds exceeded in WaitForClosedForm", WAIT_TIME/1000));
+            Assert.Fail(string.Format("Timeout {0} seconds exceeded in WaitForClosedForm", waitCycles*SLEEP_INTERVAL/1000));
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
@@ -332,13 +359,13 @@ namespace pwiz.SkylineTestUtil
 
         public static bool WaitForCondition(int millis, Func<bool> func)
         {
-            int waitCycles = millis/SLEEP_INTERVAL;
+            int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i ++)
             {
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForCondition", millis/1000));
+                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForCondition", waitCycles*SLEEP_INTERVAL/1000));
             }
             return false;
         }
@@ -350,7 +377,7 @@ namespace pwiz.SkylineTestUtil
 
         public static bool WaitForConditionUI(int millis, Func<bool> func)
         {
-            int waitCycles = millis/SLEEP_INTERVAL;
+            int waitCycles = GetWaitCycles(millis);
             for (int i = 0; i < waitCycles; i++)
             {
                 bool isCondition = false;
@@ -358,7 +385,7 @@ namespace pwiz.SkylineTestUtil
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForConditionUI", millis/1000));
+                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForConditionUI", waitCycles*SLEEP_INTERVAL/1000));
             }
             return false;
         }
@@ -386,13 +413,21 @@ namespace pwiz.SkylineTestUtil
         /// </summary>
         protected void RunFunctionalTest()
         {
-            Program.Init();
-            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
-            var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread" };
-            threadTest.Start();
-            Program.Main();
-            threadTest.Join();
-            Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+            try
+            {
+                Program.Init();
+                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
+                var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread" };
+                threadTest.Start();
+                Program.Main();
+                threadTest.Join();
+                Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault(); // Release memory held in settings
+            }
+            catch (Exception x)
+            {
+                _testExceptions.Add(x);
+            }
+
             if (_testExceptions.Count > 0)
             {
                 Assert.Fail(_testExceptions[0].ToString());
@@ -515,13 +550,21 @@ namespace pwiz.SkylineTestUtil
                                         select new AssertFailedException(
                                             string.Format("Form of type {0} left open at end of test", form.GetType())));
 
-            // Clear the clipboard to avoid the appearance of a memory leak.
-            RunUI(ClipboardEx.Clear);
-            
             _testCompleted = true;
 
-            // Close the Skyline window
-            RunUI(SkylineWindow.Close);
+            // Clear the clipboard to avoid the appearance of a memory leak.
+            ClipboardEx.Clear();
+
+            try
+            {
+                // Occasionally this causes an InvalidOperationException during stress testing.
+                RunUI(SkylineWindow.Close);
+            }
+// ReSharper disable EmptyGeneralCatchClause
+            catch (InvalidOperationException)
+// ReSharper restore EmptyGeneralCatchClause
+            {
+            }
         }
 
         // Restore minimal view layout in order to close extra windows.

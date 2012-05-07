@@ -229,6 +229,7 @@ namespace pwiz.Skyline.FileUI
 
         public void RenameResult()
         {
+            CheckDisposed();
             var selectedIndices = SelectedIndices;
             if (selectedIndices.Length == 0)
                 return;
@@ -261,6 +262,7 @@ namespace pwiz.Skyline.FileUI
 
         public void ReimportResults()
         {
+            CheckDisposed();
             if (!DocumentUIContainer.DocumentUI.Settings.MeasuredResults.IsLoaded)
             {
                 MessageDlg.Show(this, "All results must be completely imported before any can be re-imported.");

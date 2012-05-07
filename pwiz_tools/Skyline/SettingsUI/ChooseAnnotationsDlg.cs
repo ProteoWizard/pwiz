@@ -53,6 +53,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void EditList()
         {
+            CheckDisposed();
             _annotationsListBoxDriver.EditList();
         }
 
