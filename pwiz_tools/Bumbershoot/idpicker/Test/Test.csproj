@@ -96,12 +96,9 @@
     <Compile Include="TestMerger.cs" />
     <Compile Include="TestModel.cs" />
     <Compile Include="TestQonverter.cs" />
+    <Compile Include="TestUtil.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\freicore\pwiz_src\pwiz_tools\Shared\Common\Common.csproj">
-      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
-      <Name>Common</Name>
-    </ProjectReference>
     <ProjectReference Include="..\IDPicker.csproj">
       <Project>{5C5FC1C6-F9FF-4E2A-A53B-0865FBB9F9D9}</Project>
       <Name>IDPicker</Name>

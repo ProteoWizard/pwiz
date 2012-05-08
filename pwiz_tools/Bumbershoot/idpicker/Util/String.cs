@@ -47,7 +47,7 @@ namespace IDPicker
             commonFilename = commonFilename.Trim(' ', '_', '-');
 
             // use a generic 
-            if (String.IsNullOrEmpty(commonFilename))
+            if (String.IsNullOrEmpty(commonFilename) || Path.GetPathRoot(commonFilename) == commonFilename.Replace('/', '\\'))
                 commonFilename = Path.Combine(commonFilename, "idpicker-analysis-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmssZ") + ".idpDB");
             else if (String.IsNullOrEmpty(Path.GetFileName(commonFilename)))
                 commonFilename = Path.Combine(commonFilename, Path.GetFileName(Path.GetDirectoryName(commonFilename)) + ".idpDB");
