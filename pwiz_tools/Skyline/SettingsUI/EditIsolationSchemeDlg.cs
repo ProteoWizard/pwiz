@@ -88,8 +88,7 @@ namespace pwiz.Skyline.SettingsUI
             // Hide target column to match checkbox, which starts unchecked
             gridIsolationWindows.Columns[(int)GridColumns.target].Visible = false;
 
-            // TODO: Implement Calculate and Graph
-            btnCalculate.Hide();
+            // TODO: Implement Graph
             btnGraph.Hide();
         }
 
@@ -143,8 +142,8 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         _gridViewDriver.Items.Add(new EditIsolationWindow
                                                       {
-                                                          Start = isolationWindow.MethodStart,
-                                                          End = isolationWindow.MethodEnd,
+                                                          Start = isolationWindow.Start,
+                                                          End = isolationWindow.End,
                                                           Target = isolationWindow.Target,
                                                           StartMargin = isolationWindow.StartMargin,
                                                           EndMargin = isolationWindow.EndMargin
@@ -349,15 +348,15 @@ namespace pwiz.Skyline.SettingsUI
                 // Check unambiguous isolation window ranges.
                 else
                 {
-                    windowList.Sort((w1, w2) => w1.MethodStart.CompareTo(w2.MethodStart));
+                    windowList.Sort((w1, w2) => w1.Start.CompareTo(w2.Start));
                     for (int row = 1; row < windowList.Count; row++)
                     {
                         // If the previous window's end is >= to this window's end, it entirely contains this window.
                         string errorText = null;
-                        if (windowList[row - 1].MethodEnd >= windowList[row].MethodEnd)
+                        if (windowList[row - 1].End >= windowList[row].End)
                             errorText = "The selected isolation window is contained by the previous window.";
                         // If the following window's start is <= the previous window's end, the current window is redundant.
-                        else if (row < windowList.Count - 1 && windowList[row - 1].MethodEnd >= windowList[row + 1].MethodStart)
+                        else if (row < windowList.Count - 1 && windowList[row - 1].End >= windowList[row + 1].Start)
                             errorText = "The selected isolation window is covered by windows before and after it.";
                         if (errorText != null)
                         {
@@ -439,6 +438,39 @@ namespace pwiz.Skyline.SettingsUI
             gridIsolationWindows.Columns[(int)GridColumns.target].Visible = cbSpecifyTarget.Checked;
         }
 
+        private void btnCalculate_Click(object sender, EventArgs e)
+        {
+            using (var calculateDlg = new CalculateIsolationSchemeDlg())
+            {
+                if (calculateDlg.ShowDialog() == DialogResult.OK)
+                {
+                    // Get calculated isolation windows from Calculate dialog.
+                    _gridViewDriver.Items.Clear();
+                    var isolationWindows = calculateDlg.IsolationWindows;
+                    if (isolationWindows.Count == 0)
+                        return;
+
+                    // Determine whether isolation windows have a target and margins.
+                    cbSpecifyTarget.Checked = isolationWindows[0].Target.HasValue;
+                    if (isolationWindows[0].StartMargin.HasValue)
+                    {
+                        if (isolationWindows[0].EndMargin.HasValue)
+                            comboMargins.SelectedItem = WindowMargin.ASYMMETRIC;
+                        else
+                            comboMargins.SelectedItem = WindowMargin.SYMMETRIC;
+                    }
+                    else
+                        comboMargins.SelectedItem = WindowMargin.NONE;
+
+                    // Load isolation windows into grid.
+                    foreach (var window in isolationWindows)
+                    {
+                        _gridViewDriver.Items.Add(window);
+                    }
+                }
+            }
+        }
+
         private class IsolationWindowTargetComparer : IComparer<IsolationWindow>
         {
             #region Implementation of IComparer<in IsolationWindow>
@@ -449,7 +481,7 @@ namespace pwiz.Skyline.SettingsUI
 // ReSharper disable PossibleInvalidOperationException
                 int result = x.Target.Value.CompareTo(y.Target.Value);
 // ReSharper restore PossibleInvalidOperationException
-                return result == 0 ? x.MethodStart.CompareTo(y.MethodStart) : result;
+                return result == 0 ? x.Start.CompareTo(y.Start) : result;
             }
 
             #endregion

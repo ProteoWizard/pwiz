@@ -118,12 +118,6 @@ namespace pwiz.SkylineTestA
             // Bad window: start margin < 0
             AssertEx.DeserializeError<IsolationScheme>(
                 @"<isolation_scheme name=""Invalid (12)""><isolation_window start=""1"" end=""10"" margin_left=""-1"" margin_right=""2""/></isolation_scheme>");
-            // Bad window: symmetric margin exceeds window width
-            AssertEx.DeserializeError<IsolationScheme>(
-                @"<isolation_scheme name=""Invalid (13)""><isolation_window start=""1"" end=""10"" margin=""5""/></isolation_scheme>");
-            // Bad window: asymmetric margins exceeds window width
-            AssertEx.DeserializeError<IsolationScheme>(
-                @"<isolation_scheme name=""Invalid (13)""><isolation_window start=""1"" end=""10"" margin_left=""3"" margin_right=""7""/></isolation_scheme>");
         }
 
         private const string ISOLATION_SCHEME_LIST =

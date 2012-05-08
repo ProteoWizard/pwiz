@@ -30,20 +30,19 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("isolation_window")]
     public sealed class IsolationWindow : Immutable, IXmlSerializable
     {
-        public double MethodStart { get; private set; }
-        public double MethodEnd { get; private set; }
+        public double Start { get; private set; }
+        public double End { get; private set; }
         public double? Target { get; private set; }
         public double? StartMargin { get; private set; }
         public double? EndMargin { get; private set; }
 
-        public double ExtractionWidth { get { return ExtractionEnd - ExtractionStart; } }
-        public double ExtractionStart { get { return MethodStart + (StartMargin ?? 0); } }
-        public double ExtractionEnd { get { return MethodEnd - (StartMargin ?? (EndMargin ?? 0)); } }
+//        public double MethodStart { get { return Start - (StartMargin ?? 0); } }
+//        public double MethodEnd { get { return End + (EndMargin ?? (StartMargin ?? 0)); } }
 
         public IsolationWindow(double start, double end, double? target = null, double? startMargin = null, double? endMargin = null)
         {
-            MethodStart = start;
-            MethodEnd = end;
+            Start = start;
+            End = end;
             Target = target;
             StartMargin = startMargin;
             EndMargin = endMargin;
@@ -53,8 +52,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IsolationWindow(EditIsolationWindow isolationWindow)
         {
-            MethodStart = isolationWindow.Start.HasValue ? isolationWindow.Start.Value : TransitionFullScan.MIN_RES_MZ;
-            MethodEnd = isolationWindow.End.HasValue ? isolationWindow.End.Value : TransitionFullScan.MAX_RES_MZ;
+            Start = isolationWindow.Start.HasValue ? isolationWindow.Start.Value : TransitionFullScan.MIN_RES_MZ;
+            End = isolationWindow.End.HasValue ? isolationWindow.End.Value : TransitionFullScan.MAX_RES_MZ;
             Target = isolationWindow.Target;
             StartMargin = isolationWindow.StartMargin;
             EndMargin = isolationWindow.EndMargin;
@@ -72,21 +71,21 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool Contains(double isolationTarget)
         {
-            return ExtractionStart <= isolationTarget && isolationTarget < ExtractionEnd;
+            return Start <= isolationTarget && isolationTarget < End;
         }
 
         private void DoValidate()
         {
-            TransitionFullScan.ValidateRange(MethodStart, TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER, TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
+            TransitionFullScan.ValidateRange(Start, TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER, TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
                 "Isolation window Start must be between {0} and {1}.");
-            TransitionFullScan.ValidateRange(MethodEnd, TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER, TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
+            TransitionFullScan.ValidateRange(End, TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER, TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
                 "Isolation window End must be between {0} and {1}.");
 
-            if (MethodStart > MethodEnd)
+            if (Start >= End)
             {
                 throw new InvalidDataException("Isolation window Start value is greater than the End value.");
             }
-            if (Target.HasValue && (Target.Value < MethodStart || Target.Value >= MethodEnd))
+            if (Target.HasValue && (Target.Value < Start || Target.Value >= End))
             {
                 throw new InvalidDataException("Target value is not within the range of the isolation window.");
             }
@@ -96,22 +95,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     throw new InvalidDataException("Isolation window margin must be non-negative.");
                 }
-                double margin = StartMargin.Value;
                 if (EndMargin.HasValue)
                 {
                     if (EndMargin.Value < 0)
                     {
                         throw new InvalidDataException("Isolation window margin must be non-negative.");
                     }
-                    margin += EndMargin.Value;
-                }
-                else
-                {
-                    margin *= 2;
-                }
-                if (margin >= MethodEnd - MethodStart)
-                {
-                    throw new InvalidDataException("Margins cover the entire width of isolation window.");
                 }
             }
         }
@@ -148,8 +137,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public void ReadXml(XmlReader reader)
         {
             // Read tag attributes
-            MethodStart = reader.GetDoubleAttribute(ATTR.start);
-            MethodEnd = reader.GetDoubleAttribute(ATTR.end);
+            Start = reader.GetDoubleAttribute(ATTR.start);
+            End = reader.GetDoubleAttribute(ATTR.end);
             Target = reader.GetNullableDoubleAttribute(ATTR.target);
             StartMargin = reader.GetNullableDoubleAttribute(ATTR.margin);
             if (StartMargin == null)
@@ -166,8 +155,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public void WriteXml(XmlWriter writer)
         {
-            writer.WriteAttribute(ATTR.start, MethodStart);
-            writer.WriteAttribute(ATTR.end, MethodEnd);
+            writer.WriteAttribute(ATTR.start, Start);
+            writer.WriteAttribute(ATTR.end, End);
             writer.WriteAttributeNullable(ATTR.target, Target);
             if (StartMargin != null)
             {
@@ -191,7 +180,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other.MethodStart.Equals(MethodStart) && other.MethodEnd.Equals(MethodEnd) && other.Target.Equals(Target) &&
+            return other.Start.Equals(Start) && other.End.Equals(End) && other.Target.Equals(Target) &&
                 other.StartMargin.Equals(StartMargin) && other.EndMargin.Equals(EndMargin);
         }
 
@@ -207,8 +196,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             unchecked
             {
-                int result = MethodStart.GetHashCode();
-                result = (result*397) ^ MethodEnd.GetHashCode();
+                int result = Start.GetHashCode();
+                result = (result*397) ^ End.GetHashCode();
                 result = (result * 397) ^ (Target.HasValue ? Target.Value.GetHashCode() : 0);
                 result = (result * 397) ^ (StartMargin.HasValue ? StartMargin.Value.GetHashCode() : 0);
                 result = (result * 397) ^ (EndMargin.HasValue ? EndMargin.Value.GetHashCode() : 0);

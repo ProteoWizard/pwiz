@@ -863,8 +863,8 @@ namespace pwiz.Skyline.Model.Results
                         return filterPairs; // empty
                     }
 
-                    isolationWidthValue = isolationWindow.ExtractionWidth;
-                    isolationTargetMz = isolationWindow.ExtractionStart + isolationWidthValue/2;
+                    isolationWidthValue = isolationWindow.End - isolationWindow.Start;
+                    isolationTargetMz = isolationWindow.Start + isolationWidthValue/2;
                 }
 
                 // No defined isolation scheme?

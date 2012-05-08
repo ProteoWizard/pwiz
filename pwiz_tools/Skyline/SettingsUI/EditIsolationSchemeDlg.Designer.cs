@@ -59,12 +59,12 @@
             this.labelSpecialHandling = new System.Windows.Forms.Label();
             this.comboSpecialHandling = new System.Windows.Forms.ComboBox();
             this.gridIsolationWindows = new pwiz.Skyline.Controls.DataGridViewEx();
-            this.editIsolationWindowBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.startDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.endDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.targetDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.startMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.endMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.editIsolationWindowBindingSource = new System.Windows.Forms.BindingSource(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.gridIsolationWindows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.editIsolationWindowBindingSource)).BeginInit();
             this.SuspendLayout();
@@ -177,7 +177,7 @@
             // 
             // cbSpecifyTarget
             // 
-            this.cbSpecifyTarget.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.cbSpecifyTarget.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cbSpecifyTarget.AutoSize = true;
             this.cbSpecifyTarget.Enabled = false;
             this.cbSpecifyTarget.Location = new System.Drawing.Point(278, 464);
@@ -251,10 +251,11 @@
             this.btnCalculate.TabIndex = 9;
             this.btnCalculate.Text = "&Calculate...";
             this.btnCalculate.UseVisualStyleBackColor = true;
+            this.btnCalculate.Click += new System.EventHandler(this.btnCalculate_Click);
             // 
             // labelSpecialHandling
             // 
-            this.labelSpecialHandling.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelSpecialHandling.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelSpecialHandling.AutoSize = true;
             this.labelSpecialHandling.Enabled = false;
             this.labelSpecialHandling.Location = new System.Drawing.Point(31, 421);
@@ -320,10 +321,6 @@
             this.gridIsolationWindows.Size = new System.Drawing.Size(386, 184);
             this.gridIsolationWindows.TabIndex = 11;
             // 
-            // editIsolationWindowBindingSource
-            // 
-            this.editIsolationWindowBindingSource.DataSource = typeof(pwiz.Skyline.SettingsUI.EditIsolationWindow);
-            // 
             // startDataGridViewTextBoxColumn
             // 
             this.startDataGridViewTextBoxColumn.DataPropertyName = "Start";
@@ -368,6 +365,10 @@
             this.endMarginDataGridViewTextBoxColumn.DefaultCellStyle = dataGridViewCellStyle6;
             this.endMarginDataGridViewTextBoxColumn.HeaderText = "End margin";
             this.endMarginDataGridViewTextBoxColumn.Name = "endMarginDataGridViewTextBoxColumn";
+            // 
+            // editIsolationWindowBindingSource
+            // 
+            this.editIsolationWindowBindingSource.DataSource = typeof(pwiz.Skyline.SettingsUI.EditIsolationWindow);
             // 
             // EditIsolationSchemeDlg
             // 

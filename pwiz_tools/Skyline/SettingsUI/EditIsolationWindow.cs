@@ -35,8 +35,8 @@ namespace pwiz.Skyline.SettingsUI
 
         public EditIsolationWindow(IsolationWindow window)
         {
-            Start = window.MethodStart;
-            End = window.MethodEnd;
+            Start = window.Start;
+            End = window.End;
             Target = window.Target;
             StartMargin = window.StartMargin;
             EndMargin = window.EndMargin;

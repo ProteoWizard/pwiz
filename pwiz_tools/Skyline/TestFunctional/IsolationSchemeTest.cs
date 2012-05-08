@@ -536,18 +536,6 @@ namespace pwiz.SkylineTestFunctional
                         messageDlg.OkDialog();
                     });
 
-                // Test too wide margin.
-                RunUI(() =>
-                    {
-                        editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start_margin, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("2");
-                    });
-                RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
-                    {
-                        AssertEx.Contains(messageDlg.Message, "Margins cover the entire width of isolation window.");
-                        messageDlg.OkDialog();
-                    });
-
                 // Test non-numeric margin.
                 RunDlg<MessageDlg>(() =>
                     {
@@ -624,18 +612,6 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.Contains(messageDlg.Message, "Isolation window margin must be non-negative.");
-                        messageDlg.OkDialog();
-                    });
-
-                // Test too wide margin.
-                RunUI(() =>
-                    {
-                        editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end_margin, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("3");
-                    });
-                RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
-                    {
-                        AssertEx.Contains(messageDlg.Message, "Margins cover the entire width of isolation window.");
                         messageDlg.OkDialog();
                     });
 
