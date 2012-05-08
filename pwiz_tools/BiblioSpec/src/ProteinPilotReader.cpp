@@ -154,7 +154,8 @@ void ProteinPilotReader::endElement(const XML_Char* name)
             state_ = ROOT_STATE;
         }
     } else if( state_ == MOD_STATE){
-        if (isElement("Nme", name) ) {
+		// Use Nme or DisplayName, whichever shows up last
+        if (isElement("Nme", name) || isElement("DisplayName", name) ) {
             getModName();
         } else if (isElement("Fma", name) ) {
             getModFormula(); // add masses
