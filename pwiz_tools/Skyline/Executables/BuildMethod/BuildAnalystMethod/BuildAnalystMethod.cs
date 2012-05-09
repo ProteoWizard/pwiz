@@ -35,21 +35,21 @@ namespace BuildAnalystMethod
             OutputMethod = outputMethod;
             FinalMethod = finalMethod;
             TransitionList = transitionList;
+            Transitions = CreateTransitionList().ToList();
         }
 
         public string OutputMethod { get; private set; }
         public string FinalMethod { get; private set; }
         public string TransitionList { get; private set; }
 
-        public IEnumerable<MethodTransition> Transitions
+        public List<MethodTransition> Transitions { get; private set; }
+
+        private IEnumerable<MethodTransition> CreateTransitionList()
         {
-            get
-            {
-                var reader = new StringReader(TransitionList);
-                string line;
-                while ((line = reader.ReadLine()) != null)
-                    yield return new MethodTransition(line);
-            }
+            var reader = new StringReader(TransitionList);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                yield return new MethodTransition(line);
         }
     }
 
@@ -68,7 +68,11 @@ namespace BuildAnalystMethod
                 Dwell = double.Parse(values[i++], CultureInfo.InvariantCulture);
                 Label = values[i++];
                 DP = double.Parse(values[i++], CultureInfo.InvariantCulture);
-                CE = double.Parse(values[i], CultureInfo.InvariantCulture);
+                CE = double.Parse(values[i++], CultureInfo.InvariantCulture);
+                if(i < values.Length)
+                    PrecursorWindow = double.Parse(values[i++], CultureInfo.InvariantCulture);
+                if (i < values.Length)
+                    ProductWindow = double.Parse(values[i], CultureInfo.InvariantCulture);
             }
             catch (FormatException)
             {
@@ -82,6 +86,10 @@ namespace BuildAnalystMethod
         public string Label { get; private set; }
         public double CE { get; private set; }
         public double DP { get; private set; }
+        public double? PrecursorWindow { get; private set; }
+        public double? ProductWindow { get; private set; }
+
+        public int ExperimentIndex { get; set; }
     }
 
     public abstract class BuildAnalystMethod

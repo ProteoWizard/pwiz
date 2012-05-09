@@ -165,8 +165,8 @@ namespace BuildAnalystFullScanMethod.Test
                     (ParamDataColl) ((MassRange) (templateExpt.GetMassRange(i))).MassDepParamTbl;
                 var compoundDepParams_mine = (ParamDataColl) ((MassRange) (myExpt.GetMassRange(i))).MassDepParamTbl;
 
-                CompareParam("DP", compoundDepParams_template, compoundDepParams_mine);
-                CompareParam("CE", compoundDepParams_template, compoundDepParams_mine);
+                AssertParamNotZero("DP", compoundDepParams_mine);
+                AssertParamNotZero("CE", compoundDepParams_mine);
                 CompareParam("IRD", compoundDepParams_template, compoundDepParams_mine);
                 CompareParam("IRW", compoundDepParams_template, compoundDepParams_mine);
 
@@ -203,6 +203,16 @@ namespace BuildAnalystFullScanMethod.Test
             
             Assert.IsNotNull(myParam);
             Assert.AreEqual(templateParam.startVal, myParam.startVal);
+        }
+
+        private static void AssertParamNotZero(string paramKey, ParamDataColl myParamColl)
+        {
+            short s;
+
+            var myParam = (ParameterData)myParamColl.FindParameter(paramKey, out s);
+
+            Assert.IsNotNull(myParam);
+            Assert.AreNotEqual(0, myParam.startVal);
         }
     }
 }

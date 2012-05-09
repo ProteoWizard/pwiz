@@ -1554,5 +1554,17 @@ namespace pwiz.Skyline.Properties {
                 this["ExportThermoTriggerRef"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ExportMultiQuant {
+            get {
+                return ((bool)(this["ExportMultiQuant"]));
+            }
+            set {
+                this["ExportMultiQuant"] = value;
+            }
+        }
     }
 }

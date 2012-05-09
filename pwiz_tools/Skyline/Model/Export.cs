@@ -122,7 +122,7 @@ namespace pwiz.Skyline.Model
 
         public static bool CanScheduleInstrumentType(string type, SrmDocument doc)
         {
-            return !(Equals(type, Thermo_LTQ) || Equals(type, ABI_TOF))|| IsInclusionListMethod(doc);
+            return !(Equals(type, Thermo_LTQ))|| IsInclusionListMethod(doc);
         }
 
         public static bool IsInclusionListMethod(SrmDocument doc)
@@ -172,6 +172,8 @@ namespace pwiz.Skyline.Model
         public virtual bool InclusionList { get; set; }
         public virtual string MsAnalyzer { get; set; }
         public virtual string MsMsAnalyzer { get; set; }
+
+        public virtual bool ExportMultiQuant { get; set; }
 
         public TExp InitExporter<TExp>(TExp exporter)
             where TExp : MassListExporter
@@ -258,6 +260,7 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new AbiTofMethodExporter(document));
 
             exporter.FullScans = true;
+            exporter.ExportMultiQuant = ExportMultiQuant;
             
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
@@ -1487,7 +1490,15 @@ namespace pwiz.Skyline.Model
 
             writer.Write(Math.Round(GetDeclusteringPotential(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
+            writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));           
+            if (FullScans)
+            {
+                writer.Write(FieldSeparator);
+                writer.Write(
+                    Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTranGroup.PrecursorMz));
+                writer.Write(FieldSeparator);
+                writer.Write(Document.Settings.TransitionSettings.FullScan.GetProductFilterWindow(nodeTran.Mz));
+            }
             writer.WriteLine();
         }
 
@@ -1641,11 +1652,12 @@ namespace pwiz.Skyline.Model
 
     public class AbiTofMethodExporter : AbiMethodExporter
     {
+        public bool ExportMultiQuant { get; set; }
 
         public AbiTofMethodExporter(SrmDocument document)
             : base(document)
         {
-            IsPrecursorLimited = true;
+            IsPrecursorLimited = true;            
         }
 
         protected override string GetRegQueryKey()
@@ -1673,6 +1685,8 @@ namespace pwiz.Skyline.Model
                 argv.Add("-i");
             if (MethodType == ExportMethodType.Scheduled)
                 argv.Add("-r");
+            if (ExportMultiQuant)
+                argv.Add("-mq");
 
             return argv;
         }

@@ -16,6 +16,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
+using System.IO;
 using Interop.DDEMethodSvr;
 using Interop.MSMethodSvr;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -56,7 +59,7 @@ namespace BuildAnalystFullScanMethod.Test
         private void TestIDAScheduled(string templateMethodFile)
         {
             var args = new[] {
-                                "-i", "-r",
+                                "-i", "-r" , "-mq",
                                 GetTemplateFilePath(templateMethodFile),
                                 GetTransListSchedPath()
                              };
@@ -67,6 +70,22 @@ namespace BuildAnalystFullScanMethod.Test
 
 
             TestIDACommon(GetMethodSchedPath(), true);
+            TestMultiQuantFile(Path.ChangeExtension(GetMethodSchedPath(), ".MultiQuant.txt"));
+        }
+
+        private void TestMultiQuantFile(string filePath)
+        {
+            using (var file = new StreamReader(filePath))
+            {
+                string line = file.ReadLine();
+                line = file.ReadLine();
+                string[] values = line.Split(new[] {'\t'}, StringSplitOptions.RemoveEmptyEntries);
+                Assert.AreEqual(8, values.Length);
+                Assert.AreEqual("1087.47394", values[2]);
+                Assert.AreEqual("6", values[6]);
+            }
+
+            DeleteOutput(filePath);
         }
 
         // read the updated method and make sure that the inclusion list is in the method
@@ -107,6 +126,19 @@ namespace BuildAnalystFullScanMethod.Test
 
                 ((IDDEMethodObj3)idaServer).GetIncludeRetTimeEntry(19, ref rt);
                 Assert.AreEqual(20.48, rt);
+
+                double exceedCountSwitch = -1;
+                ((IDDEMethodObj)idaServer).getExceedCountSwitch(ref exceedCountSwitch);
+                Assert.AreEqual(2000000, exceedCountSwitch);
+
+                double intensityThreshold = -1;
+                ((IDDEMethodObj)idaServer).getIntensityThreshold(ref intensityThreshold);
+                Assert.AreEqual(0, intensityThreshold);
+
+                int spectraSwicth = -1;
+                ((IDDEMethodObj)idaServer).getSpectraSwitch(ref spectraSwicth);
+                Assert.AreEqual(12, spectraSwicth);
+
             }
             else
             {

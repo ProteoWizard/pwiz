@@ -56,7 +56,10 @@
             this.labelMethods = new System.Windows.Forms.Label();
             this.labelMethodNum = new System.Windows.Forms.Label();
             this.panelThermoColumns = new System.Windows.Forms.Panel();
+            this.panelAbSciexTOF = new System.Windows.Forms.Panel();
+            this.cbExportMultiQuant = new System.Windows.Forms.CheckBox();
             this.panelThermoColumns.SuspendLayout();
+            this.panelAbSciexTOF.SuspendLayout();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -69,7 +72,7 @@
             this.radioSingle.TabStop = true;
             this.radioSingle.Text = "&Single method";
             this.helpTip.SetToolTip(this.radioSingle, "Create a single file including all transitions.  If this is not just for referenc" +
-                    "e,\r\nmake sure your instrument can handle the full set of transitions.");
+        "e,\r\nmake sure your instrument can handle the full set of transitions.");
             this.radioSingle.UseVisualStyleBackColor = true;
             this.radioSingle.CheckedChanged += new System.EventHandler(this.radioSingle_CheckedChanged);
             // 
@@ -83,7 +86,7 @@
             this.radioProtein.TabStop = true;
             this.radioProtein.Text = "&One method per protein";
             this.helpTip.SetToolTip(this.radioProtein, "Split methods along protein boundaries.  If this is not just for reference,\r\nmake" +
-                    " sure your instrument can handle the number of transitions in each file.");
+        " sure your instrument can handle the number of transitions in each file.");
             this.radioProtein.UseVisualStyleBackColor = true;
             this.radioProtein.CheckedChanged += new System.EventHandler(this.radioProtein_CheckedChanged);
             // 
@@ -107,7 +110,7 @@
             this.textMaxTransitions.Size = new System.Drawing.Size(124, 20);
             this.textMaxTransitions.TabIndex = 7;
             this.helpTip.SetToolTip(this.textMaxTransitions, "Each file created will have at most this number of transitions, but may have fewe" +
-                    "r,\r\nif peptide or protein boundaries do not allow the maximum.");
+        "r,\r\nif peptide or protein boundaries do not allow the maximum.");
             this.textMaxTransitions.TextChanged += new System.EventHandler(this.textMaxTransitions_TextChanged);
             // 
             // labelMaxTransitions
@@ -123,20 +126,20 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(200, 41);
+            this.btnCancel.Location = new System.Drawing.Point(218, 41);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 21;
+            this.btnCancel.TabIndex = 22;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(200, 11);
+            this.btnOk.Location = new System.Drawing.Point(218, 11);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 20;
+            this.btnOk.TabIndex = 21;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -173,7 +176,7 @@
             // 
             // textDwellTime
             // 
-            this.textDwellTime.Location = new System.Drawing.Point(174, 322);
+            this.textDwellTime.Location = new System.Drawing.Point(174, 319);
             this.textDwellTime.Name = "textDwellTime";
             this.textDwellTime.Size = new System.Drawing.Size(100, 20);
             this.textDwellTime.TabIndex = 15;
@@ -220,22 +223,25 @@
             this.labelTemplateFile.Location = new System.Drawing.Point(13, 370);
             this.labelTemplateFile.Name = "labelTemplateFile";
             this.labelTemplateFile.Size = new System.Drawing.Size(70, 13);
-            this.labelTemplateFile.TabIndex = 17;
+            this.labelTemplateFile.TabIndex = 18;
             this.labelTemplateFile.Text = "T&emplate file:";
             // 
             // textTemplateFile
             // 
+            this.textTemplateFile.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.textTemplateFile.Location = new System.Drawing.Point(16, 388);
             this.textTemplateFile.Name = "textTemplateFile";
-            this.textTemplateFile.Size = new System.Drawing.Size(175, 20);
-            this.textTemplateFile.TabIndex = 18;
+            this.textTemplateFile.Size = new System.Drawing.Size(196, 20);
+            this.textTemplateFile.TabIndex = 19;
             // 
             // btnBrowseTemplate
             // 
-            this.btnBrowseTemplate.Location = new System.Drawing.Point(197, 386);
+            this.btnBrowseTemplate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBrowseTemplate.Location = new System.Drawing.Point(218, 387);
             this.btnBrowseTemplate.Name = "btnBrowseTemplate";
             this.btnBrowseTemplate.Size = new System.Drawing.Size(75, 23);
-            this.btnBrowseTemplate.TabIndex = 19;
+            this.btnBrowseTemplate.TabIndex = 20;
             this.btnBrowseTemplate.Text = "&Browse...";
             this.btnBrowseTemplate.UseVisualStyleBackColor = true;
             this.btnBrowseTemplate.Click += new System.EventHandler(this.btnBrowseTemplate_Click);
@@ -278,7 +284,7 @@
             this.cbTriggerRefColumns.TabIndex = 1;
             this.cbTriggerRefColumns.Text = "Add trigger && refere&nce";
             this.helpTip.SetToolTip(this.cbTriggerRefColumns, "Add Trigger and Reference columns required by some version of\r\nThermo TSQ softwar" +
-                    "e");
+        "e");
             this.cbTriggerRefColumns.UseVisualStyleBackColor = true;
             // 
             // comboOptimizing
@@ -328,13 +334,33 @@
             this.panelThermoColumns.TabIndex = 16;
             this.panelThermoColumns.Visible = false;
             // 
+            // panelAbSciexTOF
+            // 
+            this.panelAbSciexTOF.Controls.Add(this.cbExportMultiQuant);
+            this.panelAbSciexTOF.Location = new System.Drawing.Point(148, 348);
+            this.panelAbSciexTOF.Name = "panelAbSciexTOF";
+            this.panelAbSciexTOF.Size = new System.Drawing.Size(155, 28);
+            this.panelAbSciexTOF.TabIndex = 17;
+            // 
+            // cbExportMultiQuant
+            // 
+            this.cbExportMultiQuant.AutoSize = true;
+            this.cbExportMultiQuant.Location = new System.Drawing.Point(5, 6);
+            this.cbExportMultiQuant.Name = "cbExportMultiQuant";
+            this.cbExportMultiQuant.Size = new System.Drawing.Size(152, 17);
+            this.cbExportMultiQuant.TabIndex = 0;
+            this.cbExportMultiQuant.Text = "Create Multi&Quant  method";
+            this.helpTip.SetToolTip(this.cbExportMultiQuant, "Exports a MultiQuant compatible analysis method to the same directory\r\nand base n" +
+        "ame as the Analyst acquisition method.");
+            this.cbExportMultiQuant.UseVisualStyleBackColor = true;
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(287, 422);
+            this.ClientSize = new System.Drawing.Size(305, 422);
             this.Controls.Add(this.labelMethodNum);
             this.Controls.Add(this.labelMethods);
             this.Controls.Add(this.label1);
@@ -357,6 +383,7 @@
             this.Controls.Add(this.radioBuckets);
             this.Controls.Add(this.radioProtein);
             this.Controls.Add(this.radioSingle);
+            this.Controls.Add(this.panelAbSciexTOF);
             this.Controls.Add(this.panelThermoColumns);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -368,6 +395,8 @@
             this.Text = "Export Method";
             this.panelThermoColumns.ResumeLayout(false);
             this.panelThermoColumns.PerformLayout();
+            this.panelAbSciexTOF.ResumeLayout(false);
+            this.panelAbSciexTOF.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -401,5 +430,7 @@
         private System.Windows.Forms.Label labelMethodNum;
         private System.Windows.Forms.CheckBox cbTriggerRefColumns;
         private System.Windows.Forms.Panel panelThermoColumns;
+        private System.Windows.Forms.Panel panelAbSciexTOF;
+        private System.Windows.Forms.CheckBox cbExportMultiQuant;
     }
 }

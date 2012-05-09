@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -250,8 +268,7 @@ namespace pwiz.SkylineTestFunctional
             // The "Method type" combo box should be enabled.
             // However, ABI TOF instruments do not support scheduled targeted MS/MS so we should display 
             // a warning if the user selects "Scheduled" method type.
-            var exportMethodDlg1 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
-            RunUI(() =>
+            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method), exportMethodDlg1 =>
             {
                 exportMethodDlg1.InstrumentType = ExportInstrumentType.ABI_TOF;
                 Assert.AreEqual(ExportMethodDlg.PREC_PER_SAMPLE_INJ_TXT, exportMethodDlg1.GetMaxLabelText);
@@ -264,19 +281,10 @@ namespace pwiz.SkylineTestFunctional
                 Assert.IsFalse(exportMethodDlg1.IsRunLengthVisible);
                 Assert.IsFalse(exportMethodDlg1.IsDwellTimeVisible);
 
+                // Should no longer show a message box, now that scheduled MRM-HR is supported
+                exportMethodDlg1.MethodType = ExportMethodType.Scheduled;
+                exportMethodDlg1.CancelButton.PerformClick();
             });
-            // Select the "Scheduled" method type. This should popup an error message
-            RunDlg<MessageDlg>(
-                () => exportMethodDlg1.MethodType = ExportMethodType.Scheduled,
-                messageDlg =>
-                {
-                    Assert.AreEqual("Scheduled methods are not supported for the selected instrument.", messageDlg.Message);
-                    messageDlg.OkDialog();
-            });
-
-            RunUI(() => exportMethodDlg1.CancelButton.PerformClick());
-            WaitForClosedForm(exportMethodDlg1);
-
 
             // Select the dummy RT regression AND enable MS1 filtering
             // Now we can export an inclusion list method.

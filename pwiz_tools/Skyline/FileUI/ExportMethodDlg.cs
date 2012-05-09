@@ -137,8 +137,11 @@ namespace pwiz.Skyline.FileUI
 
             cbEnergyRamp.Checked = Settings.Default.ExportThermoEnergyRamp;
             cbTriggerRefColumns.Checked = Settings.Default.ExportThermoTriggerRef;
+            cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
             // Reposition from design layout
             panelThermoColumns.Top = labelDwellTime.Top;
+            panelAbSciexTOF.Top = textDwellTime.Top + (textDwellTime.Height - panelAbSciexTOF.Height)/2;
+
 
             // Add optimizable regressions
             comboOptimizing.Items.Add(ExportOptimize.NONE);
@@ -336,9 +339,20 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        public bool ExportMultiQuant
+        {
+            get { return _exportProperties.ExportMultiQuant; }
+            set { _exportProperties.ExportMultiQuant = cbExportMultiQuant.Checked = value; }
+        }
+
         private void UpdateThermoColumns(bool standard)
         {
             panelThermoColumns.Visible = !standard && InstrumentType == ExportInstrumentType.Thermo;
+        }
+
+        private void UpdateAbSciexControls()
+        {
+            panelAbSciexTOF.Visible = InstrumentType == ExportInstrumentType.ABI_TOF;
         }
 
         private void UpdateMaxTransitions()
@@ -587,6 +601,8 @@ namespace pwiz.Skyline.FileUI
             }
             if (_fileType == ExportFileType.Method)
                 Settings.Default.ExportMethodTemplateList.SetValue(new MethodTemplateFile(_instrumentType, templateName));
+            if (cbExportMultiQuant.Visible)
+                Settings.Default.ExportMultiQuant = ExportMultiQuant;
 
             DialogResult = DialogResult.OK;
             Close();
@@ -617,6 +633,8 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.FullScans = _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
             _exportProperties.AddEnergyRamp = panelThermoColumns.Visible && cbEnergyRamp.Checked;
             _exportProperties.AddTriggerReference = panelThermoColumns.Visible && cbTriggerRefColumns.Checked;
+
+            _exportProperties.ExportMultiQuant = panelAbSciexTOF.Visible && cbExportMultiQuant.Checked;
 
             _exportProperties.Ms1Scan = _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
                                         _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
@@ -872,6 +890,7 @@ namespace pwiz.Skyline.FileUI
 
             UpdateDwellControls(standard);
             UpdateThermoColumns(standard);
+            UpdateAbSciexControls();
             UpdateMaxLabel(standard);
             if (wasFullScanInstrument != IsFullScanInstrument)
                 UpdateMaxTransitions();
