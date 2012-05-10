@@ -678,22 +678,26 @@ namespace pwiz.Skyline.FileUI
                 }
                 _exportProperties.MaxTransitions = null;
             }
-            else
-            {
-                int maxVal;
-                // CONSIDER: Better error message when instrument limitation encountered?
-                int maxInstrumentTrans = _document.Settings.TransitionSettings.Instrument.MaxTransitions ??
-                                         TransitionInstrument.MAX_TRANSITION_MAX;
-                int minTrans = IsFullScanInstrument ? MassListExporter.MAX_TRANS_PER_INJ_MIN : MethodExporter.MAX_TRANS_PER_INJ_MIN_TLTQ;
-                if (!helper.ValidateNumberTextBox(e, textMaxTransitions, minTrans, maxInstrumentTrans, out maxVal))
-                    return false;
-                // Make sure all the transitions of all precursors can fit into a single document,
-                // but not if this is a full-scan instrument, because then the maximum is refering
-                // to precursors and not transitions.
-                if (!IsFullScanInstrument && !ValidatePrecursorFit(_document, maxVal, helper.ShowMessages))
-                    return false;
-                _exportProperties.MaxTransitions = maxVal;
-            }
+
+            int maxVal;
+            // CONSIDER: Better error message when instrument limitation encountered?
+            int maxInstrumentTrans = _document.Settings.TransitionSettings.Instrument.MaxTransitions ??
+                                        TransitionInstrument.MAX_TRANSITION_MAX;
+            int minTrans = IsFullScanInstrument
+                               ? MassListExporter.MAX_TRANS_PER_INJ_MIN
+                               : MethodExporter.MAX_TRANS_PER_INJ_MIN_TLTQ;
+
+            if (_exportProperties.ExportStrategy != ExportStrategy.Buckets)
+                maxVal = maxInstrumentTrans;
+            else if (!helper.ValidateNumberTextBox(e, textMaxTransitions, minTrans, maxInstrumentTrans, out maxVal))
+                return false;
+
+            // Make sure all the transitions of all precursors can fit into a single document,
+            // but not if this is a full-scan instrument, because then the maximum is refering
+            // to precursors and not transitions.
+            if (!IsFullScanInstrument && !ValidatePrecursorFit(_document, maxVal, helper.ShowMessages))
+                return false;
+            _exportProperties.MaxTransitions = maxVal;
 
             _exportProperties.MethodType = (ExportMethodType)Enum.Parse(typeof(ExportMethodType),
                                                         comboTargetType.SelectedItem.ToString());
