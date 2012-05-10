@@ -56,8 +56,6 @@
             this.labelMargins = new System.Windows.Forms.Label();
             this.btnGraph = new System.Windows.Forms.Button();
             this.btnCalculate = new System.Windows.Forms.Button();
-            this.labelSpecialHandling = new System.Windows.Forms.Label();
-            this.comboSpecialHandling = new System.Windows.Forms.ComboBox();
             this.gridIsolationWindows = new pwiz.Skyline.Controls.DataGridViewEx();
             this.startDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.endDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -65,6 +63,7 @@
             this.startMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.endMarginDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.editIsolationWindowBindingSource = new System.Windows.Forms.BindingSource(this.components);
+            this.cbMultiplexed = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.gridIsolationWindows)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.editIsolationWindowBindingSource)).BeginInit();
             this.SuspendLayout();
@@ -183,7 +182,7 @@
             this.cbSpecifyTarget.Location = new System.Drawing.Point(278, 464);
             this.cbSpecifyTarget.Name = "cbSpecifyTarget";
             this.cbSpecifyTarget.Size = new System.Drawing.Size(91, 17);
-            this.cbSpecifyTarget.TabIndex = 18;
+            this.cbSpecifyTarget.TabIndex = 17;
             this.cbSpecifyTarget.Text = "Specify &target";
             this.cbSpecifyTarget.UseVisualStyleBackColor = true;
             this.cbSpecifyTarget.CheckedChanged += new System.EventHandler(this.cbSpecifyTarget_CheckedChanged);
@@ -193,19 +192,19 @@
             this.labelWindowsPerScan.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.labelWindowsPerScan.AutoSize = true;
             this.labelWindowsPerScan.Enabled = false;
-            this.labelWindowsPerScan.Location = new System.Drawing.Point(31, 465);
+            this.labelWindowsPerScan.Location = new System.Drawing.Point(50, 465);
             this.labelWindowsPerScan.Name = "labelWindowsPerScan";
             this.labelWindowsPerScan.Size = new System.Drawing.Size(98, 13);
-            this.labelWindowsPerScan.TabIndex = 14;
+            this.labelWindowsPerScan.TabIndex = 13;
             this.labelWindowsPerScan.Text = "&Windows per scan:";
             // 
             // textWindowsPerScan
             // 
             this.textWindowsPerScan.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.textWindowsPerScan.Location = new System.Drawing.Point(137, 462);
+            this.textWindowsPerScan.Location = new System.Drawing.Point(154, 462);
             this.textWindowsPerScan.Name = "textWindowsPerScan";
             this.textWindowsPerScan.Size = new System.Drawing.Size(39, 20);
-            this.textWindowsPerScan.TabIndex = 15;
+            this.textWindowsPerScan.TabIndex = 14;
             // 
             // comboMargins
             // 
@@ -216,7 +215,7 @@
             this.comboMargins.Location = new System.Drawing.Point(278, 437);
             this.comboMargins.Name = "comboMargins";
             this.comboMargins.Size = new System.Drawing.Size(142, 21);
-            this.comboMargins.TabIndex = 17;
+            this.comboMargins.TabIndex = 16;
             this.comboMargins.SelectedIndexChanged += new System.EventHandler(this.comboMargins_SelectedIndexChanged);
             // 
             // labelMargins
@@ -227,7 +226,7 @@
             this.labelMargins.Location = new System.Drawing.Point(275, 421);
             this.labelMargins.Name = "labelMargins";
             this.labelMargins.Size = new System.Drawing.Size(47, 13);
-            this.labelMargins.TabIndex = 16;
+            this.labelMargins.TabIndex = 15;
             this.labelMargins.Text = "Margi&ns:";
             // 
             // btnGraph
@@ -252,29 +251,6 @@
             this.btnCalculate.Text = "&Calculate...";
             this.btnCalculate.UseVisualStyleBackColor = true;
             this.btnCalculate.Click += new System.EventHandler(this.btnCalculate_Click);
-            // 
-            // labelSpecialHandling
-            // 
-            this.labelSpecialHandling.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelSpecialHandling.AutoSize = true;
-            this.labelSpecialHandling.Enabled = false;
-            this.labelSpecialHandling.Location = new System.Drawing.Point(31, 421);
-            this.labelSpecialHandling.Name = "labelSpecialHandling";
-            this.labelSpecialHandling.Size = new System.Drawing.Size(88, 13);
-            this.labelSpecialHandling.TabIndex = 12;
-            this.labelSpecialHandling.Text = "&Special handling:";
-            // 
-            // comboSpecialHandling
-            // 
-            this.comboSpecialHandling.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.comboSpecialHandling.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboSpecialHandling.Enabled = false;
-            this.comboSpecialHandling.FormattingEnabled = true;
-            this.comboSpecialHandling.Location = new System.Drawing.Point(34, 437);
-            this.comboSpecialHandling.Name = "comboSpecialHandling";
-            this.comboSpecialHandling.Size = new System.Drawing.Size(142, 21);
-            this.comboSpecialHandling.TabIndex = 13;
-            this.comboSpecialHandling.SelectedIndexChanged += new System.EventHandler(this.comboSpecialHandling_SelectedIndexChanged);
             // 
             // gridIsolationWindows
             // 
@@ -370,6 +346,18 @@
             // 
             this.editIsolationWindowBindingSource.DataSource = typeof(pwiz.Skyline.SettingsUI.EditIsolationWindow);
             // 
+            // cbMultiplexed
+            // 
+            this.cbMultiplexed.AutoSize = true;
+            this.cbMultiplexed.Enabled = false;
+            this.cbMultiplexed.Location = new System.Drawing.Point(34, 437);
+            this.cbMultiplexed.Name = "cbMultiplexed";
+            this.cbMultiplexed.Size = new System.Drawing.Size(132, 17);
+            this.cbMultiplexed.TabIndex = 12;
+            this.cbMultiplexed.Text = "&Multiplexed acquisition";
+            this.cbMultiplexed.UseVisualStyleBackColor = true;
+            this.cbMultiplexed.CheckedChanged += new System.EventHandler(this.cbMultiplexed_CheckedChanged);
+            // 
             // EditIsolationSchemeDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -377,8 +365,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(436, 500);
-            this.Controls.Add(this.comboSpecialHandling);
-            this.Controls.Add(this.labelSpecialHandling);
+            this.Controls.Add(this.cbMultiplexed);
             this.Controls.Add(this.btnCalculate);
             this.Controls.Add(this.btnGraph);
             this.Controls.Add(this.labelMargins);
@@ -434,12 +421,11 @@
         private System.Windows.Forms.Button btnGraph;
         private System.Windows.Forms.Button btnCalculate;
         private System.Windows.Forms.BindingSource editIsolationWindowBindingSource;
-        private System.Windows.Forms.Label labelSpecialHandling;
-        private System.Windows.Forms.ComboBox comboSpecialHandling;
         private System.Windows.Forms.DataGridViewTextBoxColumn startDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn endDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn targetDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn startMarginDataGridViewTextBoxColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn endMarginDataGridViewTextBoxColumn;
+        private System.Windows.Forms.CheckBox cbMultiplexed;
     }
 }

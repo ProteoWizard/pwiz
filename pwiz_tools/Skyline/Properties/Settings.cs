@@ -1343,8 +1343,10 @@ namespace pwiz.Skyline.Properties
     {
         public override IEnumerable<IsolationScheme> GetDefaults(int revisionIndex)
         {
-            yield break;
+            return new[] { new IsolationScheme("MSe", new IsolationWindow[0], IsolationScheme.SpecialHandlingType.MS_E), };
         }
+
+        public override bool ExcludeDefaults { get { return true; } }
 
         public override IsolationScheme EditItem(Control owner, IsolationScheme item,
             IEnumerable<IsolationScheme> existing, object tag)

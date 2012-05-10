@@ -72,7 +72,7 @@ namespace pwiz.SkylineTestA
             AssertEx.DeserializeNoError<IsolationScheme>(
                 @"<isolation_scheme name=""Validate (3)"" special_handling=""Multiplexed"" windows_per_scan=""3""><isolation_window start=""1"" end=""10""/></isolation_scheme>");
             AssertEx.DeserializeNoError<IsolationScheme>(
-                @"<isolation_scheme name=""Validate (4)"" special_handling=""MSe""><isolation_window start=""1"" end=""10""/></isolation_scheme>");
+                @"<isolation_scheme name=""Validate (4)"" special_handling=""MSe""/>");
 
             // Missing parameters
             AssertEx.DeserializeError<IsolationScheme>(@"<isolation_scheme/>");
@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestA
                 @"<isolation_scheme name=""Invalid (3)"" precursor_filter=""1"" windows_per_scan=""3""/>");
             // Special handling but no windows
             AssertEx.DeserializeError<IsolationScheme>(
-                @"<isolation_scheme name=""Invalid (4)"" special_handling=""MSe""/>");
+                @"<isolation_scheme name=""Invalid (4)"" special_handling=""Multiplexed""/>");
             // Right filter only
             AssertEx.DeserializeError<IsolationScheme>(
                 @"<isolation_scheme name=""Invalid (5)"" precursor_right_filter=""1""/>");
@@ -98,7 +98,7 @@ namespace pwiz.SkylineTestA
                 @"<isolation_scheme name=""Invalid (6)"" windows_per_scan=""2""><isolation_window start=""1"" end=""10""/></isolation_scheme>");
             // Windows per scan with MSe
             AssertEx.DeserializeError<IsolationScheme>(
-                @"<isolation_scheme name=""Invalid (7)"" windows_per_scan=""2"" special_handling=""MSe""><isolation_window start=""1"" end=""10""/></isolation_scheme>");
+                @"<isolation_scheme name=""Invalid (7)"" windows_per_scan=""2"" special_handling=""MSe"" />");
             // Multiplexed and no windows per scan
             AssertEx.DeserializeError<IsolationScheme>(
                 @"<isolation_scheme name=""Invalid (8)"" special_handling=""Multiplexed""><isolation_window start=""1"" end=""10""/></isolation_scheme>");
@@ -118,6 +118,10 @@ namespace pwiz.SkylineTestA
             // Bad window: start margin < 0
             AssertEx.DeserializeError<IsolationScheme>(
                 @"<isolation_scheme name=""Invalid (12)""><isolation_window start=""1"" end=""10"" margin_left=""-1"" margin_right=""2""/></isolation_scheme>");
+            // MSe with window
+            AssertEx.DeserializeError<IsolationScheme>(
+                @"<isolation_scheme name=""Invalid (14)"" special_handling=""MSe""><isolation_window start=""1"" end=""10""/></isolation_scheme>");
+
         }
 
         private const string ISOLATION_SCHEME_LIST =
@@ -131,9 +135,7 @@ namespace pwiz.SkylineTestA
                 <isolation_scheme name=""SPECIAL_HANDLING_MULTIPLEXED"" special_handling=""Multiplexed"" windows_per_scan=""2"">
                     <isolation_window start=""1"" end=""10"" target=""5"" margin=""1""/>
                 </isolation_scheme>
-                <isolation_scheme name=""SPECIAL_HANDLING_MS_E"" special_handling=""MSe"">
-                    <isolation_window start=""1"" end=""10"" margin=""1""/>
-                </isolation_scheme>
+                <isolation_scheme name=""SPECIAL_HANDLING_MS_E"" special_handling=""MSe"" />
             </IsolationSchemeList>";
 
         private static void CheckSettingsList<TItem>(SettingsList<TItem> target, SettingsList<TItem> copy)

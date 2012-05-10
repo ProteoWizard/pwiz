@@ -75,16 +75,6 @@ namespace pwiz.Skyline.SettingsUI
                     });
             comboMargins.SelectedItem = WindowMargin.NONE;  // Hides margin columns
 
-            // Initialize special handling combo box.
-            comboSpecialHandling.Items.AddRange(
-                new object[]
-                    {
-                        IsolationScheme.SpecialHandlingType.NONE,
-                        IsolationScheme.SpecialHandlingType.MULTIPLEXED,
-                        IsolationScheme.SpecialHandlingType.MS_E
-                    });
-            comboSpecialHandling.SelectedItem = IsolationScheme.SpecialHandlingType.NONE;
-
             // Hide target column to match checkbox, which starts unchecked
             gridIsolationWindows.Columns[(int)GridColumns.target].Visible = false;
 
@@ -157,7 +147,8 @@ namespace pwiz.Skyline.SettingsUI
                     comboMargins.SelectedItem = showStartMargin 
                         ? (showEndMargin ? WindowMargin.ASYMMETRIC : WindowMargin.SYMMETRIC) 
                         : WindowMargin.NONE;
-                    comboSpecialHandling.SelectedItem = _isolationScheme.SpecialHandling;
+                    cbMultiplexed.Checked = Equals(_isolationScheme.SpecialHandling,
+                                                   IsolationScheme.SpecialHandlingType.MULTIPLEXED);
                     textWindowsPerScan.Text = _isolationScheme.WindowsPerScan.HasValue
                                                   ? _isolationScheme.WindowsPerScan.Value.ToString(CultureInfo.CurrentCulture)
                                                   : "";
@@ -184,8 +175,7 @@ namespace pwiz.Skyline.SettingsUI
             btnGraph.Enabled = !fromResults;
             gridIsolationWindows.Enabled = !fromResults;
             cbSpecifyTarget.Enabled = !fromResults;
-            labelSpecialHandling.Enabled = !fromResults;
-            comboSpecialHandling.Enabled = !fromResults;
+            cbMultiplexed.Enabled = !fromResults;
             comboMargins.Enabled = !fromResults;
             labelMargins.Enabled = !fromResults;
             labelWindowsPerScan.Enabled =
@@ -406,7 +396,7 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
-        private void comboSpecialHandling_SelectedIndexChanged(object sender, EventArgs e)
+        private void cbMultiplexed_CheckedChanged(object sender, EventArgs e)
         {
             EnableControls();
         }
@@ -702,8 +692,16 @@ namespace pwiz.Skyline.SettingsUI
 
         public string SpecialHandling
         {
-            get { return (string)comboSpecialHandling.SelectedItem; }
-            set { comboSpecialHandling.SelectedItem = value; }
+            get
+            {
+                return cbMultiplexed.Checked
+                    ? IsolationScheme.SpecialHandlingType.MULTIPLEXED
+                    : IsolationScheme.SpecialHandlingType.NONE;
+            }
+            set
+            {
+                cbMultiplexed.Checked = Equals(value, IsolationScheme.SpecialHandlingType.MULTIPLEXED);
+            }
         }
 
         public string WindowsPerScan

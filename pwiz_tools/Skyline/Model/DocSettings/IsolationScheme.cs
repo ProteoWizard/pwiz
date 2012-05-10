@@ -138,7 +138,12 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (PrespecifiedIsolationWindows.Count == 0)
                 {
-                    throw new InvalidDataException("Isolation scheme must have a filter or a prespecifed isolation window");
+                    if (!Equals(SpecialHandling, SpecialHandlingType.MS_E))
+                        throw new InvalidDataException("Isolation scheme must have a filter or a prespecifed isolation window");
+                }
+                else if (Equals(SpecialHandling, SpecialHandlingType.MS_E))
+                {
+                    throw new InvalidDataException("Isolation scheme for MSe cannot contain isolation windows");
                 }
 
                 if (Equals(SpecialHandling, SpecialHandlingType.MULTIPLEXED))

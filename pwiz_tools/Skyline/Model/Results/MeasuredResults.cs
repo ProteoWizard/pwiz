@@ -195,8 +195,15 @@ namespace pwiz.Skyline.Model.Results
             // data files with the extension <basename>.c.mzXML.  So, this needs
             // to be able to match <basename> with <basename>.c, and Vanderbilt
             // has a pipeline that generates mzML files all uppercase
-            return name.ToLower().StartsWith(prefix.ToLower()) &&
-                   (name.Length == prefix.Length || name[prefix.Length] == '.' /* || Equals(name.Substring(prefix.Length), "_IA_final_fragment") */);
+            if (!name.ToLower().StartsWith(prefix.ToLower()))
+                return false;
+            if (name.Length == prefix.Length || name[prefix.Length] == '.')
+                return true;
+            // Check for Waters MSe
+            string suffix = name.Substring(prefix.Length);
+            if (suffix[0] == '_' && suffix.EndsWith("_final_fragment"))
+                return true;
+            return false;
         }
 
 // ReSharper disable MemberCanBeMadeStatic.Local
