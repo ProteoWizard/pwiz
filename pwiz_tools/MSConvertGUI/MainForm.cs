@@ -35,6 +35,17 @@ namespace MSConvertGUI
     public partial class MainForm : Form
     {
         string[] cmdline_args;
+        string SetDefaultsDataType=""; // watch last-added filetype, offer to set defaults for that type
+
+        private string MakeConfigfileName()
+        {
+            string ext = ".";
+            if (SetDefaultsDataType != "") // any current input type?
+                ext += SetDefaultsDataType + ".";
+            // note not calling these files "*.cfg" in order to distinguish them from the boost program_options files
+            return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\MSConvertGUI" + ext + "cmdline";
+        }
+
         public MainForm(string[] args)
         {
             cmdline_args = args;
@@ -58,6 +69,10 @@ namespace MSConvertGUI
             OutputFormatBox.Text = "mzML";
             FilterBox.Text = "MS Level";
             ActivationTypeBox.Text = "CID";
+            // check for a user default config
+            String configname = MakeConfigfileName();
+            if (File.Exists(configname))
+                SetGUIfromCfg(configname); // populate buttons etc from config file
         }
 
         private void UseCFGButton_CheckedChanged(object sender, EventArgs e)
@@ -136,7 +151,11 @@ namespace MSConvertGUI
             {
                 if (String.IsNullOrEmpty(OutputBox.Text))
                     OutputBox.Text = Path.GetDirectoryName(FileBox.Text);
-
+                // update the set-defaults button
+                SetDefaultsDataType = ReaderList.FullReaderList.identify(FileBox.Text);
+                SetDefaultsButton.Text = "Use these settings next time I start MSConvertGUI with " + SetDefaultsDataType + " data";
+                setToolTip(SetDefaultsButton, "Saves the current settings and uses them as the defaults next time you open " + SetDefaultsDataType + " data with MSConvertGUI.");
+                // and add to the list
                 FileListBox.Items.Add(FileBox.Text);
                 FileBox.Clear();
                 RemoveFileButton.Enabled = true;
@@ -357,35 +376,13 @@ namespace MSConvertGUI
             }
         }
 
-        private void StartButton_Click(object sender, EventArgs e)
+        private String ConstructCommandline() 
+        // if you update this, you probably need to update SetControlsFromCommandline too
         {
-            var filesToProcess = new List<string>();
             var commandLine = new StringBuilder();
-
-            //Get files or filelist text
-            if (FileListRadio.Checked)
-            {
-                if (FileListBox.Items.Count == 0)
-                {
-                    MessageBox.Show("No files to process");
-                    return;
-                }
-
-                filesToProcess.AddRange(from string item in FileListBox.Items select item);
-            }
-            else if (String.IsNullOrEmpty(FileBox.Text) || !File.Exists(FileBox.Text))
-            {
-                MessageBox.Show("No files to process");
-                return;
-            }
-            else
-            {
-                filesToProcess.Add(String.Format("--filelist|\"{0}\"", FileBox.Text));
-            }
-
             //Get config settings
 
-            if (UseCFGButton.Checked && 
+            if (UseCFGButton.Checked &&
                 (String.IsNullOrEmpty(ConfigBox.Text) || !File.Exists(ConfigBox.Text)))
                 commandLine.AppendFormat("--config|\"{0}\"|", ConfigBox.Text);
 
@@ -438,7 +435,7 @@ namespace MSConvertGUI
                         msLevelsTotal += (string)row.Cells[1].Value + " ";
                         break;
                     case "peakPicking":
-                        var splitLine = ((string) row.Cells[1].Value ?? "true").Split();
+                        var splitLine = ((string)row.Cells[1].Value ?? "true").Split();
                         preferVendor = bool.Parse(splitLine[0]);
                         if (splitLine.Length > 1)
                             peakPickingTotal += splitLine[1] + " ";
@@ -450,6 +447,112 @@ namespace MSConvertGUI
                         commandLine.AppendFormat("--filter|{0} {1}|", row.Cells[0].Value, row.Cells[1].Value);
                         break;
                 }
+            }
+
+            if (!String.IsNullOrEmpty(msLevelsTotal))
+                commandLine.AppendFormat("--filter|msLevel {0}|", msLevelsTotal.Trim());
+            if (!String.IsNullOrEmpty(peakPickingTotal))
+                commandLine.AppendFormat("--filter|peakPicking {0} {1}|", preferVendor.ToString().ToLower(),
+                                         peakPickingTotal.Trim());
+            if (!String.IsNullOrEmpty(scanNumberTotal))
+                commandLine.AppendFormat("--filter|scanNumber {0}|", scanNumberTotal.Trim());
+
+            return commandLine.ToString();
+        }
+
+        private void SetControlsFromCommandline(string commandLine)
+        // if you update this, you probably need to update ConstructCommandLine too
+        {
+            // Get config settings
+            Precision32.Checked = (commandLine.IndexOf("--32")>=0);
+            Precision64.Checked = !Precision32.Checked;
+            WriteIndexBox.Checked = !(commandLine.IndexOf("--noindex")>=0);
+            UseZlibBox.Checked = (commandLine.IndexOf("--zlib")>=0);
+            GzipBox.Checked = (commandLine.IndexOf("--gzip")>=0);
+            string OutputExtension = "";
+
+            string[] words = commandLine.Split('|');
+            for (int i = 0; i < words.Length; i++)
+            {
+                switch (words[i])
+                {
+                    case "--config":
+                        UseCFGButton.Checked = true;
+                        ConfigBox.Text = words[++i];
+                        break;
+                    case "--ext":
+                        OutputExtension = words[++i];
+                        break;
+                    case "--mzXML":
+                    case "--mz5":
+                    case "--mgf":
+                    case "--text":
+                    case "--ms2":
+                    case "--cms2":
+                        OutputFormatBox.Text = words[i].Substring(2);
+                        break;
+                    case "--filter":
+                        var space = words[++i].IndexOf(' ');
+                        FilterDGV.Rows.Add(new [] { words[i].Substring(0,space),
+                            words[i].Substring(space+1) });
+                        break;
+                    case "--32":
+                    case "--noindex":
+                    case "--zlib":
+                    case "--gzip":
+                        break; // already handled these booleans above
+                    case "":
+                        break; // just that trailing "|"
+                    default:
+                        MessageBox.Show("skipping unknown config item \""+words[i]+"\"");
+                        for (int j=i+1;j<words.Length;j++)  // skip any args
+                        {
+                            if (words[j].StartsWith("--"))
+                            {
+                                i = j-1;
+                                break;
+                            }
+                            i++;
+                        }
+                        break;
+                }
+                if (OutputExtension != "")
+                {
+                    OutputExtensionBox.Text = OutputExtension;
+                }
+            }
+        }
+
+
+        private void SetDefaultsButton_Click(object sender, EventArgs e)
+        {
+            setCfgFromGUI();
+        }
+
+        private void StartButton_Click(object sender, EventArgs e)
+        {
+            var filesToProcess = new List<string>();
+            var commandLine = ConstructCommandline();
+
+            //Get files or filelist text
+            if (FileListRadio.Checked)
+            {
+                if (FileListBox.Items.Count == 0)
+                {
+                    MessageBox.Show("No files to process");
+                    return;
+                }
+
+                filesToProcess.AddRange(from string item in FileListBox.Items select item);
+            }
+            else if (String.IsNullOrEmpty(FileBox.Text) || !File.Exists(FileBox.Text))
+            {
+                MessageBox.Show("No files to process");
+                return;
+            }
+            else
+            {
+                filesToProcess.Add(String.Format("--filelist|\"{0}\"", FileBox.Text));
             }
 
             string outputFolder = String.IsNullOrEmpty(OutputBox.Text) ? Application.StartupPath
@@ -464,18 +567,36 @@ namespace MSConvertGUI
                 Directory.CreateDirectory(outputFolder);
             }
 
-            if (!String.IsNullOrEmpty(msLevelsTotal))
-                commandLine.AppendFormat("--filter|msLevel {0}|", msLevelsTotal.Trim());
-            if (!String.IsNullOrEmpty(peakPickingTotal))
-                commandLine.AppendFormat("--filter|peakPicking {0} {1}|", preferVendor.ToString().ToLower(),
-                                         peakPickingTotal.Trim());
-            if (!String.IsNullOrEmpty(scanNumberTotal))
-                commandLine.AppendFormat("--filter|scanNumber {0}|", scanNumberTotal.Trim());
 
-            var pf = new ProgressForm(filesToProcess, outputFolder, commandLine.ToString());
+            var pf = new ProgressForm(filesToProcess, outputFolder, commandLine);
             pf.Text = "Conversion Progress";
             pf.ShowDialog();
 
         }
+        private void setCfgFromGUI() // write a config file for current GUI state
+        {
+            string cfgFileName = MakeConfigfileName();
+            if (File.Exists(cfgFileName) &&
+                (MessageBox.Show("Config file \"" + cfgFileName + "\" already exists.  Do you want to replace it?",
+                                    "MSConvertGUI",
+                                    MessageBoxButtons.YesNo,
+                                    MessageBoxIcon.Question, MessageBoxDefaultButton.Button1) == DialogResult.No))
+            {
+                return;
+            }
+            string cmdline = ConstructCommandline();
+            File.WriteAllText(cfgFileName, cmdline);
+        }
+        private void SetGUIfromCfg(string cfgFileName) // populate buttons etc from config file
+        {
+            if (!File.Exists(cfgFileName))
+            {
+                MessageBox.Show("Can't find config file \"" + cfgFileName + "\"");
+                return;
+            }
+            string cmdline = File.ReadAllText(cfgFileName);
+            SetControlsFromCommandline(cmdline);
+        }
+
     }
 }
