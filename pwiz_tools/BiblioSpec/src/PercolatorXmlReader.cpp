@@ -65,6 +65,8 @@ bool PercolatorXmlReader::parseFile() {
     extensions.push_back(".pms2");
 
     vector<const char*> dirs;
+    dirs.push_back("../");
+    dirs.push_back("../../");
     dirs.push_back("../sequest/");
 
     BlibBuilder tmpBuilder;
@@ -86,7 +88,7 @@ bool PercolatorXmlReader::parseFile() {
         fullFilename += filename;
         SQTreader modsReader(tmpBuilder, fullFilename.c_str(), NULL);
         try{
-            modsReader.openRead();
+            modsReader.openRead(false);
         } catch(BlibException& e){ 
             const char* msg = e.what();
             if( strncmp(msg, "Couldn't open", strlen("Couldn't open")) == 0 ){

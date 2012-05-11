@@ -56,7 +56,7 @@ SQTreader::~SQTreader()
  * Open sqt file for reading.  Read in header and leave filepointer at
  * beginning of first record.
  */
-void SQTreader::openRead()
+void SQTreader::openRead(bool warnIfNotPercolated)
 {
     if(file.is_open())
         file.close();
@@ -118,12 +118,12 @@ void SQTreader::openRead()
             diffMods[(int)modSymbol] = modValue;
         }
 
-        if(buffer.find("Percolator") != string::npos) {
+        if( buffer.find("Percolator") != string::npos) {
             percolated = true;
         }
     }// next line
   
-    if( percolated == false ){
+    if( warnIfNotPercolated && percolated == false ){
         Verbosity::status("File was not processed by Percolator. "
                           "Filtering on xcorr.");
     }
@@ -135,7 +135,7 @@ void SQTreader::openRead()
  * SQT file and populates the vector of PSMs with the information.
  */
 bool SQTreader::parseFile() {
-    openRead();
+    openRead(true);
 
     vector<const char*> extensions;
     extensions.push_back(".ms2");

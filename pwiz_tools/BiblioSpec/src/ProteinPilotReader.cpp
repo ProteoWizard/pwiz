@@ -49,7 +49,9 @@ ProteinPilotReader::ProteinPilotReader(
   expectedNumPeaks_(0),
   curSpecMz_(0),
   probCutOff_(getScoreThreshold(PROT_PILOT)),
-  skipMods_(true)
+  skipMods_(true),
+  skipNTermMods_(false),
+  skipCTermMods_(false)
 {
     this->setFileName(xmlFileName); // this is done for the saxhandler
     curPSM_ = NULL;
@@ -121,14 +123,14 @@ void ProteinPilotReader::startElement(const XML_Char* name,
         // two kinds of mod-feature elements, in params and out
         // for now only do out of params
         if(state_ == SPECTRUM_STATE){
-            parseMatchModElement(attr);
+            parseMatchModElement(attr, false);
         }
     } else if (isElement("TERM_MOD_FEATURE", name)) {
         // two kinds of term-mod-feature elements, in params and out
         // for now only do out of params.
         // (separate from mod-feature for debugging)
         if(state_ == SPECTRUM_STATE){
-            parseMatchModElement(attr);
+            parseMatchModElement(attr, true);
         }
     } else if (isElement("MSMSPEAKS", name)) {
         state_ = PEAKS_STATE;
@@ -245,6 +247,8 @@ void ProteinPilotReader::parseMatchElement(const XML_Char** attr)
     curSpecMz_ = getDoubleRequiredAttrValue("mz", attr);
     //cerr << "keeping match score " << score << endl;
     skipMods_ = false;
+    skipNTermMods_ = ( strcmp(getAttrValue("nt", attr), "") == 0) ;
+    skipCTermMods_ = ( strcmp(getAttrValue("ct", attr), "") == 0) ;
 }
 
 void ProteinPilotReader::saveMatch(){
@@ -262,7 +266,7 @@ void ProteinPilotReader::saveMatch(){
     }
 }
 
-void ProteinPilotReader::parseMatchModElement(const XML_Char** attr)
+void ProteinPilotReader::parseMatchModElement(const XML_Char** attr, bool termMod)
 {
     
     if( skipMods_ ){
@@ -271,6 +275,14 @@ void ProteinPilotReader::parseMatchModElement(const XML_Char** attr)
     SeqMod mod;
     // get the position and the name
     mod.position = getIntRequiredAttrValue("pos", attr);
+    if (termMod) {
+        // Check for internal consistency, since group2xml can
+        // sometimes write bogus TERM_MOD_FEATURE tags.
+        if (skipNTermMods_ && mod.position == 1)
+            return;
+        if (skipCTermMods_ && mod.position == strlen(curPSM_->unmodSeq.c_str()))
+            return;
+    }
     string name = getRequiredAttrValue("mod", attr);
 
     // skip if it is the absence of a modification

@@ -92,35 +92,43 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 
    //get massType and search engine
    if(isElement("search_summary",name)) {
-       const char* search_engine = getAttrValue("search_engine",attr);
-       if(strncmp("Spectrum Mill", search_engine,
-                  strlen("Spectrum Mill")) == 0 ) {
-           Verbosity::comment(V_DEBUG, "Pepxml file is from Spectrum Mill.");
-           analysisType_ = SPECTRUM_MILL_ANALYSIS;
-           scoreType_ = SPECTRUM_MILL;
-           probCutOff = 0; // accept all psms
+       if (analysisType_ == UNKNOWN_ANALYSIS ) {
+           const char* search_engine = getAttrValue("search_engine",attr);
+           if(strncmp("Spectrum Mill", search_engine,
+                      strlen("Spectrum Mill")) == 0 ) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Spectrum Mill.");
+               analysisType_ = SPECTRUM_MILL_ANALYSIS;
+               scoreType_ = SPECTRUM_MILL;
+               probCutOff = 0; // accept all psms
 
-           lookUpBy_ = INDEX_ID; 
-           specReader_->setIdType(INDEX_ID);
-       } else if(strncmp("OMSSA", search_engine, strlen("OMSAA")) == 0) {
-           Verbosity::debug("Pepxml file is from OMSAA.");
-           analysisType_ = OMSSA_ANALYSIS;
-           scoreType_ = OMSSA_EXPECTATION_SCORE;
-           probCutOff = getScoreThreshold(OMSSA);
-       } else if(strncmp("Protein Prospector Search Compare", search_engine,
-                         strlen("Protein Prospector Search Compare")) == 0) {
-           Verbosity::comment(V_DEBUG, "Pepxml file is from Protein Prospector.");
-           analysisType_ = PROTEIN_PROSPECTOR_ANALYSIS;
-           scoreType_ = PROTEIN_PROSPECTOR_EXPECT;
-           probCutOff = getScoreThreshold(PROT_PROSPECT);
-       } else if(analysisType_ != PEPTIDE_PROPHET_ANALYSIS &&
-               strncmp("X! Tandem", search_engine,
-                       strlen("X! Tandem")) == 0) {
-           Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
-           analysisType_ = XTANDEM_ANALYSIS;
-           scoreType_ = TANDEM_EXPECTATION_VALUE;
-           probCutOff = getScoreThreshold(TANDEM);
-       }// else assume peptide prophet or inter prophet 
+               lookUpBy_ = INDEX_ID; 
+               specReader_->setIdType(INDEX_ID);
+           } else if(strncmp("OMSSA", search_engine, strlen("OMSAA")) == 0) {
+               Verbosity::debug("Pepxml file is from OMSAA.");
+               analysisType_ = OMSSA_ANALYSIS;
+               scoreType_ = OMSSA_EXPECTATION_SCORE;
+               probCutOff = getScoreThreshold(OMSSA);
+           } else if(strncmp("Protein Prospector Search Compare", search_engine,
+                             strlen("Protein Prospector Search Compare")) == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from Protein Prospector.");
+               analysisType_ = PROTEIN_PROSPECTOR_ANALYSIS;
+               scoreType_ = PROTEIN_PROSPECTOR_EXPECT;
+               probCutOff = getScoreThreshold(PROT_PROSPECT);
+           } else if(strncmp("SEQUEST", search_engine,
+                              strlen("SEQUEST")) == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from SEQUEST (Proteome Discoverer?).");
+               analysisType_ = PROTEOME_DISCOVERER_ANALYSIS;
+               scoreType_ = PERCOLATOR_QVALUE;
+               probCutOff = getScoreThreshold(SQT);
+           } else if(analysisType_ != PEPTIDE_PROPHET_ANALYSIS &&
+                   strncmp("X! Tandem", search_engine,
+                           strlen("X! Tandem")) == 0) {
+               Verbosity::comment(V_DEBUG, "Pepxml file is from X! Tandem.");
+               analysisType_ = XTANDEM_ANALYSIS;
+               scoreType_ = TANDEM_EXPECTATION_VALUE;
+               probCutOff = getScoreThreshold(TANDEM);
+           }// else assume peptide prophet or inter prophet 
+       }
        
        if(strcmp("monoisotopic",getAttrValue("fragment_mass_type",attr)) == 0)
            massType = 1;
@@ -145,6 +153,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
            analysisType_ == INTER_PROPHET_ANALYSIS ||
            analysisType_ == OMSSA_ANALYSIS ||
            analysisType_ == PROTEIN_PROSPECTOR_ANALYSIS ||
+           analysisType_ == PROTEOME_DISCOVERER_ANALYSIS ||
            analysisType_ == XTANDEM_ANALYSIS) {
            scanNumber = getIntRequiredAttrValue("start_scan",attr);
        }
@@ -193,9 +202,14 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        pepProb = getDoubleRequiredAttrValue("probability",attr);      
    } else if(analysisType_ == INTER_PROPHET_ANALYSIS && isElement("interprophet_result", name)) {
        pepProb = getDoubleRequiredAttrValue("probability",attr);      
-   } else if(state == STATE_SEARCH_HIT_BEST && isElement("search_score", name)
-             && strcmp(getAttrValue("name", attr), "expect") == 0){
-       pepProb = getDoubleRequiredAttrValue("value", attr);
+   } else if(state == STATE_SEARCH_HIT_BEST && isElement("search_score", name)) {
+       string score_name = getAttrValue("name", attr);
+       transform(score_name.begin(), score_name.end(), score_name.begin(), tolower);
+
+       if ((analysisType_ != PROTEOME_DISCOVERER_ANALYSIS && strcmp(score_name.c_str(), "expect") == 0) ||
+               (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && strcmp(score_name.c_str(), "q-value") == 0)) {
+            pepProb = getDoubleRequiredAttrValue("value", attr);
+       }
    }
    // no score for spectrum mill
    // mascot score is ??
@@ -309,6 +323,7 @@ bool PepXMLreader::scorePasses(double score){
 
     case OMSSA_ANALYSIS:
     case PROTEIN_PROSPECTOR_ANALYSIS:
+    case PROTEOME_DISCOVERER_ANALYSIS:
     case XTANDEM_ANALYSIS:
         if(score < probCutOff){
             return true;

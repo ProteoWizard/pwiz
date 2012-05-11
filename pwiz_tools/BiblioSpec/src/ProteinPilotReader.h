@@ -79,6 +79,8 @@ namespace BiblioSpec {
         double curSpecMz_;
         double probCutOff_;
         bool skipMods_;
+        bool skipNTermMods_;
+        bool skipCTermMods_;
         map<string, SpecData*> spectrumMap_;
         string nextWord_;  // tmp holder for element values
         map<string, double> elementTable_;
@@ -94,7 +96,7 @@ namespace BiblioSpec {
         void parseSpectrumFilename(const XML_Char** attr);
         void parseSpectrumElement(const XML_Char** attr);
         void parseMatchElement(const XML_Char** attr);
-        void parseMatchModElement(const XML_Char** attr);
+        void parseMatchModElement(const XML_Char** attr, bool termMod);
         double getModMass(const string& name);
         void parsePeaks(const XML_Char** attr);
         void saveMatch();

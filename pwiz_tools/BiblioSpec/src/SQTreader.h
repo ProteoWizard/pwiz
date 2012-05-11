@@ -51,7 +51,7 @@ class SQTreader : public BuildParser {
   ~SQTreader();
 
   bool parseFile(); // impelement BuildParser virtual function
-  void openRead();
+  void openRead(bool warnIfNotPercolated);
   void parseModifiedSeq(const char* modSeq, 
                         string& unmodSeq, 
                         vector<SeqMod>& mods,
