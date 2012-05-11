@@ -457,7 +457,7 @@ namespace pwiz.Skyline.Model
                 return formula1;
 
             var parts1 = ParseModParts(_massCalc, formula1);
-            var parts2 = ParseModParts(_massCalc, formula1);
+            var parts2 = ParseModParts(_massCalc, formula2);
 
             var sb = new StringBuilder();
             sb.Append(parts1[0]).Append(parts2[0]);
