@@ -25,8 +25,10 @@
 
 #include "PepXMLreader.h"
 #include "BlibMaker.h"
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
+namespace bal = boost::algorithm;
 
 namespace BiblioSpec {
 
@@ -204,7 +206,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        pepProb = getDoubleRequiredAttrValue("probability",attr);      
    } else if(state == STATE_SEARCH_HIT_BEST && isElement("search_score", name)) {
        string score_name = getAttrValue("name", attr);
-       transform(score_name.begin(), score_name.end(), score_name.begin(), tolower);
+	   bal::to_lower(score_name);
 
        if ((analysisType_ != PROTEOME_DISCOVERER_ANALYSIS && strcmp(score_name.c_str(), "expect") == 0) ||
                (analysisType_ == PROTEOME_DISCOVERER_ANALYSIS && strcmp(score_name.c_str(), "q-value") == 0)) {
