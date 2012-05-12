@@ -98,6 +98,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\DotNetZip-v1.8\Release\Ionic.Zip.dll</HintPath>
     </Reference>
+    <Reference Include="MathNet.Numerics">
+      <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="NHibernate, Version=2.0.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -605,6 +608,7 @@
     <Compile Include="Model\Proteome\BackgroundProteome.cs" />
     <Compile Include="Model\Proteome\BackgroundProteomeManager.cs" />
     <Compile Include="Model\Proteome\BackgroundProteomeSpec.cs" />
+    <Compile Include="Model\Results\ArrayPool.cs" />
     <Compile Include="Model\Results\Chromatogram.cs" />
     <Compile Include="Model\Results\ChromatogramCache.cs" />
     <Compile Include="Model\Results\ChromCacheBuilder.cs" />
@@ -619,6 +623,8 @@
     <Compile Include="Model\Results\Exception.cs" />
     <Compile Include="Model\Results\IsotopeDistInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
+    <Compile Include="Model\Results\MsxDemultiplexer.cs" />
+    <Compile Include="Model\Results\NumericsLsSolver.cs" />
     <Compile Include="Model\Results\PeptideChromData.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\SrmDocument.cs" />

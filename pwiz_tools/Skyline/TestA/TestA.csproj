@@ -92,6 +92,10 @@
     <Reference Include="Accessibility">
       <EmbedInteropTypes>False</EmbedInteropTypes>
     </Reference>
+    <Reference Include="MathNet.Numerics, Version=2011.4.17.0, Culture=neutral, PublicKeyToken=cd8b63ad3d691a37, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\pwiz\pwiz_tools\Shared\Lib\MathNet.Numerics.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=10.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core">
@@ -128,6 +132,8 @@
     <Compile Include="Results\ChromCacheMinimizerTest.cs" />
     <Compile Include="Results\AsymDiaTest.cs" />
     <Compile Include="Results\FullScanTest.cs" />
+    <Compile Include="Results\MsxTest.cs" />
+    <Compile Include="Results\NumericsLsSolverTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
@@ -174,6 +180,7 @@
     <None Include="Refine.zip" />
     <None Include="Results\AsymDIA.zip" />
     <None Include="Results\FullScan.zip" />
+    <None Include="Results\MsxTest.zip" />
     <None Include="SimpleDecoys.zip" />
     <EmbeddedResource Include="Results\HeavyVariable.sky" />
     <EmbeddedResource Include="Results\MultiLabel.sky" />

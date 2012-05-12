@@ -35,6 +35,12 @@ namespace pwiz.ProteowizardWrapper
         private SpectrumList _spectrumList;
         private SpectrumList _spectrumListCentroided;
         private ChromatogramList _chromatogramList;
+        private MsDataScanCache _scanCache;
+
+        /// <summary>
+        /// is the file multiplexed DIA?
+        /// </summary>
+        private readonly bool _isMsx;
 
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
 
@@ -72,17 +78,38 @@ namespace pwiz.ProteowizardWrapper
         private MsDataFileImpl(MSData msDataFile)
         {
             _msDataFile = msDataFile;
+            _isMsx = CheckMsx();
         }
 
         public MsDataFileImpl(string path)
         {
             _msDataFile = new MSDataFile(path);
+            _isMsx = CheckMsx();
         }
 
         public MsDataFileImpl(string path, int sampleIndex)
         {
             _msDataFile = new MSData();
             FULL_READER_LIST.read(path, _msDataFile, sampleIndex);
+            _isMsx = CheckMsx();
+        }
+
+        public void EnableCaching(int? cacheSize)
+        {
+            if (cacheSize == null || cacheSize.Value <= 0)
+            {
+                _scanCache = new MsDataScanCache();
+            }
+            else
+            {
+                _scanCache = new MsDataScanCache(cacheSize.Value);
+            }
+        }
+
+        public void DisableCaching()
+        {
+            _scanCache.Clear();
+            _scanCache = null;
         }
 
         public string RunId { get { return _msDataFile.run.id; } }
@@ -287,6 +314,63 @@ namespace pwiz.ProteowizardWrapper
             get { return _msDataFile.fileDescription.sourceFiles.Any(source => source.hasCVParam(CVID.MS_Waters_raw_file)); }
         }
 
+        public bool IsMsx
+        {
+            get { return _isMsx; }
+        }
+
+        /// <summary>
+        /// Checks the file to determine if it is MSX by analyzing the
+        /// placement of DIA windows for now the criteria is fairly loose:
+        /// MSX has: MS/MS scans w/ > 1 precursor isolation window in
+        /// one of the first 500 scans MS/MS scans after this one all have
+        /// the same number of precursors
+        /// </summary>
+        private bool CheckMsx()
+        {
+            if (!IsThermoFile)
+                return false;
+
+            // is there MS/MS w/ > 1 precursor in the first 500 scans?
+            int i;
+            int maxIndex = Math.Min(500, SpectrumCount);
+            int precursorsPerScan = 0;
+            for (i = 1; i < maxIndex; ++i )
+            {
+                if (GetMsLevel(i) != 2)
+                    continue;
+                var precursors = GetPrecursors(i);
+                if (precursors.Length < 1 || !precursors[0].PrecursorMz.HasValue)
+                    continue;
+                // if MS/MS spectrum only has a single precursor, this data
+                // is assumed to not be multiplexed
+                if (precursors.Length < 2)
+                    return false;
+                precursorsPerScan = precursors.Length;
+                break;
+            }
+
+            // there was an MS/MS in the first 500 scans w/ multiple precursors
+            // check that the next 20 MS/MS scans have the same number of precursors
+            
+            int msMsChecked = 1;
+            for (; i < SpectrumCount && msMsChecked <=20; ++i )
+            {
+                if (GetMsLevel(i) != 2)
+                    continue;
+                var precursors = GetPrecursors(i);
+                if (precursors.Length < 1 || !precursors[0].PrecursorMz.HasValue)
+                    continue;
+                int numPrecursors = precursors.Length;
+                if (numPrecursors!=precursorsPerScan)
+                    return false;
+                ++msMsChecked;
+            }
+
+            // return false; // for testing
+            return true;
+        }
+
         private ChromatogramList ChromatogramList
         {
             get
@@ -418,6 +502,19 @@ namespace pwiz.ProteowizardWrapper
 
         public MsDataSpectrum GetSpectrum(int scanIndex)
         {
+            if (_scanCache != null)
+            {
+                MsDataSpectrum returnSpectrum;
+                // check the scan for this cache
+                if (!_scanCache.TryGetSpectrum(scanIndex, out returnSpectrum))
+                {
+                    // spectrum not in the cache, pull it from the file
+                    returnSpectrum = GetSpectrum(SpectrumList.spectrum(scanIndex, true));
+                    // add it to the cache
+                    _scanCache.Add(scanIndex, returnSpectrum);
+                }
+                return returnSpectrum;
+            }
             using (var spectrum = SpectrumList.spectrum(scanIndex, true))
             {
                 return GetSpectrum(spectrum);
@@ -621,6 +718,16 @@ namespace pwiz.ProteowizardWrapper
             return param.timeInSeconds() / 60;
         }
 
+        public MsPrecursor[] GetPrecursors(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            {
+                MsPrecursor[] precursors = GetPrecursors(spectrum);
+                return precursors.Length > 0 ? precursors : GetPrecursors(scanIndex);
+            }
+        }
+
+
         private static MsPrecursor[] GetPrecursors(Spectrum spectrum)
         {
             return spectrum.precursors.Select(p =>
@@ -784,5 +891,57 @@ namespace pwiz.ProteowizardWrapper
         }
 
         #endregion
+    }
+    /// <summary>
+    /// A class to cache scans recently read from the file
+    /// </summary>
+    public class MsDataScanCache
+    {
+        private readonly int _cacheSize;
+        private readonly Dictionary<int, MsDataSpectrum> _cache;
+        /// <summary>
+        /// queue to keep track of order in which scans were added
+        /// </summary>
+        private readonly Queue<int> _scanStack;
+        public int Capacity { get { return _cacheSize; } }
+        public int Size { get { return _scanStack.Count; } }
+
+        public MsDataScanCache()
+            : this(100)
+        {
+        }
+
+        public MsDataScanCache(int cacheSize)
+        {
+            _cacheSize = cacheSize;
+            _cache = new Dictionary<int, MsDataSpectrum>(_cacheSize);
+            _scanStack = new Queue<int>();
+        }
+
+        public bool HasScan(int scanNum)
+        {
+            return _cache.ContainsKey(scanNum);
+        }
+
+        public void Add(int scanNum, MsDataSpectrum s)
+        {
+            if (_scanStack.Count() >= _cacheSize)
+            {
+                _cache.Remove(_scanStack.Dequeue());
+            }
+            _cache.Add(scanNum, s);
+            _scanStack.Enqueue(scanNum);
+        }
+
+        public bool TryGetSpectrum(int scanNum, out MsDataSpectrum spectrum)
+        {
+            return _cache.TryGetValue(scanNum, out spectrum);
+        }
+
+        public void Clear()
+        {
+            _cache.Clear();
+            _scanStack.Clear();
+        }
     }
 }

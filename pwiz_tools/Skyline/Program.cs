@@ -57,6 +57,8 @@ namespace pwiz.Skyline
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
+        // For testing SkylineRunner
+//        public static void Main(string[] args = null)
         public static void Main()
         {
             // don't allow 64-bit Skyline to run in a 32-bit process
@@ -71,6 +73,7 @@ namespace pwiz.Skyline
                 return;
             }
 
+//            if (args != null && args.Length > 0 && args[0] == "CMD")
             if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
