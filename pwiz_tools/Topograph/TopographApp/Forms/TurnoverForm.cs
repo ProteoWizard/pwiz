@@ -897,7 +897,7 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             locksForm = new LocksForm(Workspace);
-            locksForm.Show(DocumentPanel, DockState.Floating);
+            locksForm.Show(DocumentPanel, DockState.Floating); 
         }
 
         public PeptideAnalysis LoadPeptideAnalysis(long id)
@@ -940,7 +940,8 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         Title = "Export Workspace SQL",
                         Filter = "SQL Files (*.sql)|*.sql|All Files|*.*",
-                        InitialDirectory = Settings.Default.ExportResultsDirectory
+                        FileName = Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + ".sql",
+                        InitialDirectory = Settings.Default.ExportResultsDirectory,
                     })
                 {
                     if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
@@ -949,7 +950,7 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(fileDialog.FileName);
                     Settings.Default.Save();
-                    var workspace = Workspace;
+                    var workspace = new Workspace(Workspace.DatabasePath);
                     try
                     {
                         Workspace = null;

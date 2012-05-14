@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Deployment.Application;
 using System.Reflection;
 using System.Windows.Forms;
 
@@ -27,11 +28,11 @@ namespace pwiz.Topograph.ui.Forms
         public AboutDlg()
         {
             InitializeComponent();
-            this.Text = String.Format("About {0}", AssemblyTitle);
-            this.labelProductName.Text = AssemblyProduct;
-            this.labelVersion.Text = String.Format("Version {0}", AssemblyVersion);
-            this.labelCopyright.Text = AssemblyCopyright;
-            this.labelCompanyName.Text = AssemblyCompany;
+            this.Text = String.Format("About {0}", Program.AppName);
+            this.labelProductName.Text = "Topograph";
+            this.labelVersion.Text = String.Format("Version {0}", ApplicationDeployment.IsNetworkDeployed ? ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString() : "");
+            this.labelCopyright.Text = "Copyright © 2009-2012 University of Washington. All rights reserved.";
+            this.labelCompanyName.Text = "MacCoss Lab, Department of Genome Sciences, UW";
             this.textBoxDescription.Text = AssemblyDescription;
         }
 
