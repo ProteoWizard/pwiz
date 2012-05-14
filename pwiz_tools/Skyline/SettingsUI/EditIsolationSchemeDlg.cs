@@ -430,6 +430,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnCalculate_Click(object sender, EventArgs e)
         {
+            Calculate();
+        }
+
+        public void Calculate()
+        {
             using (var calculateDlg = new CalculateIsolationSchemeDlg())
             {
                 if (calculateDlg.ShowDialog() == DialogResult.OK)
@@ -667,16 +672,16 @@ namespace pwiz.Skyline.SettingsUI
             set { rbUseResultsData.Checked = value; rbPrespecified.Checked = !value; }
         }
 
-        public string PrecursorFilter
+        public double? PrecursorFilter
         {
-            get { return textPrecursorFilterMz.Text; }
-            set { textPrecursorFilterMz.Text = value; }
+            get { return Helpers.ParseNullableDouble(textPrecursorFilterMz.Text); }
+            set { textPrecursorFilterMz.Text = Helpers.NullableDoubleToString(value); }
         }
 
-        public string PrecursorRightFilter
+        public double? PrecursorRightFilter
         {
-            get { return textRightPrecursorFilterMz.Visible ? textRightPrecursorFilterMz.Text : ""; }
-            set { textRightPrecursorFilterMz.Text = value; }
+            get { return textRightPrecursorFilterMz.Visible ? Helpers.ParseNullableDouble(textRightPrecursorFilterMz.Text) : null; }
+            set { textRightPrecursorFilterMz.Text = Helpers.NullableDoubleToString(value); }
         }
 
         public bool AsymmetricFilter
@@ -704,10 +709,10 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public string WindowsPerScan
+        public double? WindowsPerScan
         {
-            get { return textWindowsPerScan.Text; }
-            set { textWindowsPerScan.Text = value; }
+            get { return Helpers.ParseNullableDouble(textWindowsPerScan.Text); }
+            set { textWindowsPerScan.Text = Helpers.NullableDoubleToString(value); }
         }
 
         public bool SpecifyTarget

@@ -64,8 +64,8 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.IsolationSchemeName, "");
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, "2");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 2);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
                         editDlg.IsolationSchemeName = "test1";
                         editDlg.OkDialog();
                     });
@@ -84,8 +84,8 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.IsolationSchemeName, "");
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, "2");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 2);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
                         editDlg.IsolationSchemeName = "test1";
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -108,10 +108,10 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.IsolationSchemeName, "test1");
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, "2");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 2);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
                         editDlg.IsolationSchemeName = "test2";
-                        editDlg.PrecursorFilter = "50";
+                        editDlg.PrecursorFilter = 50;
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -127,11 +127,11 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, "50");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 50);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
                         editDlg.AsymmetricFilter = true;
-                        Assert.AreEqual(editDlg.PrecursorFilter, "25");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "25");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 25);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, 25);
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -147,10 +147,10 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsTrue(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, "25");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "25");
-                        editDlg.PrecursorFilter = "1";
-                        editDlg.PrecursorRightFilter = "2";
+                        Assert.AreEqual(editDlg.PrecursorFilter, 25);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, 25);
+                        editDlg.PrecursorFilter = 1;
+                        editDlg.PrecursorRightFilter = 2;
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -166,11 +166,11 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsTrue(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, "1");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "2");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 1);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, 2);
                         editDlg.AsymmetricFilter = false;
-                        Assert.AreEqual(editDlg.PrecursorFilter, "3");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 3);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -186,14 +186,14 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, "3");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 3);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
                         editDlg.AsymmetricFilter = true;
-                        Assert.AreEqual(double.Parse(editDlg.PrecursorFilter), 1.5);
-                        Assert.AreEqual(double.Parse(editDlg.PrecursorRightFilter), 1.5);
-                        editDlg.PrecursorRightFilter = "";
+                        Assert.AreEqual(editDlg.PrecursorFilter, 1.5);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, 1.5);
+                        editDlg.PrecursorRightFilter = null;
                         editDlg.AsymmetricFilter = false;
-                        Assert.AreEqual(editDlg.PrecursorFilter, "3");
+                        Assert.AreEqual(editDlg.PrecursorFilter, 3);
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -209,9 +209,9 @@ namespace pwiz.SkylineTestFunctional
                         Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
-                        Assert.AreEqual(editDlg.PrecursorFilter, "3");
-                        Assert.AreEqual(editDlg.PrecursorRightFilter, "");
-                        editDlg.PrecursorFilter = "x";
+                        Assert.AreEqual(editDlg.PrecursorFilter, 3);
+                        Assert.AreEqual(editDlg.PrecursorRightFilter, null);
+                        editDlg.PrecursorFilter = null;
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -220,7 +220,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test minimum isolation width.
-                RunUI(() => editDlg.PrecursorFilter = "0");
+                RunUI(() => editDlg.PrecursorFilter = 0);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.Contains(messageDlg.Message,
@@ -229,7 +229,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test maximum isolation width.
-                RunUI(() => editDlg.PrecursorFilter = "10001");
+                RunUI(() => editDlg.PrecursorFilter = 10001);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.Contains(messageDlg.Message,
@@ -239,7 +239,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // Test maximum right isolation width.
                 RunUI(() => editDlg.AsymmetricFilter = true);
-                RunUI(() => editDlg.PrecursorFilter = "1");
+                RunUI(() => editDlg.PrecursorFilter = 1);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.Contains(messageDlg.Message,
@@ -248,7 +248,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test minimum right isolation width.
-                RunUI(() => editDlg.PrecursorRightFilter = "0");
+                RunUI(() => editDlg.PrecursorRightFilter = 0);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.Contains(messageDlg.Message,
@@ -257,7 +257,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test non-numeric right isolation width.
-                RunUI(() => editDlg.PrecursorRightFilter = "");
+                RunUI(() => editDlg.PrecursorRightFilter = null);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.Contains(messageDlg.Message, "Isolation widths must contain a decimal value.");
@@ -277,9 +277,9 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("0");
+                        editDlg.IsolationWindowGrid.SetCellValue(0);
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("1");
+                        editDlg.IsolationWindowGrid.SetCellValue(100);
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -291,9 +291,9 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("10001");
+                        editDlg.IsolationWindowGrid.SetCellValue(10001);
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("10002");
+                        editDlg.IsolationWindowGrid.SetCellValue(10002);
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -319,9 +319,9 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("1");
+                        editDlg.IsolationWindowGrid.SetCellValue(100);
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("0");
+                        editDlg.IsolationWindowGrid.SetCellValue(0);
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -333,7 +333,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("10001");
+                        editDlg.IsolationWindowGrid.SetCellValue(10001);
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -347,7 +347,7 @@ namespace pwiz.SkylineTestFunctional
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start, 0);
                         editDlg.IsolationWindowGrid.SetCellValue("");
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("1");
+                        editDlg.IsolationWindowGrid.SetCellValue(100);
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -359,7 +359,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("1");
+                        editDlg.IsolationWindowGrid.SetCellValue(100);
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
                         editDlg.IsolationWindowGrid.SetCellValue("");
                     });
@@ -373,9 +373,9 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("1");
+                        editDlg.IsolationWindowGrid.SetCellValue(100);
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("5");
+                        editDlg.IsolationWindowGrid.SetCellValue(500);
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -392,10 +392,10 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, 5.0 }
+                                new double?[] { 100.0, 500.0 }
                             });
                         editDlg.SpecialHandling = IsolationScheme.SpecialHandlingType.MULTIPLEXED;
-                        editDlg.WindowsPerScan = "5";
+                        editDlg.WindowsPerScan = 5;
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -412,12 +412,12 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, 5.0 }
+                                new double?[] { 100.0, 500.0 }
                             });
                         Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.MULTIPLEXED);
-                        Assert.AreEqual(editDlg.WindowsPerScan, "5");
+                        Assert.AreEqual(editDlg.WindowsPerScan, 5);
                         editDlg.WindowsPerScan = 
-                            (IsolationScheme.MIN_MULTIPLEXED_ISOLATION_WINDOWS - 1).ToString(CultureInfo.CurrentCulture); // Below minimum value
+                            IsolationScheme.MIN_MULTIPLEXED_ISOLATION_WINDOWS - 1; // Below minimum value
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -427,7 +427,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Test maximum windows per scan.
-                RunUI(() => editDlg.WindowsPerScan = (IsolationScheme.MAX_MULTIPLEXED_ISOLATION_WINDOWS + 1).ToString(CultureInfo.CurrentCulture)); // Above maximum value
+                RunUI(() => editDlg.WindowsPerScan = IsolationScheme.MAX_MULTIPLEXED_ISOLATION_WINDOWS + 1); // Above maximum value
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
                         AssertEx.Contains(messageDlg.Message,
@@ -455,10 +455,10 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, 5.0 }
+                                new double?[] { 100.0, 500.0 }
                             });
                         Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, "");
+                        Assert.AreEqual(editDlg.WindowsPerScan, null);
                         editDlg.SpecifyTarget = true;
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -471,7 +471,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.target, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("2");
+                        editDlg.IsolationWindowGrid.SetCellValue(200);
                     });
                 OkDialog(editDlg, editDlg.OkDialog);
             }
@@ -487,14 +487,14 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, 5.0, 2.0 }
+                                new double?[] { 100.0, 500.0, 200.0 }
                             });
                         Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, "");
+                        Assert.AreEqual(editDlg.WindowsPerScan, null);
                         Assert.IsTrue(editDlg.SpecifyTarget);
                         Assert.AreEqual(editDlg.MarginType, EditIsolationSchemeDlg.WindowMargin.NONE);
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.target, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("5"); // Outside window
+                        editDlg.IsolationWindowGrid.SetCellValue(550); // Outside window
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -507,7 +507,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.target, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("2");
+                        editDlg.IsolationWindowGrid.SetCellValue(2);
                         editDlg.MarginType = EditIsolationSchemeDlg.WindowMargin.SYMMETRIC;
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
@@ -528,7 +528,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start_margin, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("-1");
+                        editDlg.IsolationWindowGrid.SetCellValue(-1);
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -552,7 +552,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.start_margin, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("1");
+                        editDlg.IsolationWindowGrid.SetCellValue(1);
                     });
                 OkDialog(editDlg, editDlg.OkDialog);
             }
@@ -568,10 +568,10 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, 5.0, 1.0 }
+                                new double?[] { 100.0, 500.0, 1.0 }
                             });
                         Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, "");
+                        Assert.AreEqual(editDlg.WindowsPerScan, null);
                         Assert.IsFalse(editDlg.SpecifyTarget);
                         Assert.AreEqual(editDlg.MarginType, EditIsolationSchemeDlg.WindowMargin.SYMMETRIC);
                     });
@@ -589,10 +589,10 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, 5.0, 1.0 }
+                                new double?[] { 100.0, 500.0, 1.0 }
                             });
                         Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, "");
+                        Assert.AreEqual(editDlg.WindowsPerScan, null);
                         Assert.IsFalse(editDlg.SpecifyTarget);
                         Assert.AreEqual(editDlg.MarginType, EditIsolationSchemeDlg.WindowMargin.SYMMETRIC);
                         editDlg.MarginType = EditIsolationSchemeDlg.WindowMargin.ASYMMETRIC;
@@ -607,7 +607,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end_margin, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("-1");
+                        editDlg.IsolationWindowGrid.SetCellValue(-1);
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
@@ -631,7 +631,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end_margin, 0);
-                        editDlg.IsolationWindowGrid.SetCellValue("2");
+                        editDlg.IsolationWindowGrid.SetCellValue(2);
                     });
                 OkDialog(editDlg, editDlg.OkDialog);
             }
@@ -647,17 +647,17 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, 5.0, 1.0, 2.0 }
+                                new double?[] { 100.0, 500.0, 1.0, 2.0 }
                             });
 
                         Assert.AreEqual(editDlg.SpecialHandling, IsolationScheme.SpecialHandlingType.NONE);
-                        Assert.AreEqual(editDlg.WindowsPerScan, "");
+                        Assert.AreEqual(editDlg.WindowsPerScan, null);
                         Assert.IsFalse(editDlg.SpecifyTarget);
                         Assert.AreEqual(editDlg.MarginType, EditIsolationSchemeDlg.WindowMargin.ASYMMETRIC);
                     });
 
                 // Paste one number.
-                const double pasteValue = 73.6789;
+                const double pasteValue = 173.6789;
                 ClipboardEx.SetText(pasteValue.ToString(CultureInfo.CurrentCulture));
                 RunUI(() =>
                     {
@@ -665,39 +665,39 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsTrue(editDlg.IsolationWindowGrid.HandleKeyDown(Keys.V, true));
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, pasteValue, 1.0, 2.0 }
+                                new double?[] { 100.0, pasteValue, 1.0, 2.0 }
                             });
                     });
 
                 // Paste unsorted list, start only (end calculated).
-                ClipboardEx.SetText("35\n10\n5\n20");
+                ClipboardEx.SetText("350\n100\n50\n200");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
                         editDlg.IsolationWindowGrid.OnPaste();
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 5.0, 10.0, null, null },
-                                new double?[] {10.0, 20.0, null, null  },
-                                new double?[] {20.0, 35.0, null, null  }
+                                new double?[] { 50.0, 100.0, null, null },
+                                new double?[] {100.0, 200.0, null, null  },
+                                new double?[] {200.0, 350.0, null, null  }
                             });
                     });
 
                 // Paste unsorted list, start, end, start margin and end margin.
-                ClipboardEx.SetText("10\t20\t1\t1\n1\t5\t1\t2\n");
+                ClipboardEx.SetText("100\t200\t1\t1\n50\t100\t1\t2\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
                         editDlg.IsolationWindowGrid.OnPaste();
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0,  5.0, 1.0, 2.0 },
-                                new double?[] {10.0, 20.0, 1.0, 1.0  }
+                                new double?[] { 50.0, 100.0, 1.0, 2.0 },
+                                new double?[] {100.0, 200.0, 1.0, 1.0  }
                             });
                     });
 
                 // Paste list, calculate missing ends and targets.
-                ClipboardEx.SetText("1\t10\t2\n  11\t\t\n  15\t\t16\n  17\t18\t\n  20\t\t\n  30\t\t\n");
+                ClipboardEx.SetText("100\t110\t105\n  111\t\t\n  115\t\t116\n  117\t118\t\n  200\t\t\n  300\t\t\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 1);
@@ -706,16 +706,16 @@ namespace pwiz.SkylineTestFunctional
                         editDlg.IsolationWindowGrid.OnPaste();
                         VerifyCellValues(editDlg, new[]
                             {
-                                new double?[] { 1.0, 10.0,  2.0 },
-                                new double?[] {11.0, 15.0, 13.0 },
-                                new double?[] {15.0, 17.0, 16.0 },
-                                new double?[] {17.0, 18.0, 17.5 },
-                                new double?[] {20.0, 30.0, 25.0 }
+                                new double?[] {100.0, 110.0, 105.0 },
+                                new double?[] {111.0, 115.0, 113.0 },
+                                new double?[] {115.0, 117.0, 116.0 },
+                                new double?[] {117.0, 118.0, 117.5 },
+                                new double?[] {200.0, 300.0, 250.0 }
                             });
                     });
 
                 // Paste with non-numeric data.
-                ClipboardEx.SetText("1\n10\n20x\n");
+                ClipboardEx.SetText("100\n110\n200x\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 1);
@@ -725,20 +725,20 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<MessageDlg>(() => editDlg.IsolationWindowGrid.OnPaste(), messageDlg =>
                     {
                         AssertEx.Contains(messageDlg.Message,
-                            @"An invalid number (""20x"") was specified for Start on line 3.");
+                            @"An invalid number (""200x"") was specified for Start on line 3.");
                         messageDlg.OkDialog();
                     });
                 RunUI(() => VerifyCellValues(editDlg, new[]
                     {
-                        new double?[] { 1.0, 10.0,  2.0 },
-                        new double?[] {11.0, 15.0, 13.0 },
-                        new double?[] {15.0, 17.0, 16.0 },
-                        new double?[] {17.0, 18.0, 17.5 },
-                        new double?[] {20.0, 30.0, 25.0 }
+                        new double?[] {100.0, 110.0, 105.0 },
+                        new double?[] {111.0, 115.0, 113.0 },
+                        new double?[] {115.0, 117.0, 116.0 },
+                        new double?[] {117.0, 118.0, 117.5 },
+                        new double?[] {200.0, 300.0, 250.0 }
                     }));
 
                 // Paste below minimum start value.
-                ClipboardEx.SetText("0\n10\n20\n");
+                ClipboardEx.SetText("0\n100\n200\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 1);
@@ -753,15 +753,15 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunUI(() => VerifyCellValues(editDlg, new[]
                     {
-                        new double?[] { 1.0, 10.0,  2.0 },
-                        new double?[] {11.0, 15.0, 13.0 },
-                        new double?[] {15.0, 17.0, 16.0 },
-                        new double?[] {17.0, 18.0, 17.5 },
-                        new double?[] {20.0, 30.0, 25.0 }
+                        new double?[] {100.0, 110.0, 105.0 },
+                        new double?[] {111.0, 115.0, 113.0 },
+                        new double?[] {115.0, 117.0, 116.0 },
+                        new double?[] {117.0, 118.0, 117.5 },
+                        new double?[] {200.0, 300.0, 250.0 }
                     }));
 
                 // Paste above maximum end value.
-                ClipboardEx.SetText("1\n10\n10001\n");
+                ClipboardEx.SetText("100\n110\n10001\n");
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 1);
@@ -779,11 +779,11 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunUI(() => VerifyCellValues(editDlg, new[]
                     {
-                        new double?[] { 1.0, 10.0,  2.0 },
-                        new double?[] {11.0, 15.0, 13.0 },
-                        new double?[] {15.0, 17.0, 16.0 },
-                        new double?[] {17.0, 18.0, 17.5 },
-                        new double?[] {20.0, 30.0, 25.0 }
+                        new double?[] {100.0, 110.0, 105.0 },
+                        new double?[] {111.0, 115.0, 113.0 },
+                        new double?[] {115.0, 117.0, 116.0 },
+                        new double?[] {117.0, 118.0, 117.5 },
+                        new double?[] {200.0, 300.0, 250.0 }
                     }));
 
                 OkDialog(editDlg, editDlg.OkDialog);

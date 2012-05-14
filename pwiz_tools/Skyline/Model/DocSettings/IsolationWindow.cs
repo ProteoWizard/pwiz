@@ -36,8 +36,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public double? StartMargin { get; private set; }
         public double? EndMargin { get; private set; }
 
-//        public double MethodStart { get { return Start - (StartMargin ?? 0); } }
-//        public double MethodEnd { get { return End + (EndMargin ?? (StartMargin ?? 0)); } }
+        public double MethodStart { get { return Math.Max(Start - (StartMargin ?? 0), TransitionFullScan.MIN_RES_MZ); } }
+        public double MethodEnd { get { return Math.Min(End + (EndMargin ?? (StartMargin ?? 0)), TransitionFullScan.MAX_RES_MZ); } }
+
+        public double IsolationStart { get { return MethodStart + (StartMargin ?? 0); } }
+        public double IsolationEnd { get { return MethodEnd - (EndMargin ?? (StartMargin ?? 0)); } }
 
         public IsolationWindow(double start, double end, double? target = null, double? startMargin = null, double? endMargin = null)
         {
@@ -101,6 +104,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         throw new InvalidDataException("Isolation window margin must be non-negative.");
                     }
+                }
+                if (IsolationStart >= IsolationEnd)
+                {
+                    // If the margins are too large, clipping at the ends of the instrument range may result in no useable window area.
+                    throw new InvalidDataException(
+                        "Isolation window margins cover the entire isolation window at the extremes of the instrument range.");
                 }
             }
         }

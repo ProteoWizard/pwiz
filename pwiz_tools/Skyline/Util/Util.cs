@@ -1302,6 +1302,17 @@ namespace pwiz.Skyline.Util
         {
             TryTwice<IOException>(action, 500);
         }
+
+        public static double? ParseNullableDouble(string s)
+        {
+            double d;
+            return double.TryParse(s, out d) ? d : (double?)null;
+        }
+
+        public static string NullableDoubleToString(double? d)
+        {
+            return d.HasValue ? d.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
+        }
     }
 
     public static class MathEx

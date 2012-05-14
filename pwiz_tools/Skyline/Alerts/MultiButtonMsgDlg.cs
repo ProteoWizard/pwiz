@@ -95,5 +95,11 @@ namespace pwiz.Skyline.Alerts
             CheckDisposed();
             btnCancel.PerformClick();
         }
+
+        public string Message
+        {
+            get { return labelMessage.Text; }
+            set { labelMessage.Text = value;}
+        }
     }
 }

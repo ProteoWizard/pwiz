@@ -571,7 +571,6 @@ namespace pwiz.SkylineTestFunctional
 
             // Close the Library Explorer dialog
             OkDialog(_viewLibUI, _viewLibUI.CancelDialog);
-            WaitForClosedForm(_viewLibUI);
         }
 
         private ComboBox _libComboBox;

@@ -20,15 +20,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Globalization;
+using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
-    public partial class CalculateIsolationSchemeDlg : Form
+    public partial class CalculateIsolationSchemeDlg : FormEx
     {
         public IList<EditIsolationWindow> IsolationWindows { get { return CreateIsolationWindows(); } }
 
@@ -98,10 +99,6 @@ namespace pwiz.Skyline.SettingsUI
             // and the starting offset of the windows.
             if (cbOptimizeWindowPlacement.Checked)
             {
-                if (overlap > 0)
-                {
-                    return isolationWindows;
-                }
                 windowWidth = Math.Ceiling(windowWidth) * OPTIMIZED_WINDOW_WIDTH_MULTIPLE;
                 start = Math.Floor(start / windowWidth) * windowWidth + OPTIMIZED_WINDOW_OFFSET;
             }
@@ -154,23 +151,11 @@ namespace pwiz.Skyline.SettingsUI
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this);
 
+            // Validate start and end.
             double start;
             double end;
-            double windowWidth;
-            double overlap;
-            double marginLeft;
-            double marginRight;
             if (!helper.ValidateDecimalTextBox(e, textStart, TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out start) ||
-                !helper.ValidateDecimalTextBox(e, textEnd, TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out end) ||
-                !helper.ValidateDecimalTextBox(e, textWidth, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
-                    TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out windowWidth) ||
-                (textOverlap.Enabled && textOverlap.Text.Trim().Length > 0 && !helper.ValidateDecimalTextBox(e, textOverlap, 0, 99, out overlap)) ||
-                (!Equals(comboMargins.SelectedItem.ToString(), WindowMargin.NONE) &&
-                    !helper.ValidateDecimalTextBox(e, textMarginLeft, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
-                        TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginLeft)) ||
-                (Equals(comboMargins.SelectedItem.ToString(), WindowMargin.ASYMMETRIC) &&
-                    !helper.ValidateDecimalTextBox(e, textMarginRight, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
-                        TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginRight)))
+                !helper.ValidateDecimalTextBox(e, textEnd, TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out end))
             {
                 return;
             }
@@ -178,6 +163,49 @@ namespace pwiz.Skyline.SettingsUI
             if (start >= end)
             {
                 MessageDlg.Show(this, "Start value must be less than End value.");
+                return;
+            }
+
+            // Validate window width.
+            double windowWidth;
+            if (!helper.ValidateDecimalTextBox(e, textWidth, 1, TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out windowWidth))
+            {
+                return;
+            }
+
+            if (windowWidth > end - start)
+            {
+                MessageDlg.Show(this, "Window width must be less than or equal to the isolation range.");
+                return;
+            }
+
+            // Validate overlap.
+            double overlap;
+            if (textOverlap.Enabled && textOverlap.Text.Trim().Length > 0 && !helper.ValidateDecimalTextBox(e, textOverlap, 0, 99, out overlap))
+            {
+                return;
+            }
+
+            // Validate margins.
+            double marginLeft = 0.0;
+            double marginRight = 0.0;
+            if (!Equals(comboMargins.SelectedItem.ToString(), WindowMargin.NONE) &&
+                    !helper.ValidateDecimalTextBox(e, textMarginLeft, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
+                        TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginLeft) ||
+                (Equals(comboMargins.SelectedItem.ToString(), WindowMargin.ASYMMETRIC) &&
+                    !helper.ValidateDecimalTextBox(e, textMarginRight, TransitionInstrument.MIN_MZ_MATCH_TOLERANCE, 
+                        TransitionFullScan.MAX_RES_MZ - TransitionFullScan.MIN_RES_MZ, out marginRight)))
+            {
+                return;
+            }
+
+            try
+            {
+                new IsolationWindow(start, end, null, marginLeft, marginRight);
+            }
+            catch (InvalidDataException x)
+            {
+                MessageDlg.Show(this, x.Message);
                 return;
             }
 
@@ -250,5 +278,62 @@ namespace pwiz.Skyline.SettingsUI
         {
             OkDialog();
         }
+
+        #region Functional Test Support
+
+        public double? Start
+        {
+            get { return Helpers.ParseNullableDouble(textStart.Text); }
+            set { textStart.Text = Helpers.NullableDoubleToString(value); }
+        }
+
+        public double? End
+        {
+            get { return Helpers.ParseNullableDouble(textEnd.Text); }
+            set { textEnd.Text = Helpers.NullableDoubleToString(value); }
+        }
+
+        public double? WindowWidth
+        {
+            get { return Helpers.ParseNullableDouble(textWidth.Text); }
+            set { textWidth.Text = Helpers.NullableDoubleToString(value); }
+        }
+
+        public double? Overlap
+        {
+            get { return Helpers.ParseNullableDouble(textOverlap.Text); }
+            set { textOverlap.Text = Helpers.NullableDoubleToString(value); }
+        }
+
+        public string Margins
+        {
+            get { return comboMargins.SelectedItem.ToString(); }
+            set { comboMargins.SelectedItem = value; }
+        }
+
+        public double? MarginLeft
+        {
+            get { return Helpers.ParseNullableDouble(textMarginLeft.Text); }
+            set { textMarginLeft.Text = Helpers.NullableDoubleToString(value); }
+        }
+
+        public double? MarginRight
+        {
+            get { return Helpers.ParseNullableDouble(textMarginRight.Text); }
+            set { textMarginRight.Text = Helpers.NullableDoubleToString(value); }
+        }
+
+        public bool GenerateTarget
+        {
+            get { return cbGenerateMethodTarget.Checked; }
+            set { cbGenerateMethodTarget.Checked = value; }
+        }
+
+        public bool OptimizeWindowPlacement
+        {
+            get { return cbOptimizeWindowPlacement.Checked; }
+            set { cbOptimizeWindowPlacement.Checked = value; }
+        }
+        #endregion
     }
 }

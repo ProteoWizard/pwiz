@@ -50,7 +50,7 @@ namespace pwiz.SkylineTestA
 // ReSharper restore ReturnValueOfPureMethodIsNotUsed
 
             // Test IsolationWindow object methods
-            var isolationWindow = new IsolationWindow(1.0, 10.0, 5.0, 1.0, 1.0);
+            var isolationWindow = new IsolationWindow(100.0, 150.0, 125.0, 1.0, 1.0);
             isolationWindow.Equals(null);
             isolationWindow.Equals(isolationWindow);
 // ReSharper disable ReturnValueOfPureMethodIsNotUsed
@@ -130,10 +130,10 @@ namespace pwiz.SkylineTestA
                 <isolation_scheme name=""SYMMETRIC_FILTER"" precursor_filter=""1""/>
                 <isolation_scheme name=""ASYMMETRIC_FILTER"" precursor_left_filter=""1"" precursor_right_filter=""2""/>
                 <isolation_scheme name=""SPECIAL_HANDLING_NONE"">
-                    <isolation_window start=""1"" end=""10"" target=""5"" margin_left=""1"" margin_right=""2""/>
+                    <isolation_window start=""100"" end=""150"" target=""125"" margin_left=""1"" margin_right=""2""/>
                 </isolation_scheme>
                 <isolation_scheme name=""SPECIAL_HANDLING_MULTIPLEXED"" special_handling=""Multiplexed"" windows_per_scan=""2"">
-                    <isolation_window start=""1"" end=""10"" target=""5"" margin=""1""/>
+                    <isolation_window start=""100"" end=""150"" target=""125"" margin=""1""/>
                 </isolation_scheme>
                 <isolation_scheme name=""SPECIAL_HANDLING_MS_E"" special_handling=""MSe"" />
             </IsolationSchemeList>";
