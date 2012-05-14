@@ -86,6 +86,12 @@ bool PercolatorXmlReader::parseFile() {
         string fullFilename = getPath(getSpecFileName());
         replaceExtension(filename, "sqt");
         fullFilename += filename;
+        ifstream file(fullFilename.c_str());
+        if(!file.good()) {
+            fullFilename = getPath(getFileName());
+            fullFilename += filename;
+        }
+
         SQTreader modsReader(tmpBuilder, fullFilename.c_str(), NULL);
         try{
             modsReader.openRead(false);
