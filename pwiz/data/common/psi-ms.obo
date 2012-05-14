@@ -1,13 +1,13 @@
 format-version: 1.2
-data-version: 3.18.0
-date: 10:02:2012 17:09
+data-version: 3.25.0
+date: 09:05:2012 16:37
 saved-by: Gerhard Mayer
 auto-generated-by: OBO-Edit 2.1
 import: http://unit-ontology.googlecode.com/svn/trunk/unit.obo
 default-namespace: MS
 remark: namespace: MS
-remark: version: 3.18.0
-remark: release date: 2012-02-10
+remark: version: 3.25.0
+remark: release date: 2012-05-09
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -923,6 +923,8 @@ id: MS:1000133
 name: collision-induced dissociation
 def: "The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended." [PSI:MS]
 synonym: "CID" EXACT []
+synonym: "CAD" EXACT []
+synonym: "collision activated dissociation" EXACT []
 is_a: MS:1000044 ! dissociation method
 
 [Term]
@@ -2801,6 +2803,7 @@ is_a: MS:1000437 ! ion reaction
 id: MS:1000422
 name: high-energy collision-induced dissociation
 def: "A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV." [PSI:MS]
+synonym: "HCD" EXACT []
 is_a: MS:1000044 ! dissociation method
 
 [Term]
@@ -2880,7 +2883,8 @@ is_a: MS:1000437 ! ion reaction
 id: MS:1000435
 name: photodissociation
 def: "A process wherein the reactant ion is dissociated as a result of absorption of one or more photons." [PSI:MS]
-synonym: "Multiphoton Dissociation" EXACT []
+synonym: "multiphoton dissociation" EXACT []
+synonym: "MPD" EXACT []
 is_a: MS:1000044 ! dissociation method
 
 [Term]
@@ -5653,7 +5657,7 @@ relationship: part_of MS:1000840 ! laser
 [Term]
 id: MS:1000842
 name: laser type
-def: "Type of laser used used fpr desorption purpose." [PSI:MS]
+def: "Type of laser used used for desorption purpose." [PSI:MS]
 relationship: part_of MS:1000840 ! laser
 
 [Term]
@@ -5860,7 +5864,7 @@ is_a: MS:1000531 ! software
 [Term]
 id: MS:1000872
 name: MaRiMba
-def: "Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba." [PSI:MS]
+def: "Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology." [http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba ""]
 is_a: MS:1000871 ! SRM software
 
 [Term]
@@ -5872,7 +5876,7 @@ is_a: MS:1000531 ! software
 [Term]
 id: MS:1000874
 name: SSRCalc
-def: "Sequence Specific Retention Calculator esimates the retention time of peptides based on their sequence. It is available at http://hs2.proteome.ca/SSRCalc/SSRCalc.html." [PSI:MS]
+def: "Sequence Specific Retention Calculator esimates the retention time of peptides based on their sequence." [http://hs2.proteome.ca/SSRCalc/SSRCalc.html ""]
 is_a: MS:1000873 ! peptide attribute calculation software
 
 [Term]
@@ -5975,7 +5979,8 @@ is_a: MS:1000887 ! peptide attribute
 [Term]
 id: MS:1000889
 name: modified peptide sequence
-def: "A sequence of letter symbols denoting the order of amino acids that compose the peptide plus the encoding any amino acid mass modifications that are present using the notation where the total mass of the modified amino acid is specified in square bracketed numbers following the letter (e.g. R[162.10111] indicates an arginine whose final modified mass is 162.10111 amu)." [PSI:MS]
+def: "A sequence of letter symbols denoting the order of amino acids that compose the peptide plus the encoding any amino acid modifications that are present." [PSI:MS]
+comment: Make it more general as there are actually many other ways to display a modified peptide sequence.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000887 ! peptide attribute
 
@@ -6065,7 +6070,7 @@ is_a: MS:1000898 ! standard
 [Term]
 id: MS:1000902
 name: H-PINS retention time normalization standard
-def: "The de facto standard providing the retention times at which a set of halogenated reference peptides exit the reference chromatographic column, as published by Mirzaei et al. in Molecular and Cellular Proteomics in early 2009 (Early access: http://www.mcponline.org/cgi/content/abstract/M800569-MCP200v1)." [PSI:MS]
+def: "The de facto standard providing the retention times at which a set of halogenated reference peptides exit the reference chromatographic column." [DOI:10.1074/mcp.M800569-MCP200, PMID:19411281]
 is_a: MS:1000901 ! retention time normalization standard
 
 [Term]
@@ -6206,13 +6211,13 @@ is_a: MS:1000871 ! SRM software
 [Term]
 id: MS:1000923
 name: TIQAM
-def: "Software used to predict, select, and optimize transitions for selected reaction monitoring experiments developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/TIQAM/TIQAM.html." [PSI:MS]
+def: "Software used to predict, select, and optimize transitions for selected reaction monitoring experiments developed and distributed by the Institute for Systems Biology." [http://tools.proteomecenter.org/TIQAM/TIQAM.html ""]
 is_a: MS:1000871 ! SRM software
 
 [Term]
 id: MS:1000924
 name: MaRiMba
-def: "OBSOLETE Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba." [PSI:MS]
+def: "OBSOLETE Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology." [http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba ""]
 comment: This term was made obsolete because it was redundant with an existing term (MS:1000872)
 is_obsolete: true
 replaced_by: MS:1000872
@@ -6621,8 +6626,11 @@ is_a: MS:1000560 ! mass spectrometer file format
 [Term]
 id: MS:1001065
 name: TODOscoring model
-def: "DELETE. There is Phenyx:ScoringModel for Phenyx! Scoring model (more detailed granularity). TODO: add some child terms!" [PSI:PI]
+def: "OBSOLETE: There is Phenyx:ScoringModel for Phenyx! Scoring model (more detailed granularity). TODO: add some child terms!" [PSI:PI]
+comment: This term was made obsolete and is replaced by the term (MS:1001961).
 is_a: MS:1001249 ! search input details
+is_obsolete: true
+replaced_by: MS:1001961
 
 [Term]
 id: MS:1001066
@@ -7151,7 +7159,7 @@ is_a: MS:1001153 ! search engine specific score
 [Term]
 id: MS:1001155
 name: Sequest:xcorr
-def: "The SEQUEST result 'Xcorr'." [PSI:PI]
+def: "The SEQUEST result 'XCorr'." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
 is_a: MS:1001153 ! search engine specific score
@@ -9840,30 +9848,38 @@ is_a: MS:1001198 ! protein identification confidence metric
 [Term]
 id: MS:1001601
 name: ProteomeDiscoverer:Spectrum Files:Raw File names
-def: "Name and location of the .raw file or files." [PSI:MS]
+def: "OBSOLETE Name and location of the .raw file or files." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use one of the 'mass spectrometer file format' terms (MS:1000560) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001602
 name: ProteomeDiscoverer:SRF File Selector:SRF File Path
-def: "Path and name of the .srf (Sequest Result Format) file." [PSI:MS]
+def: "OBSOLETE Path and name of the .srf (Sequest Result Format) file." [PSI:MS]
+comment: This term was made obsolete. Use attribute in mzIdentML / mzQuantML instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001603
 name: ProteomeDiscoverer:Spectrum Selector:Ionization Source
-def: "Ionization source (electro-, nano-, thermospray, electron impact, APCI, MALDI, FAB etc)." [PSI:MS]
+def: "OBSOLETE Ionization source (electro-, nano-, thermospray, electron impact, APCI, MALDI, FAB etc)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use one of the 'inlet type' (MS:1000007)or 'ionization type' (MS:1000008) terms  instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001604
 name: ProteomeDiscoverer:Activation Type
-def: "Fragmentation method used (CID, MPD, ECD, PQD, ETD, HCD, Any)." [PSI:MS]
+def: "OBSOLETE Fragmentation method used (CID, MPD, ECD, PQD, ETD, HCD, Any)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use one of the 'ionization type' terms (MS:1000008) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001605
@@ -9875,9 +9891,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001606
 name: ProteomeDiscoverer:Mass Analyzer
-def: "Type of mass spectrometer used (ITMS, FTMS, TOFMS, SQMS, TQMS, SectorMS)." [PSI:MS]
+def: "OBSOLETE Type of mass spectrometer used (ITMS, FTMS, TOFMS, SQMS, TQMS, SectorMS)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use mass analyzer type (MS:1000443) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001607
@@ -9903,16 +9921,20 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001610
 name: ProteomeDiscoverer:MS Order
-def: "Level of the mass spectrum (MS/MS=MS2 ... MS10)." [PSI:MS]
+def: "OBSOLETE Level of the mass spectrum (MS/MS=MS2 ... MS10)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use MS1 spectrum (MS:1000579) or MSn spectrum (MS:1000580) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001611
 name: ProteomeDiscoverer:Polarity Mode
-def: "Polarity mode (positive or negative)." [PSI:MS]
+def: "OBSOLETE Polarity mode (positive or negative)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use scan polarity (MS:1000465) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001612
@@ -9931,9 +9953,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001614
 name: ProteomeDiscoverer:Scan Type
-def: "Scan type for the precursor ion (full, Single Ion Monitoring (SIM), Single Reaction Monitoring (SRM))." [PSI:MS]
+def: "OBSOLETE Scan type for the precursor ion (full, Single Ion Monitoring (SIM), Single Reaction Monitoring (SRM))." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use MS1 spectrum (MS:1000579), MSn spectrum (MS:1000580), CRM spectrum (MS:1000581), SIM spectrum (MS:1000582) or SRM spectrum (MS:1000583) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001615
@@ -10050,9 +10074,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001631
 name: ProteomeDiscoverer:Spectrum Grouper:Max RT Difference
-def: "Chromatographic window where precursors to be grouped must reside to be considered the same species." [PSI:MS]
+def: "OBSOLETE Chromatographic window where precursors to be grouped must reside to be considered the same species." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use retention time window width (MS:1001907) instead.
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001632
@@ -10071,9 +10097,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001634
 name: ProteomeDiscoverer:Xtract:Highest MZ
-def: "Highest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract." [PSI:MS]
+def: "OBSOLETE Highest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use scan window upper limit (MS:1000500) instead.
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001635
@@ -10085,9 +10113,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001636
 name: ProteomeDiscoverer:Xtract:Lowest MZ
-def: "Lowest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract." [PSI:MS]
+def: "OBSOLETE Lowest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use scan window lower limit (MS:1000501) instead.
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001637
@@ -10155,9 +10185,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001646
 name: ProteomeDiscoverer:Mascot:Decoy Search
-def: "Determines whether the Proteome Discoverer application searches an additional decoy database." [PSI:MS]
+def: "OBSOLETE Determines whether the Proteome Discoverer application searches an additional decoy database." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use quality estimation with decoy database (MS:1001194) instead.
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001647
@@ -10197,9 +10229,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001652
 name: ProteomeDiscoverer:Mascot:User Name
-def: "Name of the user submitting the Mascot search." [PSI:MS]
+def: "OBSOLETE Name of the user submitting the Mascot search." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use researcher (MS:1001271) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001653
@@ -10211,21 +10245,25 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001654
 name: ProteomeDiscoverer:Enzyme Name
-def: "Specifies the enzyme reagent used for protein digestion." [PSI:MS]
+def: "OBSOLETE Specifies the enzyme reagent used for protein digestion." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use cleavage agent name (MS:1001045) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001655
 name: ProteomeDiscoverer:Fragment Mass Tolerance
-def: "Mass tolerance used for matching fragment peaks in Da or mmu." [PSI:MS]
+def: "OBSOLETE Mass tolerance used for matching fragment peaks in Da or mmu." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use search tolerance minus value (MS:1001413) or search tolerance plus value (MS:1001412) instead.
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001656
-name: ProteomeDiscoverer:Mascot:Instrument
-def: "Type of instrument used to acquire the data in the .raw file." [PSI:MS]
+name: Mascot:Instrument
+def: "Type of instrument used to acquire the data in the raw file." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -10246,9 +10284,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001659
 name: ProteomeDiscoverer:Precursor Mass Tolerance
-def: "Mass window for which precursor ions are considered to be the same species." [PSI:MS]
+def: "OBSOLETE Mass window for which precursor ions are considered to be the same species." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use search tolerance minus value (MS:1001413) or search tolerance plus value (MS:1001412) instead.
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001660
@@ -10260,9 +10300,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001661
 name: ProteomeDiscoverer:Protein Database
-def: "Database to use in the search (configured on the Mascot server)." [PSI:MS]
+def: "OBSOLETE Database to use in the search (configured on the Mascot server)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use database name (MS:1001013) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001662
@@ -10288,23 +10330,29 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001665
 name: ProteomeDiscoverer:Mascot:Taxonomy
-def: "Limits searches to entries from a particular species or group of species." [PSI:MS]
+def: "OBSOLETE Limits searches to entries from a particular species or group of species." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use taxonomy: scientific name (MS:1001469) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001666
 name: ProteomeDiscoverer:Use Average Precursor Mass
-def: "Use average mass for the precursor." [PSI:MS]
+def: "OBSOLETE Use average mass for the precursor." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use parent mass type average (MS:1001212) instead.
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001667
-name: ProteomeDiscoverer:Mascot:Use MudPIT Scoring
-def: "Determines whether to use MudPIT scoring (used by Mascot for generating the protein score from data sets with a large numbers of peptide matches) or normal scoring." [PSI:MS]
+name: Mascot:use MudPIT scoring
+def: "OBSOLETE Determines whether to use MudPIT or normal scoring." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use Mascot:ProteinScoringMethod (MS:1001318) instead.
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001668
@@ -10407,9 +10455,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001682
 name: ProteomeDiscoverer:Search Against Decoy Database
-def: "Determines whether the Proteome Discoverer application searches against a decoy database." [PSI:MS]
+def: "OBSOLETE Determines whether the Proteome Discoverer application searches against a decoy database." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use quality estimation with decoy database (MS:1001194) instead.
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001683
@@ -10540,9 +10590,11 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001701
 name: ProteomeDiscoverer:Spectrum Exporter:Export Format
-def: "Format of the exported spectra (*.dta, *.mgf or *.mzData)." [PSI:MS]
+def: "OBSOLETE Format of the exported spectra (dta, mgf or mzData)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use one of the 'mass spectrometer file format' terms (MS:1000560) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001702
@@ -10771,16 +10823,20 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001734
 name: ProteomeDiscoverer:Organism
-def: "Sample organism (used for annotation purposes)." [PSI:MS]
+def: "OBSOLETE Sample organism (used for annotation purposes)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use taxonomy: scientific name (MS:1001469) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001735
 name: ProteomeDiscoverer:Reference Database
-def: "Full path database name." [PSI:MS]
+def: "OBSOLETE Full path database name." [PSI:MS]
+comment: This term was made obsolete. Use attribute in mzIdentML / mzQuantML instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001736
@@ -10792,23 +10848,29 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001737
 name: ProteomeDiscoverer:Source file extension
-def: "File type (if not pepXML)." [PSI:MS]
+def: "OBSOLETE File type (if not pepXML)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use mass spectrometer file format (MS:1000560) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001738
 name: ProteomeDiscoverer:Source Files
-def: "Input pepXML files." [PSI:MS]
+def: "OBSOLETE Input pepXML files." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use pepXML file (MS:1001421) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001739
 name: ProteomeDiscoverer:Source Files old
-def: "Input pepXML files (old)." [PSI:MS]
+def: "OBSOLETE Input pepXML files (old)." [PSI:MS]
+comment: This term was made obsolete because it's recommended to use pepXML file (MS:1001421) instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
+is_obsolete: true
 
 [Term]
 id: MS:1001740
@@ -11421,9 +11483,9 @@ is_a: MS:1001833 ! quantitation analysis summary
 
 [Term]
 id: MS:1001837
-name: iTraq quantitation analysis
-def: "iTraq workflow (reporter ions on MS/MS level)." [PSI:PI]
-is_a: MS:1001833 ! quantitation analysis summary
+name: iTRAQ quantitation analysis
+def: "Quantification analysis using the AB SCIEX iTRAQ isobaric labeling workflow, wherein 2-8 reporter ions are measured in MS/MS spectra near 114 m/z." [PSI:PI]
+is_a: MS:1002009 ! isobaric label quantification analysis
 
 [Term]
 id: MS:1001838
@@ -11656,7 +11718,7 @@ is_a: MS:1001198 ! protein identification confidence metric
 [Term]
 id: MS:1001874
 name: FDRScore
-def: "Quality measurement score." [pubmed:http://www.ncbi.nlm.nih.gov/pubmed/19253293 ""]
+def: "Quality measurement score." [PMID:19253293]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001405 ! spectrum identification result details
 
@@ -11924,21 +11986,21 @@ is_a: MS:1001457 ! data processing software
 [Term]
 id: MS:1001915
 name: leukocyte elastase
-def: "Enzyme leukocyte elastase (EC 3.4.21.37)." [http://www.brenda-enzymes.info/php/result_flat.php4?ecno=3.4.21.37 "BRENDA"]
+def: "Enzyme leukocyte elastase (EC 3.4.21.37)." [BRENDA:3.4.21.37]
 is_a: MS:1001045 ! cleavage agent name
 relationship: has_regexp MS:1001957 ! (?<=[ALIV])(?!P)
 
 [Term]
 id: MS:1001916
 name: proline endopeptidase
-def: "Enzyme proline endopeptidase (EC 3.4.21.26)." [http://www.brenda-enzymes.info/php/result_flat.php4?ecno=3.4.21.26 "BRENDA"]
+def: "Enzyme proline endopeptidase (EC 3.4.21.26)." [BRENDA:3.4.21.26]
 is_a: MS:1001045 ! cleavage agent name
 relationship: has_regexp MS:1001958 ! (?<=[HKR]P)(?!P)
 
 [Term]
 id: MS:1001917
 name: glutamyl endopeptidase
-def: "Enzyme glutamyl endopeptidase (EC 3.4.21.19)." [http://www.brenda-enzymes.info/php/result_flat.php4?ecno=3.4.21.19 "BRENDA"]
+def: "Enzyme glutamyl endopeptidase (EC 3.4.21.19)." [BRENDA:3.4.21.19]
 synonym: "staphylococcal protease" EXACT []
 synonym: "Glu-C" EXACT []
 is_a: MS:1001045 ! cleavage agent name
@@ -11947,7 +12009,7 @@ relationship: has_regexp MS:1001959 ! (?<=[^E]E)
 [Term]
 id: MS:1001918
 name: 2-iodobenzoate
-def: "Chemical iodobenzoate. Cleaves after W." [http://www.ncbi.nlm.nih.gov/sites/entrez?cmd=search&db=pccompound&term=4739928 "PubChem"]
+def: "Chemical iodobenzoate. Cleaves after W." [PubChem_Compound:4739928]
 is_a: MS:1001045 ! cleavage agent name
 relationship: has_regexp MS:1001960 ! (?<=W)
 
@@ -12224,3 +12286,379 @@ is_a: MS:1001180 ! Cleavage agent regular expression
 id: MS:1001960
 name: (?<=W)
 is_a: MS:1001180 ! Cleavage agent regular expression
+
+[Term]
+id: MS:1001961
+name: peptide spectrum match scoring algorithm
+def: "Algorithm used to score the match between a spectrum and a peptide ion." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+relationship: part_of MS:1001458 ! spectrum generation information
+
+[Term]
+id: MS:1001962
+name: Mascot:C13 counts
+def: "C13 peaks to use in peak detection." [PSI:MS]
+xref: value-type:xsd\:nonNegativeInteger "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001963
+name: ProteinExtractor:Weighting
+def: "Weighting factor for protein list compilation by ProteinExtractor." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001964
+name: ProteinScape:second round Mascot
+def: "Flag indicating a second round search with Mascot." [PSI:MS]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001965
+name: ProteinScape:second round Phenyx
+def: "Flag indicating a second round search with Phenyx." [PSI:MS]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001966
+name: product ion mobility
+def: "The mobility of an MS2 product ion, as measured by ion mobility mass spectrometry." [PSI:MS]
+is_a: MS:1001221 ! fragmentation information
+
+[Term]
+id: MS:1001967
+name: product ion drift time
+def: "The ion drift time of an MS2 product ion." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+relationship: has_units UO:0000028 ! millisecond
+
+[Term]
+id: MS:1001968
+name: PTM localization score
+def: "A score that assign confidence to the localization of an amino acid modification on a peptide sequence." [PSI:MS]
+is_a: MS:1001143 ! search engine specific score for peptides
+
+[Term]
+id: MS:1001969
+name: ProteomeDiscoverer:phosphoRS score
+def: "Peptide score based on the cumulative binomial probability that the observed match is a random event." [DOI:10.1021/pr200611n, PMID:22073976]
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001970
+name: ProteomeDiscoverer:phosphoRS sequence probability
+def: "Probability that the respective isoform is correct." [DOI:10.1021/pr200611n, PMID:22073976]
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001971
+name: ProteomeDiscoverer:phosphoRS site probability
+def: "Estimate of the probability that the respective site is truly phosphorylated." [DOI:10.1021/pr200611n, PMID:22073976]
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001972
+name: PTM scoring algorithm version
+def: "Version of the post-translational modification scoring algorithm." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001471 ! peptide modification details
+
+[Term]
+id: MS:1001973
+name: DeBunker
+def: "DeBunker software." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1001974
+name: DeBunker:score
+def: "Score specific to DeBunker." [PSI:MS]
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001975
+name: delta m/z
+def: "The difference between a theoretically calculated m/z and the corresponding experimentally measured m/z. It can be expressed as absolute or relative value." [PSI:MS]
+synonym: "m/z difference" EXACT []
+is_a: MS:1001405 ! spectrum identification result details
+relationship: has_units UO:0000166 ! parts per notation unit
+relationship: has_units UO:0000187 ! percent
+relationship: has_units UO:0000221 ! dalton
+
+[Term]
+id: MS:1001976
+name: delta M
+def: "The difference between a theoretically calculated molecular mass M and the corresponding experimentally measured M. It can be expressed as absolute or relative value." [PSI:MS]
+synonym: "mass difference" EXACT []
+is_a: MS:1001405 ! spectrum identification result details
+relationship: has_units UO:0000166 ! parts per notation unit
+relationship: has_units UO:0000187 ! percent
+relationship: has_units UO:0000221 ! dalton
+
+[Term]
+id: MS:1001977
+name: MSQuant
+def: "MSQuant software." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1001978
+name: MSQuant:PTM-score
+def: "The PTM score from MSQuant software." [DOI:10.1021/pr900721e, PMID:19888749]
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001979
+name: MaxQuant:PTM Score
+def: "The PTM score from MaxQuant software." [PSI:MS]
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001980
+name: MaxQuant:Phospho (STY) Probabilities
+def: "The Phospho (STY) Probabilities from MaxQuant software." [PSI:MS]
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001981
+name: MaxQuant:Phospho (STY) Score Diffs
+def: "The Phospho (STY) Score Diffs from MaxQuant software." [PSI:MS]
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001982
+name: MaxQuant:P-site localization probability
+def: "The P-site localization probability value from MaxQuant software." [PSI:MS]
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001983
+name: MaxQuant:PTM Delta Score
+def: "The PTM Delta Score value from MaxQuant software (Difference between highest scoring site and second highest)." [PSI:MS]
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001984
+name: Ascore
+def: "Ascore software." [PSI:MS]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1001985
+name: Ascore:Ascore
+def: "The Ascore score value from Ascore software." [DOI:10.1038/nbt1240, PMID:16964243]
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001986
+name: H-Score
+def: "H-Score for peptide phosphorylation site location." [DOI:10.1021/pr1006813, PMID:20836569]
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1001987
+name: vacuum drying MALDI sample preparation
+def: "Vacuum-drying MALDI sample preparation crystallization method." [PSI:MS]
+is_a: MS:1000833 ! matrix application type
+
+[Term]
+id: MS:1001988
+name: crushed crystal MALDI sample preparation
+def: "Crushed-crystal MALDI sample preparation method." [PSI:MS]
+is_a: MS:1000833 ! matrix application type
+
+[Term]
+id: MS:1001989
+name: fast evaporation MALDI sample preparation
+def: "Fast-evaporation MALDI sample preparation method." [DOI:10.1021/ac00091a044]
+is_a: MS:1000833 ! matrix application type
+
+[Term]
+id: MS:1001990
+name: overlayer MALDI sample preparation
+def: "Overlayer method combining features of the crushed-crystal method and the fast-evaporation method." [PSI:MS]
+is_a: MS:1000833 ! matrix application type
+
+[Term]
+id: MS:1001991
+name: sandwich MALDI sample preparation
+def: "Sandwich MALDI sample preparation method." [DOI:10.1002/(SICI)1096-9888(199706)32:6<593::AID-JMS511>3.3.CO;2-4]
+is_a: MS:1000833 ! matrix application type
+
+[Term]
+id: MS:1001992
+name: spin coating MALDI sample preparation
+def: "Spin coating MALDI sample preparation method." [DOI:10.1021/cc0500710, PMID:16283807]
+is_a: MS:1000833 ! matrix application type
+
+[Term]
+id: MS:1001993
+name: quick and dirty MALDI sample preparation
+def: "Quick & dirty (Q&D) sample preparation separating matrix handling from sample handling." [PSI:MS]
+is_a: MS:1000833 ! matrix application type
+
+[Term]
+id: MS:1001994
+name: top hat baseline reduction
+def: "Top-hat morphological filter based on the basic morphological operations 'erosion' and 'dilatation'." [PSI:MS]
+is_a: MS:1000593 ! baseline reduction
+
+[Term]
+id: MS:1001995
+name: convex hull baseline reduction
+def: "Constructs the baseline by fitting multiple parabolas to the spectrum starting with the large scale structures." [PSI:MS]
+is_a: MS:1000593 ! baseline reduction
+
+[Term]
+id: MS:1001996
+name: median baseline reduction
+def: "The spectrum that will be baseline subtracted is divided into a number of segments." [PSI:MS]
+is_a: MS:1000593 ! baseline reduction
+
+[Term]
+id: MS:1001997
+name: wavelet transformation smoothing
+def: "The random noise is removed by using the undecimated wavelet transform." [DOI:10.1093/bioinformatics/btl355, PMID:16820428]
+is_a: MS:1000592 ! smoothing
+
+[Term]
+id: MS:1001998
+name: sophisticated numerical annotation procedure
+def: "It searches for known patterns in the measured spectrum." [DOI:10.1021/ac951158i, PMID:21619291]
+synonym: "SNAP" EXACT []
+is_a: MS:1000801 ! area peak picking
+
+[Term]
+id: MS:1001999
+name: area normalization
+def: "Normalization of areas below the curves." [PSI:MS]
+is_a: MS:1001484 ! intensity normalization
+
+[Term]
+id: MS:1002000
+name: LIFT
+def: "A Bruker's proprietary technique where molecular ions are initially accelerated at lower energy, then collide with inert gas in a collision cell that is then 'lifted' to high potential. The use of inert gas is optional, as it could lift also fragments provided by LID." [DOI:10.1007/s00216-003-2057-0 , PMID:12830354]
+is_a: MS:1000044 ! dissociation method
+
+[Term]
+id: MS:1002001
+name: MS1 Label-based raw feature quantitation
+def: "MS1 Label-based raw feature quantitation." [PSI:PI]
+is_a: MS:1001833 ! quantitation analysis summary
+
+[Term]
+id: MS:1002002
+name: MS1 Label-based peptide level quantitation
+def: "MS1 Label-based peptide level quantitation." [PSI:PI]
+is_a: MS:1001833 ! quantitation analysis summary
+
+[Term]
+id: MS:1002003
+name: MS1 Label-based protein level quantitation
+def: "MS1 Label-based protein level quantitation." [PSI:PI]
+is_a: MS:1001833 ! quantitation analysis summary
+
+[Term]
+id: MS:1002004
+name: MS1 Label-based proteinGroup level quantitation
+def: "MS1 Label-based proteinGroup level quantitation." [PSI:PI]
+is_a: MS:1001833 ! quantitation analysis summary
+
+[Term]
+id: MS:1002005
+name: iRT retention time normalization standard
+def: "A de facto standard providing the retention times at which a specific set of 10 reference peptides exit the reference chromatographic column. The kit may be obtain from Biognosys." [http://www.biognosys.ch/products/rt-kit.html ""]
+is_a: MS:1000901 ! retention time normalization standard
+
+[Term]
+id: MS:1002006
+name: SRM transition type
+def: "The type of the transitions, e.g. target or decoy." [PSI:MS]
+synonym: "MRM transition type" EXACT []
+relationship: part_of MS:1000908 ! transition
+
+[Term]
+id: MS:1002007
+name: target SRM transition
+def: "A transition used to target a specific compound that may be in the sample." [PSI:MS]
+synonym: "target MRM transition" EXACT []
+is_a: MS:1002006 ! SRM transition type
+
+[Term]
+id: MS:1002008
+name: decoy SRM transition
+def: "A transition not expected to be present in the sample and used to calculate statistical confidence of target transition detections in some workflows." [PSI:MS]
+synonym: "decoy MRM transition" EXACT []
+is_a: MS:1002006 ! MRM transition type
+
+[Term]
+id: MS:1002009
+name: isobaric label quantification analysis
+def: "Quantification analysis using an isobaric labeling workflow." [PSI:PI]
+is_a: MS:1001833 ! quantitation analysis summary
+
+[Term]
+id: MS:1002010
+name: TMT quantification analysis
+def: "Quantification analysis using the Thermo Fisher tandem mass tag (TMT) labeling workflow." [PSI:PI]
+is_a: MS:1001833 ! quantitation analysis summary
+
+[Term]
+id: MS:1002011
+name: desorption electrospray ionization
+def: "Combination of electrospray and desorption ionization method that ionizes gases, liquids and solids in open air under atmospheric pressure." [DOI:10.1126/science.1104404, PMID:15486296]
+synonym: "DESI" EXACT []
+is_a: MS:1000240 ! atmospheric pressure ionization
+
+[Term]
+id: MS:1002012
+name: Mascot:PTM site assignment confidence
+def: "Relative probability that PTM site assignment is correct, derived from the Mascot score difference between matches to the same spectrum (Mascot Delta Score)." [http://www.matrixscience.com/help/pt_mods_help.html#SITE ""]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001405 ! spectrum identification result details
+is_a: MS:1001968 ! PTM localization score
+
+[Term]
+id: MS:1002013
+name: collision energy ramp start
+def: "Collision energy at the start of the collision energy ramp." [PSI:PI]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000045 ! collision energy
+relationship: has_units UO:0000266 ! electronvolt
+
+[Term]
+id: MS:1002014
+name: collision energy ramp end
+def: "Collision energy at the end of the collision energy ramp." [PSI:PI]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000045 ! collision energy
+relationship: has_units UO:0000266 ! electronvolt

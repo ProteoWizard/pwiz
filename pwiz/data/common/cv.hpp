@@ -41,15 +41,15 @@
 // [psi-ms.obo]
 #define _PSI_MS_OBO_
 //   format-version: 1.2
-//   data-version: 3.18.0
-//   date: 10:02:2012 17:09
+//   data-version: 3.25.0
+//   date: 09:05:2012 16:37
 //   saved-by: Gerhard Mayer
 //   auto-generated-by: OBO-Edit 2.1
 //   import: http://unit-ontology.googlecode.com/svn/trunk/unit.obo
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 3.18.0
-//   remark: release date: 2012-02-10
+//   remark: version: 3.25.0
+//   remark: release date: 2012-05-09
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -581,6 +581,12 @@ enum PWIZ_API_DECL CVID
 
     /// CID (collision-induced dissociation): The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.
     MS_CID = MS_collision_induced_dissociation,
+
+    /// CAD (collision-induced dissociation): The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.
+    MS_CAD = MS_collision_induced_dissociation,
+
+    /// collision activated dissociation (collision-induced dissociation): The dissociation of an ion after collisional excitation. The term collisional-activated dissociation is not recommended.
+    MS_collision_activated_dissociation = MS_collision_induced_dissociation,
 
     /// plasma desorption: The ionization of material in a solid sample by bombarding it with ionic or neutral atoms formed as a result of the fission of a suitable nuclide, typically 252Cf. Synonymous with fission fragment ionization.
     MS_plasma_desorption = 1000134,
@@ -1674,6 +1680,9 @@ enum PWIZ_API_DECL CVID
     /// high-energy collision-induced dissociation: A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.
     MS_high_energy_collision_induced_dissociation = 1000422,
 
+    /// HCD (high-energy collision-induced dissociation): A collision-induced dissociation process wherein the projectile ion has the translational energy higher than approximately 1000 eV.
+    MS_HCD = MS_high_energy_collision_induced_dissociation,
+
     /// homolytic cleavage: Fragmentation of an odd electron ion that results from one of a pair of electrons that form a bond between two atoms moving to form a pair with the odd electron on the atom at the apparent charge site. Fragmentation results in the formation of an even electron ion and a radical. This reaction involves the movement of a single electron and is symbolized by a single-barbed arrow. Synonymous with Homolysis.
     MS_homolytic_cleavage = 1000423,
 
@@ -1713,8 +1722,11 @@ enum PWIZ_API_DECL CVID
     /// photodissociation: A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
     MS_photodissociation = 1000435,
 
-    /// Multiphoton Dissociation (photodissociation): A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
-    MS_Multiphoton_Dissociation = MS_photodissociation,
+    /// multiphoton dissociation (photodissociation): A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
+    MS_multiphoton_dissociation = MS_photodissociation,
+
+    /// MPD (photodissociation): A process wherein the reactant ion is dissociated as a result of absorption of one or more photons.
+    MS_MPD = MS_photodissociation,
 
     /// partial charge transfer reaction: Reaction of an ion with a neutral species in which some but not all of the ion charge is transferred to the neutral.
     MS_partial_charge_transfer_reaction = 1000436,
@@ -3048,7 +3060,7 @@ enum PWIZ_API_DECL CVID
     /// laser attribute: Laser properties that are associated with a value.
     MS_laser_attribute = 1000841,
 
-    /// laser type: Type of laser used used fpr desorption purpose.
+    /// laser type: Type of laser used used for desorption purpose.
     MS_laser_type = 1000842,
 
     /// wavelength: The distance between two peaks of the emitted laser beam.
@@ -3144,13 +3156,13 @@ enum PWIZ_API_DECL CVID
     /// SRM software: Software used to predict, select, or optimize transitions or analyze the results of selected reaction monitoring runs.
     MS_SRM_software = 1000871,
 
-    /// MaRiMba: Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba.
+    /// MaRiMba: Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology.
     MS_MaRiMba = 1000872,
 
     /// peptide attribute calculation software: Software used to predict or calculate numberical attributes of peptides.
     MS_peptide_attribute_calculation_software = 1000873,
 
-    /// SSRCalc: Sequence Specific Retention Calculator esimates the retention time of peptides based on their sequence. It is available at http://hs2.proteome.ca/SSRCalc/SSRCalc.html.
+    /// SSRCalc: Sequence Specific Retention Calculator esimates the retention time of peptides based on their sequence.
     MS_SSRCalc = 1000874,
 
     /// declustering potential: Potential difference between the orifice and the skimmer in volts.
@@ -3195,7 +3207,7 @@ enum PWIZ_API_DECL CVID
     /// unmodified peptide sequence: A sequence of letter symbols denoting the order of amino acids that compose the peptide, without encoding any amino acid mass modifications that might be present.
     MS_unmodified_peptide_sequence = 1000888,
 
-    /// modified peptide sequence: A sequence of letter symbols denoting the order of amino acids that compose the peptide plus the encoding any amino acid mass modifications that are present using the notation where the total mass of the modified amino acid is specified in square bracketed numbers following the letter (e.g. R[162.10111] indicates an arginine whose final modified mass is 162.10111 amu).
+    /// modified peptide sequence: A sequence of letter symbols denoting the order of amino acids that compose the peptide plus the encoding any amino acid modifications that are present.
     MS_modified_peptide_sequence = 1000889,
 
     /// peptide labeling state: A state description of how a peptide might be isotopically or isobarically labelled.
@@ -3237,7 +3249,7 @@ enum PWIZ_API_DECL CVID
     /// retention time normalization standard: A standard providing the retention times at which a set of reference compounds exit the reference chromatographic column.
     MS_retention_time_normalization_standard = 1000901,
 
-    /// H-PINS retention time normalization standard: The de facto standard providing the retention times at which a set of halogenated reference peptides exit the reference chromatographic column, as published by Mirzaei et al. in Molecular and Cellular Proteomics in early 2009 (Early access: http://www.mcponline.org/cgi/content/abstract/M800569-MCP200v1).
+    /// H-PINS retention time normalization standard: The de facto standard providing the retention times at which a set of halogenated reference peptides exit the reference chromatographic column.
     MS_H_PINS_retention_time_normalization_standard = 1000902,
 
     /// product ion series ordinal: The ordinal of the fragment within a specified ion series. (e.g. 8 for a y8 ion).
@@ -3303,10 +3315,10 @@ enum PWIZ_API_DECL CVID
     /// Skyline: Software used to predict, select, and optimize transitions as well as analyze the results of selected reaction monitoring runs developed and distributed by the MacCoss lab at the University of Washington. https://brendanx-uw1.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=default.
     MS_Skyline = 1000922,
 
-    /// TIQAM: Software used to predict, select, and optimize transitions for selected reaction monitoring experiments developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/TIQAM/TIQAM.html.
+    /// TIQAM: Software used to predict, select, and optimize transitions for selected reaction monitoring experiments developed and distributed by the Institute for Systems Biology.
     MS_TIQAM = 1000923,
 
-    /// MaRiMba: Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba.
+    /// MaRiMba: Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology.
     MS_MaRiMba_OBSOLETE = 1000924,
 
     /// ATAQS: Software suite used to predict, select, and optimize transitions as well as analyze the results of selected reaction monitoring runs developed and distributed by the Institute for Systems Biology.
@@ -3498,8 +3510,8 @@ enum PWIZ_API_DECL CVID
     /// Mascot MGF file: 
     MS_Mascot_MGF_file = 1001062,
 
-    /// TODOscoring model: DELETE. There is Phenyx:ScoringModel for Phenyx! Scoring model (more detailed granularity). TODO: add some child terms!
-    MS_TODOscoring_model = 1001065,
+    /// TODOscoring model: OBSOLETE: There is Phenyx:ScoringModel for Phenyx! Scoring model (more detailed granularity). TODO: add some child terms!
+    MS_TODOscoring_model_OBSOLETE = 1001065,
 
     /// ions series considered in search: The description of the ion fragment series (including charges and neutral losses) that are considered by the search engine.
     MS_ions_series_considered_in_search = 1001066,
@@ -3750,7 +3762,7 @@ enum PWIZ_API_DECL CVID
     /// Sequest:probability: The SEQUEST result 'Probability'.
     MS_Sequest_probability = 1001154,
 
-    /// Sequest:xcorr: The SEQUEST result 'Xcorr'.
+    /// Sequest:xcorr: The SEQUEST result 'XCorr'.
     MS_Sequest_xcorr = 1001155,
 
     /// Sequest:deltacn: The SEQUEST result 'DeltaCn'.
@@ -5038,22 +5050,22 @@ enum PWIZ_API_DECL CVID
     MS_Protein_Inference_Confidence_Category = 1001600,
 
     /// ProteomeDiscoverer:Spectrum Files:Raw File names: Name and location of the .raw file or files.
-    MS_ProteomeDiscoverer_Spectrum_Files_Raw_File_names = 1001601,
+    MS_ProteomeDiscoverer_Spectrum_Files_Raw_File_names_OBSOLETE = 1001601,
 
     /// ProteomeDiscoverer:SRF File Selector:SRF File Path: Path and name of the .srf (Sequest Result Format) file.
-    MS_ProteomeDiscoverer_SRF_File_Selector_SRF_File_Path = 1001602,
+    MS_ProteomeDiscoverer_SRF_File_Selector_SRF_File_Path_OBSOLETE = 1001602,
 
     /// ProteomeDiscoverer:Spectrum Selector:Ionization Source: Ionization source (electro-, nano-, thermospray, electron impact, APCI, MALDI, FAB etc).
-    MS_ProteomeDiscoverer_Spectrum_Selector_Ionization_Source = 1001603,
+    MS_ProteomeDiscoverer_Spectrum_Selector_Ionization_Source_OBSOLETE = 1001603,
 
     /// ProteomeDiscoverer:Activation Type: Fragmentation method used (CID, MPD, ECD, PQD, ETD, HCD, Any).
-    MS_ProteomeDiscoverer_Activation_Type = 1001604,
+    MS_ProteomeDiscoverer_Activation_Type_OBSOLETE = 1001604,
 
     /// ProteomeDiscoverer:Spectrum Selector:Lower RT Limit: Lower retention-time limit.
     MS_ProteomeDiscoverer_Spectrum_Selector_Lower_RT_Limit = 1001605,
 
     /// ProteomeDiscoverer:Mass Analyzer: Type of mass spectrometer used (ITMS, FTMS, TOFMS, SQMS, TQMS, SectorMS).
-    MS_ProteomeDiscoverer_Mass_Analyzer = 1001606,
+    MS_ProteomeDiscoverer_Mass_Analyzer_OBSOLETE = 1001606,
 
     /// ProteomeDiscoverer:Max Precursor Mass: Maximum mass limit of a singly charged precursor ion.
     MS_ProteomeDiscoverer_Max_Precursor_Mass = 1001607,
@@ -5065,10 +5077,10 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Minimum_Peak_Count = 1001609,
 
     /// ProteomeDiscoverer:MS Order: Level of the mass spectrum (MS/MS=MS2 ... MS10).
-    MS_ProteomeDiscoverer_MS_Order = 1001610,
+    MS_ProteomeDiscoverer_MS_Order_OBSOLETE = 1001610,
 
     /// ProteomeDiscoverer:Polarity Mode: Polarity mode (positive or negative).
-    MS_ProteomeDiscoverer_Polarity_Mode = 1001611,
+    MS_ProteomeDiscoverer_Polarity_Mode_OBSOLETE = 1001611,
 
     /// ProteomeDiscoverer:Spectrum Selector:Precursor Selection: Determines which precursor mass to use for a given MSn scan. This option applies only to higher-order MSn scans (n >= 3).
     MS_ProteomeDiscoverer_Spectrum_Selector_Precursor_Selection = 1001612,
@@ -5077,7 +5089,7 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_SN_Threshold = 1001613,
 
     /// ProteomeDiscoverer:Scan Type: Scan type for the precursor ion (full, Single Ion Monitoring (SIM), Single Reaction Monitoring (SRM)).
-    MS_ProteomeDiscoverer_Scan_Type = 1001614,
+    MS_ProteomeDiscoverer_Scan_Type_OBSOLETE = 1001614,
 
     /// ProteomeDiscoverer:Total Intensity Threshold: Used to filter out tandem mass spectra that have a total intensity current(sum of the intensities of all peaks in a spectrum) below the specified value.
     MS_ProteomeDiscoverer_Total_Intensity_Threshold = 1001615,
@@ -5128,7 +5140,7 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Spectrum_Grouper_Allow_MS_Order_Mismatch = 1001630,
 
     /// ProteomeDiscoverer:Spectrum Grouper:Max RT Difference: Chromatographic window where precursors to be grouped must reside to be considered the same species.
-    MS_ProteomeDiscoverer_Spectrum_Grouper_Max_RT_Difference = 1001631,
+    MS_ProteomeDiscoverer_Spectrum_Grouper_Max_RT_Difference_OBSOLETE = 1001631,
 
     /// ProteomeDiscoverer:Spectrum Grouper:Precursor Mass Criterion: Groups spectra measured within the given mass and retention-time tolerances into a single spectrum for analysis.
     MS_ProteomeDiscoverer_Spectrum_Grouper_Precursor_Mass_Criterion = 1001632,
@@ -5137,13 +5149,13 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Xtract_Highest_Charge = 1001633,
 
     /// ProteomeDiscoverer:Xtract:Highest MZ: Highest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract.
-    MS_ProteomeDiscoverer_Xtract_Highest_MZ = 1001634,
+    MS_ProteomeDiscoverer_Xtract_Highest_MZ_OBSOLETE = 1001634,
 
     /// ProteomeDiscoverer:Xtract:Lowest Charge: Lowest charge state that is allowed for the deconvolution of multiply charged data.
     MS_ProteomeDiscoverer_Xtract_Lowest_Charge = 1001635,
 
     /// ProteomeDiscoverer:Xtract:Lowest MZ: Lowest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract.
-    MS_ProteomeDiscoverer_Xtract_Lowest_MZ = 1001636,
+    MS_ProteomeDiscoverer_Xtract_Lowest_MZ_OBSOLETE = 1001636,
 
     /// ProteomeDiscoverer:Xtract:Monoisotopic Mass Only: Determines whether the isotopic pattern, i.e. all isotopes of a mass are removed from the spectrum.
     MS_ProteomeDiscoverer_Xtract_Monoisotopic_Mass_Only = 1001637,
@@ -5173,7 +5185,7 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Static_Modifications = 1001645,
 
     /// ProteomeDiscoverer:Mascot:Decoy Search: Determines whether the Proteome Discoverer application searches an additional decoy database.
-    MS_ProteomeDiscoverer_Mascot_Decoy_Search = 1001646,
+    MS_ProteomeDiscoverer_Mascot_Decoy_Search_OBSOLETE = 1001646,
 
     /// ProteomeDiscoverer:Mascot:Error tolerant Search: Determines whether to search error-tolerant.
     MS_ProteomeDiscoverer_Mascot_Error_tolerant_Search = 1001647,
@@ -5191,19 +5203,19 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Mascot_X_Static_Modification = 1001651,
 
     /// ProteomeDiscoverer:Mascot:User Name: Name of the user submitting the Mascot search.
-    MS_ProteomeDiscoverer_Mascot_User_Name = 1001652,
+    MS_ProteomeDiscoverer_Mascot_User_Name_OBSOLETE = 1001652,
 
     /// ProteomeDiscoverer:Mascot:Time interval between attempts to submit a search: Time interval between attempts to submit a search in seconds.
     MS_ProteomeDiscoverer_Mascot_Time_interval_between_attempts_to_submit_a_search = 1001653,
 
     /// ProteomeDiscoverer:Enzyme Name: Specifies the enzyme reagent used for protein digestion.
-    MS_ProteomeDiscoverer_Enzyme_Name = 1001654,
+    MS_ProteomeDiscoverer_Enzyme_Name_OBSOLETE = 1001654,
 
     /// ProteomeDiscoverer:Fragment Mass Tolerance: Mass tolerance used for matching fragment peaks in Da or mmu.
-    MS_ProteomeDiscoverer_Fragment_Mass_Tolerance = 1001655,
+    MS_ProteomeDiscoverer_Fragment_Mass_Tolerance_OBSOLETE = 1001655,
 
-    /// ProteomeDiscoverer:Mascot:Instrument: Type of instrument used to acquire the data in the .raw file.
-    MS_ProteomeDiscoverer_Mascot_Instrument = 1001656,
+    /// Mascot:Instrument: Type of instrument used to acquire the data in the raw file.
+    MS_Mascot_Instrument = 1001656,
 
     /// ProteomeDiscoverer:Maximum Missed Cleavage Sites: Maximum number of missed cleavage sites to consider during the digest.
     MS_ProteomeDiscoverer_Maximum_Missed_Cleavage_Sites = 1001657,
@@ -5212,13 +5224,13 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Mascot_Peptide_CutOff_Score = 1001658,
 
     /// ProteomeDiscoverer:Precursor Mass Tolerance: Mass window for which precursor ions are considered to be the same species.
-    MS_ProteomeDiscoverer_Precursor_Mass_Tolerance = 1001659,
+    MS_ProteomeDiscoverer_Precursor_Mass_Tolerance_OBSOLETE = 1001659,
 
     /// ProteomeDiscoverer:Mascot:Protein CutOff Score: Minimum protein score in the IonScore column that each protein must exceed in order to be reported.
     MS_ProteomeDiscoverer_Mascot_Protein_CutOff_Score = 1001660,
 
     /// ProteomeDiscoverer:Protein Database: Database to use in the search (configured on the Mascot server).
-    MS_ProteomeDiscoverer_Protein_Database = 1001661,
+    MS_ProteomeDiscoverer_Protein_Database_OBSOLETE = 1001661,
 
     /// ProteomeDiscoverer:Mascot:Protein Relevance Factor: Specifies a factor that is used in calculating a threshold that determines whether a protein appears in the results report.
     MS_ProteomeDiscoverer_Mascot_Protein_Relevance_Factor = 1001662,
@@ -5230,13 +5242,13 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Target_FDR_Strict = 1001664,
 
     /// ProteomeDiscoverer:Mascot:Taxonomy: Limits searches to entries from a particular species or group of species.
-    MS_ProteomeDiscoverer_Mascot_Taxonomy = 1001665,
+    MS_ProteomeDiscoverer_Mascot_Taxonomy_OBSOLETE = 1001665,
 
     /// ProteomeDiscoverer:Use Average Precursor Mass: Use average mass for the precursor.
-    MS_ProteomeDiscoverer_Use_Average_Precursor_Mass = 1001666,
+    MS_ProteomeDiscoverer_Use_Average_Precursor_Mass_OBSOLETE = 1001666,
 
-    /// ProteomeDiscoverer:Mascot:Use MudPIT Scoring: Determines whether to use MudPIT scoring (used by Mascot for generating the protein score from data sets with a large numbers of peptide matches) or normal scoring.
-    MS_ProteomeDiscoverer_Mascot_Use_MudPIT_Scoring = 1001667,
+    /// Mascot:use MudPIT scoring: Determines whether to use MudPIT or normal scoring.
+    MS_Mascot_use_MudPIT_scoring_OBSOLETE = 1001667,
 
     /// ProteomeDiscoverer:Absolute XCorr Threshold: Minimum cross-correlation threshold that determines whether peptides in an .srf file are imported.
     MS_ProteomeDiscoverer_Absolute_XCorr_Threshold = 1001668,
@@ -5281,7 +5293,7 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Protein_Relevance_Threshold = 1001681,
 
     /// ProteomeDiscoverer:Search Against Decoy Database: Determines whether the Proteome Discoverer application searches against a decoy database.
-    MS_ProteomeDiscoverer_Search_Against_Decoy_Database = 1001682,
+    MS_ProteomeDiscoverer_Search_Against_Decoy_Database_OBSOLETE = 1001682,
 
     /// ProteomeDiscoverer:SEQUEST:Use Average Fragment Masses: Use average masses for the fragments.
     MS_ProteomeDiscoverer_SEQUEST_Use_Average_Fragment_Masses = 1001683,
@@ -5337,8 +5349,8 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:Reporter Ions Quantizer:Quantitation Method: Quantitation method for isobarically labeled quantitation.
     MS_ProteomeDiscoverer_Reporter_Ions_Quantizer_Quantitation_Method = 1001700,
 
-    /// ProteomeDiscoverer:Spectrum Exporter:Export Format: Format of the exported spectra (*.dta, *.mgf or *.mzData).
-    MS_ProteomeDiscoverer_Spectrum_Exporter_Export_Format = 1001701,
+    /// ProteomeDiscoverer:Spectrum Exporter:Export Format: Format of the exported spectra (dta, mgf or mzData).
+    MS_ProteomeDiscoverer_Spectrum_Exporter_Export_Format_OBSOLETE = 1001701,
 
     /// ProteomeDiscoverer:Spectrum Exporter:File name: Name of the output file that contains the exported data.
     MS_ProteomeDiscoverer_Spectrum_Exporter_File_name = 1001702,
@@ -5437,22 +5449,22 @@ enum PWIZ_API_DECL CVID
     MS_ProteomeDiscoverer_Number_of_predicted_correct_proteins = 1001733,
 
     /// ProteomeDiscoverer:Organism: Sample organism (used for annotation purposes).
-    MS_ProteomeDiscoverer_Organism = 1001734,
+    MS_ProteomeDiscoverer_Organism_OBSOLETE = 1001734,
 
     /// ProteomeDiscoverer:Reference Database: Full path database name.
-    MS_ProteomeDiscoverer_Reference_Database = 1001735,
+    MS_ProteomeDiscoverer_Reference_Database_OBSOLETE = 1001735,
 
     /// ProteomeDiscoverer:Residue substitution list: Residues considered equivalent when comparing peptides.
     MS_ProteomeDiscoverer_Residue_substitution_list = 1001736,
 
     /// ProteomeDiscoverer:Source file extension: File type (if not pepXML).
-    MS_ProteomeDiscoverer_Source_file_extension = 1001737,
+    MS_ProteomeDiscoverer_Source_file_extension_OBSOLETE = 1001737,
 
     /// ProteomeDiscoverer:Source Files: Input pepXML files.
-    MS_ProteomeDiscoverer_Source_Files = 1001738,
+    MS_ProteomeDiscoverer_Source_Files_OBSOLETE = 1001738,
 
     /// ProteomeDiscoverer:Source Files old: Input pepXML files (old).
-    MS_ProteomeDiscoverer_Source_Files_old = 1001739,
+    MS_ProteomeDiscoverer_Source_Files_old_OBSOLETE = 1001739,
 
     /// ProteomeDiscoverer:WinCyg reference database: Windows full path for database.
     MS_ProteomeDiscoverer_WinCyg_reference_database = 1001740,
@@ -5745,8 +5757,8 @@ enum PWIZ_API_DECL CVID
     /// spectral counting quantitation analysis: Spectral counting workflow (number of identified MS/MS spectra as approximation of peptide / protein quant).
     MS_spectral_counting_quantitation_analysis = 1001836,
 
-    /// iTraq quantitation analysis: iTraq workflow (reporter ions on MS/MS level).
-    MS_iTraq_quantitation_analysis = 1001837,
+    /// iTRAQ quantitation analysis: Quantification analysis using the AB SCIEX iTRAQ isobaric labeling workflow, wherein 2-8 reporter ions are measured in MS/MS spectra near 114 m/z.
+    MS_iTRAQ_quantitation_analysis = 1001837,
 
     /// SRM quantitation analysis: Selected Reaction Monitoring workflow (XIC quant. of precursor / fragment mass pair).
     MS_SRM_quantitation_analysis = 1001838,
@@ -6123,6 +6135,189 @@ enum PWIZ_API_DECL CVID
     /// (?<=W): 
     MS_____W_ = 1001960,
 
+    /// peptide spectrum match scoring algorithm: Algorithm used to score the match between a spectrum and a peptide ion.
+    MS_peptide_spectrum_match_scoring_algorithm = 1001961,
+
+    /// Mascot:C13 counts: C13 peaks to use in peak detection.
+    MS_Mascot_C13_counts = 1001962,
+
+    /// ProteinExtractor:Weighting: Weighting factor for protein list compilation by ProteinExtractor.
+    MS_ProteinExtractor_Weighting = 1001963,
+
+    /// ProteinScape:second round Mascot: Flag indicating a second round search with Mascot.
+    MS_ProteinScape_second_round_Mascot = 1001964,
+
+    /// ProteinScape:second round Phenyx: Flag indicating a second round search with Phenyx.
+    MS_ProteinScape_second_round_Phenyx = 1001965,
+
+    /// product ion mobility: The mobility of an MS2 product ion, as measured by ion mobility mass spectrometry.
+    MS_product_ion_mobility = 1001966,
+
+    /// product ion drift time: The ion drift time of an MS2 product ion.
+    MS_product_ion_drift_time = 1001967,
+
+    /// PTM localization score: A score that assign confidence to the localization of an amino acid modification on a peptide sequence.
+    MS_PTM_localization_score = 1001968,
+
+    /// ProteomeDiscoverer:phosphoRS score: Peptide score based on the cumulative binomial probability that the observed match is a random event.
+    MS_ProteomeDiscoverer_phosphoRS_score = 1001969,
+
+    /// ProteomeDiscoverer:phosphoRS sequence probability: Probability that the respective isoform is correct.
+    MS_ProteomeDiscoverer_phosphoRS_sequence_probability = 1001970,
+
+    /// ProteomeDiscoverer:phosphoRS site probability: Estimate of the probability that the respective site is truly phosphorylated.
+    MS_ProteomeDiscoverer_phosphoRS_site_probability = 1001971,
+
+    /// PTM scoring algorithm version: Version of the post-translational modification scoring algorithm.
+    MS_PTM_scoring_algorithm_version = 1001972,
+
+    /// DeBunker: DeBunker software.
+    MS_DeBunker = 1001973,
+
+    /// DeBunker:score: Score specific to DeBunker.
+    MS_DeBunker_score = 1001974,
+
+    /// delta m/z: The difference between a theoretically calculated m/z and the corresponding experimentally measured m/z. It can be expressed as absolute or relative value.
+    MS_delta_m_z = 1001975,
+
+    /// m/z difference (delta m/z): The difference between a theoretically calculated m/z and the corresponding experimentally measured m/z. It can be expressed as absolute or relative value.
+    MS_m_z_difference = MS_delta_m_z,
+
+    /// delta M: The difference between a theoretically calculated molecular mass M and the corresponding experimentally measured M. It can be expressed as absolute or relative value.
+    MS_delta_M = 1001976,
+
+    /// mass difference (delta M): The difference between a theoretically calculated molecular mass M and the corresponding experimentally measured M. It can be expressed as absolute or relative value.
+    MS_mass_difference = MS_delta_M,
+
+    /// MSQuant: MSQuant software.
+    MS_MSQuant = 1001977,
+
+    /// MSQuant:PTM-score: The PTM score from MSQuant software.
+    MS_MSQuant_PTM_score = 1001978,
+
+    /// MaxQuant:PTM Score: The PTM score from MaxQuant software.
+    MS_MaxQuant_PTM_Score = 1001979,
+
+    /// MaxQuant:Phospho (STY) Probabilities: The Phospho (STY) Probabilities from MaxQuant software.
+    MS_MaxQuant_Phospho__STY__Probabilities = 1001980,
+
+    /// MaxQuant:Phospho (STY) Score Diffs: The Phospho (STY) Score Diffs from MaxQuant software.
+    MS_MaxQuant_Phospho__STY__Score_Diffs = 1001981,
+
+    /// MaxQuant:P-site localization probability: The P-site localization probability value from MaxQuant software.
+    MS_MaxQuant_P_site_localization_probability = 1001982,
+
+    /// MaxQuant:PTM Delta Score: The PTM Delta Score value from MaxQuant software (Difference between highest scoring site and second highest).
+    MS_MaxQuant_PTM_Delta_Score = 1001983,
+
+    /// Ascore: Ascore software.
+    MS_Ascore = 1001984,
+
+    /// Ascore:Ascore: The Ascore score value from Ascore software.
+    MS_Ascore_Ascore = 1001985,
+
+    /// H-Score: H-Score for peptide phosphorylation site location.
+    MS_H_Score = 1001986,
+
+    /// vacuum drying MALDI sample preparation: Vacuum-drying MALDI sample preparation crystallization method.
+    MS_vacuum_drying_MALDI_sample_preparation = 1001987,
+
+    /// crushed crystal MALDI sample preparation: Crushed-crystal MALDI sample preparation method.
+    MS_crushed_crystal_MALDI_sample_preparation = 1001988,
+
+    /// fast evaporation MALDI sample preparation: Fast-evaporation MALDI sample preparation method.
+    MS_fast_evaporation_MALDI_sample_preparation = 1001989,
+
+    /// overlayer MALDI sample preparation: Overlayer method combining features of the crushed-crystal method and the fast-evaporation method.
+    MS_overlayer_MALDI_sample_preparation = 1001990,
+
+    /// sandwich MALDI sample preparation: Sandwich MALDI sample preparation method.
+    MS_sandwich_MALDI_sample_preparation = 1001991,
+
+    /// spin coating MALDI sample preparation: Spin coating MALDI sample preparation method.
+    MS_spin_coating_MALDI_sample_preparation = 1001992,
+
+    /// quick and dirty MALDI sample preparation: Quick & dirty (Q&D) sample preparation separating matrix handling from sample handling.
+    MS_quick_and_dirty_MALDI_sample_preparation = 1001993,
+
+    /// top hat baseline reduction: Top-hat morphological filter based on the basic morphological operations 'erosion' and 'dilatation'.
+    MS_top_hat_baseline_reduction = 1001994,
+
+    /// convex hull baseline reduction: Constructs the baseline by fitting multiple parabolas to the spectrum starting with the large scale structures.
+    MS_convex_hull_baseline_reduction = 1001995,
+
+    /// median baseline reduction: The spectrum that will be baseline subtracted is divided into a number of segments.
+    MS_median_baseline_reduction = 1001996,
+
+    /// wavelet transformation smoothing: The random noise is removed by using the undecimated wavelet transform.
+    MS_wavelet_transformation_smoothing = 1001997,
+
+    /// sophisticated numerical annotation procedure: It searches for known patterns in the measured spectrum.
+    MS_sophisticated_numerical_annotation_procedure = 1001998,
+
+    /// SNAP (sophisticated numerical annotation procedure): It searches for known patterns in the measured spectrum.
+    MS_SNAP = MS_sophisticated_numerical_annotation_procedure,
+
+    /// area normalization: Normalization of areas below the curves.
+    MS_area_normalization = 1001999,
+
+    /// LIFT: A Bruker's proprietary technique where molecular ions are initially accelerated at lower energy, then collide with inert gas in a collision cell that is then 'lifted' to high potential. The use of inert gas is optional, as it could lift also fragments provided by LID.
+    MS_LIFT = 1002000,
+
+    /// MS1 Label-based raw feature quantitation: MS1 Label-based raw feature quantitation.
+    MS_MS1_Label_based_raw_feature_quantitation = 1002001,
+
+    /// MS1 Label-based peptide level quantitation: MS1 Label-based peptide level quantitation.
+    MS_MS1_Label_based_peptide_level_quantitation = 1002002,
+
+    /// MS1 Label-based protein level quantitation: MS1 Label-based protein level quantitation.
+    MS_MS1_Label_based_protein_level_quantitation = 1002003,
+
+    /// MS1 Label-based proteinGroup level quantitation: MS1 Label-based proteinGroup level quantitation.
+    MS_MS1_Label_based_proteinGroup_level_quantitation = 1002004,
+
+    /// iRT retention time normalization standard: A de facto standard providing the retention times at which a specific set of 10 reference peptides exit the reference chromatographic column. The kit may be obtain from Biognosys.
+    MS_iRT_retention_time_normalization_standard = 1002005,
+
+    /// SRM transition type: The type of the transitions, e.g. target or decoy.
+    MS_SRM_transition_type = 1002006,
+
+    /// MRM transition type (SRM transition type): The type of the transitions, e.g. target or decoy.
+    MS_MRM_transition_type = MS_SRM_transition_type,
+
+    /// target SRM transition: A transition used to target a specific compound that may be in the sample.
+    MS_target_SRM_transition = 1002007,
+
+    /// target MRM transition (target SRM transition): A transition used to target a specific compound that may be in the sample.
+    MS_target_MRM_transition = MS_target_SRM_transition,
+
+    /// decoy SRM transition: A transition not expected to be present in the sample and used to calculate statistical confidence of target transition detections in some workflows.
+    MS_decoy_SRM_transition = 1002008,
+
+    /// decoy MRM transition (decoy SRM transition): A transition not expected to be present in the sample and used to calculate statistical confidence of target transition detections in some workflows.
+    MS_decoy_MRM_transition = MS_decoy_SRM_transition,
+
+    /// isobaric label quantification analysis: Quantification analysis using an isobaric labeling workflow.
+    MS_isobaric_label_quantification_analysis = 1002009,
+
+    /// TMT quantification analysis: Quantification analysis using the Thermo Fisher tandem mass tag (TMT) labeling workflow.
+    MS_TMT_quantification_analysis = 1002010,
+
+    /// desorption electrospray ionization: Combination of electrospray and desorption ionization method that ionizes gases, liquids and solids in open air under atmospheric pressure.
+    MS_desorption_electrospray_ionization = 1002011,
+
+    /// DESI (desorption electrospray ionization): Combination of electrospray and desorption ionization method that ionizes gases, liquids and solids in open air under atmospheric pressure.
+    MS_DESI = MS_desorption_electrospray_ionization,
+
+    /// Mascot:PTM site assignment confidence: Relative probability that PTM site assignment is correct, derived from the Mascot score difference between matches to the same spectrum (Mascot Delta Score).
+    MS_Mascot_PTM_site_assignment_confidence = 1002012,
+
+    /// collision energy ramp start: Collision energy at the start of the collision energy ramp.
+    MS_collision_energy_ramp_start = 1002013,
+
+    /// collision energy ramp end: Collision energy at the end of the collision energy ramp.
+    MS_collision_energy_ramp_end = 1002014,
+
     /// unimod root node: The root node of the unimod modifications ontology.
     UNIMOD_unimod_root_node = 100000000,
 
@@ -6465,7 +6660,7 @@ enum PWIZ_API_DECL CVID
     /// Hex(3)HexNAc(2)P(1): Hex3HexNAc2P1.
     UNIMOD_Hex_3_HexNAc_2_P_1_ = 100000161,
 
-    /// Delta:S(-1)Se(1): Selenium replaces sulphur.
+    /// Delta:S(-1)Se(1): Selenium replaces sulfur.
     UNIMOD_Delta_S__1_Se_1_ = 100000162,
 
     /// Delta:H(1)O(-1)18O(1): Glycosylated asparagine 18O labeling.
@@ -8946,6 +9141,15 @@ enum PWIZ_API_DECL CVID
     /// DiLeu4plex118: Accurate mass for DiLeu 118 isobaric tag.
     UNIMOD_DiLeu4plex118 = 100001324,
 
+    /// NEMsulfur: N-ethylmaleimideSulfur.
+    UNIMOD_NEMsulfur = 100001326,
+
+    /// SulfurDioxide: SulfurDioxide.
+    UNIMOD_SulfurDioxide = 100001327,
+
+    /// NEMsulfurWater: N-ethylmaleimideSulfurWater.
+    UNIMOD_NEMsulfurWater = 100001328,
+
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 200000000,
 
@@ -9051,7 +9255,7 @@ enum PWIZ_API_DECL CVID
     /// week: A time unit which is equal to 7 days.
     UO_week = 200000034,
 
-    /// month: A time unit which is approximately equal to the length of time of one of cycle of the moon's phases which is science is taken to be equal to 30 days.
+    /// month: A time unit which is approximately equal to the length of time of one of cycle of the moon's phases which in science is taken to be equal to 30 days.
     UO_month = 200000035,
 
     /// year: A time unit which is equal to 12 months which is science is taken to be equal to 365.25 days.

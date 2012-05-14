@@ -1551,23 +1551,35 @@ xref: delta_composition "H(16) C(9) O(2)"
 xref: username_of_poster "unimod"
 xref: group_of_poster "admin"
 xref: date_time_posted "2002-08-19 19:17:11"
-xref: date_time_modified "2006-11-14 11:38:12"
+xref: date_time_modified "2012-03-09 11:21:00"
 xref: approved "1"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "K"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "Post-translational"
-xref: spec_1_group "1"
-xref: spec_1_hidden "1"
-xref: spec_1_site "H"
-xref: spec_1_position "Anywhere"
-xref: spec_1_classification "Post-translational"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
 xref: spec_1_site "C"
 xref: spec_1_position "Anywhere"
 xref: spec_1_classification "Post-translational"
+xref: spec_2_group "2"
+xref: spec_2_hidden "1"
+xref: spec_2_site "H"
+xref: spec_2_position "Anywhere"
+xref: spec_2_classification "Post-translational"
+xref: spec_3_group "3"
+xref: spec_3_hidden "1"
+xref: spec_3_site "K"
+xref: spec_3_position "Anywhere"
+xref: spec_3_classification "Post-translational"
+xref: spec_4_group "4"
+xref: spec_4_hidden "1"
+xref: spec_4_site "A"
+xref: spec_4_position "Anywhere"
+xref: spec_4_classification "Post-translational"
+xref: spec_4_misc_notes "GFAP from human brain tissues"
+xref: spec_5_group "5"
+xref: spec_5_hidden "1"
+xref: spec_5_site "L"
+xref: spec_5_position "Anywhere"
+xref: spec_5_classification "Post-translational"
+xref: spec_5_misc_notes "GFAP from human brain tissues"
 is_a: UNIMOD:0 ! unimod root node
 
 
@@ -3308,7 +3320,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:162
 name: Delta:S(-1)Se(1)
-def: "Selenium replaces sulphur." [PMID:12148805, RESID:AA0022, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=162]
+def: "Selenium replaces sulfur." [RESID:AA0022, PMID:12148805, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=162]
 xref: record_id "162"
 xref: delta_mono_mass "47.944449"
 xref: delta_avge_mass "46.8950"
@@ -3316,7 +3328,7 @@ xref: delta_composition "S(-1) Se"
 xref: username_of_poster "pnacman"
 xref: group_of_poster "users"
 xref: date_time_posted "2003-10-14 11:24:28"
-xref: date_time_modified "2006-10-16 10:11:58"
+xref: date_time_modified "2012-03-09 11:23:23"
 xref: approved "1"
 xref: spec_1_group "1"
 xref: spec_1_hidden "1"
@@ -23477,6 +23489,71 @@ xref: spec_3_site "Y"
 xref: spec_3_position "Anywhere"
 xref: spec_3_classification "Isotopic label"
 xref: spec_3_misc_notes "Low abundance"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1326
+name: NEMsulfur
+def: "N-ethylmaleimideSulfur." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1326]
+synonym: "NEMS" []
+xref: record_id "1326"
+xref: delta_mono_mass "157.019749"
+xref: delta_avge_mass "157.1903"
+xref: delta_composition "H(7) C(6) N O(2) S"
+xref: username_of_poster "Raghothama"
+xref: group_of_poster ""
+xref: date_time_posted "2012-02-29 17:06:24"
+xref: date_time_modified "2012-03-09 11:26:23"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1327
+name: SulfurDioxide
+def: "SulfurDioxide." [PMID:http://www.ncbi.nlm.nih.gov/pubmed/21740851, UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1327]
+xref: record_id "1327"
+xref: delta_mono_mass "63.961900"
+xref: delta_avge_mass "64.0638"
+xref: delta_composition "O(2) S"
+xref: username_of_poster "Raghothama"
+xref: group_of_poster ""
+xref: date_time_posted "2012-02-29 17:24:24"
+xref: date_time_modified "2012-03-09 11:25:41"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+
+[Term]
+id: UNIMOD:1328
+name: NEMsulfurWater
+def: "N-ethylmaleimideSulfurWater." [UNIMODURL:http\://www.unimod.org/modifications_view.php?editid1=1328]
+synonym: "NEMSwater" []
+xref: record_id "1328"
+xref: delta_mono_mass "175.030314"
+xref: delta_avge_mass "175.2056"
+xref: delta_composition "H(9) C(6) N O(3) S"
+xref: username_of_poster "Raghothama"
+xref: group_of_poster ""
+xref: date_time_posted "2012-02-29 17:25:30"
+xref: date_time_modified "2012-03-09 11:24:53"
+xref: approved "0"
+xref: spec_1_group "1"
+xref: spec_1_hidden "1"
+xref: spec_1_site "C"
+xref: spec_1_position "Anywhere"
+xref: spec_1_classification "Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 

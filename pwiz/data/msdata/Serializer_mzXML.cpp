@@ -457,12 +457,12 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             {
                 info.activation = "CID";
             }
-            else if (it->activation.hasCVParam(MS_high_energy_collision_induced_dissociation))
+            else if (it->activation.hasCVParam(MS_HCD))
             {
                 info.activation = "HCD";
             }
 
-            if (it->activation.hasCVParam(MS_CID))
+            if (it->activation.hasCVParam(MS_CID) || it->activation.hasCVParam(MS_HCD))
                 info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
         }
         if (!info.empty()) result.push_back(info);

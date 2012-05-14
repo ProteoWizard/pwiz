@@ -332,7 +332,7 @@ created_by: george gkoutos
 [Term]
 id: UO:0000035
 name: month
-def: "A time unit which is approximately equal to the length of time of one of cycle of the moon's phases which is science is taken to be equal to 30 days." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
+def: "A time unit which is approximately equal to the length of time of one of cycle of the moon's phases which in science is taken to be equal to 30 days." [Wikipedia:Wikipedia "http://www.wikipedia.org/"]
 subset: unit_slim
 is_a: UO:0000003 ! time unit
 created_by: george gkoutos
