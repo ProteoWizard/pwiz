@@ -75,7 +75,7 @@ namespace pwiz.Topograph.ui.Forms
 
         }
 
-        void ErrorHandler_ErrorAdded(Topograph.Util.Error error)
+        private void ErrorHandler_ErrorAdded(Topograph.Util.Error error)
         {
             try
             {
@@ -91,7 +91,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             catch
             {
-                
+
             }
         }
 
@@ -112,18 +112,20 @@ namespace pwiz.Topograph.ui.Forms
             get
             {
                 return new[]
-                {
-                        closeWorkspaceToolStripMenuItem,
-                        runningJobsToolStripMenuItem,
-                        databaseLocksToolStripMenuItem,
-                        outputWorkspaceSQLToolStripMenuItem,
-                        recalculateResultsToolStripMenuItem,
-                };
+                           {
+                               closeWorkspaceToolStripMenuItem,
+                               runningJobsToolStripMenuItem,
+                               databaseLocksToolStripMenuItem,
+                               outputWorkspaceSQLToolStripMenuItem,
+                               recalculateResultsToolStripMenuItem,
+                           };
             }
         }
+
         private ToolStripMenuItem[] WorkspaceLoadedMenuItems
         {
-            get {
+            get
+            {
                 return new[]
                            {
                                modificationsToolStripMenuItem,
@@ -153,10 +155,7 @@ namespace pwiz.Topograph.ui.Forms
 
         public Workspace Workspace
         {
-            get
-            {
-                return _workspace;
-            }
+            get { return _workspace; }
             set
             {
                 var openWorkspaceForms = new List<WorkspaceForm>();
@@ -193,9 +192,9 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         menuItem.Enabled = _workspace.IsLoaded;
                     }
-                    databaseSizeToolStripMenuItem.Enabled 
-                        = _workspace.TpgLinkDef != null 
-                        && _workspace.TpgLinkDef.DatabaseTypeEnum == DatabaseTypeEnum.mysql;
+                    databaseSizeToolStripMenuItem.Enabled
+                        = _workspace.TpgLinkDef != null
+                          && _workspace.TpgLinkDef.DatabaseTypeEnum == DatabaseTypeEnum.mysql;
                     _workspace.EntitiesChange += Workspace_EntitiesChange;
                     _workspace.WorkspaceDirty += Workspace_WorkspaceDirty;
                     _workspace.WorkspaceLoaded += Workspace_WorkspaceLoaded;
@@ -238,7 +237,7 @@ namespace pwiz.Topograph.ui.Forms
 
         public event EventHandler WorkspaceChange;
 
-        void Workspace_WorkspaceDirty(Workspace workspace)
+        private void Workspace_WorkspaceDirty(Workspace workspace)
         {
             UpdateWindowTitle();
         }
@@ -272,7 +271,7 @@ namespace pwiz.Topograph.ui.Forms
             BrowseForDataDirectory();
         }
 
-        void UpdateWindowTitle()
+        private void UpdateWindowTitle()
         {
             if (Workspace == null)
             {
@@ -305,17 +304,17 @@ namespace pwiz.Topograph.ui.Forms
             Text = text;
         }
 
-        void Workspace_EntitiesChange(EntitiesChangedEventArgs entitiesChangedEventArgs)
+        private void Workspace_EntitiesChange(EntitiesChangedEventArgs entitiesChangedEventArgs)
         {
             UpdateWindowTitle();
         }
 
-        void Workspace_WorkspaceLoaded(Workspace workspace)
+        private void Workspace_WorkspaceLoaded(Workspace workspace)
         {
             BeginInvoke(new Action(WorkspaceLoaded));
         }
 
-        void WorkspaceLoaded()
+        private void WorkspaceLoaded()
         {
             foreach (var menuItem in WorkspaceLoadedMenuItems)
             {
@@ -366,10 +365,10 @@ namespace pwiz.Topograph.ui.Forms
             }
             Settings.Default.Reload();
             using (var fileDialog = new SaveFileDialog()
-            {
-                Filter = WorkspaceFilter,
-                InitialDirectory = Settings.Default.WorkspaceDirectory
-            })
+                                        {
+                                            Filter = WorkspaceFilter,
+                                            InitialDirectory = Settings.Default.WorkspaceDirectory
+                                        })
             {
                 if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
                 {
@@ -382,7 +381,10 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     File.Delete(filename);
                 }
-                using (ISessionFactory sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename, SessionFactoryFlags.create_schema))
+                using (
+                    ISessionFactory sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename,
+                                                                                                SessionFactoryFlags.
+                                                                                                    create_schema))
                 {
                     InitWorkspace(sessionFactory);
                 }
@@ -427,7 +429,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 var result =
                     MessageBox.Show(
-                        "This workspace needs to be upgraded to this version of Topograph.  Do you want to do that now?", 
+                        "This workspace needs to be upgraded to this version of Topograph.  Do you want to do that now?",
                         Program.AppName, MessageBoxButtons.OKCancel);
                 if (result == DialogResult.Cancel)
                 {
@@ -457,10 +459,10 @@ namespace pwiz.Topograph.ui.Forms
             }
             Settings.Default.Reload();
             using (var fileDialog = new OpenFileDialog
-            {
-                Filter = AnyWorkspaceFilter,
-                InitialDirectory = Settings.Default.WorkspaceDirectory
-            })
+                                        {
+                                            Filter = AnyWorkspaceFilter,
+                                            InitialDirectory = Settings.Default.WorkspaceDirectory
+                                        })
             {
                 if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
                 {
@@ -539,7 +541,7 @@ namespace pwiz.Topograph.ui.Forms
             if (Workspace.IsDirty)
             {
                 var dialogResult = MessageBox.Show(this, "Do you want to save changes to this workspace?",
-                                                       Program.AppName, MessageBoxButtons.YesNoCancel);
+                                                   Program.AppName, MessageBoxButtons.YesNoCancel);
                 if (dialogResult == DialogResult.Cancel)
                 {
                     return false;
@@ -579,7 +581,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             return EnsureMsDataFile(msDataFile, false);
         }
-        
+
         public bool EnsureMsDataFile(MsDataFile msDataFile, bool alwaysPrompt)
         {
             String errorMessage;
@@ -592,17 +594,18 @@ namespace pwiz.Topograph.ui.Forms
                 return true;
             }
             DialogResult dialogResult = MessageBox.Show(
-                "Unable to open the data file for " + msDataFile.Name + ". " + errorMessage + " Do you want to look for this file?",
+                "Unable to open the data file for " + msDataFile.Name + ". " + errorMessage +
+                " Do you want to look for this file?",
                 Program.AppName, MessageBoxButtons.OKCancel);
             while (dialogResult == DialogResult.OK)
             {
                 using (OpenFileDialog fileDialog = new OpenFileDialog
-                    {
-                        Filter = msDataFile.Name + ".*|" + msDataFile.Name + ".*"
-                                 + "|All Files|*.*",
-                        Title = "Browser for " + msDataFile.Name,
-                        InitialDirectory = Settings.Default.RawFilesDirectory
-                    })
+                                                       {
+                                                           Filter = msDataFile.Name + ".*|" + msDataFile.Name + ".*"
+                                                                    + "|All Files|*.*",
+                                                           Title = "Browser for " + msDataFile.Name,
+                                                           InitialDirectory = Settings.Default.RawFilesDirectory
+                                                       })
                 {
                     fileDialog.ShowDialog(this);
 
@@ -617,7 +620,8 @@ namespace pwiz.Topograph.ui.Forms
                     return true;
                 }
                 dialogResult =
-                    MessageBox.Show(errorMessage + " Do you want to keep looking for a different file?", Program.AppName, MessageBoxButtons.OKCancel);
+                    MessageBox.Show(errorMessage + " Do you want to keep looking for a different file?", Program.AppName,
+                                    MessageBoxButtons.OKCancel);
             }
             Workspace.RejectMsDataFile(msDataFile);
             return false;
@@ -721,13 +725,18 @@ namespace pwiz.Topograph.ui.Forms
 
         private void updateProteinNamesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ChooseFastaFile();
+        }
+
+        public void ChooseFastaFile()
+        {
             Settings.Default.Reload();
             using (var openFileDialog = new OpenFileDialog
-                {
-                    Title = "Browse for FASTA file",
-                    Multiselect = true,
-                    InitialDirectory = Settings.Default.FastaDirectory,
-                })
+            {
+                Title = "Browse for FASTA file",
+                Multiselect = true,
+                InitialDirectory = Settings.Default.FastaDirectory,
+            })
             {
                 if (openFileDialog.ShowDialog(this) == DialogResult.Cancel || openFileDialog.FileNames.Count() == 0)
                 {
@@ -745,7 +754,7 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void queriesToolStripMenuItem_Click(object sender, EventArgs e)
+    private void queriesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var form = Program.FindOpenForm<QueriesForm>();
             if (form != null)

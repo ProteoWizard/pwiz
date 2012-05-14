@@ -18,8 +18,10 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 using NHibernate;
+using NHibernate.Criterion;
 using pwiz.Common.SystemUtil;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
@@ -100,6 +102,18 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                                                           _completedBackgroundQuery.TotalResults);
                     SetProgressBarValue(progressBarResults, 100*_completedBackgroundQuery.ResultsPresent/
                                                _completedBackgroundQuery.TotalResults);
+                }
+                if (0 == _completedBackgroundQuery.ForeignLockCount)
+                {
+                    panelForeignLocks.Visible = false;
+                }
+                else
+                {
+                    lblForeignLocks.Text =
+                        string.Format(
+                            "The database says that there are {0} tasks being performed by other instances of Topograph",
+                            _completedBackgroundQuery.ForeignLockCount);
+                    panelForeignLocks.Visible = true;
                 }
             }
             else
@@ -186,10 +200,14 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                     var queryChromatogramsMissing =
                         _session.CreateQuery("SELECT COUNT(F.Id) FROM " + typeof(DbPeptideFileAnalysis) +
                                             " F WHERE F.ChromatogramSet IS NULL");
+                    var queryForeignLock = _session.CreateQuery("SELECT COUNT(L.Id) FROM " + typeof (DbLock) + " L WHERE L.InstanceIdBytes <> :instanceIdBytes")
+                        .SetParameter("instanceIdBytes", Workspace.InstanceId.ToByteArray());
+
                     ResultsPresent = Convert.ToInt32(queryResultsPresent.UniqueResult());
                     ResultsMissing = Convert.ToInt32(queryResultsMissing.UniqueResult());
                     ChromatogramsPresent = Convert.ToInt32(queryChromatogramsPresent.UniqueResult());
                     ChromatogramsMissing = Convert.ToInt32(queryChromatogramsMissing.UniqueResult());
+                    ForeignLockCount = Convert.ToInt32(queryForeignLock.UniqueResult());
                     CheckDisposed();
                     _waitForResultsStep.BeginInvoke(new Action(_waitForResultsStep.UpdateStepStatus));
                 }
@@ -225,6 +243,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             public int ResultsPresent { get; private set; }
             public int ResultsMissing { get; private set; }
             public int TotalResults { get { return ResultsPresent + ResultsMissing; } }
+            public int ForeignLockCount { get; private set; }
             public bool IsStale()
             {
                 return !IsRunning && !ReferenceEquals(Workspace, _waitForResultsStep.Workspace)
@@ -235,6 +254,34 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         private void timer_Tick(object sender, EventArgs e)
         {
             UpdateStepStatus();
+        }
+
+        private void btnCancelTasks_Click(object sender, EventArgs e)
+        {
+            IList<long> idsToDelete;
+            using (var session = Workspace.OpenSession())
+            {
+                idsToDelete =
+                    session.CreateQuery("SELECT L.Id FROM " + typeof (DbLock) + " L WHERE L.InstanceId <> :instanceId").
+                        SetParameter("instanceId", Workspace.InstanceId.ToByteArray()).List<long>();
+            }
+            foreach (var id in idsToDelete)
+            {
+                try
+                {
+                    using (var session = Workspace.OpenWriteSession())
+                    {
+                        session.BeginTransaction();
+                        var dbLock = session.Load<DbLock>(id);
+                        session.Delete(dbLock);
+                        session.Transaction.Commit();
+                    }
+                }
+                catch (StaleObjectStateException)
+                {
+                    // ignore
+                }
+            }
         }
     }
 }

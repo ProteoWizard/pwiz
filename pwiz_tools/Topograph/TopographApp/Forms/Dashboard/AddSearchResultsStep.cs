@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 using System;
-using pwiz.Topograph.Model;
+using System.Linq;
 
 namespace pwiz.Topograph.ui.Forms.Dashboard
 {
@@ -76,6 +76,17 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                             string.Format("{0} in {1} have been added to this workspace.",
                                           strPeptides, strDataFiles);
                     }
+                    var peptidesWithoutDescription =
+                        Workspace.Peptides.ListChildren().Where(
+                            peptide => string.IsNullOrEmpty(peptide.ProteinDescription)).ToArray();
+                    if (peptidesWithoutDescription.Length > Workspace.Peptides.ChildCount / 2)
+                    {
+                        panelUpdateProteinNames.Visible = true;
+                    }
+                    else
+                    {
+                        panelUpdateProteinNames.Visible = false;
+                    }
                 }
             }
             base.UpdateStepStatus();
@@ -84,6 +95,11 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         private void btnAddSearchResults_Click(object sender, EventArgs e)
         {
             TurnoverForm.AddSearchResults();
+        }
+
+        private void btnChooseFastaFile_Click(object sender, EventArgs e)
+        {
+            TurnoverForm.ChooseFastaFile();
         }
     }
 }
