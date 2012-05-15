@@ -360,29 +360,36 @@ namespace IDPicker
                 }
                 catch
                 {
-                    var findDirectoryDialog = new FolderBrowserDialog()
-                    {
-                        SelectedPath = Properties.GUI.Settings.Default.LastSpectrumSourceDirectory,
-                        ShowNewFolderButton = false,
-                        Description = "Locate the directory containing the source \"" + spectrumSourceName + "\""
-                    };
+                    string result = String.Empty;
 
-                    while (findDirectoryDialog.ShowDialog() == DialogResult.OK)
+                    Program.MainWindow.Invoke(new MethodInvoker(() =>
                     {
-                        try
-                        {
-                            string sourcePath = Util.FindSourceInSearchPath(spectrumSourceName, findDirectoryDialog.SelectedPath);
-                            Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
-                            Properties.GUI.Settings.Default.Save();
-                            return sourcePath;
-                        }
-                        catch
-                        {
-                            // couldn't find the source in that directory; prompt user again
-                        }
-                    }
+                        var findDirectoryDialog = new FolderBrowserDialog()
+                                                      {
+                                                          SelectedPath = Properties.GUI.Settings.Default.LastSpectrumSourceDirectory,
+                                                          ShowNewFolderButton = false,
+                                                          Description = "Locate the directory containing the source \"" + spectrumSourceName + "\""
+                                                      };
 
-                    return String.Empty; // user canceled
+                        result = String.Empty;
+                        while (findDirectoryDialog.ShowDialog() == DialogResult.OK)
+                        {
+                            try
+                            {
+                                string sourcePath = Util.FindSourceInSearchPath(spectrumSourceName, findDirectoryDialog.SelectedPath);
+                                Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
+                                Properties.GUI.Settings.Default.Save();
+                                result = sourcePath;
+                                break;
+                            }
+                            catch
+                            {
+                                // couldn't find the source in that directory; prompt user again
+                            }
+                        }
+                    }));
+
+                    return result; // user canceled
                 }
             }
         }
@@ -726,6 +733,39 @@ namespace IDPicker
             new Thread(() => { OpenFiles(args, null); }).Start();
         }
 
+        /// <summary>
+        /// Shows the user a SaveFileDialog (from the UI thread) for choosing a new location for an idpDB file.
+        /// </summary>
+        /// <returns>True if the dialog result is OK.</returns>
+        bool saveFileDialog (ref string commonFilename)
+        {
+            string filename = commonFilename;
+            bool cancel = false;
+
+            Invoke(new MethodInvoker(() =>
+            {
+                var sfd = new SaveFileDialog
+                {
+                    FileName = filename,
+                    AddExtension = true,
+                    RestoreDirectory = true,
+                    DefaultExt = "idpDB",
+                    Filter = "IDPicker Database|*.idpDB"
+                };
+
+                if (sfd.ShowDialog() != DialogResult.OK)
+                    cancel = true;
+                else
+                    filename = sfd.FileName;
+            }));
+
+            if (cancel)
+                return false;
+
+            commonFilename = filename;
+            return true;
+        }
+
         void OpenFiles (IList<string> filepaths, TreeNode rootNode)
         {
             try
@@ -784,25 +824,8 @@ namespace IDPicker
                 {
                     if(filepaths.Contains(commonFilename))
                     {
-                        bool cancel = false;
                         MessageBox.Show("File list contains the default output name, please select a new name.");
-                        Invoke(new MethodInvoker(() =>
-                        {
-                            var sfd = new SaveFileDialog
-                            {
-                                AddExtension = true,
-                                RestoreDirectory = true,
-                                DefaultExt = "idpDB",
-                                Filter = "IDPicker Database|*.idpDB"
-                            };
-                            if (sfd.ShowDialog() != DialogResult.OK)
-                            {
-                                cancel = true;
-                                return;
-                            }
-                            commonFilename = sfd.FileName;
-                        }));
-                        if (cancel)
+                        if (!saveFileDialog(ref commonFilename))
                             return;
                     }
                     else
@@ -828,24 +851,7 @@ namespace IDPicker
                                 }
                                 break;
                             case DialogResult.No:
-                                bool cancel = false;
-                                Invoke(new MethodInvoker(() =>
-                                                             {
-                                                                 var sfd = new SaveFileDialog
-                                                                               {
-                                                                                   AddExtension = true,
-                                                                                   RestoreDirectory = true,
-                                                                                   DefaultExt = "idpDB",
-                                                                                   Filter = "IDPicker Database|*.idpDB"
-                                                                               };
-                                                                 if (sfd.ShowDialog() != DialogResult.OK)
-                                                                 {
-                                                                     cancel = true;
-                                                                     return;
-                                                                 }
-                                                                 commonFilename = sfd.FileName;
-                                                             }));
-                                if (cancel)
+                                if (!saveFileDialog(ref commonFilename))
                                     return;
                                 break;
                             case DialogResult.Cancel:
@@ -879,25 +885,7 @@ namespace IDPicker
                         }
                     }
 
-                    bool cancel = false;
-                    Invoke(new MethodInvoker(() =>
-                    {
-                        var sfd = new SaveFileDialog
-                                   {
-                                       AddExtension = true,
-                                       RestoreDirectory = true,
-                                       DefaultExt = "idpDB",
-                                       Filter = "IDPicker Database|*.idpDB"
-                                   };
-                        if (sfd.ShowDialog() != DialogResult.OK)
-                        {
-                            cancel = true;
-                            return;
-                        }
-                        commonFilename = sfd.FileName;
-                    }));
-
-                    if (cancel)
+                    if (!saveFileDialog(ref commonFilename))
                         return;
                 }
                 //Environment.CurrentDirectory = possibleDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -969,6 +957,27 @@ namespace IDPicker
                 }
 
                 // HACK: this needs to be handled more gracefully
+                if (!IsHandleCreated)
+                    return;
+
+                if (Properties.GUI.Settings.Default.WarnAboutNonFixedDrive &&
+                    DriveType.Fixed != new DriveInfo(Path.GetPathRoot(commonFilename)).DriveType)
+                {
+                    string oldFilename = commonFilename;
+                    bool copyLocal = true;
+                    Invoke(new MethodInvoker(() =>
+                                                 {
+                                                     var form = new NonFixedDriveWarningForm();
+                                                     if (form.ShowDialog(this) == DialogResult.Ignore)
+                                                         copyLocal = false;
+                                                 }));
+                    if (!copyLocal || !saveFileDialog(ref commonFilename))
+                        return;
+
+                    toolStripStatusLabel.Text = "Copying idpDB...";
+                    File.Copy(oldFilename, commonFilename, true);
+                }
+
                 if (!IsHandleCreated)
                     return;
 

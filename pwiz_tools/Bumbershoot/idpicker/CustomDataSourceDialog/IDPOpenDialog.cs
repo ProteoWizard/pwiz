@@ -766,7 +766,19 @@ namespace CustomDataSourceDialog
             FileTreeView.Nodes.Add(FilterNode(_unfilteredNode, regexConversion));
             if (errorNode != null)
                 FileTreeView.Nodes.Add(errorNode);
-            CorrectNamingScheme(FileTreeView.Nodes[0],string.Empty);
+
+            // remove duplicate root directories
+            foreach (TreeNode node in FileTreeView.Nodes[0].Nodes)
+                if (String.IsNullOrEmpty(Path.GetFileName(node.ToolTipText)))
+                {
+                    var childNodes = node.Nodes.Cast<TreeNode>().ToArray();
+                    foreach (var childNode in childNodes)
+                        node.Nodes.Remove(childNode);
+                    node.Parent.Nodes.AddRange(childNodes);
+                    node.Parent.Nodes.Remove(node);
+                }
+
+            CorrectNamingScheme(FileTreeView.Nodes[0], String.Empty);
             FileTreeView.ExpandAll();
         }
 
@@ -1157,34 +1169,13 @@ namespace CustomDataSourceDialog
             var sourceList = new List<string>();
             if (file.Extension.ToLower() != ".idpdb")
                 sourceList.Add(Parser.ParseSource(file.FullName));//Path.GetFileNameWithoutExtension(file.FullName));
-            else if (SessionFactoryFactory.IsValidFile(file.FullName))
+            else
             {
-                NHibernate.ISessionFactory sessionFactory = null;
-                NHibernate.ISession session = null;
-                try
+                using (var conn = new System.Data.SQLite.SQLiteConnection(String.Format("Data Source={0};Version=3", file.FullName)))
                 {
-                    sessionFactory = SessionFactoryFactory.CreateSessionFactory(file.FullName);
-                    session = sessionFactory.OpenSession();
-                    var temp = session.QueryOver<SpectrumSource>().List();
-                    sourceList.AddRange(temp.Select(item => item.Name));
-                    session.Close();
-                    session.Dispose();
-                    sessionFactory.Close();
-                    sessionFactory.Dispose();
-                }
-                catch
-                {
-                    if (session != null)
-                    {
-                        session.Close();
-                        session.Dispose();
-                    }
-                    if (sessionFactory != null)
-                    {
-                        sessionFactory.Close();
-                        sessionFactory.Dispose();
-                    }
-                    throw;
+                    conn.Open();
+                    var sourceNameQuery = conn.ExecuteQuery("SELECT Name FROM SpectrumSource");
+                    sourceList.AddRange(sourceNameQuery.Select(o => o.GetString(0)));
                 }
             }
 

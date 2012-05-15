@@ -106,7 +106,7 @@ namespace IDPicker.Forms
             this.gbGroups.Size = new System.Drawing.Size(340, 465);
             this.gbGroups.TabIndex = 127;
             this.gbGroups.TabStop = false;
-            this.gbGroups.Text = "tlvBranch Hierarchy";
+            this.gbGroups.Text = "Source Group Hierarchy";
             // 
             // pnlBgGroups
             // 
@@ -233,7 +233,7 @@ namespace IDPicker.Forms
             this.gbFiles.Size = new System.Drawing.Size(338, 465);
             this.gbFiles.TabIndex = 128;
             this.gbFiles.TabStop = false;
-            this.gbFiles.Text = "Non-Grouped Files";
+            this.gbFiles.Text = "Non-Grouped Sources";
             // 
             // pnlUngroupedFiles
             // 

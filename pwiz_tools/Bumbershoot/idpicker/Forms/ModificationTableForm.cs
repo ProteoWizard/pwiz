@@ -760,25 +760,21 @@ namespace IDPicker.Forms
 
                 applySort();
 
-                try
+                if (deltaMassTable.Rows.Count > 0)
                 {
-                    if (deltaMassTable.Rows.Count > 0)
+                    dataGridView[0, 0].Selected = false;
+                    if (oldSelectedAddress != null)
                     {
-                        dataGridView[0, 0].Selected = false;
-                        if (oldSelectedAddress != null)
+                        string columnName = oldSelectedAddress.second;
+                        int massColumnIndex = dataGridView.Columns[deltaMassColumnName].Index;
+                        var oldSelectedRow = dataGridView.Rows.Cast<DataGridViewRow>().SingleOrDefault(o => (double) o.Cells[massColumnIndex].Value == oldSelectedAddress.first);
+                        if (dataGridView.Columns.Contains(columnName) && oldSelectedRow != null)
                         {
-                            string columnName = oldSelectedAddress.second;
-                            int rowIndex = deltaMassTable.DefaultView.Find(oldSelectedAddress.first);
-                            if (dataGridView.Columns.Contains(columnName) && rowIndex != -1)
-                            {
-                                dataGridView.FirstDisplayedCell = dataGridView[columnName, rowIndex];
-                                dataGridView.FirstDisplayedCell.Selected = true;
-                            }
+                            var oldSelectedCell = dataGridView[columnName, oldSelectedRow.Index];
+                            dataGridView.FirstDisplayedCell = oldSelectedCell;
+                            oldSelectedCell.Selected = true;
                         }
                     }
-                }
-                catch
-                {
                 }
             }
 

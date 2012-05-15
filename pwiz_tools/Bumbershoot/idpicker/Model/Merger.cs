@@ -374,14 +374,15 @@ namespace IDPicker.DataModel
                                                             AND newInstance.Length = oldInstance.Length
                                                             AND newInstance.Offset = oldInstance.Offset;
                 INSERT INTO PeptideInstanceMergeMap
-                SELECT newInstance.Id, IFNULL(oldInstance.Id, newInstance.Id+{1}), IFNULL(oldInstance.Protein, proMerge.AfterMergeId), newInstance.Peptide, IFNULL(oldPeptide.Id, newInstance.Peptide+{2})
+                SELECT newInstance.Id, MIN(IFNULL(oldInstance.Id, newInstance.Id+{1})), IFNULL(oldInstance.Protein, proMerge.AfterMergeId), newInstance.Peptide, MIN(IFNULL(oldPeptide.Id, newInstance.Peptide+{2}))
                 FROM ProteinMergeMap proMerge
                 JOIN {0}.PeptideInstance newInstance ON proMerge.BeforeMergeId = newInstance.Protein
                                                     AND newInstance.Offset IS NULL
                 JOIN {0}.Peptide newPeptide ON newInstance.Peptide = newPeptide.Id
                 LEFT JOIN merged.Peptide oldPeptide ON newPeptide.DecoySequence = oldPeptide.DecoySequence
                 LEFT JOIN merged.PeptideInstance oldInstance ON oldPeptide.Id = oldInstance.Peptide
-                                                            AND proMerge.AfterMergeId = oldInstance.Protein;
+                                                            AND proMerge.AfterMergeId = oldInstance.Protein
+                GROUP BY newInstance.Id;
 
                 CREATE UNIQUE INDEX PeptideInstanceMergeMap_Index2 ON PeptideInstanceMergeMap (AfterMergeId);
                 CREATE INDEX PeptideInstanceMergeMap_Index3 ON PeptideInstanceMergeMap (BeforeMergePeptide);

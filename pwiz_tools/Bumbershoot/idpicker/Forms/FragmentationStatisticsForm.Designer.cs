@@ -58,18 +58,23 @@ namespace IDPicker.Forms
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.zedGraphControl = new ZedGraph.ZedGraphControl();
             this.spectrumFiltersTextBox = new System.Windows.Forms.TextBox();
             this.lockZoomCheckBox = new System.Windows.Forms.CheckBox();
             this.refreshButton = new System.Windows.Forms.Button();
+            this.fragmentToleranceUnitsComboBox = new System.Windows.Forms.ComboBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.fragmentToleranceTextBox = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
             // exportButton
             // 
             this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Enabled = false;
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
-            this.exportButton.Location = new System.Drawing.Point(392, 2);
+            this.exportButton.Location = new System.Drawing.Point(700, 2);
             this.exportButton.Name = "exportButton";
             this.exportButton.Size = new System.Drawing.Size(30, 23);
             this.exportButton.TabIndex = 4;
@@ -106,34 +111,13 @@ namespace IDPicker.Forms
             this.showInExcelToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
             // 
-            // zedGraphControl
-            // 
-            this.zedGraphControl.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.zedGraphControl.IsEnableHPan = false;
-            this.zedGraphControl.IsEnableHZoom = false;
-            this.zedGraphControl.IsSynchronizeYAxes = true;
-            this.zedGraphControl.IsZoomOnMouseCenter = true;
-            this.zedGraphControl.Location = new System.Drawing.Point(-1, 27);
-            this.zedGraphControl.Name = "zedGraphControl";
-            this.zedGraphControl.ScrollGrace = 0;
-            this.zedGraphControl.ScrollMaxX = 0;
-            this.zedGraphControl.ScrollMaxY = 0;
-            this.zedGraphControl.ScrollMaxY2 = 0;
-            this.zedGraphControl.ScrollMinX = 0;
-            this.zedGraphControl.ScrollMinY = 0;
-            this.zedGraphControl.ScrollMinY2 = 0;
-            this.zedGraphControl.Size = new System.Drawing.Size(436, 237);
-            this.zedGraphControl.TabIndex = 5;
-            // 
             // spectrumFiltersTextBox
             // 
             this.spectrumFiltersTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.spectrumFiltersTextBox.Location = new System.Drawing.Point(41, 4);
+            this.spectrumFiltersTextBox.Location = new System.Drawing.Point(44, 4);
             this.spectrumFiltersTextBox.Name = "spectrumFiltersTextBox";
-            this.spectrumFiltersTextBox.Size = new System.Drawing.Size(251, 20);
+            this.spectrumFiltersTextBox.Size = new System.Drawing.Size(360, 20);
             this.spectrumFiltersTextBox.TabIndex = 6;
             this.spectrumFiltersTextBox.Text = "threshold count 50 most-intense;";
             this.spectrumFiltersTextBox.TextChanged += new System.EventHandler(this.spectrumFiltersTextBox_TextChanged);
@@ -142,33 +126,96 @@ namespace IDPicker.Forms
             // lockZoomCheckBox
             // 
             this.lockZoomCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lockZoomCheckBox.Appearance = System.Windows.Forms.Appearance.Button;
             this.lockZoomCheckBox.AutoSize = true;
-            this.lockZoomCheckBox.Location = new System.Drawing.Point(306, 6);
+            this.lockZoomCheckBox.Location = new System.Drawing.Point(591, 2);
             this.lockZoomCheckBox.Name = "lockZoomCheckBox";
-            this.lockZoomCheckBox.Size = new System.Drawing.Size(80, 17);
+            this.lockZoomCheckBox.Size = new System.Drawing.Size(71, 23);
             this.lockZoomCheckBox.TabIndex = 7;
             this.lockZoomCheckBox.Text = "Lock Zoom";
             this.lockZoomCheckBox.UseVisualStyleBackColor = true;
             // 
             // refreshButton
             // 
-            this.refreshButton.Location = new System.Drawing.Point(3, 2);
+            this.refreshButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.refreshButton.Location = new System.Drawing.Point(666, 2);
             this.refreshButton.Name = "refreshButton";
-            this.refreshButton.Size = new System.Drawing.Size(32, 23);
+            this.refreshButton.Size = new System.Drawing.Size(30, 23);
             this.refreshButton.TabIndex = 9;
-            this.refreshButton.Text = "Refresh";
             this.refreshButton.UseVisualStyleBackColor = true;
             this.refreshButton.Click += new System.EventHandler(this.refreshButton_Click);
+            // 
+            // fragmentToleranceUnitsComboBox
+            // 
+            this.fragmentToleranceUnitsComboBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.fragmentToleranceUnitsComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.fragmentToleranceUnitsComboBox.FormattingEnabled = true;
+            this.fragmentToleranceUnitsComboBox.Items.AddRange(new object[] {
+            "m/z",
+            "ppm"});
+            this.fragmentToleranceUnitsComboBox.Location = new System.Drawing.Point(538, 3);
+            this.fragmentToleranceUnitsComboBox.Name = "fragmentToleranceUnitsComboBox";
+            this.fragmentToleranceUnitsComboBox.Size = new System.Drawing.Size(47, 21);
+            this.fragmentToleranceUnitsComboBox.TabIndex = 22;
+            // 
+            // label4
+            // 
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(411, 7);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(87, 13);
+            this.label4.TabIndex = 21;
+            this.label4.Text = "Match tolerance:";
+            // 
+            // fragmentToleranceTextBox
+            // 
+            this.fragmentToleranceTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.fragmentToleranceTextBox.Location = new System.Drawing.Point(499, 4);
+            this.fragmentToleranceTextBox.Name = "fragmentToleranceTextBox";
+            this.fragmentToleranceTextBox.Size = new System.Drawing.Size(41, 20);
+            this.fragmentToleranceTextBox.TabIndex = 20;
+            this.fragmentToleranceTextBox.Text = "0.5";
+            this.fragmentToleranceTextBox.TextChanged += new System.EventHandler(this.spectrumFiltersTextBox_TextChanged);
+            this.fragmentToleranceTextBox.KeyDown += new System.Windows.Forms.KeyEventHandler(this.fragmentToleranceTextBox_KeyDown);
+            this.fragmentToleranceTextBox.Leave += new System.EventHandler(this.spectrumFiltersTextBox_Leave);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(4, 7);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(37, 13);
+            this.label1.TabIndex = 23;
+            this.label1.Text = "Filters:";
+            // 
+            // dockPanel
+            // 
+            this.dockPanel.ActiveAutoHideContent = null;
+            this.dockPanel.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.dockPanel.DockLeftPortion = 0.5;
+            this.dockPanel.DockRightPortion = 0.5;
+            this.dockPanel.DockTopPortion = 0.5;
+            this.dockPanel.Location = new System.Drawing.Point(-2, 27);
+            this.dockPanel.Name = "dockPanel";
+            this.dockPanel.Size = new System.Drawing.Size(746, 369);
+            this.dockPanel.TabIndex = 24;
             // 
             // FragmentationStatisticsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(434, 262);
+            this.ClientSize = new System.Drawing.Size(743, 395);
+            this.Controls.Add(this.dockPanel);
+            this.Controls.Add(this.fragmentToleranceUnitsComboBox);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.fragmentToleranceTextBox);
             this.Controls.Add(this.refreshButton);
             this.Controls.Add(this.lockZoomCheckBox);
             this.Controls.Add(this.spectrumFiltersTextBox);
-            this.Controls.Add(this.zedGraphControl);
             this.Controls.Add(this.exportButton);
             this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas) (((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
                         | DigitalRune.Windows.Docking.DockAreas.Top)
@@ -190,10 +237,14 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
-        private ZedGraph.ZedGraphControl zedGraphControl;
         private System.Windows.Forms.TextBox spectrumFiltersTextBox;
         private System.Windows.Forms.CheckBox lockZoomCheckBox;
         private System.Windows.Forms.Button refreshButton;
+        public System.Windows.Forms.ComboBox fragmentToleranceUnitsComboBox;
+        private System.Windows.Forms.Label label4;
+        public System.Windows.Forms.TextBox fragmentToleranceTextBox;
+        private System.Windows.Forms.Label label1;
+        private DigitalRune.Windows.Docking.DockPanel dockPanel;
 
     }
 }

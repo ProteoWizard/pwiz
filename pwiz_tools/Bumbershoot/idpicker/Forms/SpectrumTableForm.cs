@@ -816,7 +816,7 @@ namespace IDPicker.Forms
                                                     .Count(o => o.SpectrumSourceGroup.IsImmediateChildOf(row.SpectrumSourceGroup));
                 e.ChildRowCount += cachedRowsBySource.Where(o => o is SpectrumSourceRow)
                                                      .Select(o => o as SpectrumSourceRow)
-                                                     .Count(o => o.SpectrumSource.Group == row.SpectrumSourceGroup);
+                                                     .Count(o => o.SpectrumSource.Group.Id == row.SpectrumSourceGroup.Id);
 
                 if (e.ChildRowCount == 0)
                     throw new InvalidDataException("no child rows for source group");

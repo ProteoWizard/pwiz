@@ -169,6 +169,12 @@
     <Compile Include="Forms\NewVersionForm.Designer.cs">
       <DependentUpon>NewVersionForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\NonFixedDriveWarningForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\NonFixedDriveWarningForm.Designer.cs">
+      <DependentUpon>NonFixedDriveWarningForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\PeakStatisticsForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -352,6 +358,9 @@
     <EmbeddedResource Include="Forms\NewVersionForm.resx">
       <DependentUpon>NewVersionForm.cs</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\NonFixedDriveWarningForm.resx">
+      <DependentUpon>NonFixedDriveWarningForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\PeakStatisticsForm.resx">
       <DependentUpon>PeakStatisticsForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -431,27 +440,6 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\filllefths.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\fillrighths.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Collapse_large.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Expand_large.bmp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\XPfolder_closed.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\file.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Export.png" />
-  </ItemGroup>
-  <ItemGroup>
     <COMReference Include="Microsoft.Office.Core">
       <Guid>{2DF8D04C-5BFA-101B-BDE5-00AA0044DE52}</Guid>
       <VersionMajor>2</VersionMajor>
@@ -470,12 +458,6 @@
     </COMReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\DataProcessing.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\Annotation.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\idpicker-style.css" />
   </ItemGroup>
   <ItemGroup>
@@ -483,18 +465,19 @@
     <None Include="Resources\idpicker-scripts.js" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Resources\filllefths.png" />
+    <None Include="Resources\fillrighths.png" />
+    <None Include="Resources\Collapse_large.bmp" />
+    <None Include="Resources\Expand_large.bmp" />
+    <None Include="Resources\XPfolder_closed.png" />
+    <None Include="Resources\file.png" />
+    <None Include="Resources\Export.png" />
+    <None Include="Resources\DataProcessing.png" />
+    <None Include="Resources\Annotation.png" />
     <None Include="Resources\Cluster.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\Protein.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\ProteinGroup.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\DistinctMatch.png" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Resources\Peptide.png" />
   </ItemGroup>
   <ItemGroup>
@@ -509,25 +492,21 @@
     <None Include="Resources\IDPicker.ico" />
     <None Include="Resources\IDPickerInputFile.ico" />
     <None Include="Resources\IDPickerDatabase.ico" />
+    <None Include="Resources\PeptideViewIcon.ico" />
+    <None Include="Resources\ProteinViewIcon.ico" />
+    <None Include="Resources\SpectrumViewIcon.ico" />
+    <None Include="Resources\Refresh.ico" />
+    <None Include="Resources\Search.ico" />
+    <None Include="Resources\BlankIcon.ico" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Resources.rc" />
     <None Include="Resources\Resources.res" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\PeptideViewIcon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\ProteinViewIcon.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\SpectrumViewIcon.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <Content Include="QuasiTel V2.R">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="Resources\BlankIcon.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

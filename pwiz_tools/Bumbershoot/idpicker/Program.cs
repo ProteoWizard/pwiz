@@ -138,7 +138,7 @@ namespace IDPicker
             }
 
             // for certain exception types, the InnerException is a better representative of the real error
-            if (e is NHibernate.ADOException &&
+            if ((e is NHibernate.ADOException || e.GetType() == typeof(Exception)) &&
                 e.InnerException != null)
                 e = e.InnerException;
 

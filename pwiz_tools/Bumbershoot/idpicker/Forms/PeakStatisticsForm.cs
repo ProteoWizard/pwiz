@@ -181,11 +181,22 @@ namespace IDPicker.Forms
         {
             IList<object[]> queryRows;
             lock (session)
+            {
+                var randomIds = session.CreateQuery("SELECT psm.Id " + viewFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch))
+                                       .List<long>()
+                                       .Shuffle()
+                                       .Take(1000)
+                                       .OrderBy(o => o);
+                string randomIdSet = String.Join(",", randomIds.Select(o => o.ToString()).ToArray());
                 queryRows = session.CreateQuery("SELECT psm.Spectrum.Source.Name, psm.Spectrum, psm, DISTINCT_GROUP_CONCAT(pm.Offset || ':' || mod.MonoMassDelta), psm.Peptide.Sequence " +
-                                                viewFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToModification) +
-                                                " GROUP BY psm.Spectrum.id ")
+                                                "FROM PeptideSpectrumMatch psm " +
+                                                "LEFT JOIN psm.Modifications pm " +
+                                                "LEFT JOIN pm.Modification mod " +
+                                                "WHERE psm.Id IN (" + randomIdSet + ") " +
+                                                "GROUP BY psm.Spectrum.id ")
                                    .List<object[]>();
-            var spectrumRows = queryRows.Select(o => new SpectrumRow(o)).Shuffle().Take(1000).OrderBy(o => o.SourceName);
+            }
+            var spectrumRows = queryRows.Select(o => new SpectrumRow(o)).OrderBy(o => o.SourceName);
 
             precursorScatterPlot.Clear();
             chargeReducedScatterPlot.Clear();

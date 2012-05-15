@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -121,27 +122,99 @@ namespace IDPicker.Forms
             Text = TabText = "Fragmentation Statistics";
             Icon = Properties.Resources.BlankIcon;
 
+            refreshButton.Image = new Icon(Properties.Resources.Refresh, refreshButton.Width / 2, refreshButton.Height / 2).ToBitmap();
+
+            percentTicGraphForm = new DockableForm { Text = "%TIC" };
+            percentPeakCountGraphForm = new DockableForm { Text = "%PeakCount" };
+            meanMzErrorGraphForm = new DockableForm { Text = "Mean m/z error" };
+
+            percentTicGraphControl = new ZedGraphControl { Dock = DockStyle.Fill, Text = percentTicGraphForm.Text };
+            percentPeakCountGraphControl = new ZedGraphControl { Dock = DockStyle.Fill, Text = percentPeakCountGraphForm.Text };
+            meanMzErrorGraphControl = new ZedGraphControl { Dock = DockStyle.Fill, Text = meanMzErrorGraphForm.Text };
+
+            percentTicGraphForm.Controls.Add(percentTicGraphControl);
+            percentPeakCountGraphForm.Controls.Add(percentPeakCountGraphControl);
+            meanMzErrorGraphForm.Controls.Add(meanMzErrorGraphControl);
+
+            initializeGraphControl(percentTicGraphControl);
+            initializeGraphControl(percentPeakCountGraphControl);
+            initializeGraphControl(meanMzErrorGraphControl);
+
+            graphControls = new List<ZedGraphControl>
+            {
+                percentTicGraphControl,
+                percentPeakCountGraphControl,
+                meanMzErrorGraphControl
+            };
+
+            meanMzErrorGraphForm.Show(dockPanel, DockState.Document);
+            percentTicGraphForm.Show(dockPanel, DockState.Document);
+            percentPeakCountGraphForm.Show(dockPanel, DockState.Document);
+            meanMzErrorGraphForm.Activate();
+
+            fragmentTolerance = new MZTolerance(0.5, MZTolerance.Units.MZ);
+            fragmentToleranceUnitsComboBox.Text = fragmentTolerance.value.ToString();
+            fragmentToleranceUnitsComboBox.SelectedIndex = (int) fragmentTolerance.units;
+        }
+
+        private IDPickerForm owner;
+        private NHibernate.ISession session;
+
+        private DataFilter viewFilter; // what the user has filtered on
+        private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
+        private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
+
+        private List<double> fragmentationStatistics, basicFragmentationStatistics;
+
+        private DockableForm percentTicGraphForm, percentPeakCountGraphForm;
+        private DockableForm meanMzErrorGraphForm;
+
+        private ZedGraphControl percentTicGraphControl, percentPeakCountGraphControl;
+        private ZedGraphControl meanMzErrorGraphControl;
+
+        private List<ZedGraphControl> graphControls;
+
+        private MZTolerance fragmentTolerance;
+
+        private ZedGraphControl ActiveGraphControl
+        {
+            get
+            {
+                if (dockPanel.ActiveContent == null && dockPanel.LastActiveContent == null)
+                    return null;
+                if (dockPanel.ActiveContent == null)
+                    return (dockPanel.LastActiveContent as DockableForm).Controls[0] as ZedGraphControl;
+                return (dockPanel.ActiveContent as DockableForm).Controls[0] as ZedGraphControl;
+            }
+        }
+
+        private void initializeGraphControl (ZedGraphControl zedGraphControl)
+        {
             zedGraphControl.MasterPane.PaneList.Clear();
-            zedGraphControl.MasterPane.SetLayout(zedGraphControl.CreateGraphics(), 3, (int) IonSeries.Count + 1);
+            zedGraphControl.MasterPane.SetLayout(zedGraphControl.CreateGraphics(), 1, (int) IonSeries.Count + 1);
             zedGraphControl.MasterPane.InnerPaneGap = 0;
             zedGraphControl.MasterPane.Border.IsVisible = true;
+            zedGraphControl.IsEnableHPan = false;
+            zedGraphControl.IsEnableHZoom = false;
+            zedGraphControl.IsSynchronizeYAxes = true;
+            zedGraphControl.IsZoomOnMouseCenter = true;
 
-            var axisPane1 = new GraphPane();
-            axisPane1.Legend.IsVisible = false;
-            axisPane1.IsFontsScaled = false;
-            axisPane1.XAxis.IsVisible = false;
-            axisPane1.YAxis.Scale.Min = 0;
-            axisPane1.YAxis.Scale.Max = 100;
-            axisPane1.YAxis.Title.Text = "%TIC";
-            axisPane1.YAxis.Title.Gap = 0.05f;
-            axisPane1.YAxis.MajorTic.IsOpposite = false;
-            axisPane1.YAxis.MinorTic.IsOpposite = false;
-            axisPane1.Chart.Border.IsVisible = false;
-            axisPane1.Border.IsVisible = false;
-            axisPane1.Margin.Left = 1;
-            axisPane1.Margin.Right = 0;
-            axisPane1.Title.Text = "Series:";
-            zedGraphControl.MasterPane.Add(axisPane1);
+            var axisPane = new GraphPane();
+            axisPane.Legend.IsVisible = false;
+            axisPane.IsFontsScaled = false;
+            axisPane.XAxis.IsVisible = false;
+            axisPane.YAxis.Scale.Min = 0;
+            axisPane.YAxis.Scale.Max = 100;
+            axisPane.YAxis.Title.Text = zedGraphControl.Text;
+            axisPane.YAxis.Title.Gap = 0.05f;
+            axisPane.YAxis.MajorTic.IsOpposite = false;
+            axisPane.YAxis.MinorTic.IsOpposite = false;
+            axisPane.Chart.Border.IsVisible = false;
+            axisPane.Border.IsVisible = false;
+            axisPane.Margin.Left = 1;
+            axisPane.Margin.Right = 0;
+            axisPane.Title.Text = "Series:";
+            zedGraphControl.MasterPane.Add(axisPane);
 
             var csr = new ColorSymbolRotator();
             for (int i = 0; i < (int) IonSeries.Count; ++i)
@@ -197,167 +270,9 @@ namespace IDPicker.Forms
                 scatter.Symbol.Size = 3f;
             }
 
-            {
-                var axisPane2 = new GraphPane();
-                axisPane2.Legend.IsVisible = false;
-                axisPane2.IsFontsScaled = false;
-                axisPane2.XAxis.IsVisible = false;
-                axisPane2.YAxis.Scale.Min = 0;
-                axisPane2.YAxis.Scale.Max = 100;
-                axisPane2.YAxis.Title.Text = "%Peaks";
-                axisPane2.YAxis.Title.Gap = 0.05f;
-                axisPane2.YAxis.MajorTic.IsOpposite = false;
-                axisPane2.YAxis.MinorTic.IsOpposite = false;
-                axisPane2.Chart.Border.IsVisible = false;
-                axisPane2.Border.IsVisible = false;
-                axisPane2.Margin.Left = 1;
-                axisPane2.Margin.Right = 0;
-                axisPane2.Title.Text = "";
-                zedGraphControl.MasterPane.Add(axisPane2);
-
-                csr = new ColorSymbolRotator();
-                for (int i = 0; i < (int) IonSeries.Count; ++i)
-                {
-                    var graphPane = new GraphPane();
-                    graphPane.Title.IsVisible = false;
-                    graphPane.Legend.IsVisible = false;
-                    graphPane.IsFontsScaled = false;
-                    graphPane.Chart.Border.IsVisible = false;
-                    graphPane.Border.IsVisible = false;
-                    graphPane.XAxis.Scale.Min = -1;
-                    graphPane.XAxis.Scale.Max = 1;
-                    graphPane.XAxis.IsVisible = false;
-                    graphPane.YAxis.Scale.Min = 0;
-                    graphPane.YAxis.Scale.Max = 100;
-                    graphPane.YAxis.IsVisible = false;
-                    zedGraphControl.MasterPane.Add(graphPane);
-
-                    graphPane.BarSettings.Type = BarType.Overlay;
-                    graphPane.BarSettings.ClusterScaleWidth = 1;
-
-                    var mean = graphPane.AddCurve(IonSeriesLabels[i],
-                                                  new PointPairList(),
-                                                  Color.Black,
-                                                  SymbolType.Circle);
-                    mean.Line.IsVisible = false;
-                    mean.Symbol.Border.IsVisible = false;
-                    mean.Symbol.Fill.Type = FillType.Solid;
-                    mean.Symbol.Fill.Color = Color.Black;
-
-                    var errorBar = graphPane.AddErrorBar(IonSeriesLabels[i],
-                                                         new PointPairList(),
-                                                         Color.Black);
-                    errorBar.Bar.IsVisible = true;
-                    errorBar.Bar.PenWidth = .1f;
-                    errorBar.Bar.Symbol.IsVisible = true;
-                    errorBar.Bar.Symbol.Type = SymbolType.HDash;
-                    errorBar.Bar.Symbol.Border.Width = .1f;
-                    errorBar.Bar.Symbol.Size = 4;
-
-                    var hiLowBar = graphPane.AddHiLowBar(IonSeriesLabels[i],
-                                                         new PointPairList(),
-                                                         Color.Black);
-                    hiLowBar.Bar.Fill.Type = FillType.None;
-
-                    var scatter = graphPane.AddCurve(IonSeriesLabels[i],
-                                                     new PointPairList(),
-                                                     csr.NextColor,
-                                                     SymbolType.Circle);
-                    scatter.Line.IsVisible = false;
-                    scatter.Symbol.IsAntiAlias = true;
-                    scatter.Symbol.Border.IsVisible = false;
-                    scatter.Symbol.Fill.Type = FillType.Solid;
-                    scatter.Symbol.Size = 3f;
-                }
-            }
-
-            // add fragment m/z error statistics
-            {
-                var axisPane2 = new GraphPane();
-                axisPane2.Legend.IsVisible = false;
-                axisPane2.IsFontsScaled = false;
-                axisPane2.XAxis.IsVisible = false;
-                axisPane2.YAxis.Scale.Min = 0;
-                axisPane2.YAxis.Scale.Max = 100;
-                axisPane2.YAxis.Title.Text = "Mean m/z error";
-                axisPane2.YAxis.Title.Gap = 0.05f;
-                axisPane2.YAxis.MajorTic.IsOpposite = false;
-                axisPane2.YAxis.MinorTic.IsOpposite = false;
-                axisPane2.Chart.Border.IsVisible = false;
-                axisPane2.Border.IsVisible = false;
-                axisPane2.Margin.Left = 1;
-                axisPane2.Margin.Right = 0;
-                axisPane2.Title.Text = "";
-                zedGraphControl.MasterPane.Add(axisPane2);
-
-                csr = new ColorSymbolRotator();
-                for (int i = 0; i < (int) IonSeries.Count; ++i)
-                {
-                    var graphPane = new GraphPane();
-                    graphPane.Title.IsVisible = false;
-                    graphPane.Legend.IsVisible = false;
-                    graphPane.IsFontsScaled = false;
-                    graphPane.Chart.Border.IsVisible = false;
-                    graphPane.Border.IsVisible = false;
-                    graphPane.XAxis.Scale.Min = -1;
-                    graphPane.XAxis.Scale.Max = 1;
-                    graphPane.XAxis.IsVisible = false;
-                    graphPane.YAxis.Scale.Min = 0;
-                    graphPane.YAxis.Scale.Max = 100;
-                    graphPane.YAxis.IsVisible = false;
-                    zedGraphControl.MasterPane.Add(graphPane);
-
-                    graphPane.BarSettings.Type = BarType.Overlay;
-                    graphPane.BarSettings.ClusterScaleWidth = 1;
-
-                    var mean = graphPane.AddCurve(IonSeriesLabels[i],
-                                                  new PointPairList(),
-                                                  Color.Black,
-                                                  SymbolType.Circle);
-                    mean.Line.IsVisible = false;
-                    mean.Symbol.Border.IsVisible = false;
-                    mean.Symbol.Fill.Type = FillType.Solid;
-                    mean.Symbol.Fill.Color = Color.Black;
-
-                    var errorBar = graphPane.AddErrorBar(IonSeriesLabels[i],
-                                                         new PointPairList(),
-                                                         Color.Black);
-                    errorBar.Bar.IsVisible = true;
-                    errorBar.Bar.PenWidth = .1f;
-                    errorBar.Bar.Symbol.IsVisible = true;
-                    errorBar.Bar.Symbol.Type = SymbolType.HDash;
-                    errorBar.Bar.Symbol.Border.Width = .1f;
-                    errorBar.Bar.Symbol.Size = 4;
-
-                    var hiLowBar = graphPane.AddHiLowBar(IonSeriesLabels[i],
-                                                         new PointPairList(),
-                                                         Color.Black);
-                    hiLowBar.Bar.Fill.Type = FillType.None;
-
-                    var scatter = graphPane.AddCurve(IonSeriesLabels[i],
-                                                     new PointPairList(),
-                                                     csr.NextColor,
-                                                     SymbolType.Circle);
-                    scatter.Line.IsVisible = false;
-                    scatter.Symbol.IsAntiAlias = true;
-                    scatter.Symbol.Border.IsVisible = false;
-                    scatter.Symbol.Fill.Type = FillType.Solid;
-                    scatter.Symbol.Size = 3f;
-                }
-            }
-
             zedGraphControl.MasterPane.AxisChange();
             zedGraphControl.Refresh();
         }
-
-        private IDPickerForm owner;
-        private NHibernate.ISession session;
-
-        private DataFilter viewFilter; // what the user has filtered on
-        private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
-        private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
-
-        private List<double> fragmentationStatistics, basicFragmentationStatistics;
 
         private void addSixNumberSummary(GraphPane graphPane, IList<double> sortedNumbers)
         {
@@ -376,15 +291,33 @@ namespace IDPicker.Forms
             graphPane.CurveList[2].AddPoint(new PointPair(0, median, q1, label));
         }
 
+        private double mzError (double observed, double expected)
+        {
+            if (fragmentTolerance.units == MZTolerance.Units.PPM)
+                return (observed - expected) / expected * 1e6;
+            return observed - expected;
+        }
+
         private List<double> getFragmentationStatistics ()
         {
             IList<object[]> queryRows;
             lock (session)
+            {
+                var randomIds = session.CreateQuery("SELECT psm.Id " + viewFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch))
+                                       .List<long>()
+                                       .Shuffle()
+                                       .Take(1000)
+                                       .OrderBy(o => o);
+                string randomIdSet = String.Join(",", randomIds.Select(o => o.ToString()).ToArray());
                 queryRows = session.CreateQuery("SELECT psm.Spectrum.Source.Name, psm.Spectrum, psm, DISTINCT_GROUP_CONCAT(pm.Offset || ':' || mod.MonoMassDelta), psm.Peptide.Sequence " +
-                                                viewFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToModification) +
-                                                " GROUP BY psm.Spectrum.id ")
+                                                "FROM PeptideSpectrumMatch psm " +
+                                                "LEFT JOIN psm.Modifications pm " + 
+                                                "LEFT JOIN pm.Modification mod " +
+                                                "WHERE psm.Id IN (" + randomIdSet + ") " +
+                                                "GROUP BY psm.Spectrum.id ")
                                    .List<object[]>();
-            var spectrumRows = queryRows.Select(o => new SpectrumRow(o)).Shuffle().Take(1000).OrderBy(o => o.SourceName);
+            }
+            var spectrumRows = queryRows.Select(o => new SpectrumRow(o)).OrderBy(o => o.SourceName);
 
             var percentTicBySpectrumByFragmentType = new List<PointPairList>();
             var percentPeakCountBySpectrumByFragmentType = new List<PointPairList>();
@@ -393,15 +326,14 @@ namespace IDPicker.Forms
             var percentPeakCountListByFragmentType = new List<List<double>>();
             var meanMzErrorListByFragmentType = new List<List<double>>();
 
-            foreach (var pane in zedGraphControl.MasterPane.PaneList)
-                foreach (var curve in pane.CurveList)
-                    curve.Clear();
+            foreach(var graphControl in graphControls)
+                graphControl.MasterPane.PaneList.ForEach(o => o.CurveList.ForEach(c => c.Clear()));
 
             for (int i = 0; i < (int) IonSeries.Count; ++i)
             {
-                percentTicBySpectrumByFragmentType.Add(zedGraphControl.MasterPane.PaneList[i + 1].CurveList[3].Points as PointPairList);
-                percentPeakCountBySpectrumByFragmentType.Add(zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 2].CurveList[3].Points as PointPairList);
-                meanMzErrorBySpectrumByFragmentType.Add(zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 3].CurveList[3].Points as PointPairList);
+                percentTicBySpectrumByFragmentType.Add(percentTicGraphControl.MasterPane.PaneList[i + 1].CurveList[3].Points as PointPairList);
+                percentPeakCountBySpectrumByFragmentType.Add(percentPeakCountGraphControl.MasterPane.PaneList[i + 1].CurveList[3].Points as PointPairList);
+                meanMzErrorBySpectrumByFragmentType.Add(meanMzErrorGraphControl.MasterPane.PaneList[i + 1].CurveList[3].Points as PointPairList);
                 percentTicListByFragmentType.Add(new List<double>());
                 percentPeakCountListByFragmentType.Add(new List<double>());
                 meanMzErrorListByFragmentType.Add(new List<double>());
@@ -410,21 +342,31 @@ namespace IDPicker.Forms
             int spectraCount = 0;
             double maxPercentTic = 10;
             double maxPercentPeakCount = 10;
-            double maxMeanMzError = 0.5;
+            double maxMeanMzError = 0.1;
+            var tolerance = fragmentTolerance;
 
             string spectrumListFilters = String.Empty;
             Invoke(new MethodInvoker(() =>
             {
+                tolerance.value = Convert.ToDouble(fragmentToleranceTextBox.Text);
+                tolerance.units = (MZTolerance.Units) fragmentToleranceUnitsComboBox.SelectedIndex;
+                meanMzErrorGraphControl.GraphPane.YAxis.Title.Text = "Mean m/z error (" + tolerance.units.ToString() + ")";
+
                 spectrumListFilters = spectrumFiltersTextBox.Text;
                 if (!lockZoomCheckBox.Checked)
                     for (int i = 0; i <= (int) IonSeries.Count; ++i)
                     {
-                        zedGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxPercentTic;
-                        zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 1].YAxis.Scale.Max = maxPercentPeakCount;
-                        zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 2].YAxis.Scale.Max = maxMeanMzError;
+                        percentTicGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxPercentTic;
+                        percentPeakCountGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxPercentPeakCount;
+                        meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxMeanMzError;
+                        meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = -maxMeanMzError;
                     }
-                zedGraphControl.MasterPane.AxisChange();
-                zedGraphControl.Refresh();
+
+                foreach (var graphControl in graphControls)
+                {
+                    graphControl.MasterPane.AxisChange();
+                    graphControl.Refresh();
+                }
             }));
 
             var points = new PointPairList();
@@ -440,6 +382,8 @@ namespace IDPicker.Forms
                 {
                     currentSourceName = row.SourceName;
                     currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName);
+                    if (String.IsNullOrEmpty(currentSourcePath))
+                        throw new FileNotFoundException("source file not found");
                     msd = new pwiz.CLI.msdata.MSDataFile(currentSourcePath);
 
                     //var param = session.Query<AnalysisParameter>().Where(o => o.Name == "SpectrumListFilters").Min(o => o.Value);
@@ -473,38 +417,39 @@ namespace IDPicker.Forms
 
                     // a
                     expected = fragmentation.a(length, z);
-                    itr = pointMap.FindNear(expected, 0.5);
+                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[(int) IonSeries.a] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[(int) IonSeries.a];
-                        meanMzErrorByFragmentType[(int) IonSeries.a] += (itr.Current.Key - expected) / expected * 1e6;
+                        meanMzErrorByFragmentType[(int) IonSeries.a] += mzError(itr.Current.Key, expected);
                     }
 
                     // b
                     expected = fragmentation.b(length, z);
-                    itr = pointMap.FindNear(expected, 0.5);
+                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[(int) IonSeries.b] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[(int) IonSeries.b];
-                        meanMzErrorByFragmentType[(int) IonSeries.b] += (itr.Current.Key - expected) / expected * 1e6;
+                        meanMzErrorByFragmentType[(int) IonSeries.b] += mzError(itr.Current.Key, expected);
                     }
 
                     if (length != pwizPeptide.sequence.Length)
                     {
                         // c
                         expected = fragmentation.c(length, z);
-                        itr = pointMap.FindNear(expected, 0.5);
+                        itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                         if (itr != null && itr.IsValid)
                         {
                             percentTicByFragmentType[(int) IonSeries.a] += itr.Current.Value;
                             ++percentPeakCountByFragmentType[(int) IonSeries.a];
-                            meanMzErrorByFragmentType[(int) IonSeries.a] += (itr.Current.Key - expected) / expected * 1e6;
+                            meanMzErrorByFragmentType[(int) IonSeries.a] += mzError(itr.Current.Key, expected);
                         }
 
                         // c-1
-                        /*itr = pointMap.FindNear(fragmentation.c(length, z) - Proton.Mass / z, 0.5);
+                        /*expected = fragmentation.c(length, z) - Proton.Mass / z;
+                        itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                         if (itr != null && itr.IsValid)
                         {
                             percentTicByFragmentType[3] += itr.Current.Value;
@@ -514,47 +459,48 @@ namespace IDPicker.Forms
 
                         // x
                         expected = fragmentation.x(length, z);
-                        itr = pointMap.FindNear(expected, 0.5);
+                        itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                         if (itr != null && itr.IsValid)
                         {
                             percentTicByFragmentType[(int) IonSeries.x] += itr.Current.Value;
                             ++percentPeakCountByFragmentType[(int) IonSeries.x];
-                            meanMzErrorByFragmentType[(int) IonSeries.x] += (itr.Current.Key - expected) / expected * 1e6;
+                            meanMzErrorByFragmentType[(int) IonSeries.x] += mzError(itr.Current.Key, expected);
                         }
                     }
 
                     // y
                     expected = fragmentation.y(length, z);
-                    itr = pointMap.FindNear(expected, 0.5);
+                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[(int) IonSeries.y] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[(int) IonSeries.y];
-                        meanMzErrorByFragmentType[(int) IonSeries.y] += (itr.Current.Key - expected) / expected * 1e6;
+                        meanMzErrorByFragmentType[(int) IonSeries.y] += mzError(itr.Current.Key, expected);
                     }
 
                     // z
                     expected = fragmentation.z(length, z);
-                    itr = pointMap.FindNear(expected, 0.5);
+                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[(int) IonSeries.z] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[(int) IonSeries.z];
-                        meanMzErrorByFragmentType[(int) IonSeries.z] += (itr.Current.Key - expected) / expected * 1e6;
+                        meanMzErrorByFragmentType[(int) IonSeries.z] += mzError(itr.Current.Key, expected);
                     }
 
                     // z+1
                     /*expected = fragmentation.zRadical(length, z);
-                    itr = pointMap.FindNear(expected, 0.5);
+                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[7] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[7];
-                        meanMzErrorByFragmentType[7] += (itr.Current.Key - expected) / expected * 1e6;
+                        meanMzErrorByFragmentType[7] += mzError(itr.Current.Key, expected);
                     }
 
                     // z+2
-                    itr = pointMap.FindNear(fragmentation.zRadical(length, z) + Proton.Mass / z, 0.5);
+                    expected = fragmentation.zRadical(length, z) + Proton.Mass / z;
+                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                     if (itr != null && itr.IsValid)
                     {
                         percentTicByFragmentType[8] += itr.Current.Value;
@@ -568,7 +514,8 @@ namespace IDPicker.Forms
                 for (int i = 0; i < percentTicBySpectrumByFragmentType.Count; ++i)
                 {
                     // convert sum to mean
-                    meanMzErrorByFragmentType[i] /= percentPeakCountByFragmentType[i];
+                    if (percentPeakCountByFragmentType[i] > 0)
+                        meanMzErrorByFragmentType[i] /= percentPeakCountByFragmentType[i];
 
                     // convert to percentages
                     percentTicByFragmentType[i] /= tic / 100;
@@ -576,7 +523,7 @@ namespace IDPicker.Forms
 
                     maxPercentTic = Math.Max(maxPercentTic, percentTicByFragmentType[i]);
                     maxPercentPeakCount = Math.Max(maxPercentPeakCount, percentPeakCountByFragmentType[i]);
-                    maxMeanMzError = Math.Max(maxMeanMzError, meanMzErrorByFragmentType[i]);
+                    maxMeanMzError = Math.Max(maxMeanMzError, Math.Abs(meanMzErrorByFragmentType[i]));
 
                     double jitter = (rng.NextDouble() - 0.5);
                     percentTicBySpectrumByFragmentType[i].Add(jitter, percentTicByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, percentTicByFragmentType[i]));
@@ -592,18 +539,23 @@ namespace IDPicker.Forms
                 {
                     Invoke(new MethodInvoker(() =>
                     {
-                        if (!lockZoomCheckBox.Checked && !zedGraphControl.GraphPane.IsZoomed)
+                        if (!lockZoomCheckBox.Checked && ActiveGraphControl.GraphPane.IsZoomed)
                             for (int i = 0; i <= (int) IonSeries.Count; ++i)
                             {
-                                zedGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
-                                zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 1].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
-                                zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 2].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError * 0.05;
+                                percentTicGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
+                                percentPeakCountGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
+                                meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError * 0.05;
+                                meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = -meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max;
                             }
-                        zedGraphControl.MasterPane.AxisChange();
-                        zedGraphControl.Refresh();
+
+                        foreach (var graphControl in graphControls)
+                        {
+                            graphControl.MasterPane.AxisChange();
+                            graphControl.Refresh();
+                        }
                     }));
                 }
-            }
+            } // for each spectrum row
 
             Invoke(new MethodInvoker(() =>
             {
@@ -616,23 +568,30 @@ namespace IDPicker.Forms
                     percentPeakCountListByFragmentType[i].Sort();
                     meanMzErrorListByFragmentType[i].Sort();
 
-                    addSixNumberSummary(zedGraphControl.MasterPane.PaneList[i + 1], percentTicListByFragmentType[i]);
-                    addSixNumberSummary(zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 2], percentPeakCountListByFragmentType[i]);
-                    addSixNumberSummary(zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 3], meanMzErrorListByFragmentType[i]);
+                    addSixNumberSummary(percentTicGraphControl.MasterPane.PaneList[i + 1], percentTicListByFragmentType[i]);
+                    addSixNumberSummary(percentPeakCountGraphControl.MasterPane.PaneList[i + 1], percentPeakCountListByFragmentType[i]);
+                    addSixNumberSummary(meanMzErrorGraphControl.MasterPane.PaneList[i + 1], meanMzErrorListByFragmentType[i]);
                 }
 
                 if (!lockZoomCheckBox.Checked)
                 {
                     for (int i = 0; i <= (int) IonSeries.Count; ++i)
                     {
-                        zedGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
-                        zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count + i + 1].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
-                        zedGraphControl.MasterPane.PaneList[(int) IonSeries.Count * 2 + i + 2].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError * 0.05;
+                        percentTicGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
+                        percentPeakCountGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
+                        meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError * 0.05;
+                        meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = -meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max;
                     }
-                    zedGraphControl.ZoomOutAll(zedGraphControl.GraphPane);
+
+                    foreach (var graphControl in graphControls)
+                        graphControl.ZoomOutAll(graphControl.GraphPane);
                 }
-                zedGraphControl.MasterPane.AxisChange();
-                zedGraphControl.Refresh();
+
+                foreach (var graphControl in graphControls)
+                {
+                    graphControl.MasterPane.AxisChange();
+                    graphControl.Refresh();
+                }
             }));
             return new List<double>(); //percentTicBySpectrumByFragmentType[1];
         }
@@ -649,9 +608,6 @@ namespace IDPicker.Forms
         public void ClearData ()
         {
             Text = TabText = "Fragmentation Statistics";
-
-            //dataGridView.Rows.Clear();
-            //dataGridView.Refresh();
             Refresh();
         }
 
@@ -680,19 +636,21 @@ namespace IDPicker.Forms
                 else
                     fragmentationStatistics = getFragmentationStatistics();
             }
+            catch (FileNotFoundException)
+            {
+                // abort if the user canceled when locating the source
+                ClearData(true);
+            }
             catch (Exception ex)
             {
-                Invoke(new MethodInvoker(() => Program.HandleException(ex)));
+                ClearData(true);
+                Program.HandleException(ex);
             }
         }
 
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
-            Text = TabText = "Fragmentation Statistics";           
-
-            //dataGridView.Rows.Clear();
-            //dataGridView.Rows.Add(fragmentationStatistics.Cast<object>().ToArray());
-            //dataGridView.Refresh();
+            Text = TabText = "Fragmentation Statistics";
         }
 
         #region Export stuff
@@ -824,8 +782,8 @@ namespace IDPicker.Forms
                 WorkerSupportsCancellation = true
             };
 
-            workerThread.DoWork += new DoWorkEventHandler(setData);
-            workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
+            workerThread.DoWork += setData;
+            workerThread.RunWorkerCompleted += renderData;
             workerThread.RunWorkerAsync();
         }
 
@@ -838,6 +796,20 @@ namespace IDPicker.Forms
                 session.Dispose();
                 session = null;
             }
+        }
+
+        private void fragmentToleranceTextBox_KeyDown (object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Decimal || e.KeyCode == Keys.OemPeriod)
+            {
+                if ((sender as Control).Text.Length == 0 || (sender as Control).Text.Contains("."))
+                    e.SuppressKeyPress = true;
+            }
+            else if (!(e.KeyCode >= Keys.D0 && e.KeyCode <= Keys.D9 ||
+                    e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
+                    e.KeyCode == Keys.Delete || e.KeyCode == Keys.Back ||
+                    e.KeyCode == Keys.Left || e.KeyCode == Keys.Right))
+                e.SuppressKeyPress = true;
         }
     }
 }
