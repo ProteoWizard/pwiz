@@ -959,6 +959,13 @@ namespace pwiz.Skyline.Model.Results
                     isolationTargetMz = isolationWindow.Start + isolationWidthValue/2;
                 }
 
+                // MSe just uses the instrument isolation window
+                else if (isolationWidth.HasValue && 
+                        Equals(isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MS_E))
+                {
+                    isolationWidthValue = isolationWidth.Value;
+                }
+
                 // No defined isolation scheme?
                 else
                 {
