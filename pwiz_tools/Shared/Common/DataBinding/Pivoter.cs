@@ -108,13 +108,17 @@ namespace pwiz.Common.DataBinding
             var predicates = new List<Predicate<RowNode>>();
             foreach (var grouping in filterInfos.ToLookup(filterInfo=>filterInfo.ColumnDescriptor, filterInfo=>filterInfo.Predicate))
             {
-                predicates.Add(MakePredicate(grouping.Key, grouping));
+                var predicate = MakePredicate(grouping.Key, grouping);
+                if (predicate != null)
+                {
+                    predicates.Add(predicate);    
+                }
             }
             return Conjunction(predicates.ToArray());
         }
         private Predicate<RowNode> MakePredicate(ColumnDescriptor columnDescriptor, IEnumerable<Predicate<object>> predicates)
         {
-            var predicate = Conjunction(predicates.ToArray());
+            var predicate = Conjunction(predicates.Where(p=>null != p).ToArray());
             return rowNode=>predicate(columnDescriptor.DataSchema.UnwrapValue(columnDescriptor.GetPropertyValue(rowNode)));
         }
 

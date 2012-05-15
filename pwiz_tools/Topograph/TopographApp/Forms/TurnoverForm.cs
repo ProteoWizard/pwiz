@@ -47,7 +47,6 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             Instance = this;
-            this.Text = Environment.Is64BitProcess ? "Topograph (64-bit)" : "Topograph";
             ShowDashboard();
             var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;
             string[] args = (activationArgs != null ? activationArgs.ActivationData : null);
@@ -72,7 +71,7 @@ namespace pwiz.Topograph.ui.Forms
                     MessageBox.Show(this, "Invalid file specified.", Program.AppName);
                 }
             }
-
+            UpdateWindowTitle();
         }
 
         private void ErrorHandler_ErrorAdded(Topograph.Util.Error error)
@@ -273,9 +272,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private void UpdateWindowTitle()
         {
+            var appName = Environment.Is64BitProcess ? "Topograph (64-bit)" : "Topograph";
             if (Workspace == null)
             {
-                Text = Program.AppName;
+                Text = appName;
                 return;
             }
             var text = Path.GetFileName(_workspace.DatabasePath);
@@ -300,7 +300,7 @@ namespace pwiz.Topograph.ui.Forms
                 text += "(loading)";
             }
 
-            text += " - " + Program.AppName;
+            text += " - " + appName;
             Text = text;
         }
 

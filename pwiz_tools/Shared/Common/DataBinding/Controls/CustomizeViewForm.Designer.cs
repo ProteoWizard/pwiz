@@ -38,8 +38,25 @@
             this.tbxViewName = new System.Windows.Forms.TextBox();
             this.btnAdvanced = new System.Windows.Forms.Button();
             this.tabPageFilter = new System.Windows.Forms.TabPage();
+            this.splitContainerFilter = new System.Windows.Forms.SplitContainer();
+            this.availableFieldsTreeFilter = new pwiz.Common.DataBinding.Controls.AvailableFieldsTree();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.btnAddFilter = new System.Windows.Forms.Button();
+            this.dataGridViewFilter = new System.Windows.Forms.DataGridView();
+            this.colFilterColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colFilterOperation = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.colFilterOperand = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.toolStripFilter = new System.Windows.Forms.ToolStrip();
+            this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
             this.tabPageColumns = new System.Windows.Forms.TabPage();
             this.splitContainerAdvanced = new System.Windows.Forms.SplitContainer();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
+            this.availableFieldsTreeColumns = new pwiz.Common.DataBinding.Controls.AvailableFieldsTree();
+            this.listViewColumns = new System.Windows.Forms.ListView();
+            this.toolStripColumns = new System.Windows.Forms.ToolStrip();
+            this.btnRemove = new System.Windows.Forms.ToolStripButton();
+            this.btnUp = new System.Windows.Forms.ToolStripButton();
+            this.btnDown = new System.Windows.Forms.ToolStripButton();
             this.groupBoxSublist = new System.Windows.Forms.GroupBox();
             this.comboSublist = new System.Windows.Forms.ComboBox();
             this.groupBoxProperties = new System.Windows.Forms.GroupBox();
@@ -52,58 +69,49 @@
             this.tabPageSort = new System.Windows.Forms.TabPage();
             this.splitContainerSort = new System.Windows.Forms.SplitContainer();
             this.clbAvailableSortColumns = new System.Windows.Forms.CheckedListBox();
+            this.dataGridViewSort = new System.Windows.Forms.DataGridView();
+            this.colSortColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colSortDirection = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.toolStripSort = new System.Windows.Forms.ToolStrip();
             this.btnSortRemove = new System.Windows.Forms.ToolStripButton();
             this.btnSortMoveUp = new System.Windows.Forms.ToolStripButton();
             this.btnSortMoveDown = new System.Windows.Forms.ToolStripButton();
-            this.dataGridViewSort = new System.Windows.Forms.DataGridView();
-            this.colSortColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colSortDirection = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.listViewColumns = new System.Windows.Forms.ListView();
-            this.toolStripColumns = new System.Windows.Forms.ToolStrip();
-            this.btnRemove = new System.Windows.Forms.ToolStripButton();
-            this.btnUp = new System.Windows.Forms.ToolStripButton();
-            this.btnDown = new System.Windows.Forms.ToolStripButton();
-            this.availableFieldsTreeColumns = new pwiz.Common.DataBinding.Controls.AvailableFieldsTree();
-            this.splitContainerFilter = new System.Windows.Forms.SplitContainer();
-            this.availableFieldsTreeFilter = new pwiz.Common.DataBinding.Controls.AvailableFieldsTree();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.btnAddFilter = new System.Windows.Forms.Button();
-            this.dataGridViewFilter = new System.Windows.Forms.DataGridView();
-            this.colFilterColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colFilterOperation = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.colFilterOperand = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.toolStripFilter = new System.Windows.Forms.ToolStrip();
-            this.btnDeleteFilter = new System.Windows.Forms.ToolStripButton();
-            colHdrName = new System.Windows.Forms.ColumnHeader();
+            colHdrName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabPageFilter.SuspendLayout();
-            this.tabPageColumns.SuspendLayout();
-            this.splitContainerAdvanced.Panel1.SuspendLayout();
-            this.splitContainerAdvanced.Panel2.SuspendLayout();
-            this.splitContainerAdvanced.SuspendLayout();
-            this.groupBoxSublist.SuspendLayout();
-            this.groupBoxProperties.SuspendLayout();
-            this.groupBoxSortOrder.SuspendLayout();
-            this.groupBoxCaption.SuspendLayout();
-            this.tabControl1.SuspendLayout();
-            this.tabPageSort.SuspendLayout();
-            this.splitContainerSort.Panel1.SuspendLayout();
-            this.splitContainerSort.Panel2.SuspendLayout();
-            this.splitContainerSort.SuspendLayout();
-            this.toolStripSort.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewSort)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.toolStripColumns.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerFilter)).BeginInit();
             this.splitContainerFilter.Panel1.SuspendLayout();
             this.splitContainerFilter.Panel2.SuspendLayout();
             this.splitContainerFilter.SuspendLayout();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewFilter)).BeginInit();
             this.toolStripFilter.SuspendLayout();
+            this.tabPageColumns.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerAdvanced)).BeginInit();
+            this.splitContainerAdvanced.Panel1.SuspendLayout();
+            this.splitContainerAdvanced.Panel2.SuspendLayout();
+            this.splitContainerAdvanced.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
+            this.toolStripColumns.SuspendLayout();
+            this.groupBoxSublist.SuspendLayout();
+            this.groupBoxProperties.SuspendLayout();
+            this.groupBoxSortOrder.SuspendLayout();
+            this.groupBoxCaption.SuspendLayout();
+            this.tabControl1.SuspendLayout();
+            this.tabPageSort.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerSort)).BeginInit();
+            this.splitContainerSort.Panel1.SuspendLayout();
+            this.splitContainerSort.Panel2.SuspendLayout();
+            this.splitContainerSort.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewSort)).BeginInit();
+            this.toolStripSort.SuspendLayout();
             this.SuspendLayout();
+            // 
+            // colHdrName
+            // 
+            colHdrName.Text = "Name";
             // 
             // btnCancel
             // 
@@ -166,363 +174,6 @@
             this.tabPageFilter.Text = "Filter";
             this.tabPageFilter.UseVisualStyleBackColor = true;
             // 
-            // tabPageColumns
-            // 
-            this.tabPageColumns.Controls.Add(this.splitContainerAdvanced);
-            this.tabPageColumns.Location = new System.Drawing.Point(4, 22);
-            this.tabPageColumns.Name = "tabPageColumns";
-            this.tabPageColumns.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageColumns.Size = new System.Drawing.Size(887, 313);
-            this.tabPageColumns.TabIndex = 0;
-            this.tabPageColumns.Text = "Columns";
-            this.tabPageColumns.UseVisualStyleBackColor = true;
-            // 
-            // splitContainerAdvanced
-            // 
-            this.splitContainerAdvanced.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainerAdvanced.Location = new System.Drawing.Point(3, 3);
-            this.splitContainerAdvanced.Name = "splitContainerAdvanced";
-            // 
-            // splitContainerAdvanced.Panel1
-            // 
-            this.splitContainerAdvanced.Panel1.Controls.Add(this.splitContainer1);
-            // 
-            // splitContainerAdvanced.Panel2
-            // 
-            this.splitContainerAdvanced.Panel2.Controls.Add(this.groupBoxSublist);
-            this.splitContainerAdvanced.Panel2.Controls.Add(this.groupBoxProperties);
-            this.splitContainerAdvanced.Size = new System.Drawing.Size(881, 307);
-            this.splitContainerAdvanced.SplitterDistance = 608;
-            this.splitContainerAdvanced.TabIndex = 0;
-            // 
-            // groupBoxSublist
-            // 
-            this.groupBoxSublist.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxSublist.Controls.Add(this.comboSublist);
-            this.groupBoxSublist.Location = new System.Drawing.Point(2, 261);
-            this.groupBoxSublist.Name = "groupBoxSublist";
-            this.groupBoxSublist.Size = new System.Drawing.Size(267, 46);
-            this.groupBoxSublist.TabIndex = 5;
-            this.groupBoxSublist.TabStop = false;
-            this.groupBoxSublist.Text = "Sublist";
-            // 
-            // comboSublist
-            // 
-            this.comboSublist.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboSublist.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboSublist.FormattingEnabled = true;
-            this.comboSublist.Location = new System.Drawing.Point(6, 19);
-            this.comboSublist.Name = "comboSublist";
-            this.comboSublist.Size = new System.Drawing.Size(255, 21);
-            this.comboSublist.TabIndex = 0;
-            this.comboSublist.SelectedIndexChanged += new System.EventHandler(this.comboSublist_SelectedIndexChanged);
-            // 
-            // groupBoxProperties
-            // 
-            this.groupBoxProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxProperties.Controls.Add(this.groupBoxSortOrder);
-            this.groupBoxProperties.Controls.Add(this.groupBoxCaption);
-            this.groupBoxProperties.Controls.Add(this.cbxHidden);
-            this.groupBoxProperties.Location = new System.Drawing.Point(2, 0);
-            this.groupBoxProperties.Name = "groupBoxProperties";
-            this.groupBoxProperties.Size = new System.Drawing.Size(267, 249);
-            this.groupBoxProperties.TabIndex = 6;
-            this.groupBoxProperties.TabStop = false;
-            this.groupBoxProperties.Text = "Column Properties";
-            // 
-            // groupBoxSortOrder
-            // 
-            this.groupBoxSortOrder.Controls.Add(this.comboSortOrder);
-            this.groupBoxSortOrder.Location = new System.Drawing.Point(11, 125);
-            this.groupBoxSortOrder.Name = "groupBoxSortOrder";
-            this.groupBoxSortOrder.Size = new System.Drawing.Size(250, 51);
-            this.groupBoxSortOrder.TabIndex = 6;
-            this.groupBoxSortOrder.TabStop = false;
-            this.groupBoxSortOrder.Text = "Sort Order";
-            // 
-            // comboSortOrder
-            // 
-            this.comboSortOrder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.comboSortOrder.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboSortOrder.FormattingEnabled = true;
-            this.comboSortOrder.Items.AddRange(new object[] {
-            "Not Sorted",
-            "Ascending",
-            "Descending"});
-            this.comboSortOrder.Location = new System.Drawing.Point(6, 16);
-            this.comboSortOrder.Name = "comboSortOrder";
-            this.comboSortOrder.Size = new System.Drawing.Size(232, 21);
-            this.comboSortOrder.TabIndex = 0;
-            this.comboSortOrder.SelectedIndexChanged += new System.EventHandler(this.comboSortOrder_SelectedIndexChanged);
-            // 
-            // groupBoxCaption
-            // 
-            this.groupBoxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBoxCaption.Controls.Add(this.tbxCaption);
-            this.groupBoxCaption.Location = new System.Drawing.Point(11, 18);
-            this.groupBoxCaption.Name = "groupBoxCaption";
-            this.groupBoxCaption.Size = new System.Drawing.Size(250, 46);
-            this.groupBoxCaption.TabIndex = 2;
-            this.groupBoxCaption.TabStop = false;
-            this.groupBoxCaption.Text = "Caption";
-            // 
-            // tbxCaption
-            // 
-            this.tbxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxCaption.Location = new System.Drawing.Point(6, 19);
-            this.tbxCaption.Name = "tbxCaption";
-            this.tbxCaption.Size = new System.Drawing.Size(232, 20);
-            this.tbxCaption.TabIndex = 1;
-            this.tbxCaption.Leave += new System.EventHandler(this.tbxCaption_Leave);
-            // 
-            // cbxHidden
-            // 
-            this.cbxHidden.AutoSize = true;
-            this.cbxHidden.Location = new System.Drawing.Point(6, 194);
-            this.cbxHidden.Name = "cbxHidden";
-            this.cbxHidden.Size = new System.Drawing.Size(152, 17);
-            this.cbxHidden.TabIndex = 5;
-            this.cbxHidden.Text = "Do not display in Grid View";
-            this.cbxHidden.UseVisualStyleBackColor = true;
-            this.cbxHidden.CheckedChanged += new System.EventHandler(this.cbxHidden_CheckedChanged);
-            // 
-            // tabControl1
-            // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tabControl1.Controls.Add(this.tabPageColumns);
-            this.tabControl1.Controls.Add(this.tabPageFilter);
-            this.tabControl1.Controls.Add(this.tabPageSort);
-            this.tabControl1.Location = new System.Drawing.Point(1, 29);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(895, 339);
-            this.tabControl1.TabIndex = 0;
-            // 
-            // tabPageSort
-            // 
-            this.tabPageSort.Controls.Add(this.splitContainerSort);
-            this.tabPageSort.Location = new System.Drawing.Point(4, 22);
-            this.tabPageSort.Name = "tabPageSort";
-            this.tabPageSort.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageSort.Size = new System.Drawing.Size(887, 313);
-            this.tabPageSort.TabIndex = 2;
-            this.tabPageSort.Text = "Sort";
-            this.tabPageSort.UseVisualStyleBackColor = true;
-            // 
-            // splitContainerSort
-            // 
-            this.splitContainerSort.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainerSort.Location = new System.Drawing.Point(3, 3);
-            this.splitContainerSort.Name = "splitContainerSort";
-            // 
-            // splitContainerSort.Panel1
-            // 
-            this.splitContainerSort.Panel1.Controls.Add(this.clbAvailableSortColumns);
-            // 
-            // splitContainerSort.Panel2
-            // 
-            this.splitContainerSort.Panel2.Controls.Add(this.dataGridViewSort);
-            this.splitContainerSort.Panel2.Controls.Add(this.toolStripSort);
-            this.splitContainerSort.Size = new System.Drawing.Size(881, 307);
-            this.splitContainerSort.SplitterDistance = 458;
-            this.splitContainerSort.TabIndex = 2;
-            // 
-            // clbAvailableSortColumns
-            // 
-            this.clbAvailableSortColumns.CheckOnClick = true;
-            this.clbAvailableSortColumns.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.clbAvailableSortColumns.FormattingEnabled = true;
-            this.clbAvailableSortColumns.Location = new System.Drawing.Point(0, 0);
-            this.clbAvailableSortColumns.Name = "clbAvailableSortColumns";
-            this.clbAvailableSortColumns.Size = new System.Drawing.Size(458, 304);
-            this.clbAvailableSortColumns.TabIndex = 0;
-            this.clbAvailableSortColumns.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbAvailableSortColumns_ItemCheck);
-            // 
-            // toolStripSort
-            // 
-            this.toolStripSort.Dock = System.Windows.Forms.DockStyle.Right;
-            this.toolStripSort.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnSortRemove,
-            this.btnSortMoveUp,
-            this.btnSortMoveDown});
-            this.toolStripSort.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStripSort.Location = new System.Drawing.Point(395, 0);
-            this.toolStripSort.Name = "toolStripSort";
-            this.toolStripSort.Size = new System.Drawing.Size(24, 307);
-            this.toolStripSort.TabIndex = 2;
-            this.toolStripSort.Text = "toolStrip1";
-            // 
-            // btnSortRemove
-            // 
-            this.btnSortRemove.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnSortRemove.Image = global::pwiz.Common.Properties.Resources.Delete;
-            this.btnSortRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnSortRemove.Name = "btnSortRemove";
-            this.btnSortRemove.Size = new System.Drawing.Size(21, 20);
-            this.btnSortRemove.Text = "Remove";
-            this.btnSortRemove.Click += new System.EventHandler(this.btnSortRemove_Click);
-            // 
-            // btnSortMoveUp
-            // 
-            this.btnSortMoveUp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnSortMoveUp.Image = global::pwiz.Common.Properties.Resources.up_pro32;
-            this.btnSortMoveUp.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnSortMoveUp.Name = "btnSortMoveUp";
-            this.btnSortMoveUp.Size = new System.Drawing.Size(21, 20);
-            this.btnSortMoveUp.Text = "toolStripButton1";
-            this.btnSortMoveUp.Click += new System.EventHandler(this.btnSortMoveUp_Click);
-            // 
-            // btnSortMoveDown
-            // 
-            this.btnSortMoveDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnSortMoveDown.Image = global::pwiz.Common.Properties.Resources.down_pro32;
-            this.btnSortMoveDown.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnSortMoveDown.Name = "btnSortMoveDown";
-            this.btnSortMoveDown.Size = new System.Drawing.Size(21, 20);
-            this.btnSortMoveDown.Text = "Move Down";
-            this.btnSortMoveDown.Click += new System.EventHandler(this.btnSortMoveDown_Click);
-            // 
-            // dataGridViewSort
-            // 
-            this.dataGridViewSort.AllowUserToAddRows = false;
-            this.dataGridViewSort.AllowUserToDeleteRows = false;
-            this.dataGridViewSort.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            this.dataGridViewSort.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridViewSort.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colSortColumn,
-            this.colSortDirection});
-            this.dataGridViewSort.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridViewSort.Location = new System.Drawing.Point(0, 0);
-            this.dataGridViewSort.Name = "dataGridViewSort";
-            this.dataGridViewSort.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dataGridViewSort.Size = new System.Drawing.Size(395, 307);
-            this.dataGridViewSort.TabIndex = 3;
-            this.dataGridViewSort.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewSort_CellEndEdit);
-            this.dataGridViewSort.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridViewSort_CurrentCellDirtyStateChanged);
-            this.dataGridViewSort.SelectionChanged += new System.EventHandler(this.dataGridViewSort_SelectionChanged);
-            // 
-            // colSortColumn
-            // 
-            this.colSortColumn.HeaderText = "Column";
-            this.colSortColumn.Name = "colSortColumn";
-            this.colSortColumn.ReadOnly = true;
-            // 
-            // colSortDirection
-            // 
-            this.colSortDirection.HeaderText = "Direction";
-            this.colSortDirection.Name = "colSortDirection";
-            // 
-            // splitContainer1
-            // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Name = "splitContainer1";
-            // 
-            // splitContainer1.Panel1
-            // 
-            this.splitContainer1.Panel1.Controls.Add(this.availableFieldsTreeColumns);
-            // 
-            // splitContainer1.Panel2
-            // 
-            this.splitContainer1.Panel2.Controls.Add(this.listViewColumns);
-            this.splitContainer1.Panel2.Controls.Add(this.toolStripColumns);
-            this.splitContainer1.Size = new System.Drawing.Size(608, 307);
-            this.splitContainer1.SplitterDistance = 308;
-            this.splitContainer1.TabIndex = 1;
-            // 
-            // listViewColumns
-            // 
-            this.listViewColumns.Activation = System.Windows.Forms.ItemActivation.TwoClick;
-            this.listViewColumns.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            colHdrName});
-            this.listViewColumns.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listViewColumns.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.listViewColumns.HideSelection = false;
-            this.listViewColumns.Location = new System.Drawing.Point(0, 0);
-            this.listViewColumns.Name = "listViewColumns";
-            this.listViewColumns.Size = new System.Drawing.Size(272, 307);
-            this.listViewColumns.TabIndex = 2;
-            this.listViewColumns.UseCompatibleStateImageBehavior = false;
-            this.listViewColumns.View = System.Windows.Forms.View.Details;
-            this.listViewColumns.ItemActivate += new System.EventHandler(this.listViewColumns_ItemActivate);
-            this.listViewColumns.SelectedIndexChanged += new System.EventHandler(this.listViewColumns_SelectedIndexChanged);
-            this.listViewColumns.SizeChanged += new System.EventHandler(this.listViewColumns_SizeChanged);
-            // 
-            // colHdrName
-            // 
-            colHdrName.Text = "Name";
-            // 
-            // toolStripColumns
-            // 
-            this.toolStripColumns.Dock = System.Windows.Forms.DockStyle.Right;
-            this.toolStripColumns.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.btnRemove,
-            this.btnUp,
-            this.btnDown});
-            this.toolStripColumns.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
-            this.toolStripColumns.Location = new System.Drawing.Point(272, 0);
-            this.toolStripColumns.Name = "toolStripColumns";
-            this.toolStripColumns.Size = new System.Drawing.Size(24, 307);
-            this.toolStripColumns.TabIndex = 1;
-            this.toolStripColumns.Text = "toolStrip1";
-            // 
-            // btnRemove
-            // 
-            this.btnRemove.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnRemove.Image = global::pwiz.Common.Properties.Resources.Delete;
-            this.btnRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Size = new System.Drawing.Size(21, 20);
-            this.btnRemove.Text = "Remove";
-            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
-            // 
-            // btnUp
-            // 
-            this.btnUp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnUp.Image = global::pwiz.Common.Properties.Resources.up_pro32;
-            this.btnUp.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnUp.Name = "btnUp";
-            this.btnUp.Size = new System.Drawing.Size(21, 20);
-            this.btnUp.Text = "Up";
-            this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
-            // 
-            // btnDown
-            // 
-            this.btnDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDown.Image = global::pwiz.Common.Properties.Resources.down_pro32;
-            this.btnDown.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnDown.Name = "btnDown";
-            this.btnDown.Size = new System.Drawing.Size(21, 20);
-            this.btnDown.Text = "Down";
-            this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
-            // 
-            // availableFieldsTreeColumns
-            // 
-            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.availableFieldsTreeColumns.CheckBoxes = true;
-            this.availableFieldsTreeColumns.CheckedColumns = new pwiz.Common.DataBinding.IdentifierPath[0];
-            this.availableFieldsTreeColumns.HideSelection = false;
-            this.availableFieldsTreeColumns.Location = new System.Drawing.Point(3, 3);
-            this.availableFieldsTreeColumns.Name = "availableFieldsTreeColumns";
-            this.availableFieldsTreeColumns.RootColumn = null;
-            this.availableFieldsTreeColumns.ShowAdvancedFields = false;
-            this.availableFieldsTreeColumns.Size = new System.Drawing.Size(303, 301);
-            this.availableFieldsTreeColumns.TabIndex = 0;
-            this.availableFieldsTreeColumns.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.availableFieldsTreeColumns_NodeMouseDoubleClick);
-            this.availableFieldsTreeColumns.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTreeColumns_AfterCheck);
-            // 
             // splitContainerFilter
             // 
             this.splitContainerFilter.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -553,8 +204,8 @@
             this.availableFieldsTreeFilter.ShowAdvancedFields = false;
             this.availableFieldsTreeFilter.Size = new System.Drawing.Size(314, 307);
             this.availableFieldsTreeFilter.TabIndex = 0;
-            this.availableFieldsTreeFilter.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.availableFieldsTreeFilter_NodeMouseDoubleClick);
             this.availableFieldsTreeFilter.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTreeFilter_AfterSelect);
+            this.availableFieldsTreeFilter.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.availableFieldsTreeFilter_NodeMouseDoubleClick);
             // 
             // panel1
             // 
@@ -620,9 +271,9 @@
             this.dataGridViewFilter.TabIndex = 2;
             this.dataGridViewFilter.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewFilter_CellDoubleClick);
             this.dataGridViewFilter.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewFilter_CellEndEdit);
-            this.dataGridViewFilter.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewFilter_EditingControlShowing);
-            this.dataGridViewFilter.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridViewFilter_CurrentCellDirtyStateChanged);
             this.dataGridViewFilter.CellEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewFilter_CellEnter);
+            this.dataGridViewFilter.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridViewFilter_CurrentCellDirtyStateChanged);
+            this.dataGridViewFilter.EditingControlShowing += new System.Windows.Forms.DataGridViewEditingControlShowingEventHandler(this.dataGridViewFilter_EditingControlShowing);
             // 
             // colFilterColumn
             // 
@@ -653,7 +304,6 @@
             this.toolStripFilter.Size = new System.Drawing.Size(32, 307);
             this.toolStripFilter.TabIndex = 1;
             this.toolStripFilter.Text = "toolStrip1";
-            this.toolStripFilter.Visible = false;
             // 
             // btnDeleteFilter
             // 
@@ -662,8 +312,361 @@
             this.btnDeleteFilter.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDeleteFilter.Name = "btnDeleteFilter";
             this.btnDeleteFilter.Size = new System.Drawing.Size(21, 20);
-            this.btnDeleteFilter.Text = "toolStripButton1";
+            this.btnDeleteFilter.Text = "Delete";
             this.btnDeleteFilter.Click += new System.EventHandler(this.btnDeleteFilter_Click);
+            // 
+            // tabPageColumns
+            // 
+            this.tabPageColumns.Controls.Add(this.splitContainerAdvanced);
+            this.tabPageColumns.Location = new System.Drawing.Point(4, 22);
+            this.tabPageColumns.Name = "tabPageColumns";
+            this.tabPageColumns.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageColumns.Size = new System.Drawing.Size(887, 313);
+            this.tabPageColumns.TabIndex = 0;
+            this.tabPageColumns.Text = "Columns";
+            this.tabPageColumns.UseVisualStyleBackColor = true;
+            // 
+            // splitContainerAdvanced
+            // 
+            this.splitContainerAdvanced.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainerAdvanced.Location = new System.Drawing.Point(3, 3);
+            this.splitContainerAdvanced.Name = "splitContainerAdvanced";
+            // 
+            // splitContainerAdvanced.Panel1
+            // 
+            this.splitContainerAdvanced.Panel1.Controls.Add(this.splitContainer1);
+            // 
+            // splitContainerAdvanced.Panel2
+            // 
+            this.splitContainerAdvanced.Panel2.Controls.Add(this.groupBoxSublist);
+            this.splitContainerAdvanced.Panel2.Controls.Add(this.groupBoxProperties);
+            this.splitContainerAdvanced.Size = new System.Drawing.Size(881, 307);
+            this.splitContainerAdvanced.SplitterDistance = 608;
+            this.splitContainerAdvanced.TabIndex = 0;
+            // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.availableFieldsTreeColumns);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.listViewColumns);
+            this.splitContainer1.Panel2.Controls.Add(this.toolStripColumns);
+            this.splitContainer1.Size = new System.Drawing.Size(608, 307);
+            this.splitContainer1.SplitterDistance = 308;
+            this.splitContainer1.TabIndex = 1;
+            // 
+            // availableFieldsTreeColumns
+            // 
+            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.availableFieldsTreeColumns.CheckBoxes = true;
+            this.availableFieldsTreeColumns.CheckedColumns = new pwiz.Common.DataBinding.IdentifierPath[0];
+            this.availableFieldsTreeColumns.HideSelection = false;
+            this.availableFieldsTreeColumns.Location = new System.Drawing.Point(3, 3);
+            this.availableFieldsTreeColumns.Name = "availableFieldsTreeColumns";
+            this.availableFieldsTreeColumns.RootColumn = null;
+            this.availableFieldsTreeColumns.ShowAdvancedFields = false;
+            this.availableFieldsTreeColumns.Size = new System.Drawing.Size(303, 301);
+            this.availableFieldsTreeColumns.TabIndex = 0;
+            this.availableFieldsTreeColumns.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTreeColumns_AfterCheck);
+            this.availableFieldsTreeColumns.NodeMouseDoubleClick += new System.Windows.Forms.TreeNodeMouseClickEventHandler(this.availableFieldsTreeColumns_NodeMouseDoubleClick);
+            // 
+            // listViewColumns
+            // 
+            this.listViewColumns.Activation = System.Windows.Forms.ItemActivation.TwoClick;
+            this.listViewColumns.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            colHdrName});
+            this.listViewColumns.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.listViewColumns.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.listViewColumns.HideSelection = false;
+            this.listViewColumns.Location = new System.Drawing.Point(0, 0);
+            this.listViewColumns.Name = "listViewColumns";
+            this.listViewColumns.Size = new System.Drawing.Size(264, 307);
+            this.listViewColumns.TabIndex = 2;
+            this.listViewColumns.UseCompatibleStateImageBehavior = false;
+            this.listViewColumns.View = System.Windows.Forms.View.Details;
+            this.listViewColumns.ItemActivate += new System.EventHandler(this.listViewColumns_ItemActivate);
+            this.listViewColumns.SelectedIndexChanged += new System.EventHandler(this.listViewColumns_SelectedIndexChanged);
+            this.listViewColumns.SizeChanged += new System.EventHandler(this.listViewColumns_SizeChanged);
+            // 
+            // toolStripColumns
+            // 
+            this.toolStripColumns.Dock = System.Windows.Forms.DockStyle.Right;
+            this.toolStripColumns.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnRemove,
+            this.btnUp,
+            this.btnDown});
+            this.toolStripColumns.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStripColumns.Location = new System.Drawing.Point(264, 0);
+            this.toolStripColumns.Name = "toolStripColumns";
+            this.toolStripColumns.Size = new System.Drawing.Size(32, 307);
+            this.toolStripColumns.TabIndex = 1;
+            this.toolStripColumns.Text = "toolStrip1";
+            // 
+            // btnRemove
+            // 
+            this.btnRemove.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnRemove.Image = global::pwiz.Common.Properties.Resources.Delete;
+            this.btnRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRemove.Name = "btnRemove";
+            this.btnRemove.Size = new System.Drawing.Size(29, 20);
+            this.btnRemove.Text = "Remove";
+            this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
+            // 
+            // btnUp
+            // 
+            this.btnUp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnUp.Image = global::pwiz.Common.Properties.Resources.up_pro32;
+            this.btnUp.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnUp.Name = "btnUp";
+            this.btnUp.Size = new System.Drawing.Size(29, 20);
+            this.btnUp.Text = "Up";
+            this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
+            // 
+            // btnDown
+            // 
+            this.btnDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnDown.Image = global::pwiz.Common.Properties.Resources.down_pro32;
+            this.btnDown.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnDown.Name = "btnDown";
+            this.btnDown.Size = new System.Drawing.Size(29, 20);
+            this.btnDown.Text = "Down";
+            this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
+            // 
+            // groupBoxSublist
+            // 
+            this.groupBoxSublist.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxSublist.Controls.Add(this.comboSublist);
+            this.groupBoxSublist.Location = new System.Drawing.Point(2, 261);
+            this.groupBoxSublist.Name = "groupBoxSublist";
+            this.groupBoxSublist.Size = new System.Drawing.Size(267, 46);
+            this.groupBoxSublist.TabIndex = 5;
+            this.groupBoxSublist.TabStop = false;
+            this.groupBoxSublist.Text = "Sublist";
+            // 
+            // comboSublist
+            // 
+            this.comboSublist.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboSublist.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSublist.FormattingEnabled = true;
+            this.comboSublist.Location = new System.Drawing.Point(6, 19);
+            this.comboSublist.Name = "comboSublist";
+            this.comboSublist.Size = new System.Drawing.Size(255, 21);
+            this.comboSublist.TabIndex = 0;
+            this.comboSublist.SelectedIndexChanged += new System.EventHandler(this.comboSublist_SelectedIndexChanged);
+            // 
+            // groupBoxProperties
+            // 
+            this.groupBoxProperties.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxProperties.Controls.Add(this.groupBoxSortOrder);
+            this.groupBoxProperties.Controls.Add(this.groupBoxCaption);
+            this.groupBoxProperties.Controls.Add(this.cbxHidden);
+            this.groupBoxProperties.Location = new System.Drawing.Point(2, 0);
+            this.groupBoxProperties.Name = "groupBoxProperties";
+            this.groupBoxProperties.Size = new System.Drawing.Size(267, 249);
+            this.groupBoxProperties.TabIndex = 6;
+            this.groupBoxProperties.TabStop = false;
+            this.groupBoxProperties.Text = "Column Properties";
+            // 
+            // groupBoxSortOrder
+            // 
+            this.groupBoxSortOrder.Controls.Add(this.comboSortOrder);
+            this.groupBoxSortOrder.Location = new System.Drawing.Point(11, 125);
+            this.groupBoxSortOrder.Name = "groupBoxSortOrder";
+            this.groupBoxSortOrder.Size = new System.Drawing.Size(250, 51);
+            this.groupBoxSortOrder.TabIndex = 6;
+            this.groupBoxSortOrder.TabStop = false;
+            this.groupBoxSortOrder.Text = "Sort Order";
+            // 
+            // comboSortOrder
+            // 
+            this.comboSortOrder.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.comboSortOrder.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSortOrder.FormattingEnabled = true;
+            this.comboSortOrder.Items.AddRange(new object[] {
+            "Not Sorted",
+            "Ascending",
+            "Descending"});
+            this.comboSortOrder.Location = new System.Drawing.Point(6, 16);
+            this.comboSortOrder.Name = "comboSortOrder";
+            this.comboSortOrder.Size = new System.Drawing.Size(232, 21);
+            this.comboSortOrder.TabIndex = 0;
+            this.comboSortOrder.SelectedIndexChanged += new System.EventHandler(this.comboSortOrder_SelectedIndexChanged);
+            // 
+            // groupBoxCaption
+            // 
+            this.groupBoxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBoxCaption.Controls.Add(this.tbxCaption);
+            this.groupBoxCaption.Location = new System.Drawing.Point(11, 18);
+            this.groupBoxCaption.Name = "groupBoxCaption";
+            this.groupBoxCaption.Size = new System.Drawing.Size(250, 46);
+            this.groupBoxCaption.TabIndex = 2;
+            this.groupBoxCaption.TabStop = false;
+            this.groupBoxCaption.Text = "Caption";
+            // 
+            // tbxCaption
+            // 
+            this.tbxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxCaption.Location = new System.Drawing.Point(6, 19);
+            this.tbxCaption.Name = "tbxCaption";
+            this.tbxCaption.Size = new System.Drawing.Size(232, 20);
+            this.tbxCaption.TabIndex = 1;
+            this.tbxCaption.Leave += new System.EventHandler(this.tbxCaption_Leave);
+            // 
+            // cbxHidden
+            // 
+            this.cbxHidden.AutoSize = true;
+            this.cbxHidden.Location = new System.Drawing.Point(6, 194);
+            this.cbxHidden.Name = "cbxHidden";
+            this.cbxHidden.Size = new System.Drawing.Size(152, 17);
+            this.cbxHidden.TabIndex = 5;
+            this.cbxHidden.Text = "Do not display in Grid View";
+            this.cbxHidden.UseVisualStyleBackColor = true;
+            this.cbxHidden.CheckedChanged += new System.EventHandler(this.cbxHidden_CheckedChanged);
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Controls.Add(this.tabPageColumns);
+            this.tabControl1.Controls.Add(this.tabPageFilter);
+            this.tabControl1.Controls.Add(this.tabPageSort);
+            this.tabControl1.Location = new System.Drawing.Point(1, 29);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = 0;
+            this.tabControl1.Size = new System.Drawing.Size(895, 339);
+            this.tabControl1.TabIndex = 0;
+            // 
+            // tabPageSort
+            // 
+            this.tabPageSort.Controls.Add(this.splitContainerSort);
+            this.tabPageSort.Location = new System.Drawing.Point(4, 22);
+            this.tabPageSort.Name = "tabPageSort";
+            this.tabPageSort.Padding = new System.Windows.Forms.Padding(3);
+            this.tabPageSort.Size = new System.Drawing.Size(887, 313);
+            this.tabPageSort.TabIndex = 2;
+            this.tabPageSort.Text = "Sort";
+            this.tabPageSort.UseVisualStyleBackColor = true;
+            // 
+            // splitContainerSort
+            // 
+            this.splitContainerSort.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainerSort.Location = new System.Drawing.Point(3, 3);
+            this.splitContainerSort.Name = "splitContainerSort";
+            // 
+            // splitContainerSort.Panel1
+            // 
+            this.splitContainerSort.Panel1.Controls.Add(this.clbAvailableSortColumns);
+            // 
+            // splitContainerSort.Panel2
+            // 
+            this.splitContainerSort.Panel2.Controls.Add(this.dataGridViewSort);
+            this.splitContainerSort.Panel2.Controls.Add(this.toolStripSort);
+            this.splitContainerSort.Size = new System.Drawing.Size(881, 307);
+            this.splitContainerSort.SplitterDistance = 458;
+            this.splitContainerSort.TabIndex = 2;
+            // 
+            // clbAvailableSortColumns
+            // 
+            this.clbAvailableSortColumns.CheckOnClick = true;
+            this.clbAvailableSortColumns.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.clbAvailableSortColumns.FormattingEnabled = true;
+            this.clbAvailableSortColumns.Location = new System.Drawing.Point(0, 0);
+            this.clbAvailableSortColumns.Name = "clbAvailableSortColumns";
+            this.clbAvailableSortColumns.Size = new System.Drawing.Size(458, 307);
+            this.clbAvailableSortColumns.TabIndex = 0;
+            this.clbAvailableSortColumns.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.clbAvailableSortColumns_ItemCheck);
+            // 
+            // dataGridViewSort
+            // 
+            this.dataGridViewSort.AllowUserToAddRows = false;
+            this.dataGridViewSort.AllowUserToDeleteRows = false;
+            this.dataGridViewSort.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            this.dataGridViewSort.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewSort.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colSortColumn,
+            this.colSortDirection});
+            this.dataGridViewSort.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridViewSort.Location = new System.Drawing.Point(0, 0);
+            this.dataGridViewSort.Name = "dataGridViewSort";
+            this.dataGridViewSort.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dataGridViewSort.Size = new System.Drawing.Size(395, 307);
+            this.dataGridViewSort.TabIndex = 3;
+            this.dataGridViewSort.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridViewSort_CellEndEdit);
+            this.dataGridViewSort.CurrentCellDirtyStateChanged += new System.EventHandler(this.dataGridViewSort_CurrentCellDirtyStateChanged);
+            this.dataGridViewSort.SelectionChanged += new System.EventHandler(this.dataGridViewSort_SelectionChanged);
+            // 
+            // colSortColumn
+            // 
+            this.colSortColumn.HeaderText = "Column";
+            this.colSortColumn.Name = "colSortColumn";
+            this.colSortColumn.ReadOnly = true;
+            // 
+            // colSortDirection
+            // 
+            this.colSortDirection.HeaderText = "Direction";
+            this.colSortDirection.Name = "colSortDirection";
+            // 
+            // toolStripSort
+            // 
+            this.toolStripSort.Dock = System.Windows.Forms.DockStyle.Right;
+            this.toolStripSort.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.btnSortRemove,
+            this.btnSortMoveUp,
+            this.btnSortMoveDown});
+            this.toolStripSort.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
+            this.toolStripSort.Location = new System.Drawing.Point(395, 0);
+            this.toolStripSort.Name = "toolStripSort";
+            this.toolStripSort.Size = new System.Drawing.Size(24, 307);
+            this.toolStripSort.TabIndex = 2;
+            this.toolStripSort.Text = "toolStrip1";
+            // 
+            // btnSortRemove
+            // 
+            this.btnSortRemove.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnSortRemove.Image = global::pwiz.Common.Properties.Resources.Delete;
+            this.btnSortRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnSortRemove.Name = "btnSortRemove";
+            this.btnSortRemove.Size = new System.Drawing.Size(21, 20);
+            this.btnSortRemove.Text = "Remove";
+            this.btnSortRemove.Click += new System.EventHandler(this.btnSortRemove_Click);
+            // 
+            // btnSortMoveUp
+            // 
+            this.btnSortMoveUp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnSortMoveUp.Image = global::pwiz.Common.Properties.Resources.up_pro32;
+            this.btnSortMoveUp.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnSortMoveUp.Name = "btnSortMoveUp";
+            this.btnSortMoveUp.Size = new System.Drawing.Size(21, 20);
+            this.btnSortMoveUp.Text = "toolStripButton1";
+            this.btnSortMoveUp.Click += new System.EventHandler(this.btnSortMoveUp_Click);
+            // 
+            // btnSortMoveDown
+            // 
+            this.btnSortMoveDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.btnSortMoveDown.Image = global::pwiz.Common.Properties.Resources.down_pro32;
+            this.btnSortMoveDown.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnSortMoveDown.Name = "btnSortMoveDown";
+            this.btnSortMoveDown.Size = new System.Drawing.Size(21, 20);
+            this.btnSortMoveDown.Text = "Move Down";
+            this.btnSortMoveDown.Click += new System.EventHandler(this.btnSortMoveDown_Click);
             // 
             // CustomizeViewForm
             // 
@@ -679,10 +682,28 @@
             this.Name = "CustomizeViewForm";
             this.Text = "Customize View";
             this.tabPageFilter.ResumeLayout(false);
+            this.splitContainerFilter.Panel1.ResumeLayout(false);
+            this.splitContainerFilter.Panel2.ResumeLayout(false);
+            this.splitContainerFilter.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerFilter)).EndInit();
+            this.splitContainerFilter.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewFilter)).EndInit();
+            this.toolStripFilter.ResumeLayout(false);
+            this.toolStripFilter.PerformLayout();
             this.tabPageColumns.ResumeLayout(false);
             this.splitContainerAdvanced.Panel1.ResumeLayout(false);
             this.splitContainerAdvanced.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerAdvanced)).EndInit();
             this.splitContainerAdvanced.ResumeLayout(false);
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
+            this.splitContainer1.ResumeLayout(false);
+            this.toolStripColumns.ResumeLayout(false);
+            this.toolStripColumns.PerformLayout();
             this.groupBoxSublist.ResumeLayout(false);
             this.groupBoxProperties.ResumeLayout(false);
             this.groupBoxProperties.PerformLayout();
@@ -694,25 +715,11 @@
             this.splitContainerSort.Panel1.ResumeLayout(false);
             this.splitContainerSort.Panel2.ResumeLayout(false);
             this.splitContainerSort.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerSort)).EndInit();
             this.splitContainerSort.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewSort)).EndInit();
             this.toolStripSort.ResumeLayout(false);
             this.toolStripSort.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewSort)).EndInit();
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            this.splitContainer1.Panel2.PerformLayout();
-            this.splitContainer1.ResumeLayout(false);
-            this.toolStripColumns.ResumeLayout(false);
-            this.toolStripColumns.PerformLayout();
-            this.splitContainerFilter.Panel1.ResumeLayout(false);
-            this.splitContainerFilter.Panel2.ResumeLayout(false);
-            this.splitContainerFilter.Panel2.PerformLayout();
-            this.splitContainerFilter.ResumeLayout(false);
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewFilter)).EndInit();
-            this.toolStripFilter.ResumeLayout(false);
-            this.toolStripFilter.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 

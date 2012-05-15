@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Windows.Forms;
 using NHibernate;
@@ -413,6 +414,14 @@ namespace pwiz.Topograph.ui.Forms
                                    resultData.RateConstantError.ToString("0.##E0");
             tbxHalfLife.Text = resultData.HalfLife.ToString("0.##") + "(" + resultData.MinHalfLife.ToString("0.##") + "-" +
                                resultData.MaxHalfLife.ToString("0.##") + ")";
+            if (resultData.RSquared.HasValue)
+            {
+                tbxCorrelationCoefficient.Text = Math.Sqrt(resultData.RSquared.Value).ToString(CultureInfo.InvariantCulture);
+            }
+            else
+            {
+                tbxCorrelationCoefficient.Text = "";
+            }
             return halfLifeCalculator;
         }
 

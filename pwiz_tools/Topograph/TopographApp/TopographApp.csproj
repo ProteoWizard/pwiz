@@ -541,6 +541,7 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Content Include="TopographLogoSmall.png" />
     <EmbeddedResource Include="Controls\HalfLifeSettingsControl.resx">
       <DependentUpon>HalfLifeSettingsControl.cs</DependentUpon>
     </EmbeddedResource>
@@ -788,7 +789,6 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
-    <None Include="TopographLogo.emf" />
     <None Include="topograph_2_TemporaryKey.pfx" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>

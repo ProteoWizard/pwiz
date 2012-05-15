@@ -718,7 +718,14 @@ namespace pwiz.Topograph.MsData
         {
             if (Session != null)
             {
-                Session.CancelQuery();
+                try
+                {
+                    Session.CancelQuery();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // ignore
+                }
             }
             return true;
         }

@@ -62,7 +62,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         {
             if (null != _runningBackgroundQuery)
             {
-                if (!ReferenceEquals(Workspace, _runningBackgroundQuery.Workspace))
+                if (!_runningBackgroundQuery.IsWorkspace(Workspace))
                 {
                     _runningBackgroundQuery.Dispose();
                     _runningBackgroundQuery = null;
@@ -165,26 +165,33 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             private readonly WaitForResultsStep _waitForResultsStep;
             private long _lastChangeId;
             private ISession _session;
+            private readonly WeakReference _workspaceRef = new WeakReference(null);
 
             public BackgroundQuery(WaitForResultsStep waitForResultsStep)
             {
                 _waitForResultsStep = waitForResultsStep;
-                Workspace = waitForResultsStep.Workspace;
+                _workspaceRef.Target = waitForResultsStep.Workspace;
             }
 
             public void RunQuery()
             {
-                if (null == Workspace)
+                var workspace = _workspaceRef.Target as Workspace;
+                if (null == workspace)
                 {
                     return;
                 }
-                _session = Workspace.OpenSession();
+                _session = workspace.OpenSession();
                 IsRunning = true;
-                _lastChangeId = Workspace.Reconciler.LastChangeId;
-                new Action(RunQueryBackground).BeginInvoke(null, null);
+                _lastChangeId = workspace.Reconciler.LastChangeId;
+                new Action<Workspace>(RunQueryBackground).BeginInvoke(workspace, null, null);
             }
 
-            private void RunQueryBackground()
+            public bool IsWorkspace(Workspace workspace)
+            {
+                return ReferenceEquals(workspace, _workspaceRef.Target);
+            }
+
+            private void RunQueryBackground(Workspace workspace)
             {
                 try
                 {
@@ -201,7 +208,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                         _session.CreateQuery("SELECT COUNT(F.Id) FROM " + typeof(DbPeptideFileAnalysis) +
                                             " F WHERE F.ChromatogramSet IS NULL");
                     var queryForeignLock = _session.CreateQuery("SELECT COUNT(L.Id) FROM " + typeof (DbLock) + " L WHERE L.InstanceIdBytes <> :instanceIdBytes")
-                        .SetParameter("instanceIdBytes", Workspace.InstanceId.ToByteArray());
+                        .SetParameter("instanceIdBytes", workspace.InstanceId.ToByteArray());
 
                     ResultsPresent = Convert.ToInt32(queryResultsPresent.UniqueResult());
                     ResultsMissing = Convert.ToInt32(queryResultsMissing.UniqueResult());
@@ -236,7 +243,6 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
                 get; private set;
             }
 
-            public Workspace Workspace { get; private set; }
             public int ChromatogramsPresent { get; private set; }
             public int ChromatogramsMissing { get; private set; }
             public int TotalChromatograms { get { return ChromatogramsPresent + ChromatogramsMissing; } }
@@ -246,8 +252,8 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             public int ForeignLockCount { get; private set; }
             public bool IsStale()
             {
-                return !IsRunning && !ReferenceEquals(Workspace, _waitForResultsStep.Workspace)
-                       || Workspace != null && _lastChangeId != Workspace.Reconciler.LastChangeId;
+                return !IsRunning && !IsWorkspace(_waitForResultsStep.Workspace)
+                       || _waitForResultsStep.Workspace != null && _lastChangeId != _waitForResultsStep.Workspace.Reconciler.LastChangeId;
             }
         }
 
