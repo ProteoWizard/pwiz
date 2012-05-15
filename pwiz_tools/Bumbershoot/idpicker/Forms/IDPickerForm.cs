@@ -971,11 +971,15 @@ namespace IDPicker
                                                      if (form.ShowDialog(this) == DialogResult.Ignore)
                                                          copyLocal = false;
                                                  }));
-                    if (!copyLocal || !saveFileDialog(ref commonFilename))
-                        return;
 
-                    toolStripStatusLabel.Text = "Copying idpDB...";
-                    File.Copy(oldFilename, commonFilename, true);
+                    if (copyLocal)
+                    {
+                        if (!saveFileDialog(ref commonFilename))
+                            return;
+
+                        toolStripStatusLabel.Text = "Copying idpDB...";
+                        File.Copy(oldFilename, commonFilename, true);
+                    }
                 }
 
                 if (!IsHandleCreated)
