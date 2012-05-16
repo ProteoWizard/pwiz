@@ -222,7 +222,7 @@ namespace IDPicker.Properties {
             "tring>\r\n  <string>OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partiti" +
             "on;Partition;0.02;1 Descending Off expect</string>\r\n  <string>Pepitome optimized" +
             ";MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off " +
-            "hgt;1 Ascending Off kendallPVal</string>\r\n  <string>Phenyx zscore;StaticWeighted" +
+            "hgt;1 Ascending Off kendallpval</string>\r\n  <string>Phenyx zscore;StaticWeighted" +
             ";False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off zscore</str" +
             "ing>\r\n  <string>Sequest optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partitio" +
             "n;Partition;0.02;1 Ascending Off sequest:xcorr;1 Ascending Off sequest:deltacn</" +
