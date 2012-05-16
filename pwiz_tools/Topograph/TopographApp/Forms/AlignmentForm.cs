@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using NHibernate.Criterion;
-using pwiz.Common.DataAnalysis;
-using pwiz.Topograph.Data;
+using System.Threading.Tasks;
 using pwiz.Topograph.Model;
 using ZedGraph;
 
@@ -16,120 +11,241 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class AlignmentForm : WorkspaceForm
     {
+        private BindingList<DataRow> _dataRows = new BindingList<DataRow>();
+        private KeyValuePair<int, string> _status;
         public AlignmentForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
+            bindingSource.DataSource = _dataRows;
         }
 
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            PopulateDataFileCombo(comboDataFile1);
-            PopulateDataFileCombo(comboDataFile2);
-            comboDataFile1.SelectedIndexChanged += comboDataFile_SelectedIndexChanged;
-            comboDataFile2.SelectedIndexChanged += comboDataFile_SelectedIndexChanged;
-            RefreshUI();
+            UpdateAll();
+            comboTarget.SelectedIndexChanged += comboDataFile_SelectedIndexChanged;
+            new Action(LoadRetentionTimesBackground).BeginInvoke(null, null);
         }
 
         void comboDataFile_SelectedIndexChanged(object sender, EventArgs e)
         {
-            RefreshUI();
+            UpdateRows();
         }
 
-        protected void RefreshUI()
+        public void UpdateAll()
         {
-            zedGraphControlEx1.GraphPane.CurveList.Clear();
-            zedGraphControlEx1.GraphPane.GraphObjList.Clear();
-            var listItem1 = comboDataFile1.SelectedItem as MsDataFileListItem;
-            var listItem2 = comboDataFile2.SelectedItem as MsDataFileListItem;
-            if (listItem1 == null || listItem2 == null)
+            UpdateTarget();
+        }
+
+        public void UpdateTarget()
+        {
+            var dataFiles = ListDataFiles();
+            if (comboTarget.Items.Cast<MsDataFile>().SequenceEqual(dataFiles))
             {
-                zedGraphControlEx1.GraphPane.Title.Text =
-                    "Choose two different samples to see the retention time alignment.";
                 return;
             }
-
-            var dataFile1 = listItem1.MsDataFile;
-            var dataFile2 = listItem2.MsDataFile;
-            var searchResults1 = GetSearchResults(dataFile1);
-            searchResults1.Sort((a,b)=>GetScanIndex(a).CompareTo(GetScanIndex(b)));
-            var searchResults2 = GetSearchResults(dataFile2).ToDictionary(s=>s.Peptide, s=>s);
-            var xValues = new List<double>();
-            var yValues = new List<double>();
-            foreach (var searchResult1 in searchResults1)
+            var selectedIndexOld = comboTarget.SelectedIndex;
+            comboTarget.Items.Clear();
+            comboTarget.Items.AddRange(dataFiles.Cast<object>().ToArray());
+            if (comboTarget.Items.Count > 0)
             {
-                DbPeptideSearchResult searchResult2;
-                if (!searchResults2.TryGetValue(searchResult1.Peptide, out searchResult2))
+                comboTarget.SelectedIndex = Math.Min(comboTarget.Items.Count - 1, Math.Max(0, selectedIndexOld));
+            }
+            UpdateRows();
+        }
+
+        private void LoadRetentionTimesBackground()
+        {
+            IList<MsDataFile> msDataFiles;
+            using (Workspace.GetReadLock())
+            {
+                msDataFiles = Workspace.MsDataFiles.ListChildren();
+            }
+            for (int i = 0; i < msDataFiles.Count; i++)
+            {
+                if (IsDisposed)
+                {
+                    return;
+                }
+                try
+                {
+                    UpdateStatus(100 * i / msDataFiles.Count, "Loading MS2 IDs");
+                    IList<Peptide> regressedPeptides;
+                    msDataFiles[i].RegressTimes(msDataFiles[i], out regressedPeptides);
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+            UpdateStatus(100, "Finished loading MS2 IDs");
+        }
+
+        private void UpdateStatus(int percentComplete, string message)
+        {
+            try
+            {
+                BeginInvoke(new Action(() =>
+                                           {
+                                               progressBarStatus.Value = percentComplete;
+                                               lblStatus.Text = message;
+                                               panelStatus.Visible = percentComplete < 100;
+                                               _status = new KeyValuePair<int, string>(percentComplete, message);
+                                               UpdateRows();
+                                           }));
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        public void UpdateRows()
+        {
+            if (_status.Key < 100)
+            {
+                return;
+            }
+            var rows = GetRows();
+            if (rows.SequenceEqual(_dataRows))
+            {
+                return;
+            }
+            _dataRows.RaiseListChangedEvents = false;
+            _dataRows.Clear();
+            foreach (var row in rows)
+            {
+                _dataRows.Add(row);
+            }
+            _dataRows.RaiseListChangedEvents = true;
+            _dataRows.ResetBindings();
+            UpdateGraph();
+        }
+
+        public void UpdateGraph()
+        {
+            zedGraphControl.GraphPane.GraphObjList.Clear();
+            zedGraphControl.GraphPane.CurveList.Clear();
+            var currentRow = bindingSource.Current as DataRow;
+            var target = comboTarget.SelectedItem;
+            if (currentRow != null)
+            {
+                var refinedPoints = new PointPairList();
+                var outliers = new PointPairList();
+                var regression = currentRow.Refined ?? currentRow.Unrefined;
+                if (regression != null)
+                {
+                    var outlierIndexes = regression.OutlierIndexes;
+                    for (int i = 0; i < regression.TotalCount; i++)
+                    {
+                        var point = new PointPair(regression.OriginalTimes[i], regression.TargetTimes[i], currentRow.RegressedPeptides[i].FullSequence);
+                        if (outlierIndexes.Contains(i))
+                        {
+                            outliers.Add(point);
+                        }
+                        else
+                        {
+                            refinedPoints.Add(point);
+                        }
+                    }
+                    var refinedScatter = zedGraphControl.GraphPane.AddCurve("Refined Points", refinedPoints, Color.Black, SymbolType.Diamond);
+                    refinedScatter.Symbol.Size = 8f;
+                    refinedScatter.Line.IsVisible = false;
+                    refinedScatter.Symbol.Border.IsVisible = false;
+                    refinedScatter.Symbol.Fill = new Fill(Color.DarkBlue);
+                    if (outliers.Count > 0)
+                    {
+                        var outlierScatter = zedGraphControl.GraphPane.AddCurve("Outliers", outliers, Color.Black,
+                                                                                   SymbolType.Diamond);
+                        outlierScatter.Symbol.Size = 8f;
+                        outlierScatter.Line.IsVisible = false;
+                        outlierScatter.Symbol.Border.IsVisible = false;
+                        outlierScatter.Symbol.Fill = new Fill(Color.BlueViolet);
+                    }
+                    double xMin = regression.OriginalTimes.Min();
+                    double xMax = regression.OriginalTimes.Max();
+                    var regressionLine = zedGraphControl.GraphPane
+                        .AddCurve("Regression line", new[] { xMin, xMax },
+                            new[] { xMin * regression.Slope + regression.Intercept,xMax * regression.Slope + regression.Intercept},
+                            Color.Black);
+                    regressionLine.Symbol.IsVisible = false;
+                    zedGraphControl.GraphPane.Title.Text = string.Format("Alignment of {0} to {1}",
+                        currentRow.MsDataFile,
+                        target);
+                    zedGraphControl.GraphPane.XAxis.Title.Text
+                        = string.Format("Time from {0}", currentRow.DataFile);
+                    zedGraphControl.GraphPane.YAxis.Title.Text = "Aligned time";
+                    zedGraphControl.GraphPane.AxisChange();
+                    zedGraphControl.Invalidate();
+
+                }
+            }
+        }
+
+        private MsDataFile[] ListDataFiles()
+        {
+            var dataFiles = Workspace.MsDataFiles.ListChildren().ToArray();
+            Array.Sort(dataFiles);
+            return dataFiles;
+        }
+
+        private IList<DataRow> GetRows()
+        {
+            var target = comboTarget.SelectedItem as MsDataFile;
+            if (target == null)
+            {
+                return new DataRow[0];
+            }
+            var list = new List<DataRow>();
+            foreach (var msDataFile in ListDataFiles())
+            {
+                if (Equals(msDataFile, target))
                 {
                     continue;
                 }
-                var x = dataFile1.GetTime(GetScanIndex(searchResult1));
-                var y = dataFile2.GetTime(GetScanIndex(searchResult2));
-                xValues.Add(x);
-                yValues.Add(y);
+                IList<Peptide> regressedPeptides;
+                var rawRegression = msDataFile.RegressTimes(target, out regressedPeptides);
+                var dataRow = new DataRow(msDataFile, rawRegression, regressedPeptides);
+                list.Add(dataRow);
             }
-            var curve = zedGraphControlEx1.GraphPane.AddCurve("Common MS2 IDs", xValues.ToArray(), yValues.ToArray(), Color.Black);
-            curve.Line.IsVisible = false;
-            curve.Symbol.Type = SymbolType.Circle;
-            curve.Symbol.Size = 1;
-            var loessInterpolator = new LoessInterpolator(.1, 0);
-            var weights = Enumerable.Repeat(1.0, xValues.Count).ToArray();
-            var smoothedPoints = loessInterpolator.Smooth(xValues.ToArray(), yValues.ToArray(), weights);
-            var smoothedCurve = zedGraphControlEx1.GraphPane.AddCurve(
-                "Smoothed Curve", xValues.ToArray(), smoothedPoints.ToArray(), Color.DarkGray);
-            smoothedCurve.Symbol.IsVisible = false;
-            zedGraphControlEx1.GraphPane.XAxis.Title.Text = dataFile1.Label;
-            zedGraphControlEx1.GraphPane.YAxis.Title.Text = dataFile2.Label;
-            zedGraphControlEx1.GraphPane.Title.Text = string.Format(
-                "Alignment of {0} to {1} using MS2 identifications", dataFile1.Label, dataFile2.Label);
-            zedGraphControlEx1.GraphPane.AxisChange();
-            zedGraphControlEx1.Invalidate();
+            return list;
         }
 
-        private int GetScanIndex(DbPeptideSearchResult dbPeptideSearchResult)
+        internal class DataRow
         {
-            return (dbPeptideSearchResult.FirstDetectedScan + dbPeptideSearchResult.LastDetectedScan)/2;
-        }
-
-        private void PopulateDataFileCombo(ComboBox comboBox)
-        {
-            var oldSelection = comboBox.SelectedItem as MsDataFileListItem;
-            comboBox.Items.Clear();
-            var msDataFiles = new List<MsDataFile>(Workspace.MsDataFiles.ListChildren());
-            msDataFiles.Sort((d1,d2)=>d1.Label.CompareTo(d2.Label));
-            foreach (var msDataFile in msDataFiles)
+            public DataRow(MsDataFile dataFile, RegressionWithOutliers unrefined, IList<Peptide> regressedPeptides)
             {
-                comboBox.Items.Add(new MsDataFileListItem(msDataFile));
-                if (oldSelection != null && oldSelection.MsDataFile.Equals(msDataFile))
+                MsDataFile = dataFile;
+                Unrefined = unrefined;
+                RegressedPeptides = regressedPeptides;
+                if (Unrefined != null)
                 {
-                    comboBox.SelectedIndex = comboBox.Items.Count - 1;
+                    Refined = Unrefined.Refine();
                 }
             }
-        }
 
-        private List<DbPeptideSearchResult> GetSearchResults(MsDataFile msDataFile)
-        {
-            var result = new List<DbPeptideSearchResult>();
-            using (var session = Workspace.OpenSession())
-            {
-                var criteria = session.CreateCriteria(typeof (DbPeptideSearchResult))
-                    .Add(Restrictions.Eq("MsDataFile", session.Load<DbMsDataFile>(msDataFile.Id)));
-                criteria.List(result);
-            }
-            return result;
-        }
-
-        public class MsDataFileListItem
-        {
-            public MsDataFileListItem(MsDataFile msDataFile)
-            {
-                MsDataFile = msDataFile;
-            }
             public MsDataFile MsDataFile { get; private set; }
-            public override string ToString()
-            {
-                return MsDataFile.Label;
-            }
+            public string DataFile { get { return MsDataFile.Label; } }
+            public IList<Peptide> RegressedPeptides { get; private set; }
+            public RegressionWithOutliers Unrefined { get; private set; }
+            public RegressionWithOutliers Refined { get; private set; }
+            public double? RefinedSlope { get { return Refined == null ? (double?) null : Refined.Slope; } }
+            public double? RefinedIntercept { get { return Refined == null ? (double?) null : Refined.Intercept; } }
+            public int RefinedPointCount { get { return Refined == null ? 0 : Refined.RefinedCount; } }
+            public double RawSlope { get { return Unrefined.Slope; } }
+            public double RawIntercept { get { return Unrefined.Intercept; } }
+            public double RawR { get { return Unrefined.R; } }
+            public int TotalPointCount { get { return Unrefined.TotalCount; } }
+        }
+
+        private void comboTarget_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateRows();
+        }
+
+        private void bindingSource_CurrentChanged(object sender, EventArgs e)
+        {
+            UpdateGraph();
         }
     }
 }

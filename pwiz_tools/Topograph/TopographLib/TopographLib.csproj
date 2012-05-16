@@ -163,6 +163,7 @@
     <Compile Include="Enrichment\CrawPeakFinderWrapper.cs" />
     <Compile Include="Enrichment\TracerFormulaEnumerator.cs" />
     <Compile Include="Enrichment\TracerPercentEnumerator.cs" />
+    <Compile Include="Model\RegressionWithOutliers.cs" />
     <Compile Include="Model\Chromatograms.cs" />
     <Compile Include="Model\ConnectionSettings.cs" />
     <Compile Include="Model\DbLock.cs" />
@@ -251,6 +252,7 @@
     <Compile Include="Util\LinearRegression.cs" />
     <Compile Include="Util\Lists.cs" />
     <Compile Include="Util\LongOperation.cs" />
+    <Compile Include="Util\NameComparer.cs" />
     <Compile Include="Util\PeakDivider.cs" />
     <Compile Include="Util\PendingIdQueue.cs" />
     <Compile Include="Util\ProgressMonitorImpl.cs" />

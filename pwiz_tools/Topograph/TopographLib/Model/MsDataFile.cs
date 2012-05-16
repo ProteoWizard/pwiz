@@ -34,6 +34,7 @@ namespace pwiz.Topograph.Model
 {
     public class MsDataFile : AnnotatedEntityModel<DbMsDataFile>
     {
+        public static bool UseLoessRegression = false;
         private String _label;
         private String _cohort;
         private String _sample;
@@ -173,6 +174,39 @@ namespace pwiz.Topograph.Model
             return result;
         }
 
+        public RegressionWithOutliers RegressTimes(MsDataFile target, out IList<Peptide> peptides)
+        {
+            var mySearchResults = ListSearchResults();
+            var targetDict = target.ListSearchResults().ToDictionary(s => s.PeptideId, s => s);
+            var myTimes = new List<double>();
+            var targetTimes = new List<double>();
+            peptides = new List<Peptide>();
+            foreach (var mySearchResult in mySearchResults)
+            {
+                SearchResultInfo targetSearchResult;
+                if (!targetDict.TryGetValue(mySearchResult.PeptideId, out targetSearchResult))
+                {
+                    continue;
+                }
+                if (mySearchResult.FirstTracerCount == targetSearchResult.FirstTracerCount)
+                {
+                    myTimes.Add(GetTime(mySearchResult.FirstDetectedScan));
+                    targetTimes.Add(target.GetTime(targetSearchResult.FirstDetectedScan));
+                    peptides.Add(Workspace.Peptides.GetChild(mySearchResult.PeptideId));
+                }
+                else
+                {
+                    if (mySearchResult.LastTracerCount == targetSearchResult.LastTracerCount)
+                    {
+                        myTimes.Add(GetTime(mySearchResult.LastDetectedScan));
+                        targetTimes.Add(GetTime(targetSearchResult.LastDetectedScan));
+                        peptides.Add(Workspace.Peptides.GetChild(mySearchResult.PeptideId));
+                    }
+                }
+            }
+            return new RegressionWithOutliers(myTimes, targetTimes);
+        }
+
         public RetentionTimeAlignment GetRetentionTimeAlignment(MsDataFile other)
         {
             var alignments = _alignments;
@@ -185,34 +219,55 @@ namespace pwiz.Topograph.Model
                     {
                         return result;
                     }
-                    var lstMySearchResults = ListSearchResults();
-                    var lstOtherSearchResults = other.ListSearchResults();
-                    var otherSearchResults = lstOtherSearchResults.ToDictionary(s => s.PeptideId, s => s);
-                    var dict = new Dictionary<double, double>();
-                    foreach (var searchResult1 in lstMySearchResults)
+                    if (!UseLoessRegression)
                     {
-                        SearchResultInfo searchResult2;
-                        if (!otherSearchResults.TryGetValue(searchResult1.PeptideId, out searchResult2))
+                        IList<Peptide> regressedPeptides;
+                        var regressionWithOutliers = RegressTimes(other, out regressedPeptides);
+                        var refined = regressionWithOutliers.Refine();
+                        if (refined != null)
                         {
-                            continue;
-                        }
-                        if (searchResult1.FirstTracerCount == searchResult2.FirstTracerCount)
-                        {
-                            dict[GetTime(searchResult1.FirstDetectedScan)] =
-                                other.GetTime(searchResult2.FirstDetectedScan);
-                        }
-                        if (searchResult1.LastTracerCount == searchResult2.LastTracerCount)
-                        {
-                            dict[GetTime(searchResult1.LastDetectedScan)] = other.GetTime(searchResult2.LastDetectedScan);
+                            double minX = refined.OriginalTimes.Min();
+                            double maxX = refined.OriginalTimes.Max();
+                            result = RetentionTimeAlignment.GetRetentionTimeAlignment(
+                                new[] { minX, maxX },
+                                new[]
+                                {
+                                    minX*refined.Slope + refined.Intercept,
+                                    maxX*refined.Slope + refined.Intercept
+                                });
                         }
                     }
-                    var xValues = dict.Keys.ToArray();
-                    Array.Sort(xValues);
-                    var yValues = xValues.Select(x => dict[x]).ToArray();
-                    var loessInterpolator = new LoessInterpolator(.1, 0);
-                    var weights = Enumerable.Repeat(1.0, xValues.Count()).ToArray();
-                    var smoothedPoints = loessInterpolator.Smooth(xValues, yValues, weights);
-                    result = RetentionTimeAlignment.GetRetentionTimeAlignment(xValues, smoothedPoints);
+                    else
+                    {
+                        var lstMySearchResults = ListSearchResults();
+                        var lstOtherSearchResults = other.ListSearchResults();
+                        var otherSearchResults = lstOtherSearchResults.ToDictionary(s => s.PeptideId, s => s);
+                        var dict = new Dictionary<double, double>();
+                        foreach (var searchResult1 in lstMySearchResults)
+                        {
+                            SearchResultInfo searchResult2;
+                            if (!otherSearchResults.TryGetValue(searchResult1.PeptideId, out searchResult2))
+                            {
+                                continue;
+                            }
+                            if (searchResult1.FirstTracerCount == searchResult2.FirstTracerCount)
+                            {
+                                dict[GetTime(searchResult1.FirstDetectedScan)] =
+                                    other.GetTime(searchResult2.FirstDetectedScan);
+                            }
+                            if (searchResult1.LastTracerCount == searchResult2.LastTracerCount)
+                            {
+                                dict[GetTime(searchResult1.LastDetectedScan)] = other.GetTime(searchResult2.LastDetectedScan);
+                            }
+                        }
+                        var xValues = dict.Keys.ToArray();
+                        Array.Sort(xValues);
+                        var yValues = xValues.Select(x => dict[x]).ToArray();
+                        var loessInterpolator = new LoessInterpolator(.1, 0);
+                        var weights = Enumerable.Repeat(1.0, xValues.Count()).ToArray();
+                        var smoothedPoints = loessInterpolator.Smooth(xValues, yValues, weights);
+                        result = RetentionTimeAlignment.GetRetentionTimeAlignment(xValues, smoothedPoints);
+                    }
                     alignments.Add(other.Id.Value, result);
                     return result;
                 }
@@ -243,6 +298,16 @@ namespace pwiz.Topograph.Model
                     .List(searchResults);
             }
             return _searchResults = searchResults.Select(s=>new SearchResultInfo(s)).ToArray();
+        }
+
+        public override int CompareTo(object obj)
+        {
+            var that = obj as MsDataFile;
+            if (null == that)
+            {
+                return base.CompareTo(obj);
+            }
+            return NameComparers.CompareReplicateNames(ToString(), that.ToString());
         }
 
         private class SearchResultInfo

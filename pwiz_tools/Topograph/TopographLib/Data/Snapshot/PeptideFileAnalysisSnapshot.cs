@@ -55,7 +55,7 @@ namespace pwiz.Topograph.Data.Snapshot
                                     " T WHERE T.ChromatogramSet.PeptideFileAnalysis.PeptideAnalysis.Id IN " + idList;
             if (!loadAllChromatograms)
             {
-                chromatogramQuery += " AND (T.ChromatogramSet.PeptideFileAnalysis.PeakCount = 0 OR T.ChromatogramSet.PeptideFileAnalysis.TracerPercent IS NULL)";
+                chromatogramQuery += " AND (T.ChromatogramSet.PeptideFileAnalysis.PeakCount = 0 OR T.ChromatogramSet.PeptideFileAnalysis.TracerPercent IS NULL OR T.ChromatogramSet.PeptideFileAnalysis.PsmCount = 0)";
             }
             session.CreateQuery(chromatogramQuery).List(chromatograms);
             var peaks = new List<DbPeak>();

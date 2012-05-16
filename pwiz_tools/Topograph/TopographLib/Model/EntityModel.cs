@@ -30,7 +30,7 @@ using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Model
 {
-    public class EntityModel : IEntity
+    public class EntityModel : IEntity, IComparable
     {
         private EntityModel _parent;
         protected EntityModel(Workspace workspace, long? id)
@@ -129,6 +129,15 @@ namespace pwiz.Topograph.Model
         public AutoLock GetWriteLock()
         {
             return Workspace.GetWriteLock();
+        }
+
+        public virtual int CompareTo(object obj)
+        {
+            if (null == obj)
+            {
+                return 1;
+            }
+            return CaseInsensitiveComparer.DefaultInvariant.Compare(ToString(), obj.ToString());
         }
     }
     

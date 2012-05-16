@@ -18,10 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using pwiz.Topograph.Data;
-using NHibernate;
 
 namespace pwiz.Topograph.Model
 {
