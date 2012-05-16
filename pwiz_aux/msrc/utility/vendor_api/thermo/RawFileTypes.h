@@ -169,8 +169,8 @@ inline InstrumentModelType parseInstrumentModelType(const std::string& instrumen
     else if (type == "ELEMENT XR")              return InstrumentModelType_Element_XR;
     else if (type == "ELEMENT GD")              return InstrumentModelType_Element_GD;
     else if (type == "GC ISOLINK")              return InstrumentModelType_GC_IsoLink;
-    else if (type == "EXACTIVE")                return InstrumentModelType_Exactive;
-    else if (type == "Q EXACTIVE")              return InstrumentModelType_Q_Exactive;
+    else if (bal::contains(type, "Q EXACTIVE")) return InstrumentModelType_Q_Exactive;
+    else if (bal::contains(type, "EXACTIVE"))   return InstrumentModelType_Exactive;
     else if (type == "SURVEYOR PDA")            return InstrumentModelType_Surveyor_PDA;
     else if (type == "ACCELA PDA")              return InstrumentModelType_Accela_PDA;
     else
