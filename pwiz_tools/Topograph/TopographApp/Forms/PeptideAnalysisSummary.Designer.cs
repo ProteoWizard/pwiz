@@ -51,6 +51,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnShowGraph = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.tbxMassAccuracy = new System.Windows.Forms.TextBox();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.colDataFileLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -62,11 +63,17 @@ namespace pwiz.Topograph.ui.Forms
             this.colScore = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colPrecursorEnrichment = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.zedGraphControl = new pwiz.Topograph.ui.Controls.ZedGraphControlEx();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewExcludedMzs)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).BeginInit();
+            this.splitContainer2.Panel1.SuspendLayout();
+            this.splitContainer2.Panel2.SuspendLayout();
+            this.splitContainer2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -83,7 +90,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.dataGridView);
+            this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
             this.splitContainer1.Size = new System.Drawing.Size(1245, 412);
             this.splitContainer1.SplitterDistance = 259;
             this.splitContainer1.TabIndex = 0;
@@ -325,6 +332,24 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMassAccuracy.TabIndex = 24;
             this.tbxMassAccuracy.Leave += new System.EventHandler(this.tbxMassAccuracy_Leave);
             // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Name = "splitContainer2";
+            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.dataGridView);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.zedGraphControl);
+            this.splitContainer2.Size = new System.Drawing.Size(982, 412);
+            this.splitContainer2.SplitterDistance = 206;
+            this.splitContainer2.TabIndex = 1;
+            // 
             // dataGridView
             // 
             this.dataGridView.AllowUserToAddRows = false;
@@ -345,11 +370,11 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 0);
             this.dataGridView.Name = "dataGridView";
-            this.dataGridView.Size = new System.Drawing.Size(982, 412);
+            this.dataGridView.Size = new System.Drawing.Size(982, 206);
             this.dataGridView.TabIndex = 0;
+            this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
             this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
             this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
-            this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
             // 
             // colStatus
             // 
@@ -418,6 +443,22 @@ namespace pwiz.Topograph.ui.Forms
             this.colTurnover.Name = "colTurnover";
             this.colTurnover.ReadOnly = true;
             // 
+            // zedGraphControl
+            // 
+            this.zedGraphControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.zedGraphControl.Location = new System.Drawing.Point(0, 0);
+            this.zedGraphControl.Name = "zedGraphControl";
+            this.zedGraphControl.ScrollGrace = 0D;
+            this.zedGraphControl.ScrollMaxX = 0D;
+            this.zedGraphControl.ScrollMaxY = 0D;
+            this.zedGraphControl.ScrollMaxY2 = 0D;
+            this.zedGraphControl.ScrollMinX = 0D;
+            this.zedGraphControl.ScrollMinY = 0D;
+            this.zedGraphControl.ScrollMinY2 = 0D;
+            this.zedGraphControl.Size = new System.Drawing.Size(982, 202);
+            this.zedGraphControl.TabIndex = 0;
+            this.zedGraphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl_ContextMenuBuilder);
+            // 
             // PeptideAnalysisSummary
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -429,10 +470,15 @@ namespace pwiz.Topograph.ui.Forms
             this.Text = "PeptideComparisonForm";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewExcludedMzs)).EndInit();
+            this.splitContainer2.Panel1.ResumeLayout(false);
+            this.splitContainer2.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer2)).EndInit();
+            this.splitContainer2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
 
@@ -472,5 +518,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewLinkColumn colScore;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorEnrichment;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
+        private System.Windows.Forms.SplitContainer splitContainer2;
+        private ZedGraphControlEx zedGraphControl;
     }
 }

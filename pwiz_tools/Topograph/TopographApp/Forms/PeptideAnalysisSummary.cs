@@ -18,15 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using NHibernate.Criterion;
+using ZedGraph;
 using pwiz.Topograph.Data;
-using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.ui.Forms
@@ -38,6 +34,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private int? _originalMinCharge;
         private int? _originalMaxCharge;
+        private bool _normalizeRetentionTimes;
         public PeptideAnalysisSummary(PeptideAnalysis peptideAnalysis) : base(peptideAnalysis)
         {
             InitializeComponent();
@@ -176,6 +173,78 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 UpdateRow(row);
             }
+            UpdateGraph();
+        }
+
+        private void UpdateGraph()
+        {
+            zedGraphControl.GraphPane.CurveList.Clear();
+            zedGraphControl.GraphPane.GraphObjList.Clear();
+            zedGraphControl.GraphPane.Title.IsVisible = false;
+            MsDataFile normalizeTo = null;
+            var fileAnalyses = new List<PeptideFileAnalysis>();
+            for (int iRow = 0; iRow < dataGridView.Rows.Count; iRow++)
+            {
+                fileAnalyses.Add((PeptideFileAnalysis)dataGridView.Rows[iRow].Tag);
+            }
+            if (fileAnalyses.Count == 0)
+            {
+                return;
+            }
+            if (_normalizeRetentionTimes)
+            {
+                normalizeTo = fileAnalyses[0].MsDataFile;
+            }
+            var tracerFormulas = PeptideAnalysis.GetTurnoverCalculator().ListTracerFormulas();
+            var pointPairLists = tracerFormulas.Select(tf=>new PointPairList()).ToArray();
+            for (int iFileAnalysis = 0; iFileAnalysis < fileAnalyses.Count; iFileAnalysis++)
+            {
+                var fileAnalysis = fileAnalyses[iFileAnalysis];
+                var peaks = fileAnalysis.Peaks;
+                for (int iTracerFormula = 0; iTracerFormula < tracerFormulas.Count; iTracerFormula++)
+                {
+                    var pointPairList = pointPairLists[iTracerFormula];
+                    var peak = peaks.GetPeak(tracerFormulas[iTracerFormula]);
+                    if (peak == null)
+                    {
+                        pointPairList.Add(new PointPair(iFileAnalysis + 1, PointPairBase.Missing, PointPairBase.Missing));
+                    }
+                    else
+                    {
+                        if (normalizeTo == null)
+                        {
+                            pointPairList.Add(new PointPair(iFileAnalysis + 1, peak.StartTime, peak.EndTime));
+                        }
+                        else
+                        {
+                            var alignment = fileAnalysis.MsDataFile.GetRetentionTimeAlignment(normalizeTo);
+                            if (alignment == null)
+                            {
+                                pointPairList.Add(new PointPair(iFileAnalysis + 1, PointPairBase.Missing, PointPairBase.Missing));
+                            }
+                            else
+                            {
+                                pointPairList.Add(new PointPair(iFileAnalysis + 1, alignment.GetTargetTime(peak.StartTime), alignment.GetTargetTime(peak.EndTime), fileAnalysis));
+                            }
+                        }
+                    }
+                }
+            }
+            zedGraphControl.GraphPane.XAxis.Type = AxisType.Text;
+            zedGraphControl.GraphPane.XAxis.Scale.TextLabels =
+                fileAnalyses.Select(fileAnalysis => fileAnalysis.MsDataFile.ToString()).ToArray();
+            zedGraphControl.GraphPane.XAxis.Title.Text = "Data File";
+            zedGraphControl.GraphPane.YAxis.Title.Text = normalizeTo == null ? "Retention Time" : "Normalized Retention Time";
+            
+            for (int iTracerFormula = 0; iTracerFormula < tracerFormulas.Count; iTracerFormula++)
+            {
+                var curve = zedGraphControl.GraphPane.AddHiLowBar(tracerFormulas[iTracerFormula].ToDisplayString(),
+                                                                  pointPairLists[iTracerFormula],
+                                                                  TracerChromatogramForm.GetColor(iTracerFormula,
+                                                                                                  tracerFormulas.Count));
+            }
+            zedGraphControl.GraphPane.AxisChange();
+            zedGraphControl.Invalidate();
         }
 
         private void dataGridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -323,6 +392,22 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     PeptideAnalysis.MassAccuracy = value;
                 }
+            }
+        }
+
+        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            menuStrip.Items.Add(new ToolStripMenuItem("Normalize Times", null, NormalizeTimesOnClick)
+                                    {CheckOnClick = true, Checked = _normalizeRetentionTimes});
+        }
+
+        private void NormalizeTimesOnClick(object sender, EventArgs eventArgs)
+        {
+            var toolstripMenuItem = sender as ToolStripMenuItem;
+            if (toolstripMenuItem != null)
+            {
+                _normalizeRetentionTimes = toolstripMenuItem.Checked;
+                UpdateGraph();
             }
         }
     }

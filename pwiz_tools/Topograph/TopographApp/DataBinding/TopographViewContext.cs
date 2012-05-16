@@ -79,8 +79,7 @@ namespace pwiz.Topograph.ui
 
         public override string GetDefaultExportFilename(ViewSpec viewSpec)
         {
-            string currentViewName = viewSpec.Name;
-            return Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + RowType.Name + (string.IsNullOrEmpty(currentViewName) ? "" : currentViewName);
+            return Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + base.GetDefaultExportFilename(viewSpec);
         }
 
         private string ViewSpecKey
