@@ -26,7 +26,7 @@ namespace IDPicker.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute(@"
-// $Id$
+// $Revision$ $Date$ $Author$
 //
 // Licensed under the Apache License, Version 2.0 (the ""License""); 
 // you may not use this file except in compliance with the License. 
