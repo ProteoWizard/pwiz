@@ -23,6 +23,38 @@ namespace IDPicker.Properties {
             }
         }
         
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"
+// $Id$
+//
+// Licensed under the Apache License, Version 2.0 (the ""License""); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an ""AS IS"" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+// The Original Code is the IDPicker project.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2012 Vanderbilt University
+//
+// Contributor(s):
+//
+")]
+        public string License {
+            get {
+                return ((string)(this["License"]));
+            }
+        }
+        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2")]
@@ -222,20 +254,25 @@ namespace IDPicker.Properties {
             "tring>\r\n  <string>OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partiti" +
             "on;Partition;0.02;1 Descending Off expect</string>\r\n  <string>Pepitome optimized" +
             ";MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off " +
-            "hgt;1 Ascending Off kendallpval</string>\r\n  <string>Phenyx zscore;StaticWeighted" +
-            ";False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off zscore</str" +
-            "ing>\r\n  <string>Sequest optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partitio" +
-            "n;Partition;0.02;1 Ascending Off sequest:xcorr;1 Ascending Off sequest:deltacn</" +
-            "string>\r\n  <string>Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Parti" +
-            "tion;Partition;0.02;1 Ascending Off sequest:xcorr</string>\r\n  <string>TagRecon o" +
-            "ptimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascend" +
-            "ing Off myrimatch:mvh;1 Ascending Off xcorr</string>\r\n  <string>X!Tandem optimiz" +
-            "ed;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending O" +
-            "ff x!tandem:expect;1 Ascending Off x!tandem:hyperscore</string>\r\n  <string>X!Tan" +
-            "dem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 " +
-            "Descending Off x!tandem:expect</string>\r\n  <string>X!Tandem hyperscore;StaticWei" +
-            "ghted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off x!tand" +
-            "em:hyperscore</string>\r\n</ArrayOfString>")]
+            "hgt;1 Ascending Off kendallpval</string>\r\n  <string>Pepitome MVH;StaticWeighted;" +
+            "False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mv" +
+            "h</string>\r\n  <string>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Pa" +
+            "rtition;Partition;0.02;1 Ascending Off zscore</string>\r\n  <string>Sequest optimi" +
+            "zed;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending O" +
+            "ff sequest:xcorr;1 Ascending Off sequest:deltacn</string>\r\n  <string>Sequest XCo" +
+            "rr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascendin" +
+            "g Off sequest:xcorr</string>\r\n  <string>TagRecon optimized;MonteCarlo;False;Line" +
+            "ar;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh;1 Ascend" +
+            "ing Off xcorr</string>\r\n  <string>TagRecon MVH;StaticWeighted;False;Linear;Ignor" +
+            "e;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh</string>\r\n  <str" +
+            "ing>TagRecon XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition" +
+            ";0.02;1 Ascending Off xcorr</string>\r\n  <string>X!Tandem optimized;MonteCarlo;Fa" +
+            "lse;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off x!tandem:expe" +
+            "ct;1 Ascending Off x!tandem:hyperscore</string>\r\n  <string>X!Tandem expect;Stati" +
+            "cWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off x" +
+            "!tandem:expect</string>\r\n  <string>X!Tandem hyperscore;StaticWeighted;False;Line" +
+            "ar;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off x!tandem:hyperscore</s" +
+            "tring>\r\n</ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));
