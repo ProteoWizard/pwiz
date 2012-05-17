@@ -315,5 +315,16 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
         }
+
+        private void gridView_SortCompare(object sender, DataGridViewSortCompareEventArgs e)
+        {
+            var s1 = e.CellValue1 as string;
+            var s2 = e.CellValue2 as string;
+            if (s1 != null && s2 != null)
+            {
+                e.SortResult = NameComparers.CompareReplicateNames(s1, s2);
+                e.Handled = true;
+            }
+        }
     }
 }

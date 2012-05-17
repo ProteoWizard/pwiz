@@ -41,6 +41,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSample = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -119,10 +120,11 @@ namespace pwiz.Topograph.ui.Forms
             this.gridView.Name = "gridView";
             this.gridView.Size = new System.Drawing.Size(772, 192);
             this.gridView.TabIndex = 0;
+            this.gridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellContentClick);
             this.gridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellEndEdit);
             this.gridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.gridView_RowHeaderMouseDoubleClick);
             this.gridView.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridView_RowsRemoved);
-            this.gridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellContentClick);
+            this.gridView.SortCompare += new System.Windows.Forms.DataGridViewSortCompareEventHandler(this.gridView_SortCompare);
             // 
             // colName
             // 
@@ -163,6 +165,7 @@ namespace pwiz.Topograph.ui.Forms
             this.Text = "DataFilesForm";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridView)).EndInit();
