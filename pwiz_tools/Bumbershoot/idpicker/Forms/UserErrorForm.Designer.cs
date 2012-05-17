@@ -148,7 +148,7 @@ namespace IDPicker.Forms
             this.MinimumSize = new System.Drawing.Size(425, 200);
             this.Name = "UserErrorForm";
             this.ShowIcon = false;
-            this.Text = "Probable User Error (PEBKAC)";
+            this.Text = "Probable User Error";
             this.ResumeLayout(false);
             this.PerformLayout();
 

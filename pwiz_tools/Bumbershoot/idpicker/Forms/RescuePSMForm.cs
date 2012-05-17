@@ -292,8 +292,8 @@ namespace IDPicker.Forms
             reportProgressDelegate reportProgress = new reportProgressDelegate(setProgress);
             reportStatusDelegate reportStatus = new reportStatusDelegate(setStatus);
 
-            string database = Path.GetFileName(session.Connection.GetDataSource());
-            logFile = database + "-log.txt";
+            string database = session.Connection.GetDataSource();
+            logFile = Path.ChangeExtension(database, ".log.txt");
 
             string config = string.Format("Parameters:\r\n" +
                                           "PrecursorMZTol: {0} \r\n" +
@@ -320,13 +320,10 @@ namespace IDPicker.Forms
              */
             if (backupDB)
             {
-                string dbBackupFile = database + ".bak.idpDB";
+                string dbBackupFile = Path.ChangeExtension(database, ".backup.idpDB");
                 reportStatus(string.Format("Backing up idpDB to {0} ... ",dbBackupFile));
                 reportProgress(-1, "Backing up idpDB");
-                if (File.Exists(database))
-                {   
-                    File.Copy(database, dbBackupFile, true);
-                }
+                File.Copy(database, dbBackupFile, true);
                 reportStatus(reportSecondsElapsed((DateTime.Now - startTime).TotalSeconds));
             }
 

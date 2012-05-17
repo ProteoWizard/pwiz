@@ -899,45 +899,48 @@ namespace IDPicker
                 {
                     importCancelled = false;
 
-                    Parser parser = new Parser();
-                    Invoke(new MethodInvoker(() => parser.ImportSettings += importSettingsHandler));
-
-                    var ilr = new IterationListenerRegistry();
-
-                    var progressForm = new ProgressForm(xml_filepaths, ilr)
+                    // loop until the import settings don't result in any fatal errors, or user cancels
+                    while (!importCancelled)
                     {
-                        Text = "Import Progress",
-                        StartPosition = FormStartPosition.CenterParent,
-                    };
-                    progressForm.NonFatalErrorCaught +=
-                        (rawMessage, emptyargs) =>
+                        Parser parser = new Parser();
+                        Invoke(new MethodInvoker(() => parser.ImportSettings += importSettingsHandler));
+
+                        var ilr = new IterationListenerRegistry();
+
+                        var progressForm = new ProgressForm(xml_filepaths, ilr)
+                        {
+                            Text = "Import Progress",
+                            StartPosition = FormStartPosition.CenterParent,
+                        };
+                        progressForm.NonFatalErrorCaught +=
+                            (rawMessage, emptyargs) =>
                             {
                                 var message = rawMessage as string[];
                                 if (message == null || message.Length < 2)
                                     return;
-                                delayedMessages.Add(new[]{message[0], message[1]});
+                                delayedMessages.Add(new[] { message[0], message[1] });
                             };
 
-                    Invoke(new MethodInvoker(() => progressForm.Show(this)));
+                        Invoke(new MethodInvoker(() => progressForm.Show(this)));
 
-                    try
-                    {
-                        parser.Parse(xml_filepaths, ilr);
-                    }
-                    catch (Exception ex)
-                    {
-                        importCancelled = true;
-
-                        if (ex.Message.Contains("no peptides found mapping to a decoy protein") ||
-                            ex.Message.Contains("peptides did not map to the database"))
-                            Program.HandleUserError(ex);
-                        else
-                            throw;
-                    }
-                    finally
-                    {
-                        importCancelled |= progressForm.Cancelled;
-                        Invoke(new MethodInvoker(() => progressForm.Close()));
+                        try
+                        {
+                            parser.Parse(xml_filepaths, ilr);
+                            break; // no fatal errors, break the loop
+                        }
+                        catch (Exception ex)
+                        {
+                            if (ex.Message.Contains("no peptides found mapping to a decoy protein") ||
+                                ex.Message.Contains("peptides did not map to the database"))
+                                Program.HandleUserError(ex);
+                            else
+                                throw;
+                        }
+                        finally
+                        {
+                            importCancelled |= progressForm.Cancelled;
+                            Invoke(new MethodInvoker(() => progressForm.Close()));
+                        }
                     }
 
                     if (importCancelled)
