@@ -268,8 +268,8 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             using (var session = Workspace.OpenSession())
             {
                 idsToDelete =
-                    session.CreateQuery("SELECT L.Id FROM " + typeof (DbLock) + " L WHERE L.InstanceId <> :instanceId").
-                        SetParameter("instanceId", Workspace.InstanceId.ToByteArray()).List<long>();
+                    session.CreateQuery("SELECT L.Id FROM " + typeof (DbLock) + " L WHERE L.InstanceIdBytes <> :instanceIdBytes").
+                        SetParameter("instanceIdBytes", Workspace.InstanceId.ToByteArray()).List<long>();
             }
             foreach (var id in idsToDelete)
             {

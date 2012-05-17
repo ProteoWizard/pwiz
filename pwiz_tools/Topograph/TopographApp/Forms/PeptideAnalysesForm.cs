@@ -41,17 +41,21 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             TabText = Name = Title + " (loading)";
-            deleteMenuItem.Click += _deleteAnalysesMenuItem_Click;
+            deleteMenuItem.Click += DeleteAnalysesMenuItemOnClick;
             
             colMinScore.DefaultCellStyle.Format = "0.####";
             colMaxScore.DefaultCellStyle.Format = "0.####";
         }
 
-        void _deleteAnalysesMenuItem_Click(object sender, EventArgs e)
+        void DeleteAnalysesMenuItemOnClick(object sender, EventArgs e)
         {
             var peptideAnalysisIds = new List<long>();
             foreach (DataGridViewRow row in dataGridView.SelectedRows)
             {
+                if (!row.Visible)
+                {
+                    continue;
+                }
                 peptideAnalysisIds.Add((long)row.Tag);
             }
             if (peptideAnalysisIds.Count == 0)
