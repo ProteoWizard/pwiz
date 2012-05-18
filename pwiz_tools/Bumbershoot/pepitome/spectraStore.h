@@ -60,6 +60,8 @@
 #include <boost/iostreams/filtering_streambuf.hpp> 
 #include <boost/iostreams/detail/config/zlib.hpp> 
 #include <boost/iostreams/filter/base64.hpp>
+#include <boost/iostreams/device/array.hpp>
+#include <boost/iostreams/stream.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/foreach_field.hpp>
@@ -195,7 +197,7 @@ namespace pepitome
         string filename;
         bool isOpen;
         
-        NativeFileReader(string name) : buffer_(1024, ' ')
+        NativeFileReader(string name) : buffer_(2048, ' ')
         {
            handle = fopen(name.c_str(), "rb");
             isOpen = (handle == NULL) ? false : true;
@@ -219,7 +221,7 @@ namespace pepitome
 
             while(true)
             {
-                char* result = fgets(&buffer_[0], 1024, handle);
+                char* result = fgets(&buffer_[0], 2048, handle);
 
                 if (ferror(handle))
                     throw runtime_error("[NativeFileReader] error reading file");
@@ -1252,7 +1254,8 @@ namespace pepitome
                 BOOST_FOREACH_FIELD((sqlite3_int64 index)(shared_ptr<string>& data), spectraData)
                 {
                     const shared_ptr<BaseLibrarySpectrum>& spectrum = (*this)[libraryIndexToArrayIndex[index]];
-                    strstream dataStream(&(*data)[0], data->length());
+                    bio::array_source sr(&(*data)[0], data->length());  
+                    bio::stream< bio::array_source > dataStream(sr);
                     eos::portable_iarchive packArchive(dataStream);
                     packArchive & *spectrum;
                 }

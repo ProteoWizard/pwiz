@@ -60,7 +60,6 @@ using namespace pwiz::math;
     RTCONFIG_VARIABLE( double,          MaxPeptideMass,             10000.0         ) \
     RTCONFIG_VARIABLE( int,             MinPeptideLength,           5               ) \
     RTCONFIG_VARIABLE( int,             MaxPeptideLength,           75              ) \
-	RTCONFIG_VARIABLE( int,				NumBatches,					50				) \
 	RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		0.98			) \
 	RTCONFIG_VARIABLE( double,			LibTicCutoffPercentage,		0.98			) \
 	RTCONFIG_VARIABLE( int,			    LibMaxPeakCount,    		100 			) \
