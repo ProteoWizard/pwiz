@@ -9,7 +9,8 @@
 #   optional full_path_to_msvcbuild_log
 #   optional list of msvc versions to build for
 #
-# places resulting build files in <full_path_to_pwiz_root>/msvc
+# places resulting .vc(x)proj and .sln build files in <full_path_to_pwiz_root>/msvc
+# and creates a distribution zip file in <full_path_to_pwiz_root>/build-nt-x86
 #
 # thanks to http://weblog.latte.ca/static/blake/refreshvcproj.py
 #
@@ -489,7 +490,7 @@ readmeMSVC = open("%s\\README_MSVC.txt"%(ac.get_pwizroot()),"w")
 readmeMSVC.write(faq)
 readmeMSVC.close()
 
-fz="libpwiz_msvc.zip"
+fz="%s\\build-nt-x86\\libpwiz_msvc.zip"%ac.get_pwizroot()
 print "creating MSVC source build distribution kit %s"%(fz)
 z = zipfile.ZipFile(fz,"w",zipfile.ZIP_DEFLATED)
 exts = ["h","hpp","c","cpp","cxx","sln","vcproj.user","vcxproj.user","vcproj","vcxproj","txt","inl"]
@@ -505,7 +506,9 @@ for shipdir in shipdirs :
 		f = shipdir+"\\"+file
 		ext = file.partition(".")[2]
 		if (not stat.S_ISDIR(os.stat(f).st_mode)) and ext in exts or ext=="":
-			z.write(f,ac.replace_pwizroot(f,"pwiz"))
+			tname = ac.replace_pwizroot(f,"pwiz")
+			print 'adding %s as %s'%(f,tname)
+			z.write(f,tname)
 			
 testfiles = set()
 for test in testargs : # grab data files
@@ -519,4 +522,6 @@ for test in testargs : # grab data files
 			if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
 				testfiles.add(ff)
 for f in testfiles :
-	z.write(f,ac.replace_pwizroot(f,"pwiz"))
+	tname = ac.replace_pwizroot(f,"pwiz")
+	print 'adding %s as %s'%(f,tname)
+	z.write(f,tname)
