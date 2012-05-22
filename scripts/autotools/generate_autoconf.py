@@ -40,22 +40,12 @@ import sys
 import stat
 import tarfile
 
-dbug = False
+dbug = True
 
 args = sys.argv
 
-if "-d" in args :
-	dbug = True
-	print "-d debug option enabled"
-	for i in range(1,len(args)) :
-		if "-d"==args[i] :
-			for j in range(i,len(args)-1) :
-				args[j] = args[j+1]
-	args = args[:len(args)-1]
-
-
 if (len(args) < 3) :
-	print "usage: %s <pwizroot> <dir_with_build_log> [dryrun]"%args[0]
+	print "usage: %s <pwizroot> <dir_with_build_log> [<tarball_name>]"%args[0]
 	print "# normally this is called by the script make_nonbjam_build.sh"
 	quit(1)
 	
@@ -66,9 +56,8 @@ logfile = "%s/build.log"%logdir
 print "using log file %s\n"%logfile
 
 dryrun = False
-if (len(args) > 3) :
-	if (args[3]=='dryrun') :
-		dryrun = true
+if (len(args) < 4) : # no tarball name given
+	dryrun = True
 
 def make_testname(testpath) : # /foo/bar/baz.cpp
 	noext = os.path.basename(testpath).rpartition(".")[0] # baz
@@ -272,9 +261,9 @@ if (not dryrun) :
 	for d in ["pwiz_aux"] : # any others not mentioned?
 		addShipDir(ac.get_pwizroot()+"/"+d,addTree=True)
 
-	fz=ac.get_pwizroot()+"/scripts/autotools/libpwiz_src.tgz"
+	fz = args[3]
 	print "creating autotools source build distribution kit %s"%(fz)
-	z = tarfile.open(fz,"w|gz")
+	z = tarfile.open(fz,"w:gz")
 	exts = ["h","hpp","c","cpp","cxx","am","inl",""]
 
 	for shipdir in shipdirs :
@@ -286,10 +275,10 @@ if (not dryrun) :
 				if dbug :
 					print "add "+f+" as "+tarname
 				z.add(f,tarname)
-	for file in os.listdir(logdir) :
+	for file in os.listdir(logdir) : # assume we also did the autoconf stuff in this dir
 		f = logdir+"/"+file
 		ext = file.partition(".")[2]
-		if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts)) :
+		if (os.path.exists(f) and (not os.path.isdir(f))) :
 			tarname = f.replace(logdir,"pwiz/autotools")
 			if dbug :
 				print "add "+f+" as "+tarname

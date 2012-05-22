@@ -47,18 +47,22 @@ if [ ! -e boost.m4 ]; then
 wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4
 fi
 echo "do autoconf stuff..."
-libtoolize --copy &>/dev/null; aclocal  &>/dev/null; autoscan $PWIZROOT/pwiz  &>/dev/null ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR dryrun &>/dev/null
+# assume this as a directory where we can drop the tarball
+export TARBALLDIR=$PWIZROOT/build-linux-x86
+mkdir -p $TARBALLDIR
+export TARBALL=$TARBALLDIR/libpwiz_src.tgz
+libtoolize --copy &>/dev/null; aclocal  &>/dev/null; autoscan $PWIZROOT/pwiz  &>/dev/null ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR &>/dev/null
 # yes, doing this twice, solves a chicken vs egg problem that first invocation barks about
-libtoolize  --copy ; aclocal ; cat boost.m4 >> aclocal.m4 ; autoscan $PWIZROOT/pwiz ; python $PWIZROOT/scripts/autotools/generate_autoconf.py -d $PWIZROOT $TMPDIR
+libtoolize  --copy ; aclocal ; cat boost.m4 >> aclocal.m4 ; autoscan $PWIZROOT/pwiz ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR $TARBALL
 
 popd
 
 echo "now test our work..."
-cd $PWIZROOT
-rm -rf autotools_test
-mkdir -p autotools_test
-cd autotools_test
-tar -xzf $PWIZROOT/scripts/autotools/libpwiz_src.tgz
+cd $TARBALLDIR
+rm -rf $TARBALLDIR/autotools_test
+mkdir -p $TARBALLDIR/autotools_test
+cd $TARBALLDIR/autotools_test
+tar -xzf $TARBALL
 cd pwiz
 bash autotools/configure
 make check
