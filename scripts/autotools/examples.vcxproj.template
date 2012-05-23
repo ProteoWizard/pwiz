@@ -46,7 +46,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;$(ProjectDir)..;$(BOOST_ROOT);$(ProjectDir)..\libraries\boost_aux;$(ZLIB_SOURCE);$(ProjectDir)..\libraries\zlib-1.2.3;$(ProjectDir)..\libraries\libsvm-3.0;$(ProjectDir)..\pwiz\data\msdata\ramp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(ProjectDir)..;$(BOOST_ROOT);$(ProjectDir)..\libraries\boost_aux;$(ZLIB_SOURCE).;$(ProjectDir)..\libraries\zlib-1.2.3;$(ProjectDir)..\libraries\libsvm-3.0;$(ProjectDir)..\pwiz\data\msdata\ramp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <MinimalRebuild>true</MinimalRebuild>
@@ -68,7 +68,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <AdditionalIncludeDirectories>.;$(ProjectDir)..;$(BOOST_ROOT);$(ProjectDir)..\libraries\boost_aux;$(ZLIB_SOURCE);$(ProjectDir)..\libraries\zlib-1.2.3;$(ProjectDir)..\libraries\libsvm-3.0;$(ProjectDir)..\pwiz\data\msdata\ramp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;$(ProjectDir)..;$(BOOST_ROOT);$(ProjectDir)..\libraries\boost_aux;$(ZLIB_SOURCE).;$(ProjectDir)..\libraries\zlib-1.2.3;$(ProjectDir)..\libraries\libsvm-3.0;$(ProjectDir)..\pwiz\data\msdata\ramp;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>

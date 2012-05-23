@@ -39,7 +39,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories=".;&quot;$(ProjectDir)..&quot;;$(BOOST_ROOT);&quot;$(ProjectDir)..\libraries\boost_aux&quot;;$(ZLIB_SOURCE)"
+				AdditionalIncludeDirectories=".;&quot;$(ProjectDir)..&quot;;$(BOOST_ROOT);&quot;$(ProjectDir)..\libraries\boost_aux&quot;;$(ZLIB_SOURCE)."
 				PreprocessorDefinitions="WIN32;WITHOUT_MZ5;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_USE_MATH_DEFINES;;_DEBUG;_CONSOLE"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -114,7 +114,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories=".;&quot;$(ProjectDir)..&quot;;$(BOOST_ROOT);&quot;$(ProjectDir)..\libraries\boost_aux&quot;;$(ZLIB_SOURCE)"
+				AdditionalIncludeDirectories=".;&quot;$(ProjectDir)..&quot;;$(BOOST_ROOT);&quot;$(ProjectDir)..\libraries\boost_aux&quot;;$(ZLIB_SOURCE)."
 				PreprocessorDefinitions="WIN32;WITHOUT_MZ5;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_USE_MATH_DEFINES;;NDEBUG;_CONSOLE"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
