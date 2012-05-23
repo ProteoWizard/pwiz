@@ -32,7 +32,7 @@ namespace CustomDataSourceDialog
 {
     public partial class OpenDataSourceDialog : Form
     {
-        private BreadCrumbControl BreadCrumbs;
+        private BreadCrumbControl BreadCrumbs = null;
         private List<string> _historyQueue;
         private List<ListViewItem> _unfilteredItems;
         private Dictionary<string, List<string[]>> _spectraFolders;
@@ -849,7 +849,8 @@ namespace CustomDataSourceDialog
 
         private void BreadCrumbPanel_Resize(object sender, EventArgs e)
         {
-            BreadCrumbs.CheckBreadcrumbSize();
+            if (BreadCrumbs != null)
+                BreadCrumbs.CheckBreadcrumbSize();
         }
 
         private void sourcePathTextBox_PreviewKeyDown (object sender, PreviewKeyDownEventArgs e)
