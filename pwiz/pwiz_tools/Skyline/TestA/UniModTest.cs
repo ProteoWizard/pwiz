@@ -106,7 +106,9 @@ namespace pwiz.SkylineTestA
 
         private static void WriteModListXml(string name, string tagName, IEnumerable<Dictionary<string, StaticMod>> dicts)
         {
-            FileStream fileStream = File.Create(string.Format(@"..\..\..\TestA\{0}", name));
+            string projectDir = FindProjectDir();
+            Assert.IsNotNull(projectDir);
+            FileStream fileStream = File.Create(Path.Combine(projectDir, name));
 
             XmlWriterSettings settings = new XmlWriterSettings
             {
@@ -122,6 +124,19 @@ namespace pwiz.SkylineTestA
             xmlWriter.WriteEndElement();
             xmlWriter.Close();
             fileStream.Close();
+        }
+
+        private static string FindProjectDir()
+        {
+            string parentPath = Path.GetFullPath("..");
+            for (;;)                
+            {
+                if (string.IsNullOrEmpty(parentPath) || !Directory.Exists(parentPath))
+                    return null;
+                if (File.Exists(Path.Combine(parentPath, "Skyline.sln")))
+                    return Path.Combine(parentPath, "TestA");
+                parentPath = Path.GetDirectoryName(parentPath);
+            }
         }
     }
 }
