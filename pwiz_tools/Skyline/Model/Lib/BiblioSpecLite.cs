@@ -24,6 +24,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -171,12 +172,11 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                var dataFiles = new List<string>(_librarySourceFiles.Length);
-                foreach (var sourceFile in _librarySourceFiles)
-                {
-                    dataFiles.Add(sourceFile.BaseName);
-                }
-                
+                var dataFiles = (from sourceFile in _librarySourceFiles
+                                 let fileName = sourceFile.FileName
+                                 where fileName != null
+                                 select fileName).ToArray();
+
                 LibraryDetails details = new LibraryDetails
                                              {
                                                  Format = "BiblioSpec",
@@ -1190,6 +1190,21 @@ namespace pwiz.Skyline.Model.Lib
                     try
                     {
                         return Path.GetFileNameWithoutExtension(FilePath);
+                    }
+                    catch (Exception)
+                    {
+                        return null;
+                    }
+                }
+            }
+
+            public string FileName
+            {
+                get
+                {
+                    try
+                    {
+                        return Path.GetFileName(FilePath);
                     }
                     catch (Exception)
                     {

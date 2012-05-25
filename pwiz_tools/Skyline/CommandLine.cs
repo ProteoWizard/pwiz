@@ -272,7 +272,7 @@ namespace pwiz.Skyline
 
                 if (pair.Name.Equals("in"))
                 {
-                    SkylineFile = pair.Value;
+                    SkylineFile = Path.GetFullPath(pair.Value);
                 }
 
                 else if (pair.Name.Equals("save"))
@@ -281,12 +281,12 @@ namespace pwiz.Skyline
                 }
                 else if (pair.Name.Equals("out"))
                 {
-                    SaveFile = pair.Value;
+                    SaveFile = Path.GetFullPath(pair.Value);
                 }
 
                 else if (pair.Name.Equals("import-file"))
                 {
-                    ReplicateFile = pair.Value;
+                    ReplicateFile = Path.GetFullPath(pair.Value);
                 }
 
                 else if (pair.Name.Equals("import-replicate-name"))
@@ -300,7 +300,7 @@ namespace pwiz.Skyline
 
                 else if (pair.Name.Equals("import-all"))
                 {
-                    ImportSourceDirectory = pair.Value;
+                    ImportSourceDirectory = Path.GetFullPath(pair.Value);
                 }
 
                 else if (pair.Name.Equals("import-naming-pattern"))
@@ -338,7 +338,7 @@ namespace pwiz.Skyline
 
                 else if (pair.Name.Equals("report-file"))
                 {
-                    ReportFile = pair.Value;
+                    ReportFile = Path.GetFullPath(pair.Value);
                 }
 
                 else if (pair.Name.Equals("report-format"))
@@ -389,7 +389,7 @@ namespace pwiz.Skyline
                 }
                 else if (pair.Name.Equals("exp-file"))
                 {
-                    ExportPath = pair.Value;
+                    ExportPath = Path.GetFullPath(pair.Value);
                 }
                 else if (pair.Name.Equals("exp-strategy"))
                 {
@@ -463,7 +463,7 @@ namespace pwiz.Skyline
                 }
                 else if (pair.Name.Equals("exp-template"))
                 {
-                    TemplateFile = pair.Value;
+                    TemplateFile = Path.GetFullPath(pair.Value);
                 }
                 else if (pair.Name.Equals("exp-ignore-proteins"))
                 {

@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Lib;
 using System.Linq;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -12,6 +13,8 @@ namespace pwiz.Skyline.Alerts
         public SpectrumLibraryInfoDlg(LibraryDetails libraryDetails)
         {
             InitializeComponent();
+
+            Icon = Resources.Skyline;
 
             // library details
             SetDetailsText(libraryDetails);
