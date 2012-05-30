@@ -1,1 +1,0 @@
-pscp -r publish\* proteome.gs.washington.edu:/www/html/software/topograph/
