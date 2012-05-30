@@ -183,9 +183,9 @@ namespace pwiz.Skyline
             get { return _dwellTime; }
             set
             {
-                if (value < MassListExporter.DWELL_TIME_MIN || value > MassListExporter.DWELL_TIME_MAX)
+                if (value < AbstractMassListExporter.DWELL_TIME_MIN || value > AbstractMassListExporter.DWELL_TIME_MAX)
                 {
-                    throw new ArgumentException(string.Format("The dwell time {0} must be between {1} and {2}.", value, MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX));
+                    throw new ArgumentException(string.Format("The dwell time {0} must be between {1} and {2}.", value, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX));
                 }
                 _dwellTime = value;
             }
@@ -198,9 +198,9 @@ namespace pwiz.Skyline
             get { return _runLength; }
             set
             {
-                if (value < MassListExporter.RUN_LENGTH_MIN || value > MassListExporter.RUN_LENGTH_MAX)
+                if (value < AbstractMassListExporter.RUN_LENGTH_MIN || value > AbstractMassListExporter.RUN_LENGTH_MAX)
                 {
-                    throw new ArgumentException(string.Format("The run length {0} must be between {1} and {2}.", value, MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX));
+                    throw new ArgumentException(string.Format("The run length {0} must be between {1} and {2}.", value, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX));
                 }
                 _runLength = value;
             }
@@ -235,12 +235,12 @@ namespace pwiz.Skyline
             _out = output;
 
             ReportColumnSeparator = ',';
-            MaxTransitionsPerInjection = MassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
+            MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             OptimizeType = ExportOptimize.NONE;
             ExportStrategy = ExportStrategy.Single;
             ExportMethodType = ExportMethodType.Standard;
-            DwellTime = MassListExporter.DWELL_TIME_DEFAULT;
-            RunLength = MassListExporter.RUN_LENGTH_DEFAULT;
+            DwellTime = AbstractMassListExporter.DWELL_TIME_DEFAULT;
+            RunLength = AbstractMassListExporter.RUN_LENGTH_DEFAULT;
         }
 
         public struct NameValuePair
@@ -442,8 +442,8 @@ namespace pwiz.Skyline
                     catch
                     {
                         _out.WriteLine("Warning: Invalid max transitions per injection parameter ({0}).", pair.Value);
-                        _out.WriteLine("It must be a number. Defaulting to " + MassListExporter.MAX_TRANS_PER_INJ_DEFAULT + ".");
-                        MaxTransitionsPerInjection = MassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
+                        _out.WriteLine("It must be a number. Defaulting to " + AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT + ".");
+                        MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
                     }
                 }
 
@@ -478,8 +478,8 @@ namespace pwiz.Skyline
                     catch
                     {
                         _out.WriteLine("Warning: The dwell time {0} is invalid. it must be a number between {1} and {2}.", pair.Value,
-                            MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX);
-                        _out.WriteLine("Defaulting to {0}.", MassListExporter.DWELL_TIME_DEFAULT);
+                            AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX);
+                        _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.DWELL_TIME_DEFAULT);
                     }
                 }
                 else if (pair.Name.Equals("exp-add-energy-ramp"))
@@ -495,8 +495,8 @@ namespace pwiz.Skyline
                     catch
                     {
                         _out.WriteLine("Warning: The run length {0} is invalid. It must be a number between {1} and {2}.", pair.Value,
-                            MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX);
-                        _out.WriteLine("Defaulting to {0}.", MassListExporter.RUN_LENGTH_DEFAULT);
+                            AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX);
+                        _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.RUN_LENGTH_DEFAULT);
                     }
                 }
             }
@@ -1078,14 +1078,14 @@ namespace pwiz.Skyline
                     _out.WriteLine("Error: A template file is required to export a method.");
                     return;
                 }
-                if (Equals(args.MethodInstrumentType, ExportInstrumentType.Agilent6400)
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400)
                         ? !Directory.Exists(args.TemplateFile)
                         : !File.Exists(args.TemplateFile))
                 {
                     _out.WriteLine("Error: The template file {0} does not exist.", args.TemplateFile);
                     return;
                 }
-                if (Equals(args.MethodInstrumentType, ExportInstrumentType.Agilent6400) &&
+                if (Equals(args.MethodInstrumentType, ExportInstrumentType.AGILENT6400) &&
                     !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
                 {
                     _out.WriteLine("Error: The folder {0} does not appear to contain an Agilent QQQ", args.TemplateFile);
@@ -1102,7 +1102,7 @@ namespace pwiz.Skyline
                 args.ExportStrategy = ExportStrategy.Single;
             }
 
-            if (args.AddEnergyRamp && !Equals(args.TransListInstrumentType, ExportInstrumentType.Thermo))
+            if (args.AddEnergyRamp && !Equals(args.TransListInstrumentType, ExportInstrumentType.THERMO))
             {
                 _out.WriteLine("Warning: The add-energy-ramp parameter is only applicable for Thermo");
                 _out.WriteLine("transition lists. This parameter will be ignored.");
@@ -1122,16 +1122,16 @@ namespace pwiz.Skyline
             int maxInstrumentTrans = _doc.Settings.TransitionSettings.Instrument.MaxTransitions ??
                                      TransitionInstrument.MAX_TRANSITION_MAX;
 
-            if ((args.MaxTransitionsPerInjection < MassListExporter.MAX_TRANS_PER_INJ_MIN ||
+            if ((args.MaxTransitionsPerInjection < AbstractMassListExporter.MAX_TRANS_PER_INJ_MIN ||
                  args.MaxTransitionsPerInjection > maxInstrumentTrans) &&
                 (Equals(args.ExportStrategy, ExportStrategy.Buckets) ||
                  Equals(args.ExportStrategy, ExportStrategy.Protein)))
             {
                 _out.WriteLine("Warning: Max transitions per injection must be set to some value between");
-                _out.WriteLine("{0} and {1} for export strategies \"protein\" and \"buckets\" and for", MassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans);
-                _out.WriteLine("scheduled methods. You specified {1}. Defaulting to {0}.", MassListExporter.MAX_TRANS_PER_INJ_DEFAULT, args.MaxTransitionsPerInjection);
+                _out.WriteLine("{0} and {1} for export strategies \"protein\" and \"buckets\" and for", AbstractMassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans);
+                _out.WriteLine("scheduled methods. You specified {1}. Defaulting to {0}.", AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT, args.MaxTransitionsPerInjection);
 
-                args.MaxTransitionsPerInjection = MassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
+                args.MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             }
 
             /*
@@ -1348,7 +1348,7 @@ namespace pwiz.Skyline
         public static bool CheckInstrument(string instrument, SrmDocument doc)
         {
             // Thermo LTQ method building ignores CE and DP regression values
-            if (!Equals(instrument, ExportInstrumentType.Thermo_LTQ))
+            if (!Equals(instrument, ExportInstrumentType.THERMO_LTQ))
             {
                 // Check to make sure CE and DP match chosen instrument, and offer to use
                 // the correct version for the instrument, if not.

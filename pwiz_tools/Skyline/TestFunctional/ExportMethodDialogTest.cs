@@ -68,7 +68,7 @@ namespace pwiz.SkylineTestFunctional
                 (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method)),
                 exportMethodDlg =>
                     {
-                        exportMethodDlg.InstrumentType = ExportInstrumentType.Thermo_TSQ;
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_TSQ;
                         Assert.AreEqual(ExportMethodDlg.TRANS_PER_SAMPLE_INJ_TXT, exportMethodDlg.GetMaxLabelText);
                         Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
                         Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
@@ -87,7 +87,7 @@ namespace pwiz.SkylineTestFunctional
                 (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method)),
                 exportMethodDlg =>
                 {
-                    exportMethodDlg.InstrumentType = ExportInstrumentType.Thermo_TSQ;
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_TSQ;
 
                     Assert.IsTrue(exportMethodDlg.IsOptimizeTypeEnabled);
                     Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
@@ -123,7 +123,7 @@ namespace pwiz.SkylineTestFunctional
             var exportMethodDlg1 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             RunUI(() =>
             {
-                exportMethodDlg1.InstrumentType = ExportInstrumentType.Thermo_LTQ;
+                exportMethodDlg1.InstrumentType = ExportInstrumentType.THERMO_LTQ;
                 Assert.AreEqual(ExportMethodDlg.PREC_PER_SAMPLE_INJ_TXT, exportMethodDlg1.GetMaxLabelText);
                 Assert.IsFalse(exportMethodDlg1.IsOptimizeTypeEnabled);
                 Assert.IsTrue(exportMethodDlg1.IsTargetTypeEnabled);
@@ -156,7 +156,7 @@ namespace pwiz.SkylineTestFunctional
                (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method)),
                exportMethodDlg =>
                {
-                   exportMethodDlg.InstrumentType = ExportInstrumentType.Thermo_LTQ;
+                   exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_LTQ;
 
                    Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
                    Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
@@ -183,7 +183,7 @@ namespace pwiz.SkylineTestFunctional
             var exportMethodDlg2 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             RunUI(() =>
             {
-                exportMethodDlg2.InstrumentType = ExportInstrumentType.Thermo_LTQ;
+                exportMethodDlg2.InstrumentType = ExportInstrumentType.THERMO_LTQ;
                 Assert.AreEqual(ExportMethodDlg.PREC_PER_SAMPLE_INJ_TXT, exportMethodDlg2.GetMaxLabelText);
                 Assert.IsFalse(exportMethodDlg2.IsOptimizeTypeEnabled);
                 Assert.IsTrue(exportMethodDlg2.IsTargetTypeEnabled);

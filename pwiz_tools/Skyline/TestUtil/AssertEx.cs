@@ -216,7 +216,7 @@ namespace pwiz.SkylineTestUtil
 // ReSharper restore HeuristicUnreachableCode
         }
 
-        public static SrmDocument RoundTripTransitionList(MassListExporter exporter)
+        public static SrmDocument RoundTripTransitionList(AbstractMassListExporter exporter)
         {
             exporter.Export(null);
 

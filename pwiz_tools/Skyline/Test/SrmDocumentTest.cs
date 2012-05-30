@@ -160,7 +160,7 @@ namespace pwiz.SkylineTest
             ValidateExportState(exporter, new[] {10, 3});
         }
 
-        private static void ValidateExportState(MassListExporter exporter, int[] arrayTranCounts)
+        private static void ValidateExportState(AbstractMassListExporter exporter, int[] arrayTranCounts)
         {
             exporter.Export(null);
             var names = exporter.MemoryOutput.Keys.ToArray();
@@ -214,7 +214,7 @@ namespace pwiz.SkylineTest
                                      ExportStrategy strategy, int minTransition, int? maxTransition, ExportMethodType methodType)
         {
             XmlMassListExporter exporterTarget;
-            MassListExporter exporterActual;
+            AbstractMassListExporter exporterActual;
             exporters(target, out exporterTarget, actual, out exporterActual);
             exporterTarget.Strategy = exporterActual.Strategy = strategy;
             exporterTarget.MinTransitions = exporterActual.MinTransitions = minTransition;
@@ -261,17 +261,17 @@ namespace pwiz.SkylineTest
         }
 
         private delegate void CreateExporters(XmlSrmDocument target, out XmlMassListExporter exporterTarget,
-                                              SrmDocument actual, out MassListExporter exporterActual);
+                                              SrmDocument actual, out AbstractMassListExporter exporterActual);
 
         private static void ThermoExporters(XmlSrmDocument target, out XmlMassListExporter exporterTarget,
-                                                  SrmDocument actual, out MassListExporter exporterActual)
+                                                  SrmDocument actual, out AbstractMassListExporter exporterActual)
         {
             exporterTarget = new XmlThermoMassListExporter(target);
             exporterActual = new ThermoMassListExporter(actual);
         }
 
         private static void CreateAbiExporters(XmlSrmDocument target, out XmlMassListExporter exporterTarget,
-                                               SrmDocument actual, out MassListExporter exporterActual)
+                                               SrmDocument actual, out AbstractMassListExporter exporterActual)
         {
             exporterTarget = new XmlAbiMassListExporter(target);
             exporterActual = new AbiMassListExporter(actual);

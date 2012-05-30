@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestFunctional
                     (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList)),
                     exportMethodDlg =>
                     {
-                        exportMethodDlg.InstrumentType = ExportInstrumentType.Thermo_Q_Exactive;
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_Q_EXACTIVE;
                         Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
                         Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
                         Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);
@@ -131,7 +131,7 @@ namespace pwiz.SkylineTestFunctional
                     (() => SkylineWindow.ShowExportMethodDialog(ExportFileType.IsolationList)),
                     exportMethodDlg =>
                     {
-                        exportMethodDlg.InstrumentType = ExportInstrumentType.Thermo_Q_Exactive;
+                        exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO_Q_EXACTIVE;
                         Assert.IsFalse(exportMethodDlg.IsOptimizeTypeEnabled);
                         Assert.IsTrue(exportMethodDlg.IsTargetTypeEnabled);
                         Assert.IsFalse(exportMethodDlg.IsDwellTimeVisible);

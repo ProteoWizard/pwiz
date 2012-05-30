@@ -192,7 +192,7 @@ namespace pwiz.SkylineTestA
 
             string output = RunCommand("--in=" + docPath,
                                        "--import-file=" + rawPath,
-                                       "--exp-translist-instrument=" + ExportInstrumentType.Thermo,
+                                       "--exp-translist-instrument=" + ExportInstrumentType.THERMO,
                                        "--exp-file=" + thermoPath);
 
             Assert.IsTrue(output.Contains("successfully."));
@@ -206,7 +206,7 @@ namespace pwiz.SkylineTestA
 
             output = RunCommand("--in=" + docPath,
                                 "--import-file=" + rawPath,
-                                "--exp-translist-instrument=" + ExportInstrumentType.Agilent,
+                                "--exp-translist-instrument=" + ExportInstrumentType.AGILENT,
                                 "--exp-file=" + agilentPath,
                                 "--exp-dwelltime=20");
 
@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestA
 
             output = RunCommand("--in=" + docPath,
                                 "--import-file=" + rawPath,
-                                "--exp-translist-instrument=" + ExportInstrumentType.Waters,
+                                "--exp-translist-instrument=" + ExportInstrumentType.WATERS,
                                 "--exp-file=" + watersPath,
                                 "--exp-runlength=100");
 

@@ -223,7 +223,7 @@ namespace pwiz.SkylineTestA
             AssertEx.Serializable(document, 3, AssertEx.DocumentCloned);
         }
 
-        private static void VerifyExportRoundTrip(MassListExporter exporter, SrmDocument docFasta)
+        private static void VerifyExportRoundTrip(AbstractMassListExporter exporter, SrmDocument docFasta)
         {
             var docImport = AssertEx.RoundTripTransitionList(exporter);
 

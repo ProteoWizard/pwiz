@@ -206,12 +206,12 @@ namespace pwiz.Skyline.FileUI
 
         private static bool IsSingleDwellInstrumentType(string type)
         {
-            return Equals(type, ExportInstrumentType.Thermo) ||
-                   Equals(type, ExportInstrumentType.Thermo_TSQ) ||
-                   Equals(type, ExportInstrumentType.Thermo_LTQ) ||
-                   Equals(type, ExportInstrumentType.Waters) ||
-                   Equals(type, ExportInstrumentType.Waters_Xevo) ||
-                   Equals(type, ExportInstrumentType.Waters_Quattro_Premier) ||
+            return Equals(type, ExportInstrumentType.THERMO) ||
+                   Equals(type, ExportInstrumentType.THERMO_TSQ) ||
+                   Equals(type, ExportInstrumentType.THERMO_LTQ) ||
+                   Equals(type, ExportInstrumentType.WATERS) ||
+                   Equals(type, ExportInstrumentType.WATERS_XEVO) ||
+                   Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                    // For AbSciex's TOF 5600 and QSTAR instruments, the dwell (accumulation) time
                    // given in the template method is used. So we will not display the 
                    // "Dwell Time" text box.
@@ -226,13 +226,13 @@ namespace pwiz.Skyline.FileUI
                     return false;
 
                 var type = InstrumentType;
-                return Equals(type, ExportInstrumentType.Thermo_TSQ) ||
-                       Equals(type, ExportInstrumentType.Waters) ||
-                       Equals(type, ExportInstrumentType.Waters_Xevo) ||
-                       Equals(type, ExportInstrumentType.Waters_Quattro_Premier) ||
+                return Equals(type, ExportInstrumentType.THERMO_TSQ) ||
+                       Equals(type, ExportInstrumentType.WATERS) ||
+                       Equals(type, ExportInstrumentType.WATERS_XEVO) ||
+                       Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
                        // LTQ can only schedule for inclusion lists, but then it always
                        // requires start and stop times.
-                       Equals(type, ExportInstrumentType.Thermo_LTQ);
+                       Equals(type, ExportInstrumentType.THERMO_LTQ);
                        // This will only happen for ABI TOF with inclusion lists, since
                        // MRM-HR cannot yet be scheduled, and ABI TOF can either be scheduled
                        // or unscheduled when exporting inclusion lists.
@@ -356,7 +356,7 @@ namespace pwiz.Skyline.FileUI
 
         private void UpdateThermoColumns(bool standard)
         {
-            panelThermoColumns.Visible = !standard && InstrumentType == ExportInstrumentType.Thermo;
+            panelThermoColumns.Visible = !standard && InstrumentType == ExportInstrumentType.THERMO;
         }
 
         private void UpdateAbSciexControls()
@@ -452,13 +452,13 @@ namespace pwiz.Skyline.FileUI
                     helper.ShowTextBoxError(textTemplateFile, "A template file is required to export a method.");
                     return;
                 }
-                if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) ?
+                if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ?
                                                                                  !Directory.Exists(templateName) : !File.Exists(templateName))
                 {
                     helper.ShowTextBoxError(textTemplateFile, "The template file {0} does not exist.", templateName);
                     return;
                 }
-                if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) &&
+                if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) &&
                     !AgilentMethodExporter.IsAgilentMethodPath(templateName))
                 {
                     helper.ShowTextBoxError(textTemplateFile, "The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.", templateName);
@@ -700,7 +700,7 @@ namespace pwiz.Skyline.FileUI
             int maxInstrumentTrans = _document.Settings.TransitionSettings.Instrument.MaxTransitions ??
                                         TransitionInstrument.MAX_TRANSITION_MAX;
             int minTrans = IsFullScanInstrument
-                               ? MassListExporter.MAX_TRANS_PER_INJ_MIN
+                               ? AbstractMassListExporter.MAX_TRANS_PER_INJ_MIN
                                : MethodExporter.MAX_TRANS_PER_INJ_MIN_TLTQ;
 
             if (_exportProperties.ExportStrategy != ExportStrategy.Buckets)
@@ -721,7 +721,7 @@ namespace pwiz.Skyline.FileUI
             if (textDwellTime.Visible)
             {
                 int dwellTime;
-                if (!helper.ValidateNumberTextBox(e, textDwellTime, MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX, out dwellTime))
+                if (!helper.ValidateNumberTextBox(e, textDwellTime, AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX, out dwellTime))
                     return false;
 
                 _exportProperties.DwellTime = dwellTime;
@@ -729,7 +729,7 @@ namespace pwiz.Skyline.FileUI
             if (textRunLength.Visible)
             {
                 double runLength;
-                if (!helper.ValidateDecimalTextBox(e, textRunLength, MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX, out runLength))
+                if (!helper.ValidateDecimalTextBox(e, textRunLength, AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX, out runLength))
                     return false;
 
                 _exportProperties.RunLength = runLength;
@@ -1042,7 +1042,7 @@ namespace pwiz.Skyline.FileUI
         private void RecalcMethodCount(ExportDlgProperties exportProperties,
             string instrument, ExportFileType fileType, SrmDocument document)
         {
-            MassListExporter exporter = null;
+            AbstractMassListExporter exporter = null;
             try
             {
                 exporter = exportProperties.ExportFile(instrument, fileType, null, document, null);
@@ -1086,7 +1086,7 @@ namespace pwiz.Skyline.FileUI
         {
             bool showDwell = false;
             bool showRunLength = false;
-            if (standard && IsDia)
+            if (standard && !IsDia)
             {
                 if (!IsSingleDwellInstrument)
                 {
@@ -1107,7 +1107,7 @@ namespace pwiz.Skyline.FileUI
         private void btnBrowseTemplate_Click(object sender, EventArgs e)
         {
             string templateName = textTemplateFile.Text;
-            if (Equals(InstrumentType, ExportInstrumentType.Agilent6400))
+            if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400))
             {
                 var chooseDirDialog = new FolderBrowserDialog
                                           {
@@ -1161,14 +1161,14 @@ namespace pwiz.Skyline.FileUI
                 listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
                                                 InstrumentType, ExportInstrumentType.EXT_AB_SCIEX));
             }
-            else if (Equals(InstrumentType, ExportInstrumentType.Thermo_TSQ) ||
-                     Equals(InstrumentType, ExportInstrumentType.Thermo_LTQ))
+            else if (Equals(InstrumentType, ExportInstrumentType.THERMO_TSQ) ||
+                     Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
             {
                 listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
                                                 InstrumentType, ExportInstrumentType.EXT_THERMO));
             }
-            else if (Equals(InstrumentType, ExportInstrumentType.Waters_Xevo) ||
-                     Equals(InstrumentType, ExportInstrumentType.Waters_Quattro_Premier))
+            else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO) ||
+                     Equals(InstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
             {
                 listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
                                                 InstrumentType, ExportInstrumentType.EXT_WATERS));

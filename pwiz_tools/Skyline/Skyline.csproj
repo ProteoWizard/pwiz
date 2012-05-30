@@ -397,11 +397,12 @@
     <Compile Include="FileUI\SchedulingOptionsDlg.Designer.cs">
       <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Model\AbstractIsolationSchemeExporter.cs" />
+    <Compile Include="Model\AbstractMassListExporter.cs" />
     <Compile Include="Model\Esp\EspFeatureCalc.cs" />
     <Compile Include="Model\Esp\EspFeatureDb.cs" />
     <Compile Include="Model\Esp\GasPhaseBasicityCalc.cs" />
     <Compile Include="Model\Esp\PiCalc.cs" />
-
     <Compile Include="Model\DocSettings\IsolationScheme.cs" />
     <Compile Include="Model\DocSettings\IsolationWindow.cs" />
     <Compile Include="Model\OptimizationStep.cs" />

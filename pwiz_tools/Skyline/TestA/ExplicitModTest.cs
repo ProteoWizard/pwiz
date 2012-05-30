@@ -359,7 +359,7 @@ namespace pwiz.SkylineTestA
 
         private static string ExportCsv(SrmDocument document)
         {
-            MassListExporter exporter = new ThermoMassListExporter(document);
+            AbstractMassListExporter exporter = new ThermoMassListExporter(document);
             exporter.Export(null);
             StringBuilder sb = new StringBuilder();
             foreach (var pair in exporter.MemoryOutput)

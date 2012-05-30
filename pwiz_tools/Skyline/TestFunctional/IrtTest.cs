@@ -582,7 +582,7 @@ namespace pwiz.SkylineTestFunctional
             var expMethodDlg = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
             RunUI(() =>
                       {
-                          expMethodDlg.SetInstrument(ExportInstrumentType.Thermo);
+                          expMethodDlg.SetInstrument(ExportInstrumentType.THERMO);
                           expMethodDlg.SetMethodType(ExportMethodType.Scheduled);
                           expMethodDlg.OkDialog(exportPath);
                       });

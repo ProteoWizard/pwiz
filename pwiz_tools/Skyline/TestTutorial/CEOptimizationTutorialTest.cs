@@ -80,7 +80,7 @@ namespace pwiz.SkylineTestTutorial
             // Measuring Retention Times for Method Scheduling, p. 3
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
             {
-                exportMethodDlg.InstrumentType = ExportInstrumentType.Thermo;
+                exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
                 exportMethodDlg.ExportStrategy = ExportStrategy.Single;
                 exportMethodDlg.OptimizeType = ExportOptimize.NONE;
                 exportMethodDlg.MethodType = ExportMethodType.Standard;
@@ -115,7 +115,7 @@ namespace pwiz.SkylineTestTutorial
             // Creating Optimization Methods, p. 5
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
             {
-                exportMethodDlg.InstrumentType = ExportInstrumentType.Thermo;
+                exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
                 exportMethodDlg.ExportStrategy = ExportStrategy.Buckets;
                 exportMethodDlg.MaxTransitions = 110;
                 exportMethodDlg.IgnoreProteins = true;

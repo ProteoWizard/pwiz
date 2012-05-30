@@ -467,7 +467,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             var transitionListExporter = new AbiMassListExporter(Document, DocNode);
             transitionListExporter.Export(null);
             data.SetData(DataFormats.CommaSeparatedValue,
-                         transitionListExporter.MemoryOutput[MassListExporter.MEMORY_KEY_ROOT].ToString());
+                         transitionListExporter.MemoryOutput[AbstractMassListExporter.MEMORY_KEY_ROOT].ToString());
 
             return data;
         }

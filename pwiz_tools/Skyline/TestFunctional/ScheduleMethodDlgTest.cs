@@ -73,7 +73,7 @@ namespace pwiz.SkylineTestFunctional
             var exportMethodDlg1 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
             RunUI(() =>
             {
-                exportMethodDlg1.InstrumentType = ExportInstrumentType.Waters;
+                exportMethodDlg1.InstrumentType = ExportInstrumentType.WATERS;
                 exportMethodDlg1.ExportStrategy = ExportStrategy.Single;
                 exportMethodDlg1.OptimizeType = ExportOptimize.NONE;
                 exportMethodDlg1.MethodType = ExportMethodType.Scheduled;
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List),
                 exportMethodDlg4 =>
                       {
-                          exportMethodDlg4.InstrumentType = ExportInstrumentType.Waters;
+                          exportMethodDlg4.InstrumentType = ExportInstrumentType.WATERS;
                           Assert.AreEqual(ExportStrategy.Single, exportMethodDlg4.ExportStrategy);
                           Assert.IsNull(exportMethodDlg4.OptimizeType);
                           Assert.AreEqual(ExportMethodType.Scheduled, exportMethodDlg4.MethodType);
@@ -183,7 +183,7 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
                       {
-                          exportMethodDlg.InstrumentType = ExportInstrumentType.Waters;
+                          exportMethodDlg.InstrumentType = ExportInstrumentType.WATERS;
                           Assert.AreEqual(ExportStrategy.Single, exportMethodDlg.ExportStrategy);
                           Assert.IsNull(exportMethodDlg.OptimizeType);
                           Assert.AreEqual(ExportMethodType.Scheduled, exportMethodDlg.MethodType);

@@ -18,11 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -31,32 +29,31 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
-
 // ReSharper disable InconsistentNaming
     public enum ExportStrategy { Single, Protein, Buckets }
     public enum ExportMethodType { Standard, Scheduled }
     public enum ExportSchedulingAlgorithm { Average, Trends, Single }
     public enum ExportFileType { List, Method, IsolationList }
+// ReSharper restore InconsistentNaming
     public static class ExportInstrumentType
     {
         public const string ABI = "AB SCIEX";
         public const string ABI_QTRAP = "AB SCIEX QTRAP";
         public const string ABI_TOF = "AB SCIEX TOF";
-        public const string Agilent = "Agilent";
-        public const string Agilent6400 = "Agilent 6400 Series";
-        public const string Thermo = "Thermo";
-        public const string Thermo_TSQ = "Thermo TSQ";
-        public const string Thermo_LTQ = "Thermo LTQ";
-        public const string Thermo_Q_Exactive = "Thermo Q Exactive";
-        public const string Waters = "Waters";
-        public const string Waters_Xevo = "Waters Xevo";
-        public const string Waters_Quattro_Premier = "Waters Quattro Premier";
+        public const string AGILENT = "Agilent";
+        public const string AGILENT6400 = "Agilent 6400 Series";
+        public const string THERMO = "Thermo";
+        public const string THERMO_TSQ = "Thermo TSQ";
+        public const string THERMO_LTQ = "Thermo LTQ";
+        public const string THERMO_Q_EXACTIVE = "Thermo Q Exactive";
+        public const string WATERS = "Waters";
+        public const string WATERS_XEVO = "Waters Xevo";
+        public const string WATERS_QUATTRO_PREMIER = "Waters Quattro Premier";
 
         public const string EXT_AB_SCIEX = ".dam";
         public const string EXT_AGILENT = ".m";
@@ -67,39 +64,39 @@ namespace pwiz.Skyline.Model
             {
                 ABI_QTRAP,
                 ABI_TOF,
-                Agilent6400,
-                Thermo_TSQ,
-                Thermo_LTQ,
-                Waters_Xevo,
-                Waters_Quattro_Premier,
+                AGILENT6400,
+                THERMO_TSQ,
+                THERMO_LTQ,
+                WATERS_XEVO,
+                WATERS_QUATTRO_PREMIER,
             };
 
         public static readonly string[] TRANSITION_LIST_TYPES =
             {
                 ABI,
-                Agilent,
-                Thermo,
-                Waters
+                AGILENT,
+                THERMO,
+                WATERS
             };
 
         public static readonly string[] ISOLATION_LIST_TYPES =
             {
-                Thermo_Q_Exactive
+                THERMO_Q_EXACTIVE
             };
 
-        private readonly static Dictionary<string, string> MethodExtensions;
+        private readonly static Dictionary<string, string> METHOD_EXTENSIONS;
 
         static ExportInstrumentType()
         {
-            MethodExtensions = new Dictionary<string, string>
+            METHOD_EXTENSIONS = new Dictionary<string, string>
                                    {
                                        {ABI_QTRAP, EXT_AB_SCIEX},
                                        {ABI_TOF, EXT_AB_SCIEX},
-                                       {Agilent6400, EXT_AGILENT},
-                                       {Thermo_TSQ, EXT_THERMO},
-                                       {Thermo_LTQ, EXT_THERMO},
-                                       {Waters_Xevo, EXT_WATERS},
-                                       {Waters_Quattro_Premier, EXT_WATERS}
+                                       {AGILENT6400, EXT_AGILENT},
+                                       {THERMO_TSQ, EXT_THERMO},
+                                       {THERMO_LTQ, EXT_THERMO},
+                                       {WATERS_XEVO, EXT_WATERS},
+                                       {WATERS_QUATTRO_PREMIER, EXT_WATERS}
                                    };
         }
 
@@ -111,25 +108,25 @@ namespace pwiz.Skyline.Model
         public static string MethodExtension(string instrument)
         {
             string ext;
-            return MethodExtensions.TryGetValue(instrument, out ext) ? ext : null;
+            return METHOD_EXTENSIONS.TryGetValue(instrument, out ext) ? ext : null;
         }
 
         public static bool IsFullScanInstrumentType(string type)
         {
-            return Equals(type, Thermo_LTQ) ||
-                   Equals(type, Thermo_Q_Exactive) ||
+            return Equals(type, THERMO_LTQ) ||
+                   Equals(type, THERMO_Q_EXACTIVE) ||
                    Equals(type, ABI_TOF);
         }
 
         public static bool IsPrecursorOnlyInstrumentType(string type)
         {
-            return Equals(type, Thermo_LTQ) ||
+            return Equals(type, THERMO_LTQ) ||
                    Equals(type, ABI_TOF);
         }
 
         public static bool CanScheduleInstrumentType(string type, SrmDocument doc)
         {
-            return !(Equals(type, Thermo_LTQ))|| IsInclusionListMethod(doc);
+            return !(Equals(type, THERMO_LTQ))|| IsInclusionListMethod(doc);
         }
 
         public static bool IsInclusionListMethod(SrmDocument doc)
@@ -151,9 +148,9 @@ namespace pwiz.Skyline.Model
         {
             return Equals(type, ABI) ||
                    Equals(type, ABI_QTRAP) ||
-                   Equals(type, Waters) ||
-                   Equals(type, Waters_Xevo) ||
-                   Equals(type, Waters_Quattro_Premier);
+                   Equals(type, WATERS) ||
+                   Equals(type, WATERS_XEVO) ||
+                   Equals(type, WATERS_QUATTRO_PREMIER);
         }
     }
 
@@ -186,7 +183,7 @@ namespace pwiz.Skyline.Model
         public virtual bool DebugCycles { get; set; }
 
         public TExp InitExporter<TExp>(TExp exporter)
-            where TExp : MassListExporter
+            where TExp : AbstractMassListExporter
         {
             exporter.Strategy = ExportStrategy;
             exporter.IgnoreProteins = IgnoreProteins;
@@ -204,7 +201,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportFile(string instrumentType, ExportFileType type, string path, SrmDocument doc, string template)
+        public AbstractMassListExporter ExportFile(string instrumentType, ExportFileType type, string path, SrmDocument doc, string template)
         {
             switch (instrumentType)
             {
@@ -217,22 +214,22 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.ABI_TOF:
                     OptimizeType = null;
                     return ExportAbiTofMethod(doc, path, template);
-                case ExportInstrumentType.Agilent:
-                case ExportInstrumentType.Agilent6400:
+                case ExportInstrumentType.AGILENT:
+                case ExportInstrumentType.AGILENT6400:
                     if (type == ExportFileType.List)
                         return ExportAgilentCsv(doc, path);
                     else
                         return ExportAgilentMethod(doc, path, template);
-                case ExportInstrumentType.Thermo:
-                case ExportInstrumentType.Thermo_TSQ:
+                case ExportInstrumentType.THERMO:
+                case ExportInstrumentType.THERMO_TSQ:
                     if (type == ExportFileType.List)
                         return ExportThermoCsv(doc, path);
                     else
                         return ExportThermoMethod(doc, path, template);
-                case ExportInstrumentType.Thermo_LTQ:
+                case ExportInstrumentType.THERMO_LTQ:
                     OptimizeType = null;
                     return ExportThermoLtqMethod(doc, path, template);
-                case ExportInstrumentType.Thermo_Q_Exactive:
+                case ExportInstrumentType.THERMO_Q_EXACTIVE:
                     ExportThermoQExactiveIsolationList(
                         doc.Settings.TransitionSettings.FullScan.IsolationScheme,
                         doc.Settings.TransitionSettings.Instrument.MaxInclusions,
@@ -240,20 +237,20 @@ namespace pwiz.Skyline.Model
                         MultiplexIsolationListCalculationTime,
                         DebugCycles);
                     return null;
-                case ExportInstrumentType.Waters:
-                case ExportInstrumentType.Waters_Xevo:
+                case ExportInstrumentType.WATERS:
+                case ExportInstrumentType.WATERS_XEVO:
                     if (type == ExportFileType.List)
                         return ExportWatersCsv(doc, path);
                     else
                         return ExportWatersMethod(doc, path, template);
-                case ExportInstrumentType.Waters_Quattro_Premier:
+                case ExportInstrumentType.WATERS_QUATTRO_PREMIER:
                     return ExportWatersQMethod(doc, path, template);
                 default:
                     throw new InvalidOperationException(string.Format("Unrecognized instrument type {0}.", instrumentType));
             }
         }
 
-        public MassListExporter ExportAbiCsv(SrmDocument document, string fileName)
+        public AbstractMassListExporter ExportAbiCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new AbiMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
@@ -263,7 +260,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportAbiQtrapMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportAbiQtrapMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new AbiQtrapMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
@@ -273,7 +270,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportAbiTofMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportAbiTofMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new AbiTofMethodExporter(document));
 
@@ -285,7 +282,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportAgilentCsv(SrmDocument document, string fileName)
+        public AbstractMassListExporter ExportAgilentCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new AgilentMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
@@ -295,7 +292,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new AgilentMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
@@ -305,7 +302,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportThermoCsv(SrmDocument document, string fileName)
+        public AbstractMassListExporter ExportThermoCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new ThermoMassListExporter(document));
             exporter.AddEnergyRamp = AddEnergyRamp;
@@ -315,7 +312,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportThermoMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportThermoMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new ThermoMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
@@ -326,7 +323,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new ThermoLtqMethodExporter(document));
             exporter.FullScans = FullScans;
@@ -349,7 +346,7 @@ namespace pwiz.Skyline.Model
             PerformLongExport(m => exporter.ExportIsolationList(fileName, m));
         }
 
-        public MassListExporter ExportWatersCsv(SrmDocument document, string fileName)
+        public AbstractMassListExporter ExportWatersCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new WatersMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
@@ -359,7 +356,7 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportWatersMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportWatersMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new WatersMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
@@ -370,11 +367,11 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public MassListExporter ExportWatersQMethod(SrmDocument document, string fileName, string templateName)
+        public AbstractMassListExporter ExportWatersQMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new WatersMethodExporter(document)
             {
-                MethodInstrumentType = ExportInstrumentType.Waters_Quattro_Premier
+                MethodInstrumentType = ExportInstrumentType.WATERS_QUATTRO_PREMIER
             });
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
@@ -393,1295 +390,12 @@ namespace pwiz.Skyline.Model
         public const string CE = "Collision Energy";
         public const string DP = "Declustering Potential";
 
-        public static string[] OptimizeTypes = {NONE, CE, DP};
+        private static readonly string[] OPTIMIZE_TYPES = {NONE, CE, DP};
+
+        public static string[] OptimizeTypes { get { return OPTIMIZE_TYPES; } }
     }
 
-// ReSharper restore InconsistentNaming
-    public abstract class MassListExporter
-    {
-        public const int DWELL_TIME_MIN = 1;
-        public const int DWELL_TIME_MAX = 1000;
-        public const int DWELL_TIME_DEFAULT = 20;
-
-        public const int RUN_LENGTH_MIN = 5;
-        public const int RUN_LENGTH_MAX = 500;
-        public const int RUN_LENGTH_DEFAULT = 60;
-
-        public const int MAX_TRANS_PER_INJ_DEFAULT = 130;
-        public const int MAX_TRANS_PER_INJ_MIN = 2;
-
-        public const string MEMORY_KEY_ROOT = "memory";
-
-        protected MassListExporter(SrmDocument document, DocNode node)
-        {
-            Document = document;
-            DocNode = node;
-            CultureInfo = CultureInfo.InvariantCulture;
-        }
-
-        protected RequiredPeptideSet RequiredPeptides { get; private set; }
-        public SrmDocument Document { get; private set; }
-        public DocNode DocNode { get; private set; }
-
-        public ExportStrategy Strategy { get; set; }
-        public ExportMethodType MethodType { get; set; }
-        public bool IsPrecursorLimited { get; set; }
-        public bool FullScans { get; set; }
-        public int? MaxTransitions { get; set; }
-        public int MinTransitions { get; set; }
-        public bool IgnoreProteins { get; set; }
-
-        public string OptimizeType { get; set; }
-        public double OptimizeStepSize { get; set; }
-        public int OptimizeStepCount { get; set; }
-
-        public int? SchedulingReplicateIndex { get; set; }
-        public ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
-
-        public bool Ms1Scan { get; set; }
-        public bool InclusionList { get; set; }
-        public string MsAnalyzer { get; set; }
-        public string MsMsAnalyzer { get; set; }
-
-        // CONSIDER: Should transition lists ever be exported with local culture
-        //           CSV format?  This would allow them to be opened directly into
-        //           Excel on the same system, but multiple vendors do not support
-        //           international settings on their instrument control computers,
-        //           which means the resulting CSVs probably wouldn't import correctly
-        //           into methods.
-        private CultureInfo _cultureInfo;
-        public CultureInfo CultureInfo
-        {
-            get { return _cultureInfo; }
-            set
-            {
-                _cultureInfo = value;
-                FieldSeparator = TextUtil.GetCsvSeparator(_cultureInfo);
-            }
-        }
-        public char FieldSeparator { get; private set; }
-
-        public Dictionary<string, StringBuilder> MemoryOutput { get; private set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        protected bool InitExport(string fileName, IProgressMonitor progressMonitor)
-        {
-            if (progressMonitor.IsCanceled)
-                return false;
-
-            // First export transition lists to map in memory
-            Export(null);
-
-            // If filename is null, then no more work needs to be done.
-            if (fileName == null)
-            {
-                progressMonitor.UpdateProgress(new ProgressStatus("").Complete());
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Export to a transition list to a file or to memory.
-        /// </summary>
-        /// <param name="fileName">A file on disk to export to, or null to export to memory.</param>
-        public void Export(string fileName)
-        {
-            bool single = (Strategy == ExportStrategy.Single);
-            RequiredPeptides = GetRequiredPeptides(single);
-            if (MaxTransitions.HasValue && RequiredPeptides.TransitionCount > MaxTransitions)
-                throw new IOException(string.Format("The number of required transitions {0} exceeds the maximum {1}", RequiredPeptides.TransitionCount, MaxTransitions));
-
-            using (var fileIterator = new FileIterator(fileName, single, IsPrecursorLimited, WriteHeaders))
-            {
-                MemoryOutput = fileIterator.MemoryOutput;
-
-                fileIterator.Init();
-
-                if (MethodType == ExportMethodType.Scheduled && Strategy == ExportStrategy.Buckets)
-                    ExportScheduledBuckets(fileIterator);
-                else
-                    ExportNormal(fileIterator, single);
-                fileIterator.Commit();
-            }
-        }
-
-        private void NextFile(FileIterator fileIterator)
-        {
-            if (fileIterator.HasFile)
-                fileIterator.WriteRequiredTransitions(this, RequiredPeptides);
-            fileIterator.NextFile();
-        }
-
-        private RequiredPeptideSet GetRequiredPeptides(bool single)
-        {
-            return single
-                       ? new RequiredPeptideSet()
-                       : new RequiredPeptideSet(Document, IsPrecursorLimited);
-        }
-
-        protected sealed class RequiredPeptideSet
-        {
-            private readonly RequiredPeptide[] _peptides;
-            private readonly HashSet<int> _setPepIndexes;
-
-            public RequiredPeptideSet()
-            {
-                _setPepIndexes = new HashSet<int>();
-                _peptides = new RequiredPeptide[0];
-            }
-
-            public RequiredPeptideSet(SrmDocument document, bool isPrecursorLimited)
-            {
-                var settings = document.Settings;
-                if (settings.PeptideSettings.Prediction.RetentionTime == null)
-                    _peptides = new RequiredPeptide[0];
-                else
-                {
-                    var setRegression = document.GetRetentionTimeStandards();
-                    _peptides = (from nodePepGroup in document.PeptideGroups
-                                 from nodePep in nodePepGroup.Peptides
-                                 where setRegression.Contains(settings.GetModifiedSequence(nodePep))
-                                 select new RequiredPeptide(nodePepGroup, nodePep))
-                        .ToArray();
-                }
-                _setPepIndexes = new HashSet<int>(_peptides.Select(pep => pep.PeptideNode.Peptide.GlobalIndex));
-                TransitionCount = _peptides.Sum(pep => isPrecursorLimited
-                                                           ? pep.PeptideNode.TransitionGroupCount
-                                                           : pep.PeptideNode.TransitionCount);
-            }
-
-            public int TransitionCount { get; private set; }
-
-            public IEnumerable<RequiredPeptide> Peptides { get { return _peptides; } }
-
-            public bool IsRequired(PeptideDocNode nodePep)
-            {
-                return _setPepIndexes.Contains(nodePep.Id.GlobalIndex);
-            }
-        }
-
-        protected struct RequiredPeptide
-        {
-            public RequiredPeptide(PeptideGroupDocNode peptideGroup, PeptideDocNode peptide)
-                : this()
-            {
-                PeptideGroupNode = peptideGroup;
-                PeptideNode = peptide;
-            }
-
-            public PeptideGroupDocNode PeptideGroupNode { get; private set; }
-            public PeptideDocNode PeptideNode { get; private set; }
-        }
-
-        private void ExportNormal(FileIterator fileIterator, bool single)
-        {
-            foreach (PeptideGroupDocNode seq in Document.PeptideGroups)
-            {
-                // Skip peptide groups with no transitions
-                if (seq.TransitionCount == 0)
-                    continue;
-                if (DocNode is PeptideGroupDocNode && !ReferenceEquals(seq, DocNode))
-                    continue;
-
-                if (Strategy == ExportStrategy.Protein)
-                {
-                    fileIterator.Suffix = FileEscape(seq.Name);
-                    NextFile(fileIterator);
-                }
-                else if (!single && (!fileIterator.HasFile ||
-                    (!IgnoreProteins && ExceedsMax(fileIterator.TransitionCount + CalcTransitionCount(seq)))))
-                {
-                    NextFile(fileIterator);
-                }
-
-                foreach (PeptideDocNode peptide in seq.Children)
-                {
-                    if (DocNode is PeptideDocNode && !ReferenceEquals(peptide, DocNode))
-                        continue;
-                    // Required peptides will be written by the NextFile method
-                    if (RequiredPeptides.IsRequired(peptide))
-                        continue;
-
-                    // Make sure we can write out all the transitions for this peptide.
-                    // Never split transitions from a single peptide across multiple injections,
-                    // since this would mess up coelution and quantitation.
-                    if (!single && fileIterator.TransitionCount > 0 &&
-                            ExceedsMax(fileIterator.TransitionCount + CalcTransitionCount(peptide)))
-                    {
-                        NextFile(fileIterator);
-                    }
-
-                    foreach (TransitionGroupDocNode group in peptide.Children)
-                    {
-                        // Skip precursors with too few transitions.
-                        int groupTransitions = group.Children.Count;
-                        if (groupTransitions < MinTransitions)
-                            continue;
-
-                        if (DocNode is TransitionGroupDocNode && !ReferenceEquals(group, DocNode))
-                            continue;
-
-                        foreach (TransitionDocNode transition in group.Children)
-                        {
-                            if (OptimizeType == null)
-                                fileIterator.WriteTransition(this, seq, peptide, group, transition, 0);
-                            else
-                            {
-                                // -step through step
-                                for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
-                                    fileIterator.WriteTransition(this, seq, peptide, group, transition, i);
-                            }
-                        }
-                    }
-                }
-            }
-            // Add the required transitions to the last file
-            fileIterator.WriteRequiredTransitions(this, RequiredPeptides);
-        }
-
-        private int CalcTransitionCount(PeptideGroupDocNode nodePepGroup)
-        {
-            return CalcTransitionCount(IsPrecursorLimited ? nodePepGroup.TransitionGroupCount : nodePepGroup.TransitionCount);
-        }
-
-        private int CalcTransitionCount(PeptideDocNode nodePep)
-        {
-            return CalcTransitionCount(IsPrecursorLimited ? nodePep.TransitionGroupCount : nodePep.TransitionCount);
-        }
-
-        private int CalcTransitionCount(int transitionNodes)
-        {
-            if (OptimizeType == null)
-                return transitionNodes;
-            return transitionNodes*(OptimizeStepCount*2 + 1);
-        }
-
-        private void ExportScheduledBuckets(FileIterator fileIterator)
-        {
-            if (!MaxTransitions.HasValue)
-                throw new InvalidOperationException("Maximum transitions per file required");
-
-            bool singleWindow = ExportInstrumentType.IsSingleWindowInstrumentType(InstrumentType);
-
-            var predict = Document.Settings.PeptideSettings.Prediction;
-            int? maxInstrumentTrans = null;
-            if (!IsPrecursorLimited)
-                maxInstrumentTrans = Document.Settings.TransitionSettings.Instrument.MaxTransitions;
-            var listSchedules = new List<PeptideSchedule>();
-            var listRequired = new List<PeptideSchedule>();
-            var listUnscheduled = new List<PeptideSchedule>();
-            foreach (PeptideGroupDocNode nodePepGroup in Document.PeptideGroups)
-            {
-                foreach (PeptideDocNode nodePep in nodePepGroup.Children)
-                {
-                    var peptideSchedule = new PeptideSchedule(nodePep, maxInstrumentTrans);
-                    foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
-                    {
-                        double timeWindow;
-                        double? retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
-                            SchedulingAlgorithm, singleWindow, out timeWindow);
-                        if (retentionTime.HasValue)
-                        {
-                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup,
-                                retentionTime.Value, timeWindow, IsPrecursorLimited, OptimizeStepCount));
-                        }
-                        else
-                        {
-                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup,
-                                0, 0, IsPrecursorLimited, OptimizeStepCount));
-                        }
-                    }
-                    if (RequiredPeptides.IsRequired(nodePep))
-                    {
-                        if (!peptideSchedule.CanSchedule)
-                            throw new IOException(string.Format("The required peptide {0} cannot be scheduled", Document.Settings.GetModifiedSequence(nodePep)));
-                        listRequired.Add(peptideSchedule);
-                    }
-                    else if (peptideSchedule.CanSchedule)
-                        listSchedules.Add(peptideSchedule);
-                    else
-                        listUnscheduled.Add(peptideSchedule);
-                }
-            }
-
-            int totalScheduled = 0;
-            var listScheduleBuckets = new List<PeptideScheduleBucket>();
-            while (!PeptideSchedule.IsListScheduled(listSchedules))
-            {
-                var listScheduleNext = new PeptideScheduleBucket();
-                // First add all required transitions
-                foreach (var schedule in listRequired)
-                    schedule.Schedule(listScheduleNext, MaxTransitions.Value);
-                // Then try to add from the scheduling list
-                foreach (var schedule in listSchedules)
-                    schedule.Schedule(listScheduleNext, MaxTransitions.Value);
-                // Throw an error if nothing beyond the required transitions could be added
-                if (listScheduleNext.TransitionCount == RequiredPeptides.TransitionCount)
-                {
-                    string itemName = IsPrecursorLimited ? "precursors" : "transitions";
-                    var sb = new StringBuilder();
-                    foreach (var peptideSchedule in listSchedules)
-                    {
-                        if (peptideSchedule.TransitionCount > MaxTransitions.Value)
-                        {
-                            sb.AppendLine(string.Format("{0} - {1} {2}",
-                                peptideSchedule.Peptide.Peptide,
-                                peptideSchedule.TransitionCount,
-                                itemName));
-                        }
-                    }
-                    if (OptimizeStepCount == 0)
-                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\n\nCheck max concurrent {1} count.", sb, itemName));
-                    else
-                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\nCheck max concurrent {1} count and optimization step count.", sb, itemName));
-                }
-                listScheduleBuckets.Add(listScheduleNext);
-                totalScheduled += listScheduleNext.TransitionCount;
-            }
-
-            int countScheduleGroups = listScheduleBuckets.Count;
-            if (countScheduleGroups > 1)
-            {
-                // Balance the scheduling buckets to counteract the tendancy for each
-                // successive bucket to have fewer transitions than the previous.
-                // CONSIDER: O(n^2) but number of groups should never get that large
-                int balanceCount = totalScheduled / countScheduleGroups;
-
-                for (int i = 0; i < countScheduleGroups; i++)
-                {
-                    var bucketUnder = listScheduleBuckets[i];
-                    if (bucketUnder.TransitionCount >= balanceCount)
-                        continue;
-
-                    // It should not be possible to borrow from scheduling lists
-                    // after the current list, since the reason they are there is
-                    // that they had too much overlap to be included in any of the
-                    // preceding buckets.
-                    for (int j = 0; j < i; j++)
-                    {
-                        var bucketOver = listScheduleBuckets[j];
-                        if (bucketOver.TransitionCount <= balanceCount)
-                            continue;
-                        BorrowTransitions(bucketUnder, bucketOver, balanceCount);
-                        // If the under bucket ever goes over balance, then quit.
-                        if (bucketUnder.Count > balanceCount)
-                            break;
-                    }
-                }
-            }
-
-            foreach (var listScheduleNext in listScheduleBuckets)
-                WriteScheduledList(fileIterator, listScheduleNext);
-            WriteScheduledList(fileIterator, listUnscheduled);
-        }
-
-        private void BorrowTransitions(PeptideScheduleBucket bucketUnder, PeptideScheduleBucket bucketOver, int balanceCount)
-        {
-            if (!MaxTransitions.HasValue)
-                throw new InvalidOperationException("Maximum transitions per file required");
-
-            foreach (var schedule in bucketOver.ToArray().RandomOrder())
-            {
-                // Required peptides may not be removed
-                if (RequiredPeptides.IsRequired(schedule.Peptide))
-                    continue;
-
-                int newOverCount = bucketOver.TransitionCount - schedule.TransitionCount;
-                int newUnderCount = bucketUnder.TransitionCount + schedule.TransitionCount;
-                // If borrowing would not change the balance
-                if ((newOverCount > balanceCount && balanceCount > newUnderCount) ||
-                        // Or the transfer gets us closer to being balanced
-                        Math.Abs(newOverCount - balanceCount) + Math.Abs(newUnderCount - balanceCount) <
-                        Math.Abs(bucketOver.Count - balanceCount) + Math.Abs(bucketUnder.Count - balanceCount))
-                {
-                    // Make sure this doesn't exceed the maximum concurrent transition limit.
-                    if (schedule.CanAddToBucket(bucketUnder, MaxTransitions.Value))
-                    {
-                        bucketOver.Remove(schedule);
-                        bucketUnder.Add(schedule);
-                    }
-                }
-
-                // If the over bucket goes below the balance, then quit.
-                if (bucketOver.TransitionCount < balanceCount)
-                    break;
-            }
-        }
-
-        private void WriteScheduledList(FileIterator fileIterator,
-            ICollection<PeptideSchedule> listSchedules)
-        {
-            if (listSchedules.Count == 0)
-                return;
-
-            fileIterator.NextFile();
-            foreach (var schedule in PeptideSchedule.GetPrecursorSchedules(listSchedules))
-            {
-                var nodePepGroup = schedule.PeptideGroup;
-                var nodePep = schedule.Peptide;
-                var nodeGroup = schedule.TransitionGroup;
-                // Write required peptides at the end, like unscheduled methods
-                if (RequiredPeptides.IsRequired(nodePep))
-                    continue;
-
-                // Skip percursors with too few transitions.
-                int groupTransitions = nodeGroup.Children.Count;
-                if (groupTransitions < MinTransitions)
-                    continue;
-
-                foreach (TransitionDocNode transition in nodeGroup.Children)
-                {
-                    if (OptimizeType == null)
-                        fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, transition, 0);
-                    else
-                    {
-                        // -step through step
-                        for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
-                            fileIterator.WriteTransition(this, nodePepGroup, nodePep, nodeGroup, transition, i);
-                    }
-                }
-            }
-            fileIterator.WriteRequiredTransitions(this, RequiredPeptides);
-        }
-
-        private sealed class PeptideScheduleBucket : Collection<PeptideSchedule>
-        {
-            public int TransitionCount { get; private set; }
-
-            protected override void ClearItems()
-            {
-                TransitionCount = 0;
-                base.ClearItems();
-            }
-
-            protected override void InsertItem(int index, PeptideSchedule item)
-            {
-                TransitionCount += item.TransitionCount;
-                base.InsertItem(index, item);
-            }
-
-            protected override void RemoveItem(int index)
-            {
-                TransitionCount -= this[index].TransitionCount;
-                base.RemoveItem(index);
-            }
-
-            protected override void SetItem(int index, PeptideSchedule item)
-            {
-                TransitionCount += item.TransitionCount - this[index].TransitionCount;
-                base.SetItem(index, item);
-            }
-        }
-
-        private sealed class PeptideSchedule
-        {
-            private readonly List<PrecursorSchedule> _precursorSchedules = new List<PrecursorSchedule>();
-
-            public PeptideSchedule(PeptideDocNode nodePep, int? maxInstrumentTrans)
-            {
-                Peptide = nodePep;
-                MaxInstrumentTrans = maxInstrumentTrans;
-            }
-
-            public PeptideDocNode Peptide { get; private set; }
-
-            private bool IsScheduled { get; set; }
-
-            public bool CanSchedule
-            {
-                get { return !_precursorSchedules.Contains(s => s.EndTime == 0); }
-            }
-
-            public int TransitionCount { get; private set; }
-
-            private int? MaxInstrumentTrans { get; set; }
-
-            public void Add(PrecursorSchedule schedule)
-            {
-                TransitionCount += schedule.TransitionCount;
-                _precursorSchedules.Add(schedule);
-            }
-
-            public bool CanAddToBucket(PeptideScheduleBucket schedules, int maxTransitions)
-            {
-                int transitionCount = TransitionCount;
-                if (MaxInstrumentTrans.HasValue && schedules.TransitionCount + transitionCount > MaxInstrumentTrans)
-                    return false;
-
-                return GetOverlapCount(schedules) + transitionCount <= maxTransitions;
-            }
-
-            /// <summary>
-            /// Attempts to add this <see cref="PrecursorSchedule"/> to a scheduling list
-            /// without exceeding the maximum current transitions allowed.
-            /// </summary>
-            /// <param name="schedules">Scheduling list</param>
-            /// <param name="maxTransitions">Maximum number of concurrent transitions allowed</param>
-            public void Schedule(PeptideScheduleBucket schedules, int maxTransitions)
-            {
-                if (!IsScheduled && CanAddToBucket(schedules, maxTransitions))
-                {
-                    schedules.Add(this);
-                    IsScheduled = true;
-                }
-            }
-
-            private int GetOverlapCount(IList<PeptideSchedule> peptideSchedules)
-            {
-                // While this may be less completely correct the less the precursors in a
-                // peptide overlap, wildly different precursor peaks are not all that interesting.
-                int maxOverlap = 0;
-                foreach (var precursorSchedule in _precursorSchedules)
-                {
-                    maxOverlap = Math.Max(maxOverlap,
-                        precursorSchedule.GetOverlapCount(GetPrecursorSchedules(peptideSchedules).ToArray()));
-                }
-                return maxOverlap;
-            }
-
-            public static IEnumerable<PrecursorSchedule> GetPrecursorSchedules(IEnumerable<PeptideSchedule> peptideSchedules)
-            {
-                foreach (var schedule in peptideSchedules)
-                {
-                    foreach (var precursorSchedule in schedule._precursorSchedules)
-                        yield return precursorSchedule;
-                }
-            }
-
-            /// <summary>
-            /// Returns true, if all elements in the given scheduling list have been scheduled.
-            /// </summary>
-            public static bool IsListScheduled(IEnumerable<PeptideSchedule> schedules)
-            {
-                return !schedules.Contains(s => !s.IsScheduled);
-            }
-        }
-
-        private sealed class PrecursorSchedule : PrecursorScheduleBase
-        {
-            public PrecursorSchedule(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
-                    TransitionGroupDocNode nodeTranGroup, double retentionTime, double timeWindow,
-                    bool isPrecursorLimited, int optimizeStepCount)
-                : base(nodeTranGroup, retentionTime, timeWindow, isPrecursorLimited, optimizeStepCount)
-            {
-                PeptideGroup = nodePepGroup;
-                Peptide = nodePep;
-            }
-
-            public PeptideGroupDocNode PeptideGroup { get; private set; }
-            public PeptideDocNode Peptide { get; private set; }
-        }
-
-        protected abstract string InstrumentType { get; }
-
-        public virtual bool HasHeaders { get { return false; } }
-
-        protected virtual void WriteHeaders(TextWriter writer) { /* No headers by default */ }
-
-        protected abstract void WriteTransition(TextWriter writer,
-                                                PeptideGroupDocNode nodePepGroup,
-                                                PeptideDocNode nodePep,
-                                                TransitionGroupDocNode nodeTranGroup,
-                                                TransitionDocNode nodeTran,
-                                                int step);
-
-        protected double GetProductMz(double productMz, int step)
-        {
-            return productMz + ChromatogramInfo.OPTIMIZE_SHIFT_SIZE*step;
-        }
-
-        protected double GetCollisionEnergy(PeptideDocNode nodePep,
-                                            TransitionGroupDocNode nodeGroup,
-                                            TransitionDocNode nodeTran,
-                                            int step)
-        {
-            var prediction = Document.Settings.TransitionSettings.Prediction;
-
-            // If exporting optimization methods, or optimization data should be ignored,
-            // use the regression setting to calculate CE
-            if (OptimizeType != null || prediction.OptimizedMethodType == OptimizedMethodType.None)
-            {
-                if (!Equals(OptimizeType, ExportOptimize.CE))
-                    step = 0;
-                return Document.GetCollisionEnergy(nodePep, nodeGroup, step);
-            }
-
-            return Document.GetOptimizedCollisionEnergy(nodePep, nodeGroup, nodeTran);
-        }
-
-        protected double GetDeclusteringPotential(PeptideDocNode nodePep,
-                                                  TransitionGroupDocNode nodeGroup,
-                                                  TransitionDocNode nodeTran,
-                                                  int step)
-        {
-            var prediction = Document.Settings.TransitionSettings.Prediction;
-
-            // If exporting optimization methods, or optimization data should be ignored,
-            // use the regression setting to calculate CE
-            if (OptimizeType != null || prediction.OptimizedMethodType == OptimizedMethodType.None)
-            {
-                if (!Equals(OptimizeType, ExportOptimize.DP))
-                    step = 0;
-                return Document.GetDeclusteringPotential(nodePep, nodeGroup, step);
-            }
-
-            return Document.GetOptimizedDeclusteringPotential(nodePep, nodeGroup, nodeTran);
-        }
-
-        private bool ExceedsMax(int count)
-        {
-            // Leave room for the required peptides
-            count += RequiredPeptides.TransitionCount;
-
-            return (MaxTransitions != null && count > 0 && count > MaxTransitions);
-        }
-
-        private static string FileEscape(IEnumerable<char> namePart)
-        {
-            StringBuilder sb = new StringBuilder();
-            foreach (char c in namePart)
-            {
-                if ("/\\:*?\"<>|".IndexOf(c) == -1)
-                    sb.Append(c);
-                else
-                    sb.Append('_');
-            }
-            return sb.ToString();
-        }
-
-        private sealed class FileIterator : IDisposable
-        {
-            private FileSaver _saver;
-            private TextWriter _writer;
-            private readonly bool _single;
-            private readonly bool _isPrecursorLimited;
-            private readonly Action<TextWriter> _writeHeaders;
-
-            private TransitionGroupDocNode _nodeGroupLast;
-
-            public FileIterator(string fileName, bool single, bool isPrecursorLimited, Action<TextWriter> writeHeaders)
-            {
-                FileName = fileName;
-                _single = single;
-                _isPrecursorLimited = isPrecursorLimited;
-                _writeHeaders = writeHeaders;
-                if (fileName == null)
-                {
-                    BaseName = MEMORY_KEY_ROOT;
-                    MemoryOutput = new Dictionary<string, StringBuilder>();
-                }
-                else
-                {
-                    BaseName = Path.Combine(Path.GetDirectoryName(fileName) ?? "",
-                        Path.GetFileNameWithoutExtension(fileName) ?? "");
-                }
-            }
-
-// ReSharper disable MemberCanBePrivate.Local
-            public string FileName { get; private set; }
-            public string BaseName { get; set; }
-            public string Suffix { get; set; }
-            public int FileCount { get; set; }
-            public int TransitionCount { get; set; }
-// ReSharper restore MemberCanBePrivate.Local
-
-            public Dictionary<string, StringBuilder> MemoryOutput { get; private set; }
-
-            public bool HasFile { get { return _writer != null; } }
-
-            public void Init()
-            {
-                if (_single)
-                {
-                    if (FileName != null)
-                    {
-                        _saver = new FileSaver(FileName);
-                        if (!_saver.CanSave(false))
-                            throw new IOException(string.Format("Cannot save to {0}.", FileName));
-
-                        _writer = new StreamWriter(_saver.SafeName);
-                    }
-                    else
-                    {
-                        StringBuilder sb = new StringBuilder();
-                        MemoryOutput[BaseName] = sb;
-                        _writer = new StringWriter(sb);
-                    }
-                    _writeHeaders(_writer);
-                }
-            }
-
-            public void Commit()
-            {
-                // Never commit an empty file to disk
-                if (TransitionCount == 0)
-                    Dispose();
-                else
-                {
-                    if (_writer != null)
-                        _writer.Close();
-                    _writer = null;
-                    if (_saver != null)
-                        _saver.Commit();
-                    _saver = null;                    
-                }
-            }
-
-            public void Dispose()
-            {
-                try
-                {
-                    if (_writer != null)
-                        _writer.Close();
-                    _writer = null;
-                    if (_saver != null)
-                        _saver.Dispose();
-                    _saver = null;
-                }
-                catch (IOException)
-                {
-                }
-            }
-
-            public void NextFile()
-            {
-                Commit();
-
-                TransitionCount = 0;
-                FileCount++;
-
-                string baseName;
-                // Make sure file names sort into the order in which they were
-                // written.  This will help the results load in tree order.
-                if (Suffix == null)
-                    baseName = string.Format("{0}_{1:0000}", BaseName, FileCount);
-                else
-                    baseName = string.Format("{0}_{1:0000}_{2}", BaseName, FileCount, Suffix);
-
-                if (MemoryOutput == null)
-                {
-                    _saver = new FileSaver(baseName + ".csv");
-                    _writer = new StreamWriter(_saver.SafeName);
-                }
-                else
-                {
-                    StringBuilder sb = new StringBuilder();
-                    MemoryOutput[baseName] = sb;
-                    _writer = new StringWriter(sb);
-                }
-                _writeHeaders(_writer);
-            }
-
-            public void WriteTransition(MassListExporter exporter,
-                                        PeptideGroupDocNode seq,
-                                        PeptideDocNode peptide,
-                                        TransitionGroupDocNode group,
-                                        TransitionDocNode transition,
-                                        int step)
-            {
-                if (!HasFile)
-                    throw new IOException("Unexpected failure writing transitions.");
-
-                exporter.WriteTransition(_writer, seq, peptide, group, transition, step);
-
-                // If not full-scan, count transtions
-                if (!_isPrecursorLimited)
-                    TransitionCount++;
-                // Otherwise, count precursors
-                else if (!ReferenceEquals(_nodeGroupLast, group))
-                {
-                    TransitionCount++;
-                    _nodeGroupLast = group;
-                }
-            }
-
-            public void WriteRequiredTransitions(MassListExporter exporter, RequiredPeptideSet requiredPeptides)
-            {
-                foreach (var requiredPeptide in requiredPeptides.Peptides)
-                {
-                    var seq = requiredPeptide.PeptideGroupNode;
-                    var peptide = requiredPeptide.PeptideNode;
-
-                    foreach (var group in peptide.TransitionGroups)
-                    {
-                        foreach (var transition in group.Transitions)
-                        {
-                            WriteTransition(exporter, seq, peptide, group, transition, 0);
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public abstract class IsolationSchemeExporter
-    {
-        public IsolationScheme IsolationScheme { get; private set; }
-        public string ExportString { get; set; }
-        public int CalculationTime { get; set; }
-        public bool DebugCycles { get; set; }
-        private readonly int? _maxInstrumentWindows;
-
-        protected IsolationSchemeExporter(IsolationScheme isolationScheme, int? maxInstrumentWindows)
-        {
-            IsolationScheme = isolationScheme;
-            _maxInstrumentWindows = maxInstrumentWindows;
-        }
-
-        /// <summary>
-        /// Initialize isolation scheme export.
-        /// </summary>
-        protected bool InitExport(string fileName, IProgressMonitor progressMonitor)
-        {
-            if (progressMonitor.IsCanceled)
-                return false;
-
-            // First export transition lists to map in memory
-            Export(null, progressMonitor);
-
-            // If filename is null, then no more work needs to be done.
-            if (fileName == null)
-            {
-                progressMonitor.UpdateProgress(new ProgressStatus("").Complete());
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Export to a isolation scheme to a file or to memory.
-        /// </summary>
-        /// <param name="fileName">A file on disk to export to, or null to export to memory.</param>
-        /// <param name="progressMonitor">progress monitor</param>
-        public void Export(string fileName, IProgressMonitor progressMonitor)
-        {
-            if (ExportString == null)
-            {
-                StringWriter writer = new StringWriter();
-                if (HasHeaders)
-                    WriteHeaders(writer);
-                if (IsolationScheme.WindowsPerScan.HasValue)
-                    WriteMultiplexedWindows(writer, IsolationScheme.WindowsPerScan.Value, progressMonitor);
-                else
-                    WriteWindows(writer);
-                ExportString = writer.ToString();
-            }
-
-            if (fileName != null)
-            {
-                var saver = new FileSaver(fileName);
-                if (!saver.CanSave(false))
-                    throw new IOException(string.Format("Cannot save to {0}.", fileName));
-
-                var writer = new StreamWriter(saver.SafeName);
-                writer.Write(ExportString);
-                writer.Close();
-                saver.Commit();
-            }
-        }
-
-        private void WriteWindows(TextWriter writer)
-        {
-            foreach (var window in IsolationScheme.PrespecifiedIsolationWindows)
-            {
-                WriteIsolationWindow(writer, window);
-            }
-        }
-
-        /// <summary>
-        /// Generate an isolation list containing multiplexed windows, attempting to minimize the number
-        /// and frequency of repeated window pairings within each scan.
-        /// </summary>
-        /// <param name="writer">writer to write results</param>
-        /// <param name="windowsPerScan">how many windows are contained in each scan</param>
-        /// <param name="progressMonitor">progress monitor</param>
-        private void WriteMultiplexedWindows(TextWriter writer, int windowsPerScan, IProgressMonitor progressMonitor)
-        {
-            int maxInstrumentWindows = Helpers.AssumeValue(_maxInstrumentWindows);
-            int windowCount = IsolationScheme.PrespecifiedIsolationWindows.Count;
-            int cycleCount = maxInstrumentWindows/windowCount;
-            double totalScore = 0.0;
-
-            // Prepare to generate the best isolation list possible within the given time limit.
-            var startTime = DateTime.Now;
-            var cycle = new Cycle(windowCount, windowsPerScan);
-            int cyclesGenerated = 0;
-            ProgressStatus status = new ProgressStatus("Exporting Isolation List");
-            progressMonitor.UpdateProgress(status);
-
-            // Generate each cycle.
-            for (int cycleNumber = 1; cycleNumber <= cycleCount; cycleNumber++)
-            {
-                // Update status.
-                if (progressMonitor.IsCanceled)
-                    return;
-                progressMonitor.UpdateProgress(status.ChangePercentComplete((int)(DateTime.Now - startTime).TotalSeconds * 100 / CalculationTime).ChangeMessage(
-                    string.Format("Exporting Isolation List ({0} cycles out of {1})", cycleNumber - 1, cycleCount)));
-
-                double secondsRemaining = CalculationTime - (DateTime.Now - startTime).TotalSeconds;
-                double secondsPerCycle = secondsRemaining/(cycleCount - cycleNumber + 1);
-                var endTime = DateTime.Now.AddSeconds(secondsPerCycle);
-
-                Cycle bestCycle = null;
-                do
-                {
-                    // Generate a bunch of cycles, looking for one with the lowest score.
-                    const int attemptCount = 50;
-                    for (int i = 0; i < attemptCount; i++)
-                    {
-                        cycle.Generate(cycleNumber);
-                        if (bestCycle == null || bestCycle.CycleScore > cycle.CycleScore)
-                        {
-                            bestCycle = new Cycle(cycle);
-                            if (bestCycle.CycleScore == 0.0)
-                            {
-                                cyclesGenerated += i + 1 - attemptCount;
-                                endTime = DateTime.Now; // Break outer loop.
-                                break;
-                            }
-                        }
-                    }
-                    cyclesGenerated += attemptCount;
-                } while (DateTime.Now < endTime);
-
-// ReSharper disable PossibleNullReferenceException
-                totalScore += bestCycle.CycleScore;
-                WriteCycle(writer, bestCycle, cycleNumber);
-                WriteCycleInfo(bestCycle, cycleNumber, cyclesGenerated, startTime);
-// ReSharper restore PossibleNullReferenceException
-
-            }
-
-            WriteTotalScore(totalScore);
-
-            // Show 100% in the wait dialog.
-            progressMonitor.UpdateProgress(status.ChangePercentComplete(100).ChangeMessage(
-                string.Format("Exporting Isolation List ({0} cycles out of {0})", cycleCount)));
-        }
-
-        // For debugging...
-        private void WriteTotalScore(double totalScore)
-        {
-            if (!DebugCycles)
-                return;
-            Console.WriteLine("Total score = {0:0.00}", totalScore);
-        }
-
-        // For debugging...
-        private void WriteCycleInfo(Cycle cycle, int cycleNumber, int cyclesGenerated, DateTime startTime)
-        {
-            if (!DebugCycles)
-                return;
-            if (cycle.Repeats > 0)
-                Console.WriteLine("Cycle {0}: score {1:0.00}, repeats {2}, minDistance {3}, at iteration {4}, {5:0.00} seconds",
-                    cycleNumber, cycle.CycleScore, cycle.Repeats, cycle.MinDistance, cyclesGenerated, (DateTime.Now - startTime).TotalSeconds);
-            else
-                Console.WriteLine("Cycle {0}: score {1:0.00}, at iteration {2}, {3:0.00} seconds",
-                    cycleNumber, cycle.CycleScore, cyclesGenerated, (DateTime.Now - startTime).TotalSeconds);
-        }
-
-        private void WriteCycle(TextWriter writer, Cycle cycle, int cycleNumber)
-        {
-            // Record window pairing in this cycle.
-            cycle.Commit(cycleNumber);
-
-            foreach (int window in cycle)
-            {
-                WriteIsolationWindow(writer, IsolationScheme.PrespecifiedIsolationWindows[window]);
-            }
-        }
-
-        public virtual bool HasHeaders { get { return false; } }
-
-        protected virtual void WriteHeaders(TextWriter writer) { /* No headers by default */ }
-
-        protected virtual void WriteIsolationWindow(TextWriter writer, IsolationWindow isolationWindow)
-        {
-            double target = isolationWindow.Target ?? isolationWindow.MethodCenter;
-            writer.WriteLine(target);
-        }
-
-        // Cycle holds the scans containing all the windows to be sampled.
-        private class Cycle
-        {
-            public double CycleScore { get; private set; }
-            public int Repeats { get; private set; }
-            public int MinDistance { get; private set; }
-
-            private readonly int[] _ordering;
-            private readonly int[] _windows;
-            private readonly int[] _scans;
-            private readonly int[] _nextWindowInScan;
-            private readonly int _windowsPerScan;
-            private readonly PairingHistory _pairingHistory;
-            private readonly Random _random;
-
-            public Cycle(int windowCount, int windowsPerScan)
-            {
-                CycleScore = double.MaxValue;
-                _ordering = new int[windowCount];
-                _windows = new int[windowCount];
-                int scansPerCycle = windowCount/windowsPerScan;
-                _scans = new int[scansPerCycle];
-                _nextWindowInScan = new int[scansPerCycle];
-                _windowsPerScan = windowsPerScan;
-                _pairingHistory = new PairingHistory(windowCount);
-                _random = new Random(0);    // Fixed seed for repeatable results.
-
-                for (int i = 0; i < _ordering.Length; i++)
-                {
-                    _ordering[i] = i;
-                }
-            }
-
-            public Cycle(Cycle other)
-            {
-                CycleScore = other.CycleScore;
-                Repeats = other.Repeats;
-                MinDistance = other.MinDistance;
-                _windows = new int[other._windows.Length];
-                other._windows.CopyTo(_windows, 0);
-                _windowsPerScan = other._windowsPerScan;
-                _pairingHistory = other._pairingHistory;    // Copy shares PairingHistory with other.
-            }
-
-            public void Generate(int cycleNumber)
-            {
-                // Initialize output information.
-                CycleScore = 0.0;
-                Repeats = 0;
-                MinDistance = int.MaxValue;
-
-                // Initialize scan indexing arrays.
-                int openScans;
-                for (openScans = 0; openScans < _scans.Length; openScans++)
-                {
-                    _scans[openScans] = _nextWindowInScan[openScans] = openScans*_windowsPerScan;
-                }
-
-                // Randomize order.
-                for (int i = 0; i < _ordering.Length; i++)
-                {
-                    Helpers.Swap(ref _ordering[i], ref _ordering[_random.Next(_ordering.Length)]);
-                }
-
-                // Place each window in this cycle.
-                foreach (int window in _ordering)
-                {
-                    int bestScan = -1;
-
-                    // Look for an acceptable spot in each scan.
-                    for (int i = 0; i < openScans && bestScan < 0; i++)
-                    {
-                        bestScan = i;
-                        int nextWindow = _nextWindowInScan[i];
-
-                        // Does the window create a repeated pair in this scan?
-                        for (int j = _scans[i]; j < nextWindow; j++)
-                        {
-                            if (_pairingHistory.GetLastPairCycle(_windows[j], window) > 0)
-                            {
-                                bestScan = -1;  // No unpaired scan was found.
-                                break;
-                            }
-                        }
-                    }
-
-                    if (bestScan < 0)
-                    {
-                        double minScore = double.MaxValue;
-                        int bestRepeats = 0;
-                        int bestDistance = 0;
-
-                        // Find the scan which generates the lowest score with this window added.
-                        for (int i = 0; i < openScans; i++)
-                        {
-                            double score = 0.0;
-                            int repeats = 0;
-                            int nextWindow = _nextWindowInScan[i];
-                            int minDistance = int.MaxValue;
-
-                            // Does the window create a repeated pair in this scan?
-                            for (int j = _scans[i]; j < nextWindow; j++)
-                            {
-                                int lastPairCycle = _pairingHistory.GetLastPairCycle(_windows[j], window);
-                                if (lastPairCycle > 0)
-                                {
-                                    // Compute score for this repeated pair.
-                                    repeats++;
-                                    int distance = cycleNumber - lastPairCycle;
-                                    minDistance = Math.Min(distance, minDistance);
-                                    score += 1.0/(distance*distance);
-                                }
-                            }
-
-                            // Remember the window placement with the best score.
-                            if (minScore <= score)
-                                continue;
-                            minScore = score;
-                            bestScan = i;
-                            bestRepeats = repeats;
-                            bestDistance = minDistance;
-                        }
-
-                        CycleScore += minScore;
-                        Repeats += bestRepeats;
-                        MinDistance = Math.Min(bestDistance, MinDistance);
-                    }
-
-                    // Add this window to the scan.
-                    _windows[_nextWindowInScan[bestScan]++] = window;
-
-                    // Compact scan list if this scan is full.
-                    if (_nextWindowInScan[bestScan] == _scans[bestScan] + _windowsPerScan)
-                    {
-                        openScans--;
-                        _nextWindowInScan[bestScan] = _nextWindowInScan[openScans];
-                        _scans[bestScan] = _scans[openScans];
-                    }
-                }
-            }
-
-            public void Commit(int cycleNumber)
-            {
-                for (int i = 0; i < _windows.Length; i += _windowsPerScan)
-                {
-                    int nextScan = i + _windowsPerScan;
-                    for (int j = i; j < nextScan; j++)
-                    {
-                        for (int k = j + 1; k < nextScan; k++)
-                        {
-                            _pairingHistory.RecordPair(_windows[j], _windows[k], cycleNumber);
-                        }
-                    }
-                }
-            }
-
-            public System.Collections.IEnumerator GetEnumerator()
-            {
-                return _windows.GetEnumerator();
-            }
-
-            /// <summary>
-            /// PairingHistory records which step each window pairing occurred in.  It can
-            /// then compute a score used to select the best cycle among many to minimize
-            /// repeated window pairings within each scan.
-            /// </summary>
-            private class PairingHistory
-            {
-                private readonly int[] _pairs; // Triangular array of pairs.
-                private readonly int _windowCount;
-
-                public PairingHistory(int windowCount)
-                {
-                    _windowCount = windowCount;
-
-                    // Allocate triangular array.
-                    _pairs = new int[(int)Math.Pow(_windowCount - 1, 2) - Sum(_windowCount - 2)];
-                }
-
-                public void RecordPair(int index1, int index2, int cycleNumber)
-                {
-                    _pairs[GetIndex(index1, index2)] = cycleNumber;
-                }
-
-                public int GetLastPairCycle(int index1, int index2)
-                {
-                    return _pairs[GetIndex(index1, index2)];
-                }
-
-                // Get index into triangular array.
-                private int GetIndex(int window1, int window2)
-                {
-                    if (window1 > window2)
-                        Helpers.Swap(ref window1, ref window2);
-                    var index = window1 * (_windowCount - 1) + window2 - 1 - (window1 + 1) * window1 / 2;
-                    return index;
-                }
-
-                // Return the sum of integers 1..x
-                private static int Sum(int x)
-                {
-                    return (x + 1) * x / 2;
-                }
-            }
-        }
-    }
-
-    internal class PrecursorScheduleBase
-    {
-        public PrecursorScheduleBase(TransitionGroupDocNode nodeGroup, double retentionTime,
-            double timeWindow, bool isPrecursorLimited, int optimizeStepCount)
-        {
-            TransitionGroup = nodeGroup;
-            StartTime = retentionTime - (timeWindow / 2);
-            EndTime = StartTime + timeWindow;
-            IsPrecursorLimited = isPrecursorLimited;
-            OptimizeStepCount = optimizeStepCount;
-        }
-
-        public TransitionGroupDocNode TransitionGroup { get; private set; }
-        public int TransitionCount
-        {
-            get
-            {
-                int count = IsPrecursorLimited ? 1 : TransitionGroup.TransitionCount;
-                return count*(OptimizeStepCount*2 + 1);
-            }
-        }
-        public double StartTime { get; set; }
-        public double EndTime { get; set; }
-        public bool IsPrecursorLimited { get; set; }
-        public int OptimizeStepCount { get; set; }
-
-        public bool ContainsTime(double time)
-        {
-            return StartTime <= time && time <= EndTime;
-        }
-
-        public int GetOverlapCount<TBase>(IList<TBase> schedules)
-            where TBase : PrecursorScheduleBase
-        {
-            // Check for maximum overlap count at start and end times of this
-            // schedule window, and any other start or end time that falls within
-            // this schedule window.
-            List<double> times = new List<double> {StartTime, EndTime};
-            foreach (var schedule in schedules)
-            {
-                if (ContainsTime(schedule.StartTime))
-                    times.Add(schedule.StartTime);
-                if (ContainsTime(schedule.EndTime))
-                    times.Add(schedule.EndTime);
-            }
-
-            int overlapMax = 0;
-            foreach (double time in times)
-                overlapMax = Math.Max(overlapMax, GetOverlapCount(schedules, time));
-            return overlapMax;            
-        }
-
-        /// <summary>
-        /// Returns the number of transitions in a list of schedules that contain a given time.
-        /// </summary>
-        public static int GetOverlapCount<TBase>(IEnumerable<TBase> schedules, double time)
-            where TBase : PrecursorScheduleBase
-        {
-            int overlapping = 0;
-            foreach (var schedule in schedules)
-            {
-                if (schedule.ContainsTime(time))
-                    overlapping += schedule.TransitionCount;
-            }
-            return overlapping;                        
-        }
-    }
-
-    public class ThermoMassListExporter : MassListExporter
+    public class ThermoMassListExporter : AbstractMassListExporter
     {
         private bool _addTriggerReference;
         private HashSet<string> _setRTStandards;
@@ -1709,7 +423,7 @@ namespace pwiz.Skyline.Model
 
         protected override string InstrumentType
         {
-            get { return ExportInstrumentType.Thermo; }
+            get { return ExportInstrumentType.THERMO; }
         }
 
         protected override void WriteTransition(TextWriter writer,
@@ -1854,7 +568,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class ThermoQExactiveIsolationListExporter : IsolationSchemeExporter
+    public class ThermoQExactiveIsolationListExporter : AbstractIsolationSchemeExporter
     {
         public ThermoQExactiveIsolationListExporter(IsolationScheme isolationScheme, int? maxInclusions)
             : base(isolationScheme, maxInclusions)
@@ -1870,7 +584,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class AbiMassListExporter : MassListExporter
+    public class AbiMassListExporter : AbstractMassListExporter
     {
         public AbiMassListExporter(SrmDocument document)
             : this(document, null)
@@ -2133,7 +847,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class AgilentMassListExporter : MassListExporter
+    public class AgilentMassListExporter : AbstractMassListExporter
     {
         public AgilentMassListExporter(SrmDocument document)
             : this(document, null)
@@ -2151,7 +865,7 @@ namespace pwiz.Skyline.Model
 
         protected override string InstrumentType
         {
-            get { return ExportInstrumentType.Agilent; }
+            get { return ExportInstrumentType.AGILENT; }
         }
 
         public override bool HasHeaders { get { return true; } }
@@ -2285,7 +999,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class WatersMassListExporter : MassListExporter
+    public class WatersMassListExporter : AbstractMassListExporter
     {
         public WatersMassListExporter(SrmDocument document)
             : this(document, null)
@@ -2308,7 +1022,7 @@ namespace pwiz.Skyline.Model
 
         protected override string InstrumentType
         {
-            get { return ExportInstrumentType.Waters; }
+            get { return ExportInstrumentType.WATERS; }
         }
 
         public override bool HasHeaders { get { return true; } }
@@ -2434,7 +1148,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             var argv = new List<string>();
-            if (Equals(MethodInstrumentType, ExportInstrumentType.Waters_Quattro_Premier))
+            if (Equals(MethodInstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
                 argv.Add("-q");
             argv.Add("-w");
             argv.Add(RTWindow.ToString(CultureInfo.InvariantCulture));
@@ -2581,7 +1295,7 @@ namespace pwiz.Skyline.Model
                 StringBuilder stdinBuilder = new StringBuilder();
                 foreach (KeyValuePair<string, StringBuilder> pair in dictTranLists)
                 {
-                    string suffix = pair.Key.Substring(MassListExporter.MEMORY_KEY_ROOT.Length);
+                    string suffix = pair.Key.Substring(AbstractMassListExporter.MEMORY_KEY_ROOT.Length);
                     suffix = Path.GetFileNameWithoutExtension(suffix);
                     methodName = baseName + suffix + ext;
 
