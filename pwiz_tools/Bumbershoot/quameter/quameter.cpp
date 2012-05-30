@@ -828,6 +828,9 @@ namespace quameter
 
                     SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
 
+                    if (spectrum->defaultArrayLength == 0) // skip empty scans
+                        continue;
+
                     if (spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
                         continue;
 
@@ -913,8 +916,8 @@ namespace quameter
                         // calculate TIC manually if necessary
                         if (scanInfo.precursorIntensity == 0)
                         {
-                            BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
-                                const_cast<MS2ScanInfo&>(scanInfo).precursorIntensity += p;
+                            BOOST_FOREACH(const MZIntensityPair& p, peaks)
+                                const_cast<MS2ScanInfo&>(scanInfo).precursorIntensity += p.intensity;
                         }
                     }
                 } // end of spectra loop
