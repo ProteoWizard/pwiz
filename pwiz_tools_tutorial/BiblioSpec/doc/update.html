@@ -1,0 +1,98 @@
+<html>
+<!--
+FILE: update.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 8/19/05
+PROJECT: BiblioSpec
+REVISION: $Revision: 1.1 $
+-->
+<head>
+<title>BlibUpdate</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibUpdate</h1></center>
+
+<blockquote>
+
+<p><b>Description:</b>&nbsp;&nbsp;Alters an existing library by either
+adding spectra, deleting spectra, or changing the annotation of
+existing spectra.  The version of the library will change from n.n to
+n+1.n if spectra are added or deleted or it will change to n.n+1 if
+annotations are changed.
+
+<p><b>Usage:</b><code>  BlibUpdate [options]
+&nbsp;&lt;operation&gt;
+&nbsp;&lt;updates&gt;
+&nbsp;&lt;library&gt;</code>
+
+<p><b>Input:</b>
+<ul>
+
+<li> &lt;operation&gt; - a tag to indicate adding, deleting, or
+annotating spectra
+<li> &lt;updates&gt; - a list of the changes to make, the format of
+which varies by operation
+
+<li> &lt;library&gt; - the library to be altered
+</ul>
+
+<p><b>Output:</b>&nbsp;&nbsp;An updated library with new version number
+
+
+<p><b>Options:</b>&nbsp;&nbsp;
+<ul>
+
+<li> <code>-v, --verbose &lt;0|1|2&gt;</code> - Set the verbosity
+	       level of the output to stderr.  Default is 2.
+
+</ul>
+<p><b>Operations and Updates:</b>&nbsp;&nbsp;
+<ul>
+
+<li> <code>-a, --add</code> - Insert spectra into the
+	       library.  Additions can come from either an existing
+	       library or from an <a
+	       href="fileFormats.html#ssl">SSL</a> file. The unique ID
+	       numbers of spectra added from an existing library will
+	       be changed. 
+
+<li> <code>-d, --delete</code> - Remove spectra from the
+	       library. The updates file should have the one-word
+	       header <code>'delete'</code> on the first line,
+	       followed by a list of library ID numbers, one per line.
+	       See <a href="libStats.html">BlibStats</a> for
+	       acquiring a list of IDs.
+
+<li> <code>-n, --annotate</code> - Change the annotations of existing
+	       spectra.  The updates file should be a tab-delimited
+	       list of ID number and new annotation.  The first line
+	       should read <code>'id  annotation'</code>.
+
+</ul>
+
+<p><b>Warning messages:</b>
+
+<ul>
+<li> <p> <i>Warning: library has been filtered.  You might want to make these changes to the unfiltered library.</i><p>
+<p>Changes made to the filtered library will not be reflected in the redundant library and can lead to inconsistencies.</p>
+
+
+<li> <p> <i>WARNING: Spectrum X was not found in the library</i><p>
+<p>The library did not contain ID number X.</p>
+
+</ul>
+
+<!--
+<p><b>Bugs:</b>
+<ul>
+<li>description</li>
+<li>description</li>
+</ul>
+</blockquote>
+-->
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

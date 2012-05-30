@@ -1,0 +1,446 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>STL_Containers</name>
+    </assembly>
+    <members>
+        <member name="T:System.Collections.Generic.RBTree`1">
+            <remarks>
+            RBTree is implemented using black-red binary trees. The
+            algorithms follows the indications given in the textbook
+            "Introduction to Algorithms" Thomas H. Cormen, Charles E. 
+            Leiserson, Ronald L. Rivest
+            </remarks>
+        </member>
+        <member name="F:System.Collections.Generic.RBTree`1.count">
+            <summary>
+            Store the number of elements in the RBTree.
+            </summary>
+        </member>
+        <member name="F:System.Collections.Generic.RBTree`1.root">
+            <summary>
+            Store the root node of the RBTree.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.#ctor">
+            <summary>
+            Initializes an new instance of Collections.System.RBTree
+            class that is empty. A default comparer will be used to
+            compare the elements added to the RBTree.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.#ctor(System.Collections.Generic.IComparer{`0})">
+            <summary>
+            Initializes an new instance of Collections.System.RBTree
+            class that is empty.
+            </summary>
+            <param name="comp">
+            comp represents the IComparer elements which will be used to
+            sort the elements in RBTree.
+            </param>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Initialize">
+            <summary>
+            Perform the common initialization tasks to all the constructors.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Insert(`0)">
+            <summary>
+            Inserts an elements to the RBTree. The operation is performed
+            in a guaranteed logarithmic time of the RBTree size.
+            Returns a pair: first element is a reference to either the inserted key-value pair or the existing one,
+            second element is a boolean storing whether the insert actually happened
+            (if the keys must be unique and the key was already in the tree, the key is not actually inserted)
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Clear">
+            <summary>
+            Removes of the elements from the RBTree.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Contains(`0)">
+            <summary>
+            Determines whether the RBTree contains a specific object.
+            The RBTree could contain several identical object. The operation
+            is performed in a guaranteed logarithmic time of the RBTree size.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.CopyTo(`0[],System.Int32)">
+            <summary>
+            Copies the elements of RBTree to a one dimensional
+            System.Array at the specified index.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.GetEnumerator">
+            <summary>
+            Returns an System.Collection.IEnumerator that can iterate
+            through the RBTree.
+            </summary>
+            
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Remove(`0)">
+            <summary>
+            Removes the first occurrence of the element in the RBTree.
+            The operation is performed in a guaranteed logarithmic time
+            of the RBTree size.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.OnRBTreeModified">
+            <summary>
+            Invalidates the System.Collections.IEnumerator linked
+            with the RBTree.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.RemoveRBTreeNode(System.Collections.Generic.RBTreeNode{`0})">
+            <summary>
+            Removes a specific node of the RBTree.
+            </summary>
+            <param name="node">
+            node must be contained by RBTree.</param>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Successor(System.Collections.Generic.RBTreeNode{`0})">
+            <summary>
+            Returns the node that contains the successor of node.Key.
+            If such node does not exist then null is returned.
+            </summary>
+            <param name="node">
+            node must be contained by RBTree.</param>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.RotateLeft(System.Collections.Generic.RBTreeNode{`0})">
+            <summary>
+            Performs a left tree rotation.
+            </summary>
+            <param name="node">
+            node is considered as the root of the tree.</param>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.RotateRight(System.Collections.Generic.RBTreeNode{`0})">
+            <summary>
+            Performs a right tree rotation.
+            </summary>
+            <param name="node">
+            node is considered as the root of the tree.</param>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.RecCopyTo(System.Collections.Generic.RBTreeNode{`0},`0[],System.Int32)">
+            <summary>
+            Copies the element of the tree into a one dimensional
+            System.Array starting at index.
+            </summary>
+            <param name="currentRBTreeNode">The root of the tree.</param>
+            <param name="array">The System.Array where the elements will be copied.</param>
+            <param name="index">The index where the copy will start.</param>
+            <returns>
+            The new index after the copy of the elements of the tree.
+            </returns>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.RecContains(System.Collections.Generic.RBTreeNode{`0},`0)">
+            <summary>
+            Returns a node of the tree which contains the object
+            as Key. If the tree does not contain such node, then
+            null is returned.
+            </summary>
+            <param name="node">The root of the tree.</param>
+            <param name="x">The researched object.</param>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.RecConform(System.Collections.Generic.RBTreeNode{`0})">
+            <summary>
+            For debugging only. Checks whether the RBTree is conform
+            to the definition of the a red-black tree. If not an
+            exception is thrown.
+            </summary>
+            <param name="node">The root of the tree.</param>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.Comparer">
+            <summary>
+            Store the IComparer that allows to compare the node keys.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.Count">
+            <summary>
+            Gets the number of elements stored in RBTree.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.IsSynchronized">
+            <summary>
+            Gets a value indicating whether the access to RBTree is
+            synchronized (thread-safe).
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.SyncRoot">
+            <summary>
+            Gets an object that can be used to synchronize access
+            to RBTree
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.IsFixedSize">
+            <summary>
+            Gets a value indicating whether the RBTree has
+            a fixed size.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.IsReadOnly">
+            <summary>
+            Gets a value indicating whether the RBTree is
+            read-only.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.Max">
+            <summary>
+            Gets the highest element stored in the RBTree. The operation
+            is performed in a guaranteed logarithmic time of the size of RBTree.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.Min">
+            <summary>
+            Gets the lowest element stored in the RBTree. The operation
+            is performed in a guaranteed logarithmic time of the size of RBTree.
+            </summary>
+        </member>
+        <member name="T:System.Collections.Generic.RBTree`1.Enumerator">
+            <remarks>
+            RBTreeEnumerator could be instancied only through the
+            RBTree.GetEnumerator method. If the RBTree is modified
+            after the instanciation of RBTreeEnumerator, then
+            RBTreeEnumerator become invalid. Any attempt to read or
+            iterate will throw an exception. The elements contained
+            in the RBTree are iterated following the order provided
+            to the RBTree (ascending order).
+            </remarks>
+        </member>
+        <member name="F:System.Collections.Generic.RBTree`1.Enumerator.current">
+            <summary>
+            The current node (or null if none)
+            </summary>
+        </member>
+        <member name="F:System.Collections.Generic.RBTree`1.Enumerator.tree">
+            <summary>
+            Reference to the RBTree which has instanciated the
+            RBTreeEnumerator.
+            </summary>
+        </member>
+        <member name="F:System.Collections.Generic.RBTree`1.Enumerator.started">
+            <summary>
+            Store the state of the RBTreeEnumerator. If 
+            <c>!started</c> then the current position is
+            before the first element of the RBTree.
+            </summary>
+        </member>
+        <member name="F:System.Collections.Generic.RBTree`1.Enumerator.isValid">
+            <summary>
+            Store the the state of the RBTreeEnumerator. If
+            <c>!isValid</c>, any attempt to read or iterate 
+            will throw an exception.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Enumerator.#ctor(System.Collections.Generic.RBTree{`0})">
+            <summary>
+            Initializes an new instance of Collections.System.RBTreeEnumerator
+            class. The current position is before the first element.
+            </summary>
+            <param name="t">The RBTree which will be enumerate.</param>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Enumerator.MoveNext">
+            <summary>
+            Advances the RBTreeEnumerator the next element of the RBTree.
+            Returns whether the move was possible.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Enumerator.Reset">
+            <summary>
+            Sets the enumerator the its initial position which is before
+            the first element of the RBTree.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Enumerator.Invalidate">
+            <summary>
+            Invalidates the RBTreeEnumerator.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTree`1.Enumerator.Clone">
+            <summary>
+            Returns a copy of this enumerator which can be stored or enumerated separately.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTree`1.Enumerator.Current">
+            <summary>
+            Gets the current element in the RBTree.
+            </summary>
+        </member>
+        <member name="T:System.Collections.Generic.RBTreeNode`1">
+            <remarks>
+            RBTreeNode is simple colored binary tree node which
+            contains a key.
+            </remarks>
+        </member>
+        <member name="F:System.Collections.Generic.RBTreeNode`1.father">
+            <summary>
+            References to the other elements of the RBTree.
+            </summary>
+        </member>
+        <member name="F:System.Collections.Generic.RBTreeNode`1.left">
+            <summary>
+            References to the other elements of the RBTree.
+            </summary>
+        </member>
+        <member name="F:System.Collections.Generic.RBTreeNode`1.right">
+            <summary>
+            References to the other elements of the RBTree.
+            </summary>
+        </member>
+        <member name="F:System.Collections.Generic.RBTreeNode`1.key">
+            <summary>
+            Reference to the object contained by the RBTreeNode.
+            </summary>
+        </member>
+        <member name="F:System.Collections.Generic.RBTreeNode`1.color">
+            <summary>
+            The color of the node (red = true, black = false).
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTreeNode`1.#ctor">
+            <summary>
+            Initializes an new instance of Collections.System.RBTreeNode
+            class. All references are set to null.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.RBTreeNode`1.#ctor(`0,System.Collections.Generic.RBTreeNode{`0})">
+            <summary>
+            Initializes an new instance of Collections.System.RBTreeNode
+            class and partially insert the RBTreeNode into a tree.
+            </summary>
+            <param name="k">Key of the RBTreeNode</param>
+            <param name="fatherRBTreeNode">The father node of the instanciated RBTreeNode.</param>
+        </member>
+        <member name="P:System.Collections.Generic.RBTreeNode`1.Key">
+            <summary>
+            Gets or sets the key of the RBTreeNode.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTreeNode`1.Father">
+            <summary>
+            Gets or sets the father of the RBTreeNode.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTreeNode`1.Left">
+            <summary>
+            Gets or sets the left children of the RBTreeNode.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTreeNode`1.Right">
+            <summary>
+            Gets or sets the right children of the RBTreeNode.
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.RBTreeNode`1.Color">
+            <summary>
+            Gets or sets the color of the RBTreeNode.
+            </summary>
+        </member>
+        <member name="T:System.Collections.Generic.Set`1">
+            <summmary>
+            STL-like set container (unique sorted sequence);
+            supports common set operations as member functions
+            </summmary>
+            <remarks>
+            Author: Matt Chambers
+            </remarks>
+            <exception>
+            ?
+            </exception>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.#ctor">
+            <summary>
+            Constructs an empty set using IComparable&lt;T&gt;
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.#ctor(System.Collections.Generic.IComparer{`0})">
+            <summary>
+            Constructs an empty set using the specified comparer
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.#ctor(System.Comparison{`0})">
+            <summary>
+            Constructs an empty set using the specified comparison
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.#ctor(System.Collections.Generic.Set{`0})">
+            <summary>
+            Copies the other set using IComparable&lt;T&gt;
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.#ctor(System.Collections.Generic.Set{`0},System.Collections.Generic.IComparer{`0})">
+            <summary>
+            Copies the other set using the specified comparer
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.#ctor(System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            Copies the other collection using 
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.Generate(System.Collections.Generic.Set{`0},System.Collections.Generic.Set{`0},System.Collections.Generic.Set{`0},System.Boolean)">
+            <summary>
+            Helper function that does most of the work in the class.
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.op_BitwiseOr(System.Collections.Generic.Set{`0},System.Collections.Generic.Set{`0})">
+            <summary>
+            Generates a new set that is the union of set1 and set2
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.UnionCopy(System.Collections.Generic.Set{`0})">
+            <summary>
+            Generates a new set that is the union of set1 and set2
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.Union(System.Collections.Generic.Set{`0})">
+            <summary>
+            Inserts the other set's elements into this set
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.op_BitwiseAnd(System.Collections.Generic.Set{`0},System.Collections.Generic.Set{`0})">
+            <summary>
+            Generates a new set that is the intersection of set1 and set2
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.Intersection(System.Collections.Generic.Set{`0})">
+            <summary>
+            Generates a new set that is the intersection of this and the other set
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.op_ExclusiveOr(System.Collections.Generic.Set{`0},System.Collections.Generic.Set{`0})">
+            <summary>
+            Generates a new set that contains elements in set1 or set2, but not in both (XOR)
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.ExclusiveOr(System.Collections.Generic.Set{`0})">
+            <summary>
+            Generates a new set that contains elements in set1 or set2, but not in both (XOR)
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.Subtract(System.Collections.Generic.Set{`0})">
+            <summary>
+            Subtracts elements from the other set from this set
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.op_Subtraction(System.Collections.Generic.Set{`0},System.Collections.Generic.Set{`0})">
+            <summary>
+            Generates a new set that is the difference of set1 and set2
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.Difference(System.Collections.Generic.Set{`0})">
+            <summary>
+            Generates a new set that is the difference of set1 and set2
+            </summary>
+        </member>
+        <member name="M:System.Collections.Generic.Set`1.CompareTo(System.Collections.Generic.Set{`0})">
+            <summary>
+            Pairwise comparison of the set with another set
+            </summary>
+        </member>
+        <member name="P:System.Collections.Generic.Set`1.Keys">
+            <summary>
+            Retrieves the list of elements as a flat list
+            </summary>
+        </member>
+    </members>
+</doc>

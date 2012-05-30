@@ -1,0 +1,2882 @@
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (69a41753).
+//
+// c:\proj\util\buildltqmethod\debug\ltmethod.tlh
+//
+// C++ source equivalent of Win32 type library C:\\XCalibur\\system\\LTQ\\programs\\LTMethod.dll
+// compiler-generated file created 09/07/09 at 19:43:17 - DO NOT EDIT!
+
+#pragma once
+#pragma pack(push, 8)
+
+#include <comdef.h>
+
+namespace LTMETHODLib {
+
+//
+// Forward references and typedefs
+//
+
+struct __declspec(uuid("afd37da1-52b5-48b0-b9ae-75bb925aa3aa"))
+/* LIBID */ __LTMETHODLib;
+struct __declspec(uuid("1c879568-7ed9-45f0-a30e-b0798496e373"))
+/* dual interface */ ILCQMethod;
+struct __declspec(uuid("9b1cfd11-e05f-4de0-8be0-268c8625e362"))
+/* dual interface */ ILCQTune;
+struct __declspec(uuid("ffee3cf9-9fd9-4d46-8027-ecbd0c5bddd6"))
+/* dual interface */ ILCQCal;
+struct /* coclass */ LCQMethod;
+struct /* coclass */ LCQTune;
+struct /* coclass */ LCQCal;
+
+//
+// Smart pointer typedef declarations
+//
+
+_COM_SMARTPTR_TYPEDEF(ILCQMethod, __uuidof(ILCQMethod));
+_COM_SMARTPTR_TYPEDEF(ILCQTune, __uuidof(ILCQTune));
+_COM_SMARTPTR_TYPEDEF(ILCQCal, __uuidof(ILCQCal));
+
+//
+// Type library items
+//
+
+struct __declspec(uuid("1c879568-7ed9-45f0-a30e-b0798496e373"))
+ILCQMethod : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetLTQModel))
+    short LTQModel;
+    __declspec(property(get=GetLTQSubModel))
+    short LTQSubModel;
+    __declspec(property(get=GetHybridModel))
+    short HybridModel;
+    __declspec(property(get=GetHybridSubModel))
+    short HybridSubModel;
+    __declspec(property(get=GetSWVersion))
+    _bstr_t SWVersion;
+    __declspec(property(get=GetAcquireTime,put=PutAcquireTime))
+    double AcquireTime;
+    __declspec(property(get=GetNumSegments,put=PutNumSegments))
+    short NumSegments;
+    __declspec(property(get=GetNumScanEvents,put=PutNumScanEvents))
+    short NumScanEvents;
+    __declspec(property(get=GetCurrentSegment,put=PutCurrentSegment))
+    short CurrentSegment;
+    __declspec(property(get=GetCurrentScanEvent,put=PutCurrentScanEvent))
+    short CurrentScanEvent;
+    __declspec(property(get=GetTuneMethod,put=PutTuneMethod))
+    _bstr_t TuneMethod;
+    __declspec(property(get=GetSegmentTime,put=PutSegmentTime))
+    double SegmentTime;
+    __declspec(property(get=GetSourceFragmentation,put=PutSourceFragmentation))
+    long SourceFragmentation;
+    __declspec(property(get=GetSourceFragmentationPotential,put=PutSourceFragmentationPotential))
+    float SourceFragmentationPotential;
+    __declspec(property(get=GetScanRate,put=PutScanRate))
+    short ScanRate;
+    __declspec(property(get=GetDependentScan,put=PutDependentScan))
+    long DependentScan;
+    __declspec(property(get=GetPolarity,put=PutPolarity))
+    short Polarity;
+    __declspec(property(get=GetScanMassRange,put=PutScanMassRange))
+    short ScanMassRange;
+    __declspec(property(get=GetInjectionRF,put=PutInjectionRF))
+    float InjectionRF;
+    __declspec(property(get=GetScanMode,put=PutScanMode))
+    short ScanMode;
+    __declspec(property(get=GetScanType,put=PutScanType))
+    short ScanType;
+    __declspec(property(get=GetDataType,put=PutDataType))
+    short DataType;
+    __declspec(property(get=GetWidebandActivation,put=PutWidebandActivation))
+    long WidebandActivation;
+    __declspec(property(get=GetStartDelay,put=PutStartDelay))
+    float StartDelay;
+    __declspec(property(get=GetAdvancedFeatures,put=PutAdvancedFeatures))
+    long AdvancedFeatures;
+    __declspec(property(get=GetRealTime,put=PutRealTime))
+    long RealTime;
+    __declspec(property(get=GetNumReactions,put=PutNumReactions))
+    short NumReactions;
+    __declspec(property(get=GetNumMassRanges,put=PutNumMassRanges))
+    short NumMassRanges;
+    __declspec(property(get=GetDataDepExclusionMassWidth,put=PutDataDepExclusionMassWidth))
+    double DataDepExclusionMassWidth;
+    __declspec(property(get=GetDataDepRejectMassWidth,put=PutDataDepRejectMassWidth))
+    double DataDepRejectMassWidth;
+    __declspec(property(get=GetDataDepAddSubMass,put=PutDataDepAddSubMass))
+    long DataDepAddSubMass;
+    __declspec(property(get=GetDataDepAddSubMassValue,put=PutDataDepAddSubMassValue))
+    double DataDepAddSubMassValue;
+    __declspec(property(get=GetAnalogDataDep,put=PutAnalogDataDep))
+    long AnalogDataDep;
+    __declspec(property(get=GetAnalogDataDepChannel,put=PutAnalogDataDepChannel))
+    short AnalogDataDepChannel;
+    __declspec(property(get=GetAnalogDataDepThreshold,put=PutAnalogDataDepThreshold))
+    double AnalogDataDepThreshold;
+    __declspec(property(get=GetDynamicExclusion,put=PutDynamicExclusion))
+    long DynamicExclusion;
+    __declspec(property(get=GetDynamicExclusionRepeatCount,put=PutDynamicExclusionRepeatCount))
+    short DynamicExclusionRepeatCount;
+    __declspec(property(get=GetDynamicExclusionRepeatDuration,put=PutDynamicExclusionRepeatDuration))
+    float DynamicExclusionRepeatDuration;
+    __declspec(property(get=GetDynamicExclusionExclusionMassWidth,put=PutDynamicExclusionExclusionMassWidth))
+    float DynamicExclusionExclusionMassWidth;
+    __declspec(property(get=GetDynamicExclusionExclusionDuration,put=PutDynamicExclusionExclusionDuration))
+    float DynamicExclusionExclusionDuration;
+    __declspec(property(get=GetIsotopicDataDep,put=PutIsotopicDataDep))
+    long IsotopicDataDep;
+    __declspec(property(get=GetIsotopicDataDepMatchTolerance,put=PutIsotopicDataDepMatchTolerance))
+    double IsotopicDataDepMatchTolerance;
+    __declspec(property(get=GetIsotopicDataDepNumMassDifferences,put=PutIsotopicDataDepNumMassDifferences))
+    short IsotopicDataDepNumMassDifferences;
+    __declspec(property(get=GetDataDepNumParentMasses,put=PutDataDepNumParentMasses))
+    short DataDepNumParentMasses;
+    __declspec(property(get=GetDataDepNumRejectMasses,put=PutDataDepNumRejectMasses))
+    short DataDepNumRejectMasses;
+    __declspec(property(get=GetDataDepMode,put=PutDataDepMode))
+    short DataDepMode;
+    __declspec(property(get=GetDataDepNthMostIntenseIon,put=PutDataDepNthMostIntenseIon))
+    short DataDepNthMostIntenseIon;
+    __declspec(property(get=GetSummary))
+    _bstr_t Summary;
+    __declspec(property(get=GetUseSyringePump,put=PutUseSyringePump))
+    long UseSyringePump;
+    __declspec(property(get=GetSyringeType,put=PutSyringeType))
+    short SyringeType;
+    __declspec(property(get=GetSyringeVolume,put=PutSyringeVolume))
+    float SyringeVolume;
+    __declspec(property(get=GetSyringeID,put=PutSyringeID))
+    float SyringeID;
+    __declspec(property(get=GetSyringeFlowRate,put=PutSyringeFlowRate))
+    float SyringeFlowRate;
+    __declspec(property(get=GetStopSyringeAtEndOfRun,put=PutStopSyringeAtEndOfRun))
+    long StopSyringeAtEndOfRun;
+    __declspec(property(get=GetExternalTrigger,put=PutExternalTrigger))
+    long ExternalTrigger;
+    __declspec(property(get=GetSendExternalTriggerBasedOn,put=PutSendExternalTriggerBasedOn))
+    short SendExternalTriggerBasedOn;
+    __declspec(property(get=GetExternalTriggerSignalThreshold,put=PutExternalTriggerSignalThreshold))
+    double ExternalTriggerSignalThreshold;
+    __declspec(property(get=GetExternalTriggerRejectMassWidth,put=PutExternalTriggerRejectMassWidth))
+    double ExternalTriggerRejectMassWidth;
+    __declspec(property(get=GetDivertValve,put=PutDivertValve))
+    long DivertValve;
+    __declspec(property(get=GetDivertValveNumValvePositions,put=PutDivertValveNumValvePositions))
+    short DivertValveNumValvePositions;
+    __declspec(property(get=GetDivertValvePositionAtStartOfRun,put=PutDivertValvePositionAtStartOfRun))
+    short DivertValvePositionAtStartOfRun;
+    __declspec(property(get=GetContactClosure,put=PutContactClosure))
+    long ContactClosure;
+    __declspec(property(get=GetContactClosureNumSwitches,put=PutContactClosureNumSwitches))
+    short ContactClosureNumSwitches;
+    __declspec(property(get=GetContactClosurePositionAtStartOfRun,put=PutContactClosurePositionAtStartOfRun))
+    short ContactClosurePositionAtStartOfRun;
+    __declspec(property(get=GetCustomDD,put=PutCustomDD))
+    long CustomDD;
+    __declspec(property(get=GetCustomDDDivertValve,put=PutCustomDDDivertValve))
+    long CustomDDDivertValve;
+    __declspec(property(get=GetCustomDDHighVoltage,put=PutCustomDDHighVoltage))
+    long CustomDDHighVoltage;
+    __declspec(property(get=GetCustomDDSpareTrigger,put=PutCustomDDSpareTrigger))
+    long CustomDDSpareTrigger;
+    __declspec(property(get=GetCustomDDContactClosure,put=PutCustomDDContactClosure))
+    long CustomDDContactClosure;
+    __declspec(property(get=GetCustomDDActivationThreshold,put=PutCustomDDActivationThreshold))
+    double CustomDDActivationThreshold;
+    __declspec(property(get=GetCustomDDDeactivationHysteresis,put=PutCustomDDDeactivationHysteresis))
+    double CustomDDDeactivationHysteresis;
+    __declspec(property(get=GetCustomDDHighVoltageDelta,put=PutCustomDDHighVoltageDelta))
+    long CustomDDHighVoltageDelta;
+    __declspec(property(get=GetCustomDDStabilizationTime,put=PutCustomDDStabilizationTime))
+    long CustomDDStabilizationTime;
+    __declspec(property(get=GetCustomDDDependenceMode,put=PutCustomDDDependenceMode))
+    short CustomDDDependenceMode;
+    __declspec(property(get=GetCustomDDNumMasses,put=PutCustomDDNumMasses))
+    short CustomDDNumMasses;
+    __declspec(property(get=GetCustomDDNumPosAdducts,put=PutCustomDDNumPosAdducts))
+    short CustomDDNumPosAdducts;
+    __declspec(property(get=GetCustomDDNumNegAdducts,put=PutCustomDDNumNegAdducts))
+    short CustomDDNumNegAdducts;
+    __declspec(property(get=GetDataDepFallThroughToNthMostIntense,put=PutDataDepFallThroughToNthMostIntense))
+    long DataDepFallThroughToNthMostIntense;
+    __declspec(property(get=GetEnableValidation,put=PutEnableValidation))
+    long EnableValidation;
+    __declspec(property(get=GetDataDepExclusionMassWidthType,put=PutDataDepExclusionMassWidthType))
+    short DataDepExclusionMassWidthType;
+    __declspec(property(get=GetDataDepExclusionMassWidthLow,put=PutDataDepExclusionMassWidthLow))
+    double DataDepExclusionMassWidthLow;
+    __declspec(property(get=GetDataDepExclusionMassWidthHigh,put=PutDataDepExclusionMassWidthHigh))
+    double DataDepExclusionMassWidthHigh;
+    __declspec(property(get=GetDataDepRejectMassWidthType,put=PutDataDepRejectMassWidthType))
+    short DataDepRejectMassWidthType;
+    __declspec(property(get=GetDataDepRejectMassWidthLow,put=PutDataDepRejectMassWidthLow))
+    double DataDepRejectMassWidthLow;
+    __declspec(property(get=GetDataDepRejectMassWidthHigh,put=PutDataDepRejectMassWidthHigh))
+    double DataDepRejectMassWidthHigh;
+    __declspec(property(get=GetDynamicExclusionExclusionMassWidthType,put=PutDynamicExclusionExclusionMassWidthType))
+    short DynamicExclusionExclusionMassWidthType;
+    __declspec(property(get=GetDynamicExclusionExclusionMassWidthLow,put=PutDynamicExclusionExclusionMassWidthLow))
+    double DynamicExclusionExclusionMassWidthLow;
+    __declspec(property(get=GetDynamicExclusionExclusionMassWidthHigh,put=PutDynamicExclusionExclusionMassWidthHigh))
+    double DynamicExclusionExclusionMassWidthHigh;
+    __declspec(property(get=GetDataDepMSnSelectionRangeType,put=PutDataDepMSnSelectionRangeType))
+    short DataDepMSnSelectionRangeType;
+    __declspec(property(get=GetDataDepZoomScanRangeType,put=PutDataDepZoomScanRangeType))
+    short DataDepZoomScanRangeType;
+    __declspec(property(get=GetDataDepZoomScanRangeLow,put=PutDataDepZoomScanRangeLow))
+    double DataDepZoomScanRangeLow;
+    __declspec(property(get=GetDataDepZoomScanRangeHigh,put=PutDataDepZoomScanRangeHigh))
+    double DataDepZoomScanRangeHigh;
+    __declspec(property(get=GetExternalTriggerRejectMassWidthType,put=PutExternalTriggerRejectMassWidthType))
+    short ExternalTriggerRejectMassWidthType;
+    __declspec(property(get=GetExternalTriggerRejectMassWidthLow,put=PutExternalTriggerRejectMassWidthLow))
+    double ExternalTriggerRejectMassWidthLow;
+    __declspec(property(get=GetExternalTriggerRejectMassWidthHigh,put=PutExternalTriggerRejectMassWidthHigh))
+    double ExternalTriggerRejectMassWidthHigh;
+    __declspec(property(get=GetDynamicExclusionExclusionListSize,put=PutDynamicExclusionExclusionListSize))
+    short DynamicExclusionExclusionListSize;
+    __declspec(property(get=GetMassTags,put=PutMassTags))
+    long MassTags;
+    __declspec(property(get=GetMassTagsPartnerScanType,put=PutMassTagsPartnerScanType))
+    short MassTagsPartnerScanType;
+    __declspec(property(get=GetMassTagsNumMassDeltas,put=PutMassTagsNumMassDeltas))
+    short MassTagsNumMassDeltas;
+    __declspec(property(get=GetChargeStateScreening,put=PutChargeStateScreening))
+    long ChargeStateScreening;
+    __declspec(property(get=GetChargeStateExclusion,put=PutChargeStateExclusion))
+    long ChargeStateExclusion;
+    __declspec(property(get=GetMethodParamsInSeqRow,put=PutMethodParamsInSeqRow))
+    long MethodParamsInSeqRow;
+    __declspec(property(get=GetSyringeNumSwitches,put=PutSyringeNumSwitches))
+    short SyringeNumSwitches;
+    __declspec(property(get=GetSyringeStateAtStartOfRun,put=PutSyringeStateAtStartOfRun))
+    short SyringeStateAtStartOfRun;
+    __declspec(property(get=GetDataDepMasterEvent,put=PutDataDepMasterEvent))
+    short DataDepMasterEvent;
+    __declspec(property(get=GetDataDepSameMSOrder,put=PutDataDepSameMSOrder))
+    long DataDepSameMSOrder;
+    __declspec(property(get=GetScanResolution,put=PutScanResolution))
+    long ScanResolution;
+    __declspec(property(get=GetDynamicExclusionEarlyExpiration,put=PutDynamicExclusionEarlyExpiration))
+    long DynamicExclusionEarlyExpiration;
+    __declspec(property(get=GetDynamicExclusionExpirationCount,put=PutDynamicExclusionExpirationCount))
+    short DynamicExclusionExpirationCount;
+    __declspec(property(get=GetDynamicExclusionExpirationThreshold,put=PutDynamicExclusionExpirationThreshold))
+    float DynamicExclusionExpirationThreshold;
+    __declspec(property(get=GetDataDepNeutralLossSortMode,put=PutDataDepNeutralLossSortMode))
+    short DataDepNeutralLossSortMode;
+    __declspec(property(get=GetDataDepNeutralLossMassWidthType,put=PutDataDepNeutralLossMassWidthType))
+    short DataDepNeutralLossMassWidthType;
+    __declspec(property(get=GetDataDepNeutralLossMassWidthLow,put=PutDataDepNeutralLossMassWidthLow))
+    double DataDepNeutralLossMassWidthLow;
+    __declspec(property(get=GetDataDepNeutralLossMassWidthHigh,put=PutDataDepNeutralLossMassWidthHigh))
+    double DataDepNeutralLossMassWidthHigh;
+    __declspec(property(get=GetDataDepNumNeutralLossMasses,put=PutDataDepNumNeutralLossMasses))
+    short DataDepNumNeutralLossMasses;
+    __declspec(property(get=GetDataDepNeutralLossMassInNthMost,put=PutDataDepNeutralLossMassInNthMost))
+    short DataDepNeutralLossMassInNthMost;
+    __declspec(property(get=GetDataDepAnalyzeTopN,put=PutDataDepAnalyzeTopN))
+    short DataDepAnalyzeTopN;
+    __declspec(property(get=GetAnalyzer,put=PutAnalyzer))
+    short Analyzer;
+    __declspec(property(get=GetExperimentType,put=PutExperimentType))
+    short ExperimentType;
+    __declspec(property(get=GetEventECDActive,put=PutEventECDActive))
+    long EventECDActive;
+    __declspec(property(get=GetEventIRMPDActive,put=PutEventIRMPDActive))
+    long EventIRMPDActive;
+    __declspec(property(get=GetPosLockMassListName,put=PutPosLockMassListName))
+    _bstr_t PosLockMassListName;
+    __declspec(property(get=GetNumPosLockMasses,put=PutNumPosLockMasses))
+    short NumPosLockMasses;
+    __declspec(property(get=GetNegLockMassListName,put=PutNegLockMassListName))
+    _bstr_t NegLockMassListName;
+    __declspec(property(get=GetNumNegLockMasses,put=PutNumNegLockMasses))
+    short NumNegLockMasses;
+    __declspec(property(get=GetDataDepEventECDActive,put=PutDataDepEventECDActive))
+    long DataDepEventECDActive;
+    __declspec(property(get=GetDataDepEventIRMPDActive,put=PutDataDepEventIRMPDActive))
+    long DataDepEventIRMPDActive;
+    __declspec(property(get=GetChargeStateMonoisotopicPrecursors,put=PutChargeStateMonoisotopicPrecursors))
+    long ChargeStateMonoisotopicPrecursors;
+    __declspec(property(get=GetDataDepPreviewMode,put=PutDataDepPreviewMode))
+    long DataDepPreviewMode;
+    __declspec(property(get=GetDataDepChargeDepECDTime,put=PutDataDepChargeDepECDTime))
+    long DataDepChargeDepECDTime;
+    __declspec(property(get=GetUseSeparateSegmentPolarityValues,put=PutUseSeparateSegmentPolarityValues))
+    long UseSeparateSegmentPolarityValues;
+    __declspec(property(get=GetScanEventAssocMode,put=PutScanEventAssocMode))
+    short ScanEventAssocMode;
+    __declspec(property(get=GetDataDepExcludeParentMass,put=PutDataDepExcludeParentMass))
+    long DataDepExcludeParentMass;
+    __declspec(property(get=GetDataDepUseGlobalMassLists,put=PutDataDepUseGlobalMassLists))
+    long DataDepUseGlobalMassLists;
+    __declspec(property(get=GetEnableSteppedCollisionEnergy,put=PutEnableSteppedCollisionEnergy))
+    long EnableSteppedCollisionEnergy;
+    __declspec(property(get=GetSteppedCollisionEnergyNumSteps,put=PutSteppedCollisionEnergyNumSteps))
+    short SteppedCollisionEnergyNumSteps;
+    __declspec(property(get=GetSteppedCollisionEnergyWidth,put=PutSteppedCollisionEnergyWidth))
+    double SteppedCollisionEnergyWidth;
+    __declspec(property(get=GetChargeStateUseNonPeptideMonoisotopicRecognition,put=PutChargeStateUseNonPeptideMonoisotopicRecognition))
+    long ChargeStateUseNonPeptideMonoisotopicRecognition;
+    __declspec(property(get=GetDataDepInclusionMassWidth,put=PutDataDepInclusionMassWidth))
+    double DataDepInclusionMassWidth;
+    __declspec(property(get=GetDataDepInclusionMassWidthType,put=PutDataDepInclusionMassWidthType))
+    short DataDepInclusionMassWidthType;
+    __declspec(property(get=GetDataDepInclusionMassWidthLow,put=PutDataDepInclusionMassWidthLow))
+    double DataDepInclusionMassWidthLow;
+    __declspec(property(get=GetDataDepInclusionMassWidthHigh,put=PutDataDepInclusionMassWidthHigh))
+    double DataDepInclusionMassWidthHigh;
+    __declspec(property(get=GetDataDepSESignalThreshold,put=PutDataDepSESignalThreshold))
+    double DataDepSESignalThreshold;
+    __declspec(property(get=GetDataDepSEDefaultChargeState,put=PutDataDepSEDefaultChargeState))
+    short DataDepSEDefaultChargeState;
+    __declspec(property(get=GetDataDepSEDefaultCollisionEnergy,put=PutDataDepSEDefaultCollisionEnergy))
+    float DataDepSEDefaultCollisionEnergy;
+    __declspec(property(get=GetDataDepSEIsolationWidth,put=PutDataDepSEIsolationWidth))
+    float DataDepSEIsolationWidth;
+    __declspec(property(get=GetDataDepSEActivationQ,put=PutDataDepSEActivationQ))
+    float DataDepSEActivationQ;
+    __declspec(property(get=GetDataDepSEActivationTime,put=PutDataDepSEActivationTime))
+    double DataDepSEActivationTime;
+    __declspec(property(get=GetDataDepSEActivationType,put=PutDataDepSEActivationType))
+    short DataDepSEActivationType;
+    __declspec(property(get=GetDataDepSEHybridFirstMassMode,put=PutDataDepSEHybridFirstMassMode))
+    short DataDepSEHybridFirstMassMode;
+    __declspec(property(get=GetDataDepSEHybridFirstMassAutoFactor,put=PutDataDepSEHybridFirstMassAutoFactor))
+    float DataDepSEHybridFirstMassAutoFactor;
+    __declspec(property(get=GetDataDepSEHybridFirstMassFixedValue,put=PutDataDepSEHybridFirstMassFixedValue))
+    float DataDepSEHybridFirstMassFixedValue;
+    __declspec(property(get=GetDataDepNLECD,put=PutDataDepNLECD))
+    long DataDepNLECD;
+    __declspec(property(get=GetDataDepParentMassName,put=PutDataDepParentMassName))
+    _bstr_t DataDepParentMassName[];
+    __declspec(property(get=GetDataDepParentMS2Mass,put=PutDataDepParentMS2Mass))
+    double DataDepParentMS2Mass[];
+    __declspec(property(get=GetDataDepParentMassCollisionEnergy,put=PutDataDepParentMassCollisionEnergy))
+    double DataDepParentMassCollisionEnergy[];
+    __declspec(property(get=GetDataDepRejectMassName,put=PutDataDepRejectMassName))
+    _bstr_t DataDepRejectMassName[];
+    __declspec(property(get=GetDataDepNeutralLossMassName,put=PutDataDepNeutralLossMassName))
+    _bstr_t DataDepNeutralLossMassName[];
+    __declspec(property(get=GetDataDepPolarParentMassName,put=PutDataDepPolarParentMassName))
+    _bstr_t DataDepPolarParentMassName[][];
+    __declspec(property(get=GetDataDepPolarParentMS2Mass,put=PutDataDepPolarParentMS2Mass))
+    double DataDepPolarParentMS2Mass[][];
+    __declspec(property(get=GetDataDepPolarParentMassCollisionEnergy,put=PutDataDepPolarParentMassCollisionEnergy))
+    double DataDepPolarParentMassCollisionEnergy[][];
+    __declspec(property(get=GetDataDepPolarRejectMassName,put=PutDataDepPolarRejectMassName))
+    _bstr_t DataDepPolarRejectMassName[][];
+    __declspec(property(get=GetDataDepPolarNeutralLossMassName,put=PutDataDepPolarNeutralLossMassName))
+    _bstr_t DataDepPolarNeutralLossMassName[][];
+    __declspec(property(get=GetMassTimeWindowMassName,put=PutMassTimeWindowMassName))
+    _bstr_t MassTimeWindowMassName[][];
+    __declspec(property(get=GetMassTimeWindowMS2Mass,put=PutMassTimeWindowMS2Mass))
+    double MassTimeWindowMS2Mass[][];
+    __declspec(property(get=GetMassTimeWindowCollisionEnergy,put=PutMassTimeWindowCollisionEnergy))
+    double MassTimeWindowCollisionEnergy[][];
+    __declspec(property(get=GetMassTimeWindowLastMass,put=PutMassTimeWindowLastMass))
+    double MassTimeWindowLastMass[][];
+    __declspec(property(get=GetDataDepMS2ParentMassCollisionEnergy,put=PutDataDepMS2ParentMassCollisionEnergy))
+    double DataDepMS2ParentMassCollisionEnergy[];
+    __declspec(property(get=GetDataDepPolarMS2ParentMassCollisionEnergy,put=PutDataDepPolarMS2ParentMassCollisionEnergy))
+    double DataDepPolarMS2ParentMassCollisionEnergy[][];
+    __declspec(property(get=GetDataDepParentMassChargeState,put=PutDataDepParentMassChargeState))
+    long DataDepParentMassChargeState[];
+    __declspec(property(get=GetDataDepPolarParentMassChargeState,put=PutDataDepPolarParentMassChargeState))
+    long DataDepPolarParentMassChargeState[][];
+    __declspec(property(get=GetDataDepParentMassIntensityThreshold,put=PutDataDepParentMassIntensityThreshold))
+    double DataDepParentMassIntensityThreshold[];
+    __declspec(property(get=GetDataDepPolarParentMassIntensityThreshold,put=PutDataDepPolarParentMassIntensityThreshold))
+    double DataDepPolarParentMassIntensityThreshold[][];
+    __declspec(property(get=GetMassTimeWindowMS2CollisionEnergy,put=PutMassTimeWindowMS2CollisionEnergy))
+    double MassTimeWindowMS2CollisionEnergy[][];
+    __declspec(property(get=GetMassTimeWindowChargeState,put=PutMassTimeWindowChargeState))
+    long MassTimeWindowChargeState[][];
+    __declspec(property(get=GetMassTimeWindowIntensityThreshold,put=PutMassTimeWindowIntensityThreshold))
+    double MassTimeWindowIntensityThreshold[][];
+    __declspec(property(get=GetCVOn,put=PutCVOn))
+    VARIANT_BOOL CVOn;
+    __declspec(property(get=GetCV,put=PutCV))
+    double CV;
+    __declspec(property(get=GetDataDepProductSortMode,put=PutDataDepProductSortMode))
+    short DataDepProductSortMode;
+    __declspec(property(get=GetDataDepProductMassWidthType,put=PutDataDepProductMassWidthType))
+    short DataDepProductMassWidthType;
+    __declspec(property(get=GetDataDepProductMassWidthLow,put=PutDataDepProductMassWidthLow))
+    double DataDepProductMassWidthLow;
+    __declspec(property(get=GetDataDepProductMassWidthHigh,put=PutDataDepProductMassWidthHigh))
+    double DataDepProductMassWidthHigh;
+    __declspec(property(get=GetDataDepNumProductMasses,put=PutDataDepNumProductMasses))
+    short DataDepNumProductMasses;
+    __declspec(property(get=GetDataDepProductMassInNthMost,put=PutDataDepProductMassInNthMost))
+    short DataDepProductMassInNthMost;
+    __declspec(property(get=GetDataDepProductMassName,put=PutDataDepProductMassName))
+    _bstr_t DataDepProductMassName[];
+    __declspec(property(get=GetDataDepPolarProductMassName,put=PutDataDepPolarProductMassName))
+    _bstr_t DataDepPolarProductMassName[][];
+    __declspec(property(get=GetNumSteppedCVs,put=PutNumSteppedCVs))
+    unsigned short NumSteppedCVs;
+    __declspec(property(get=GetSteppedCVs,put=PutSteppedCVs))
+    double SteppedCVs[];
+    __declspec(property(get=GetDataDepUseMZAsMass,put=PutDataDepUseMZAsMass))
+    VARIANT_BOOL DataDepUseMZAsMass;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    short GetLTQModel ( );
+    short GetLTQSubModel ( );
+    short GetHybridModel ( );
+    short GetHybridSubModel ( );
+    _bstr_t GetSWVersion ( );
+    HRESULT Open (
+        _bstr_t szFileName );
+    HRESULT Close ( );
+    HRESULT Save ( );
+    HRESULT SaveAs (
+        _bstr_t szFileName );
+    HRESULT IsMethodValid (
+        long * bIsValid );
+    HRESULT New ( );
+    double GetAcquireTime ( );
+    void PutAcquireTime (
+        double pVal );
+    short GetNumSegments ( );
+    void PutNumSegments (
+        short pVal );
+    short GetNumScanEvents ( );
+    void PutNumScanEvents (
+        short pVal );
+    short GetCurrentSegment ( );
+    void PutCurrentSegment (
+        short pVal );
+    short GetCurrentScanEvent ( );
+    void PutCurrentScanEvent (
+        short pVal );
+    _bstr_t GetTuneMethod ( );
+    void PutTuneMethod (
+        _bstr_t pVal );
+    double GetSegmentTime ( );
+    void PutSegmentTime (
+        double pVal );
+    long GetSourceFragmentation ( );
+    void PutSourceFragmentation (
+        long pVal );
+    float GetSourceFragmentationPotential ( );
+    void PutSourceFragmentationPotential (
+        float pVal );
+    short GetScanRate ( );
+    void PutScanRate (
+        short pVal );
+    long GetDependentScan ( );
+    void PutDependentScan (
+        long pVal );
+    short GetPolarity ( );
+    void PutPolarity (
+        short pVal );
+    short GetScanMassRange ( );
+    void PutScanMassRange (
+        short pVal );
+    float GetInjectionRF ( );
+    void PutInjectionRF (
+        float pVal );
+    short GetScanMode ( );
+    void PutScanMode (
+        short pVal );
+    short GetScanType ( );
+    void PutScanType (
+        short pVal );
+    short GetDataType ( );
+    void PutDataType (
+        short pVal );
+    long GetWidebandActivation ( );
+    void PutWidebandActivation (
+        long pVal );
+    float GetStartDelay ( );
+    void PutStartDelay (
+        float pVal );
+    long GetAdvancedFeatures ( );
+    void PutAdvancedFeatures (
+        long pVal );
+    long GetRealTime ( );
+    void PutRealTime (
+        long pVal );
+    short GetNumReactions ( );
+    void PutNumReactions (
+        short pVal );
+    HRESULT SetReaction (
+        short nReactionIndex,
+        double dPrecursorMass,
+        double dIsolationWidth,
+        double dCollisionEnergy,
+        float fActivationQ,
+        double dActivationTime );
+    HRESULT GetReaction (
+        short nReactionIndex,
+        double * pdPrecursorMass,
+        double * pdIsolationWidth,
+        double * pdCollisionEnergy,
+        float * pfActivationQ,
+        double * pdActivationTime );
+    short GetNumMassRanges ( );
+    void PutNumMassRanges (
+        short pVal );
+    HRESULT SetMassRange (
+        short nMassRangeIndex,
+        double dFirstMass,
+        double dLastMass );
+    HRESULT GetMassRange (
+        short nMassRangeIndex,
+        double * pdFirstMass,
+        double * pdLastMass );
+    HRESULT InsertScanEvent (
+        short nInsertIndex,
+        short * pnInsertedIndex );
+    HRESULT InsertScanEventByCopy (
+        short nInsertSegmentIndex,
+        short nInsertScanEventIndex,
+        short * pnInsertedSegmentIndex,
+        short * pnInsertedScanEventIndex );
+    HRESULT RemoveScanEvent ( );
+    HRESULT InsertSegment (
+        short nInsertIndex,
+        short * pnInsertedIndex );
+    HRESULT InsertSegmentByCopy (
+        short nInsertIndex,
+        short * pnInsertedIndex );
+    HRESULT RemoveSegment ( );
+    HRESULT AddScanEventsByCopy (
+        short nAddSegmentIndex,
+        short nNumScanEventsToAdd );
+    double GetDataDepExclusionMassWidth ( );
+    void PutDataDepExclusionMassWidth (
+        double pVal );
+    double GetDataDepRejectMassWidth ( );
+    void PutDataDepRejectMassWidth (
+        double pVal );
+    long GetDataDepAddSubMass ( );
+    void PutDataDepAddSubMass (
+        long pVal );
+    double GetDataDepAddSubMassValue ( );
+    void PutDataDepAddSubMassValue (
+        double pVal );
+    long GetAnalogDataDep ( );
+    void PutAnalogDataDep (
+        long pVal );
+    short GetAnalogDataDepChannel ( );
+    void PutAnalogDataDepChannel (
+        short pVal );
+    double GetAnalogDataDepThreshold ( );
+    void PutAnalogDataDepThreshold (
+        double pVal );
+    long GetDynamicExclusion ( );
+    void PutDynamicExclusion (
+        long pVal );
+    short GetDynamicExclusionRepeatCount ( );
+    void PutDynamicExclusionRepeatCount (
+        short pVal );
+    float GetDynamicExclusionRepeatDuration ( );
+    void PutDynamicExclusionRepeatDuration (
+        float pVal );
+    float GetDynamicExclusionExclusionMassWidth ( );
+    void PutDynamicExclusionExclusionMassWidth (
+        float pVal );
+    float GetDynamicExclusionExclusionDuration ( );
+    void PutDynamicExclusionExclusionDuration (
+        float pVal );
+    long GetIsotopicDataDep ( );
+    void PutIsotopicDataDep (
+        long pVal );
+    double GetIsotopicDataDepMatchTolerance ( );
+    void PutIsotopicDataDepMatchTolerance (
+        double pVal );
+    short GetIsotopicDataDepNumMassDifferences ( );
+    void PutIsotopicDataDepNumMassDifferences (
+        short pVal );
+    HRESULT GetMassDifferenceInfo (
+        int nIndex,
+        double * pdMassDifference,
+        double * pdExpectedRatio );
+    HRESULT SetMassDifferenceInfo (
+        int nIndex,
+        double dMassDifference,
+        double dExpectedRatio );
+    short GetDataDepNumParentMasses ( );
+    void PutDataDepNumParentMasses (
+        short pVal );
+    short GetDataDepNumRejectMasses ( );
+    void PutDataDepNumRejectMasses (
+        short pVal );
+    double GetDataDepParentMass (
+        short nIndex );
+    void PutDataDepParentMass (
+        short nIndex,
+        double pVal );
+    double GetDataDepRejectMass (
+        short nIndex );
+    void PutDataDepRejectMass (
+        short nIndex,
+        double pVal );
+    short GetDataDepMode ( );
+    void PutDataDepMode (
+        short pVal );
+    short GetDataDepNthMostIntenseIon ( );
+    void PutDataDepNthMostIntenseIon (
+        short pVal );
+    _bstr_t GetSummary ( );
+    long GetUseSyringePump ( );
+    void PutUseSyringePump (
+        long pVal );
+    short GetSyringeType ( );
+    void PutSyringeType (
+        short pVal );
+    float GetSyringeVolume ( );
+    void PutSyringeVolume (
+        float pVal );
+    float GetSyringeID ( );
+    void PutSyringeID (
+        float pVal );
+    float GetSyringeFlowRate ( );
+    void PutSyringeFlowRate (
+        float pVal );
+    long GetStopSyringeAtEndOfRun ( );
+    void PutStopSyringeAtEndOfRun (
+        long pVal );
+    long GetExternalTrigger ( );
+    void PutExternalTrigger (
+        long pVal );
+    short GetSendExternalTriggerBasedOn ( );
+    void PutSendExternalTriggerBasedOn (
+        short pVal );
+    double GetExternalTriggerSignalThreshold ( );
+    void PutExternalTriggerSignalThreshold (
+        double pVal );
+    double GetExternalTriggerRejectMassWidth ( );
+    void PutExternalTriggerRejectMassWidth (
+        double pVal );
+    long GetDivertValve ( );
+    void PutDivertValve (
+        long pVal );
+    short GetDivertValveNumValvePositions ( );
+    void PutDivertValveNumValvePositions (
+        short pVal );
+    short GetDivertValvePositionAtStartOfRun ( );
+    void PutDivertValvePositionAtStartOfRun (
+        short pVal );
+    double GetDivertValvePositionDuration (
+        short nIndex );
+    void PutDivertValvePositionDuration (
+        short nIndex,
+        double pVal );
+    long GetContactClosure ( );
+    void PutContactClosure (
+        long pVal );
+    short GetContactClosureNumSwitches ( );
+    void PutContactClosureNumSwitches (
+        short pVal );
+    short GetContactClosurePositionAtStartOfRun ( );
+    void PutContactClosurePositionAtStartOfRun (
+        short pVal );
+    double GetContactClosureSwitchDuration (
+        short nIndex );
+    void PutContactClosureSwitchDuration (
+        short nIndex,
+        double pVal );
+    long GetCustomDD ( );
+    void PutCustomDD (
+        long pVal );
+    long GetCustomDDDivertValve ( );
+    void PutCustomDDDivertValve (
+        long pVal );
+    long GetCustomDDHighVoltage ( );
+    void PutCustomDDHighVoltage (
+        long pVal );
+    long GetCustomDDSpareTrigger ( );
+    void PutCustomDDSpareTrigger (
+        long pVal );
+    long GetCustomDDContactClosure ( );
+    void PutCustomDDContactClosure (
+        long pVal );
+    double GetCustomDDActivationThreshold ( );
+    void PutCustomDDActivationThreshold (
+        double pVal );
+    double GetCustomDDDeactivationHysteresis ( );
+    void PutCustomDDDeactivationHysteresis (
+        double pVal );
+    long GetCustomDDHighVoltageDelta ( );
+    void PutCustomDDHighVoltageDelta (
+        long pVal );
+    long GetCustomDDStabilizationTime ( );
+    void PutCustomDDStabilizationTime (
+        long pVal );
+    short GetCustomDDDependenceMode ( );
+    void PutCustomDDDependenceMode (
+        short pVal );
+    short GetCustomDDNumMasses ( );
+    void PutCustomDDNumMasses (
+        short pVal );
+    double GetCustomDDMass (
+        short nIndex );
+    void PutCustomDDMass (
+        short nIndex,
+        double pVal );
+    short GetCustomDDNumPosAdducts ( );
+    void PutCustomDDNumPosAdducts (
+        short pVal );
+    double GetCustomDDPosAdduct (
+        short nIndex );
+    void PutCustomDDPosAdduct (
+        short nIndex,
+        double pVal );
+    short GetCustomDDNumNegAdducts ( );
+    void PutCustomDDNumNegAdducts (
+        short pVal );
+    double GetCustomDDNegAdduct (
+        short nIndex );
+    void PutCustomDDNegAdduct (
+        short nIndex,
+        double pVal );
+    long GetDataDepFallThroughToNthMostIntense ( );
+    void PutDataDepFallThroughToNthMostIntense (
+        long pVal );
+    long GetEnableValidation ( );
+    void PutEnableValidation (
+        long pVal );
+    short GetDataDepExclusionMassWidthType ( );
+    void PutDataDepExclusionMassWidthType (
+        short pVal );
+    double GetDataDepExclusionMassWidthLow ( );
+    void PutDataDepExclusionMassWidthLow (
+        double pVal );
+    double GetDataDepExclusionMassWidthHigh ( );
+    void PutDataDepExclusionMassWidthHigh (
+        double pVal );
+    short GetDataDepRejectMassWidthType ( );
+    void PutDataDepRejectMassWidthType (
+        short pVal );
+    double GetDataDepRejectMassWidthLow ( );
+    void PutDataDepRejectMassWidthLow (
+        double pVal );
+    double GetDataDepRejectMassWidthHigh ( );
+    void PutDataDepRejectMassWidthHigh (
+        double pVal );
+    short GetDynamicExclusionExclusionMassWidthType ( );
+    void PutDynamicExclusionExclusionMassWidthType (
+        short pVal );
+    double GetDynamicExclusionExclusionMassWidthLow ( );
+    void PutDynamicExclusionExclusionMassWidthLow (
+        double pVal );
+    double GetDynamicExclusionExclusionMassWidthHigh ( );
+    void PutDynamicExclusionExclusionMassWidthHigh (
+        double pVal );
+    HRESULT SetDataDepMSSelectionRange (
+        double dFirstMass,
+        double dLastMass );
+    HRESULT GetDataDepMSSelectionRange (
+        double * pdFirstMass,
+        double * pdLastMass );
+    short GetDataDepMSnSelectionRangeType ( );
+    void PutDataDepMSnSelectionRangeType (
+        short pVal );
+    HRESULT SetDataDepMSnSelectionRange (
+        double dFirstValue,
+        double dLastValue );
+    HRESULT GetDataDepMSnSelectionRange (
+        double * pdFirstValue,
+        double * pdLastValue );
+    short GetDataDepZoomScanRangeType ( );
+    void PutDataDepZoomScanRangeType (
+        short pVal );
+    double GetDataDepZoomScanRangeLow ( );
+    void PutDataDepZoomScanRangeLow (
+        double pVal );
+    double GetDataDepZoomScanRangeHigh ( );
+    void PutDataDepZoomScanRangeHigh (
+        double pVal );
+    short GetExternalTriggerRejectMassWidthType ( );
+    void PutExternalTriggerRejectMassWidthType (
+        short pVal );
+    double GetExternalTriggerRejectMassWidthLow ( );
+    void PutExternalTriggerRejectMassWidthLow (
+        double pVal );
+    double GetExternalTriggerRejectMassWidthHigh ( );
+    void PutExternalTriggerRejectMassWidthHigh (
+        double pVal );
+    short GetDynamicExclusionExclusionListSize ( );
+    void PutDynamicExclusionExclusionListSize (
+        short pVal );
+    long GetMassTags ( );
+    void PutMassTags (
+        long pVal );
+    HRESULT SetMassTagsPartnerIntensityRange (
+        double dMinIntensity,
+        double dMaxIntensity );
+    HRESULT GetMassTagsPartnerIntensityRange (
+        double * pdMinIntensity,
+        double * pdMaxIntensity );
+    short GetMassTagsPartnerScanType ( );
+    void PutMassTagsPartnerScanType (
+        short pVal );
+    short GetMassTagsNumMassDeltas ( );
+    void PutMassTagsNumMassDeltas (
+        short pVal );
+    double GetMassTagsMassDelta (
+        short nIndex );
+    void PutMassTagsMassDelta (
+        short nIndex,
+        double pVal );
+    long GetChargeStateScreening ( );
+    void PutChargeStateScreening (
+        long pVal );
+    long GetChargeStateExclusion ( );
+    void PutChargeStateExclusion (
+        long pVal );
+    long GetChargeStateExclusionChargeState (
+        short nChargeState );
+    void PutChargeStateExclusionChargeState (
+        short nChargeState,
+        long pVal );
+    long GetMethodParamsInSeqRow ( );
+    void PutMethodParamsInSeqRow (
+        long pVal );
+    short GetSyringeNumSwitches ( );
+    void PutSyringeNumSwitches (
+        short pVal );
+    short GetSyringeStateAtStartOfRun ( );
+    void PutSyringeStateAtStartOfRun (
+        short pVal );
+    double GetSyringeStateDuration (
+        short nIndex );
+    void PutSyringeStateDuration (
+        short nIndex,
+        double pVal );
+    short GetDataDepMasterEvent ( );
+    void PutDataDepMasterEvent (
+        short pVal );
+    long GetDataDepSameMSOrder ( );
+    void PutDataDepSameMSOrder (
+        long pVal );
+    long GetScanResolution ( );
+    void PutScanResolution (
+        long pVal );
+    long GetDynamicExclusionEarlyExpiration ( );
+    void PutDynamicExclusionEarlyExpiration (
+        long pVal );
+    short GetDynamicExclusionExpirationCount ( );
+    void PutDynamicExclusionExpirationCount (
+        short pVal );
+    float GetDynamicExclusionExpirationThreshold ( );
+    void PutDynamicExclusionExpirationThreshold (
+        float pVal );
+    short GetDataDepNeutralLossSortMode ( );
+    void PutDataDepNeutralLossSortMode (
+        short pVal );
+    short GetDataDepNeutralLossMassWidthType ( );
+    void PutDataDepNeutralLossMassWidthType (
+        short pVal );
+    double GetDataDepNeutralLossMassWidthLow ( );
+    void PutDataDepNeutralLossMassWidthLow (
+        double pVal );
+    double GetDataDepNeutralLossMassWidthHigh ( );
+    void PutDataDepNeutralLossMassWidthHigh (
+        double pVal );
+    short GetDataDepNumNeutralLossMasses ( );
+    void PutDataDepNumNeutralLossMasses (
+        short pVal );
+    double GetDataDepNeutralLossMass (
+        short nIndex );
+    void PutDataDepNeutralLossMass (
+        short nIndex,
+        double pVal );
+    short GetDataDepNeutralLossMassInNthMost ( );
+    void PutDataDepNeutralLossMassInNthMost (
+        short pVal );
+    short GetDataDepAnalyzeTopN ( );
+    void PutDataDepAnalyzeTopN (
+        short pVal );
+    short GetAnalyzer ( );
+    void PutAnalyzer (
+        short pVal );
+    short GetExperimentType ( );
+    void PutExperimentType (
+        short pVal );
+    long GetEventECDActive ( );
+    void PutEventECDActive (
+        long pVal );
+    HRESULT SetEventECDSettings (
+        float fEnergy,
+        float fDelay,
+        float fDuration );
+    HRESULT GetEventECDSettings (
+        float * pfEnergy,
+        float * pfDelay,
+        float * pfDuration );
+    long GetEventIRMPDActive ( );
+    void PutEventIRMPDActive (
+        long pVal );
+    HRESULT SetEventIRMPDSettings (
+        float fEnergy,
+        float fDelay,
+        float fDuration );
+    HRESULT GetEventIRMPDSettings (
+        float * pfEnergy,
+        float * pfDelay,
+        float * pfDuration );
+    _bstr_t GetPosLockMassListName ( );
+    void PutPosLockMassListName (
+        _bstr_t pVal );
+    short GetNumPosLockMasses ( );
+    void PutNumPosLockMasses (
+        short pVal );
+    double GetPosLockMass (
+        short nIndex );
+    void PutPosLockMass (
+        short nIndex,
+        double pVal );
+    _bstr_t GetNegLockMassListName ( );
+    void PutNegLockMassListName (
+        _bstr_t pVal );
+    short GetNumNegLockMasses ( );
+    void PutNumNegLockMasses (
+        short pVal );
+    double GetNegLockMass (
+        short nIndex );
+    void PutNegLockMass (
+        short nIndex,
+        double pVal );
+    long GetDataDepEventECDActive ( );
+    void PutDataDepEventECDActive (
+        long pVal );
+    long GetDataDepEventIRMPDActive ( );
+    void PutDataDepEventIRMPDActive (
+        long pVal );
+    long GetChargeStateMonoisotopicPrecursors ( );
+    void PutChargeStateMonoisotopicPrecursors (
+        long pVal );
+    long GetDataDepPreviewMode ( );
+    void PutDataDepPreviewMode (
+        long pVal );
+    long GetDataDepChargeDepECDTime ( );
+    void PutDataDepChargeDepECDTime (
+        long pVal );
+    long GetUseSeparateSegmentPolarityValues ( );
+    void PutUseSeparateSegmentPolarityValues (
+        long pVal );
+    long GetNumMassTimeWindows (
+        short nIndex );
+    void PutNumMassTimeWindows (
+        short nIndex,
+        long pVal );
+    HRESULT SetMassTimeWindow (
+        short nIndex,
+        long nItem,
+        double dStartTime,
+        double dEndTime,
+        double dMass );
+    HRESULT GetMassTimeWindow (
+        short nIndex,
+        long nItem,
+        double * pdStartTime,
+        double * pdEndTime,
+        double * pdMass );
+    short GetScanEventAssocMode ( );
+    void PutScanEventAssocMode (
+        short pVal );
+    long GetDataDepExcludeParentMass ( );
+    void PutDataDepExcludeParentMass (
+        long pVal );
+    long GetDataDepUseGlobalMassLists ( );
+    void PutDataDepUseGlobalMassLists (
+        long pVal );
+    long GetEnableSteppedCollisionEnergy ( );
+    void PutEnableSteppedCollisionEnergy (
+        long pVal );
+    short GetSteppedCollisionEnergyNumSteps ( );
+    void PutSteppedCollisionEnergyNumSteps (
+        short pVal );
+    double GetSteppedCollisionEnergyWidth ( );
+    void PutSteppedCollisionEnergyWidth (
+        double pVal );
+    long GetChargeStateUseNonPeptideMonoisotopicRecognition ( );
+    void PutChargeStateUseNonPeptideMonoisotopicRecognition (
+        long pVal );
+    short GetDataDepPolarNumParentMasses (
+        short nPolarity );
+    void PutDataDepPolarNumParentMasses (
+        short nPolarity,
+        short pVal );
+    short GetDataDepPolarNumRejectMasses (
+        short nPolarity );
+    void PutDataDepPolarNumRejectMasses (
+        short nPolarity,
+        short pVal );
+    double GetDataDepPolarParentMass (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarParentMass (
+        short nPolarity,
+        short nIndex,
+        double pVal );
+    double GetDataDepPolarRejectMass (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarRejectMass (
+        short nPolarity,
+        short nIndex,
+        double pVal );
+    short GetDataDepPolarNumNeutralLossMasses (
+        short nPolarity );
+    void PutDataDepPolarNumNeutralLossMasses (
+        short nPolarity,
+        short pVal );
+    double GetDataDepPolarNeutralLossMass (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarNeutralLossMass (
+        short nPolarity,
+        short nIndex,
+        double pVal );
+    short GetDataDepPolarNeutralLossMassInNthMost (
+        short nPolarity );
+    void PutDataDepPolarNeutralLossMassInNthMost (
+        short nPolarity,
+        short pVal );
+    double GetDataDepInclusionMassWidth ( );
+    void PutDataDepInclusionMassWidth (
+        double pVal );
+    short GetDataDepInclusionMassWidthType ( );
+    void PutDataDepInclusionMassWidthType (
+        short pVal );
+    double GetDataDepInclusionMassWidthLow ( );
+    void PutDataDepInclusionMassWidthLow (
+        double pVal );
+    double GetDataDepInclusionMassWidthHigh ( );
+    void PutDataDepInclusionMassWidthHigh (
+        double pVal );
+    short GetDataDepAdditionalMicroscans (
+        short nIndex );
+    void PutDataDepAdditionalMicroscans (
+        short nIndex,
+        short pVal );
+    double GetDataDepTargetIncrement (
+        short nIndex );
+    void PutDataDepTargetIncrement (
+        short nIndex,
+        double pVal );
+    double GetDataDepSESignalThreshold ( );
+    void PutDataDepSESignalThreshold (
+        double pVal );
+    short GetDataDepSEDefaultChargeState ( );
+    void PutDataDepSEDefaultChargeState (
+        short pVal );
+    float GetDataDepSEDefaultCollisionEnergy ( );
+    void PutDataDepSEDefaultCollisionEnergy (
+        float pVal );
+    float GetDataDepSEIsolationWidth ( );
+    void PutDataDepSEIsolationWidth (
+        float pVal );
+    float GetDataDepSEActivationQ ( );
+    void PutDataDepSEActivationQ (
+        float pVal );
+    double GetDataDepSEActivationTime ( );
+    void PutDataDepSEActivationTime (
+        double pVal );
+    HRESULT SetReaction2 (
+        short nReactionIndex,
+        double dPrecursorMass,
+        short nActivationType,
+        double dIsolationWidth,
+        double dCollisionEnergy,
+        float fActivationQ,
+        double dActivationTime );
+    HRESULT GetReaction2 (
+        short nReactionIndex,
+        double * pdPrecursorMass,
+        short * pnActivationType,
+        double * pdIsolationWidth,
+        double * pdCollisionEnergy,
+        float * pfActivationQ,
+        double * pdActivationTime );
+    short GetDataDepSEActivationType ( );
+    void PutDataDepSEActivationType (
+        short pVal );
+    short GetDataDepSEHybridFirstMassMode ( );
+    void PutDataDepSEHybridFirstMassMode (
+        short pVal );
+    float GetDataDepSEHybridFirstMassAutoFactor ( );
+    void PutDataDepSEHybridFirstMassAutoFactor (
+        float pVal );
+    float GetDataDepSEHybridFirstMassFixedValue ( );
+    void PutDataDepSEHybridFirstMassFixedValue (
+        float pVal );
+    long GetDataDepNLECD ( );
+    void PutDataDepNLECD (
+        long pVal );
+    HRESULT SetDataDepSEECDSettings (
+        float fEnergy,
+        float fDelay,
+        float fDuration );
+    HRESULT GetDataDepSEECDSettings (
+        float * pfEnergy,
+        float * pfDelay,
+        float * pfDuration );
+    HRESULT SetDataDepSEIRMPDSettings (
+        float fEnergy,
+        float fDelay,
+        float fDuration );
+    HRESULT GetDataDepSEIRMPDSettings (
+        float * pfEnergy,
+        float * pfDelay,
+        float * pfDuration );
+    _bstr_t GetDataDepParentMassName (
+        short nIndex );
+    void PutDataDepParentMassName (
+        short nIndex,
+        _bstr_t pVal );
+    double GetDataDepParentMS2Mass (
+        short nIndex );
+    void PutDataDepParentMS2Mass (
+        short nIndex,
+        double pVal );
+    double GetDataDepParentMassCollisionEnergy (
+        short nIndex );
+    void PutDataDepParentMassCollisionEnergy (
+        short nIndex,
+        double pVal );
+    _bstr_t GetDataDepRejectMassName (
+        short nIndex );
+    void PutDataDepRejectMassName (
+        short nIndex,
+        _bstr_t pVal );
+    _bstr_t GetDataDepNeutralLossMassName (
+        short nIndex );
+    void PutDataDepNeutralLossMassName (
+        short nIndex,
+        _bstr_t pVal );
+    _bstr_t GetDataDepPolarParentMassName (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarParentMassName (
+        short nPolarity,
+        short nIndex,
+        _bstr_t pVal );
+    double GetDataDepPolarParentMS2Mass (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarParentMS2Mass (
+        short nPolarity,
+        short nIndex,
+        double pVal );
+    double GetDataDepPolarParentMassCollisionEnergy (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarParentMassCollisionEnergy (
+        short nPolarity,
+        short nIndex,
+        double pVal );
+    _bstr_t GetDataDepPolarRejectMassName (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarRejectMassName (
+        short nPolarity,
+        short nIndex,
+        _bstr_t pVal );
+    _bstr_t GetDataDepPolarNeutralLossMassName (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarNeutralLossMassName (
+        short nPolarity,
+        short nIndex,
+        _bstr_t pVal );
+    _bstr_t GetMassTimeWindowMassName (
+        short nIndex,
+        long nItem );
+    void PutMassTimeWindowMassName (
+        short nIndex,
+        long nItem,
+        _bstr_t pVal );
+    double GetMassTimeWindowMS2Mass (
+        short nIndex,
+        long nItem );
+    void PutMassTimeWindowMS2Mass (
+        short nIndex,
+        long nItem,
+        double pVal );
+    double GetMassTimeWindowCollisionEnergy (
+        short nIndex,
+        long nItem );
+    void PutMassTimeWindowCollisionEnergy (
+        short nIndex,
+        long nItem,
+        double pVal );
+    double GetMassTimeWindowLastMass (
+        short nIndex,
+        long nItem );
+    void PutMassTimeWindowLastMass (
+        short nIndex,
+        long nItem,
+        double pVal );
+    double GetDataDepMS2ParentMassCollisionEnergy (
+        short nIndex );
+    void PutDataDepMS2ParentMassCollisionEnergy (
+        short nIndex,
+        double pVal );
+    double GetDataDepPolarMS2ParentMassCollisionEnergy (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarMS2ParentMassCollisionEnergy (
+        short nPolarity,
+        short nIndex,
+        double pVal );
+    long GetDataDepParentMassChargeState (
+        short nIndex );
+    void PutDataDepParentMassChargeState (
+        short nIndex,
+        long pVal );
+    long GetDataDepPolarParentMassChargeState (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarParentMassChargeState (
+        short nPolarity,
+        short nIndex,
+        long pVal );
+    double GetDataDepParentMassIntensityThreshold (
+        short nIndex );
+    void PutDataDepParentMassIntensityThreshold (
+        short nIndex,
+        double pVal );
+    double GetDataDepPolarParentMassIntensityThreshold (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarParentMassIntensityThreshold (
+        short nPolarity,
+        short nIndex,
+        double pVal );
+    double GetMassTimeWindowMS2CollisionEnergy (
+        short nIndex,
+        long nItem );
+    void PutMassTimeWindowMS2CollisionEnergy (
+        short nIndex,
+        long nItem,
+        double pVal );
+    long GetMassTimeWindowChargeState (
+        short nIndex,
+        long nItem );
+    void PutMassTimeWindowChargeState (
+        short nIndex,
+        long nItem,
+        long pVal );
+    double GetMassTimeWindowIntensityThreshold (
+        short nIndex,
+        long nItem );
+    void PutMassTimeWindowIntensityThreshold (
+        short nIndex,
+        long nItem,
+        double pVal );
+    VARIANT_BOOL GetCVOn ( );
+    void PutCVOn (
+        VARIANT_BOOL pVal );
+    double GetCV ( );
+    void PutCV (
+        double pVal );
+    short GetDataDepProductSortMode ( );
+    void PutDataDepProductSortMode (
+        short pVal );
+    short GetDataDepProductMassWidthType ( );
+    void PutDataDepProductMassWidthType (
+        short pVal );
+    double GetDataDepProductMassWidthLow ( );
+    void PutDataDepProductMassWidthLow (
+        double pVal );
+    double GetDataDepProductMassWidthHigh ( );
+    void PutDataDepProductMassWidthHigh (
+        double pVal );
+    short GetDataDepNumProductMasses ( );
+    void PutDataDepNumProductMasses (
+        short pVal );
+    double GetDataDepProductMass (
+        short nIndex );
+    void PutDataDepProductMass (
+        short nIndex,
+        double pVal );
+    short GetDataDepProductMassInNthMost ( );
+    void PutDataDepProductMassInNthMost (
+        short pVal );
+    short GetDataDepPolarNumProductMasses (
+        short nPolarity );
+    void PutDataDepPolarNumProductMasses (
+        short nPolarity,
+        short pVal );
+    double GetDataDepPolarProductMass (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarProductMass (
+        short nPolarity,
+        short nIndex,
+        double pVal );
+    short GetDataDepPolarProductMassInNthMost (
+        short nPolarity );
+    void PutDataDepPolarProductMassInNthMost (
+        short nPolarity,
+        short pVal );
+    _bstr_t GetDataDepProductMassName (
+        short nIndex );
+    void PutDataDepProductMassName (
+        short nIndex,
+        _bstr_t pVal );
+    _bstr_t GetDataDepPolarProductMassName (
+        short nPolarity,
+        short nIndex );
+    void PutDataDepPolarProductMassName (
+        short nPolarity,
+        short nIndex,
+        _bstr_t pVal );
+    unsigned short GetNumSteppedCVs ( );
+    void PutNumSteppedCVs (
+        unsigned short pVal );
+    double GetSteppedCVs (
+        unsigned short unIndex );
+    void PutSteppedCVs (
+        unsigned short unIndex,
+        double pVal );
+    VARIANT_BOOL GetDataDepUseMZAsMass ( );
+    void PutDataDepUseMZAsMass (
+        VARIANT_BOOL pVal );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall get_LTQModel (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_LTQSubModel (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_HybridModel (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_HybridSubModel (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_SWVersion (
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall raw_Open (
+        BSTR szFileName ) = 0;
+      virtual HRESULT __stdcall raw_Close ( ) = 0;
+      virtual HRESULT __stdcall raw_Save ( ) = 0;
+      virtual HRESULT __stdcall raw_SaveAs (
+        BSTR szFileName ) = 0;
+      virtual HRESULT __stdcall raw_IsMethodValid (
+        long * bIsValid ) = 0;
+      virtual HRESULT __stdcall raw_New ( ) = 0;
+      virtual HRESULT __stdcall get_AcquireTime (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_AcquireTime (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_NumSegments (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_NumSegments (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_NumScanEvents (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_NumScanEvents (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_CurrentSegment (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_CurrentSegment (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_CurrentScanEvent (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_CurrentScanEvent (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_TuneMethod (
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_TuneMethod (
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_SegmentTime (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_SegmentTime (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_SourceFragmentation (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_SourceFragmentation (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_SourceFragmentationPotential (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_SourceFragmentationPotential (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_ScanRate (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ScanRate (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DependentScan (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DependentScan (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_Polarity (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_Polarity (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ScanMassRange (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ScanMassRange (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_InjectionRF (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_InjectionRF (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_ScanMode (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ScanMode (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ScanType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ScanType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_WidebandActivation (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_WidebandActivation (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_StartDelay (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_StartDelay (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_AdvancedFeatures (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_AdvancedFeatures (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_RealTime (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_RealTime (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_NumReactions (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_NumReactions (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetReaction (
+        short nReactionIndex,
+        double dPrecursorMass,
+        double dIsolationWidth,
+        double dCollisionEnergy,
+        float fActivationQ,
+        double dActivationTime ) = 0;
+      virtual HRESULT __stdcall raw_GetReaction (
+        short nReactionIndex,
+        double * pdPrecursorMass,
+        double * pdIsolationWidth,
+        double * pdCollisionEnergy,
+        float * pfActivationQ,
+        double * pdActivationTime ) = 0;
+      virtual HRESULT __stdcall get_NumMassRanges (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_NumMassRanges (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetMassRange (
+        short nMassRangeIndex,
+        double dFirstMass,
+        double dLastMass ) = 0;
+      virtual HRESULT __stdcall raw_GetMassRange (
+        short nMassRangeIndex,
+        double * pdFirstMass,
+        double * pdLastMass ) = 0;
+      virtual HRESULT __stdcall raw_InsertScanEvent (
+        short nInsertIndex,
+        short * pnInsertedIndex ) = 0;
+      virtual HRESULT __stdcall raw_InsertScanEventByCopy (
+        short nInsertSegmentIndex,
+        short nInsertScanEventIndex,
+        short * pnInsertedSegmentIndex,
+        short * pnInsertedScanEventIndex ) = 0;
+      virtual HRESULT __stdcall raw_RemoveScanEvent ( ) = 0;
+      virtual HRESULT __stdcall raw_InsertSegment (
+        short nInsertIndex,
+        short * pnInsertedIndex ) = 0;
+      virtual HRESULT __stdcall raw_InsertSegmentByCopy (
+        short nInsertIndex,
+        short * pnInsertedIndex ) = 0;
+      virtual HRESULT __stdcall raw_RemoveSegment ( ) = 0;
+      virtual HRESULT __stdcall raw_AddScanEventsByCopy (
+        short nAddSegmentIndex,
+        short nNumScanEventsToAdd ) = 0;
+      virtual HRESULT __stdcall get_DataDepExclusionMassWidth (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepExclusionMassWidth (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepRejectMassWidth (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepRejectMassWidth (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepAddSubMass (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepAddSubMass (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepAddSubMassValue (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepAddSubMassValue (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_AnalogDataDep (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_AnalogDataDep (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_AnalogDataDepChannel (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_AnalogDataDepChannel (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_AnalogDataDepThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_AnalogDataDepThreshold (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusion (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusion (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionRepeatCount (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionRepeatCount (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionRepeatDuration (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionRepeatDuration (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionExclusionMassWidth (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionExclusionMassWidth (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionExclusionDuration (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionExclusionDuration (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_IsotopicDataDep (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_IsotopicDataDep (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_IsotopicDataDepMatchTolerance (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_IsotopicDataDepMatchTolerance (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_IsotopicDataDepNumMassDifferences (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_IsotopicDataDepNumMassDifferences (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall raw_GetMassDifferenceInfo (
+        int nIndex,
+        double * pdMassDifference,
+        double * pdExpectedRatio ) = 0;
+      virtual HRESULT __stdcall raw_SetMassDifferenceInfo (
+        int nIndex,
+        double dMassDifference,
+        double dExpectedRatio ) = 0;
+      virtual HRESULT __stdcall get_DataDepNumParentMasses (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNumParentMasses (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNumRejectMasses (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNumRejectMasses (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepParentMass (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepParentMass (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepRejectMass (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepRejectMass (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepMode (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepMode (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNthMostIntenseIon (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNthMostIntenseIon (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_Summary (
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall get_UseSyringePump (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_UseSyringePump (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_SyringeType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SyringeType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_SyringeVolume (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_SyringeVolume (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_SyringeID (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_SyringeID (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_SyringeFlowRate (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_SyringeFlowRate (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_StopSyringeAtEndOfRun (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_StopSyringeAtEndOfRun (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_ExternalTrigger (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ExternalTrigger (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_SendExternalTriggerBasedOn (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SendExternalTriggerBasedOn (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ExternalTriggerSignalThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_ExternalTriggerSignalThreshold (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_ExternalTriggerRejectMassWidth (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_ExternalTriggerRejectMassWidth (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DivertValve (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DivertValve (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DivertValveNumValvePositions (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DivertValveNumValvePositions (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DivertValvePositionAtStartOfRun (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DivertValvePositionAtStartOfRun (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DivertValvePositionDuration (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DivertValvePositionDuration (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_ContactClosure (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ContactClosure (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_ContactClosureNumSwitches (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ContactClosureNumSwitches (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ContactClosurePositionAtStartOfRun (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ContactClosurePositionAtStartOfRun (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ContactClosureSwitchDuration (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_ContactClosureSwitchDuration (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDD (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDD (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDDivertValve (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDDivertValve (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDHighVoltage (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDHighVoltage (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDSpareTrigger (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDSpareTrigger (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDContactClosure (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDContactClosure (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDActivationThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDActivationThreshold (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDDeactivationHysteresis (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDDeactivationHysteresis (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDHighVoltageDelta (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDHighVoltageDelta (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDStabilizationTime (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDStabilizationTime (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDDependenceMode (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDDependenceMode (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDNumMasses (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDNumMasses (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDMass (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDMass (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDNumPosAdducts (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDNumPosAdducts (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDPosAdduct (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDPosAdduct (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDNumNegAdducts (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDNumNegAdducts (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_CustomDDNegAdduct (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_CustomDDNegAdduct (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepFallThroughToNthMostIntense (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepFallThroughToNthMostIntense (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_EnableValidation (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_EnableValidation (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepExclusionMassWidthType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepExclusionMassWidthType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepExclusionMassWidthLow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepExclusionMassWidthLow (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepExclusionMassWidthHigh (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepExclusionMassWidthHigh (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepRejectMassWidthType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepRejectMassWidthType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepRejectMassWidthLow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepRejectMassWidthLow (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepRejectMassWidthHigh (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepRejectMassWidthHigh (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionExclusionMassWidthType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionExclusionMassWidthType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionExclusionMassWidthLow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionExclusionMassWidthLow (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionExclusionMassWidthHigh (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionExclusionMassWidthHigh (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetDataDepMSSelectionRange (
+        double dFirstMass,
+        double dLastMass ) = 0;
+      virtual HRESULT __stdcall raw_GetDataDepMSSelectionRange (
+        double * pdFirstMass,
+        double * pdLastMass ) = 0;
+      virtual HRESULT __stdcall get_DataDepMSnSelectionRangeType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepMSnSelectionRangeType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetDataDepMSnSelectionRange (
+        double dFirstValue,
+        double dLastValue ) = 0;
+      virtual HRESULT __stdcall raw_GetDataDepMSnSelectionRange (
+        double * pdFirstValue,
+        double * pdLastValue ) = 0;
+      virtual HRESULT __stdcall get_DataDepZoomScanRangeType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepZoomScanRangeType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepZoomScanRangeLow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepZoomScanRangeLow (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepZoomScanRangeHigh (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepZoomScanRangeHigh (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_ExternalTriggerRejectMassWidthType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ExternalTriggerRejectMassWidthType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ExternalTriggerRejectMassWidthLow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_ExternalTriggerRejectMassWidthLow (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_ExternalTriggerRejectMassWidthHigh (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_ExternalTriggerRejectMassWidthHigh (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionExclusionListSize (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionExclusionListSize (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTags (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTags (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetMassTagsPartnerIntensityRange (
+        double dMinIntensity,
+        double dMaxIntensity ) = 0;
+      virtual HRESULT __stdcall raw_GetMassTagsPartnerIntensityRange (
+        double * pdMinIntensity,
+        double * pdMaxIntensity ) = 0;
+      virtual HRESULT __stdcall get_MassTagsPartnerScanType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTagsPartnerScanType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTagsNumMassDeltas (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTagsNumMassDeltas (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTagsMassDelta (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTagsMassDelta (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_ChargeStateScreening (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ChargeStateScreening (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_ChargeStateExclusion (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ChargeStateExclusion (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_ChargeStateExclusionChargeState (
+        short nChargeState,
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ChargeStateExclusionChargeState (
+        short nChargeState,
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_MethodParamsInSeqRow (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_MethodParamsInSeqRow (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_SyringeNumSwitches (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SyringeNumSwitches (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_SyringeStateAtStartOfRun (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SyringeStateAtStartOfRun (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_SyringeStateDuration (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_SyringeStateDuration (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepMasterEvent (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepMasterEvent (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSameMSOrder (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSameMSOrder (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_ScanResolution (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ScanResolution (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionEarlyExpiration (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionEarlyExpiration (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionExpirationCount (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionExpirationCount (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DynamicExclusionExpirationThreshold (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DynamicExclusionExpirationThreshold (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNeutralLossSortMode (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNeutralLossSortMode (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNeutralLossMassWidthType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNeutralLossMassWidthType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNeutralLossMassWidthLow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNeutralLossMassWidthLow (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNeutralLossMassWidthHigh (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNeutralLossMassWidthHigh (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNumNeutralLossMasses (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNumNeutralLossMasses (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNeutralLossMass (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNeutralLossMass (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNeutralLossMassInNthMost (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNeutralLossMassInNthMost (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepAnalyzeTopN (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepAnalyzeTopN (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_Analyzer (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_Analyzer (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_ExperimentType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ExperimentType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_EventECDActive (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_EventECDActive (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetEventECDSettings (
+        float fEnergy,
+        float fDelay,
+        float fDuration ) = 0;
+      virtual HRESULT __stdcall raw_GetEventECDSettings (
+        float * pfEnergy,
+        float * pfDelay,
+        float * pfDuration ) = 0;
+      virtual HRESULT __stdcall get_EventIRMPDActive (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_EventIRMPDActive (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetEventIRMPDSettings (
+        float fEnergy,
+        float fDelay,
+        float fDuration ) = 0;
+      virtual HRESULT __stdcall raw_GetEventIRMPDSettings (
+        float * pfEnergy,
+        float * pfDelay,
+        float * pfDuration ) = 0;
+      virtual HRESULT __stdcall get_PosLockMassListName (
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_PosLockMassListName (
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_NumPosLockMasses (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_NumPosLockMasses (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_PosLockMass (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_PosLockMass (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_NegLockMassListName (
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_NegLockMassListName (
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_NumNegLockMasses (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_NumNegLockMasses (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_NegLockMass (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_NegLockMass (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepEventECDActive (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepEventECDActive (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepEventIRMPDActive (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepEventIRMPDActive (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_ChargeStateMonoisotopicPrecursors (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ChargeStateMonoisotopicPrecursors (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPreviewMode (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPreviewMode (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepChargeDepECDTime (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepChargeDepECDTime (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_UseSeparateSegmentPolarityValues (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_UseSeparateSegmentPolarityValues (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_NumMassTimeWindows (
+        short nIndex,
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_NumMassTimeWindows (
+        short nIndex,
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetMassTimeWindow (
+        short nIndex,
+        long nItem,
+        double dStartTime,
+        double dEndTime,
+        double dMass ) = 0;
+      virtual HRESULT __stdcall raw_GetMassTimeWindow (
+        short nIndex,
+        long nItem,
+        double * pdStartTime,
+        double * pdEndTime,
+        double * pdMass ) = 0;
+      virtual HRESULT __stdcall get_ScanEventAssocMode (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_ScanEventAssocMode (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepExcludeParentMass (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepExcludeParentMass (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepUseGlobalMassLists (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepUseGlobalMassLists (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_EnableSteppedCollisionEnergy (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_EnableSteppedCollisionEnergy (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_SteppedCollisionEnergyNumSteps (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_SteppedCollisionEnergyNumSteps (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_SteppedCollisionEnergyWidth (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_SteppedCollisionEnergyWidth (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_ChargeStateUseNonPeptideMonoisotopicRecognition (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_ChargeStateUseNonPeptideMonoisotopicRecognition (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarNumParentMasses (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarNumParentMasses (
+        short nPolarity,
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarNumRejectMasses (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarNumRejectMasses (
+        short nPolarity,
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarParentMass (
+        short nPolarity,
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarParentMass (
+        short nPolarity,
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarRejectMass (
+        short nPolarity,
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarRejectMass (
+        short nPolarity,
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarNumNeutralLossMasses (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarNumNeutralLossMasses (
+        short nPolarity,
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarNeutralLossMass (
+        short nPolarity,
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarNeutralLossMass (
+        short nPolarity,
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarNeutralLossMassInNthMost (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarNeutralLossMassInNthMost (
+        short nPolarity,
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepInclusionMassWidth (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepInclusionMassWidth (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepInclusionMassWidthType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepInclusionMassWidthType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepInclusionMassWidthLow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepInclusionMassWidthLow (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepInclusionMassWidthHigh (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepInclusionMassWidthHigh (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepAdditionalMicroscans (
+        short nIndex,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepAdditionalMicroscans (
+        short nIndex,
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepTargetIncrement (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepTargetIncrement (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSESignalThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSESignalThreshold (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEDefaultChargeState (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEDefaultChargeState (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEDefaultCollisionEnergy (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEDefaultCollisionEnergy (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEIsolationWidth (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEIsolationWidth (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEActivationQ (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEActivationQ (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEActivationTime (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEActivationTime (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetReaction2 (
+        short nReactionIndex,
+        double dPrecursorMass,
+        short nActivationType,
+        double dIsolationWidth,
+        double dCollisionEnergy,
+        float fActivationQ,
+        double dActivationTime ) = 0;
+      virtual HRESULT __stdcall raw_GetReaction2 (
+        short nReactionIndex,
+        double * pdPrecursorMass,
+        short * pnActivationType,
+        double * pdIsolationWidth,
+        double * pdCollisionEnergy,
+        float * pfActivationQ,
+        double * pdActivationTime ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEActivationType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEActivationType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEHybridFirstMassMode (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEHybridFirstMassMode (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEHybridFirstMassAutoFactor (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEHybridFirstMassAutoFactor (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepSEHybridFirstMassFixedValue (
+        /*[out,retval]*/ float * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepSEHybridFirstMassFixedValue (
+        /*[in]*/ float pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNLECD (
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNLECD (
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall raw_SetDataDepSEECDSettings (
+        float fEnergy,
+        float fDelay,
+        float fDuration ) = 0;
+      virtual HRESULT __stdcall raw_GetDataDepSEECDSettings (
+        float * pfEnergy,
+        float * pfDelay,
+        float * pfDuration ) = 0;
+      virtual HRESULT __stdcall raw_SetDataDepSEIRMPDSettings (
+        float fEnergy,
+        float fDelay,
+        float fDuration ) = 0;
+      virtual HRESULT __stdcall raw_GetDataDepSEIRMPDSettings (
+        float * pfEnergy,
+        float * pfDelay,
+        float * pfDuration ) = 0;
+      virtual HRESULT __stdcall get_DataDepParentMassName (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepParentMassName (
+        /*[in]*/ short nIndex,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepParentMS2Mass (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepParentMS2Mass (
+        /*[in]*/ short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepParentMassCollisionEnergy (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepParentMassCollisionEnergy (
+        /*[in]*/ short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepRejectMassName (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepRejectMassName (
+        /*[in]*/ short nIndex,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNeutralLossMassName (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNeutralLossMassName (
+        /*[in]*/ short nIndex,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarParentMassName (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarParentMassName (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarParentMS2Mass (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarParentMS2Mass (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarParentMassCollisionEnergy (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarParentMassCollisionEnergy (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarRejectMassName (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarRejectMassName (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarNeutralLossMassName (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarNeutralLossMassName (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTimeWindowMassName (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTimeWindowMassName (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTimeWindowMS2Mass (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTimeWindowMS2Mass (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTimeWindowCollisionEnergy (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTimeWindowCollisionEnergy (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTimeWindowLastMass (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTimeWindowLastMass (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepMS2ParentMassCollisionEnergy (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepMS2ParentMassCollisionEnergy (
+        /*[in]*/ short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarMS2ParentMassCollisionEnergy (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarMS2ParentMassCollisionEnergy (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepParentMassChargeState (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepParentMassChargeState (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarParentMassChargeState (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarParentMassChargeState (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepParentMassIntensityThreshold (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepParentMassIntensityThreshold (
+        /*[in]*/ short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarParentMassIntensityThreshold (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarParentMassIntensityThreshold (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTimeWindowMS2CollisionEnergy (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTimeWindowMS2CollisionEnergy (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTimeWindowChargeState (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[out,retval]*/ long * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTimeWindowChargeState (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[in]*/ long pVal ) = 0;
+      virtual HRESULT __stdcall get_MassTimeWindowIntensityThreshold (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_MassTimeWindowIntensityThreshold (
+        /*[in]*/ short nIndex,
+        /*[in]*/ long nItem,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_CVOn (
+        /*[out,retval]*/ VARIANT_BOOL * pVal ) = 0;
+      virtual HRESULT __stdcall put_CVOn (
+        /*[in]*/ VARIANT_BOOL pVal ) = 0;
+      virtual HRESULT __stdcall get_CV (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_CV (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepProductSortMode (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepProductSortMode (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepProductMassWidthType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepProductMassWidthType (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepProductMassWidthLow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepProductMassWidthLow (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepProductMassWidthHigh (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepProductMassWidthHigh (
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepNumProductMasses (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepNumProductMasses (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepProductMass (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepProductMass (
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepProductMassInNthMost (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepProductMassInNthMost (
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarNumProductMasses (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarNumProductMasses (
+        short nPolarity,
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarProductMass (
+        short nPolarity,
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarProductMass (
+        short nPolarity,
+        short nIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarProductMassInNthMost (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarProductMassInNthMost (
+        short nPolarity,
+        /*[in]*/ short pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepProductMassName (
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepProductMassName (
+        /*[in]*/ short nIndex,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepPolarProductMassName (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[out,retval]*/ BSTR * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepPolarProductMassName (
+        /*[in]*/ short nPolarity,
+        /*[in]*/ short nIndex,
+        /*[in]*/ BSTR pVal ) = 0;
+      virtual HRESULT __stdcall get_NumSteppedCVs (
+        /*[out,retval]*/ unsigned short * pVal ) = 0;
+      virtual HRESULT __stdcall put_NumSteppedCVs (
+        /*[in]*/ unsigned short pVal ) = 0;
+      virtual HRESULT __stdcall get_SteppedCVs (
+        /*[in]*/ unsigned short unIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall put_SteppedCVs (
+        /*[in]*/ unsigned short unIndex,
+        /*[in]*/ double pVal ) = 0;
+      virtual HRESULT __stdcall get_DataDepUseMZAsMass (
+        /*[out,retval]*/ VARIANT_BOOL * pVal ) = 0;
+      virtual HRESULT __stdcall put_DataDepUseMZAsMass (
+        /*[in]*/ VARIANT_BOOL pVal ) = 0;
+};
+
+struct __declspec(uuid("9b1cfd11-e05f-4de0-8be0-268c8625e362"))
+ILCQTune : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetLCQModel))
+    short LCQModel;
+    __declspec(property(get=GetInjectionWaveformType))
+    short InjectionWaveformType;
+    __declspec(property(get=GetDataType))
+    short DataType;
+    __declspec(property(get=GetSourceType))
+    short SourceType;
+    __declspec(property(get=GetPolarity))
+    short Polarity;
+    __declspec(property(get=GetCapillaryTemperature))
+    double CapillaryTemperature;
+    __declspec(property(get=GetAPCIVapTemp))
+    double APCIVapTemp;
+    __declspec(property(get=GetSheathGasFlow))
+    double SheathGasFlow;
+    __declspec(property(get=GetAuxGasFlow))
+    double AuxGasFlow;
+    __declspec(property(get=GetSweepGasFlow))
+    double SweepGasFlow;
+    __declspec(property(get=GetAGCFullThreshold))
+    double AGCFullThreshold;
+    __declspec(property(get=GetAGCSIMThreshold))
+    double AGCSIMThreshold;
+    __declspec(property(get=GetAGCMSnThreshold))
+    double AGCMSnThreshold;
+    __declspec(property(get=GetAGCZoomThreshold))
+    double AGCZoomThreshold;
+    __declspec(property(get=GetHybridAGCFullThreshold))
+    double HybridAGCFullThreshold;
+    __declspec(property(get=GetHybridAGCSIMThreshold))
+    double HybridAGCSIMThreshold;
+    __declspec(property(get=GetHybridAGCMSnThreshold))
+    double HybridAGCMSnThreshold;
+    __declspec(property(get=GetHybridAGCZoomThreshold))
+    double HybridAGCZoomThreshold;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT Open (
+        _bstr_t szFileName );
+    HRESULT Close ( );
+    short GetLCQModel ( );
+    short GetInjectionWaveformType ( );
+    short GetDataType ( );
+    short GetSourceType ( );
+    short GetPolarity ( );
+    double GetCapillaryTemperature ( );
+    double GetAPCIVapTemp ( );
+    double GetSheathGasFlow ( );
+    double GetAuxGasFlow ( );
+    double GetSweepGasFlow ( );
+    double GetAGCFullThreshold ( );
+    double GetAGCSIMThreshold ( );
+    double GetAGCMSnThreshold ( );
+    double GetAGCZoomThreshold ( );
+    short GetNumMicroscansFull (
+        short nPolarity );
+    short GetNumMicroscansSIM (
+        short nPolarity );
+    short GetNumMicroscansMSn (
+        short nPolarity );
+    short GetNumMicroscansZoom (
+        short nPolarity );
+    double GetLens0Voltage (
+        short nPolarity );
+    double GetLens1Voltage (
+        short nPolarity );
+    double GetTubeLensAdjust (
+        short nPolarity );
+    double GetMPRFAmp (
+        short nPolarity );
+    double GetSourceHighVoltage (
+        short nPolarity );
+    double GetSourceCurrent (
+        short nPolarity );
+    double GetCapillaryVoltage (
+        short nPolarity );
+    double GetRFDev00Offset (
+        short nPolarity );
+    double GetMP0Offset (
+        short nPolarity );
+    double GetMP1Offset (
+        short nPolarity );
+    double GetMaxIonTimeFull (
+        short nPolarity );
+    double GetMaxIonTimeSIM (
+        short nPolarity );
+    double GetMaxIonTimeMSn (
+        short nPolarity );
+    double GetMaxIonTimeZoom (
+        short nPolarity );
+    double GetFrontLens (
+        short nPolarity );
+    double GetSkimmer (
+        short nPolarity );
+    double GetSplitLens (
+        short nPolarity );
+    double GetHybridAGCFullThreshold ( );
+    double GetHybridAGCSIMThreshold ( );
+    double GetHybridAGCMSnThreshold ( );
+    double GetHybridAGCZoomThreshold ( );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_Open (
+        BSTR szFileName ) = 0;
+      virtual HRESULT __stdcall raw_Close ( ) = 0;
+      virtual HRESULT __stdcall get_LCQModel (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_InjectionWaveformType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_DataType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_SourceType (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_Polarity (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_CapillaryTemperature (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_APCIVapTemp (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_SheathGasFlow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_AuxGasFlow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_SweepGasFlow (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_AGCFullThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_AGCSIMThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_AGCMSnThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_AGCZoomThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumMicroscansFull (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumMicroscansSIM (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumMicroscansMSn (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumMicroscansZoom (
+        short nPolarity,
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_Lens0Voltage (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_Lens1Voltage (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_TubeLensAdjust (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MPRFAmp (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_SourceHighVoltage (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_SourceCurrent (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_CapillaryVoltage (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_RFDev00Offset (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MP0Offset (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MP1Offset (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MaxIonTimeFull (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MaxIonTimeSIM (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MaxIonTimeMSn (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MaxIonTimeZoom (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_FrontLens (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_Skimmer (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_SplitLens (
+        short nPolarity,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_HybridAGCFullThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_HybridAGCSIMThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_HybridAGCMSnThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_HybridAGCZoomThreshold (
+        /*[out,retval]*/ double * pVal ) = 0;
+};
+
+struct __declspec(uuid("ffee3cf9-9fd9-4d46-8027-ecbd0c5bddd6"))
+ILCQCal : IDispatch
+{
+    //
+    // Property data
+    //
+
+    __declspec(property(get=GetMPFrequency))
+    double MPFrequency;
+    __declspec(property(get=GetRFFrequency))
+    double RFFrequency;
+    __declspec(property(get=GetWfIonAmpSlope))
+    double WfIonAmpSlope;
+    __declspec(property(get=GetWfIsoAmpSlope))
+    double WfIsoAmpSlope;
+    __declspec(property(get=GetWfIonAmpInt))
+    double WfIonAmpInt;
+    __declspec(property(get=GetWfIsoAmpInt))
+    double WfIsoAmpInt;
+    __declspec(property(get=GetNumqmSlopeInts))
+    short NumqmSlopeInts;
+    __declspec(property(get=GetNumTickAmpSlopeInts))
+    short NumTickAmpSlopeInts;
+    __declspec(property(get=GetNumDeviceMinMax))
+    short NumDeviceMinMax;
+    __declspec(property(get=GetNumCalibrationModes))
+    short NumCalibrationModes;
+    __declspec(property(get=GetNumVernierDACCalibrations))
+    short NumVernierDACCalibrations;
+
+    //
+    // Wrapper methods for error-handling
+    //
+
+    HRESULT Open (
+        _bstr_t szFileName );
+    HRESULT Close ( );
+    double GetMultiplier1 (
+        short nIndex );
+    double GetMultiplier2 (
+        short nIndex );
+    double GetMPFrequency ( );
+    double GetRFFrequency ( );
+    double Getqmslope (
+        short nIndex );
+    double Getqmintercept (
+        short nIndex );
+    double GetWfIonAmpSlope ( );
+    double GetWfIsoAmpSlope ( );
+    double GetWfIonAmpInt ( );
+    double GetWfIsoAmpInt ( );
+    double GetTickAmpSlope (
+        short nIndex );
+    double GetTickAmpInt (
+        short nIndex );
+    double GetDeviceMin (
+        short nIndex );
+    double GetDeviceMax (
+        short nIndex );
+    double GetResEjectSlope (
+        short nIndex );
+    double GetResEjectInt (
+        short nIndex );
+    double GetMassSlope (
+        short nIndex );
+    double GetMassInt (
+        short nIndex );
+    short GetNumqmSlopeInts ( );
+    short GetNumTickAmpSlopeInts ( );
+    short GetNumDeviceMinMax ( );
+    short GetNumCalibrationModes ( );
+    short GetNumVernierDACCalibrations ( );
+    double GetVernierMassSlope (
+        short nIndex );
+    double GetVernierMassInt (
+        short nIndex );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_Open (
+        BSTR szFileName ) = 0;
+      virtual HRESULT __stdcall raw_Close ( ) = 0;
+      virtual HRESULT __stdcall get_Multiplier1 (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_Multiplier2 (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MPFrequency (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_RFFrequency (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_qmslope (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_qmintercept (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_WfIonAmpSlope (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_WfIsoAmpSlope (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_WfIonAmpInt (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_WfIsoAmpInt (
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_TickAmpSlope (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_TickAmpInt (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_DeviceMin (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_DeviceMax (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_ResEjectSlope (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_ResEjectInt (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MassSlope (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_MassInt (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumqmSlopeInts (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumTickAmpSlopeInts (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumDeviceMinMax (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumCalibrationModes (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_NumVernierDACCalibrations (
+        /*[out,retval]*/ short * pVal ) = 0;
+      virtual HRESULT __stdcall get_VernierMassSlope (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+      virtual HRESULT __stdcall get_VernierMassInt (
+        short nIndex,
+        /*[out,retval]*/ double * pVal ) = 0;
+};
+
+struct __declspec(uuid("ba6648b0-42f3-4cc1-8a3f-665457df90be"))
+LCQMethod;
+    // [ default ] interface ILCQMethod
+
+struct __declspec(uuid("dd55926c-755e-46f3-92c7-867c2dc9f4ca"))
+LCQTune;
+    // [ default ] interface ILCQTune
+
+struct __declspec(uuid("2b86185c-67dd-4ff1-9220-15b69b5c27f3"))
+LCQCal;
+    // [ default ] interface ILCQCal
+
+//
+// Wrapper method implementations
+//
+
+#include "ltmethod.tli"
+
+} // namespace LTMETHODLib
+
+#pragma pack(pop)

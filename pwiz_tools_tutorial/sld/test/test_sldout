@@ -1,0 +1,11 @@
+#!/bin/bash
+
+sldout csv chosen_14.sld | diff chosen_14.csv -
+sldout txt chosen_14.sld | diff chosen_14.txt -
+
+sldout csv chosen_14_b.sld | diff chosen_14_b.csv -
+sldout txt chosen_14_b.sld | diff chosen_14_b.txt -
+
+sldout csv chosen_205.sld | diff chosen_205.csv -
+sldout txt chosen_205.sld | diff chosen_205.txt -
+

@@ -1,0 +1,163 @@
+BiblioSpec Tests
+
+There are several pieces to the BiblioSpec tests: inputs, expected
+outputs, source files, and invocations.  The inputs are data files
+used by the tests (e.g. search results and spectrum files that get
+built into a library).  The expected outputs are text files in
+BiblioSpec/tests/reference.  A test passes if the output of the test
+matches its expected output file.  The source files are small C++
+programs that execute a test.  The invocations (for lack of a better
+word) are the calls to the tests in Jamfile.jam.  I'll describe each
+in detail. 
+
+Inputs
+
+All input files are in inputs.tar.bz2.  They are automatically
+unpacked into BiblioSpec/tests/inputs by bjam as part of the
+proteowizard build process. If you add or change an input file, be
+sure to update the tar file and check the new version into the
+repository.
+
+Expected outputs
+
+Most tests produce a file.  This file should match one of the files in
+tests/reference/.  The comparison is done as part of the test.  If the
+BiblioSpec code changes such that the output changes, simply update
+the appropriate file in tests/reference/.
+
+Invocations (Jamfile.jam)
+
+The BiblioSpec tests are run automatically as part of the bjam build
+process.  The tests are specified in
+pwiz/pwiz_tools/BiblioSpec/tests/Jamfile.jam.  Each one is run with
+the rule 'run-if-exists ( sources : options : inputs : properties :
+name)'.  Here is an example with an explanation of the parts.
+
+run-if-exists ExecuteBlib.cpp
+  : -o
+  : ../src//BlibBuild inputs/smaller.perc.xml output/perc.blib
+  : 
+  : build-perc-xml ;
+
+Each test is it's own mini executable.  The source file for the
+executable in this example is ExecuteBlib.cpp.  The name of the test
+is build-perc-xml and will be compiled into an executable of that
+name.  It can be found in 
+<pwiz-root>/<build-dir>/pwiz_tools/BiblioSpec/tests/build-perc-xml.test/<toolset>/<set-of-properties>/build-perc-xml
+
+After the test is compiled, it will be run with the given options, in
+this case '-o'. It will also be given the arguments 'smaller.perc.xml'
+and 'perc.blib'.  This particular test has no properties specified.
+
+You can run the test just as bjam would with this command
+
+[long path to]/build-perc-xml -o ../src//BlibBuild inputs/smaller.perc.xml output/perc.blib
+
+There are a couple of peculiarities of bjam and the rule run-if-exists
+to keep in mind.  The difference between the options and the inputs is
+that the options can be any string and are passed to the test as-is
+whereas the inputs must be files that bjam can find and are passed
+with their fully-qualified path. This is handy in that you don't have
+to worry about where the build directory is relative to the inputs,
+but it means that the file must exist.  In some cases, the "input" is
+really the name of an output file which may not exist yet.  To get
+around this, we create an empty file that bjam can find.  For the
+above example, it's accomplished with this line in Jamfile.jam
+
+make output/perc.blib : inputs/empty : @common.copy : $(test_output_req) ;
+
+Briefly, 'make' is a rule that creates a file.  The file will be named
+output/perc.blib.  The source of that file is inputs/empty.  It will
+be made with the rule @common.copy and it has the requirements in the
+variable $(test_output_req). 
+
+Another oddity of the inputs part of run-if-exists is that the files
+must be listed alphabetically.  I have no explanation for this.  Bjam
+complains if it isn't so.  This means in a few cases, the names are
+chosen so they can be conveniently given alphabetically
+(e.g. reference/zbuild.skip-lines).  More on this in the next section.
+
+Source Files
+
+There are three source files for running tests: ExecuteBlib.cpp,
+CompareLibraryContents.cpp, CompareTextFiles.cpp.  Each one reproduces
+a command-line task in the original version of these tests.  ExecuteBlib.cpp is
+used to run one of the BiblioSpec tools as you might on the command
+line.  CompareLibraryContents uses sqlite3 to extract information from
+a BiblioSpec library and compare it to a text file.  CompareTextFiles
+is basically a diff command that compares two text files, with some
+added features.
+
+Most tests come in pairs where first a BiblioSpec tool is run and then
+its output is compared with the expected output.  The first test
+confirms that the tool runs without error and the second test makes
+sure that the output is correct. Since these pairs must be run in
+order, the second one will have a dependency on the first.  Here is
+the test paired with our above example: 
+
+run-if-exists CompareLibraryContents.cpp compare-src
+  :
+  : output/perc.blib reference/perc-xml.check
+  : $(compare-reqs)
+    <dependency>build-perc-xml
+  : check-perc-xml ;
+
+It takes as input the output of build-perc-xml (output/perc.blib).  It
+also requires that build-perc-xml be run before it
+(<dependency>build-perc-xml).  
+
+A few details about each of the test sources.  Each one will print a
+usage statement when run with no arguments.  For example
+
+ExecuteBlib <blib tool> [<inputs>+]
+
+The first required argument is one of the BiblioSpec tools.  Following
+that are the arguments and options that you would pass to those
+tools.  In our first example, the -o will be passed to BlibBuild to
+mean "overwrite any existing library".
+
+Another oddity about run-if-exists is that the options and inputs will
+not be passed to the test in the same order they were given in
+Jamfile.jam.  But since we had to list them alphabetically,
+ExecuteBlib will take advantage of that and sort them alphabetically
+before passing them to the BiblioSpec tool.
+
+CompareLibraryContents has this usage statement:
+
+CompareLibraryContents <library> <expected output> [<skip>]
+
+It requires a BiblioSpec library and a file with what the library
+should contain (files in tests/reference/).  There is an optional file
+with information about allowed tolerance.  The file might look like
+this:
+
+CompareDetails: 4       0.00005
+
+Which would mean that if the value in column 4 is not the same between the
+library and the reference file, call it the same if it differs by no
+more than 0.00005.
+
+The final test source is CompareTextFiles.cpp
+
+CompareTextFiles <expected> <observed> [<skip lines>]
+
+It requires two inputs, the expected output and the observed output.
+It will also take an optional file with lines that can be skipped when
+doing the comparison.  (This is to emulate the -I function in gnu diff.) Each
+line of the skip file represents a line in the output that can be
+skipped.  The lines must appear in the order they are expected.  Here
+is an example skip file:
+
+CreationDate
+Library
+
+The first line in the expected output containing the string
+"CreationDate" will be skipped along with the corresponding line in the
+observed file.  The next line following that containing "Library" will
+be skipped.
+
+The skip file may also begin with "CompareDetails" and information
+about accepted tolerance of a column.
+
+
+Last updated May 4, 2012

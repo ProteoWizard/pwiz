@@ -1,0 +1,91 @@
+<html>
+<!--
+FILE: update.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 8/19/05
+PROJECT: BiblioSpec
+REVISION: $Revision: 1.1 $
+-->
+<head>
+<title>BlibPpMS2</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BlibPpMS2</h1></center>
+
+<blockquote>
+
+<p><b>Description:</b>&nbsp;&nbsp;Processes spectra in an MS2 file and
+prints resulting spectra to a new MS2 file.  This provides a means of
+either viewing processed spectra (with a visualization tool) and a
+mechanism for building libraries of processed spectra.
+
+<p><b>Usage:</b><code>  BlibUPpMS2 [options]
+&nbsp;&lt;input MS2&gt;
+&nbsp;&lt;ouput MS2&gt;
+</code>
+
+<p><b>Input:</b>
+<ul>
+
+<li> &lt;input MS2&gt; - an MS2 file containing spectra to be
+processed. 
+<li> &lt;ouput MS2&gt; - the name of the file to which results are
+printed. 
+
+</ul>
+
+<p><b>Output:</b>&nbsp;&nbsp;An MS2 file containing each input
+spectrum modified by peak binning, noise reduction, and intensity
+normalization. 
+
+
+<p><b>Options:</b>&nbsp;&nbsp;  Defaults are as for <a
+href="BlibSearch.html">BlibSearch</a>.
+<ul>
+
+<li> <code>-b, --bin &lt;n&gt;</code> - Use n bins to normalize
+	       intensities. 
+
+<li> <code>-p, --clearPrecursor </code> - Do not delete peaks in a -20
+               to +5 m/z window around precursor ion.
+
+<li> <code>-l, --noiselast</code> - Remove noise peaks after
+	       normalizing intensities. Default is to remove them first.
+
+<li> <code>-t, --numPeaks &lt;n&gt;</code> - Use the n top-ranking 
+	       peaks as signal. Default is 100.
+
+<li> <code>-f, --percentCurrent &lt;n&gt;</code> - Use a fraction, n,
+	       of total current to determine signal/noise cut
+	       off. Requires 0 < n <= 1. 
+
+<li> <code>-q, --sqrt </code> - Use sqaure root of intensties for peak
+	       normalization. 
+
+<li> <code>-v, --verbose &lt;0|1|2&gt;</code> - Set the verbosity
+	       level of the output to stderr.  Default is 2.
+
+</ul>
+
+<!--
+<p><b>Warning messages:</b>
+
+<ul>
+<li> <p> <i>Warning: </i><p>
+<p>... inconsistencies.</p>
+</ul>
+-->
+<!--
+<p><b>Bugs:</b>
+<ul>
+<li>description</li>
+<li>description</li>
+</ul>
+</blockquote>
+-->
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

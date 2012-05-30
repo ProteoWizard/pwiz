@@ -1,0 +1,225 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<srm_settings format_version="0.8">
+  <settings_summary name="Default">
+    <peptide_settings>
+      <enzyme name="Trypsin" cut="KR" no_cut="P" sense="C" />
+      <digest_settings max_missed_cleavages="0" />
+      <peptide_prediction use_measured_rts="True" measured_rt_window="2" />
+      <peptide_filter start="0" min_length="6" max_length="25">
+        <peptide_exclusions />
+      </peptide_filter>
+      <peptide_libraries pick="library" />
+      <peptide_modifications>
+        <static_modifications>
+          <static_modification name="Carbamidomethyl Cysteine" aminoacid="C" formula="C2H3ON" />
+          <static_modification name="acetylation" aminoacid="K" variable="true" formula="C2H2O1" />
+        </static_modifications>
+        <heavy_modifications>
+          <static_modification name="K-8" aminoacid="K" label_13C="true" label_15N="true" />
+          <static_modification name="R-10" aminoacid="R" label_13C="true" label_15N="true" />
+        </heavy_modifications>
+        <heavy_modifications isotope_label="all 15N">
+          <static_modification name="all 15N" label_15N="true" />
+        </heavy_modifications>
+      </peptide_modifications>
+    </peptide_settings>
+    <transition_settings>
+      <transition_prediction precursor_mass_type="Monoisotopic" fragment_mass_type="Monoisotopic" optimize_by="None">
+        <predict_collision_energy name="ABI 4000 QTrap" step_size="1" step_count="5">
+          <regression_ce charge="2" slope="0.057" intercept="-4.265" />
+          <regression_ce charge="3" slope="0.031" intercept="7.082" />
+        </predict_collision_energy>
+        <predict_declustering_potential name="ABI" step_size="1" step_count="5" slope="0.0729" intercept="31.117" />
+      </transition_prediction>
+      <transition_filter precursor_charges="2,3" product_charges="1,2" fragment_types="p" fragment_range_first="m/z &gt; precursor" fragment_range_last="5 ions" precursor_mz_window="0" auto_select="true">
+        <measured_ion name="N-terminal to Proline (legacy)" cut="P" sense="N" min_length="1" />
+      </transition_filter>
+      <transition_libraries ion_match_tolerance="0.5" ion_count="5" pick_from="all" />
+      <transition_integration />
+      <transition_instrument min_mz="50" max_mz="1550" mz_match_tolerance="0.1" max_transitions="70" />
+      <transition_full_scan precursor_isotopes="Count" precursor_isotope_filter="1" precursor_mass_analyzer="tof" precursor_res="10000">
+        <isotope_enrichments name="Default">
+          <atom_percent_enrichment symbol="H'">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="C'">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="N'">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="O&quot;">0.99</atom_percent_enrichment>
+          <atom_percent_enrichment symbol="O'">0.99</atom_percent_enrichment>
+        </isotope_enrichments>
+      </transition_full_scan>
+    </transition_settings>
+    <data_settings />
+  </settings_summary>
+  <peptide_list label_name="peptides1" auto_manage_children="false">
+    <note category="-1" />
+    <peptide sequence="LVSSVSDLPKR" auto_manage_children="false" calc_neutral_pep_mass="1241.697952" num_missed_cleavages="1">
+      <note category="-1" />
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="9" modification_name="acetylation" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="10" modification_name="R-10" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>626.860386</precursor_mz>
+          <product_mz>626.860386</product_mz>
+          <collision_energy>31.466042</collision_energy>
+          <declustering_potential>76.815122</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>418.242683</precursor_mz>
+          <product_mz>418.242683</product_mz>
+          <collision_energy>20.047523</collision_energy>
+          <declustering_potential>61.606892</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="MVQKSLAR" auto_manage_children="false" calc_neutral_pep_mass="973.537886" num_missed_cleavages="1">
+      <note category="-1" />
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="3" modification_name="acetylation" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="7" modification_name="R-10" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>492.780354</precursor_mz>
+          <product_mz>492.780354</product_mz>
+          <collision_energy>23.82348</collision_energy>
+          <declustering_potential>67.040688</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="AFVDSCLQLHETKR" auto_manage_children="false" calc_neutral_pep_mass="1744.856655" num_missed_cleavages="1">
+      <note category="-1" />
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="5" modification_name="Carbamidomethyl Cysteine" />
+          <explicit_modification index_aa="12" modification_name="acetylation" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="13" modification_name="R-10" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>878.439738</precursor_mz>
+          <product_mz>878.439738</product_mz>
+          <collision_energy>45.806065</collision_energy>
+          <declustering_potential>95.155257</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>585.962251</precursor_mz>
+          <product_mz>585.962251</product_mz>
+          <collision_energy>25.24683</collision_energy>
+          <declustering_potential>73.833648</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="LFVDKIR" auto_manage_children="false" calc_neutral_pep_mass="931.549103" num_missed_cleavages="1">
+      <note category="-1" />
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="4" modification_name="acetylation" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="6" modification_name="R-10" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>471.785962</precursor_mz>
+          <product_mz>471.785962</product_mz>
+          <collision_energy>22.6268</collision_energy>
+          <declustering_potential>65.510197</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+    <peptide sequence="AFGGQSLKFGK" auto_manage_children="false" calc_neutral_pep_mass="1180.624059" num_missed_cleavages="1">
+      <note category="-1" />
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="7" modification_name="acetylation" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="10" modification_name="K-8" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>595.326405</precursor_mz>
+          <product_mz>595.326405</product_mz>
+          <collision_energy>29.668605</collision_energy>
+          <declustering_potential>74.516295</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>397.220029</precursor_mz>
+          <product_mz>397.220029</product_mz>
+          <collision_energy>19.395821</collision_energy>
+          <declustering_potential>60.07434</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+  <peptide_list label_name="peptides2" auto_manage_children="false">
+    <note category="-1" />
+    <peptide sequence="YAPVAKDLASR" auto_manage_children="false" calc_neutral_pep_mass="1231.656087" num_missed_cleavages="1">
+      <note category="-1" />
+      <explicit_modifications>
+        <explicit_static_modifications>
+          <explicit_modification index_aa="5" modification_name="acetylation" />
+        </explicit_static_modifications>
+        <explicit_heavy_modifications>
+          <explicit_modification index_aa="10" modification_name="R-10" />
+        </explicit_heavy_modifications>
+      </explicit_modifications>
+      <precursor charge="2" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>621.839454</precursor_mz>
+          <product_mz>621.839454</product_mz>
+          <collision_energy>31.179849</collision_energy>
+          <declustering_potential>76.449096</declustering_potential>
+        </transition>
+      </precursor>
+      <precursor charge="3" isotope_label="heavy">
+        <note category="-1" />
+        <transition fragment_type="precursor">
+          <note category="-1" />
+          <precursor_mz>414.895395</precursor_mz>
+          <product_mz>414.895395</product_mz>
+          <collision_energy>19.943757</collision_energy>
+          <declustering_potential>61.362874</declustering_potential>
+        </transition>
+      </precursor>
+    </peptide>
+  </peptide_list>
+</srm_settings>

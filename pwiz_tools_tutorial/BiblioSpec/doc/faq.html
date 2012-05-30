@@ -1,0 +1,116 @@
+<html>
+<body>
+<h3>BiblioSpec Frequently Asked Questions</h3>
+
+<ol>
+<li><b>What input file formats does BiblioSpec support?</b>
+<p>
+BiblioSpec version 1 accepted two file types,  
+<a href=fileFormats#ssl>.ssl</a> files containing peptide-spectrum
+match information and .ms2 files containing the spectrum information.
+With BiblioSpec version 2, many new input file formats have been
+added.
+</p>
+<table>
+<tr><th>Results Generator</th>
+    <th>File extension</th>
+    <th>Associated spectrum file</th>
+    </tr>
+
+<tr><td>PeptideProphet</td>
+    <td>.pep.xml, .pep.XML, .pepXML</td>
+    <td>.mzML, .mzXML</td>
+    </tr>
+
+<tr><td>Spectrum Mill</td>
+    <td>.pep.xml, .pep.XML, .pepXML</td>
+    <td>.mzML, .mzXML</td>
+    </tr>
+
+<tr><td>OMSAA</td>
+    <td>.pep.xml, .pep.XML, .pepXML</td>
+    <td>.mzML, .mzXML</td>
+    </tr>
+
+<tr><td>IDPicker</td>
+    <td>.idpXML</td>
+    <td>.mzML, .mzXML</td>
+    </tr>
+
+<tr><td>Mascot</td>
+    <td>.dat</td>
+    <td>.dat</td>
+    </tr>
+
+<tr><td>Scaffold</td>
+    <td>.mzid</td>
+    <td>.MGF</td>
+    </tr>
+
+<tr><td>Percolator</td>
+    <td>.perc.xml</td>
+    <td>.ms2, .cms2</td>
+    </tr>
+
+<tr><td>Waters MSe</td>
+    <td>final_fragment.csv</td>
+    <td>final_fragment.csv</td>
+    </tr>
+
+</table>
+<p></p>
+<li><b>What is the difference between BiblioSpec versions 1 and 2?</b>
+<p>
+The two different versions of BiblioSpec store the libraries in a
+different file format.  A BiblioSpec v1 library cannot be read by
+BiblioSpec v2 and vice versa.  However, there is a conversion tool,
+LibToSqlite3, that will convert a v1 library to v2.
+</p>
+
+<li><b>How does BlibFilter select the spectrum to keep in the
+    filtered library?</b>
+<p>
+After building a library from database search results, there are
+typically several spectra for any particular peptide at some charge
+state.  Let's call them replicate spectra.  A filtered library (the
+output of BlibFilter) will contain just one spectrum per peptide at
+each charge state.  BlibFilter selects the spectrum as follows.  Each
+pair of replicate spectra are compared to each other using a dot
+product score. For each replicate an average of those scores is
+computed and the replicate with the highest average is selected for
+inclusion in the filtered library.
+</p>
+
+<li><b>Why isn't my peptide in the library?</b>
+<p>
+BlibBuild filters the search results based on a score specific to that
+file type.  If a peptide-spectrum match has a score beyond the
+threshold it will not be included in the library.  Use the command
+line options to change the threshold.  BlibBuild also excludes a
+peptide-spectrum match if the same spectrum matches a different
+peptide at the same score.  In this case the spectrum's identity is
+ambiguous and it is not a good candidate for the library.  If there are
+cases where you have verified the identity of an ambiguous
+identification, you can add them to the library by creating a .ssl
+file for those spectra with their correct peptide identification.
+Note that an ambiguous identification includes one peptide sequence
+with different patterns of modification.  It does not include peptides
+that differ by a L/I substitution.
+
+</p>
+
+<li><b>Where can I find BiblioSpec publications?</b>
+<p>
+BiblioSpec was originally described in <a href=bibliospec.pdf>this
+article</a>.  There is also a chapter in Current Protocols in
+Bioinformatics  
+(<a href=http://www.ncbi.nlm.nih.gov/pubmed/18428681>citation</a>)
+documenting the use of BiblioSpec version 1.
+
+</p>
+
+</ol>
+
+
+</body>
+</html>
