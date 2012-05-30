@@ -47,6 +47,7 @@ namespace pwiz.Skyline
             this.importDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportTransitionListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportIsolationListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportMethodMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.exportReportMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.eSPFeaturesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -480,6 +481,7 @@ namespace pwiz.Skyline
             // 
             this.exportToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.exportTransitionListMenuItem,
+            this.exportIsolationListMenuItem,
             this.exportMethodMenuItem,
             this.exportReportMenuItem,
             this.eSPFeaturesMenuItem});
@@ -493,6 +495,13 @@ namespace pwiz.Skyline
             this.exportTransitionListMenuItem.Size = new System.Drawing.Size(157, 22);
             this.exportTransitionListMenuItem.Text = "&Transition List...";
             this.exportTransitionListMenuItem.Click += new System.EventHandler(this.exportTransitionListMenuItem_Click);
+            // 
+            // exportIsolationListMenuItem
+            // 
+            this.exportIsolationListMenuItem.Name = "exportIsolationListMenuItem";
+            this.exportIsolationListMenuItem.Size = new System.Drawing.Size(157, 22);
+            this.exportIsolationListMenuItem.Text = "&Isolation List...";
+            this.exportIsolationListMenuItem.Click += new System.EventHandler(this.exportIsolationListMenuItem_Click);
             // 
             // exportMethodMenuItem
             // 
@@ -3428,6 +3437,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem peptideIDTimesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generateDecoysMenuItem;
         private System.Windows.Forms.ToolStripMenuItem eSPFeaturesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportIsolationListMenuItem;
     }
 }
 

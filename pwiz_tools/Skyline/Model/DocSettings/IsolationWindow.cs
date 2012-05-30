@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double MethodStart { get { return Math.Max(Start - (StartMargin ?? 0), TransitionFullScan.MIN_RES_MZ); } }
         public double MethodEnd { get { return Math.Min(End + (EndMargin ?? (StartMargin ?? 0)), TransitionFullScan.MAX_RES_MZ); } }
+        public double MethodCenter { get { return (MethodStart + MethodEnd)/2; } }
 
         public double IsolationStart { get { return MethodStart + (StartMargin ?? 0); } }
         public double IsolationEnd { get { return MethodEnd - (EndMargin ?? (StartMargin ?? 0)); } }

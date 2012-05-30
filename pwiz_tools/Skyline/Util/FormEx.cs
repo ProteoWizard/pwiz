@@ -74,6 +74,11 @@ namespace pwiz.Skyline.Util
                 control = parent;
             }
         }
+
+        public virtual void CancelDialog()
+        {
+            CancelButton.PerformClick();
+        }
     }
 
     public class DockableFormEx : DockableForm

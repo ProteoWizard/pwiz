@@ -141,8 +141,12 @@ namespace pwiz.Skyline.Controls
                 {
                     // Show complete status before returning.
                     progressBar.Value = 100;
-                    Application.DoEvents();
-                    Thread.Sleep(100);
+                    labelMessage.Text = _message;
+                    for (int i = 0; i < 10; i++)
+                    {
+                        Application.DoEvents();
+                        Thread.Sleep(100);
+                    }
                 }
             }
             finally

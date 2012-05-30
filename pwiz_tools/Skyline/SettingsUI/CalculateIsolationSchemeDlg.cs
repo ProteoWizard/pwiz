@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -32,6 +33,21 @@ namespace pwiz.Skyline.SettingsUI
     public partial class CalculateIsolationSchemeDlg : FormEx
     {
         public IList<EditIsolationWindow> IsolationWindows { get { return CreateIsolationWindows(); } }
+        public bool Multiplexed { get { return cbMultiplexed.Checked; } }
+        public int WindowsPerScan 
+        { 
+            get
+            {
+                int windowsPerScan = 0;
+                int.TryParse(textWindowsPerScan.Text, out windowsPerScan);
+                return windowsPerScan;
+            }
+            set
+            {
+                textWindowsPerScan.Text = value.ToString(CultureInfo.CurrentCulture);
+                cbMultiplexed.Checked = (WindowsPerScan != 0);
+            }
+        }
 
         private const double OPTIMIZED_WINDOW_WIDTH_MULTIPLE = 1.00045475;
         private const double OPTIMIZED_WINDOW_OFFSET = 0.25;
@@ -68,6 +84,7 @@ namespace pwiz.Skyline.SettingsUI
             double overlap;
             double marginLeft = 0;
             double marginRight = 0;
+            int windowsPerScan = 0;
 
             double.TryParse(textOverlap.Text, out overlap);
             switch (comboMargins.SelectedItem.ToString())
@@ -87,6 +104,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!double.TryParse(textStart.Text, out start) ||
                 !double.TryParse(textEnd.Text, out end) ||
                 !double.TryParse(textWidth.Text, out windowWidth) ||
+                (Multiplexed && !int.TryParse(textWindowsPerScan.Text, out windowsPerScan)) ||
                 start >= end ||
                 windowWidth <= 0 ||
                 overlap >= 100)
@@ -109,7 +127,9 @@ namespace pwiz.Skyline.SettingsUI
             bool generateEndMargin = (comboMargins.SelectedItem.ToString() == WindowMargin.ASYMMETRIC);
             double windowStep = windowWidth * (100 - overlap) / 100;
             for (;
-                start < end && isolationWindows.Count <= MAX_GENERATED_WINDOWS;
+                // For multiplexed windows, add extra windows to make number of windows a multiple of windows per scan.
+                (start < end || (Multiplexed && start < TransitionFullScan.MAX_RES_MZ && isolationWindows.Count % windowsPerScan != 0))
+                && isolationWindows.Count <= MAX_GENERATED_WINDOWS;
                 start += windowStep)
             {
                 // Apply instrument limits to method start and end.
@@ -199,6 +219,24 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
+            // Validate multiplexing.
+            if (Multiplexed)
+            {
+                int windowsPerScan;
+                if (!helper.ValidateNumberTextBox(e, textWindowsPerScan, 2, 20, out windowsPerScan))
+                {
+                    return;
+                }
+
+                // Make sure multiplexed window count is a multiple of windows per scan.
+                if (Multiplexed && IsolationWindows.Count % windowsPerScan != 0)
+                {
+                    MessageDlg.Show(this,
+                        "The number of generated windows could not be adjusted to be a multiple of the windows per scan.  Try changing the windows per scan or the End value.");
+                    return;
+                }
+            }
+
             try
             {
                 new IsolationWindow(start, end, null, marginLeft, marginRight);
@@ -274,9 +312,20 @@ namespace pwiz.Skyline.SettingsUI
             UpdateWindowCount();
         }
 
+        private void textWindowsPerScan_TextChanged(object sender, EventArgs e)
+        {
+            UpdateWindowCount();
+        }
+
         private void btnOk_Click(object sender, EventArgs e)
         {
             OkDialog();
+        }
+
+        private void cbMultiplexed_CheckedChanged(object sender, EventArgs e)
+        {
+            textWindowsPerScan.Enabled = cbMultiplexed.Checked;
+            labelWindowsPerScan.Enabled = cbMultiplexed.Checked;
         }
 
         #region Functional Test Support

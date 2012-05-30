@@ -1313,6 +1313,46 @@ namespace pwiz.Skyline.Util
         {
             return d.HasValue ? d.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
         }
+
+        public static string LineSeparate(params object[] values)
+        {
+            var sb = new StringBuilder();
+            foreach (var value in values)
+                sb.AppendLine(value.ToString());
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// This is a replacement for Debug.Assert, having the advantage that it is not omitted in a retail build.
+        /// </summary>
+        /// <param name="condition">condition to check</param>
+        /// <param name="error">optional error message</param>
+        public static void Assume(bool condition, string error = "")
+        {
+            if (!condition)
+                throw new AssumptionException(error);
+        }
+
+        /// <summary>
+        /// This function does two things: it returns the value of a nullable that we assume has a value (this
+        /// avoids Resharper warnings), and it throws an exception if the nullable unexpectedly has no value.
+        /// </summary>
+        /// <param name="value">a nullable int that is expected to have a value</param>
+        /// <returns>the value of the nullable int</returns>
+        public static T AssumeValue<T>(T? value) where T : struct
+        {
+            if (!value.HasValue)
+                throw new AssumptionException("Nullable was expected to have a value.");
+            return value.Value;
+        }
+    }
+
+    public class AssumptionException : Exception
+    {
+        public AssumptionException(string message)
+            : base(message)
+        {
+        }
     }
 
     public static class MathEx
@@ -1326,6 +1366,6 @@ namespace pwiz.Skyline.Util
                     return rounded;
             }
             return 0;
-        }        
+        }
     }
 }

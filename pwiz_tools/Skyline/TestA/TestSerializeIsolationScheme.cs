@@ -70,7 +70,8 @@ namespace pwiz.SkylineTestA
             AssertEx.DeserializeNoError<IsolationScheme>(
                 @"<isolation_scheme name=""Validate (2)"" precursor_left_filter=""0.5"" precursor_right_filter=""0.5""/>");
             AssertEx.DeserializeNoError<IsolationScheme>(
-                @"<isolation_scheme name=""Validate (3)"" special_handling=""Multiplexed"" windows_per_scan=""3""><isolation_window start=""1"" end=""10""/></isolation_scheme>");
+                @"<isolation_scheme name=""Validate (3)"" special_handling=""Multiplexed"" windows_per_scan=""2"">
+                    <isolation_window start=""100"" end=""110""/><isolation_window start=""110"" end=""130""/></isolation_scheme>");
             AssertEx.DeserializeNoError<IsolationScheme>(
                 @"<isolation_scheme name=""Validate (4)"" special_handling=""MSe""/>");
 
@@ -134,6 +135,7 @@ namespace pwiz.SkylineTestA
                 </isolation_scheme>
                 <isolation_scheme name=""SPECIAL_HANDLING_MULTIPLEXED"" special_handling=""Multiplexed"" windows_per_scan=""2"">
                     <isolation_window start=""100"" end=""150"" target=""125"" margin=""1""/>
+                    <isolation_window start=""150"" end=""200"" target=""175"" margin=""1""/>
                 </isolation_scheme>
                 <isolation_scheme name=""SPECIAL_HANDLING_MS_E"" special_handling=""MSe"" />
             </IsolationSchemeList>";

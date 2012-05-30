@@ -738,6 +738,18 @@ namespace pwiz.Skyline
             ShowExportMethodDialog(ExportFileType.List);
         }
 
+        private void exportIsolationListMenuItem_Click(object sender, EventArgs e)
+        {
+            var isolationScheme = DocumentUI.Settings.TransitionSettings.FullScan.IsolationScheme;
+            if (isolationScheme == null || isolationScheme.FromResults)
+            {
+                MessageDlg.Show(this,
+                    "Export of isolation list is supported only for DIA acquisition with prespecified isolation windows.");
+                return;
+            }
+            ShowExportMethodDialog(ExportFileType.IsolationList);
+        }
+
         private void exportMethodMenuItem_Click(object sender, EventArgs e)
         {
             ShowExportMethodDialog(ExportFileType.Method);

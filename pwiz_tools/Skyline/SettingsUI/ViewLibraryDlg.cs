@@ -1175,7 +1175,7 @@ namespace pwiz.Skyline.SettingsUI
             CancelDialog();
         }
 
-        public void CancelDialog()
+        public override void CancelDialog()
         {
             DialogResult = DialogResult.Cancel;
             Application.DoEvents();

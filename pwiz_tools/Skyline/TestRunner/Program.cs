@@ -338,6 +338,7 @@ namespace TestRunner
             // Pause for profiling
             if (CommandLineArgs.ArgAsBool("profile"))
             {
+                GC.Collect();
                 Console.WriteLine("\nSleeping to allow memory profiling...\n");
                 Thread.Sleep(24*60*60*1000);    // 24 hours
             }

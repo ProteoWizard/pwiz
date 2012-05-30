@@ -282,9 +282,10 @@ namespace pwiz.SkylineTestA
             // Try this a few times, because Agilent method building seems to fail under stress
             // about 10% of the time.
             bool success = false;
+            string output = "";
             for (int i = 0; !success && i < 3; i++)
             {
-                string output = RunCommand("--in=" + docPath2,
+                output = RunCommand("--in=" + docPath2,
                                            "--exp-method-instrument=Agilent 6400 Series",
                                            "--exp-template=" + agilentTemplate,
                                            "--exp-file=" + agilentOut,
@@ -294,11 +295,13 @@ namespace pwiz.SkylineTestA
 
                 //check for success
                 success = output.Contains("successfully.");
-
-                if (!success)
-                    Console.WriteLine("Failed to write Agilent method: {0}", output);
             }
-            Assert.IsTrue(success);
+
+            if (!success)
+            {
+                Console.WriteLine("Failed to write Agilent method: {0}", output);
+                Assert.IsTrue(success);
+            }
         }
 
         [TestMethod]

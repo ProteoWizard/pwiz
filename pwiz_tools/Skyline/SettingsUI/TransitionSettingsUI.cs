@@ -109,6 +109,8 @@ namespace pwiz.Skyline.SettingsUI
             textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString(CultureInfo.CurrentCulture);
             if (Instrument.MaxTransitions.HasValue)
                 textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString(CultureInfo.CurrentCulture);
+            if (Instrument.MaxInclusions.HasValue)
+                textMaxInclusions.Text = Instrument.MaxInclusions.Value.ToString(CultureInfo.CurrentCulture);
             if (Instrument.MinTime.HasValue)
                 textMinTime.Text = Instrument.MinTime.Value.ToString(CultureInfo.CurrentCulture);
             if (Instrument.MaxTime.HasValue)
@@ -349,6 +351,17 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 maxTrans = maxTransTemp;
             }
+            int? maxInclusions = null;
+            if (!string.IsNullOrEmpty(textMaxInclusions.Text))
+            {
+                int maxInclusionsTemp;
+                min = TransitionInstrument.MIN_INCLUSION_MAX;
+                max = TransitionInstrument.MAX_INCLUSION_MAX;
+                if (!helper.ValidateNumberTextBox(e, tabControl1, (int) TABS.Instrument, textMaxInclusions,
+                        min, max, out maxInclusionsTemp))
+                    return;
+                maxInclusions = maxInclusionsTemp;
+            }
             int? minTime = null, maxTime = null;
             min = TransitionInstrument.MIN_TIME;
             max = TransitionInstrument.MAX_TIME;
@@ -370,7 +383,7 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             TransitionInstrument instrument = new TransitionInstrument(minMz,
-                maxMz, isDynamicMin, mzMatchTolerance, maxTrans, minTime, maxTime);
+                maxMz, isDynamicMin, mzMatchTolerance, maxTrans, maxInclusions, minTime, maxTime);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
             // Validate and store full-scan settings
@@ -500,6 +513,13 @@ namespace pwiz.Skyline.SettingsUI
                 MessageDlg.Show(this, "An isolation scheme is required to match multiple precursors.");
                 tabControl1.SelectedIndex = (int) TABS.FullScan;
                 comboIsolationScheme.Focus();
+                return;
+            }
+            if (isolationScheme != null && isolationScheme.WindowsPerScan.HasValue && !maxInclusions.HasValue)
+            {
+                MessageDlg.Show(this, "Before performing a multiplexed DIA scan, the instrument's firmware inclusion limit must be specified.");
+                tabControl1.SelectedIndex = (int)TABS.Instrument;
+                textMaxInclusions.Focus();
                 return;
             }
 
@@ -962,6 +982,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             get { return textMaxTime.Text; }
             set { textMaxTime.Text = value; }
+        }
+
+        public int MaxInclusions
+        {
+            set { textMaxInclusions.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
         public void AddIsolationScheme()

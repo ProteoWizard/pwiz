@@ -369,7 +369,15 @@ namespace pwiz.Skyline.SettingsUI
                     windowsPerScan = x;
                 }
 
-                _isolationScheme = new IsolationScheme(name, windowList, SpecialHandling, windowsPerScan);
+                try
+                {
+                    _isolationScheme = new IsolationScheme(name, windowList, SpecialHandling, windowsPerScan);
+                }
+                catch (InvalidDataException exception)
+                {
+                    MessageDlg.Show(this, exception.Message);
+                    return;
+                }
             }
 
             DialogResult = DialogResult.OK;
@@ -461,6 +469,18 @@ namespace pwiz.Skyline.SettingsUI
                     foreach (var window in isolationWindows)
                     {
                         _gridViewDriver.Items.Add(window);
+                    }
+
+                    // Copy multiplexed windows settings.
+                    if (calculateDlg.Multiplexed)
+                    {
+                        cbMultiplexed.Checked = true;
+                        textWindowsPerScan.Text = calculateDlg.WindowsPerScan.ToString(CultureInfo.CurrentCulture);
+                    }
+                    else
+                    {
+                        cbMultiplexed.Checked = false;
+                        textWindowsPerScan.Text = string.Empty;
                     }
                 }
             }

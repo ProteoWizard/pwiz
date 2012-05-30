@@ -152,6 +152,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         throw new InvalidDataException("Multiplexed windows require at least one window per scan");
                     }
+                    if (PrespecifiedIsolationWindows.Count % WindowsPerScan.Value != 0)
+                    {
+                        throw new InvalidDataException("The number of prespecified isolation windows must be a multiple of the windows per scan in multiplexed sampling.");
+                    }
                 }
                 else
                 {

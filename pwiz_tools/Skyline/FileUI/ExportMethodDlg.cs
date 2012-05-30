@@ -67,13 +67,22 @@ namespace pwiz.Skyline.FileUI
                 listTypes = ExportInstrumentType.METHOD_TYPES;
             else
             {
-                Text = "Export Transition List";
+                if (_fileType == ExportFileType.List)
+                {
+                    Text = "Export Transition List";
+                    listTypes = ExportInstrumentType.TRANSITION_LIST_TYPES;
+                }
+                else
+                {
+                    Text = "Export Isolation List";
+                    listTypes = ExportInstrumentType.ISOLATION_LIST_TYPES;
+                    _exportProperties.MultiplexIsolationListCalculationTime = 20;   // Default 20 seconds to search for good multiplexed window ordering.
+                }
+                
                 btnBrowseTemplate.Visible = false;
                 labelTemplateFile.Visible = false;
                 textTemplateFile.Visible = false;
                 Height -= textTemplateFile.Bottom - comboTargetType.Bottom;
-
-                listTypes = ExportInstrumentType.TRANSITION_LIST_TYPES;
             }
 
             comboInstrument.Items.Clear();
@@ -466,8 +475,8 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            // Thermo LTQ method building ignores CE and DP regression values
-            if (!Equals(InstrumentType, ExportInstrumentType.Thermo_LTQ))
+            // Full-scan method building ignores CE and DP regression values
+            if (!ExportInstrumentType.IsFullScanInstrumentType(InstrumentType))
             {
                 // Check to make sure CE and DP match chosen instrument, and offer to use
                 // the correct version for the instrument, if not.
@@ -523,31 +532,38 @@ namespace pwiz.Skyline.FileUI
 
             if (outputPath == null)
             {
+                string title = Text;
+                string ext = "csv";
+                string filter = "Method File";
+
+                switch (_fileType)
+                {
+                    case ExportFileType.List:
+                        filter = "Transition List";
+                        break;
+
+                    case ExportFileType.IsolationList:
+                        filter = "Isolation List";
+                        break;
+
+                    case ExportFileType.Method:
+                        title = string.Format("Export {0} Method", _instrumentType);
+                        ext = ExportInstrumentType.MethodExtension(_instrumentType);
+                        break;
+                }
+
                 SaveFileDialog dlg = new SaveFileDialog
                 {
-                    Title = "Export Transition List",
+                    Title = title,
                     InitialDirectory = Settings.Default.ExportDirectory,
                     OverwritePrompt = true,
-                    DefaultExt = "csv",
+                    DefaultExt = ext,
                     Filter = string.Join("|", new[]
                     {
-                        "Transition List (*.csv)|*.csv",
+                        string.Format("{0} (*.{1})|*.{1}", filter, ext),
                         "All Files (*.*)|*.*"
                     })
                 };
-
-                if (_fileType != ExportFileType.List)
-                {
-                    dlg.Title = string.Format("Export {0} Method", _instrumentType);
-
-                    dlg.DefaultExt = ExportInstrumentType.MethodExtension(_instrumentType);
-                    
-                    dlg.Filter = string.Join("|", new[]
-                                     {
-                                         string.Format("Method File (*.{0})|*.{0}", dlg.DefaultExt),
-                                         "All Files (*.*)|*.*"
-                                     });
-                }
 
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
                 {
@@ -856,8 +872,16 @@ namespace pwiz.Skyline.FileUI
             StrategyCheckChanged();
         }
 
+        private bool IsDia { get { return _document.Settings.TransitionSettings.FullScan.IsolationScheme != null; } }
+
         private void StrategyCheckChanged()
         {
+            if (IsDia && !radioSingle.Checked)
+            {
+                MessageDlg.Show(this, "Only one method can be exported in DIA mode.");
+                radioSingle.Checked = true;
+            }
+
             textMaxTransitions.Enabled = !radioSingle.Checked;
             cbIgnoreProteins.Enabled = radioBuckets.Checked;
             if (!radioBuckets.Checked)
@@ -910,6 +934,12 @@ namespace pwiz.Skyline.FileUI
         private void comboTargetType_SelectedIndexChanged(object sender, EventArgs e)
         {
             bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.ToString());
+            if (!standard && IsDia)
+            {
+                MessageDlg.Show(this, "Scheduled methods are not yet supported for DIA acquisition.");
+                comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
+                return;
+            }
             if (!standard && !CanSchedule)
             {
                 var prediction = _document.Settings.PeptideSettings.Prediction;
@@ -979,6 +1009,9 @@ namespace pwiz.Skyline.FileUI
 
         private void CalcMethodCount()
         {
+            if (IsDia)
+                return;
+
             if (_recalcMethodCountStatus != RecalcMethodCountStatus.waiting || !IsHandleCreated)
             {
                 _recalcMethodCountStatus = RecalcMethodCountStatus.pending;
@@ -1053,7 +1086,7 @@ namespace pwiz.Skyline.FileUI
         {
             bool showDwell = false;
             bool showRunLength = false;
-            if (standard)
+            if (standard && IsDia)
             {
                 if (!IsSingleDwellInstrument)
                 {
@@ -1196,6 +1229,11 @@ namespace pwiz.Skyline.FileUI
            get { return labelMaxTransitions.Text; }
         }
 
+        public bool IsMaxTransitionsEnabled
+        {
+           get { return textMaxTransitions.Enabled; }
+        }
+
         public string GetDwellTimeLabel
         {
             get { return labelDwellTime.Text; }
@@ -1203,12 +1241,24 @@ namespace pwiz.Skyline.FileUI
 
         public bool IsDwellTimeVisible
         {
-            get{ return textDwellTime.Visible;}
+            get { return textDwellTime.Visible; }
         }
 
         public bool IsRunLengthVisible
         {
             get{ return textRunLength.Visible; }
+        }
+
+        public int CalculationTime
+        {
+            get { return _exportProperties.MultiplexIsolationListCalculationTime; }
+            set { _exportProperties.MultiplexIsolationListCalculationTime = value; }
+        }
+
+        public bool DebugCycles
+        {
+            get { return _exportProperties.DebugCycles; }
+            set { _exportProperties.DebugCycles = value; }
         }
 
         #endregion

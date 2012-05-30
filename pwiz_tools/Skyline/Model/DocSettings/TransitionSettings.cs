@@ -123,6 +123,12 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 throw new InvalidDataException("High resolution MS1 filtering requires use of monoisotopic precursor masses.");
             }
+
+            if (FullScan != null && FullScan.IsolationScheme != null && FullScan.IsolationScheme.WindowsPerScan.HasValue &&
+                (Instrument == null || !Instrument.MaxInclusions.HasValue))
+            {
+                throw new InvalidDataException("The instrument's firmware inclusion limit must be specified before doing a multiplexed DIA scan.");
+            }
         }
 
         public static TransitionSettings Deserialize(XmlReader reader)
@@ -1238,6 +1244,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_TRANSITION_MAX_ORIGINAL = 50;
         public const int MIN_TRANSITION_MAX = 320;
         public const int MAX_TRANSITION_MAX = 10000;
+        public const int MIN_INCLUSION_MAX = 100;
+        public const int MAX_INCLUSION_MAX = 5000;
         public const int MIN_TIME = 0;
         public const int MAX_TIME = 500;
         public const int MIN_TIME_RANGE = 5;
@@ -1253,6 +1261,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                     bool isDynamicMin,
                                     double mzMatchTolerance,
                                     int? maxTransitions,
+                                    int? maxInclusions,
                                     int? minTime,
                                     int? maxTime)
         {
@@ -1261,6 +1270,7 @@ namespace pwiz.Skyline.Model.DocSettings
             IsDynamicMin = isDynamicMin;
             MzMatchTolerance = mzMatchTolerance;
             MaxTransitions = maxTransitions;
+            MaxInclusions = maxInclusions;
             MinTime = minTime;
             MaxTime = maxTime;
 
@@ -1299,6 +1309,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public int? MaxTransitions { get; private set; }
+        
+        public int? MaxInclusions { get; private set; }
 
         public int? MinTime { get; private set; }
 
@@ -1339,6 +1351,11 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionInstrument ChangeMaxTransitions(int? prop)
         {
             return ChangeProp(ImClone(this), im => im.MaxTransitions = prop);
+        }
+
+        public TransitionInstrument ChangeMaxInclusions(int? prop)
+        {
+            return ChangeProp(ImClone(this), im => im.MaxInclusions = prop);
         }
 
         public TransitionInstrument ChangeMinTime(int? prop)
@@ -1384,6 +1401,7 @@ namespace pwiz.Skyline.Model.DocSettings
             dynamic_min,
             mz_match_tolerance,
             max_transitions,
+            max_inclusions,
 
             // Backward compatibility with 0.7.1
             precursor_filter_type,
@@ -1422,6 +1440,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 throw new InvalidDataException(string.Format("The maximum number of transitions {0} must be between {1} and {2}.",
                     MaxTransitions, MIN_TRANSITION_MAX_ORIGINAL, MAX_TRANSITION_MAX));
+            }
+            if (MIN_INCLUSION_MAX > MaxInclusions || MaxInclusions > MAX_INCLUSION_MAX)
+            {
+                throw new InvalidDataException(string.Format("The maximum number of inclusions {0} must be between {1} and {2}.",
+                    MaxInclusions, MIN_INCLUSION_MAX, MAX_INCLUSION_MAX));
             }
             if (MinTime.HasValue && (MIN_TIME > MinTime || MinTime > MAX_TIME))
             {
@@ -1473,6 +1496,7 @@ namespace pwiz.Skyline.Model.DocSettings
             MinTime = reader.GetNullableIntAttribute(ATTR.min_time);
             MaxTime = reader.GetNullableIntAttribute(ATTR.max_time);
             MaxTransitions = reader.GetNullableIntAttribute(ATTR.max_transitions);
+            MaxInclusions = reader.GetNullableIntAttribute(ATTR.max_inclusions);
 
             // Full-scan filter parameters (backward compatibility w/ 0.7.1)
             var legacyFilterType = reader.GetEnumAttribute(ATTR.precursor_filter_type, LegacyAcquisitionMethod.None);
@@ -1505,6 +1529,7 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttributeNullable(ATTR.min_time, MinTime);
             writer.WriteAttributeNullable(ATTR.max_time, MaxTime);
             writer.WriteAttributeNullable(ATTR.max_transitions, MaxTransitions);
+            writer.WriteAttributeNullable(ATTR.max_inclusions, MaxInclusions);
         }
 
         #endregion
@@ -1522,6 +1547,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 other.MinTime.Equals(MinTime) &&
                 other.MaxTime.Equals(MaxTime) &&
                 other.MaxTransitions.Equals(MaxTransitions) &&
+                other.MaxInclusions.Equals(MaxInclusions) &&
                 Equals(other.PrecursorAcquisitionMethod, PrecursorAcquisitionMethod) &&
                 other.PrecursorFilter.Equals(PrecursorFilter) &&
                 Equals(other.ProductFilterType, ProductFilterType) &&
@@ -1547,6 +1573,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (MinTime.HasValue ? MinTime.Value : 0);
                 result = (result*397) ^ (MaxTime.HasValue ? MaxTime.Value : 0);
                 result = (result*397) ^ (MaxTransitions.HasValue ? MaxTransitions.Value : 0);
+                result = (result*397) ^ (MaxInclusions.HasValue ? MaxInclusions.Value : 0);
                 result = (result*397) ^ PrecursorAcquisitionMethod.GetHashCode();
                 result = (result*397) ^ (PrecursorFilter.HasValue ? PrecursorFilter.Value.GetHashCode() : 0);
                 result = (result*397) ^ (ProductFilterType != null ? ProductFilterType.GetHashCode() : 0);

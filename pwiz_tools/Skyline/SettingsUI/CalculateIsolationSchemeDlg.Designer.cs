@@ -49,26 +49,29 @@
             this.cbOptimizeWindowPlacement = new System.Windows.Forms.CheckBox();
             this.cbGenerateMethodTarget = new System.Windows.Forms.CheckBox();
             this.labelWindowCount = new System.Windows.Forms.Label();
+            this.cbMultiplexed = new System.Windows.Forms.CheckBox();
+            this.textWindowsPerScan = new System.Windows.Forms.TextBox();
+            this.labelWindowsPerScan = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(245, 42);
+            this.btnCancel.Location = new System.Drawing.Point(250, 42);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 19;
+            this.btnCancel.TabIndex = 22;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(245, 13);
+            this.btnOk.Location = new System.Drawing.Point(250, 13);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 18;
+            this.btnOk.TabIndex = 21;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -129,47 +132,47 @@
             this.comboMargins.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.comboMargins.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboMargins.FormattingEnabled = true;
-            this.comboMargins.Location = new System.Drawing.Point(199, 161);
+            this.comboMargins.Location = new System.Drawing.Point(204, 185);
             this.comboMargins.Name = "comboMargins";
             this.comboMargins.Size = new System.Drawing.Size(121, 21);
-            this.comboMargins.TabIndex = 14;
+            this.comboMargins.TabIndex = 15;
             this.comboMargins.SelectedIndexChanged += new System.EventHandler(this.comboMargins_SelectedIndexChanged);
             // 
             // label4
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(196, 145);
+            this.label4.Location = new System.Drawing.Point(201, 169);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(47, 13);
-            this.label4.TabIndex = 13;
+            this.label4.TabIndex = 14;
             this.label4.Text = "&Margins:";
             // 
             // label5
             // 
             this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(196, 196);
+            this.label5.Location = new System.Drawing.Point(201, 220);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(70, 13);
-            this.label5.TabIndex = 15;
+            this.label5.TabIndex = 16;
             this.label5.Text = "Mar&gin width:";
             // 
             // textMarginLeft
             // 
             this.textMarginLeft.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.textMarginLeft.Location = new System.Drawing.Point(199, 212);
+            this.textMarginLeft.Location = new System.Drawing.Point(204, 236);
             this.textMarginLeft.Name = "textMarginLeft";
             this.textMarginLeft.Size = new System.Drawing.Size(55, 20);
-            this.textMarginLeft.TabIndex = 16;
+            this.textMarginLeft.TabIndex = 17;
             // 
             // textMarginRight
             // 
             this.textMarginRight.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.textMarginRight.Location = new System.Drawing.Point(265, 212);
+            this.textMarginRight.Location = new System.Drawing.Point(270, 236);
             this.textMarginRight.Name = "textMarginRight";
             this.textMarginRight.Size = new System.Drawing.Size(55, 20);
-            this.textMarginRight.TabIndex = 17;
+            this.textMarginRight.TabIndex = 18;
             // 
             // textOverlap
             // 
@@ -210,22 +213,23 @@
             // cbOptimizeWindowPlacement
             // 
             this.cbOptimizeWindowPlacement.AutoSize = true;
-            this.cbOptimizeWindowPlacement.Location = new System.Drawing.Point(16, 163);
+            this.cbOptimizeWindowPlacement.Location = new System.Drawing.Point(16, 278);
             this.cbOptimizeWindowPlacement.Name = "cbOptimizeWindowPlacement";
             this.cbOptimizeWindowPlacement.Size = new System.Drawing.Size(157, 17);
-            this.cbOptimizeWindowPlacement.TabIndex = 11;
+            this.cbOptimizeWindowPlacement.TabIndex = 19;
             this.cbOptimizeWindowPlacement.Text = "Optimize window &placement";
             this.cbOptimizeWindowPlacement.UseVisualStyleBackColor = true;
             this.cbOptimizeWindowPlacement.CheckedChanged += new System.EventHandler(this.cbOptimizeWindowPlacement_CheckedChanged);
             // 
             // cbGenerateMethodTarget
             // 
+            this.cbGenerateMethodTarget.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.cbGenerateMethodTarget.AutoSize = true;
-            this.cbGenerateMethodTarget.Location = new System.Drawing.Point(16, 195);
+            this.cbGenerateMethodTarget.Location = new System.Drawing.Point(204, 278);
             this.cbGenerateMethodTarget.Name = "cbGenerateMethodTarget";
-            this.cbGenerateMethodTarget.Size = new System.Drawing.Size(138, 17);
-            this.cbGenerateMethodTarget.TabIndex = 12;
-            this.cbGenerateMethodTarget.Text = "Generate method &target";
+            this.cbGenerateMethodTarget.Size = new System.Drawing.Size(100, 17);
+            this.cbGenerateMethodTarget.TabIndex = 20;
+            this.cbGenerateMethodTarget.Text = "Generate &target";
             this.cbGenerateMethodTarget.UseVisualStyleBackColor = true;
             // 
             // labelWindowCount
@@ -237,13 +241,46 @@
             this.labelWindowCount.Size = new System.Drawing.Size(0, 13);
             this.labelWindowCount.TabIndex = 10;
             // 
+            // cbMultiplexed
+            // 
+            this.cbMultiplexed.AutoSize = true;
+            this.cbMultiplexed.Location = new System.Drawing.Point(16, 168);
+            this.cbMultiplexed.Name = "cbMultiplexed";
+            this.cbMultiplexed.Size = new System.Drawing.Size(132, 17);
+            this.cbMultiplexed.TabIndex = 11;
+            this.cbMultiplexed.Text = "Multiplexed &acquisition";
+            this.cbMultiplexed.UseVisualStyleBackColor = true;
+            this.cbMultiplexed.CheckedChanged += new System.EventHandler(this.cbMultiplexed_CheckedChanged);
+            // 
+            // textWindowsPerScan
+            // 
+            this.textWindowsPerScan.Enabled = false;
+            this.textWindowsPerScan.Location = new System.Drawing.Point(35, 205);
+            this.textWindowsPerScan.Name = "textWindowsPerScan";
+            this.textWindowsPerScan.Size = new System.Drawing.Size(39, 20);
+            this.textWindowsPerScan.TabIndex = 13;
+            this.textWindowsPerScan.TextChanged += new System.EventHandler(this.textWindowsPerScan_TextChanged);
+            // 
+            // labelWindowsPerScan
+            // 
+            this.labelWindowsPerScan.AutoSize = true;
+            this.labelWindowsPerScan.Enabled = false;
+            this.labelWindowsPerScan.Location = new System.Drawing.Point(32, 189);
+            this.labelWindowsPerScan.Name = "labelWindowsPerScan";
+            this.labelWindowsPerScan.Size = new System.Drawing.Size(98, 13);
+            this.labelWindowsPerScan.TabIndex = 12;
+            this.labelWindowsPerScan.Text = "Win&dows per scan:";
+            // 
             // CalculateIsolationSchemeDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(332, 250);
+            this.ClientSize = new System.Drawing.Size(337, 311);
+            this.Controls.Add(this.cbMultiplexed);
+            this.Controls.Add(this.textWindowsPerScan);
+            this.Controls.Add(this.labelWindowsPerScan);
             this.Controls.Add(this.labelWindowCount);
             this.Controls.Add(this.cbGenerateMethodTarget);
             this.Controls.Add(this.cbOptimizeWindowPlacement);
@@ -298,5 +335,8 @@
         private System.Windows.Forms.CheckBox cbOptimizeWindowPlacement;
         private System.Windows.Forms.CheckBox cbGenerateMethodTarget;
         private System.Windows.Forms.Label labelWindowCount;
+        private System.Windows.Forms.CheckBox cbMultiplexed;
+        private System.Windows.Forms.TextBox textWindowsPerScan;
+        private System.Windows.Forms.Label labelWindowsPerScan;
     }
 }

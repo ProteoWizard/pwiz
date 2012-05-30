@@ -77,6 +77,8 @@
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabInstrument = new System.Windows.Forms.TabPage();
+            this.textMaxInclusions = new System.Windows.Forms.TextBox();
+            this.label21 = new System.Windows.Forms.Label();
             this.label30 = new System.Windows.Forms.Label();
             this.label31 = new System.Windows.Forms.Label();
             this.label33 = new System.Windows.Forms.Label();
@@ -661,6 +663,8 @@
             // 
             // tabInstrument
             // 
+            this.tabInstrument.Controls.Add(this.textMaxInclusions);
+            this.tabInstrument.Controls.Add(this.label21);
             this.tabInstrument.Controls.Add(this.label30);
             this.tabInstrument.Controls.Add(this.label31);
             this.tabInstrument.Controls.Add(this.label33);
@@ -686,10 +690,28 @@
             this.tabInstrument.Text = "Instrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
             // 
+            // textMaxInclusions
+            // 
+            this.textMaxInclusions.Location = new System.Drawing.Point(189, 185);
+            this.textMaxInclusions.Name = "textMaxInclusions";
+            this.textMaxInclusions.Size = new System.Drawing.Size(68, 20);
+            this.textMaxInclusions.TabIndex = 20;
+            this.helpTip.SetToolTip(this.textMaxInclusions, "Maximum number of inclusion windows measured by the target\r\ninstrument during mul" +
+        "tiplexed scanning.");
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(186, 169);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(116, 13);
+            this.label21.TabIndex = 19;
+            this.label21.Text = "Firmware &inclusion limit:";
+            // 
             // label30
             // 
             this.label30.AutoSize = true;
-            this.label30.Location = new System.Drawing.Point(264, 215);
+            this.label30.Location = new System.Drawing.Point(264, 252);
             this.label30.Name = "label30";
             this.label30.Size = new System.Drawing.Size(23, 13);
             this.label30.TabIndex = 18;
@@ -698,7 +720,7 @@
             // label31
             // 
             this.label31.AutoSize = true;
-            this.label31.Location = new System.Drawing.Point(101, 215);
+            this.label31.Location = new System.Drawing.Point(101, 252);
             this.label31.Name = "label31";
             this.label31.Size = new System.Drawing.Size(23, 13);
             this.label31.TabIndex = 14;
@@ -707,24 +729,24 @@
             // label33
             // 
             this.label33.AutoSize = true;
-            this.label33.Location = new System.Drawing.Point(187, 196);
+            this.label33.Location = new System.Drawing.Point(187, 233);
             this.label33.Name = "label33";
             this.label33.Size = new System.Drawing.Size(52, 13);
             this.label33.TabIndex = 16;
-            this.label33.Text = "Ma&x time:";
+            this.label33.Text = "M&ax time:";
             // 
             // label34
             // 
             this.label34.AutoSize = true;
-            this.label34.Location = new System.Drawing.Point(24, 196);
+            this.label34.Location = new System.Drawing.Point(24, 233);
             this.label34.Name = "label34";
             this.label34.Size = new System.Drawing.Size(49, 13);
             this.label34.TabIndex = 12;
-            this.label34.Text = "&Min time:";
+            this.label34.Text = "Mi&n time:";
             // 
             // textMaxTime
             // 
-            this.textMaxTime.Location = new System.Drawing.Point(190, 212);
+            this.textMaxTime.Location = new System.Drawing.Point(190, 249);
             this.textMaxTime.Name = "textMaxTime";
             this.textMaxTime.Size = new System.Drawing.Size(68, 20);
             this.textMaxTime.TabIndex = 17;
@@ -734,7 +756,7 @@
             // 
             // textMinTime
             // 
-            this.textMinTime.Location = new System.Drawing.Point(27, 212);
+            this.textMinTime.Location = new System.Drawing.Point(27, 249);
             this.textMinTime.Name = "textMinTime";
             this.textMinTime.Size = new System.Drawing.Size(68, 20);
             this.textMinTime.TabIndex = 13;
@@ -784,7 +806,7 @@
             // 
             // textMaxTrans
             // 
-            this.textMaxTrans.Location = new System.Drawing.Point(190, 124);
+            this.textMaxTrans.Location = new System.Drawing.Point(27, 185);
             this.textMaxTrans.Name = "textMaxTrans";
             this.textMaxTrans.Size = new System.Drawing.Size(68, 20);
             this.textMaxTrans.TabIndex = 11;
@@ -794,7 +816,7 @@
             // label17
             // 
             this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(187, 108);
+            this.label17.Location = new System.Drawing.Point(24, 169);
             this.label17.Name = "label17";
             this.label17.Size = new System.Drawing.Size(117, 13);
             this.label17.TabIndex = 10;
@@ -1296,5 +1318,7 @@
         private System.Windows.Forms.TextBox textMinTime;
         private System.Windows.Forms.CheckBox cbFilterScheduling;
         private System.Windows.Forms.ComboBox comboIsolationScheme;
+        private System.Windows.Forms.TextBox textMaxInclusions;
+        private System.Windows.Forms.Label label21;
     }
 }
