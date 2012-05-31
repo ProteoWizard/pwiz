@@ -87,8 +87,8 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     SourceFilePtr sourceFile(new SourceFile);
     bfs::path p(wiffpath);
     sourceFile->id = "WIFF";
-    sourceFile->name = p.leaf();
-    string location = bfs::complete(p.branch_path()).string();
+    sourceFile->name = BFS_STRING(p.leaf());
+    string location = BFS_COMPLETE(p.branch_path()).string();
     if (location.empty()) location = ".";
     sourceFile->location = "file://" + location;
     sourceFile->set(MS_WIFF_nativeID_format);
@@ -103,8 +103,8 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     {
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = "WIFFSCAN";
-        sourceFile->name = wiffscan.leaf();
-        string location = bfs::complete(wiffscan.branch_path()).string();
+        sourceFile->name = BFS_STRING(wiffscan.leaf());
+        string location = BFS_COMPLETE(wiffscan.branch_path()).string();
         if (location.empty()) location = ".";
         sourceFile->location = "file://" + location;
         sourceFile->set(MS_WIFF_nativeID_format);

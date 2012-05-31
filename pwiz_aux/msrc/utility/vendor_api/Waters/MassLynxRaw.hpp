@@ -83,7 +83,7 @@ struct PWIZ_API_DECL RawData
         int functionCount = 0;
         for (size_t i=0; i < functionFilepaths.size(); ++i)
         {
-			string fileName = functionFilepaths[i].filename();
+			string fileName = BFS_STRING(functionFilepaths[i].filename());
             int number = lexical_cast<int>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
             functionIndexList.push_back(number-1); // 0-based
             functionCount = std::max(functionCount, number);

@@ -53,7 +53,6 @@ rule vendor-api-requirements ( properties * )
         {
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
-        result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <assembly>$(API_PATH)/Interop.EDAL.dll ;
         result += <assembly>$(API_PATH)/Interop.HSREADWRITELib.dll ;
         result += <assembly>$(API_PATH)/BDal.CXt.Lc.dll ;

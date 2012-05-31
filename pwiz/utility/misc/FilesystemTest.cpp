@@ -29,12 +29,13 @@
 using namespace pwiz::util;
 using boost::system::error_code;
 using boost::system::system_category;
-#if (BOOST_VERSION/100) >= 1044 
-#define SYSTEMCATEGORY system_category()
-#else // exported library symbol used to be a global variable, now its a function. Okeedokee, then.
-#define SYSTEMCATEGORY system_category
-#endif
 using boost::system::system_error;
+
+#if (BOOST_VERSION/100) >= 1044 
+#   define SYSTEMCATEGORY system_category()
+#else // exported library symbol used to be a global variable, now its a function. Okeedokee, then.
+#   define SYSTEMCATEGORY system_category
+#endif
 
 
 // platform-specific path elements

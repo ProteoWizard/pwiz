@@ -35,18 +35,23 @@ import "class" : new ;
 import os ;
 import tar ;
 import regex ;
-
+import errors ;
 
 extension.declare boost ;
 
+# FIXME: how to get the path to the current jamfile?
+path-constant THIS_PATH : ../../libraries ;
 
+.boost-version = ;
+.boost-src-location = ;
+
+feature.feature boost-filesystem-version : default 2 3 : composite link-incompatible propagated ;
 feature.feature boost-iostreams-zlib : on off : composite link-incompatible propagated ;
 feature.feature boost-iostreams-bzip2 : off on : composite link-incompatible propagated ;
 feature.feature zlib-src-location : : free path ;
 
 feature.feature boost-interprocess : : free ;
 feature.feature boost-asio : : free ;
-
 
 rule boost-tag ( name : type ? : property-set )
 {
@@ -68,7 +73,70 @@ rule secure-scl-throws ( properties * )
     }
 }
 
+rule filesystem-usage-requirements ( properties * )
+{
+    local location = $(.boost-src-location) ;
+    local version-tokens = [ regex.split $(.boost-version) \\. ] ;
+    local fs-version = [ feature.get-values boost-filesystem-version : $(properties) ] ;
 
+    # TODO: at some point v2 support will disappear
+    #if $(fs-version) = 2 && $(version-tokens[2]) > 49
+    #{
+    #    errors.user-error "Boost $(.boost-version) does not support filesystem version 2." ;
+    #}
+
+    if $(fs-version) = 3 && $(version-tokens[2]) < 44
+    {
+        errors.user-error "Boost $(.boost-version) does not support filesystem version 3." ;
+    }
+
+    local result ;
+    
+    if $(fs-version) = "default"
+    {
+        fs-version = 2 ;
+        if $(version-tokens[2]) > 45 { fs-version = 3 ; }
+    }
+    else
+    {
+        result += <define>BOOST_FILESYSTEM_VERSION=$(fs-version) ;
+    }
+
+    if $(version-tokens[2]) < 44 && <toolset>msvc in $(properties)
+    {
+        result += <define>BOOST_WINDOWS_API ;
+    }
+
+    return $(result) ;
+}
+
+rule filesystem-requirements ( properties * )
+{
+    local location = $(.boost-src-location) ;
+    local version-tokens = [ regex.split $(.boost-version) \\. ] ;
+    local fs-version = [ feature.get-values boost-filesystem-version : $(properties) ] ;
+
+    local result = [ filesystem-usage-requirements $(properties) ] ;
+    
+    if $(fs-version) = "default"
+    {
+        fs-version = 2 ;
+        if $(version-tokens[2]) > 45 { fs-version = 3 ; }
+    }
+
+    local sources = [ glob $(location)/libs/filesystem/v$(fs-version)/src/*.cpp ] [ glob $(location)/libs/filesystem/src/*.cpp ] ;
+    result += <source>$(sources) ;
+
+    if $(version-tokens[2]) < 44 && <toolset>msvc in $(properties)
+    {
+        result += <define>BOOST_WINDOWS_API ;
+    }
+
+    return $(result) ;
+}
+
+
+# TODO: parse version from version.hpp file
 rule init ( version : location : options * )
 {
     if ! $(.initialized)
@@ -78,30 +146,35 @@ rule init ( version : location : options * )
         local version-tokens = [ regex.split $(version) \\. ] ;
         local boost-basename = "boost_$(version-tokens:J=_)" ;
 
-        # extract boost tarball
-        tar.extract
-              # tar filepath
-                $(boost-basename).tar.bz2
-            : # include patterns
-                $(boost-basename)/boost*.?pp
-                $(boost-basename)/libs*.?pp
-                $(boost-basename)/libs/*timeconv.inl
-            : # requirements
-                <location>.
-            : # usage-requirements
-            : check-last-file-only   
-            ;
+        if [ path.exists $(location:D)/$(boost-basename).tar.bz2 ]
+        {
+            # extract boost tarball
+            tar.extract
+                  # tar filepath
+                    $(boost-basename).tar.bz2
+                : # include patterns
+                    $(boost-basename)/boost*.?pp
+                    $(boost-basename)/libs*.?pp
+                    $(boost-basename)/libs/*timeconv.inl
+                : # requirements
+                    <location>.
+                : # usage-requirements
+                : check-last-file-only   
+                ;
+        }
 
         local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
         zlib-src-location ?= $(location)/../zlib-1.2.3 ;
         path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
         using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 
+        .boost-src-location = $(location) ;
+        .boost-version = $(version) ;
+
         local requirements =
             [ extension.refine boost $(version) : <tag>@boost-tag $(options) ]
             $(options)
             <toolset>msvc:<define>WIN32
-            <toolset>msvc:<define>BOOST_WINDOWS_API
             <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
             <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
             <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
@@ -138,27 +211,29 @@ rule init ( version : location : options * )
 
 
         lib filesystem
-            :   [ glob $(location)/libs/filesystem/src/*.cpp ]
+            :
             :   $(requirements)
-                <location-prefix>filesystem
+                <location-prefix>filesystem-$(version-tokens:J=_)
                 <use>boost
                 <threading>multi
                 <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
                 <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
                 <define>BOOST_FILESYSTEM_NO_LIB=1
+                <conditional>@filesystem-requirements
                 <library>system
             :
             :   <define>BOOST_FILESYSTEM_NO_LIB=1
                 <link>shared:<define>BOOST_FILESYSTEM_DYN_LINK=1
                 <link>static:<define>BOOST_FILESYSTEM_STATIC_LINK=1
                 <link>shared:<define>BOOST_ALL_DYN_LINK=1
+                <conditional>@filesystem-usage-requirements
                 <library>system
             ;
 
         lib program_options
             :   [ glob $(location)/libs/program_options/src/*.cpp ]
             :   $(requirements)
-                <location-prefix>program_options
+                <location-prefix>program_options-$(version-tokens:J=_)
                 <use>boost
                 <threading>multi
                 <link>shared:<define>BOOST_PROGRAM_OPTIONS_DYN_LINK=1
@@ -171,7 +246,7 @@ rule init ( version : location : options * )
         lib iostreams
             :   [ glob $(location)/libs/iostreams/src/*.cpp : $(location)/libs/iostreams/src/zlib.cpp $(location)/libs/iostreams/src/gzip.cpp $(location)/libs/iostreams/src/bzip2.cpp ]
             :   $(requirements)
-                <location-prefix>iostreams
+                <location-prefix>iostreams-$(version-tokens:J=_)
                 <use>boost
                 <threading>multi
                 <link>shared:<define>BOOST_IOSTREAMS_DYN_LINK=1
@@ -238,7 +313,7 @@ rule init ( version : location : options * )
         lib serialization
             :   $(location)/libs/serialization/src/$(serialization_sources).cpp
             :   $(requirements) <toolset>msvc:<cxxflags>/Gy
-                <location-prefix>serialization
+                <location-prefix>serialization-$(version-tokens:J=_)
                 <use>boost
                 #<threading>multi
                 <link>shared:<define>BOOST_SERIALIZATION_DYN_LINK=1
@@ -251,7 +326,7 @@ rule init ( version : location : options * )
         lib wserialization
             :   $(location)/libs/serialization/src/$(wserialization_sources).cpp serialization
             :   $(requirements) <toolset>msvc:<cxxflags>/Gy 
-                <location-prefix>wserialization
+                <location-prefix>wserialization-$(version-tokens:J=_)
                 <use>boost
                 #<threading>multi
                 <link>shared:<define>BOOST_WSERIALIZATION_DYN_LINK=1
@@ -267,7 +342,6 @@ rule init ( version : location : options * )
           thread_sources =
                 win32/thread
                 win32/tss_dll
-                ../../../../boost_aux/libs/thread/src/win32/tss_pe
               ;
         } else
         {
@@ -277,20 +351,34 @@ rule init ( version : location : options * )
               ;
         }
 
+        local alternate_thread_sources ;
+        if [ modules.peek : NT ]
+        {
+            if $(version-tokens[2]) < 44
+            {
+                alternate_thread_sources += <source>$(THIS_PATH)/boost_aux/libs/thread/src/win32/tss_pe-before_1_44.cpp ;
+            }
+            else
+            {
+                alternate_thread_sources += <source>$(THIS_PATH)/boost_aux/libs/thread/src/win32/tss_pe.cpp ;
+            }
+        }
+        
         lib thread
             :   $(location)/libs/thread/src/$(thread_sources).cpp
             :   $(requirements)
-                <location-prefix>thread
+                <location-prefix>thread-$(version-tokens:J=_)
                 <use>boost
                 <link>shared:<define>BOOST_THREAD_DYN_LINK=1
                 <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
                 <link>static:<define>BOOST_THREAD_BUILD_LIB=1
                 <define>BOOST_THREAD_NO_LIB=1
-                <link>static:<source>$(location)/../tss_workaround.cpp
+                $(alternate_thread_sources)
+                <link>static:<source>$(THIS_PATH)/tss_workaround.cpp
                 <library>date_time
             :
             :   <threading>multi
-                <link>shared:<define>BOOST_THREAD_DYN_LINK=1
+                <link>shared:<define>BOOST_THREAD_DYN_DLL=1
                 <link>static:<define>BOOST_THREAD_USE_LIB=1
                 <define>BOOST_THREAD_NO_LIB=1
                 <library>date_time
@@ -305,7 +393,7 @@ rule init ( version : location : options * )
         lib date_time
             :   $(location)/libs/date_time/src/gregorian/$(date_time_sources).cpp
             :   $(requirements)
-                <location-prefix>date_time
+                <location-prefix>date_time-$(version-tokens:J=_)
                 <use>boost
                 <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
                 <link>static:<define>BOOST_DATE_TIME_STATIC_LINK
@@ -321,7 +409,7 @@ rule init ( version : location : options * )
             :   [ glob $(location)/libs/regex/src/*.cpp ]
             :   $(requirements)
                 $(regex_pthread_requirement)
-                <location-prefix>regex
+                <location-prefix>regex-$(version-tokens:J=_)
                 <use>boost
                 <link>shared:<define>BOOST_REGEX_DYN_LINK=1
                 <define>BOOST_REGEX_NO_LIB=1
@@ -335,7 +423,7 @@ rule init ( version : location : options * )
         lib system
             :   $(location)/libs/system/src/error_code.cpp
             :   $(requirements)
-                <location-prefix>system
+                <location-prefix>system-$(version-tokens:J=_)
                 <use>boost
                 <define>BOOST_SYSTEM_NO_LIB=1
                 <link>shared:<define>BOOST_SYSTEM_DYN_LINK=1
@@ -399,7 +487,7 @@ rule init ( version : location : options * )
                 $(location)/libs/test/src/$(PRG_EXEC_MON_SOURCES).cpp
             : # requirements
                 $(requirements)
-                <location-prefix>prg_exec_monitor
+                <location-prefix>prg_exec_monitor-$(version-tokens:J=_)
                 <use>boost
             ;
 
@@ -408,7 +496,7 @@ rule init ( version : location : options * )
                 $(location)/libs/test/src/$(TEST_EXEC_MON_SOURCES).cpp
             : # requirements
                 $(requirements)
-                <location-prefix>test_exec_monitor
+                <location-prefix>test_exec_monitor-$(version-tokens:J=_)
                 <use>boost
                 <link>static
             ;
@@ -418,7 +506,7 @@ rule init ( version : location : options * )
                 $(location)/libs/test/src/$(UTF_SOURCES).cpp
             : # requirements
                 $(requirements)
-                <location-prefix>unit_test_framework
+                <location-prefix>unit_test_framework-$(version-tokens:J=_)
                 <use>boost
             ;
 
@@ -435,7 +523,7 @@ rule init ( version : location : options * )
                     local custom-file = [ path.relative $(i-file) $(i-location) ] ;
                     make $(custom-file) : $(i-file) : common.copy
                         :   $(requirements)
-                            <location-prefix>interprocess
+                            <location-prefix>interprocess-$(version-tokens:J=_)
                         ;
                     custom-files += $(custom-file) ;
                 }
@@ -475,7 +563,7 @@ rule init ( version : location : options * )
                     local custom-file = [ path.relative $(i-file) $(i-location) ] ;
                     make $(custom-file) : $(i-file) : common.copy
                         :   $(requirements)
-                            <location-prefix>asio
+                            <location-prefix>asio-$(version-tokens:J=_)
                         ;
                     custom-files += $(custom-file) ;
                 }

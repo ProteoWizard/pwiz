@@ -1,4 +1,4 @@
-// $Id: tss_pe.cpp 72431 2011-06-06 08:28:31Z anthonyw $
+// $Id: tss_pe.cpp 43743 2008-03-21 15:04:10Z anthonyw $
 // (C) Copyright Aaron W. LaFramboise, Roland Schwarz, Michael Glassford 2004.
 // (C) Copyright 2007 Roland Schwarz
 // (C) Copyright 2007 Anthony Williams
@@ -11,7 +11,7 @@
 
 #if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) 
 
-#if (defined(__MINGW32__) && !defined(_WIN64)) || defined(__MINGW64__)
+#if defined(__MINGW32__) && !defined(_WIN64)
 
 #include <boost/thread/detail/tss_hooks.hpp>
 
@@ -19,37 +19,42 @@
 
 #include <cstdlib>
 
-namespace boost
-{
-    void tss_cleanup_implemented() {}
-}
+extern "C" void tss_cleanup_implemented(void) {}
 
 namespace {
     void NTAPI on_tls_callback(void* h, DWORD dwReason, PVOID pv)
     {
         switch (dwReason)
         {
-        case DLL_THREAD_DETACH:
-        {
-            boost::on_thread_exit();
-            break;
+            case DLL_THREAD_DETACH:
+            {
+                on_thread_exit();
+                break;
+            }
         }
-        }
+    }
+
+    void on_after_ctors(void)
+    {
+        on_process_enter();
+    }
+    
+    void on_before_dtors(void)
+    {
+        on_thread_exit();
+    }
+    
+    void on_after_dtors(void)
+    {
+        on_process_exit();        
     }
 }
 
-#if defined(__MINGW64__) || (__MINGW32_MAJOR_VERSION >3) ||             \
-    ((__MINGW32_MAJOR_VERSION==3) && (__MINGW32_MINOR_VERSION>=18))
-extern "C"
-{
-    PIMAGE_TLS_CALLBACK __crt_xl_tls_callback__ __attribute__ ((section(".CRT$XLB"))) = on_tls_callback;
-}
-#else
 extern "C" {
 
-    void (* after_ctors )() __attribute__((section(".ctors")))     = boost::on_process_enter;
-    void (* before_dtors)() __attribute__((section(".dtors")))     = boost::on_thread_exit;
-    void (* after_dtors )() __attribute__((section(".dtors.zzz"))) = boost::on_process_exit;
+    void (* after_ctors )(void) __attribute__((section(".ctors")))     = on_after_ctors;
+    void (* before_dtors)(void) __attribute__((section(".dtors")))     = on_before_dtors;
+    void (* after_dtors )(void) __attribute__((section(".dtors.zzz"))) = on_after_dtors;
 
     ULONG __tls_index__ = 0;
     char __tls_end__ __attribute__((section(".tls$zzz"))) = 0;
@@ -57,8 +62,10 @@ extern "C" {
 
 
     PIMAGE_TLS_CALLBACK __crt_xl_start__ __attribute__ ((section(".CRT$XLA"))) = 0;
+    PIMAGE_TLS_CALLBACK __crt_xl_tls_callback__ __attribute__ ((section(".CRT$XLB"))) = on_tls_callback;
     PIMAGE_TLS_CALLBACK __crt_xl_end__ __attribute__ ((section(".CRT$XLZ"))) = 0;
 }
+
 extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata$T"))) =
 {
         (DWORD) &__tls_start__,
@@ -68,7 +75,6 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
         (DWORD) 0,
         (DWORD) 0
 };
-#endif
 
 
 #elif  defined(_MSC_VER) && !defined(UNDER_CE)
@@ -83,13 +89,13 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
     //Definitions required by implementation
 
     #if (_MSC_VER < 1300) // 1300 == VC++ 7.0
-        typedef void (__cdecl *_PVFV)();
+        typedef void (__cdecl *_PVFV)(void);
         #define INIRETSUCCESS
-        #define PVAPI void __cdecl
+        #define PVAPI void
     #else
-        typedef int (__cdecl *_PVFV)();
+        typedef int (__cdecl *_PVFV)(void);
         #define INIRETSUCCESS 0
-        #define PVAPI int __cdecl
+        #define PVAPI int
     #endif
 
     typedef void (NTAPI* _TLSCB)(HINSTANCE, DWORD, PVOID);
@@ -106,9 +112,9 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
     {
         //Forward declarations
 
-        static PVAPI on_tls_prepare();
-        static PVAPI on_process_init();
-        static PVAPI on_process_term();
+        static PVAPI on_tls_prepare(void);
+        static PVAPI on_process_init(void);
+        static PVAPI on_process_term(void);
         static void NTAPI on_tls_callback(HINSTANCE, DWORD, PVOID);
 
         //The .CRT$Xxx information is taken from Codeguru:
@@ -119,10 +125,10 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 #pragma section(".CRT$XCU",long,read)
 #pragma section(".CRT$XTU",long,read)
 #pragma section(".CRT$XLC",long,read)
-        __declspec(allocate(".CRT$XLC")) _TLSCB __xl_ca=on_tls_callback;
-        //__declspec(allocate(".CRT$XIU"))_PVFV p_tls_prepare = on_tls_prepare;
-        __declspec(allocate(".CRT$XCU"))_PVFV p_process_init = on_process_init;
-        __declspec(allocate(".CRT$XTU"))_PVFV p_process_term = on_process_term;
+        static __declspec(allocate(".CRT$XLC")) _TLSCB __xl_ca=on_tls_callback;
+        //static __declspec(allocate(".CRT$XIU"))_PVFV p_tls_prepare = on_tls_prepare;
+        static __declspec(allocate(".CRT$XCU"))_PVFV p_process_init = on_process_init;
+        static __declspec(allocate(".CRT$XTU"))_PVFV p_process_term = on_process_term;
 #else
         #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(push, old_seg)
@@ -162,8 +168,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 #pragma warning(push)
 #pragma warning(disable:4189)
 #endif
-
-        PVAPI on_tls_prepare()
+        PVAPI on_tls_prepare(void)
         {
             //The following line has an important side effect:
             //if the TLS directory is not already there, it will
@@ -204,7 +209,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 #pragma warning(pop)
 #endif
 
-        PVAPI on_process_init()
+        PVAPI on_process_init(void)
         {
             //Schedule on_thread_exit() to be called for the main
             //thread before destructors of global objects have been
@@ -215,18 +220,18 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
             //for destructors of global objects, so that
             //shouldn't be a problem.
 
-            atexit(boost::on_thread_exit);
+            atexit(on_thread_exit);
 
             //Call Boost process entry callback here
 
-            boost::on_process_enter();
+            on_process_enter();
 
             return INIRETSUCCESS;
         }
 
-        PVAPI on_process_term()
+        PVAPI on_process_term(void)
         {
-            boost::on_process_exit();
+            on_process_exit();
             return INIRETSUCCESS;
         }
 
@@ -234,34 +239,16 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
         {
             switch (dwReason)
             {
-            case DLL_THREAD_DETACH:
-                boost::on_thread_exit();
-                break;
+                case DLL_THREAD_DETACH:
+                {
+                    on_thread_exit();
+                    break;
+                }
             }
-        }
-
-        BOOL WINAPI dll_callback(HANDLE, DWORD dwReason, LPVOID)
-        {
-            switch (dwReason)
-            {
-            case DLL_THREAD_DETACH:
-                boost::on_thread_exit();
-                break;
-            case DLL_PROCESS_DETACH:
-                boost::on_process_exit();
-                break;
-            }
-            return true;
         }
     } //namespace
 
-extern "C"
-{
-    extern BOOL (WINAPI * const _pRawDllMain)(HANDLE, DWORD, LPVOID)=&dll_callback;
-}
-namespace boost
-{
-    void tss_cleanup_implemented()
+    extern "C" void tss_cleanup_implemented(void)
     {
         /*
         This function's sole purpose is to cause a link error in cases where
@@ -277,8 +264,6 @@ namespace boost
         longer needed and can be removed.
         */
     }
-}
-
 #endif //defined(_MSC_VER) && !defined(UNDER_CE)
 
 #endif //defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB)

@@ -21,6 +21,23 @@
 # limitations under the License.
 #
 
+rule usage-requirements ( properties * )
+{
+    local result ;
+    if <toolset>msvc in $(properties)
+    {
+        # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+        if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+        {
+            result += <library>/ext/boost//thread/<link>shared ;
+        }
+        else
+        {
+            result += <library>/ext/boost//thread ;
+        }
+    }
+}
+
 lib pwiz_data_msdata_mz5
     : # sources
         Configuration_mz5.cpp
@@ -31,11 +48,11 @@ lib pwiz_data_msdata_mz5
         Translator_mz5.cpp
     : # requirements
         <link>static
-        <library>/ext/boost//thread
         <library>$(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7//hdf5pp
+        <conditional>@usage-requirements
     : # default-build
     : # usage-requirements
         <include>.
-        <library>/ext/boost//thread
         <library>$(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7//hdf5pp
+        <conditional>@usage-requirements
     ;

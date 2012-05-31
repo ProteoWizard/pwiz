@@ -356,13 +356,13 @@ void addSource(MSData& msd, const bfs::path& sourcePath, const bfs::path& rootPa
 {
     SourceFilePtr sourceFile(new SourceFile);
     sourceFile->id = sourcePath.string();
-    sourceFile->name = sourcePath.leaf();
+    sourceFile->name = BFS_STRING(sourcePath.leaf());
 
     // sourcePath: <source>\Analysis.yep|<source>\Analysis.baf|<source>\fid
     // rootPath: c:\path\to\<source>[\Analysis.yep|Analysis.baf|fid]
     bfs::path location = rootPath.has_branch_path() ?
-                         bfs::complete(rootPath.branch_path() / sourcePath) :
-                         bfs::complete(sourcePath); // uses initial path
+                         BFS_COMPLETE(rootPath.branch_path() / sourcePath) :
+                         BFS_COMPLETE(sourcePath); // uses initial path
     sourceFile->location = "file:///" + location.branch_path().string();
 
     msd.fileDescription.sourceFilePtrs.push_back(sourceFile);

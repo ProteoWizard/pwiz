@@ -86,9 +86,9 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     {
         bfs::path sourcePath = functionFilepaths[i];
         SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = sourcePath.leaf();
-        sourceFile->name = sourcePath.leaf();
-        sourceFile->location = "file:///" + bfs::complete(sourcePath.branch_path()).string();
+        sourceFile->id = BFS_STRING(sourcePath.leaf());
+        sourceFile->name = BFS_STRING(sourcePath.leaf());
+        sourceFile->location = "file:///" + BFS_COMPLETE(sourcePath.branch_path()).string();
         sourceFile->set(MS_Waters_nativeID_format);
         sourceFile->set(MS_Waters_raw_file);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
@@ -104,9 +104,9 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
 
         bfs::path sourcePath = itr->path();
         SourceFilePtr sourceFile(new SourceFile);
-        sourceFile->id = sourcePath.leaf();
-        sourceFile->name = sourcePath.leaf();
-        sourceFile->location = string("file://") + bfs::complete(sourcePath.branch_path()).string();
+        sourceFile->id = BFS_STRING(sourcePath.leaf());
+        sourceFile->name = BFS_STRING(sourcePath.leaf());
+        sourceFile->location = string("file://") + BFS_COMPLETE(sourcePath.branch_path()).string();
         sourceFile->set(MS_no_nativeID_format);
         msd.fileDescription.sourceFilePtrs.push_back(sourceFile);
     }

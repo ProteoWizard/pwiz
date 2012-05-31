@@ -89,19 +89,24 @@ else
     exit ;
 }
 
-constant BOOST_VERSION : 1 43 0 ;
-
 local default_libraries_path = "./libraries" ;
 local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
 libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
 
-local default_boost_src = "$(libraries_path)/boost_$(BOOST_VERSION:J=_)" ;
+local default_boost_src = "$(libraries_path)/boost_1_43_0" ;
 local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
 boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
 
 local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
 local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
 zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
+
+
+# TODO: get version from boost/version.hpp
+import regex ;
+local boost_version_suffix = [ MATCH "boost_(._.._.)" : $(boost_src:L) ] ;
+constant BOOST_VERSION : [ regex.split $(boost_version_suffix) _ ] ;
+
 
 if ( "--without-binary-msdata" in  [ modules.peek : ARGV ] ) # support only text formats like mzML, mzXML, MGF etc
 {
@@ -446,14 +451,21 @@ if [ modules.peek : NT ]
         }
      }
 
-    # HACK: bug in boost::iostreams 1.43 requires a patch to support building with link=shared
-    # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
-    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\file_descriptor.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\iostreams\\device" ;
+    # overwrite the original header files because of MSVC looking in the current header's path with #include "foo"
+    if $(BOOST_VERSION[2]) <= 43
+    {
+        # HACK: bug in boost::iostreams 1.43 requires a patch to support building with link=shared
+        # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335
+        SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\iostreams\\device\\file_descriptor.hpp.bak rename $(BOOST_SOURCE)\\boost\\iostreams\\device\\file_descriptor.hpp file_descriptor.hpp.bak" ;
+        SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\file_descriptor.hpp $(BOOST_SOURCE)\\boost\\iostreams\\device" ;
 
-    # HACK: bug in boost::thread 1.43 requires a patch for thread-safe static usage of call_once (i.e. singletons)
-    # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4225
-    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\once.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\thread\\win32" ;
-    SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\thread_primitives.hpp $(PWIZ_LIBRARIES_PATH)\\boost_1_43_0\\boost\\thread\\win32" ;
+        # HACK: bug in boost::thread 1.43 requires a patch for thread-safe static usage of call_once (i.e. singletons)
+        # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4225
+        SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\thread\\win32\\once.hpp.bak rename $(BOOST_SOURCE)\\boost\\thread\\win32\\once.hpp once.hpp.bak" ;
+        SHELL "@IF NOT EXIST $(BOOST_SOURCE)\\boost\\thread\\win32\\thread_primitives.hpp.bak rename $(BOOST_SOURCE)\\boost\\thread\\win32\\thread_primitives.hpp thread_primitives.hpp.bak" ;
+        SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\once.hpp $(BOOST_SOURCE)\\boost\\thread\\win32" ;
+        SHELL "@copy /Y $(PWIZ_LIBRARIES_PATH)\\boost_aux\\thread_primitives.hpp $(BOOST_SOURCE)\\boost\\thread\\win32" ;
+    }
 }
 
 

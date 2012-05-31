@@ -31,14 +31,24 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/version.hpp>
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 
 namespace bfs = boost::filesystem;
 
+#ifndef BOOST_FILESYSTEM_VERSION
+# if (BOOST_VERSION/100) >= 1046
+#  define BOOST_FILESYSTEM_VERSION 3
+# else
+#  define BOOST_FILESYSTEM_VERSION 2
+# endif
+#endif // BOOST_FILESYSTEM_VERSION
+
+
 // boost filesystem v2 support is going away
 // and v3 breaks the API in surprising ways
 // see http://www.boost.org/doc/libs/1_47_0/libs/filesystem/v3/doc/deprecated.html
-#if !defined(BOOST_FILESYSTEM_VERSION) || (BOOST_FILESYSTEM_VERSION == 2)
+#if BOOST_FILESYSTEM_VERSION == 2
 // in BFS2 p.filename() or p.leaf() or p.extension() returns a string
 #define BFS_STRING(p) p
 // in BFS2 complete() is in namespace

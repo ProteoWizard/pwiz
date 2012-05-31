@@ -85,13 +85,13 @@ void fillInSources(const string& datapath, MSData& msd, DataPtr t2d_data)
 
         SourceFilePtr sourceFile(new SourceFile);
         sourceFile->id = relativePath.string();
-        sourceFile->name = relativePath.leaf();
+        sourceFile->name = BFS_STRING(relativePath.leaf());
 
         // relativePath: <source>\MS\A1.t2d
         // rootpath: c:\path\to\<source>\A1.t2d
         bfs::path location = rootpath.has_branch_path() ?
-                             bfs::complete(rootpath.branch_path() / relativePath) :
-                             bfs::complete(relativePath); // uses initial path
+                             BFS_COMPLETE(rootpath.branch_path() / relativePath) :
+                             BFS_COMPLETE(relativePath); // uses initial path
         sourceFile->location = "file://" + location.branch_path().string();
 
         sourceFile->set(MS_AB_SCIEX_TOF_TOF_T2D_nativeID_format);
