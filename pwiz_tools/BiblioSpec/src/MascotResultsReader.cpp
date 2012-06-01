@@ -26,6 +26,7 @@
  */
 
 #include <sys/stat.h>
+#include <boost/algorithm/string.hpp>
 #include "MascotResultsReader.h"
 #include "BlibUtils.h"
 
@@ -496,6 +497,18 @@ void MascotResultsReader::applyIsotopeDiffs(PSM* psm, string quantName){
                 if( end != string::npos){
                     end += (specFileExtensions_[extIdx - 1].length() - 1);
                     filename = title.substr(start, end - start);
+                }
+            }
+            else
+            {
+                // check for TPP format <basename>.<start scan>.<end scan>.<charge>
+                vector<string> parts;
+                boost::split(parts, title, boost::is_any_of("."));
+                if (parts.size() == 4 && atoi(parts[1].c_str()) != 0
+                                      && atoi(parts[2].c_str()) != 0
+                                      && atoi(parts[3].c_str()) != 0)
+                {
+                    filename = parts[0];
                 }
             }
         }
