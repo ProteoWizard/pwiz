@@ -1054,7 +1054,6 @@ namespace pwiz.Skyline
             bool retentionPredict = (settings.PeptideSettings.Prediction.RetentionTime != null);
             bool peptideIdTimes = (settings.PeptideSettings.Libraries.HasLibraries &&
                                    settings.TransitionSettings.FullScan.IsEnabled);
-
             var set = Settings.Default;
             int iInsert = 0;
             var nodeTree = SelectedNode;
@@ -1103,6 +1102,8 @@ namespace pwiz.Skyline
             {
                 peptideIDTimesContextMenuItem.Checked = set.ShowPeptideIdTimes;
                 menuStrip.Items.Insert(iInsert++, peptideIDTimesContextMenuItem);
+                alignedPeptideIDTimesToolStripMenuItem.Checked = set.ShowAlignedPeptideIdTimes;
+                menuStrip.Items.Insert(iInsert++, alignedPeptideIDTimesToolStripMenuItem);
             }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
             menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
@@ -1250,6 +1251,12 @@ namespace pwiz.Skyline
         private void peptideIDTimesContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowPeptideIdTimes = peptideIDTimesContextMenuItem.Checked;
+            UpdateChromGraphs();
+        }
+
+        private void alignedPeptideIDTimesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowAlignedPeptideIdTimes = alignedPeptideIDTimesToolStripMenuItem.Checked;
             UpdateChromGraphs();
         }
 

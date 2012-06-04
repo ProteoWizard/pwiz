@@ -98,7 +98,14 @@
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
             this.tabFullScan = new System.Windows.Forms.TabPage();
-            this.cbFilterScheduling = new System.Windows.Forms.CheckBox();
+            this.groupBoxRetentionTimeToKeep = new System.Windows.Forms.GroupBox();
+            this.radioTimeAroundMs2Ids = new System.Windows.Forms.RadioButton();
+            this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
+            this.label35 = new System.Windows.Forms.Label();
+            this.tbxTimeAroundMs2Ids = new System.Windows.Forms.TextBox();
+            this.label27 = new System.Windows.Forms.Label();
+            this.radioUseSchedulingWindow = new System.Windows.Forms.RadioButton();
+            this.radioKeepAllTime = new System.Windows.Forms.RadioButton();
             this.groupBoxMS1 = new System.Windows.Forms.GroupBox();
             this.comboEnrichments = new System.Windows.Forms.ComboBox();
             this.label29 = new System.Windows.Forms.Label();
@@ -135,6 +142,8 @@
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
             this.tabFullScan.SuspendLayout();
+            this.groupBoxRetentionTimeToKeep.SuspendLayout();
+            this.flowLayoutPanel1.SuspendLayout();
             this.groupBoxMS1.SuspendLayout();
             this.groupBoxMS2.SuspendLayout();
             this.SuspendLayout();
@@ -143,7 +152,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 502);
+            this.btnCancel.Location = new System.Drawing.Point(308, 537);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -153,7 +162,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(227, 502);
+            this.btnOk.Location = new System.Drawing.Point(227, 537);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -175,7 +184,7 @@
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 482);
+            this.tabControl1.Size = new System.Drawing.Size(371, 517);
             this.tabControl1.TabIndex = 0;
             // 
             // tabGeneral
@@ -194,7 +203,7 @@
             this.tabGeneral.Location = new System.Drawing.Point(4, 22);
             this.tabGeneral.Name = "tabGeneral";
             this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeneral.Size = new System.Drawing.Size(363, 456);
+            this.tabGeneral.Size = new System.Drawing.Size(363, 491);
             this.tabGeneral.TabIndex = 0;
             this.tabGeneral.Text = "Prediction";
             this.tabGeneral.UseVisualStyleBackColor = true;
@@ -339,7 +348,7 @@
             this.tabFilter.Location = new System.Drawing.Point(4, 22);
             this.tabFilter.Name = "tabFilter";
             this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 456);
+            this.tabFilter.Size = new System.Drawing.Size(363, 491);
             this.tabFilter.TabIndex = 1;
             this.tabFilter.Text = "Filter";
             this.tabFilter.UseVisualStyleBackColor = true;
@@ -538,7 +547,7 @@
             this.tabLibrary.Location = new System.Drawing.Point(4, 22);
             this.tabLibrary.Name = "tabLibrary";
             this.tabLibrary.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLibrary.Size = new System.Drawing.Size(363, 456);
+            this.tabLibrary.Size = new System.Drawing.Size(363, 491);
             this.tabLibrary.TabIndex = 3;
             this.tabLibrary.Text = "Library";
             this.tabLibrary.UseVisualStyleBackColor = true;
@@ -685,7 +694,7 @@
             this.tabInstrument.Controls.Add(this.textMinMz);
             this.tabInstrument.Location = new System.Drawing.Point(4, 22);
             this.tabInstrument.Name = "tabInstrument";
-            this.tabInstrument.Size = new System.Drawing.Size(363, 456);
+            this.tabInstrument.Size = new System.Drawing.Size(363, 491);
             this.tabInstrument.TabIndex = 2;
             this.tabInstrument.Text = "Instrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
@@ -876,27 +885,102 @@
             // 
             // tabFullScan
             // 
-            this.tabFullScan.Controls.Add(this.cbFilterScheduling);
+            this.tabFullScan.Controls.Add(this.groupBoxRetentionTimeToKeep);
             this.tabFullScan.Controls.Add(this.groupBoxMS1);
             this.tabFullScan.Controls.Add(this.groupBoxMS2);
             this.tabFullScan.Location = new System.Drawing.Point(4, 22);
             this.tabFullScan.Name = "tabFullScan";
             this.tabFullScan.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFullScan.Size = new System.Drawing.Size(363, 456);
+            this.tabFullScan.Size = new System.Drawing.Size(363, 491);
             this.tabFullScan.TabIndex = 4;
             this.tabFullScan.Text = "Full-Scan";
             this.tabFullScan.UseVisualStyleBackColor = true;
             // 
-            // cbFilterScheduling
+            // groupBoxRetentionTimeToKeep
             // 
-            this.cbFilterScheduling.AutoSize = true;
-            this.cbFilterScheduling.Location = new System.Drawing.Point(18, 423);
-            this.cbFilterScheduling.Name = "cbFilterScheduling";
-            this.cbFilterScheduling.Size = new System.Drawing.Size(234, 17);
-            this.cbFilterScheduling.TabIndex = 2;
-            this.cbFilterScheduling.Text = "Filter only retention time scheduling windows";
-            this.helpTip.SetToolTip(this.cbFilterScheduling, resources.GetString("cbFilterScheduling.ToolTip"));
-            this.cbFilterScheduling.UseVisualStyleBackColor = true;
+            this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioTimeAroundMs2Ids);
+            this.groupBoxRetentionTimeToKeep.Controls.Add(this.flowLayoutPanel1);
+            this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioUseSchedulingWindow);
+            this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioKeepAllTime);
+            this.groupBoxRetentionTimeToKeep.Location = new System.Drawing.Point(18, 398);
+            this.groupBoxRetentionTimeToKeep.Name = "groupBoxRetentionTimeToKeep";
+            this.groupBoxRetentionTimeToKeep.Size = new System.Drawing.Size(326, 87);
+            this.groupBoxRetentionTimeToKeep.TabIndex = 2;
+            this.groupBoxRetentionTimeToKeep.TabStop = false;
+            this.groupBoxRetentionTimeToKeep.Text = "Retention Time Filter";
+            // 
+            // radioTimeAroundMs2Ids
+            // 
+            this.radioTimeAroundMs2Ids.AutoSize = true;
+            this.radioTimeAroundMs2Ids.Location = new System.Drawing.Point(6, 65);
+            this.radioTimeAroundMs2Ids.Name = "radioTimeAroundMs2Ids";
+            this.radioTimeAroundMs2Ids.Size = new System.Drawing.Size(14, 13);
+            this.radioTimeAroundMs2Ids.TabIndex = 2;
+            this.radioTimeAroundMs2Ids.TabStop = true;
+            this.radioTimeAroundMs2Ids.UseVisualStyleBackColor = true;
+            this.radioTimeAroundMs2Ids.CheckedChanged += new System.EventHandler(this.RadioNoiseAroundMs2IdsCheckedChanged);
+            // 
+            // flowLayoutPanel1
+            // 
+            this.flowLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.flowLayoutPanel1.Controls.Add(this.label35);
+            this.flowLayoutPanel1.Controls.Add(this.tbxTimeAroundMs2Ids);
+            this.flowLayoutPanel1.Controls.Add(this.label27);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(19, 62);
+            this.flowLayoutPanel1.Name = "flowLayoutPanel1";
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(303, 22);
+            this.flowLayoutPanel1.TabIndex = 2;
+            // 
+            // label35
+            // 
+            this.label35.AutoSize = true;
+            this.label35.Location = new System.Drawing.Point(3, 3);
+            this.label35.Margin = new System.Windows.Forms.Padding(3);
+            this.label35.Name = "label35";
+            this.label35.Size = new System.Drawing.Size(32, 13);
+            this.label35.TabIndex = 3;
+            this.label35.Text = "Keep";
+            // 
+            // tbxTimeAroundMs2Ids
+            // 
+            this.tbxTimeAroundMs2Ids.Location = new System.Drawing.Point(38, 0);
+            this.tbxTimeAroundMs2Ids.Margin = new System.Windows.Forms.Padding(0);
+            this.tbxTimeAroundMs2Ids.Name = "tbxTimeAroundMs2Ids";
+            this.tbxTimeAroundMs2Ids.Size = new System.Drawing.Size(49, 20);
+            this.tbxTimeAroundMs2Ids.TabIndex = 3;
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(90, 3);
+            this.label27.Margin = new System.Windows.Forms.Padding(3);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(180, 13);
+            this.label27.TabIndex = 4;
+            this.label27.Text = "minutes before and after MS/MS IDs";
+            // 
+            // radioUseSchedulingWindow
+            // 
+            this.radioUseSchedulingWindow.AutoSize = true;
+            this.radioUseSchedulingWindow.Location = new System.Drawing.Point(6, 42);
+            this.radioUseSchedulingWindow.Name = "radioUseSchedulingWindow";
+            this.radioUseSchedulingWindow.Size = new System.Drawing.Size(252, 17);
+            this.radioUseSchedulingWindow.TabIndex = 1;
+            this.radioUseSchedulingWindow.TabStop = true;
+            this.radioUseSchedulingWindow.Text = "Filter down to retention time scheduling windows";
+            this.radioUseSchedulingWindow.UseVisualStyleBackColor = true;
+            // 
+            // radioKeepAllTime
+            // 
+            this.radioKeepAllTime.AutoSize = true;
+            this.radioKeepAllTime.Location = new System.Drawing.Point(6, 19);
+            this.radioKeepAllTime.Name = "radioKeepAllTime";
+            this.radioKeepAllTime.Size = new System.Drawing.Size(250, 17);
+            this.radioKeepAllTime.TabIndex = 0;
+            this.radioKeepAllTime.TabStop = true;
+            this.radioKeepAllTime.Text = "Generate chromatograms for entire length of run";
+            this.radioKeepAllTime.UseVisualStyleBackColor = true;
             // 
             // groupBoxMS1
             // 
@@ -916,7 +1000,7 @@
             this.groupBoxMS1.Controls.Add(this.label32);
             this.groupBoxMS1.Location = new System.Drawing.Point(18, 21);
             this.groupBoxMS1.Name = "groupBoxMS1";
-            this.groupBoxMS1.Size = new System.Drawing.Size(326, 217);
+            this.groupBoxMS1.Size = new System.Drawing.Size(326, 205);
             this.groupBoxMS1.TabIndex = 0;
             this.groupBoxMS1.TabStop = false;
             this.groupBoxMS1.Text = "&MS1 filtering";
@@ -1062,7 +1146,7 @@
             this.groupBoxMS2.Controls.Add(this.labelIsolationScheme);
             this.groupBoxMS2.Controls.Add(this.comboAcquisitionMethod);
             this.groupBoxMS2.Controls.Add(this.label20);
-            this.groupBoxMS2.Location = new System.Drawing.Point(18, 257);
+            this.groupBoxMS2.Location = new System.Drawing.Point(18, 232);
             this.groupBoxMS2.Name = "groupBoxMS2";
             this.groupBoxMS2.Size = new System.Drawing.Size(326, 160);
             this.groupBoxMS2.TabIndex = 1;
@@ -1187,7 +1271,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 537);
+            this.ClientSize = new System.Drawing.Size(395, 572);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.tabControl1);
@@ -1212,7 +1296,10 @@
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
             this.tabFullScan.ResumeLayout(false);
-            this.tabFullScan.PerformLayout();
+            this.groupBoxRetentionTimeToKeep.ResumeLayout(false);
+            this.groupBoxRetentionTimeToKeep.PerformLayout();
+            this.flowLayoutPanel1.ResumeLayout(false);
+            this.flowLayoutPanel1.PerformLayout();
             this.groupBoxMS1.ResumeLayout(false);
             this.groupBoxMS1.PerformLayout();
             this.groupBoxMS2.ResumeLayout(false);
@@ -1316,9 +1403,16 @@
         private System.Windows.Forms.Label label34;
         private System.Windows.Forms.TextBox textMaxTime;
         private System.Windows.Forms.TextBox textMinTime;
-        private System.Windows.Forms.CheckBox cbFilterScheduling;
         private System.Windows.Forms.ComboBox comboIsolationScheme;
-        private System.Windows.Forms.TextBox textMaxInclusions;
+        private System.Windows.Forms.GroupBox groupBoxRetentionTimeToKeep;
+        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel1;
+        private System.Windows.Forms.RadioButton radioTimeAroundMs2Ids;
         private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.TextBox tbxTimeAroundMs2Ids;
+        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.RadioButton radioUseSchedulingWindow;
+        private System.Windows.Forms.RadioButton radioKeepAllTime;
+        private System.Windows.Forms.TextBox textMaxInclusions;
+        private System.Windows.Forms.Label label35;
     }
 }

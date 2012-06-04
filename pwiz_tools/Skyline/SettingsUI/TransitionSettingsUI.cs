@@ -44,6 +44,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
         private readonly SettingsListComboDriver<IsotopeEnrichments> _driverEnrichments;
         private readonly SettingsListComboDriver<IsolationScheme> _driverIsolationScheme;
+        public const double DefaultTimeAroundMs2Ids = 5;
 
         public TransitionSettingsUI(SkylineWindow parent)
         {
@@ -57,16 +58,19 @@ namespace pwiz.Skyline.SettingsUI
 
             _parent = parent;
             _transitionSettings = _parent.DocumentUI.Settings.TransitionSettings;
-        
+
             // Initialize prediction settings
             comboPrecursorMass.SelectedItem = Prediction.PrecursorMassType.ToString();
             comboIonMass.SelectedItem = Prediction.FragmentMassType.ToString();
 
-            _driverCE = new SettingsListComboDriver<CollisionEnergyRegression>(comboCollisionEnergy, Settings.Default.CollisionEnergyList);
+            _driverCE = new SettingsListComboDriver<CollisionEnergyRegression>(comboCollisionEnergy,
+                                                                               Settings.Default.CollisionEnergyList);
             string sel = (Prediction.CollisionEnergy == null ? null : Prediction.CollisionEnergy.Name);
             _driverCE.LoadList(sel);
 
-            _driverDP = new SettingsListComboDriver<DeclusteringPotentialRegression>(comboDeclusterPotential, Settings.Default.DeclusterPotentialList);
+            _driverDP = new SettingsListComboDriver<DeclusteringPotentialRegression>(comboDeclusterPotential,
+                                                                                     Settings.Default.
+                                                                                         DeclusterPotentialList);
             sel = (Prediction.DeclusteringPotential == null ? null : Prediction.DeclusteringPotential.Name);
             _driverDP.LoadList(sel);
 
@@ -85,8 +89,8 @@ namespace pwiz.Skyline.SettingsUI
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.GetKey();
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.GetKey();
             textExclusionWindow.Text = Filter.PrecursorMzWindow != 0
-                ? Filter.PrecursorMzWindow.ToString(CultureInfo.CurrentCulture)
-                : "";            
+                                           ? Filter.PrecursorMzWindow.ToString(CultureInfo.CurrentCulture)
+                                           : "";
             cbAutoSelect.Checked = Filter.AutoSelect;
 
             _driverIons = new SettingsListBoxDriver<MeasuredIon>(listAlwaysAdd, Settings.Default.MeasuredIonList);
@@ -117,11 +121,13 @@ namespace pwiz.Skyline.SettingsUI
                 textMaxTime.Text = Instrument.MaxTime.Value.ToString(CultureInfo.CurrentCulture);
 
             // Initialize full-scan settings
-            _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments, Settings.Default.IsotopeEnrichmentsList);
+            _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments,
+                                                                                 Settings.Default.IsotopeEnrichmentsList);
             sel = (FullScan.IsotopeEnrichments != null ? FullScan.IsotopeEnrichments.Name : null);
             _driverEnrichments.LoadList(sel);
 
-            _driverIsolationScheme = new SettingsListComboDriver<IsolationScheme>(comboIsolationScheme, Settings.Default.IsolationSchemeList);
+            _driverIsolationScheme = new SettingsListComboDriver<IsolationScheme>(comboIsolationScheme,
+                                                                                  Settings.Default.IsolationSchemeList);
             sel = (FullScan.IsolationScheme != null ? FullScan.IsolationScheme.Name : null);
             _driverIsolationScheme.LoadList(sel);
 
@@ -146,13 +152,28 @@ namespace pwiz.Skyline.SettingsUI
                         FullScanAcquisitionMethod.Targeted.ToString(),
                         FullScanAcquisitionMethod.DIA.ToString()
                     });
-            comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());            
+            comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
             comboAcquisitionMethod.SelectedItem = FullScan.AcquisitionMethod.ToString();
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();
-
-            cbFilterScheduling.Checked = FullScan.IsScheduledFilter;
+            tbxTimeAroundMs2Ids.Text = DefaultTimeAroundMs2Ids.ToString(CultureInfo.CurrentUICulture);
+            tbxTimeAroundMs2Ids.Enabled = false;
+            if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
+            {
+                radioUseSchedulingWindow.Checked = true;
+            }
+            else if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+            {
+                radioTimeAroundMs2Ids.Checked = true;
+                tbxTimeAroundMs2Ids.Text =
+                    FullScan.RetentionTimeFilterLength.ToString(CultureInfo.CurrentUICulture);
+                tbxTimeAroundMs2Ids.Enabled = true;
+            }
+            else
+            {
+                radioKeepAllTime.Checked = true;
+            }
         }
 
         public TransitionPrediction Prediction { get { return _transitionSettings.Prediction; } }
@@ -505,7 +526,6 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 }
             }
-            bool isScheduledFilter = cbFilterScheduling.Checked;
 
             IsolationScheme isolationScheme = _driverIsolationScheme.SelectedItem;
             if (isolationScheme == null && acquisitionMethod == FullScanAcquisitionMethod.DIA)
@@ -523,6 +543,27 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
+            RetentionTimeFilterType retentionTimeFilterType;
+            double timeAroundMs2Ids = 0;
+            if (radioUseSchedulingWindow.Checked)
+            {
+                retentionTimeFilterType = RetentionTimeFilterType.scheduling_windows;
+            }
+            else if (radioTimeAroundMs2Ids.Checked)
+            {
+                retentionTimeFilterType = RetentionTimeFilterType.ms2_ids;
+                if (!double.TryParse(tbxTimeAroundMs2Ids.Text, out timeAroundMs2Ids) || timeAroundMs2Ids < 0)
+                {
+                    MessageDlg.Show(this, "This is not a valid number of minutes.");
+                    tabControl1.SelectedIndex = (int) TABS.FullScan;
+                    tbxTimeAroundMs2Ids.Focus();
+                    return;
+                }
+            }
+            else
+            {
+                retentionTimeFilterType = RetentionTimeFilterType.none;
+            }
             var fullScan = new TransitionFullScan(acquisitionMethod,
                                                   isolationScheme,
                                                   productAnalyzerType,
@@ -534,7 +575,8 @@ namespace pwiz.Skyline.SettingsUI
                                                   precursorRes,
                                                   precursorResMz,
                                                   enrichments,
-                                                  isScheduledFilter);
+                                                  retentionTimeFilterType,
+                                                  timeAroundMs2Ids);
 
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
@@ -1001,5 +1043,9 @@ namespace pwiz.Skyline.SettingsUI
 
         #endregion
 
+        private void RadioNoiseAroundMs2IdsCheckedChanged(object sender, EventArgs e)
+        {
+            tbxTimeAroundMs2Ids.Enabled = radioTimeAroundMs2Ids.Checked;
+        }
     }
 }

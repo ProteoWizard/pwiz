@@ -538,12 +538,36 @@ namespace pwiz.Skyline.Model.DocSettings
             return null;
         }
 
+        /// <summary>
+        /// Returns the times at which a peptide was found in a particular file.
+        /// </summary>
         public double[] GetRetentionTimes(LibraryRetentionTimes retentionTimes, string sequence, ExplicitMods mods)
         {
             return (from typedSequence in GetTypedSequences(sequence, mods)
                     from time in retentionTimes.GetRetentionTimes(typedSequence.ModifiedSequence)
                     select time)
                 .ToArray();
+        }
+
+        /// <summary>
+        /// Returns the aligned retention times where a peptide was found in runs other than the target.
+        /// </summary>
+        public double[] GetAlignedRetentionTimes(RetentionTimesAlignedToFile retentionTimesAlignedToFile, string sequence, ExplicitMods mods)
+        {
+            return (from typedSequence in GetTypedSequences(sequence, mods)
+                    from time in retentionTimesAlignedToFile.GetAlignedRetentionTimes(typedSequence.ModifiedSequence)
+                    select time)
+                .ToArray();
+        }
+
+        /// <summary>
+        /// Returns all of the times where a peptide was found in the target run, or the
+        /// aligned time where a peptide was found in another run.
+        /// </summary>
+        public double[] GetAllRetentionTimes(RetentionTimesAlignedToFile retentionTimesAlignedToFile, string sequence, ExplicitMods mods)
+        {
+            return GetRetentionTimes(retentionTimesAlignedToFile.TargetTimes, sequence, mods)
+                .Concat(GetAlignedRetentionTimes(retentionTimesAlignedToFile, sequence, mods)).ToArray();
         }
 
         /// <summary>

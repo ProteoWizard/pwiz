@@ -54,7 +54,7 @@ namespace pwiz.SkylineTestA.Results
             var file = new MsDataFileImpl(dataPath, 0);
             Assert.IsTrue(file.IsMsx);
 
-            var filter = new SpectrumFilter(doc);
+            var filter = new SpectrumFilter(doc, null);
             Assert.IsTrue(filter.EnabledMsMs);
             var demultiplexer = new MsxDemultiplexer(file, filter);
             demultiplexer.ForceInitializeFile();

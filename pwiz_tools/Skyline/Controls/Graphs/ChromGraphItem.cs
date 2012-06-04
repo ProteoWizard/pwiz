@@ -36,6 +36,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_BEST_PEAK = Color.Black;
         private static readonly Color COLOR_RETENTION_TIME = Color.Gray;
         private static readonly Color COLOR_MSMSID_TIME = Color.Navy;
+        private static readonly Color COLOR_ALIGNED_MSMSID_TIME = Color.LightBlue;
         private static readonly Color COLOR_RETENTION_WINDOW = Color.LightGoldenrodYellow;
         private static readonly Color COLOR_BOUNDARIES = Color.Gray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
@@ -146,6 +147,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public double[] RetentionMsMs { get; set; }
         public double? SelectedRetentionMsMs { get; set; }
 
+        public double[] AlignedRetentionMsMs { get; set; }
+
         public bool HideBest { get; set; }
 
         public double BestPeakTime { get { return _bestPeakTimeIndex != -1 ? _times[_bestPeakTimeIndex] : 0; } }
@@ -238,12 +241,26 @@ namespace pwiz.Skyline.Controls.Graphs
             PointF ptTop = new PointF(0, graphPane.Chart.Rect.Top);
             graphPane.ReverseTransform(ptTop, out xTemp, out yMax);
 
-            if (GraphChromatogram.ShowRT != ShowRTChrom.none && RetentionMsMs != null)
+            if (GraphChromatogram.ShowRT != ShowRTChrom.none)
             {
-                foreach (double retentionTime in RetentionMsMs)
+                if (RetentionMsMs != null)
                 {
-                    Color color = Equals(retentionTime, SelectedRetentionMsMs) ? ColorSelected : COLOR_MSMSID_TIME;
-                    AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, "ID", color, retentionTime);
+                    foreach (double retentionTime in RetentionMsMs)
+                    {
+                        Color color = Equals(retentionTime, SelectedRetentionMsMs) ? ColorSelected : COLOR_MSMSID_TIME;
+                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, "ID", color, retentionTime);
+                    }
+                }
+                if (AlignedRetentionMsMs != null)
+                {
+                    foreach (var time in AlignedRetentionMsMs)
+                    {
+                        var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, time, yMax, time, 0)
+                                       {
+                                           ZOrder = ZOrder.E_BehindCurves,
+                                       };
+                        graphPane.GraphObjList.Add(line);
+                    }
                 }
             }
 
@@ -364,7 +381,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 {
                                     IsClippedToChartRect = true,
                                     Location = { CoordinateFrame = CoordType.AxisXYScale },
-                                    ZOrder = ZOrder.B_BehindLegend,
+                                    ZOrder = ZOrder.E_BehindCurves,
                                     Line = { Width = 1 }
                                 };
             annotations.Add(stick);
@@ -375,7 +392,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                        CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
                                {
                                    IsClippedToChartRect = true,
-                                   ZOrder = ZOrder.B_BehindLegend,
+                                   ZOrder = ZOrder.E_BehindCurves,
                                    FontSpec = CreateFontSpec(color, _fontSpec.Size),
                                };
             annotations.Add(text);

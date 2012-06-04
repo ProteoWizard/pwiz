@@ -131,10 +131,7 @@ the selection of MS/MS peaks matching ions for ranking, but
 also add all product ions matching the full filter, if they are
 not found in the library</value>
   </data>
-  <data name="cbFilterScheduling.ToolTip" xml:space="preserve">
-    <value>Full-scan filtering will limit  chromatorgram time ranges to the windows
-it would use in scheduling acquisition, regardless of whether the data
-was acquired with a scheduled method.  This can save memory and disk
-space in some cases.</value>
-  </data>
+  <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
+    <value>53</value>
+  </metadata>
 </root>

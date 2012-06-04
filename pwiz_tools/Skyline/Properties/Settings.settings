@@ -386,6 +386,9 @@
     <Setting Name="ExportThermoTriggerRef" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
+    <Setting Name="ShowAlignedPeptideIdTimes" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
     <Setting Name="ExportMultiQuant" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>

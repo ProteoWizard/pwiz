@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
                                                       FullScanMassAnalyzerType.none, null, null,
-                                                      null, false);
+                                                      null, RetentionTimeFilterType.none, 0);
                     Instrument = Instrument.ClearFullScanSettings();
                 }
 
@@ -1586,6 +1586,7 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     public enum FullScanMassAnalyzerType { none = -1, qit, tof, orbitrap, ft_icr }
+    public enum RetentionTimeFilterType {none, scheduling_windows, ms2_ids}
 
     [XmlRoot("transition_full_scan")]
     public sealed class TransitionFullScan : Immutable, IValidating, IXmlSerializable
@@ -1631,7 +1632,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
             DoValidate();
         }
-
         public TransitionFullScan(FullScanAcquisitionMethod acquisitionMethod,
                                     IsolationScheme isolationScheme,
                                     FullScanMassAnalyzerType productMassAnalyzer,
@@ -1643,7 +1643,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                     double? precursorRes,
                                     double? precursorResMz,
                                     IsotopeEnrichments isotopeEnrichments,
-                                    bool isScheduledFilter)
+                                    RetentionTimeFilterType retentionTimeFilterType,
+                                    double retentionTimeFilterMinutes)
         {
             AcquisitionMethod = acquisitionMethod;
             IsolationScheme = isolationScheme;
@@ -1658,7 +1659,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             IsotopeEnrichments = isotopeEnrichments;
 
-            IsScheduledFilter = isScheduledFilter;
+            RetentionTimeFilterType = retentionTimeFilterType;
+            RetentionTimeFilterLength = retentionTimeFilterMinutes;
 
             DoValidate();
         }
@@ -1730,7 +1732,8 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return IsotopeEnrichments != null ? IsotopeEnrichments.IsotopeAbundances : null; }
         }
 
-        public bool IsScheduledFilter { get; private set; }
+        public RetentionTimeFilterType RetentionTimeFilterType { get; private set; }
+        public double RetentionTimeFilterLength { get; private set; }
 
         public bool IsEnabled
         {
@@ -1955,7 +1958,9 @@ namespace pwiz.Skyline.Model.DocSettings
             precursor_mass_analyzer,
             precursor_res,
             precursor_res_mz,
-            scheduled_filter
+            scheduled_filter, // deprecated
+            retention_time_filter_type,
+            retention_time_filter_length,
         }
 
         void IValidating.Validate()
@@ -2110,7 +2115,18 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            IsScheduledFilter = reader.GetBoolAttribute(ATTR.scheduled_filter);
+            RetentionTimeFilterType = RetentionTimeFilterType.none;
+            RetentionTimeFilterLength = 0;
+            if (reader.GetBoolAttribute(ATTR.scheduled_filter))
+            {
+                // backwards compatibility to version 1.2
+                RetentionTimeFilterType = RetentionTimeFilterType.scheduling_windows;
+            }
+            else
+            {
+                RetentionTimeFilterType = reader.GetEnumAttribute(ATTR.retention_time_filter_type, RetentionTimeFilterType.none);
+                RetentionTimeFilterLength = reader.GetIntAttribute(ATTR.retention_time_filter_length);
+            }
 
             // Create isolation scheme for backward compatibility.
             if (AcquisitionMethod == FullScanAcquisitionMethod.DIA)
@@ -2185,7 +2201,14 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttributeNullable(ATTR.precursor_res, PrecursorRes);
                 writer.WriteAttributeNullable(ATTR.precursor_res_mz, PrecursorResMz);
             }
-            writer.WriteAttribute(ATTR.scheduled_filter, IsScheduledFilter);
+            if (RetentionTimeFilterType != RetentionTimeFilterType.none)
+            {
+                writer.WriteAttribute(ATTR.retention_time_filter_type, RetentionTimeFilterType);
+                if (RetentionTimeFilterType == RetentionTimeFilterType.ms2_ids)
+                {
+                    writer.WriteAttribute(ATTR.retention_time_filter_length, RetentionTimeFilterLength);
+                }
+            }
             if (IsotopeEnrichments != null)
                 writer.WriteElement(IsotopeEnrichments);
             if (AcquisitionMethod == FullScanAcquisitionMethod.DIA && IsolationScheme != null)
@@ -2211,7 +2234,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(other.PrecursorMassAnalyzer, PrecursorMassAnalyzer) &&
                 other.PrecursorRes.Equals(PrecursorRes) &&
                 other.PrecursorResMz.Equals(PrecursorResMz) &&
-                other.IsScheduledFilter == IsScheduledFilter;
+                other.RetentionTimeFilterType == RetentionTimeFilterType &&
+                other.RetentionTimeFilterLength == RetentionTimeFilterLength;
         }
 
         public override bool Equals(object obj)
@@ -2237,7 +2261,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ PrecursorMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (PrecursorRes.HasValue ? PrecursorRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (PrecursorResMz.HasValue ? PrecursorResMz.Value.GetHashCode() : 0);
-                result = (result*397) ^ IsScheduledFilter.GetHashCode();
+                result = (result*397) ^ RetentionTimeFilterType.GetHashCode();
+                result = (result*397) ^ RetentionTimeFilterLength.GetHashCode();
                 return result;
             }
         }

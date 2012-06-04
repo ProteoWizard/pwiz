@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Lib;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -236,6 +237,7 @@ namespace pwiz.Skyline.Model.Results
 
         public SpectraChromDataProvider(MsDataFileImpl dataFile,
                                         SrmDocument document,
+                                        RetentionTimesAlignedToFile retentionTimesAlignedToFile,
                                         ProgressStatus status,
                                         int startPercent,
                                         int endPercent,
@@ -254,7 +256,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Create a spectrum filter data structure, in case it is needed
                 // This could be done lazily, but does not seem worth it, given the file reading
-                var filter = new SpectrumFilter(document);
+                var filter = new SpectrumFilter(document, retentionTimesAlignedToFile);
 
                 // First read all of the spectra, building chromatogram time, intensity lists
                 bool isSrm = dataFile.HasSrmSpectra;
@@ -638,13 +640,12 @@ namespace pwiz.Skyline.Model.Results
         private readonly double? _minTime;
         private readonly double? _maxTime;
         private readonly SpectrumFilterPair[] _filterMzValues;
-
         private int _mseLevel;
         private double _mseMaxTime;
 
         public SpectrumFilterPair[] FilterPairs { get { return _filterMzValues; } }
 
-        public SpectrumFilter(SrmDocument document)
+        public SpectrumFilter(SrmDocument document, RetentionTimesAlignedToFile retentionTimesAlignedToFile)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
@@ -674,9 +675,19 @@ namespace pwiz.Skyline.Model.Results
                 Func<double, double> calcWindowsQ3 = _fullScan.GetProductFilterWindow;
                 _minTime = _instrument.MinTime;
                 _maxTime = _instrument.MaxTime;
-                bool canSchedule = _fullScan.IsScheduledFilter &&
-                    document.Settings.PeptideSettings.Prediction.CanSchedule(document,
-                        PeptidePrediction.SchedulingStrategy.any);
+                bool canSchedule;
+                if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
+                {
+                    canSchedule = document.Settings.PeptideSettings.Prediction.CanSchedule(document, PeptidePrediction.SchedulingStrategy.any);
+                }
+                else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
+                {
+                    canSchedule = retentionTimesAlignedToFile != null;
+                }
+                else
+                {
+                    canSchedule = false;
+                }
                 _isSharedTime = !canSchedule;
                 int? replicateNum = null;
                 if (document.Settings.HasResults)
@@ -694,15 +705,32 @@ namespace pwiz.Skyline.Model.Results
                         double? minTime = _minTime, maxTime = _maxTime;
                         if (canSchedule)
                         {
-                            double windowRT;
-                            double? centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTime(
-                                document, nodePep, nodeGroup, replicateNum, schedulingAlgorithm, false, out windowRT);
-                            if (centerTime != null)
+                            if (RetentionTimeFilterType.scheduling_windows == _fullScan.RetentionTimeFilterType)
                             {
-                                double startTime = centerTime.Value - windowRT/2;
-                                double endTime = startTime + windowRT;
-                                minTime = Math.Max(minTime ?? 0, startTime);
-                                maxTime = Math.Min(maxTime ?? double.MaxValue, endTime);
+                                double windowRT;
+                                double? centerTime = document.Settings.PeptideSettings.Prediction.PredictRetentionTime(
+                                    document, nodePep, nodeGroup, replicateNum, schedulingAlgorithm, false, out windowRT);
+                                if (centerTime != null)
+                                {
+                                    double startTime = centerTime.Value - windowRT / 2;
+                                    double endTime = startTime + windowRT;
+                                    minTime = Math.Max(minTime ?? 0, startTime);
+                                    maxTime = Math.Min(maxTime ?? double.MaxValue, endTime);
+                                }
+                            }
+                            else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
+                            {
+                                var allTimes =
+                                    document.Settings.GetRetentionTimes(retentionTimesAlignedToFile.TargetTimes,
+                                                                        nodePep.Peptide.Sequence, nodePep.ExplicitMods)
+                                        .Concat(document.Settings.GetAlignedRetentionTimes(
+                                            retentionTimesAlignedToFile, nodePep.Peptide.Sequence, nodePep.ExplicitMods))
+                                        .ToArray();
+                                if (allTimes.Length > 0)
+                                {
+                                    minTime = Math.Max(minTime ?? 0, allTimes.Min() - _fullScan.RetentionTimeFilterLength);
+                                    maxTime = Math.Min(maxTime ?? double.MaxValue, allTimes.Max() + _fullScan.RetentionTimeFilterLength);
+                                }
                             }
                         }
 

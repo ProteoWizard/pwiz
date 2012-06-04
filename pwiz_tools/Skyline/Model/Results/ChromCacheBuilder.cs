@@ -47,7 +47,8 @@ namespace pwiz.Skyline.Model.Results
     {
         // Lock on this to access these variables
         private readonly SrmDocument _document;
-        private LibraryRetentionTimes _libraryRetentionTimes;
+        private LoadedRetentionTimes _loadedRetentionTimes;
+        private RetentionTimesAlignedToFile _retentionTimesAlignedToFile;
         private int _currentFileIndex = -1;
         private FileBuildInfo _currentFileInfo;
         private string _tempFileSubsitute;
@@ -211,18 +212,26 @@ namespace pwiz.Skyline.Model.Results
                         _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
 
                     _currentFileInfo = new FileBuildInfo(inFile);
-
-                    _libraryRetentionTimes = null;
-
+                    _retentionTimesAlignedToFile = null;
                     // Read and write the mass spec data)
                     if (ChromatogramDataProvider.HasChromatogramData(inFile))
                         provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
                     else if (SpectraChromDataProvider.HasSpectrumData(inFile))
                     {                            
                         if (_document.Settings.TransitionSettings.FullScan.IsEnabled)
-                            _libraryRetentionTimes = _document.Settings.GetRetentionTimes(dataFilePathPart);
+                        {
+                            if (_retentionTimesAlignedToFile == null)
+                            {
+                                if (_loadedRetentionTimes == null)
+                                {
+                                    _loadedRetentionTimes = LoadedRetentionTimes.StartLoadFromAllLibraries(_document).Result;
+                                }
+                                _retentionTimesAlignedToFile =
+                                    _loadedRetentionTimes.GetRetentionTimesAlignedToFile(dataFilePathPart);
+                            }
+                        }
 
-                        provider = CreateSpectraChromProvider(inFile, _document);
+                        provider = CreateSpectraChromProvider(inFile, _document, _retentionTimesAlignedToFile);
                     }
                     else
                     {
@@ -407,10 +416,15 @@ namespace pwiz.Skyline.Model.Results
             if (!dictPeptideChromData.TryGetValue(id, out pepDataSets))
             {
                 double[] retentionTimes = new double[0];
-                if (_libraryRetentionTimes != null)
+                if (_retentionTimesAlignedToFile != null)
                 {
-                    retentionTimes = _document.Settings.GetRetentionTimes(_libraryRetentionTimes,
+                    retentionTimes = _document.Settings.GetRetentionTimes(_retentionTimesAlignedToFile.TargetTimes,
                         nodePep.Peptide.Sequence, nodePep.ExplicitMods);
+                    if (retentionTimes.Length == 0)
+                    {
+                        retentionTimes = _document.Settings.GetAlignedRetentionTimes(
+                            _retentionTimesAlignedToFile, nodePep.Peptide.Sequence, nodePep.ExplicitMods);
+                    }
                 }
 
                 pepDataSets = new PeptideChromDataSets(retentionTimes, isProcessedScans);
@@ -583,7 +597,7 @@ namespace pwiz.Skyline.Model.Results
             return new ChromatogramDataProvider(dataFile, throwIfSlow, _status, StartPercent, EndPercent, _loader);
         }
 
-        private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile, SrmDocument document)
+        private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile, SrmDocument document, RetentionTimesAlignedToFile retentionTimesAlignedToFile)
         {
             // New WIFF reader library no longer needs this, and mzWiff.exe has been removed from the installation
             // The old WiffFileDataReader messed up the precursor m/z values for targeted
@@ -598,7 +612,7 @@ namespace pwiz.Skyline.Model.Results
             // does not jump backward perceptibly.
             int startPercent = (_tempFileSubsitute != null ? (StartPercent + EndPercent)/2 : StartPercent);
                 
-            return new SpectraChromDataProvider(dataFile, document, _status, startPercent, EndPercent, _loader);
+            return new SpectraChromDataProvider(dataFile, document, retentionTimesAlignedToFile, _status, startPercent, EndPercent, _loader);
         }
 
         private void PostChromDataSet(PeptideChromDataSets chromDataSet, bool complete)

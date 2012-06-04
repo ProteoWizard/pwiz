@@ -26,6 +26,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
@@ -94,8 +95,10 @@ namespace pwiz.Skyline.Model.Lib
 
         private PooledSqliteConnection _sqliteConnection;
         private PooledSqliteConnection _sqliteConnectionRedundant;
+        private IStreamManager _streamManager;
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
+        private Task<IDictionary<string, LibraryRetentionTimes>> _getAllRetentionTimesTask;
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
@@ -133,6 +136,7 @@ namespace pwiz.Skyline.Model.Lib
 
             // Create the SQLite connection without actually connecting
             _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
+            _streamManager = streamManager;
         }
 
         public override LibrarySpec CreateSpec(string path)
@@ -864,7 +868,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 try
                 {
-                    retentionTimes = new LibraryRetentionTimes(filePath, ReadRetentionTimes(_librarySourceFiles[j]));
+                    retentionTimes = new LibraryRetentionTimes(filePath, ReadRetentionTimes(_sqliteConnection.Connection, _librarySourceFiles[j]));
                     return true;
                 }
                 catch (SQLiteException)
@@ -880,9 +884,9 @@ namespace pwiz.Skyline.Model.Lib
         /// Reads all retention times for a specified source file into a dictionary by
         /// modified peptide sequence, with times stored in an array in ascending order.
         /// </summary>
-        private IDictionary<string, double[]> ReadRetentionTimes(BiblioLiteSourceInfo sourceInfo)
+        private IDictionary<string, double[]> ReadRetentionTimes(SQLiteConnection connection, BiblioLiteSourceInfo sourceInfo)
         {
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            using (SQLiteCommand select = new SQLiteCommand(connection))
             {
                 select.CommandText = "SELECT peptideModSeq, t.retentionTime " +
                     "FROM [RefSpectra] as s INNER JOIN [RetentionTimes] as t ON s.[id] = t.[RefSpectraID] " +
@@ -1049,6 +1053,33 @@ namespace pwiz.Skyline.Model.Lib
                     return 0;
                 }
             }
+        }
+
+        public override Task<IDictionary<string, LibraryRetentionTimes>> StartGetAllRetentionTimes()
+        {
+            lock (this)
+            {
+                if (_getAllRetentionTimesTask == null)
+                {
+                    _getAllRetentionTimesTask = Task.Factory.StartNew<IDictionary<string, LibraryRetentionTimes>>(GetAllRetentionTimes);
+                }
+            }
+            return _getAllRetentionTimesTask;
+        }
+
+        private IDictionary<string, LibraryRetentionTimes> GetAllRetentionTimes()
+        {
+            var result = new Dictionary<string, LibraryRetentionTimes>();
+            var connectionStringBuilder = new SQLiteConnectionStringBuilder() { DataSource = FilePath };
+            using (var connection = new SQLiteConnection(connectionStringBuilder.ConnectionString))
+            {
+                connection.Open();
+                foreach (var source in _librarySourceFiles)
+                {
+                    result.Add(source.FilePath, new LibraryRetentionTimes(source.FilePath, ReadRetentionTimes(connection, source)));
+                }
+            }
+            return result;
         }
 
         #region Implementation of IXmlSerializable

@@ -1,0 +1,26 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<assembly xsi:schemaLocation="urn:schemas-microsoft-com:asm.v1 assembly.adaptive.xsd" manifestVersion="1.0" xmlns:asmv1="urn:schemas-microsoft-com:asm.v1" xmlns:asmv2="urn:schemas-microsoft-com:asm.v2" xmlns:asmv3="urn:schemas-microsoft-com:asm.v3" xmlns:dsig="http://www.w3.org/2000/09/xmldsig#" xmlns:co.v1="urn:schemas-microsoft-com:clickonce.v1" xmlns="urn:schemas-microsoft-com:asm.v1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <assemblyIdentity name="Interop.HSREADWRITELib.SxS" version="1.0.0.0" type="win32" />
+  <file name="HSReadWrite.dll" asmv2:size="127054">
+    <hash xmlns="urn:schemas-microsoft-com:asm.v2">
+      <dsig:Transforms>
+        <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
+      </dsig:Transforms>
+      <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+      <dsig:DigestValue>svDIblp1mybyewBG8WAeDOh26Ec=</dsig:DigestValue>
+    </hash>
+    <typelib tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" version="1.0" helpdir="" resourceid="0" flags="HASDISKIMAGE" />
+    <comClass clsid="{638a7f38-e613-11d4-9179-0000c0850ffa}" threadingModel="Apartment" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" progid="HSReadWrite.ReadWriteData.1" description="ReadWriteData Class" />
+    <comClass clsid="{8CFCC124-0C78-11D5-91A1-0000C0850FFA}" threadingModel="Apartment" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" progid="HSReadWrite.Read2D.1" description="Read2D Class" />
+    <comClass clsid="{aabc8d48-2e60-4a9f-ab40-f2e6cde54fe4}" threadingModel="Apartment" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" progid="HSReadWrite.GeneProtLIMS.1" description="GeneProtLIMS Class" />
+    <comClass clsid="{0e69dbd5-0180-41d7-8aaf-ad1569e87db2}" threadingModel="Apartment" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" progid="HSReadWrite.SampleTrack.1" description="SampleTrack Class" />
+    <comClass clsid="{7bd4fc86-bf2f-443e-8205-d180024328f2}" threadingModel="Apartment" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" progid="HSReadWrite.SeqTable.1" description="SeqTable Class" />
+  </file>
+  <comInterfaceExternalProxyStub name="IGeneProtLIMS" iid="{AF5AF537-C27A-4D70-AAFA-07256ADCE2D8}" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="IReadWriteData" iid="{638A7F37-E613-11D4-9179-0000C0850FFA}" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="IRead2D" iid="{35383005-0C78-11D5-91A1-0000C0850FFA}" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="IRead2D2" iid="{618836F8-2481-4D65-8204-BD347A6574E8}" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="ISampleTrack" iid="{92EEE797-562B-4A23-AFD0-5E61A1A2DA42}" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="ISeqTable" iid="{96127407-F349-4CB8-8EE5-188D6E406624}" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+  <comInterfaceExternalProxyStub name="ISeqTable2" iid="{51E3C13F-C3A8-4902-8CA9-2048C84171CD}" tlbid="{638a7f2a-e613-11d4-9179-0000c0850ffa}" proxyStubClsid32="{00020424-0000-0000-C000-000000000046}" />
+</assembly>

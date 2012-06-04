@@ -257,6 +257,7 @@ namespace pwiz.Skyline
             this.noneRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.retentionTimePredContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideIDTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.alignedPeptideIDTimesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.transitionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -354,6 +355,7 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.retentionTimeAlignmentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -1039,7 +1041,7 @@ namespace pwiz.Skyline
             this.arrangedTabbedMenuItem,
             this.groupedMenuItem});
             this.arrangeGraphsToolStripMenuItem.Name = "arrangeGraphsToolStripMenuItem";
-            this.arrangeGraphsToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.arrangeGraphsToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.arrangeGraphsToolStripMenuItem.Text = "&Arrange Graphs";
             // 
             // arrangeTiledMenuItem
@@ -1069,26 +1071,26 @@ namespace pwiz.Skyline
             // toolStripSeparator32
             // 
             this.toolStripSeparator32.Name = "toolStripSeparator32";
-            this.toolStripSeparator32.Size = new System.Drawing.Size(188, 6);
+            this.toolStripSeparator32.Size = new System.Drawing.Size(211, 6);
             // 
             // spectralLibrariesToolStripMenuItem
             // 
             this.spectralLibrariesToolStripMenuItem.Name = "spectralLibrariesToolStripMenuItem";
-            this.spectralLibrariesToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.spectralLibrariesToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.spectralLibrariesToolStripMenuItem.Text = "Spectral &Libraries";
             this.spectralLibrariesToolStripMenuItem.Click += new System.EventHandler(this.spectralLibrariesToolStripMenuItem_Click);
             // 
             // toolStripSeparator39
             // 
             this.toolStripSeparator39.Name = "toolStripSeparator39";
-            this.toolStripSeparator39.Size = new System.Drawing.Size(188, 6);
+            this.toolStripSeparator39.Size = new System.Drawing.Size(211, 6);
             // 
             // graphsToolStripMenuItem
             // 
             this.graphsToolStripMenuItem.Enabled = false;
             this.graphsToolStripMenuItem.Name = "graphsToolStripMenuItem";
             this.graphsToolStripMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D1)));
-            this.graphsToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.graphsToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.graphsToolStripMenuItem.Text = "&MS/MS Spectra";
             this.graphsToolStripMenuItem.Click += new System.EventHandler(this.graphsToolStripMenuItem_Click);
             // 
@@ -1104,7 +1106,7 @@ namespace pwiz.Skyline
             this.precursorIonMenuItem});
             this.ionTypesMenuItem.Enabled = false;
             this.ionTypesMenuItem.Name = "ionTypesMenuItem";
-            this.ionTypesMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.ionTypesMenuItem.Size = new System.Drawing.Size(214, 22);
             this.ionTypesMenuItem.Text = "&Ion Types";
             this.ionTypesMenuItem.DropDownOpening += new System.EventHandler(this.ionTypesMenuItem_DropDownOpening);
             // 
@@ -1174,7 +1176,7 @@ namespace pwiz.Skyline
             this.charge4MenuItem});
             this.chargesMenuItem.Enabled = false;
             this.chargesMenuItem.Name = "chargesMenuItem";
-            this.chargesMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.chargesMenuItem.Size = new System.Drawing.Size(214, 22);
             this.chargesMenuItem.Text = "&Charges";
             this.chargesMenuItem.DropDownOpening += new System.EventHandler(this.chargesMenuItem_DropDownOpening);
             // 
@@ -1217,14 +1219,14 @@ namespace pwiz.Skyline
             this.ranksMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.ranksMenuItem.Enabled = false;
             this.ranksMenuItem.Name = "ranksMenuItem";
-            this.ranksMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.ranksMenuItem.Size = new System.Drawing.Size(214, 22);
             this.ranksMenuItem.Text = "&Ranks";
             this.ranksMenuItem.Click += new System.EventHandler(this.ranksMenuItem_Click);
             // 
             // toolStripSeparator9
             // 
             this.toolStripSeparator9.Name = "toolStripSeparator9";
-            this.toolStripSeparator9.Size = new System.Drawing.Size(188, 6);
+            this.toolStripSeparator9.Size = new System.Drawing.Size(211, 6);
             // 
             // chromatogramsMenuItem
             // 
@@ -1237,7 +1239,7 @@ namespace pwiz.Skyline
             this.closeAllChromatogramsMenuItem});
             this.chromatogramsMenuItem.Enabled = false;
             this.chromatogramsMenuItem.Name = "chromatogramsMenuItem";
-            this.chromatogramsMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.chromatogramsMenuItem.Size = new System.Drawing.Size(214, 22);
             this.chromatogramsMenuItem.Text = "Chr&omatograms";
             this.chromatogramsMenuItem.DropDownOpening += new System.EventHandler(this.chromatogramsMenuItem_DropDownOpening);
             // 
@@ -1290,7 +1292,7 @@ namespace pwiz.Skyline
             this.totalTranMenuItem});
             this.transitionsMenuItem.Enabled = false;
             this.transitionsMenuItem.Name = "transitionsMenuItem";
-            this.transitionsMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.transitionsMenuItem.Size = new System.Drawing.Size(214, 22);
             this.transitionsMenuItem.Text = "Tra&nsitions";
             this.transitionsMenuItem.DropDownOpening += new System.EventHandler(this.transitionsMenuItem_DropDownOpening);
             // 
@@ -1344,7 +1346,7 @@ namespace pwiz.Skyline
             this.smoothSGChromMenuItem});
             this.transformChromMenuItem.Enabled = false;
             this.transformChromMenuItem.Name = "transformChromMenuItem";
-            this.transformChromMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.transformChromMenuItem.Size = new System.Drawing.Size(214, 22);
             this.transformChromMenuItem.Text = "Trans&form";
             this.transformChromMenuItem.DropDownOpening += new System.EventHandler(this.transformChromMenuItem_DropDownOpening);
             // 
@@ -1390,7 +1392,7 @@ namespace pwiz.Skyline
             this.autoZoomBothMenuItem});
             this.autoZoomMenuItem.Enabled = false;
             this.autoZoomMenuItem.Name = "autoZoomMenuItem";
-            this.autoZoomMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.autoZoomMenuItem.Size = new System.Drawing.Size(214, 22);
             this.autoZoomMenuItem.Text = "Auto-&Zoom";
             this.autoZoomMenuItem.DropDownOpening += new System.EventHandler(this.autozoomMenuItem_DropDownOpening);
             // 
@@ -1430,7 +1432,7 @@ namespace pwiz.Skyline
             // toolStripSeparator10
             // 
             this.toolStripSeparator10.Name = "toolStripSeparator10";
-            this.toolStripSeparator10.Size = new System.Drawing.Size(188, 6);
+            this.toolStripSeparator10.Size = new System.Drawing.Size(211, 6);
             // 
             // retentionTimesMenuItem
             // 
@@ -1438,10 +1440,11 @@ namespace pwiz.Skyline
             this.replicateComparisonMenuItem,
             this.timePeptideComparisonMenuItem,
             this.linearRegressionMenuItem,
-            this.schedulingMenuItem});
+            this.schedulingMenuItem,
+            this.retentionTimeAlignmentsToolStripMenuItem});
             this.retentionTimesMenuItem.Enabled = false;
             this.retentionTimesMenuItem.Name = "retentionTimesMenuItem";
-            this.retentionTimesMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.retentionTimesMenuItem.Size = new System.Drawing.Size(214, 22);
             this.retentionTimesMenuItem.Text = "Retention &Times";
             this.retentionTimesMenuItem.DropDownOpening += new System.EventHandler(this.timeGraphMenuItem_DropDownOpening);
             // 
@@ -1483,7 +1486,7 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonMenuItem});
             this.peakAreasMenuItem.Enabled = false;
             this.peakAreasMenuItem.Name = "peakAreasMenuItem";
-            this.peakAreasMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.peakAreasMenuItem.Size = new System.Drawing.Size(214, 22);
             this.peakAreasMenuItem.Text = "&Peak Areas";
             this.peakAreasMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
             // 
@@ -1508,14 +1511,14 @@ namespace pwiz.Skyline
             this.resultsGridMenuItem.Enabled = false;
             this.resultsGridMenuItem.Name = "resultsGridMenuItem";
             this.resultsGridMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.D2)));
-            this.resultsGridMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.resultsGridMenuItem.Size = new System.Drawing.Size(214, 22);
             this.resultsGridMenuItem.Text = "Results &Grid";
             this.resultsGridMenuItem.Click += new System.EventHandler(this.resultsGridMenuItem_Click);
             // 
             // toolStripSeparator36
             // 
             this.toolStripSeparator36.Name = "toolStripSeparator36";
-            this.toolStripSeparator36.Size = new System.Drawing.Size(188, 6);
+            this.toolStripSeparator36.Size = new System.Drawing.Size(211, 6);
             // 
             // textZoomToolStripMenuItem
             // 
@@ -1524,7 +1527,7 @@ namespace pwiz.Skyline
             this.largeToolStripMenuItem,
             this.extraLargeToolStripMenuItem});
             this.textZoomToolStripMenuItem.Name = "textZoomToolStripMenuItem";
-            this.textZoomToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.textZoomToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.textZoomToolStripMenuItem.Text = "Text &Zoom";
             // 
             // defaultTextToolStripMenuItem
@@ -1551,7 +1554,7 @@ namespace pwiz.Skyline
             // toolStripSeparator41
             // 
             this.toolStripSeparator41.Name = "toolStripSeparator41";
-            this.toolStripSeparator41.Size = new System.Drawing.Size(188, 6);
+            this.toolStripSeparator41.Size = new System.Drawing.Size(211, 6);
             // 
             // toolBarToolStripMenuItem
             // 
@@ -1559,7 +1562,7 @@ namespace pwiz.Skyline
             this.toolBarToolStripMenuItem.CheckOnClick = true;
             this.toolBarToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.toolBarToolStripMenuItem.Name = "toolBarToolStripMenuItem";
-            this.toolBarToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.toolBarToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.toolBarToolStripMenuItem.Text = "Tool &Bar";
             this.toolBarToolStripMenuItem.Click += new System.EventHandler(this.toolBarToolStripMenuItem_Click);
             // 
@@ -1569,7 +1572,7 @@ namespace pwiz.Skyline
             this.statusToolStripMenuItem.CheckOnClick = true;
             this.statusToolStripMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.statusToolStripMenuItem.Name = "statusToolStripMenuItem";
-            this.statusToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.statusToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.statusToolStripMenuItem.Text = "&Status Bar";
             this.statusToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
             // 
@@ -2185,6 +2188,7 @@ namespace pwiz.Skyline
             this.retentionTimesContextMenuItem,
             this.retentionTimePredContextMenuItem,
             this.peptideIDTimesContextMenuItem,
+            this.alignedPeptideIDTimesToolStripMenuItem,
             this.toolStripSeparator16,
             this.transitionsContextMenuItem,
             this.transformChromContextMenuItem,
@@ -2198,7 +2202,7 @@ namespace pwiz.Skyline
             this.zoomChromContextMenuItem,
             this.toolStripSeparator26});
             this.contextMenuChromatogram.Name = "contextMenuChromatogram";
-            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 348);
+            this.contextMenuChromatogram.Size = new System.Drawing.Size(213, 370);
             // 
             // removePeakGraphMenuItem
             // 
@@ -2299,6 +2303,14 @@ namespace pwiz.Skyline
             this.peptideIDTimesContextMenuItem.Size = new System.Drawing.Size(212, 22);
             this.peptideIDTimesContextMenuItem.Text = "Peptide ID Times";
             this.peptideIDTimesContextMenuItem.Click += new System.EventHandler(this.peptideIDTimesContextMenuItem_Click);
+            // 
+            // alignedPeptideIDTimesToolStripMenuItem
+            // 
+            this.alignedPeptideIDTimesToolStripMenuItem.CheckOnClick = true;
+            this.alignedPeptideIDTimesToolStripMenuItem.Name = "alignedPeptideIDTimesToolStripMenuItem";
+            this.alignedPeptideIDTimesToolStripMenuItem.Size = new System.Drawing.Size(212, 22);
+            this.alignedPeptideIDTimesToolStripMenuItem.Text = "Aligned Peptide ID Times";
+            this.alignedPeptideIDTimesToolStripMenuItem.Click += new System.EventHandler(this.alignedPeptideIDTimesToolStripMenuItem_Click);
             // 
             // toolStripSeparator16
             // 
@@ -3076,6 +3088,13 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
+            // alignmentToolStripMenuItem
+            // 
+            this.retentionTimeAlignmentsToolStripMenuItem.Name = "alignmentToolStripMenuItem";
+            this.retentionTimeAlignmentsToolStripMenuItem.Size = new System.Drawing.Size(228, 22);
+            this.retentionTimeAlignmentsToolStripMenuItem.Text = "Ali&gnment";
+            this.retentionTimeAlignmentsToolStripMenuItem.Click += new System.EventHandler(this.retentionTimeAlignmentToolStripMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3437,6 +3456,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem peptideIDTimesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generateDecoysMenuItem;
         private System.Windows.Forms.ToolStripMenuItem eSPFeaturesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem alignedPeptideIDTimesToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem retentionTimeAlignmentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportIsolationListMenuItem;
     }
 }

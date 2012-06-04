@@ -22,6 +22,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
 using pwiz.Common.SystemUtil;
@@ -449,6 +450,16 @@ namespace pwiz.Skyline.Model.Lib
         /// Returns an enumerator for the keys of the spectra loaded from the library.
         /// </summary>
         public abstract IEnumerable<LibKey> Keys { get; }
+
+        /// <summary>
+        /// Asynchronously reads all of the retention times from the library.
+        /// </summary>
+        public virtual Task<IDictionary<string, LibraryRetentionTimes>> StartGetAllRetentionTimes()
+        {
+            var taskCompletionSource = new TaskCompletionSource<IDictionary<string, LibraryRetentionTimes>>();
+            taskCompletionSource.SetResult(new Dictionary<string, LibraryRetentionTimes>());
+            return taskCompletionSource.Task;
+        }
 
         #region File reading utility functions
 
