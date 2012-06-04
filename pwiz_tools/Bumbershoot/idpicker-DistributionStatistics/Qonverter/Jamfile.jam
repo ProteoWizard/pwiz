@@ -1,0 +1,66 @@
+#
+# $Id$
+#
+# The contents of this file are subject to the Mozilla Public License
+# Version 1.1 (the "License"); you may not use this file except in
+# compliance with the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS"
+# basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+# License for the specific language governing rights and limitations
+# under the License.
+#
+# The Original Code is the IDPicker build system.
+#
+# The Initial Developer of the Original Code is Matt Chambers.
+#
+# Copyright 2011 Vanderbilt University
+#
+# Contributor(s): Surendra Dasaris
+#
+
+#project Qonverter : requirements <define>QONVERTER_HAS_NATIVEID ;
+
+lib Qonverter
+    : # sources
+        [ glob *Qonverter.cpp ]
+    : # requirements
+        <library>../Lib/SQLite//sqlite3pp
+        <library>..//svm
+        <library>/ext/boost//thread
+        <library>/ext/boost//filesystem
+        <library>waffles//waffles
+    : # default-build
+    : # usage-requirements
+        <library>../Lib/SQLite//sqlite3pp
+        <library>..//svm
+        <library>/ext/boost//thread
+        <library>/ext/boost//filesystem
+        <library>waffles//waffles
+    ;
+
+lib Parser
+    : # sources
+        Parser.cpp Embedder.cpp
+    : # requirements
+        <library>Qonverter
+        <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
+        <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
+        <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
+        <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+    : # default-build
+    : # usage-requirements
+        <library>Qonverter
+        <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
+        <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
+        <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
+        <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+    ;
+
+exe idpQonvert : idpQonvert.cpp Parser ../freicore ;
+
+import testing ;
+unit-test QonverterTest : QonverterTest.cpp Qonverter ;
+unit-test EmbedderTest : EmbedderTest.cpp Parser $(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata_examples $(PWIZ_SOURCE)/pwiz/data/msdata//pwiz_data_msdata ;
+

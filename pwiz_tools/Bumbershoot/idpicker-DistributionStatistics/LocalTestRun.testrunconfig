@@ -1,0 +1,20 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<TestRunConfiguration name="Local Test Run" id="efa5d976-818a-4d7e-86c8-6cb49651f007" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2006">
+  <Description>This is a default test run configuration for a local test run.</Description>
+  <Deployment>
+    <DeploymentItem filename="build-nt-x86\obj\release\MassLynxRaw.dll" />
+    <DeploymentItem filename="build-nt-x86\obj\release\fregistry.dll" />
+    <DeploymentItem filename="build-nt-x86\obj\release\agtsampleinforw.dll" />
+    <DeploymentItem filename="build-nt-x86\obj\release\MSFileReader.XRawfile2.SxS.manifest" />
+    <DeploymentItem filename="build-nt-x86\obj\release\fileio.dll" />
+    <DeploymentItem filename="build-nt-x86\obj\release\MSFileReader.XRawfile2.dll" />
+    <DeploymentItem filename="build-nt-x86\obj\release\NTB-vc80-mt-1_5_97.dll" />
+    <DeploymentItem filename="build-nt-x86\obj\release\Interop.EDAL.SxS.manifest" />
+    <DeploymentItem filename="build-nt-x86\obj\release\Interop.HSREADWRITELib.SxS.manifest" />
+    <DeploymentItem filename="build-nt-x86\obj\release\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" />
+    <DeploymentItem filename="build-nt-x86\obj\release\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" />
+    <DeploymentItem filename="build-nt-x86\obj\release\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" />
+  </Deployment>
+  <NamingScheme baseName="Run" appendTimeStamp="false" useDefault="false" />
+  <TestTypeSpecific />
+</TestRunConfiguration>

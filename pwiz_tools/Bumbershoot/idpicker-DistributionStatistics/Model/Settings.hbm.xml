@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<!--
+//
+// $Id$
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+// The Original Code is the IDPicker project.
+//
+// The Initial Developer of the Original Code is Matt Chambers.
+//
+// Copyright 2012 Vanderbilt University
+//
+// Contributor(s):
+//
+-->
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" namespace="IDPicker.DataModel" assembly="IDPicker.DataModel" auto-import="true">
+
+	<class name="QonverterSettings">
+		<id name="Id">
+			<generator class="foreign">
+				<param name="property">Analysis</param>
+			</generator>
+		</id>
+		<one-to-one name="Analysis" constrained="true"/>
+		<property name="QonverterMethod"/>
+		<property name="DecoyPrefix"/>
+		<property name="RerankMatches"/>
+		<property name="Kernel"/>
+		<property name="MassErrorHandling"/>
+		<property name="MissedCleavagesHandling"/>
+		<property name="TerminalSpecificityHandling"/>
+		<property name="ChargeStateHandling"/>
+		<property name="ScoreInfoByName" type="ScoreInfoUserType"/>
+	</class>
+
+	<class name="LayoutProperty">
+		<id name="Id"><generator class="native"/></id>
+		<property name="Name"/>
+		<property name="PaneLocations"/>
+		<property name="HasCustomColumnSettings"/>
+		<property name="FormProperties" type="FormPropertiesUserType"/>
+	</class>
+
+</hibernate-mapping>

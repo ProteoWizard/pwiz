@@ -1,0 +1,53 @@
+span.tglcaption {
+	white-space:nowrap; 
+	cursor: pointer;
+	text-align:left;
+	text-decoration:underline
+}
+table.t1 { display: table }
+table.t2 { display: table }
+table.t3 { display: table; border: 2px solid black; table-layout: fixed; border-collapse: collapse; font-family: 'Courier New', monospace }
+table.t4 { display: table; border: 2px solid black; table-layout: fixed; border-collapse: collapse; empty-cells: show; font-family: 'Courier New', monospace; text-align: center }
+#protID {
+	color: #2222ff;
+	font-family: \"MS Arial\", sans-serif;
+	font-style: normal;
+	font-weight: bold;
+	font-size: 12pt
+}
+#seq {
+	font-family: \"Courier New\", monospace;
+	font-style: normal;
+	font-size: 12pt
+}
+#es1 {	background-color: #BBBBBB; text-align:center }
+#es2 {	background-color: #FFFFFF }
+#es3 {	background-color: #DCDCFF }
+#even {	background-color: #FFFFDD }
+td.bs1 {	border: 1px solid gray }
+tr.h1 {	background-color: #BBBBBB; text-align:center }
+tr.h2 {	background-color: #FFFFFF }
+tr.h3 {	background-color: #DCDCFF }
+a.tb {
+	cursor: pointer;
+	font-family: \"Courier New\", monospace;
+	font-style: normal;
+	font-size: 10pt
+}
+a.txtBtn {
+	cursor: pointer;
+	text-decoration:underline
+}
+ .index {
+	position: relative;
+	bottom: 0.4em;
+	color: blue;
+	 font-size: 0.67em;
+	 font-weight: bold
+}
+ .indexAnn {
+	position: relative;
+	bottom: 0.15em;
+	color: blue;
+	 font-size: 0.8em;
+}
