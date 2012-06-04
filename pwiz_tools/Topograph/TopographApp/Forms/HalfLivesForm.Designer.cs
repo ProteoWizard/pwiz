@@ -63,9 +63,9 @@ namespace pwiz.Topograph.ui.Forms
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(573, 3);
+            this.btnRequery.Location = new System.Drawing.Point(572, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(184, 19);
+            this.btnRequery.Size = new System.Drawing.Size(185, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -78,7 +78,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 122F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 189F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 190F));
             this.tableLayoutPanel1.Controls.Add(this.btnRequery, 4, 0);
             this.tableLayoutPanel1.Controls.Add(this.cbxByProtein, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.cbxBySample, 1, 0);
@@ -120,7 +120,7 @@ namespace pwiz.Topograph.ui.Forms
             this.checkedListBoxTimePoints.Margin = new System.Windows.Forms.Padding(0);
             this.checkedListBoxTimePoints.Name = "checkedListBoxTimePoints";
             this.tableLayoutPanel1.SetRowSpan(this.checkedListBoxTimePoints, 2);
-            this.checkedListBoxTimePoints.Size = new System.Drawing.Size(187, 49);
+            this.checkedListBoxTimePoints.Size = new System.Drawing.Size(186, 49);
             this.checkedListBoxTimePoints.TabIndex = 27;
             // 
             // dataGridView1

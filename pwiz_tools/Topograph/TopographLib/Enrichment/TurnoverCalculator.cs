@@ -555,10 +555,14 @@ namespace pwiz.Topograph.Enrichment
 
         private static Vector DistributionToVector(IDictionary<TracerFormula, double> distribution, IDictionary<TracerFormula, int> indexes)
         {
-            var result = new Vector(indexes.Count);
+            var result = new Vector(indexes.Count, double.NaN);
             foreach (var entry in distribution)
             {
-                result[indexes[entry.Key]] = entry.Value;
+                int index;
+                if (indexes.TryGetValue(entry.Key, out index))
+                {
+                    result[indexes[entry.Key]] = entry.Value;
+                }
             }
             return result;
         }

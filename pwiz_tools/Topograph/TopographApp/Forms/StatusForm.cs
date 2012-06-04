@@ -45,7 +45,7 @@ namespace pwiz.Topograph.ui.Forms
                 tbxChromatogramMessage.Text = Workspace.ChromatogramGenerator.PendingAnalysisCount + " analyses left to process.";
                 if (Workspace.ChromatogramGenerator.IsRequeryPending())
                 {
-                    tbxChromatogramMessage.Text += " (Requery pending)";
+                    tbxChromatogramMessage.Text += " (Approximate)";
                 }
                 if (string.IsNullOrEmpty(Workspace.GetDataDirectory()))
                 {
@@ -62,7 +62,7 @@ namespace pwiz.Topograph.ui.Forms
                 tbxResultCalculatorMessage.Text = Workspace.ResultCalculator.PendingAnalysisCount + " analyses left to process.";
                 if (Workspace.ResultCalculator.IsRequeryPending())
                 {
-                    tbxResultCalculatorMessage.Text += " (Requery pending)";
+                    tbxResultCalculatorMessage.Text += " (Approximate)";
                 }
             }
             else

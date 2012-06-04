@@ -161,7 +161,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(212, 25);
             this.label2.TabIndex = 20;
-            this.label2.Text = "Outlier Filter (experimental, untested)";
+            this.label2.Text = "Outlier Filter (experimental)";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // comboEvviesFilter

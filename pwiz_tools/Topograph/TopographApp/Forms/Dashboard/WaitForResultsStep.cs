@@ -253,7 +253,8 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
             public bool IsStale()
             {
                 return !IsRunning && !IsWorkspace(_waitForResultsStep.Workspace)
-                       || _waitForResultsStep.Workspace != null && _lastChangeId != _waitForResultsStep.Workspace.Reconciler.LastChangeId;
+                       || _waitForResultsStep.Workspace != null && _lastChangeId != _waitForResultsStep.Workspace.Reconciler.LastChangeId
+                       || ForeignLockCount > 0;
             }
         }
 

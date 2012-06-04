@@ -50,7 +50,6 @@ namespace pwiz.Topograph.ui.Forms
             this.label9 = new System.Windows.Forms.Label();
             this.tbxRateConstant = new System.Windows.Forms.TextBox();
             this.tbxHalfLife = new System.Windows.Forms.TextBox();
-            this.cbxLogPlot = new System.Windows.Forms.CheckBox();
             this.gridViewStats = new System.Windows.Forms.DataGridView();
             this.colStatsTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatsInclude = new System.Windows.Forms.DataGridViewCheckBoxColumn();
@@ -59,6 +58,9 @@ namespace pwiz.Topograph.ui.Forms
             this.colStatsStdDev = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatsPointCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbxBySample = new System.Windows.Forms.CheckBox();
+            this.cbxLogPlot = new System.Windows.Forms.CheckBox();
+            this.tbxCorrelationCoefficient = new System.Windows.Forms.TextBox();
+            this.label5 = new System.Windows.Forms.Label();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -80,8 +82,6 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.validationStatusColumn1 = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.halfLifeSettingsControl = new pwiz.Topograph.ui.Controls.HalfLifeSettingsControl();
-            this.tbxCorrelationCoefficient = new System.Windows.Forms.TextBox();
-            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -267,18 +267,6 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxHalfLife.Size = new System.Drawing.Size(299, 20);
             this.tbxHalfLife.TabIndex = 20;
             // 
-            // cbxLogPlot
-            // 
-            this.cbxLogPlot.AutoSize = true;
-            this.cbxLogPlot.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbxLogPlot.Location = new System.Drawing.Point(153, 178);
-            this.cbxLogPlot.Name = "cbxLogPlot";
-            this.cbxLogPlot.Size = new System.Drawing.Size(299, 19);
-            this.cbxLogPlot.TabIndex = 10;
-            this.cbxLogPlot.Text = "Log Plot";
-            this.cbxLogPlot.UseVisualStyleBackColor = true;
-            this.cbxLogPlot.CheckedChanged += new System.EventHandler(this.cbxLogPlot_CheckedChanged);
-            // 
             // gridViewStats
             // 
             this.gridViewStats.AllowUserToAddRows = false;
@@ -381,6 +369,38 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxBySample.Text = "By Sample";
             this.cbxBySample.UseVisualStyleBackColor = true;
             this.cbxBySample.CheckedChanged += new System.EventHandler(this.cbxBySample_CheckedChanged);
+            // 
+            // cbxLogPlot
+            // 
+            this.cbxLogPlot.AutoSize = true;
+            this.cbxLogPlot.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.cbxLogPlot.Location = new System.Drawing.Point(153, 178);
+            this.cbxLogPlot.Name = "cbxLogPlot";
+            this.cbxLogPlot.Size = new System.Drawing.Size(299, 19);
+            this.cbxLogPlot.TabIndex = 10;
+            this.cbxLogPlot.Text = "Log Plot";
+            this.cbxLogPlot.UseVisualStyleBackColor = true;
+            this.cbxLogPlot.CheckedChanged += new System.EventHandler(this.cbxLogPlot_CheckedChanged);
+            // 
+            // tbxCorrelationCoefficient
+            // 
+            this.tbxCorrelationCoefficient.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxCorrelationCoefficient.Location = new System.Drawing.Point(153, 103);
+            this.tbxCorrelationCoefficient.Name = "tbxCorrelationCoefficient";
+            this.tbxCorrelationCoefficient.ReadOnly = true;
+            this.tbxCorrelationCoefficient.Size = new System.Drawing.Size(299, 20);
+            this.tbxCorrelationCoefficient.TabIndex = 25;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label5.Location = new System.Drawing.Point(3, 100);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(144, 25);
+            this.label5.TabIndex = 26;
+            this.label5.Text = "Correlation Coefficient (R)";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // dataGridView1
             // 
@@ -544,7 +564,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // colEvviesFilter
             // 
-            this.colEvviesFilter.HeaderText = "Outlier Filter (experimental, untested)";
+            this.colEvviesFilter.HeaderText = "Outlier Filter (experimental)";
             this.colEvviesFilter.Name = "colEvviesFilter";
             this.colEvviesFilter.ReadOnly = true;
             // 
@@ -586,26 +606,6 @@ namespace pwiz.Topograph.ui.Forms
             this.halfLifeSettingsControl.Size = new System.Drawing.Size(948, 20);
             this.halfLifeSettingsControl.TabIndex = 2;
             this.halfLifeSettingsControl.SettingsChange += new System.EventHandler(this.halfLifeSettingsControl_SettingsChange);
-            // 
-            // tbxCorrelationCoefficient
-            // 
-            this.tbxCorrelationCoefficient.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxCorrelationCoefficient.Location = new System.Drawing.Point(153, 103);
-            this.tbxCorrelationCoefficient.Name = "tbxCorrelationCoefficient";
-            this.tbxCorrelationCoefficient.ReadOnly = true;
-            this.tbxCorrelationCoefficient.Size = new System.Drawing.Size(299, 20);
-            this.tbxCorrelationCoefficient.TabIndex = 25;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label5.Location = new System.Drawing.Point(3, 100);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(144, 25);
-            this.label5.TabIndex = 26;
-            this.label5.Text = "Correlation Coefficient (R)";
-            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // HalfLifeForm
             // 

@@ -54,8 +54,8 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.btnSuspendChromatogram);
             this.groupBox1.Controls.Add(this.pbChromatogram);
             this.groupBox1.Controls.Add(this.tbxChromatogramStatus);
@@ -86,8 +86,8 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // tbxChromatogramStatus
             // 
-            this.tbxChromatogramStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxChromatogramStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tbxChromatogramStatus.Location = new System.Drawing.Point(14, 46);
             this.tbxChromatogramStatus.Name = "tbxChromatogramStatus";
             this.tbxChromatogramStatus.ReadOnly = true;
@@ -96,8 +96,8 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // tbxChromatogramMessage
             // 
-            this.tbxChromatogramMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxChromatogramMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tbxChromatogramMessage.Location = new System.Drawing.Point(14, 20);
             this.tbxChromatogramMessage.Name = "tbxChromatogramMessage";
             this.tbxChromatogramMessage.ReadOnly = true;
@@ -106,8 +106,8 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // groupBox2
             // 
-            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox2.Controls.Add(this.tbxResultCalculatorStatus);
             this.groupBox2.Controls.Add(this.tbxResultCalculatorMessage);
             this.groupBox2.Location = new System.Drawing.Point(12, 159);
@@ -119,8 +119,8 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // tbxResultCalculatorStatus
             // 
-            this.tbxResultCalculatorStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxResultCalculatorStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tbxResultCalculatorStatus.Location = new System.Drawing.Point(14, 53);
             this.tbxResultCalculatorStatus.Name = "tbxResultCalculatorStatus";
             this.tbxResultCalculatorStatus.ReadOnly = true;
@@ -129,8 +129,8 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // tbxResultCalculatorMessage
             // 
-            this.tbxResultCalculatorMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxResultCalculatorMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.tbxResultCalculatorMessage.Location = new System.Drawing.Point(14, 19);
             this.tbxResultCalculatorMessage.Name = "tbxResultCalculatorMessage";
             this.tbxResultCalculatorMessage.ReadOnly = true;

@@ -18,21 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.IO;
-using System.Linq;
-using System.Text;
 using System.Windows.Forms;
-using DigitalRune.Windows.Docking;
 using pwiz.MSGraph;
-using NHibernate;
-using NHibernate.Criterion;
 using pwiz.Topograph.ui.Controls;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
-using pwiz.Topograph.ui.Controls;
 using pwiz.Topograph.ui.Properties;
 using ZedGraph;
 
