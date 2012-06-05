@@ -79,6 +79,7 @@ lib InteropQonverter
    <toolset>msvc:<using-clr>true
    <toolset>msvc:<link>shared
    <toolset>msvc:<source>AssemblyInfo.cpp
+   <toolset>msvc:<linkflags>"/MACHINE:$(PLATFORM) /FIXED:No"
  ;
 
 } # [ modules.peek : NT ]

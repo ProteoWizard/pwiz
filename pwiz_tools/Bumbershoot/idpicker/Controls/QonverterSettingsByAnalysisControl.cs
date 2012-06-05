@@ -67,7 +67,7 @@ namespace IDPicker.Controls
                 var row = new DataGridViewRow();
                 row.CreateCells(dataGridView);
 
-                ISet<AnalysisParameter> diffParameters = new SortedSet<AnalysisParameter>();
+                Iesi.Collections.Generic.ISet<AnalysisParameter> diffParameters = new Iesi.Collections.Generic.SortedSet<AnalysisParameter>();
                 foreach (var a2 in qonverterSettingsByAnalysis.Keys)
                 {
                     if (a.Software.Name != a2.Software.Name)

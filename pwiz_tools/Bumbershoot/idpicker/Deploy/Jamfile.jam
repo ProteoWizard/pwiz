@@ -47,17 +47,14 @@ rule msbuild_deploy ( targets + : sources * : properties * )
 
 actions msbuild_deploy
 {
-    REM support both MSVC 8 and 9
-    IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+	IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
     echo Building SetupDeployProject in $(CONFIGURATION:L) configuration...
     pushd $(THIS_PATH)
-    msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);Platform=x86;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+    msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     $(OUTPUT_PATH)SetupDeployProject.exe "$(INPUT_PATH)" "$(BUILD_PATH)"
     pushd $(BUILD_PATH)
-    "%ProgramFiles%\Windows Installer XML v3.6\bin\candle.exe" *.wxs
-    "%ProgramFiles%\Windows Installer XML v3.6\bin\light.exe" *.wixObj -ext WixUIExtension -cultures:en-us
+    "%WIX%\bin\candle.exe" *.wxs
+    "%WIX%\bin\light.exe" *.wixObj -ext WixUIExtension -cultures:en-us
     set EXIT=%ERRORLEVEL%
     popd
     popd

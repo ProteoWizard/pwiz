@@ -98,6 +98,14 @@ namespace IDPicker
 
             return clone;
         }
+
+        public static void SaveToDisk(this System.Data.SQLite.SQLiteConnection conn, string diskFilepath)
+        {
+            using (var diskConnection = new System.Data.SQLite.SQLiteConnection("data source=" + diskFilepath))
+            {
+                conn.BackupDatabase(diskConnection, diskFilepath, conn.GetDataSource(), -1, null, 100);
+            }
+        }
     }
 
     public static class BitfieldExtensionMethods

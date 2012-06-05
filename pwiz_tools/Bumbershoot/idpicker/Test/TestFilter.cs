@@ -84,7 +84,7 @@ namespace Test
             var result = lhs + rhs;
 
             var rhs2 = new DataFilter() { Peptide = new List<Peptide>() };
-            rhs2.Peptide.Add((Peptide)new Peptide_Accessor("FOO").Target);
+            rhs2.Peptide.Add(new TestPeptide("FOO"));
             var result2 = result + rhs2;
 
             Assert.AreEqual(1, result.Protein.Count);
@@ -870,7 +870,7 @@ namespace Test
                 TestModel.CreateTestData(session, testPsmSummary);
             }
 
-            var dataFilter = new DataFilter_Accessor()
+            var dataFilter = new DataFilter()
             {
                 MaximumQValue = 1,
                 MinimumDistinctPeptidesPerProtein = 0,
@@ -882,7 +882,8 @@ namespace Test
             // clear session so objects are loaded from database
             session.Clear();
 
-            Map<long, long> additionalPeptidesByProteinId = DataFilter_Accessor.CalculateAdditionalPeptides(session);
+            var dataFilterPrivateType = new PrivateType(typeof(DataFilter));
+            var additionalPeptidesByProteinId = (Map<long, long>) dataFilterPrivateType.InvokeStatic("CalculateAdditionalPeptides", session);
 
             // 1 protein to 1 peptide to 1 spectrum = 1 additional peptide
             Assert.AreEqual(1, additionalPeptidesByProteinId[session.UniqueResult<Protein>(o => o.Accession == "PRO1").Id.GetValueOrDefault()]);

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="3.5" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">x86</Platform>
@@ -10,10 +10,18 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>IDPicker</RootNamespace>
     <AssemblyName>IDPicker</AssemblyName>
-    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <StartupObject>IDPicker.Program</StartupObject>
+    <ApplicationIcon>
+    </ApplicationIcon>
+    <Win32Resource>Resources\Resources.res</Win32Resource>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <OldToolsVersion>3.5</OldToolsVersion>
+    <UpgradeBackupLocation />
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -28,10 +36,7 @@
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
-    <ApplicationIcon>
-    </ApplicationIcon>
-    <Win32Resource>Resources\Resources.res</Win32Resource>
-    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|x86' ">
     <DebugSymbols>true</DebugSymbols>
@@ -41,6 +46,7 @@
     <PlatformTarget>x86</PlatformTarget>
     <ErrorReport>prompt</ErrorReport>
     <UseVSHostingProcess>false</UseVSHostingProcess>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|x86' ">
     <OutputPath>build-nt-x86\msvc-release\</OutputPath>
@@ -51,6 +57,41 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <ErrorReport>prompt</ErrorReport>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>build-nt-x86\msvc-debug-x86_64\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>build-nt-x86\msvc-debug-x86_64\IDPicker.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>build-nt-x86\msvc-release-x86_64\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>x64</PlatformTarget>
+    <CodeAnalysisLogFile>build-nt-x86\msvc-release-x86_64\IDPicker.exe.CodeAnalysisLog.xml</CodeAnalysisLogFile>
+    <CodeAnalysisUseTypeNameInSuppression>true</CodeAnalysisUseTypeNameInSuppression>
+    <CodeAnalysisModuleSuppressionsFile>GlobalSuppressions.cs</CodeAnalysisModuleSuppressionsFile>
+    <UseVSHostingProcess>false</UseVSHostingProcess>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSetDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\\Rule Sets</CodeAnalysisRuleSetDirectories>
+    <CodeAnalysisIgnoreBuiltInRuleSets>true</CodeAnalysisIgnoreBuiltInRuleSets>
+    <CodeAnalysisRuleDirectories>;C:\Program Files (x86)\Microsoft Visual Studio 10.0\Team Tools\Static Analysis Tools\FxCop\\Rules</CodeAnalysisRuleDirectories>
+    <CodeAnalysisIgnoreBuiltInRules>true</CodeAnalysisIgnoreBuiltInRules>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime, Version=3.1.3.42154, Culture=neutral, PublicKeyToken=3a9cab8f8d22bfb7, processorArchitecture=MSIL">
@@ -69,9 +110,13 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Iesi.Collections.dll</HintPath>
     </Reference>
-    <Reference Include="InteropQonverter, Version=3.0.246.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="InteropQonverter, Version=3.0.246.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>build-nt-x86\obj\x86\$(Configuration)\InteropQonverter.dll</HintPath>
+      <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\InteropQonverter.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Numerics, Version=2011.4.17.0, Culture=neutral, PublicKeyToken=cd8b63ad3d691a37, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>freicore\pwiz_src\pwiz_tools\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.WindowsAPICodePack, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -97,9 +142,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\SimplePopup\PopupControl.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>build-nt-x86\obj\x86\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
+      <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\pwiz_bindings_cli.dll</HintPath>
     </Reference>
     <Reference Include="Remotion.Data.Linq, Version=1.13.41.2, Culture=neutral, PublicKeyToken=cab60358ab4081ea, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -107,7 +152,7 @@
     </Reference>
     <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Lib\SharpSvn\SharpSvn.dll</HintPath>
+      <HintPath>Lib\SharpSvn\$(Platform)\SharpSvn.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.configuration" />
@@ -117,9 +162,9 @@
     <Reference Include="System.Data.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data.SQLite, Version=1.0.66.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=x86">
+    <Reference Include="System.Data.SQLite, Version=1.0.66.0, Culture=neutral, PublicKeyToken=db937bc2d44ff139, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>Lib\SQLite\System.Data.SQLite.DLL</HintPath>
+      <HintPath>Lib\SQLite\$(Platform)\System.Data.SQLite.DLL</HintPath>
     </Reference>
     <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Xml.Linq">
@@ -156,6 +201,15 @@
     </Compile>
     <Compile Include="Forms\ColumnControlForm.Designer.cs">
       <DependentUpon>ColumnControlForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\DistributionStatisticsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\DistributionStatisticsForm.Designer.cs">
+      <DependentUpon>DistributionStatisticsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\DockableGraphForm.cs">
+      <SubType>Form</SubType>
     </Compile>
     <Compile Include="Forms\EmbedderForm.cs">
       <SubType>Form</SubType>
@@ -352,6 +406,9 @@
       <DependentUpon>ColumnControlForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Forms\DistributionStatisticsForm.resx">
+      <DependentUpon>DistributionStatisticsForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\EmbedderForm.resx">
       <DependentUpon>EmbedderForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -400,17 +457,17 @@
   <ItemGroup>
     <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
       <Name>Interop.EDAL.SxS.manifest</Name>
-      <HintPath>build-nt-x86\obj\x86\$(Configuration)\Interop.EDAL.SxS.manifest</HintPath>
+      <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\Interop.EDAL.SxS.manifest</HintPath>
     </NativeReference>
     <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.1.0.20, Type=win32">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
-      <HintPath>build-nt-x86\obj\x86\$(Configuration)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
+      <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
     </NativeReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
       <Visible>False</Visible>
-      <ProductName>.NET Framework Client Profile</ProductName>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
       <Install>false</Install>
     </BootstrapperPackage>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
@@ -517,8 +574,9 @@
   </Target>
   -->
   <PropertyGroup>
-    <PostBuildEvent>call "$(VS90COMNTOOLS)vsvars32.bat" &gt;nul
+    <PostBuildEvent>call "$(VS100COMNTOOLS)vsvars32.bat" &gt;nul
 editbin.exe /nologo /LARGEADDRESSAWARE "$(TargetPath)"</PostBuildEvent>
-    <PreBuildEvent>rc.exe $(ProjectDir)/Resources/Resources.rc &gt; nul</PreBuildEvent>
+    <PreBuildEvent>call "$(VS100COMNTOOLS)vsvars32.bat" &gt;nul
+rc.exe $(ProjectDir)/Resources/Resources.rc &gt;nul</PreBuildEvent>
   </PropertyGroup>
 </Project>

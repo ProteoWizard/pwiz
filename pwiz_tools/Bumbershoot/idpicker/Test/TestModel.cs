@@ -46,16 +46,17 @@ using ModDelimiter = pwiz.CLI.proteome.ModificationDelimiter;
 
 namespace Test
 {
-    using TestProtein = Protein_Accessor;
-    using TestPeptide = Peptide_Accessor;
-    using TestPI = PeptideInstance_Accessor;
-    using TestPSM = PeptideSpectrumMatch_Accessor;
-    using TestMod = Modification_Accessor;
-    using TestPM = PeptideModification_Accessor;
-    using TestSpectrum = Spectrum_Accessor;
-    using TestSource = SpectrumSource_Accessor;
-    using TestGroup = SpectrumSourceGroup_Accessor;
-    using TestGL = SpectrumSourceGroupLink_Accessor;
+    using TestProtein = Protein;
+    using TestPI = PeptideInstance;
+    using TestPSM = PeptideSpectrumMatch;
+    using TestMod = Modification;
+    using TestPM = PeptideModification;
+    using TestSpectrum = Spectrum;
+    using TestSource = SpectrumSource;
+    using TestGroup = SpectrumSourceGroup;
+    using TestGL = SpectrumSourceGroupLink;
+
+    public class TestPeptide : Peptide { public TestPeptide(string sequence) : base(sequence) { } };
 
     /// <summary>
     /// Summary description for TestModel
@@ -71,15 +72,16 @@ namespace Test
             for (int i = 0; i < testProteinSequences.Count; ++i)
             {
                 int id = i + 1;
-
-                bulkInserter.Add(new TestProtein()
+                var protein = new TestProtein()
                 {
                     Id = id,
                     Accession = "PRO" + id.ToString(),
                     Description = "Protein " + id.ToString(),
-                    Sequence = testProteinSequences[i],
-                    length = testProteinSequences[i].Length
-                }.Target as Protein);
+                    Sequence = testProteinSequences[i]
+                };
+                var proteinAccessor = new PrivateObject(protein);
+                proteinAccessor.SetFieldOrProperty("length", testProteinSequences[i].Length);
+                bulkInserter.Add(protein);
             }
 
             bulkInserter.Execute();
@@ -262,7 +264,7 @@ namespace Test
                             Peptide peptide = dbPeptides[pwizPeptide.sequence];
                             if (String.IsNullOrEmpty(peptide.Sequence))
                             {
-                                peptide = new TestPeptide(pwizPeptide.sequence).Target as Peptide;
+                                peptide = new TestPeptide(pwizPeptide.sequence);
                                 peptide.Id = dbPeptides.Max(o => o.Value.Id).GetValueOrDefault() + 1;
                                 peptide.MonoisotopicMass = pwizPeptide.monoisotopicMass(false);
                                 peptide.MolecularWeight = pwizPeptide.molecularWeight(false);
@@ -394,8 +396,10 @@ namespace Test
                         MissedCleavages = pep.Sequence.ToCharArray(0, pep.Sequence.Length - 1).Count(o => o == 'K' || o == 'R'),
                         NTerminusIsSpecific = nTerminusIsSpecific,
                         CTerminusIsSpecific = cTerminusIsSpecific,
-                        specificTermini = (nTerminusIsSpecific ? 1 : 0) + (cTerminusIsSpecific ? 1 : 0),
-                    }.Target as PeptideInstance;
+                    };
+
+                    var instanceAccessor = new PrivateObject(instance);
+                    instanceAccessor.SetField("specificTermini", (nTerminusIsSpecific ? 1 : 0) + (cTerminusIsSpecific ? 1 : 0));
 
                     bulkInserter.Add(instance);
                     pep.Instances.Add(instance);

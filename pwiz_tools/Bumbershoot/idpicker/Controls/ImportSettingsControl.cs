@@ -79,14 +79,14 @@ namespace IDPicker.Controls
                 var row = new DataGridViewRow();
                 row.CreateCells(dataGridView);
 
-                var parameterSet = new SortedSet<string>(a.parameters.Select(o => o.Key + "=" + o.Value).ToArray() as ICollection<string>);
-                ISet<string> diffParameters = new SortedSet<string>();
+                var parameterSet = new Iesi.Collections.Generic.SortedSet<string>(a.parameters.Select(o => o.Key + "=" + o.Value).ToArray() as ICollection<string>);
+                Iesi.Collections.Generic.ISet<string> diffParameters = new Iesi.Collections.Generic.SortedSet<string>();
                 foreach (var a2 in distinctAnalyses)
                 {
                     if (a.softwareName != a2.softwareName)
                         continue;
 
-                    var parameterSet2 = new SortedSet<string>(a.parameters.Select(o => o.Key + "=" + o.Value).ToArray() as ICollection<string>);
+                    var parameterSet2 = new Iesi.Collections.Generic.SortedSet<string>(a.parameters.Select(o => o.Key + "=" + o.Value).ToArray() as ICollection<string>);
                     diffParameters = diffParameters.Union(parameterSet.Minus(parameterSet2));
                 }
 

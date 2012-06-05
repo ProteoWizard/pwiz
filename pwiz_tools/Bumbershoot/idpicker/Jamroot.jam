@@ -35,6 +35,23 @@
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
+# set up explicit 32-bit or 64-bit builds
+if "address-model=64" in [ modules.peek : ARGV ] || $(.platform:L) = "x86_64"
+{
+    constant PROCESSOR_ARCHITECTURE : "AMD64" ;
+    constant PLATFORM : "x64" ;
+}
+else if "address-model=32" in [ modules.peek : ARGV ] || $(.platform:L) = "x86"
+{
+    constant PROCESSOR_ARCHITECTURE : "x86" ;
+    constant PLATFORM : "x86" ;
+}
+else
+{
+    echo "Unable to determine address-model for platform $(.platform:L). The only supported platforms are x86 and x86_64." ;
+    exit ;
+}
+
 constant BOOST_VERSION : 1 43 0 ;
 
 local default_libraries_path = "./freicore/libraries" ;
@@ -409,7 +426,11 @@ rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    if <link>shared in $(properties) { location = $(location)-shared ; }
+    if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
+
+    return <location>$(location) ;
 }
 
 rule install-vendor-api-dependencies ( properties * )
@@ -432,7 +453,7 @@ rule install-vendor-api-dependencies ( properties * )
 rule pwiz-dependency ( properties * )
 {
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = <location>$(BUILD_PATH)/obj/x86/$(variants[1]) ;
+    local location = <location>$(BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
     return <assembly>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
            <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
            <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
@@ -463,18 +484,15 @@ rule msbuild_IDPicker ( targets + : sources * : properties * )
 
     local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
     OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
-    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/$(PLATFORM)/" ;
     JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
 }
 
 actions msbuild_IDPicker
 {
-    REM support both MSVC 8 and 9
-    IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
-    IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
+	IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
     echo Building IDPicker in $(CONFIGURATION:L) configuration...
-    msbuild $(ROOT_PATH)/IDPicker.csproj /p:Configuration=$(CONFIGURATION);Platform=x86;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+    msbuild $(ROOT_PATH)/IDPicker.csproj /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
 }
 
 
@@ -486,11 +504,11 @@ rule build-location ( properties * )
     {
         if <variant>debug in $(properties)
         {
-            result = <location>$(BUILD_PATH)/bin/Debug ;
+            result = <location>$(BUILD_PATH)/bin/$(PLATFORM)/Debug ;
         }
         else
         {
-            result = <location>$(BUILD_PATH)/bin/Release ;
+            result = <location>$(BUILD_PATH)/bin/$(PLATFORM)/Release ;
         }
         return $(result) ;
     }
@@ -502,14 +520,7 @@ rule build-location ( properties * )
 
 
 import tar ;
-if [ os.on-windows ]
-{
-    using tar : bsdtar.exe ;
-}
-else
-{
-    using tar ;
-}
+using tar ;
 
 local pwiz_src_tarball = [ SORT [ glob $(ROOT_PATH)/freicore/pwiz-src*.tar.bz2 ] ] ;
 pwiz_src_tarball = $(pwiz_src_tarball[-1]) ; # take the last (latest) tarball
@@ -552,16 +563,40 @@ rule qonverter-dependency ( properties * )
     if <toolset>msvc in $(properties)
     {
         local variants = [ feature.get-values <variant> : $(properties) ] ;
-        local location = <location>$(BUILD_PATH)/obj/x86/$(variants[1]) ;
+        local location = <location>$(BUILD_PATH)/obj/$(PLATFORM)/$(variants[1]) ;
         return <assembly>Qonverter/CLI//InteropQonverter
                <dependency>Qonverter/CLI//InteropQonverter/$(location) ;
                #<dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
     }
 }
 
+# predicate for use as a <conditional> requirement of targets that must only build with MSVC
+rule msvc-requirement ( properties * )
+{
+    if ! <toolset>msvc in $(properties) { return <build>no ; }
+}
+
+# predicate for use as a <conditional> requirement of targets that must only build with MSVC and current .NET Framework
+rule msvc-dotnet-requirement ( properties * )
+{
+    # require VS 2010 because of .NET Framework version
+    if ! ( <toolset-msvc:version>10.0 in $(properties) ||
+           10.0express in $(properties:G=) )
+    { return <build>no ; }
+}
+
+# predicate for use as a <conditional> requirement of targets that must only build with non-express version of MSVC
+rule no-express-requirement ( properties * )
+{
+    # only the latest, non-express version of MSVC
+    if ! <toolset-msvc:version>10.0 in $(properties) { return <build>no ; }
+    if 10.0express in $(properties:G=) { return <build>no ; }
+}
+
+
 make IDPicker.exe
     : # sources
-        [ path.glob-tree $(ROOT_PATH) : *.cs ]
+        Program.cs
     : # actions
         @msbuild_IDPicker
     : # requirements
@@ -569,6 +604,53 @@ make IDPicker.exe
         <conditional>@seems-dependency
         <conditional>@pwiz-dependency
         <conditional>@qonverter-dependency
+    ;
+
+
+rule test-properties ( targets + : sources * : properties * )
+{
+    if <variant>debug in $(properties)
+    {
+        CONFIGURATION on $(<[1]) = "Debug" ;
+    }
+    else
+    {
+        CONFIGURATION on $(<[1]) = "Release" ;
+    }
+
+    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+    OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/Test/$(PLATFORM)/" ;
+    JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+}
+
+rule do_IDPicker_test ( targets + : sources * : properties * )
+{
+    return [ test-properties $(targets) : $(sources) : $(properties) ] ;
+}
+
+actions do_IDPicker_test
+{
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
+    set name="IDPicker unit test"
+    $(TEST_PRECOMMAND)
+    msbuild $(ROOT_PATH)/IDPicker.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
+    msbuild $(ROOT_PATH)/Test/Test.csproj /p:SolutionDir=$(ROOT_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=Test /nologo /verbosity:minimal
+    set status=%ERRORLEVEL%
+    $(TEST_POSTCOMMAND)
+}
+
+make IDPickerTest.passed
+    : # sources
+    : # actions
+        @do_IDPicker_test
+    : # requirements
+        <link>shared:<build>no
+        <conditional>@no-express-requirement
+        <conditional>@msvc-dotnet-requirement
+        <conditional>@build-location
+        <dependency>IDPicker.exe
     ;
 
 rule dotNET-dependencies ( properties * )
