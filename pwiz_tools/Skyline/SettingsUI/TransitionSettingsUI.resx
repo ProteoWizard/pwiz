@@ -131,6 +131,30 @@ the selection of MS/MS peaks matching ions for ranking, but
 also add all product ions matching the full filter, if they are
 not found in the library</value>
   </data>
+  <data name="radioTimeAroundMs2Ids.ToolTip" xml:space="preserve">
+    <value>Only scans that fall within the window defined by the specified
+number of minutes before the minimum and after the maximum
+MS/MS peptide ID times will be used in chromatogram extraction.
+In runs where no actual ID was found, aligned IDs may be used.</value>
+  </data>
+  <data name="label35.ToolTip" xml:space="preserve">
+    <value>Only scans that fall within the window defined by the specified
+number of minutes before the minimum and after the maximum
+MS/MS peptide ID times will be used in chromatogram extraction.
+In runs where no actual ID was found, aligned IDs may be used.</value>
+  </data>
+  <data name="tbxTimeAroundMs2Ids.ToolTip" xml:space="preserve">
+    <value>Only scans that fall within the window defined by the specified
+number of minutes before the minimum and after the maximum
+MS/MS peptide ID times will be used in chromatogram extraction.
+In runs where no actual ID was found, aligned IDs may be used.</value>
+  </data>
+  <data name="label27.ToolTip" xml:space="preserve">
+    <value>Only scans that fall within the window defined by the specified
+number of minutes before the minimum and after the maximum
+MS/MS peptide ID times will be used in chromatogram extraction.
+In runs where no actual ID was found, aligned IDs may be used.</value>
+  </data>
   <metadata name="$this.TrayHeight" type="System.Int32, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>53</value>
   </metadata>

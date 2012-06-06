@@ -902,21 +902,22 @@
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.flowLayoutPanel1);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioUseSchedulingWindow);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioKeepAllTime);
-            this.groupBoxRetentionTimeToKeep.Location = new System.Drawing.Point(18, 398);
+            this.groupBoxRetentionTimeToKeep.Location = new System.Drawing.Point(18, 384);
             this.groupBoxRetentionTimeToKeep.Name = "groupBoxRetentionTimeToKeep";
-            this.groupBoxRetentionTimeToKeep.Size = new System.Drawing.Size(326, 87);
+            this.groupBoxRetentionTimeToKeep.Size = new System.Drawing.Size(326, 92);
             this.groupBoxRetentionTimeToKeep.TabIndex = 2;
             this.groupBoxRetentionTimeToKeep.TabStop = false;
-            this.groupBoxRetentionTimeToKeep.Text = "Retention Time Filter";
+            this.groupBoxRetentionTimeToKeep.Text = "Retention time filtering";
             // 
             // radioTimeAroundMs2Ids
             // 
             this.radioTimeAroundMs2Ids.AutoSize = true;
-            this.radioTimeAroundMs2Ids.Location = new System.Drawing.Point(6, 65);
+            this.radioTimeAroundMs2Ids.Location = new System.Drawing.Point(14, 65);
             this.radioTimeAroundMs2Ids.Name = "radioTimeAroundMs2Ids";
             this.radioTimeAroundMs2Ids.Size = new System.Drawing.Size(14, 13);
             this.radioTimeAroundMs2Ids.TabIndex = 2;
             this.radioTimeAroundMs2Ids.TabStop = true;
+            this.helpTip.SetToolTip(this.radioTimeAroundMs2Ids, resources.GetString("radioTimeAroundMs2Ids.ToolTip"));
             this.radioTimeAroundMs2Ids.UseVisualStyleBackColor = true;
             this.radioTimeAroundMs2Ids.CheckedChanged += new System.EventHandler(this.RadioNoiseAroundMs2IdsCheckedChanged);
             // 
@@ -927,7 +928,7 @@
             this.flowLayoutPanel1.Controls.Add(this.label35);
             this.flowLayoutPanel1.Controls.Add(this.tbxTimeAroundMs2Ids);
             this.flowLayoutPanel1.Controls.Add(this.label27);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(19, 62);
+            this.flowLayoutPanel1.Location = new System.Drawing.Point(27, 63);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(303, 22);
             this.flowLayoutPanel1.TabIndex = 2;
@@ -938,48 +939,55 @@
             this.label35.Location = new System.Drawing.Point(3, 3);
             this.label35.Margin = new System.Windows.Forms.Padding(3);
             this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(32, 13);
+            this.label35.Size = new System.Drawing.Size(109, 13);
             this.label35.TabIndex = 3;
-            this.label35.Text = "Keep";
+            this.label35.Text = "Use only scans within";
+            this.helpTip.SetToolTip(this.label35, resources.GetString("label35.ToolTip"));
             // 
             // tbxTimeAroundMs2Ids
             // 
-            this.tbxTimeAroundMs2Ids.Location = new System.Drawing.Point(38, 0);
+            this.tbxTimeAroundMs2Ids.Location = new System.Drawing.Point(115, 0);
             this.tbxTimeAroundMs2Ids.Margin = new System.Windows.Forms.Padding(0);
             this.tbxTimeAroundMs2Ids.Name = "tbxTimeAroundMs2Ids";
             this.tbxTimeAroundMs2Ids.Size = new System.Drawing.Size(49, 20);
             this.tbxTimeAroundMs2Ids.TabIndex = 3;
+            this.helpTip.SetToolTip(this.tbxTimeAroundMs2Ids, resources.GetString("tbxTimeAroundMs2Ids.ToolTip"));
             // 
             // label27
             // 
             this.label27.AutoSize = true;
-            this.label27.Location = new System.Drawing.Point(90, 3);
+            this.label27.Location = new System.Drawing.Point(167, 3);
             this.label27.Margin = new System.Windows.Forms.Padding(3);
             this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(180, 13);
+            this.label27.Size = new System.Drawing.Size(114, 13);
             this.label27.TabIndex = 4;
-            this.label27.Text = "minutes before and after MS/MS IDs";
+            this.label27.Text = "minutes of MS/MS IDs";
+            this.helpTip.SetToolTip(this.label27, resources.GetString("label27.ToolTip"));
             // 
             // radioUseSchedulingWindow
             // 
             this.radioUseSchedulingWindow.AutoSize = true;
-            this.radioUseSchedulingWindow.Location = new System.Drawing.Point(6, 42);
+            this.radioUseSchedulingWindow.Location = new System.Drawing.Point(14, 42);
             this.radioUseSchedulingWindow.Name = "radioUseSchedulingWindow";
-            this.radioUseSchedulingWindow.Size = new System.Drawing.Size(252, 17);
+            this.radioUseSchedulingWindow.Size = new System.Drawing.Size(272, 17);
             this.radioUseSchedulingWindow.TabIndex = 1;
             this.radioUseSchedulingWindow.TabStop = true;
-            this.radioUseSchedulingWindow.Text = "Filter down to retention time scheduling windows";
+            this.radioUseSchedulingWindow.Text = "Use only scans in retention time scheduling windows";
+            this.helpTip.SetToolTip(this.radioUseSchedulingWindow, "Only scans that fall within the retention time scheduling\r\nwindows defined in the" +
+        " Peptide Settings Filter tab will\r\nbe used in chromatogram extraction.");
             this.radioUseSchedulingWindow.UseVisualStyleBackColor = true;
             // 
             // radioKeepAllTime
             // 
             this.radioKeepAllTime.AutoSize = true;
-            this.radioKeepAllTime.Location = new System.Drawing.Point(6, 19);
+            this.radioKeepAllTime.Location = new System.Drawing.Point(14, 19);
             this.radioKeepAllTime.Name = "radioKeepAllTime";
-            this.radioKeepAllTime.Size = new System.Drawing.Size(250, 17);
+            this.radioKeepAllTime.Size = new System.Drawing.Size(150, 17);
             this.radioKeepAllTime.TabIndex = 0;
             this.radioKeepAllTime.TabStop = true;
-            this.radioKeepAllTime.Text = "Generate chromatograms for entire length of run";
+            this.radioKeepAllTime.Text = "Include all matching scans";
+            this.helpTip.SetToolTip(this.radioKeepAllTime, "All scans matching the MS1 and MS/MS filters will be used\r\nin chromatogram extrac" +
+        "tion.");
             this.radioKeepAllTime.UseVisualStyleBackColor = true;
             // 
             // groupBoxMS1
@@ -998,9 +1006,9 @@
             this.groupBoxMS1.Controls.Add(this.labelPrecursorRes);
             this.groupBoxMS1.Controls.Add(this.comboPrecursorAnalyzerType);
             this.groupBoxMS1.Controls.Add(this.label32);
-            this.groupBoxMS1.Location = new System.Drawing.Point(18, 21);
+            this.groupBoxMS1.Location = new System.Drawing.Point(18, 12);
             this.groupBoxMS1.Name = "groupBoxMS1";
-            this.groupBoxMS1.Size = new System.Drawing.Size(326, 205);
+            this.groupBoxMS1.Size = new System.Drawing.Size(326, 211);
             this.groupBoxMS1.TabIndex = 0;
             this.groupBoxMS1.TabStop = false;
             this.groupBoxMS1.Text = "&MS1 filtering";
@@ -1146,9 +1154,9 @@
             this.groupBoxMS2.Controls.Add(this.labelIsolationScheme);
             this.groupBoxMS2.Controls.Add(this.comboAcquisitionMethod);
             this.groupBoxMS2.Controls.Add(this.label20);
-            this.groupBoxMS2.Location = new System.Drawing.Point(18, 232);
+            this.groupBoxMS2.Location = new System.Drawing.Point(18, 231);
             this.groupBoxMS2.Name = "groupBoxMS2";
-            this.groupBoxMS2.Size = new System.Drawing.Size(326, 160);
+            this.groupBoxMS2.Size = new System.Drawing.Size(326, 145);
             this.groupBoxMS2.TabIndex = 1;
             this.groupBoxMS2.TabStop = false;
             this.groupBoxMS2.Text = "M&S/MS filtering";
@@ -1409,10 +1417,10 @@
         private System.Windows.Forms.RadioButton radioTimeAroundMs2Ids;
         private System.Windows.Forms.Label label21;
         private System.Windows.Forms.TextBox tbxTimeAroundMs2Ids;
-        private System.Windows.Forms.Label label27;
         private System.Windows.Forms.RadioButton radioUseSchedulingWindow;
         private System.Windows.Forms.RadioButton radioKeepAllTime;
         private System.Windows.Forms.TextBox textMaxInclusions;
         private System.Windows.Forms.Label label35;
+        private System.Windows.Forms.Label label27;
     }
 }
