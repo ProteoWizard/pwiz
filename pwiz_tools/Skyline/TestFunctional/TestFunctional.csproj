@@ -147,6 +147,7 @@
     <Compile Include="NeutralLossTest.cs" />
     <Compile Include="PrecursorTest.cs" />
     <Compile Include="ReportSummaryTest.cs" />
+    <Compile Include="RetentionTimeAlignmentTest.cs" />
     <Compile Include="ScheduleMethodDlgTest.cs" />
     <Compile Include="ShareDocumentTest.cs" />
     <Compile Include="LibraryBuildTest.cs" />
@@ -207,6 +208,7 @@
     <None Include="OptimizeTest.zip" />
     <None Include="PrecursorTest.zip" />
     <None Include="ReportSummaryTest.zip" />
+    <None Include="RetentionTimeAlignmentTest.zip" />
     <None Include="SynchSiblingsTest.zip" />
   </ItemGroup>
   <ItemGroup>

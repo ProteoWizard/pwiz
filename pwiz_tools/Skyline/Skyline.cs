@@ -3034,6 +3034,11 @@ namespace pwiz.Skyline
 
         private void retentionTimeAlignmentToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ShowRetentionTimeAlignmentForm();
+        }
+
+        public AlignmentForm ShowRetentionTimeAlignmentForm()
+        {
             var form = Application.OpenForms.OfType<AlignmentForm>().FirstOrDefault();
             if (form == null)
             {
@@ -3044,6 +3049,7 @@ namespace pwiz.Skyline
             {
                 form.Activate();
             }
+            return form;
         }
     }
 }

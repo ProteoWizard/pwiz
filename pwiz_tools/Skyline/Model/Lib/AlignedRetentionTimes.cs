@@ -262,7 +262,6 @@ namespace pwiz.Skyline.Model.Lib
         /// are plotted against each other, and a linear regression is performed.
         /// In cases where there is more than one MS2 id in either file, only the earliest MS2 id from
         /// each file is used.
-        /// TODO(nicksh): outlier removal
         /// </summary>
         public static AlignedFile AlignLibraryRetentionTimes(RetentionTimesAlignedToFile target,
                                                              Library library,

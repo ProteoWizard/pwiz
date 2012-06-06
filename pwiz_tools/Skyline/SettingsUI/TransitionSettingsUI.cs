@@ -916,6 +916,25 @@ namespace pwiz.Skyline.SettingsUI
             set { textMaxMz.Text = value.ToString(CultureInfo.CurrentCulture); }
         }
 
+        public void SetRetentionTimeFilter(RetentionTimeFilterType retentionTimeFilterType, double length)
+        {
+            switch (retentionTimeFilterType)
+            {
+                case RetentionTimeFilterType.none:
+                    radioKeepAllTime.Checked = true;
+                    break;
+                case RetentionTimeFilterType.scheduling_windows:
+                    radioUseSchedulingWindow.Checked = true;
+                    break;
+                case RetentionTimeFilterType.ms2_ids:
+                    radioTimeAroundMs2Ids.Checked = true;
+                    break;
+                default:
+                    throw new ArgumentException("Invalid RetentionTimeFilterType", "retentionTimeFilterType");
+            }
+            tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentUICulture);
+        }
+
         public double MZMatchTolerance
         {
             get { return Double.Parse(textMzMatchTolerance.Text); }
