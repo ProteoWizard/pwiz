@@ -403,7 +403,7 @@
     <Compile Include="FileUI\SchedulingOptionsDlg.Designer.cs">
       <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Model\AbstractIsolationSchemeExporter.cs" />
+    <Compile Include="Model\AbstractDiaExporter.cs" />
     <Compile Include="Model\AbstractMassListExporter.cs" />
     <Compile Include="Model\Esp\EspFeatureCalc.cs" />
     <Compile Include="Model\Esp\EspFeatureDb.cs" />

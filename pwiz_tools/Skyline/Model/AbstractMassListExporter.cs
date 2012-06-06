@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Model
         public ExportMethodType MethodType { get; set; }
         public bool IsPrecursorLimited { get; set; }
         public bool FullScans { get; set; }
+        public bool IsolationList { get; set; }
         public int? MaxTransitions { get; set; }
         public int MinTransitions { get; set; }
         public bool IgnoreProteins { get; set; }
@@ -259,15 +260,25 @@ namespace pwiz.Skyline.Model
                         if (DocNode is TransitionGroupDocNode && !ReferenceEquals(group, DocNode))
                             continue;
 
-                        foreach (TransitionDocNode transition in group.Children)
+                        if (IsolationList)
                         {
-                            if (OptimizeType == null)
-                                fileIterator.WriteTransition(this, seq, peptide, group, transition, 0);
-                            else
+                            foreach (TransitionDocNode transition in group.Children)
                             {
-                                // -step through step
-                                for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
-                                    fileIterator.WriteTransition(this, seq, peptide, group, transition, i);
+                                fileIterator.WriteTransition(this, seq, peptide, group, transition, 0);
+                            }
+                        }
+                        else
+                        {
+                            foreach (TransitionDocNode transition in group.Children)
+                            {
+                                if (OptimizeType == null)
+                                    fileIterator.WriteTransition(this, seq, peptide, group, transition, 0);
+                                else
+                                {
+                                    // -step through step
+                                    for (int i = -OptimizeStepCount; i <= OptimizeStepCount; i++)
+                                        fileIterator.WriteTransition(this, seq, peptide, group, transition, i);
+                                }
                             }
                         }
                     }

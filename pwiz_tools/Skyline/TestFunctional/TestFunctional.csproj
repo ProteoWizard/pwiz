@@ -127,6 +127,7 @@
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="CalculateIsolationWindowsTest.cs" />
     <Compile Include="EmptyFunctionalTest.cs" />
+    <Compile Include="ExportAgilentListTest.cs" />
     <Compile Include="ExportDiaListTest.cs" />
     <Compile Include="FullScanIdTest.cs" />
     <Compile Include="ImportDocTest.cs" />

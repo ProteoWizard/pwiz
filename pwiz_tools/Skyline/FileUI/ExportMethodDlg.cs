@@ -116,28 +116,36 @@ namespace pwiz.Skyline.FileUI
                 MethodType = ExportMethodType.Standard;
             }
 
-            // Instrument type may force method type to standard, so it must
-            // be calculated after method type.
-            string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
-            if (instrumentTypeName != null)
+            // Temporary code until our Q-Exactive support allows non-DIA export.
+            if (_fileType == ExportFileType.IsolationList && !IsDia)
             {
-                // Look for the first instrument type with the same prefix as the CE name
-                string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
-                int i = -1;
-                if (document.Settings.TransitionSettings.FullScan.IsEnabled)
-                {
-                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix) &&
-                        ExportInstrumentType.IsFullScanInstrumentType(typeName));
-                }
-                if (i == -1)
-                {
-                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix));
-                }
-                if (i != -1)
-                    InstrumentType = listTypes[i];
+                InstrumentType = ExportInstrumentType.AGILENT_TOF;
             }
-            if (InstrumentType == null)
-                InstrumentType = listTypes[0];
+            else
+            {
+                // Instrument type may force method type to standard, so it must
+                // be calculated after method type.
+                string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
+                if (instrumentTypeName != null)
+                {
+                    // Look for the first instrument type with the same prefix as the CE name
+                    string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
+                    int i = -1;
+                    if (document.Settings.TransitionSettings.FullScan.IsEnabled)
+                    {
+                        i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix) &&
+                            ExportInstrumentType.IsFullScanInstrumentType(typeName));
+                    }
+                    if (i == -1)
+                    {
+                        i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix));
+                    }
+                    if (i != -1)
+                        InstrumentType = listTypes[i];
+                }
+                if (InstrumentType == null)
+                    InstrumentType = listTypes[0];
+            }
 
             DwellTime = Settings.Default.ExportMethodDwellTime;
             RunLength = Settings.Default.ExportMethodRunLength;
@@ -206,9 +214,11 @@ namespace pwiz.Skyline.FileUI
 
         private static bool IsSingleDwellInstrumentType(string type)
         {
-            return Equals(type, ExportInstrumentType.THERMO) ||
+            return Equals(type, ExportInstrumentType.AGILENT_TOF) ||
+                   Equals(type, ExportInstrumentType.THERMO) ||
                    Equals(type, ExportInstrumentType.THERMO_TSQ) ||
                    Equals(type, ExportInstrumentType.THERMO_LTQ) ||
+                   Equals(type, ExportInstrumentType.THERMO_Q_EXACTIVE) ||
                    Equals(type, ExportInstrumentType.WATERS) ||
                    Equals(type, ExportInstrumentType.WATERS_XEVO) ||
                    Equals(type, ExportInstrumentType.WATERS_QUATTRO_PREMIER) ||
@@ -446,6 +456,18 @@ namespace pwiz.Skyline.FileUI
             string templateName = null;
             if (_fileType == ExportFileType.Method)
             {
+                // Check for instruments that cannot do DIA.
+                if (IsDia)
+                {
+                    if (Equals(InstrumentType, ExportInstrumentType.AGILENT_TOF) ||
+                        Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
+                        Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
+                    {
+                        helper.ShowTextBoxError(textTemplateFile, "Export of DIA method is not supported for {0}.", InstrumentType);
+                        return;
+                    }
+                }
+
                 templateName = textTemplateFile.Text;
                 if (string.IsNullOrEmpty(templateName))
                 {
@@ -464,6 +486,25 @@ namespace pwiz.Skyline.FileUI
                     helper.ShowTextBoxError(textTemplateFile, "The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.", templateName);
                     return;
                 }
+            }
+
+            if (Equals(InstrumentType, ExportInstrumentType.AGILENT_TOF) ||
+                Equals(InstrumentType, ExportInstrumentType.ABI_TOF))
+            {
+                // Check that mass analyzer settings are set to TOF.
+                if (documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.tof)
+                {
+                    MessageDlg.Show(this,
+                        "The precursor mass analyzer type is not set to TOF in Transition Settings (under the Full Scan tab).");
+                    return;
+                }
+                if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
+                    documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer != FullScanMassAnalyzerType.tof)
+                {
+                    MessageDlg.Show(this,
+                        "The product mass analyzer type is not set to TOF in Transition Settings (under the Full Scan tab).");
+                    return;
+                }                    
             }
 
             if (!documentExport.HasAllRetentionTimeStandards())
@@ -872,7 +913,7 @@ namespace pwiz.Skyline.FileUI
             StrategyCheckChanged();
         }
 
-        private bool IsDia { get { return _document.Settings.TransitionSettings.FullScan.IsolationScheme != null; } }
+        private bool IsDia { get { return _document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA; } }
 
         private void StrategyCheckChanged()
         {
@@ -902,6 +943,21 @@ namespace pwiz.Skyline.FileUI
             bool wasFullScanInstrument = IsFullScanInstrument;
 
             _instrumentType = comboInstrument.SelectedItem.ToString();
+
+            // Temporary code until we support Q-Exactive export of non-DIA isolation lists.
+            if (Equals(_instrumentType, ExportInstrumentType.THERMO_Q_EXACTIVE) && !IsDia)
+            {
+                MessageDlg.Show(this, string.Format("Export of non-DIA isolation lists is not yet supported for {0}.", _instrumentType));
+                comboInstrument.SelectedItem = ExportInstrumentType.AGILENT_TOF;
+                return;
+            }
+            // Temporary code until we support Agilent export of DIA isolation lists.
+            if (Equals(_instrumentType, ExportInstrumentType.AGILENT_TOF) && IsDia)
+            {
+                MessageDlg.Show(this, string.Format("Export of DIA isolation lists is not yet supported for {0}.", _instrumentType));
+                comboInstrument.SelectedItem = ExportInstrumentType.THERMO_Q_EXACTIVE;
+                return;
+            }
 
             bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.ToString());
             if (!standard && !CanSchedule)
@@ -1009,8 +1065,14 @@ namespace pwiz.Skyline.FileUI
 
         private void CalcMethodCount()
         {
-            if (IsDia)
+            if (InstrumentType == null)
                 return;
+
+            if (IsDia)
+            {
+                labelMethodNum.Text = "1";
+                return;
+            }
 
             if (_recalcMethodCountStatus != RecalcMethodCountStatus.waiting || !IsHandleCreated)
             {

@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
@@ -24,7 +25,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
-    public abstract class AbstractIsolationSchemeExporter
+    public abstract class AbstractDiaExporter
     {
         public IsolationScheme IsolationScheme { get; private set; }
         public string ExportString { get; set; }
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.Model
         public bool DebugCycles { get; set; }
         private readonly int? _maxInstrumentWindows;
 
-        protected AbstractIsolationSchemeExporter(IsolationScheme isolationScheme, int? maxInstrumentWindows)
+        protected AbstractDiaExporter(IsolationScheme isolationScheme, int? maxInstrumentWindows)
         {
             IsolationScheme = isolationScheme;
             _maxInstrumentWindows = maxInstrumentWindows;
@@ -209,7 +210,7 @@ namespace pwiz.Skyline.Model
         protected virtual void WriteIsolationWindow(TextWriter writer, IsolationWindow isolationWindow)
         {
             double target = isolationWindow.Target ?? isolationWindow.MethodCenter;
-            writer.WriteLine(target);
+            writer.WriteLine(SequenceMassCalc.PersistentMZ(target).ToString(CultureInfo.InvariantCulture));
         }
 
         // Cycle holds the scans containing all the windows to be sampled.

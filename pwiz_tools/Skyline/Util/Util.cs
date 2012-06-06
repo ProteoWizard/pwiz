@@ -1314,14 +1314,6 @@ namespace pwiz.Skyline.Util
             return d.HasValue ? d.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
         }
 
-        public static string LineSeparate(params object[] values)
-        {
-            var sb = new StringBuilder();
-            foreach (var value in values)
-                sb.AppendLine(value.ToString());
-            return sb.ToString();
-        }
-
         /// <summary>
         /// This is a replacement for Debug.Assert, having the advantage that it is not omitted in a retail build.
         /// </summary>

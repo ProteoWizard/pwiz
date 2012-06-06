@@ -195,7 +195,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Select the "Scheduled" method type. This should popup an error message
-            // since we are not exporting an inclusin list (reason: both MS1 and MS2 filtering are enabled)
+            // since we are not exporting an inclusion list (reason: both MS1 and MS2 filtering are enabled)
             RunDlg<MessageDlg>(
                 () => exportMethodDlg2.MethodType = ExportMethodType.Scheduled,
                 messageDlg =>

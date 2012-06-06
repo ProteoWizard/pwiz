@@ -17,13 +17,15 @@
  * limitations under the License.
  */
 
+using System.Globalization;
 using System.IO;
+using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.SettingsUI;
-using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -37,7 +39,7 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestExportDiaList()
         {
-            TestDirectoryName = "ExportIsolationListTest";
+            TestDirectoryName = "ExportDiaListTest";
             RunFunctionalTest();
         }
 
@@ -91,7 +93,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // Check for expected output.
                 string csvOut = File.ReadAllText(csvPath);
-                Assert.AreEqual(csvOut, Helpers.LineSeparate(100.5, 101.5, 102.5, 103.5));
+                Assert.AreEqual(csvOut, LineSeparateMzs(100.5, 101.5, 102.5, 103.5));
             }
 
             {
@@ -145,9 +147,46 @@ namespace pwiz.SkylineTestFunctional
 
                 // Check for expected output.
                 string csvOut = File.ReadAllText(csvPath);
-                Assert.IsTrue(csvOut.StartsWith(Helpers.LineSeparate(790, 826, 806, 646, 582, 718, 626, 698, 798, 862)));
+                Assert.IsTrue(csvOut.StartsWith(LineSeparateMzs(790.0, 826.0, 806.0, 646.0, 582.0, 718.0, 626.0, 698.0, 798.0, 862.0)));
                 Assert.AreEqual(5001, csvOut.Split('\n').Length);
             }
+
+            {
+                // Check errors for instruments that can't export a DIA method.
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
+
+                string[] nonDiaInstruments =
+                    {
+                        ExportInstrumentType.ABI_TOF,
+                        ExportInstrumentType.THERMO_LTQ
+                    };
+
+                foreach (var i in nonDiaInstruments)
+                {
+                    var instrument = i;
+                    RunUI(() =>
+                    {
+                        exportMethodDlg.InstrumentType = instrument;
+                    });
+                    RunDlg<MessageDlg>(
+                        exportMethodDlg.OkDialog,
+                        messageDlg =>
+                        {
+                            AssertEx.Contains(messageDlg.Message, "Export of DIA method is not supported for");
+                            messageDlg.OkDialog();
+                        });
+                }
+
+                OkDialog(exportMethodDlg, exportMethodDlg.CancelDialog);
+            }
+        }
+
+        public static string LineSeparateMzs(params double[] mzValues)
+        {
+            var sb = new StringBuilder();
+            foreach (var value in mzValues)
+                sb.AppendLine(SequenceMassCalc.PersistentMZ(value).ToString(CultureInfo.InvariantCulture));
+            return sb.ToString();
         }
     }
 }

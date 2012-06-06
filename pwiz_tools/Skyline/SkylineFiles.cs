@@ -741,10 +741,10 @@ namespace pwiz.Skyline
         private void exportIsolationListMenuItem_Click(object sender, EventArgs e)
         {
             var isolationScheme = DocumentUI.Settings.TransitionSettings.FullScan.IsolationScheme;
-            if (isolationScheme == null || isolationScheme.FromResults)
+            if (Document.PeptideCount == 0 && (isolationScheme == null || isolationScheme.FromResults))
             {
                 MessageDlg.Show(this,
-                    "Export of isolation list is supported only for DIA acquisition with prespecified isolation windows.");
+                    "There is no isolation list data to export.");
                 return;
             }
             ShowExportMethodDialog(ExportFileType.IsolationList);

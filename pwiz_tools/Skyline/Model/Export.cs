@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Model
         public const string ABI_QTRAP = "AB SCIEX QTRAP";
         public const string ABI_TOF = "AB SCIEX TOF";
         public const string AGILENT = "Agilent";
+        public const string AGILENT_TOF = "Agilent TOF";
         public const string AGILENT6400 = "Agilent 6400 Series";
         public const string THERMO = "Thermo";
         public const string THERMO_TSQ = "Thermo TSQ";
@@ -81,6 +82,7 @@ namespace pwiz.Skyline.Model
 
         public static readonly string[] ISOLATION_LIST_TYPES =
             {
+                AGILENT_TOF,
                 THERMO_Q_EXACTIVE
             };
 
@@ -115,6 +117,7 @@ namespace pwiz.Skyline.Model
         {
             return Equals(type, THERMO_LTQ) ||
                    Equals(type, THERMO_Q_EXACTIVE) ||
+                   Equals(type, AGILENT_TOF) ||
                    Equals(type, ABI_TOF);
         }
 
@@ -126,7 +129,7 @@ namespace pwiz.Skyline.Model
 
         public static bool CanScheduleInstrumentType(string type, SrmDocument doc)
         {
-            return !(Equals(type, THERMO_LTQ))|| IsInclusionListMethod(doc);
+            return !(Equals(type, THERMO_LTQ)) || IsInclusionListMethod(doc);
         }
 
         public static bool IsInclusionListMethod(SrmDocument doc)
@@ -220,6 +223,11 @@ namespace pwiz.Skyline.Model
                         return ExportAgilentCsv(doc, path);
                     else
                         return ExportAgilentMethod(doc, path, template);
+                case ExportInstrumentType.AGILENT_TOF:
+                    if (type == ExportFileType.IsolationList)
+                        return ExportAgilentIsolationList(doc, path, template);
+                    else
+                        throw new InvalidOperationException(string.Format("Unrecognized instrument type {0}.", instrumentType));
                 case ExportInstrumentType.THERMO:
                 case ExportInstrumentType.THERMO_TSQ:
                     if (type == ExportFileType.List)
@@ -295,6 +303,16 @@ namespace pwiz.Skyline.Model
         public AbstractMassListExporter ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new AgilentMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public AbstractMassListExporter ExportAgilentIsolationList(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new AgilentIsolationListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
@@ -568,7 +586,7 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class ThermoQExactiveIsolationListExporter : AbstractIsolationSchemeExporter
+    public class ThermoQExactiveIsolationListExporter : AbstractDiaExporter
     {
         public ThermoQExactiveIsolationListExporter(IsolationScheme isolationScheme, int? maxInclusions)
             : base(isolationScheme, maxInclusions)
@@ -996,6 +1014,89 @@ namespace pwiz.Skyline.Model
         public static bool IsAgilentMethodPath(string methodPath)
         {
             return methodPath.EndsWith(".m") && File.Exists(Path.Combine(methodPath, "qqqacqmeth.xsd"));
+        }
+    }
+
+    public class AgilentIsolationListExporter : AgilentMassListExporter
+    {
+        public AgilentIsolationListExporter(SrmDocument document)
+            : base(document)
+        {
+            IsolationList = true;
+        }
+
+        private bool IsDda { get { return !Document.Settings.TransitionSettings.FullScan.IsEnabledMsMs; } }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+            Export(fileName);
+        }
+
+        // Write values separated by the field separator, and a line separator at the end.
+        private void Write(TextWriter writer, params string[] vals)
+        {
+            writer.WriteLine(string.Join(FieldSeparator.ToString(CultureInfo.InvariantCulture), vals));
+        }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            writer.WriteLine(IsDda ? GetDdaHeader(FieldSeparator) : GetTargetedHeader(FieldSeparator));
+        }
+
+        public static string GetDdaHeader(char fieldSeparator)
+        {
+            const string ddaHeader =
+                "On,Prec. m/z,Delta m/z (ppm),Z,Prec. Type,Ret. Time (min),Delta Ret. Time (min),Iso. Width,Collision Energy";
+            return ddaHeader.Replace(',', fieldSeparator);
+        }
+
+        public static string GetTargetedHeader(char fieldSeparator)
+        {
+            const string targetedHeader =
+                "On,Prec. m/z,Z,Ret. Time (min),Delta Ret. Time (min),Iso. Width,Collision Energy,Acquisition Time (ms/spec)";
+            return targetedHeader.Replace(',', fieldSeparator);
+        }
+
+        protected override void WriteTransition(TextWriter writer,
+                                                PeptideGroupDocNode nodePepGroup,
+                                                PeptideDocNode nodePep,
+                                                TransitionGroupDocNode nodeTranGroup,
+                                                TransitionDocNode nodeTran,
+                                                int step)
+        {
+            string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            string z = nodeTran.Transition.Charge.ToString(CultureInfo);
+            string retentionTime = "0";
+            string deltaRetentionTime = "";
+            if (MethodType == ExportMethodType.Scheduled)
+            {
+                // Scheduling information
+                var prediction = Document.Settings.PeptideSettings.Prediction;
+                double windowRT;
+                double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                if (predictedRT.HasValue)
+                {
+                    retentionTime = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);  // Ret. Time (min)
+                    deltaRetentionTime = Math.Round(windowRT, 1).ToString(CultureInfo); // Delta Ret. Time (min)
+                }
+            }
+            string isolationWidth = string.Format(CultureInfo, "Narrow (~{0:0.0} m/z)", 1.3);
+            string collisionEnergy = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
+
+            if (IsDda)
+            {
+                const string deltaMz = "20"; // TODO check: Delta m/z (ppm)
+                const string precursorType = "Preferred";
+                Write(writer, "True", precursorMz, deltaMz, z, precursorType, retentionTime, deltaRetentionTime, isolationWidth, collisionEnergy);
+            }
+            else
+            {
+                const string acquisitionTime = "";  // TODO check: nothing to write for: Acquisition Time (ms/spec)
+                Write(writer, "True", precursorMz, z, retentionTime, deltaRetentionTime, isolationWidth, collisionEnergy, acquisitionTime);
+            }
         }
     }
 

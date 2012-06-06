@@ -44,7 +44,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
         private readonly SettingsListComboDriver<IsotopeEnrichments> _driverEnrichments;
         private readonly SettingsListComboDriver<IsolationScheme> _driverIsolationScheme;
-        public const double DefaultTimeAroundMs2Ids = 5;
+        public const double DEFAULT_TIME_AROUND_MS2_IDS = 5;
 
         public TransitionSettingsUI(SkylineWindow parent)
         {
@@ -157,7 +157,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();
-            tbxTimeAroundMs2Ids.Text = DefaultTimeAroundMs2Ids.ToString(CultureInfo.CurrentUICulture);
+            tbxTimeAroundMs2Ids.Text = DEFAULT_TIME_AROUND_MS2_IDS.ToString(CultureInfo.CurrentUICulture);
             tbxTimeAroundMs2Ids.Enabled = false;
             if (FullScan.RetentionTimeFilterType == RetentionTimeFilterType.scheduling_windows)
             {
