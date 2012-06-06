@@ -70,7 +70,7 @@ namespace pwiz.Skyline.Model.Lib
         public IList<KeyValuePair<Library, IDictionary<string, LibraryRetentionTimes>>> LibraryRetentionTimesByPath { get; private set; }
         public bool IsValidFor(SrmDocument document)
         {
-            var librarySet = new HashSet<Library>(document.Settings.PeptideSettings.Libraries.Libraries.Where(library=>library.IsLoaded)).ToArray();
+            var librarySet = new HashSet<Library>(document.Settings.PeptideSettings.Libraries.Libraries.Where(library=>library != null && library.IsLoaded)).ToArray();
             return librarySet.SequenceEqual(LibraryRetentionTimesByPath.Select(entry=>entry.Key));
         }
 
