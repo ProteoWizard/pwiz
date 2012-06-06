@@ -256,10 +256,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (var time in AlignedRetentionMsMs)
                     {
                         var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, time, yMax, time, 0)
-                                       {
-                                           ZOrder = ZOrder.E_BehindCurves,
-                                       };
-                        graphPane.GraphObjList.Add(line);
+                        {
+                            ZOrder = ZOrder.E_BehindCurves,
+                        };
+                        annotations.Add(line);
                     }
                 }
             }

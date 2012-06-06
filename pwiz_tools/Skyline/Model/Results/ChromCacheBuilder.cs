@@ -420,11 +420,6 @@ namespace pwiz.Skyline.Model.Results
                 {
                     retentionTimes = _document.Settings.GetRetentionTimes(_retentionTimesAlignedToFile.TargetTimes,
                         nodePep.Peptide.Sequence, nodePep.ExplicitMods);
-                    if (retentionTimes.Length == 0)
-                    {
-                        retentionTimes = _document.Settings.GetAlignedRetentionTimes(
-                            _retentionTimesAlignedToFile, nodePep.Peptide.Sequence, nodePep.ExplicitMods);
-                    }
                 }
 
                 pepDataSets = new PeptideChromDataSets(retentionTimes, isProcessedScans);
