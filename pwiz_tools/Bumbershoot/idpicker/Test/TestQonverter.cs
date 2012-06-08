@@ -191,27 +191,20 @@ namespace Test
                 ExpectedTotalAnalyses = analysisCount * sourceCount // engine 3 is ignored
             };
 
-            System.IO.File.Copy("testStaticQonversion.idpDB", "testStaticQonversion.idpDB-copy");
+            System.IO.File.Copy("testStaticQonversion.idpDB", "testStaticQonversion2.idpDB");
 
             // test without progress monitor
-            qonverter.Qonvert("testStaticQonversion.idpDB");
+            qonverter.Qonvert("testStaticQonversion2.idpDB");
 
             qonverter.QonversionProgress += new IDPicker.Qonverter.QonversionProgressEventHandler(progressTester.qonverter_QonversionProgress);
 
-            // HACK: I don't know why this is needed.
-            GC.WaitForPendingFinalizers();
-
-            System.IO.File.Delete("testStaticQonversion.idpDB");
-            System.IO.File.Copy("testStaticQonversion.idpDB-copy", "testStaticQonversion.idpDB");
+            System.IO.File.Copy("testStaticQonversion.idpDB", "testStaticQonversion3.idpDB");
 
             // test progress monitor with cancelling
             // (must before a full qonversion since the QValue test doesn't expect cancellation)
             progressTester.ExpectedQonvertedAnalyses = 0;
             progressTester.CancelAtCount = 4;
-            qonverter.Qonvert("testStaticQonversion.idpDB");
-
-            System.IO.File.Delete("testStaticQonversion.idpDB");
-            System.IO.File.Copy("testStaticQonversion.idpDB-copy", "testStaticQonversion.idpDB");
+            qonverter.Qonvert("testStaticQonversion3.idpDB");
 
             // test progress monitor without cancelling
             progressTester.ExpectedQonvertedAnalyses = 0;
