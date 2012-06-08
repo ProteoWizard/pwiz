@@ -358,29 +358,31 @@ END
 
 constant COMPANY_AND_PRODUCT : "Vanderbilt University" "IDPicker" ;
 
-generate-AssemblyInfo.cs Util\\Properties\\AssemblyInfo.cs : [ path.glob-tree Util : *.jam *.?pp *.h *.cs ] : : : "IDPicker.Util" "IDPicker utilities." $(COMPANY_AND_PRODUCT) ;
+generate-AssemblyInfo.cs Util\\Properties\\AssemblyInfo.cs : [ path.glob-tree Util : *.jam *.?pp *.h *.cs ] app.config : : : "IDPicker.Util" "IDPicker utilities." $(COMPANY_AND_PRODUCT) ;
 generate-AssemblyInfo.cs Model\\Properties\\AssemblyInfo.cs : [ path.glob-tree Model : *.jam *.?pp *.h *.cs ] : : : "IDPicker.DataModel" "IDPicker data model." $(COMPANY_AND_PRODUCT) ;
 generate-AssemblyInfo.cs Controls\\Properties\\AssemblyInfo.cs : [ path.glob-tree Controls : *.jam *.?pp *.h *.cs ] : : : "IDPicker.Controls" "IDPicker custom controls." $(COMPANY_AND_PRODUCT) ;
     
 generate-rc Resources\\Resources.rc :
-    [ path.glob-tree . : *.jam
-                         *.?pp *.h
-                         *.cs
-                         #*.html
-                         #*.vdproj
-      : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
+        [ path.glob-tree . : *.jam
+                             *.?pp *.h
+                             *.cs
+                             #*.html
+                             #*.vdproj
+            : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
+        App.config
     : warn-on-missing : : "IDPicker" "IDPicker" $(COMPANY_AND_PRODUCT)
     : IDPicker.ico IDPickerDatabase.ico IDPickerInputFile.ico
       BlankIcon.ico PeptideViewIcon.ico ProteinViewIcon.ico SpectrumViewIcon.ico ;
 
 # generate IDPicker version header
 local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
-    [ path.glob-tree . : *.jam
-                         *.?pp *.h
-                         *.cs
-                         #*.html
-                         #*.vdproj
-      : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs AssemblyInfo.cs waffles* ]
+        [ path.glob-tree . : *.jam
+                             *.?pp *.h
+                             *.cs
+                             #*.html
+                             #*.vdproj
+            : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs waffles* ]
+        App.config
     : : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
@@ -686,7 +688,7 @@ rule binary-tarball-requirements ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    local location = [ feature.get-values <location> : [ install-location $(properties) ] ] ;
 
     local non-redistributables = pwiz_bindings_cli.xml ; # .NET documentation
 
@@ -700,6 +702,7 @@ rule binary-tarball-requirements ( properties * )
     if ! <architecture> in $(properties:G)
     {
         if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
+        else if $(.platform:L) = "x86" && <address-model>64 in $(properties) { properties += <architecture>x86_64 ; } 
         else { properties += <architecture>$(.platform:L) ; }
     }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> -$(version-tag:J=_)

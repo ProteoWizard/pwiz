@@ -230,8 +230,9 @@ namespace IDPicker
                 if (endIndex < 0) throw new InvalidDataException("not well formed xml:\r\n" + xml);
                 startIndex += 4; // skip the attribute name, equals, and opening quote
                 string buildId = xml.Substring(startIndex, endIndex - startIndex);
+                string buildType = Environment.Is64BitProcess ? "bt123" : "bt31";
 
-                latestArtifactURL = String.Format("{0}/repository/download/bt31/{1}:id", teamcityURL, buildId);
+                latestArtifactURL = String.Format("{0}/repository/download/{1}/{2}:id", teamcityURL, buildType, buildId);
                 latestVersion = new Version(webClient.DownloadString(latestArtifactURL + "/VERSION?guest=1"));
             }
 
@@ -283,7 +284,8 @@ namespace IDPicker
 
                 if (form.ShowDialog() == DialogResult.Yes)
                 {
-                    string installerURL = String.Format("{0}/IDPicker-{1}.msi?guest=1", latestArtifactURL, latestVersion);
+                    string archSuffix = Environment.Is64BitProcess ? "x86_64" : "x86";
+                    string installerURL = String.Format("{0}/IDPicker-{1}-{2}.msi?guest=1", latestArtifactURL, latestVersion, archSuffix);
                     System.Diagnostics.Process.Start(installerURL);
                 }
                 return true;

@@ -35,14 +35,17 @@ rule msbuild_deploy ( targets + : sources * : properties * )
     TOOLSET on $(targets) = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
     OUTPUT_PATH on $(targets) = [ path.native $(BUILD_PATH)/Deploy/ ] ; # OutDir requires trailing slash
     INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+    ARTIFACT_NAME on $(targets) = IDPicker-$(version-tag:J=.) ;
     
     if $(address-model) = 64
     {
         ARCH on $(targets) = x64 ;
+        ARCH_SUFFIX on $(targets) = "-x86_64" ;
     }
     else
     {
         ARCH on $(targets) = x86 ;
+        ARCH_SUFFIX on $(targets) = "-x86" ;
     }
 }
 
@@ -53,11 +56,12 @@ actions msbuild_deploy
     msbuild $(THIS_PATH)/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
     $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(ADDRESS_MODEL)
     pushd $(BUILD_PATH)
-    "%WIX%\bin\candle.exe" *.wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
-    "%WIX%\bin\light.exe" *.wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
+    "%WIX%\bin\candle.exe" $(ARTIFACT_NAME)$(ARCH_SUFFIX).wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
+    "%WIX%\bin\light.exe" $(ARTIFACT_NAME)$(ARCH_SUFFIX).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
     set EXIT=%ERRORLEVEL%
-    popd
     if %EXIT% NEQ 0 exit %EXIT%
+    mklink $(ARTIFACT_NAME).msi $(ARTIFACT_NAME)$(ARCH_SUFFIX).msi
+    popd
 }
 
 
