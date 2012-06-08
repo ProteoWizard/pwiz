@@ -137,6 +137,9 @@ namespace myrimatch
             decoyPrefix = DecoyPrefix.empty() ? "rev_" : DecoyPrefix;
             automaticDecoys = DecoyPrefix.empty() ? false : true;
 
+            if (MonoisotopeAdjustmentSet.empty())
+                MonoisotopeAdjustmentSet.insert(0);
+
             // TODO: move CleavageRules parsing to its own class
             trim(CleavageRules); // trim flanking whitespace
             if( CleavageRules.find(' ') == string::npos )
