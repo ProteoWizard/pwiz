@@ -60,7 +60,7 @@ actions msbuild_deploy
     "%WIX%\bin\light.exe" $(ARTIFACT_NAME)$(ARCH_SUFFIX).wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
     set EXIT=%ERRORLEVEL%
     if %EXIT% NEQ 0 exit %EXIT%
-    mklink $(ARTIFACT_NAME).msi $(ARTIFACT_NAME)$(ARCH_SUFFIX).msi
+    copy $(ARTIFACT_NAME)$(ARCH_SUFFIX).msi $(ARTIFACT_NAME).msi
     popd
 }
 
