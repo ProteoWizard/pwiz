@@ -391,9 +391,7 @@ local day = $(revision-info[4]) ;
 
 constant SVNREV : $(revision-info[1]) ;
 constant SVNREVDATE : "(last modified $(year)-$(month)-$(day))" ;
-
-
-version-tag = $(MAJOR) $(MINOR) $(SVNREV) ;
+constant version-tag : $(MAJOR) $(MINOR) $(SVNREV) ;
 
 if $(revision-info[5]) > 0
 {
@@ -442,9 +440,13 @@ rule install-vendor-api-dependencies ( properties * )
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
-        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
-        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
+
+        if ! <address-model>64 in $(properties)
+        {
+            if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
+            if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
+        }
     }
     return $(dependencies) ;
 }

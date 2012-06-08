@@ -1,20 +1,37 @@
 <?xml version="1.0"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-   <Product Id="<ProductGuid>"
-            Name="IDPicker <version>"
+   <Product Id="{ProductGuid}"
+            Name="IDPicker {version} $(var.AddressModel)-bit"
             Language="1033"
-            Version="<version>"
+            Version="{version}"
             Manufacturer="Bumbershoot"
             UpgradeCode="644795C6-012A-49B7-A47F-E46E164D3689">
 
-      <Package Description="IDPicker <version> Installer" Manufacturer="Bumbershoot" InstallerVersion="200" Compressed="yes" />
+      <Package Description="IDPicker {version} $(var.AddressModel)-bit Installer" Manufacturer="Bumbershoot" InstallerVersion="300" Compressed="yes" />
       <Media Id="1" Cabinet="IDPicker.cab" EmbedCab="yes" />
-      <Icon Id="idpDB_Icon.exe" SourceFile="<IDPickerExe>" />
+      <Icon Id="idpDB_Icon.exe" SourceFile="msvc-release\IDPicker.exe" />
       <Property Id="ARPPRODUCTICON" Value="idpDB_Icon.exe" />
       <Property Id="ALLUSERS" Value="1" />
       <Property Id="WIXUI_INSTALLDIR" Value="APPLICATIONROOTDIRECTORY" />
       <WixVariable Id="WixUIBannerBmp" Value="..\Resources\IDPickerSetupBanner.bmp" />
       <WixVariable Id="WixUIDialogBmp" Value="..\Resources\IDPickerSetupBackground.bmp" />
+
+      <?if $(var.AddressModel)=64 ?>
+      <?define ProgramFilesFolder="ProgramFiles64Folder"?>
+      <?else?>
+      <?define ProgramFilesFolder="ProgramFilesFolder"?>
+      <?endif?>
+
+      <PropertyRef Id='NETFRAMEWORK35'/>
+      <PropertyRef Id='NETFRAMEWORK35_SP_LEVEL'/>
+      <Condition Message="Requires Microsoft .NET 3.5 Framework with Service Pack 1">
+        <![CDATA[Installed OR (NETFRAMEWORK35_SP_LEVEL and NOT NETFRAMEWORK35_SP_LEVEL = "#0")]]>
+      </Condition>
+
+      <PropertyRef Id='NETFRAMEWORK40FULL'/>
+      <Condition Message="Requires Microsoft .NET 4.0 Framework">
+        <![CDATA[Installed OR (NETFRAMEWORK40FULL = "#1")]]>
+      </Condition>
 
       <UI>
          <UIRef Id="WixUI_InstallDir" />
@@ -24,38 +41,165 @@
       </UI>
 
       <Directory Id="TARGETDIR" Name="SourceDir">
-         <Directory Id="ProgramMenuFolder" />
-         <Directory Id="ProgramFilesFolder" Name="PFiles">
-            <Directory Id="BumbershootFolder" Name="Bumbershoot">
-                <Directory Id="APPLICATIONROOTDIRECTORY" Name="IDPicker <version>">
-                   <Component Feature="MainFeature" Id="MainComponent">
-                      <File Id="IDPicker.exe" Name="IDPicker.exe" Source="<IDPickerExe>" KeyPath="yes" Checksum="yes" />
-                      <Shortcut Id="MainShortcut" Directory="ProgramMenuFolder" Name="IDPicker <version>" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="idpDB_Icon.exe" IconIndex="-101" Advertise="yes" />
+
+        <?if $(var.AddressModel)=64 ?>
+          <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
+          <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
+          <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86_x64.msm" DiskId="1" />
+          <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86_x64.msm" DiskId="1" />
+
+          <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x64.msm" DiskId="1" />
+          <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x64.msm" DiskId="1" />
+        <?else?>
+          <Merge Id="CRT9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+          <Merge Id="MFC9" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+          <Merge Id="CRT9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_CRT_x86.msm" DiskId="1" />
+          <Merge Id="MFC9_policy" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\policy_9_0_Microsoft_VC90_MFC_x86.msm" DiskId="1" />
+
+          <Merge Id="CRT10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_CRT_x86.msm" DiskId="1" />
+          <Merge Id="MFC10" Language="0" SourceFile="$(env.ProgramFiles)\Common Files\Merge Modules\Microsoft_VC100_MFC_x86.msm" DiskId="1" />
+        <?endif?>
+        
+        <Directory Id="ProgramMenuFolder" />
+        <Directory Id="$(var.ProgramFilesFolder)" Name="PFiles">
+          <Directory Id="BumbershootFolder" Name="Bumbershoot">
+            <Directory Id="APPLICATIONROOTDIRECTORY" Name="IDPicker {version} $(var.AddressModel)-bit">
+              <Component Feature="MainFeature" Id="MainComponent">
+                <File Id="IDPicker.exe" Name="IDPicker.exe" Source="msvc-release\IDPicker.exe" KeyPath="yes" Checksum="yes" />
+                <Shortcut Id="MainShortcut" Directory="ProgramMenuFolder" Name="IDPicker {version} $(var.AddressModel)-bit" WorkingDirectory="APPLICATIONROOTDIRECTORY" Icon="idpDB_Icon.exe" IconIndex="-101" Advertise="yes" />
     
-                      <ProgId Id="idpDB_ProgId" Description="IDPicker database" Icon="idpDB_Icon.exe" IconIndex="-102" Advertise="yes">
-                        <Extension Id="idpDB" Advertise="yes">
-                          <Verb Id="open" Command="&amp;Open" Sequence="1" Argument="&quot;%1&quot;"/>
-                        </Extension>
-                      </ProgId>
+                <ProgId Id="idpDB_ProgId" Description="IDPicker database" Icon="idpDB_Icon.exe" IconIndex="-102" Advertise="yes">
+                  <Extension Id="idpDB" Advertise="yes">
+                    <Verb Id="open" Command="&amp;Open" Sequence="1" Argument="&quot;%1&quot;"/>
+                  </Extension>
+                </ProgId>
 
-                      <ProgId Id="pepXML_ProgId" Description="IDPicker input file" Icon="idpDB_Icon.exe" IconIndex="-103" Advertise="yes">
-                        <Extension Id="pepXML" Advertise="yes">
-                          <Verb Id="open" Command="&amp;Import" Sequence="1" Argument="&quot;%1&quot;"/>
-                        </Extension>
-                      </ProgId>
+                <ProgId Id="pepXML_ProgId" Description="IDPicker input file" Icon="idpDB_Icon.exe" IconIndex="-103" Advertise="yes">
+                  <Extension Id="pepXML" Advertise="yes">
+                    <Verb Id="open" Command="&amp;Import" Sequence="1" Argument="&quot;%1&quot;"/>
+                  </Extension>
+                </ProgId>
 
-                      <ProgId Id="mzid_ProgId" Description="IDPicker input file" Icon="idpDB_Icon.exe" IconIndex="-103" Advertise="yes">
-                        <Extension Id="mzid" Advertise="yes">
-                          <Verb Id="open" Command="&amp;Import" Sequence="1" Argument="&quot;%1&quot;"/>
-                        </Extension>
-                      </ProgId>
-                   </Component>
-<ComponentList/>
-                </Directory>
-            </Directory>
-         </Directory>
-      </Directory>
+                <ProgId Id="mzid_ProgId" Description="IDPicker input file" Icon="idpDB_Icon.exe" IconIndex="-103" Advertise="yes">
+                  <Extension Id="mzid" Advertise="yes">
+                    <Verb Id="open" Command="&amp;Import" Sequence="1" Argument="&quot;%1&quot;"/>
+                  </Extension>
+                </ProgId>
+              </Component>
 
-      <Feature Id="MainFeature" Title="IDPicker <version>" Level="1"/>      
-   </Product>
+<!-- Components unique to IDPicker -->
+<Component Feature="MainFeature"><File Id="_IDPicker.exe.config" Name="IDPicker.exe.config" Source="msvc-release\IDPicker.exe.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_IDPicker.exe.manifest" Name="IDPicker.exe.manifest" Source="msvc-release\IDPicker.exe.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Antlr3.Runtime.dll" Name="Antlr3.Runtime.dll" Source="msvc-release\Antlr3.Runtime.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Castle.Core.dll" Name="Castle.Core.dll" Source="msvc-release\Castle.Core.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_IDPicker.Controls.dll" Name="IDPicker.Controls.dll" Source="msvc-release\IDPicker.Controls.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_IDPicker.DataModel.dll" Name="IDPicker.DataModel.dll" Source="msvc-release\IDPicker.DataModel.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_IDPicker.Util.dll" Name="IDPicker.Util.dll" Source="msvc-release\IDPicker.Util.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_IDPicker.Util.dll.config" Name="IDPicker.Util.dll.config" Source="msvc-release\IDPicker.Util.dll.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Iesi.Collections.dll" Name="Iesi.Collections.dll" Source="msvc-release\Iesi.Collections.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_InteropQonverter.dll" Name="InteropQonverter.dll" Source="msvc-release\InteropQonverter.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_idpQonvert.exe" Name="idpQonvert.exe" Source="msvc-release\idpQonvert.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MathNet.Numerics.dll" Name="MathNet.Numerics.dll" Source="msvc-release\MathNet.Numerics.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Microsoft.WindowsAPICodePack.dll" Name="Microsoft.WindowsAPICodePack.dll" Source="msvc-release\Microsoft.WindowsAPICodePack.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Microsoft.WindowsAPICodePack.Shell.dll" Name="Microsoft.WindowsAPICodePack.Shell.dll" Source="msvc-release\Microsoft.WindowsAPICodePack.Shell.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_NHibernate.ByteCode.Castle.dll" Name="NHibernate.ByteCode.Castle.dll" Source="msvc-release\NHibernate.ByteCode.Castle.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_NHibernate.dll" Name="NHibernate.dll" Source="msvc-release\NHibernate.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_ObjectListView.dll" Name="ObjectListView.dll" Source="msvc-release\ObjectListView.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_PopupControl.dll" Name="PopupControl.dll" Source="msvc-release\PopupControl.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Remotion.Data.Linq.dll" Name="Remotion.Data.Linq.dll" Source="msvc-release\Remotion.Data.Linq.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_SharpSvn.dll" Name="SharpSvn.dll" Source="msvc-release\SharpSvn.dll" KeyPath="yes"/></Component>
+<?if $(var.AddressModel)=32 ?>
+    <Component Feature="MainFeature"><File Id="_SharpPlink_Win32.svnExe" Name="SharpPlink-Win32.svnExe" Source="msvc-release\SharpPlink-Win32.svnExe" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_SharpSvn_DB44_20_Win32.dll" Name="SharpSvn-DB44-20-Win32.dll" Source="msvc-release\SharpSvn-DB44-20-Win32.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_SharpSvn_SASL21_23_Win32.dll" Name="SharpSvn-SASL21-23-Win32.dll" Source="msvc-release\SharpSvn-SASL21-23-Win32.dll" KeyPath="yes"/></Component>
+<?else?>
+    <Component Feature="MainFeature"><File Id="_SharpPlink_x64.svnExe" Name="SharpPlink-x64.svnExe" Source="msvc-release\SharpPlink-x64.svnExe" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_SharpSvn_DB44_20_x64.dll" Name="SharpSvn-DB44-20-x64.dll" Source="msvc-release\SharpSvn-DB44-20-x64.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_SharpSvn_SASL21_23_x64.dll" Name="SharpSvn-SASL21-23-x64.dll" Source="msvc-release\SharpSvn-SASL21-23-x64.dll" KeyPath="yes"/></Component>
+<?endif?>
+
+<!-- Bruker and T2D support not available in 64-bit -->
+<?if $(var.AddressModel)=32 ?>
+    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.dll" Name="BDal.CXt.Lc.dll" Source="msvc-release\BDal.CXt.Lc.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.Factory.dll" Name="BDal.CXt.Lc.Factory.dll" Source="msvc-release\BDal.CXt.Lc.Factory.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.Interfaces.dll" Name="BDal.CXt.Lc.Interfaces.dll" Source="msvc-release\BDal.CXt.Lc.Interfaces.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_BDal.CXt.Lc.UntU2.dll" Name="BDal.CXt.Lc.UntU2.dll" Source="msvc-release\BDal.CXt.Lc.UntU2.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_NTB_vc80_mt_1_5_97.dll" Name="NTB-vc80-mt-1_5_97.dll" Source="msvc-release\NTB-vc80-mt-1_5_97.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.EDAL.dll" Name="Interop.EDAL.dll" Source="msvc-release\Interop.EDAL.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.EDAL.SxS.manifest" Name="Interop.EDAL.SxS.manifest" Source="msvc-release\Interop.EDAL.SxS.manifest" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.dll" Name="Interop.HSREADWRITELib.dll" Source="msvc-release\Interop.HSREADWRITELib.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.HSREADWRITELib.SxS.manifest" Name="Interop.HSREADWRITELib.SxS.manifest" Source="msvc-release\Interop.HSREADWRITELib.SxS.manifest" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_libfftw3_3.dll" Name="libfftw3-3.dll" Source="msvc-release\libfftw3-3.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_libfftw3f_3.dll" Name="libfftw3f-3.dll" Source="msvc-release\libfftw3f-3.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_FlexVariableTable.xml" Name="FlexVariableTable.xml" Source="msvc-release\FlexVariableTable.xml" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_HSReadWrite.dll" Name="HSReadWrite.dll" Source="msvc-release\HSReadWrite.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_ICRVariableTable.xml" Name="ICRVariableTable.xml" Source="msvc-release\ICRVariableTable.xml" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_CompassXtractMS.dll" Name="CompassXtractMS.dll" Source="msvc-release\CompassXtractMS.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_boost_date_time_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_boost_regex_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_boost_thread_vc80_mt_1_33_1_BDAL_20070424.dll" Name="boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" Source="msvc-release\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_Interop.DataExplorer.dll" Name="Interop.DataExplorer.dll" Source="msvc-release\Interop.DataExplorer.dll" KeyPath="yes"/></Component>
+<?endif?>
+
+<!-- Components shared by IDPicker and ProteoWizard -->
+<Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll" Name="CustomDataSourceDialog.dll" Source="msvc-release\CustomDataSourceDialog.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_CustomDataSourceDialog.dll.config" Name="CustomDataSourceDialog.dll.config" Source="msvc-release\CustomDataSourceDialog.dll.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_DataGridViewAutoFilter.dll" Name="DataGridViewAutoFilter.dll" Source="msvc-release\DataGridViewAutoFilter.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_DigitalRune.Windows.Docking.dll" Name="DigitalRune.Windows.Docking.dll" Source="msvc-release\DigitalRune.Windows.Docking.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Interop.MSFileReaderLib.dll" Name="Interop.MSFileReaderLib.dll" Source="msvc-release\Interop.MSFileReaderLib.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSGraph.dll" Name="MSGraph.dll" Source="msvc-release\MSGraph.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_pwiz.CommonUtil.dll" Name="pwiz.CommonUtil.dll" Source="msvc-release\pwiz.CommonUtil.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_pwiz_bindings_cli.dll" Name="pwiz_bindings_cli.dll" Source="msvc-release\pwiz_bindings_cli.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_seems.exe" Name="seems.exe" Source="msvc-release\seems.exe" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_seems.exe.config" Name="seems.exe.config" Source="msvc-release\seems.exe.config" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_seems.exe.manifest" Name="seems.exe.manifest" Source="msvc-release\seems.exe.manifest" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_STL_Containers.dll" Name="STL_Containers.dll" Source="msvc-release\STL_Containers.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_ZedGraph.dll" Name="ZedGraph.dll" Source="msvc-release\ZedGraph.dll" KeyPath="yes"/></Component>
+<!-- Mascot support is not currently available for VC10
+<Component Feature="MainFeature"><File Id="_msparser.dll" Name="msparser.dll" Source="msvc-release\msparser.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_unimod_2.xsd" Name="unimod_2.xsd" Source="msvc-release\unimod_2.xsd" KeyPath="yes"/></Component>
+-->
+<Component Feature="MainFeature"><File Id="_agtsampleinforw.dll" Name="agtsampleinforw.dll" Source="msvc-release\agtsampleinforw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseCommon.dll" Name="BaseCommon.dll" Source="msvc-release\BaseCommon.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseDataAccess.dll" Name="BaseDataAccess.dll" Source="msvc-release\BaseDataAccess.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseError.dll" Name="BaseError.dll" Source="msvc-release\BaseError.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_BaseTof.dll" Name="BaseTof.dll" Source="msvc-release\BaseTof.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.AnalystDataProvider.dll" Name="Clearcore2.Data.AnalystDataProvider.dll" Source="msvc-release\Clearcore2.Data.AnalystDataProvider.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.CommonInterfaces.dll" Name="Clearcore2.Data.CommonInterfaces.dll" Source="msvc-release\Clearcore2.Data.CommonInterfaces.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.dll" Name="Clearcore2.Data.dll" Source="msvc-release\Clearcore2.Data.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Data.WiffReader.dll" Name="Clearcore2.Data.WiffReader.dll" Source="msvc-release\Clearcore2.Data.WiffReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.InternalRawXYProcessing.dll" Name="Clearcore2.InternalRawXYProcessing.dll" Source="msvc-release\Clearcore2.InternalRawXYProcessing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.ProjectUtilities.dll" Name="Clearcore2.ProjectUtilities.dll" Source="msvc-release\Clearcore2.ProjectUtilities.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.StructuredStorage.dll" Name="Clearcore2.StructuredStorage.dll" Source="msvc-release\Clearcore2.StructuredStorage.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Utility.dll" Name="Clearcore2.Utility.dll" Source="msvc-release\Clearcore2.Utility.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.Muni.dll" Name="Clearcore2.Muni.dll" Source="msvc-release\Clearcore2.Muni.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_Clearcore2.RawXYProcessing.dll" Name="Clearcore2.RawXYProcessing.dll" Source="msvc-release\Clearcore2.RawXYProcessing.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_EULA.MHDAC" Name="EULA.MHDAC" Source="msvc-release\EULA.MHDAC" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_EULA.MSFileReader" Name="EULA.MSFileReader" Source="msvc-release\EULA.MSFileReader" KeyPath="yes"/></Component>
+<?if $(var.AddressModel)=64 ?>
+    <Component Feature="MainFeature"><File Id="_fileio_x64.dll" Name="fileio_x64.dll" Source="msvc-release\fileio_x64.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_fregistry_x64.dll" Name="fregistry_x64.dll" Source="msvc-release\fregistry_x64.dll" KeyPath="yes"/></Component>
+<?else?>
+    <Component Feature="MainFeature"><File Id="_fileio.dll" Name="fileio.dll" Source="msvc-release\fileio.dll" KeyPath="yes"/></Component>
+    <Component Feature="MainFeature"><File Id="_fregistry.dll" Name="fregistry.dll" Source="msvc-release\fregistry.dll" KeyPath="yes"/></Component>
+<?endif?>
+<Component Feature="MainFeature"><File Id="_MassLynxRaw.dll" Name="MassLynxRaw.dll" Source="msvc-release\MassLynxRaw.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MassSpecDataReader.dll" Name="MassSpecDataReader.dll" Source="msvc-release\MassSpecDataReader.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSFileReader.XRawfile2.dll" Name="MSFileReader.XRawfile2.dll" Source="msvc-release\MSFileReader.XRawfile2.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_MSFileReader.XRawfile2.SxS.manifest" Name="MSFileReader.XRawfile2.SxS.manifest" Source="msvc-release\MSFileReader.XRawfile2.SxS.manifest" KeyPath="yes"/></Component>
+              </Directory>
+          </Directory>
+        </Directory>
+        </Directory>
+
+        <Feature Id="MainFeature" Title="IDPicker {version} $(var.AddressModel)-bit" Level="1">
+          <MergeRef Id="CRT9" />
+          <MergeRef Id="MFC9" />
+          <MergeRef Id="CRT9_policy" />
+          <MergeRef Id="MFC9_policy" />
+          <MergeRef Id="CRT10" />
+          <MergeRef Id="MFC10" />
+        </Feature>   
+    </Product>
 </Wix>

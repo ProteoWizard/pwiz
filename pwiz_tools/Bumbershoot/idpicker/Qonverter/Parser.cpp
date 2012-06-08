@@ -793,11 +793,13 @@ struct ParserImpl
         if (analysis.importSettings.maxQValue == 1 && analysis.importSettings.maxResultRank == 0)
             return;
 
+        int maxResultRank = analysis.importSettings.maxResultRank > 0 ? analysis.importSettings.maxResultRank : 100;
+
         sqlite::transaction transaction(idpDb);
 
-        const char* sql =
+        string sql =
             // Apply a broad QValue filter on top-ranked PSMs
-            "DELETE FROM PeptideSpectrumMatch WHERE (Rank = 1 AND QValue > %f) OR (Rank > %d);"
+            "DELETE FROM PeptideSpectrumMatch WHERE (Rank = 1 AND QValue > %1%) OR (Rank > %2%);"
 
             // Delete all PSMs for a spectrum if the spectrum's top-ranked PSM was deleted above
             "DELETE FROM PeptideSpectrumMatch"
@@ -818,8 +820,8 @@ struct ParserImpl
             "DELETE FROM ProteinData WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);"
             "DELETE FROM ProteinMetadata WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);";
 
-        int maxResultRank = analysis.importSettings.maxResultRank > 0 ? analysis.importSettings.maxResultRank : 100;
-        idpDb.executef(sql, analysis.importSettings.maxQValue, maxResultRank);
+        sql = (boost::format(sql) % analysis.importSettings.maxQValue % maxResultRank).str();
+        idpDb.execute(sql.c_str());
 
         transaction.commit();
 

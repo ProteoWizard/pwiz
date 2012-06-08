@@ -29,34 +29,33 @@ path-constant THIS_PATH : . ;
 
 rule msbuild_deploy ( targets + : sources * : properties * )
 {
-    if <variant>debug in $(properties) ||
-       <debug-symbols>on in $(properties)
+    local address-model = [ feature.get-values <address-model> : $(properties) ] ;
+    ADDRESS_MODEL on $(targets) = $(address-model:E=32) ;
+    LOCATION on $(targets) = [ feature.get-values <location> : $(properties) ] ;
+    TOOLSET on $(targets) = [ feature.get-values <toolset-msvc:version> : $(properties) ] ;
+    OUTPUT_PATH on $(targets) = [ path.native $(BUILD_PATH)/Deploy/ ] ; # OutDir requires trailing slash
+    INTERMEDIATE_PATH on $(targets) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
+    
+    if $(address-model) = 64
     {
-        CONFIGURATION on $(<[1]) = "Debug" ;
+        ARCH on $(targets) = x64 ;
     }
     else
     {
-        CONFIGURATION on $(<[1]) = "Release" ;
+        ARCH on $(targets) = x86 ;
     }
-
-    local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
-    INPUT_PATH on $(<[1]) = [ path.native $(location) ] ;
-    OUTPUT_PATH on $(<[1]) = [ path.native $(BUILD_PATH)/Deploy/ ] ; # OutDir requires trailing slash
-    INTERMEDIATE_PATH on $(<[1]) = "BaseIntermediateOutputPath=$(BUILD_PATH)/obj/" ;
 }
 
 actions msbuild_deploy
 {
-	IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
-    echo Building SetupDeployProject in $(CONFIGURATION:L) configuration...
-    pushd $(THIS_PATH)
-    msbuild SetupDeployProject.csproj /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
-    $(OUTPUT_PATH)SetupDeployProject.exe "$(INPUT_PATH)" "$(BUILD_PATH)"
+    IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+    echo Building SetupDeployProject...
+    msbuild $(THIS_PATH)/SetupDeployProject.csproj /p:Configuration=Release;Platform=AnyCPU;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+    $(OUTPUT_PATH)SetupDeployProject.exe "$(THIS_PATH)/Deploy.wxs.template" "$(LOCATION)" $(version-tag:J=.) $(ADDRESS_MODEL)
     pushd $(BUILD_PATH)
-    "%WIX%\bin\candle.exe" *.wxs
-    "%WIX%\bin\light.exe" *.wixObj -ext WixUIExtension -cultures:en-us
+    "%WIX%\bin\candle.exe" *.wxs -nologo -arch $(ARCH) -dAddressModel=$(ADDRESS_MODEL) -dToolset=$(TOOLSET)
+    "%WIX%\bin\light.exe" *.wixObj -nologo -ext WixUIExtension -ext WixNetFxExtension -cultures:en-us
     set EXIT=%ERRORLEVEL%
-    popd
     popd
     if %EXIT% NEQ 0 exit %EXIT%
 }

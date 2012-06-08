@@ -1250,6 +1250,9 @@ namespace IDPicker
                 _layoutManager.SaveMainFormSettings();
                 _layoutManager.SaveUserLayoutList();
             }
+
+            // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
+            Process.GetCurrentProcess().Kill();
         }
 
 

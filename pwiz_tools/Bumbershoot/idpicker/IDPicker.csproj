@@ -150,7 +150,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\NHibernate\Remotion.Data.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=x86">
+    <Reference Include="SharpSvn, Version=1.7002.1998.12257, Culture=neutral, PublicKeyToken=d729672594885a28, processorArchitecture=$(Platform)">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\SharpSvn\$(Platform)\SharpSvn.dll</HintPath>
     </Reference>
@@ -443,11 +443,15 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <NativeReference Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
+    <NativeReference Condition=" '$(Platform)' == 'x86' " Include="Interop.EDAL.SxS, Version=1.0.0.0, Type=win32">
       <Name>Interop.EDAL.SxS.manifest</Name>
       <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\Interop.EDAL.SxS.manifest</HintPath>
     </NativeReference>
-    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.1.0.20, Type=win32">
+    <NativeReference Condition=" '$(Platform)' == 'x86' " Include="Interop.HSREADWRITELib.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.HSREADWRITELib.SxS.manifest</Name>
+      <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\Interop.HSREADWRITELib.SxS.manifest</HintPath>
+    </NativeReference>
+    <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.2.61.0, Type=win32">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>build-nt-x86\obj\$(Platform)\$(Configuration)\MSFileReader.XRawfile2.SxS.manifest</HintPath>
     </NativeReference>
