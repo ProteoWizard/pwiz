@@ -4,7 +4,8 @@ Microsoft Visual Studio Solution File, Format Version 11.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{30DD84D7-0E18-45C8-8594-2656F94C468E}"
 	ProjectSection(SolutionItems) = preProject
 		IDPicker.vsmdi = IDPicker.vsmdi
-		LocalTestRun.testrunconfig = LocalTestRun.testrunconfig
+		Local-x86.testrunconfig = Local-x86.testrunconfig
+		Local-x64.testrunconfig = Local-x64.testrunconfig
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "STL_Containers", "Util\STL_Containers\STL_Containers.csproj", "{D6BD694C-FF6E-4962-A05D-59ACD6CBD6A3}"
