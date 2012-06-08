@@ -139,6 +139,9 @@ namespace pepitome
             else
                 throw runtime_error("invalid output format");
 
+            if (MonoisotopeAdjustmentSet.empty())
+                MonoisotopeAdjustmentSet.insert(0);
+
             // TODO: move CleavageRules parsing to its own class
             trim(CleavageRules); // trim flanking whitespace
             if( CleavageRules.find(' ') == string::npos )
