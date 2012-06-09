@@ -65,9 +65,9 @@ bool PercolatorXmlReader::parseFile() {
     extensions.push_back(".pms2");
 
     vector<const char*> dirs;
+    dirs.push_back("../sequest/");
     dirs.push_back("../");
     dirs.push_back("../../");
-    dirs.push_back("../sequest/");
 
     BlibBuilder tmpBuilder;
 
