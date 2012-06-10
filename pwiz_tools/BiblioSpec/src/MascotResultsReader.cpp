@@ -26,7 +26,6 @@
  */
 
 #include <sys/stat.h>
-#include <boost/algorithm/string.hpp>
 #include "MascotResultsReader.h"
 #include "BlibUtils.h"
 
@@ -468,53 +467,37 @@ void MascotResultsReader::applyIsotopeDiffs(PSM* psm, string quantName){
     }
 }
 
-    /**
-     * Look in the title string of the spectrum for the name of the file it
-     * originally came from.  Return an empty string if no file found.
-     */
-    string MascotResultsReader::getFilename(ms_inputquery& spec){
+/**
+ * Look in the title string of the spectrum for the name of the file it
+ * originally came from.  Return an empty string if no file found.
+ */
+string MascotResultsReader::getFilename(ms_inputquery& spec){
 
-        string filename = ""; // default if not found
+    string idStr = spec.getStringTitle(true);
+    string filename = getFilenameFromID(idStr);
 
-        string title = spec.getStringTitle(true);
-        size_t start = title.find("File:");
+    if (filename.empty()){
+        // try looking for square braces
+        size_t start = idStr.find("[");
         if( start != string::npos ){ // found it
-            start += strlen("File: ");
-            size_t end = title.find_first_of(",\"", start);
-            filename = title.substr(start, end - start);
-        } else {
-            // else, try looking for square braces
-            start = title.find("[");
-            if( start != string::npos ){ // found it
-                start++; // move to next character
-                // look for a known file extension
-                size_t end = string::npos;
-                size_t extIdx = 0;
-                while(end == string::npos 
-                      && extIdx < specFileExtensions_.size()){
-                    end = title.find(specFileExtensions_[extIdx++], start);
-                }
-                if( end != string::npos){
-                    end += (specFileExtensions_[extIdx - 1].length() - 1);
-                    filename = title.substr(start, end - start);
-                }
+            start++; // move to next character
+            // look for a known file extension
+            size_t end = string::npos;
+            size_t extIdx = 0;
+            while(end == string::npos 
+                  && extIdx < specFileExtensions_.size()){
+                end = idStr.find(specFileExtensions_[extIdx++], start);
             }
-            else
-            {
-                // check for TPP format <basename>.<start scan>.<end scan>.<charge>
-                vector<string> parts;
-                boost::split(parts, title, boost::is_any_of("."));
-                if (parts.size() == 4 && atoi(parts[1].c_str()) != 0
-                                      && atoi(parts[2].c_str()) != 0
-                                      && atoi(parts[3].c_str()) != 0)
-                {
-                    filename = parts[0];
-                }
+            if( end != string::npos){
+                end += (specFileExtensions_[extIdx - 1].length() - 1);
+                filename = idStr.substr(start, end - start);
             }
         }
-
-        return filename;
     }
+
+    return filename;
+}
+
 /**
  * Call getLastError and return a string with information about which
  * error was returned.
@@ -523,6 +506,7 @@ string MascotResultsReader::getErrorMessage(){
     int errorCode = ms_file_->getLastError();
     return getErrorMessage(errorCode);
  }
+
 /**
  * \return A string with a description of the given error code.
  */

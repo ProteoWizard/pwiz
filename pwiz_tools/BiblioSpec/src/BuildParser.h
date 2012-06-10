@@ -114,6 +114,7 @@ class BuildParser : protected SAXHandler{
   sqlite3_int64 insertSpectrumFilename(string& filename, bool insertAsIs = false);
   void buildTables(PSM_SCORE_TYPE score_type, string specfilename = "");
   const char* getPsmFilePath(); // path containing file being parsed
+  string getFilenameFromID(const string& idStr); // spectrum source file from spectrum ID
 
  public:
   BuildParser(BlibBuilder& maker,

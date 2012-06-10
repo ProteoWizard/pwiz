@@ -20,6 +20,7 @@
 //
 
 #include "BuildParser.h"
+#include <boost/algorithm/string.hpp>
 
 namespace BiblioSpec {
 
@@ -687,6 +688,65 @@ void BuildParser::setNextProgressSize(int size){
     fileProgressIncrement_ = size;
 }
 
+/**
+ * Look in the ID string of the spectrum for the name of the file it
+ * originally came from.  Return an empty string if no file found.
+ */
+string BuildParser::getFilenameFromID(const string& idStr){
+
+    string filename = ""; // default if not found
+
+    size_t start = idStr.find("File:");
+    if( start != string::npos ){ // found it
+        start += strlen("File: ");
+        size_t end = idStr.find_first_of(",\"", start);
+        filename = idStr.substr(start, end - start);
+    }
+    if (filename.empty()){
+        // check for TPP/SEQUEST format <basename>.<start scan>.<end scan>.<charge>[.dta]
+        vector<string> parts;
+        boost::split(parts, idStr, boost::is_any_of("."));
+        if ((parts.size() == 4 || (parts.size() == 5 && strcmp(parts[4].c_str(), "dta") == 0))
+                              && atoi(parts[1].c_str()) != 0
+                              && atoi(parts[2].c_str()) != 0
+                              && atoi(parts[3].c_str()) != 0){
+
+            filename = parts[0];
+
+            // check for special ScaffoldIDNumber prefix
+            const char* scaffoldPrefix = "ScaffoldIDNumber_";
+            size_t lenPrefix = strlen(scaffoldPrefix);
+            if (strncmp(filename.c_str(), scaffoldPrefix, lenPrefix) == 0) {
+                size_t endPrefix = filename.find("_", lenPrefix);
+                if (endPrefix != string::npos && endPrefix < filename.length() - 1
+                        && atoi(filename.substr(lenPrefix, endPrefix - lenPrefix).c_str()) != 0)
+                    filename = filename.substr(endPrefix + 1, filename.length() - endPrefix - 1);
+            }
+        }
+    }
+    if (filename.empty()){
+        // Proteome Discoverer format <basename>-<spectrum id>-<start scan>_<end scan>
+        size_t lastDash = idStr.rfind("-");
+        if (lastDash != string::npos){
+            size_t lastDash2 = idStr.rfind("-", lastDash - 1);
+            if (lastDash2 != string::npos){
+                size_t suffixStart = lastDash + 1;
+                size_t spectrumStart = lastDash2 + 1;
+                vector<string> parts;
+                string startAndEnd = idStr.substr(suffixStart, idStr.length() - suffixStart);
+                boost::split(parts, startAndEnd, boost::is_any_of("_"));
+                if (parts.size() == 2
+                        && atoi(parts[0].c_str()) != 0
+                        && atoi(parts[1].c_str()) != 0
+                        && atoi(idStr.substr(spectrumStart, lastDash - spectrumStart).c_str()) != 0){
+                    filename = idStr.substr(0, lastDash2);
+                }
+            }
+        }
+    }
+
+    return filename;
+}
 
 } // namespace
 

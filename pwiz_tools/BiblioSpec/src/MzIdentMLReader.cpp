@@ -26,6 +26,7 @@
 
 #include "MzIdentMLReader.h"
 #include <iostream>
+#include <boost/algorithm/string.hpp>
 
 using namespace std;
 using namespace pwiz;
@@ -62,14 +63,38 @@ bool MzIdentMLReader::parseFile(){
         initSpecFileProgress((int)fileMap_.size());
     }
     
+    map<string, string> mapSourceFiles;
+    vector<pwiz::identdata::SourceFilePtr>& sourceFiles = pwizReader_->dataCollection.inputs.sourceFile;
+    for(size_t i = 0; i < sourceFiles.size(); i++){
+        string location = sourceFiles[i]->location;
+        if (!location.empty())
+        {
+            size_t dot = location.find_last_of('.');
+            size_t slash = location.find_last_of("\\/");
+            string key = (dot != string::npos && slash != string::npos && slash < dot)
+                ? location.substr(slash + 1, dot - slash - 1)
+                : location;
+            mapSourceFiles[key] = location;
+        }
+    }
+
     map<string, vector<PSM*> >::iterator fileIterator = fileMap_.begin();
     for(; fileIterator != fileMap_.end(); ++fileIterator) {
-        string fileroot = getFileRoot(fileIterator->first);
-        setSpecFileName(fileroot.c_str(), vector<const char*>(1, ".MGF"));
+        vector<string> pathParts;
+        boost::split(pathParts, fileIterator->first, boost::is_any_of(";"));
+        string mgfFileroot = getFileRoot(pathParts[0]);
+        setSpecFileName(mgfFileroot.c_str(), vector<const char*>(1, ".MGF"));
+
+        string sourceFile = pathParts[1];
+        if (!mapSourceFiles[sourceFile].empty())
+            sourceFile = mapSourceFiles[sourceFile];
 
         // move from map to psms_
         psms_ = fileIterator->second;
-        buildTables(SCAFFOLD_SOMETHING);
+        if (sourceFile.empty())
+            buildTables(SCAFFOLD_SOMETHING);
+        else
+            buildTables(SCAFFOLD_SOMETHING, sourceFile);
     }
 
     return true;
@@ -96,6 +121,8 @@ void MzIdentMLReader::collectPsms(){
             SpectrumIdentificationResult& result = **result_iter_;
             string idStr = result.spectrumID;
             string filename = result.spectraDataPtr->location;
+            filename += ";";
+            filename += getFilenameFromID(idStr);
             
             // 1 SpectrumIdentificationItem = 1 psm
             for(item_iter_ = result.spectrumIdentificationItem.begin(); 
