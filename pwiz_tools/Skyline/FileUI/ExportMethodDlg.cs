@@ -116,36 +116,28 @@ namespace pwiz.Skyline.FileUI
                 MethodType = ExportMethodType.Standard;
             }
 
-            // Temporary code until our Q-Exactive support allows non-DIA export.
-            if (_fileType == ExportFileType.IsolationList && !IsDia)
+            // Instrument type may force method type to standard, so it must
+            // be calculated after method type.
+            string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
+            if (instrumentTypeName != null)
             {
-                InstrumentType = ExportInstrumentType.AGILENT_TOF;
-            }
-            else
-            {
-                // Instrument type may force method type to standard, so it must
-                // be calculated after method type.
-                string instrumentTypeName = document.Settings.TransitionSettings.Prediction.CollisionEnergy.Name;
-                if (instrumentTypeName != null)
+                // Look for the first instrument type with the same prefix as the CE name
+                string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
+                int i = -1;
+                if (document.Settings.TransitionSettings.FullScan.IsEnabled)
                 {
-                    // Look for the first instrument type with the same prefix as the CE name
-                    string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
-                    int i = -1;
-                    if (document.Settings.TransitionSettings.FullScan.IsEnabled)
-                    {
-                        i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix) &&
-                            ExportInstrumentType.IsFullScanInstrumentType(typeName));
-                    }
-                    if (i == -1)
-                    {
-                        i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix));
-                    }
-                    if (i != -1)
-                        InstrumentType = listTypes[i];
+                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix) &&
+                        ExportInstrumentType.IsFullScanInstrumentType(typeName));
                 }
-                if (InstrumentType == null)
-                    InstrumentType = listTypes[0];
+                if (i == -1)
+                {
+                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix));
+                }
+                if (i != -1)
+                    InstrumentType = listTypes[i];
             }
+            if (InstrumentType == null)
+                InstrumentType = listTypes[0];
 
             DwellTime = Settings.Default.ExportMethodDwellTime;
             RunLength = Settings.Default.ExportMethodRunLength;
@@ -492,7 +484,8 @@ namespace pwiz.Skyline.FileUI
                 Equals(InstrumentType, ExportInstrumentType.ABI_TOF))
             {
                 // Check that mass analyzer settings are set to TOF.
-                if (documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.tof)
+                if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs && 
+                    documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.tof)
                 {
                     MessageDlg.Show(this,
                         "The precursor mass analyzer type is not set to TOF in Transition Settings (under the Full Scan tab).");
@@ -503,6 +496,25 @@ namespace pwiz.Skyline.FileUI
                 {
                     MessageDlg.Show(this,
                         "The product mass analyzer type is not set to TOF in Transition Settings (under the Full Scan tab).");
+                    return;
+                }                    
+            }
+
+            if (Equals(InstrumentType, ExportInstrumentType.THERMO_Q_EXACTIVE))
+            {
+                // Check that mass analyzer settings are set to Orbitrap.
+                if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs &&
+                    documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.orbitrap)
+                {
+                    MessageDlg.Show(this,
+                        "The precursor mass analyzer type is not set to Orbitrap in Transition Settings (under the Full Scan tab).");
+                    return;
+                }
+                if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
+                    documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer != FullScanMassAnalyzerType.orbitrap)
+                {
+                    MessageDlg.Show(this,
+                        "The product mass analyzer type is not set to Orbitrap in Transition Settings (under the Full Scan tab).");
                     return;
                 }                    
             }
@@ -944,13 +956,6 @@ namespace pwiz.Skyline.FileUI
 
             _instrumentType = comboInstrument.SelectedItem.ToString();
 
-            // Temporary code until we support Q-Exactive export of non-DIA isolation lists.
-            if (Equals(_instrumentType, ExportInstrumentType.THERMO_Q_EXACTIVE) && !IsDia)
-            {
-                MessageDlg.Show(this, string.Format("Export of non-DIA isolation lists is not yet supported for {0}.", _instrumentType));
-                comboInstrument.SelectedItem = ExportInstrumentType.AGILENT_TOF;
-                return;
-            }
             // Temporary code until we support Agilent export of DIA isolation lists.
             if (Equals(_instrumentType, ExportInstrumentType.AGILENT_TOF) && IsDia)
             {

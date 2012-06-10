@@ -53,6 +53,8 @@ namespace pwiz.SkylineTestFunctional
                     {
                         fullScanDlg.SelectedTab = TransitionSettingsUI.TABS.FullScan;
                         fullScanDlg.AcquisitionMethod = FullScanAcquisitionMethod.DIA;
+                        //fullScanDlg.PrecursorMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
+                        fullScanDlg.ProductMassAnalyzer = FullScanMassAnalyzerType.orbitrap;
                     });
 
                 // Open the isolation scheme dialog and calculate dialog.

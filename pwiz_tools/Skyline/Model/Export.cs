@@ -238,13 +238,17 @@ namespace pwiz.Skyline.Model
                     OptimizeType = null;
                     return ExportThermoLtqMethod(doc, path, template);
                 case ExportInstrumentType.THERMO_Q_EXACTIVE:
-                    ExportThermoQExactiveIsolationList(
-                        doc.Settings.TransitionSettings.FullScan.IsolationScheme,
-                        doc.Settings.TransitionSettings.Instrument.MaxInclusions,
-                        path,
-                        MultiplexIsolationListCalculationTime,
-                        DebugCycles);
-                    return null;
+                    if (doc.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA)
+                    {
+                        ExportThermoQExactiveDiaList(
+                            doc.Settings.TransitionSettings.FullScan.IsolationScheme,
+                            doc.Settings.TransitionSettings.Instrument.MaxInclusions,
+                            path,
+                            MultiplexIsolationListCalculationTime,
+                            DebugCycles);
+                        return null;
+                    }
+                    return ExportThermoQExactiveIsolationList(doc, path, template);
                 case ExportInstrumentType.WATERS:
                 case ExportInstrumentType.WATERS_XEVO:
                     if (type == ExportFileType.List)
@@ -352,10 +356,18 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public void ExportThermoQExactiveIsolationList(IsolationScheme isolationScheme, int? maxInclusions, string fileName,
+        public AbstractMassListExporter ExportThermoQExactiveIsolationList(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new ThermoQExactiveIsolationListExporter(document));
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public void ExportThermoQExactiveDiaList(IsolationScheme isolationScheme, int? maxInclusions, string fileName,
             int calculationTime, bool debugCycles)
         {
-            var exporter = new ThermoQExactiveIsolationListExporter(isolationScheme, maxInclusions)
+            var exporter = new ThermoQExactiveDiaExporter(isolationScheme, maxInclusions)
                 {
                     CalculationTime = calculationTime,
                     DebugCycles = debugCycles
@@ -586,9 +598,9 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class ThermoQExactiveIsolationListExporter : AbstractDiaExporter
+    public class ThermoQExactiveDiaExporter : AbstractDiaExporter
     {
-        public ThermoQExactiveIsolationListExporter(IsolationScheme isolationScheme, int? maxInclusions)
+        public ThermoQExactiveDiaExporter(IsolationScheme isolationScheme, int? maxInclusions)
             : base(isolationScheme, maxInclusions)
         {
         }
@@ -1097,6 +1109,76 @@ namespace pwiz.Skyline.Model
                 const string acquisitionTime = "";  // TODO check: nothing to write for: Acquisition Time (ms/spec)
                 Write(writer, "True", precursorMz, z, retentionTime, deltaRetentionTime, isolationWidth, collisionEnergy, acquisitionTime);
             }
+        }
+    }
+
+    public class ThermoQExactiveIsolationListExporter : ThermoMassListExporter
+    {
+        public ThermoQExactiveIsolationListExporter(SrmDocument document)
+            : base(document)
+        {
+            IsolationList = true;
+        }
+
+        public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
+        {
+            if (!InitExport(fileName, progressMonitor))
+                return;
+            Export(fileName);
+        }
+
+        // Write values separated by the field separator, and a line separator at the end.
+        private void Write(TextWriter writer, params string[] vals)
+        {
+            writer.WriteLine(string.Join(FieldSeparator.ToString(CultureInfo.InvariantCulture), vals));
+        }
+
+        protected override void WriteHeaders(TextWriter writer)
+        {
+            writer.WriteLine(GetHeader(FieldSeparator));
+        }
+
+        public static string GetHeader(char fieldSeparator)
+        {
+            const string header =
+                "Mass [m/z],Polarity,Start [min],End [min],nCE,CS [z],Comment";
+            return header.Replace(',', fieldSeparator);
+        }
+
+        protected override void WriteTransition(TextWriter writer,
+                                                PeptideGroupDocNode nodePepGroup,
+                                                PeptideDocNode nodePep,
+                                                TransitionGroupDocNode nodeTranGroup,
+                                                TransitionDocNode nodeTran,
+                                                int step)
+        {
+            string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
+            const string polarity = "Positive";
+
+            string start = "";
+            string end = "";
+            if (MethodType == ExportMethodType.Scheduled)
+            {
+                var prediction = Document.Settings.PeptideSettings.Prediction;
+                double windowRT;
+                double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+                // Start Time and End Time
+                if (predictedRT.HasValue)
+                {
+                    start = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo);
+                    end = (RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT.Value + windowRT/2) ?? 0).ToString(CultureInfo);
+                }
+            }
+
+            string z = nodeTran.Transition.Charge.ToString(CultureInfo);
+            string collisionEnergy = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
+
+            string comment = string.Format("{0} ({1})",
+                Document.Settings.GetModifiedSequence(nodePep.Peptide.Sequence, nodeTranGroup.TransitionGroup.LabelType, nodePep.ExplicitMods),
+                nodeTranGroup.TransitionGroup.LabelType);
+
+            Write(writer, precursorMz, polarity, start, end, collisionEnergy, z, comment);
         }
     }
 
