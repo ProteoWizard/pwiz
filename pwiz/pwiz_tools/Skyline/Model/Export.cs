@@ -1079,7 +1079,7 @@ namespace pwiz.Skyline.Model
                                                 int step)
         {
             string precursorMz = SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo);
-            string z = nodeTran.Transition.Charge.ToString(CultureInfo);
+            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);
             string retentionTime = "0";
             string deltaRetentionTime = "";
             if (MethodType == ExportMethodType.Scheduled)
@@ -1171,7 +1171,7 @@ namespace pwiz.Skyline.Model
                 }
             }
 
-            string z = nodeTran.Transition.Charge.ToString(CultureInfo);
+            string z = nodeTranGroup.TransitionGroup.PrecursorCharge.ToString(CultureInfo);
             string collisionEnergy = Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo);
 
             string comment = string.Format("{0} ({1})",
