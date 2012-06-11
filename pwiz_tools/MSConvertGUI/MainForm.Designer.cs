@@ -43,22 +43,6 @@ namespace MSConvertGUI
             base.Dispose(disposing);
         }
 
-        void setToolTip(System.Windows.Forms.Control ctl, string text)
-        {
-            ctlToolTip.UseFading = true;
-            ctlToolTip.UseAnimation = true;
-            ctlToolTip.IsBalloon = true;
-
-            ctlToolTip.ShowAlways = true;
-
-            ctlToolTip.AutoPopDelay = 5000;
-            ctlToolTip.InitialDelay = 1000;
-            ctlToolTip.ReshowDelay = 500;
-
-            ctlToolTip.SetToolTip(ctl, text);
-
-        }
-
         #region Windows Form Designer generated code
 
         /// <summary>
@@ -67,7 +51,8 @@ namespace MSConvertGUI
         /// </summary>
         private void InitializeComponent()
         {
-            this.ctlToolTip = new System.Windows.Forms.ToolTip();
+            this.components = new System.ComponentModel.Container();
+            this.ctlToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.FileBox = new System.Windows.Forms.TextBox();
             this.FileLabel = new System.Windows.Forms.Label();
             this.AddFileButton = new System.Windows.Forms.Button();
@@ -79,6 +64,21 @@ namespace MSConvertGUI
             this.StartButton = new System.Windows.Forms.Button();
             this.FilterGB = new System.Windows.Forms.GroupBox();
             this.FilterBox = new System.Windows.Forms.ComboBox();
+            this.ChargeStatePredictorPanel = new System.Windows.Forms.Panel();
+            this.ThresholdFilterPanel = new System.Windows.Forms.Panel();
+            this.thresholdValueLabel = new System.Windows.Forms.Label();
+            this.thresholdOrientationLabel = new System.Windows.Forms.Label();
+            this.thresholdTypeLabel = new System.Windows.Forms.Label();
+            this.thresholdOrientationComboBox = new System.Windows.Forms.ComboBox();
+            this.thresholdValueTextBox = new System.Windows.Forms.TextBox();
+            this.thresholdTypeComboBox = new System.Windows.Forms.ComboBox();
+            this.ChaMCMaxLabel = new System.Windows.Forms.Label();
+            this.ChaMCMaxBox = new System.Windows.Forms.TextBox();
+            this.ChaMCMinBox = new System.Windows.Forms.TextBox();
+            this.ChaMCMinLabel = new System.Windows.Forms.Label();
+            this.ChaSingleBox = new System.Windows.Forms.NumericUpDown();
+            this.ChaSingleLabel = new System.Windows.Forms.Label();
+            this.ChaOverwriteCharge = new System.Windows.Forms.CheckBox();
             this.ActivationPanel = new System.Windows.Forms.Panel();
             this.ActivationTypeBox = new System.Windows.Forms.ComboBox();
             this.ActivationTypeLabel = new System.Windows.Forms.Label();
@@ -107,9 +107,9 @@ namespace MSConvertGUI
             this.PeakMSLevelBox2 = new System.Windows.Forms.TextBox();
             this.PeakMSLevelBox1 = new System.Windows.Forms.TextBox();
             this.ZeroSamplesPanel = new System.Windows.Forms.Panel();
-            this.ZeroSamplesRemove = new System.Windows.Forms.RadioButton();
             this.ZeroSamplesAddMissing = new System.Windows.Forms.RadioButton();
             this.ZeroSamplesAddMissingFlankCountBox = new System.Windows.Forms.TextBox();
+            this.ZeroSamplesRemove = new System.Windows.Forms.RadioButton();
             this.ZeroSamplesMSLevelLabel = new System.Windows.Forms.Label();
             this.ZeroSamplesMSLevelSeperator = new System.Windows.Forms.Label();
             this.ZeroSamplesMSLevelBox2 = new System.Windows.Forms.TextBox();
@@ -119,14 +119,6 @@ namespace MSConvertGUI
             this.ETDRemoveChargeReducedBox = new System.Windows.Forms.CheckBox();
             this.ETDRemoveNeutralLossBox = new System.Windows.Forms.CheckBox();
             this.ETDRemovePrecursorBox = new System.Windows.Forms.CheckBox();
-            this.ChargeStatePredictorPanel = new System.Windows.Forms.Panel();
-            this.ChaMCMaxLabel = new System.Windows.Forms.Label();
-            this.ChaMCMaxBox = new System.Windows.Forms.TextBox();
-            this.ChaMCMinBox = new System.Windows.Forms.TextBox();
-            this.ChaMCMinLabel = new System.Windows.Forms.Label();
-            this.ChaSingleBox = new System.Windows.Forms.NumericUpDown();
-            this.ChaSingleLabel = new System.Windows.Forms.Label();
-            this.ChaOverwriteCharge = new System.Windows.Forms.CheckBox();
             this.RemoveFilterButton = new System.Windows.Forms.Button();
             this.AddFilterButton = new System.Windows.Forms.Button();
             this.TextFileRadio = new System.Windows.Forms.RadioButton();
@@ -139,10 +131,7 @@ namespace MSConvertGUI
             this.OutputBox = new System.Windows.Forms.TextBox();
             this.PrecisionLabel = new System.Windows.Forms.Label();
             this.OptionsGB = new System.Windows.Forms.GroupBox();
-            this.ConfigurationFileGB = new System.Windows.Forms.GroupBox();
-            this.BrowseConfigButton = new System.Windows.Forms.Button();
-            this.ConfigBox = new System.Windows.Forms.TextBox();
-            this.UseCFGButton = new System.Windows.Forms.CheckBox();
+            this.MakeTPPCompatibleOutputButton = new System.Windows.Forms.CheckBox();
             this.UseZlibBox = new System.Windows.Forms.CheckBox();
             this.GzipBox = new System.Windows.Forms.CheckBox();
             this.OutputExtensionBox = new System.Windows.Forms.TextBox();
@@ -152,33 +141,32 @@ namespace MSConvertGUI
             this.Precision64 = new System.Windows.Forms.RadioButton();
             this.SlidingPanel = new System.Windows.Forms.Panel();
             this.SetDefaultsButton = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize) (this.FilterDGV)).BeginInit();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).BeginInit();
             this.FilterGB.SuspendLayout();
+            this.ChargeStatePredictorPanel.SuspendLayout();
+            this.ThresholdFilterPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).BeginInit();
             this.ActivationPanel.SuspendLayout();
             this.SubsetPanel.SuspendLayout();
             this.MSLevelPanel.SuspendLayout();
             this.PeakPickingPanel.SuspendLayout();
             this.ZeroSamplesPanel.SuspendLayout();
-            this.ZeroSamplesRemove = new System.Windows.Forms.RadioButton();
-            this.ZeroSamplesAddMissing = new System.Windows.Forms.RadioButton();
             this.ETDFilterPanel.SuspendLayout();
-            this.ChargeStatePredictorPanel.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.ChaSingleBox)).BeginInit();
             this.OptionsGB.SuspendLayout();
-            this.ConfigurationFileGB.SuspendLayout();
             this.SlidingPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FileBox
             // 
-            this.FileBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Append;
+            this.FileBox.AutoCompleteMode = System.Windows.Forms.AutoCompleteMode.Suggest;
             this.FileBox.AutoCompleteSource = System.Windows.Forms.AutoCompleteSource.FileSystem;
             this.FileBox.Location = new System.Drawing.Point(43, 35);
             this.FileBox.Name = "FileBox";
             this.FileBox.Size = new System.Drawing.Size(182, 20);
             this.FileBox.TabIndex = 3;
             this.FileBox.TextChanged += new System.EventHandler(this.FileBox_TextChanged);
-            setToolTip(this.FileBox,"Use the Browse button or type a filename here, then click Add to add it to the list of files to be converted.");
             // 
             // FileLabel
             // 
@@ -199,26 +187,21 @@ namespace MSConvertGUI
             this.AddFileButton.Text = "Add";
             this.AddFileButton.UseVisualStyleBackColor = true;
             this.AddFileButton.Click += new System.EventHandler(this.AddFileButton_Click);
-            setToolTip(this.AddFileButton, "Adds the current file to the conversion list.");
             // 
             // FilterDGV
             // 
             this.FilterDGV.AllowUserToAddRows = false;
             this.FilterDGV.AllowUserToDeleteRows = false;
             this.FilterDGV.AllowUserToResizeRows = false;
-            this.FilterDGV.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.FilterDGV.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.FilterDGV.BackgroundColor = System.Drawing.SystemColors.Window;
             this.FilterDGV.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.FilterDGV.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.FilterDGV.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.OptionTab,
             this.ValueTab});
-            for (int col = 0; col < this.FilterDGV.Columns.Count; col++)
-            {
-                this.FilterDGV.Columns[col].SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
-            }
             this.FilterDGV.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
             this.FilterDGV.Location = new System.Drawing.Point(322, 261);
             this.FilterDGV.MultiSelect = false;
@@ -227,7 +210,6 @@ namespace MSConvertGUI
             this.FilterDGV.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.FilterDGV.Size = new System.Drawing.Size(327, 163);
             this.FilterDGV.TabIndex = 12;
-            setToolTip(this.FilterDGV, "Use the controls above to add conversion filters.  The order can be significant.");
             // 
             // OptionTab
             // 
@@ -244,17 +226,16 @@ namespace MSConvertGUI
             // 
             // FileListBox
             // 
-            this.FileListBox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)));
+            this.FileListBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
             this.FileListBox.FormattingEnabled = true;
             this.FileListBox.HorizontalScrollbar = true;
-            this.FileListBox.Location = new System.Drawing.Point(15, 90);
+            this.FileListBox.Location = new System.Drawing.Point(17, 90);
             this.FileListBox.Name = "FileListBox";
             this.FileListBox.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.FileListBox.Size = new System.Drawing.Size(266, 160);
+            this.FileListBox.Size = new System.Drawing.Size(269, 160);
             this.FileListBox.TabIndex = 7;
             this.FileListBox.KeyUp += new System.Windows.Forms.KeyEventHandler(this.FileListBox_KeyUp);
-            setToolTip(this.FileListBox, "Add files to this conversion list by using the Browse button to select a file, then clicking the Add button.");
             // 
             // RemoveFileButton
             // 
@@ -266,39 +247,37 @@ namespace MSConvertGUI
             this.RemoveFileButton.Text = "Remove";
             this.RemoveFileButton.UseVisualStyleBackColor = true;
             this.RemoveFileButton.Click += new System.EventHandler(this.RemoveFileButton_Click);
-            setToolTip(this.RemoveFileButton, "Select a file to be removed from the conversion list, then click here.");
             // 
             // StartButton
             // 
-            this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.StartButton.Location = new System.Drawing.Point(574, 430);
+            this.StartButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.StartButton.Location = new System.Drawing.Point(574, 433);
             this.StartButton.Name = "StartButton";
             this.StartButton.Size = new System.Drawing.Size(75, 23);
             this.StartButton.TabIndex = 13;
             this.StartButton.Text = "Start";
             this.StartButton.UseVisualStyleBackColor = true;
             this.StartButton.Click += new System.EventHandler(this.StartButton_Click);
-            setToolTip(this.StartButton, "Click here to begin the conversion process.");
             // 
             // FilterGB
             // 
-            this.FilterGB.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.FilterGB.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.FilterGB.Controls.Add(this.FilterBox);
+            this.FilterGB.Controls.Add(this.ChargeStatePredictorPanel);
             this.FilterGB.Controls.Add(this.ActivationPanel);
             this.FilterGB.Controls.Add(this.SubsetPanel);
             this.FilterGB.Controls.Add(this.MSLevelPanel);
             this.FilterGB.Controls.Add(this.PeakPickingPanel);
             this.FilterGB.Controls.Add(this.ZeroSamplesPanel);
             this.FilterGB.Controls.Add(this.ETDFilterPanel);
-            this.FilterGB.Controls.Add(this.ChargeStatePredictorPanel);
+            this.FilterGB.Controls.Add(this.ThresholdFilterPanel);
             this.FilterGB.Location = new System.Drawing.Point(322, 83);
             this.FilterGB.Name = "FilterGB";
             this.FilterGB.Size = new System.Drawing.Size(327, 143);
             this.FilterGB.TabIndex = 9;
             this.FilterGB.TabStop = false;
             this.FilterGB.Text = "Filters";
-            setToolTip(this.FilterGB, "Use these controls to add to the conversion filter list.");
             // 
             // FilterBox
             // 
@@ -309,6 +288,7 @@ namespace MSConvertGUI
             "Peak Picking",
             "Zero Samples",
             "ETD Peak Filter",
+            "Threshold Peak Filter",
             "Charge State Predictor",
             "Activation",
             "Subset"});
@@ -317,7 +297,169 @@ namespace MSConvertGUI
             this.FilterBox.Size = new System.Drawing.Size(132, 21);
             this.FilterBox.TabIndex = 0;
             this.FilterBox.SelectedIndexChanged += new System.EventHandler(this.FilterBox_SelectedIndexChanged);
-            setToolTip(this.FilterBox, "This chooses the type of filter that you want to add next.");
+            // 
+            // ChargeStatePredictorPanel
+            // 
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMaxLabel);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMaxBox);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMinBox);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMinLabel);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleBox);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleLabel);
+            this.ChargeStatePredictorPanel.Controls.Add(this.ChaOverwriteCharge);
+            this.ChargeStatePredictorPanel.Location = new System.Drawing.Point(22, 46);
+            this.ChargeStatePredictorPanel.Name = "ChargeStatePredictorPanel";
+            this.ChargeStatePredictorPanel.Size = new System.Drawing.Size(283, 91);
+            this.ChargeStatePredictorPanel.TabIndex = 4;
+            this.ChargeStatePredictorPanel.Visible = false;
+            // 
+            // ThresholdFilterPanel
+            // 
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeLabel);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdOrientationComboBox);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdValueTextBox);
+            this.ThresholdFilterPanel.Controls.Add(this.thresholdTypeComboBox);
+            this.ThresholdFilterPanel.Location = new System.Drawing.Point(22, 46);
+            this.ThresholdFilterPanel.Name = "ThresholdFilterPanel";
+            this.ThresholdFilterPanel.Size = new System.Drawing.Size(283, 91);
+            this.ThresholdFilterPanel.TabIndex = 20;
+            this.ThresholdFilterPanel.Visible = false;
+            // 
+            // thresholdValueLabel
+            // 
+            this.thresholdValueLabel.AutoSize = true;
+            this.thresholdValueLabel.Location = new System.Drawing.Point(69, 64);
+            this.thresholdValueLabel.Name = "thresholdValueLabel";
+            this.thresholdValueLabel.Size = new System.Drawing.Size(37, 13);
+            this.thresholdValueLabel.TabIndex = 16;
+            this.thresholdValueLabel.Text = "Value:";
+            // 
+            // thresholdOrientationLabel
+            // 
+            this.thresholdOrientationLabel.AutoSize = true;
+            this.thresholdOrientationLabel.Location = new System.Drawing.Point(45, 37);
+            this.thresholdOrientationLabel.Name = "thresholdOrientationLabel";
+            this.thresholdOrientationLabel.Size = new System.Drawing.Size(61, 13);
+            this.thresholdOrientationLabel.TabIndex = 15;
+            this.thresholdOrientationLabel.Text = "Orientation:";
+            // 
+            // thresholdTypeLabel
+            // 
+            this.thresholdTypeLabel.AutoSize = true;
+            this.thresholdTypeLabel.Location = new System.Drawing.Point(26, 10);
+            this.thresholdTypeLabel.Name = "thresholdTypeLabel";
+            this.thresholdTypeLabel.Size = new System.Drawing.Size(80, 13);
+            this.thresholdTypeLabel.TabIndex = 14;
+            this.thresholdTypeLabel.Text = "Threshold type:";
+            // 
+            // thresholdOrientationComboBox
+            // 
+            this.thresholdOrientationComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.thresholdOrientationComboBox.FormattingEnabled = true;
+            this.thresholdOrientationComboBox.Items.AddRange(new object[] {
+            "Most intense",
+            "Least intense"});
+            this.thresholdOrientationComboBox.Location = new System.Drawing.Point(113, 34);
+            this.thresholdOrientationComboBox.Name = "thresholdOrientationComboBox";
+            this.thresholdOrientationComboBox.Size = new System.Drawing.Size(121, 21);
+            this.thresholdOrientationComboBox.TabIndex = 2;
+            // 
+            // thresholdValueTextBox
+            // 
+            this.thresholdValueTextBox.Location = new System.Drawing.Point(114, 61);
+            this.thresholdValueTextBox.Name = "thresholdValueTextBox";
+            this.thresholdValueTextBox.Size = new System.Drawing.Size(120, 20);
+            this.thresholdValueTextBox.TabIndex = 1;
+            // 
+            // thresholdTypeComboBox
+            // 
+            this.thresholdTypeComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.thresholdTypeComboBox.FormattingEnabled = true;
+            this.thresholdTypeComboBox.Location = new System.Drawing.Point(113, 7);
+            this.thresholdTypeComboBox.Name = "thresholdTypeComboBox";
+            this.thresholdTypeComboBox.Size = new System.Drawing.Size(121, 21);
+            this.thresholdTypeComboBox.TabIndex = 0;
+            // 
+            // ChaMCMaxLabel
+            // 
+            this.ChaMCMaxLabel.AutoSize = true;
+            this.ChaMCMaxLabel.Location = new System.Drawing.Point(182, 66);
+            this.ChaMCMaxLabel.Name = "ChaMCMaxLabel";
+            this.ChaMCMaxLabel.Size = new System.Drawing.Size(30, 13);
+            this.ChaMCMaxLabel.TabIndex = 19;
+            this.ChaMCMaxLabel.Text = "Max:";
+            // 
+            // ChaMCMaxBox
+            // 
+            this.ChaMCMaxBox.Location = new System.Drawing.Point(215, 62);
+            this.ChaMCMaxBox.Name = "ChaMCMaxBox";
+            this.ChaMCMaxBox.Size = new System.Drawing.Size(37, 20);
+            this.ChaMCMaxBox.TabIndex = 18;
+            this.ChaMCMaxBox.Text = "3";
+            this.ChaMCMaxBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            // 
+            // ChaMCMinBox
+            // 
+            this.ChaMCMinBox.Location = new System.Drawing.Point(133, 62);
+            this.ChaMCMinBox.Name = "ChaMCMinBox";
+            this.ChaMCMinBox.Size = new System.Drawing.Size(37, 20);
+            this.ChaMCMinBox.TabIndex = 17;
+            this.ChaMCMinBox.Text = "2";
+            this.ChaMCMinBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            // 
+            // ChaMCMinLabel
+            // 
+            this.ChaMCMinLabel.AutoSize = true;
+            this.ChaMCMinLabel.Location = new System.Drawing.Point(30, 66);
+            this.ChaMCMinLabel.Name = "ChaMCMinLabel";
+            this.ChaMCMinLabel.Size = new System.Drawing.Size(103, 13);
+            this.ChaMCMinLabel.TabIndex = 9;
+            this.ChaMCMinLabel.Text = "Multiple Charge Min:";
+            // 
+            // ChaSingleBox
+            // 
+            this.ChaSingleBox.DecimalPlaces = 2;
+            this.ChaSingleBox.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            65536});
+            this.ChaSingleBox.Location = new System.Drawing.Point(174, 36);
+            this.ChaSingleBox.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.ChaSingleBox.Name = "ChaSingleBox";
+            this.ChaSingleBox.Size = new System.Drawing.Size(41, 20);
+            this.ChaSingleBox.TabIndex = 8;
+            this.ChaSingleBox.Value = new decimal(new int[] {
+            9,
+            0,
+            0,
+            65536});
+            // 
+            // ChaSingleLabel
+            // 
+            this.ChaSingleLabel.AutoSize = true;
+            this.ChaSingleLabel.Location = new System.Drawing.Point(67, 38);
+            this.ChaSingleLabel.Name = "ChaSingleLabel";
+            this.ChaSingleLabel.Size = new System.Drawing.Size(107, 13);
+            this.ChaSingleLabel.TabIndex = 7;
+            this.ChaSingleLabel.Text = "Single Charge % TIC:";
+            // 
+            // ChaOverwriteCharge
+            // 
+            this.ChaOverwriteCharge.AutoSize = true;
+            this.ChaOverwriteCharge.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.ChaOverwriteCharge.Location = new System.Drawing.Point(86, 12);
+            this.ChaOverwriteCharge.Name = "ChaOverwriteCharge";
+            this.ChaOverwriteCharge.Size = new System.Drawing.Size(111, 17);
+            this.ChaOverwriteCharge.TabIndex = 6;
+            this.ChaOverwriteCharge.Text = "Overwrite Charge:";
+            this.ChaOverwriteCharge.UseVisualStyleBackColor = true;
             // 
             // ActivationPanel
             // 
@@ -352,8 +494,6 @@ namespace MSConvertGUI
             this.ActivationTypeBox.Size = new System.Drawing.Size(68, 21);
             this.ActivationTypeBox.Sorted = true;
             this.ActivationTypeBox.TabIndex = 14;
-            string ActivationTypeHelp = "Include only scans with this precursor activation type.";
-            setToolTip(this.ActivationTypeBox, ActivationTypeHelp);
             // 
             // ActivationTypeLabel
             // 
@@ -363,7 +503,6 @@ namespace MSConvertGUI
             this.ActivationTypeLabel.Size = new System.Drawing.Size(34, 13);
             this.ActivationTypeLabel.TabIndex = 15;
             this.ActivationTypeLabel.Text = "Type:";
-            setToolTip(this.ActivationTypeLabel, ActivationTypeHelp);
             // 
             // SubsetPanel
             // 
@@ -384,13 +523,11 @@ namespace MSConvertGUI
             this.SubsetPanel.Size = new System.Drawing.Size(283, 91);
             this.SubsetPanel.TabIndex = 6;
             this.SubsetPanel.Visible = false;
-            setToolTip(this.SubsetPanel, "Set values for one or more subset filters, then click Add.");
-
             // 
             // mzWinLabel2
             // 
             this.mzWinLabel2.AutoSize = true;
-            this.mzWinLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.mzWinLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.mzWinLabel2.Location = new System.Drawing.Point(174, 60);
             this.mzWinLabel2.Name = "mzWinLabel2";
             this.mzWinLabel2.Size = new System.Drawing.Size(15, 20);
@@ -403,7 +540,6 @@ namespace MSConvertGUI
             this.ScanNumberHigh.Name = "ScanNumberHigh";
             this.ScanNumberHigh.Size = new System.Drawing.Size(37, 20);
             this.ScanNumberHigh.TabIndex = 11;
-            setToolTip(this.ScanNumberHigh, "Highest scan number to include in the conversion (may be left blank).");
             // 
             // ScanTimeLow
             // 
@@ -411,7 +547,6 @@ namespace MSConvertGUI
             this.ScanTimeLow.Name = "ScanTimeLow";
             this.ScanTimeLow.Size = new System.Drawing.Size(37, 20);
             this.ScanTimeLow.TabIndex = 0;
-            setToolTip(this.ScanTimeLow,"Lowest scan time to include in the conversion.");
             // 
             // mzWinHigh
             // 
@@ -419,7 +554,6 @@ namespace MSConvertGUI
             this.mzWinHigh.Name = "mzWinHigh";
             this.mzWinHigh.Size = new System.Drawing.Size(37, 20);
             this.mzWinHigh.TabIndex = 15;
-            setToolTip(this.mzWinHigh,"Highest m/z value to include in the conversion.");
             // 
             // ScanTimeHigh
             // 
@@ -427,12 +561,11 @@ namespace MSConvertGUI
             this.ScanTimeHigh.Name = "ScanTimeHigh";
             this.ScanTimeHigh.Size = new System.Drawing.Size(37, 20);
             this.ScanTimeHigh.TabIndex = 1;
-            setToolTip(this.ScanTimeHigh,"Highest scan time to include in the conversion.");
             // 
             // ScanTimeLabel2
             // 
             this.ScanTimeLabel2.AutoSize = true;
-            this.ScanTimeLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.ScanTimeLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ScanTimeLabel2.Location = new System.Drawing.Point(174, 34);
             this.ScanTimeLabel2.Name = "ScanTimeLabel2";
             this.ScanTimeLabel2.Size = new System.Drawing.Size(15, 20);
@@ -445,7 +578,6 @@ namespace MSConvertGUI
             this.mzWinLow.Name = "mzWinLow";
             this.mzWinLow.Size = new System.Drawing.Size(37, 20);
             this.mzWinLow.TabIndex = 14;
-            setToolTip(this.mzWinLow, "Lowest m/z value to include in the conversion");
             // 
             // ScanTimeLabel
             // 
@@ -455,7 +587,6 @@ namespace MSConvertGUI
             this.ScanTimeLabel.Size = new System.Drawing.Size(61, 13);
             this.ScanTimeLabel.TabIndex = 3;
             this.ScanTimeLabel.Text = "Scan Time:";
-            setToolTip(this.ScanTimeLabel, "Use this filter to include only scans with a limited range of scan times.");
             // 
             // mzWinLabel
             // 
@@ -465,7 +596,6 @@ namespace MSConvertGUI
             this.mzWinLabel.Size = new System.Drawing.Size(65, 13);
             this.mzWinLabel.TabIndex = 6;
             this.mzWinLabel.Text = "mz Window:";
-            setToolTip(this.mzWinLabel, "Use this filter to include only scans with a limited range of m/z values.");
             // 
             // ScanNumberLabel
             // 
@@ -475,7 +605,6 @@ namespace MSConvertGUI
             this.ScanNumberLabel.Size = new System.Drawing.Size(75, 13);
             this.ScanNumberLabel.TabIndex = 13;
             this.ScanNumberLabel.Text = "Scan Number:";
-            setToolTip(this.ScanNumberLabel, "Use this filter to include only scans with a limited range of scan numbers.");
             // 
             // ScanNumberLow
             // 
@@ -483,12 +612,11 @@ namespace MSConvertGUI
             this.ScanNumberLow.Name = "ScanNumberLow";
             this.ScanNumberLow.Size = new System.Drawing.Size(37, 20);
             this.ScanNumberLow.TabIndex = 10;
-            setToolTip(this.ScanNumberLow, "Lowest scan number to include in the conversion.");
             // 
             // ScanNumberLabel2
             // 
             this.ScanNumberLabel2.AutoSize = true;
-            this.ScanNumberLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.ScanNumberLabel2.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.ScanNumberLabel2.Location = new System.Drawing.Point(174, 8);
             this.ScanNumberLabel2.Name = "ScanNumberLabel2";
             this.ScanNumberLabel2.Size = new System.Drawing.Size(15, 20);
@@ -506,8 +634,6 @@ namespace MSConvertGUI
             this.MSLevelPanel.Size = new System.Drawing.Size(283, 91);
             this.MSLevelPanel.TabIndex = 1;
             this.MSLevelPanel.Visible = false;
-            string msLevelHelp = "Use this filter to include only scans with certain MS levels.";
-            setToolTip(this.MSLevelPanel, msLevelHelp);
             // 
             // MSLevelLabel
             // 
@@ -517,12 +643,11 @@ namespace MSConvertGUI
             this.MSLevelLabel.Size = new System.Drawing.Size(41, 13);
             this.MSLevelLabel.TabIndex = 3;
             this.MSLevelLabel.Text = "Levels:";
-            setToolTip(this.MSLevelLabel, msLevelHelp);
             // 
             // MSLabelSeperator
             // 
             this.MSLabelSeperator.AutoSize = true;
-            this.MSLabelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.MSLabelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MSLabelSeperator.Location = new System.Drawing.Point(134, 34);
             this.MSLabelSeperator.Name = "MSLabelSeperator";
             this.MSLabelSeperator.Size = new System.Drawing.Size(15, 20);
@@ -536,7 +661,6 @@ namespace MSConvertGUI
             this.MSLevelBox2.Size = new System.Drawing.Size(37, 20);
             this.MSLevelBox2.TabIndex = 1;
             this.MSLevelBox2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            setToolTip(this.MSLevelBox2, "Highest MS level to include in the conversion (may be left blank).");
             // 
             // MSLevelBox1
             // 
@@ -546,7 +670,6 @@ namespace MSConvertGUI
             this.MSLevelBox1.TabIndex = 0;
             this.MSLevelBox1.Text = "1";
             this.MSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            setToolTip(this.MSLevelBox1, "Lowest MS level for scans to include in the conversion.");
             // 
             // PeakPickingPanel
             // 
@@ -560,8 +683,6 @@ namespace MSConvertGUI
             this.PeakPickingPanel.Size = new System.Drawing.Size(283, 91);
             this.PeakPickingPanel.TabIndex = 2;
             this.PeakPickingPanel.Visible = false;
-            string peakPickingHelp = "Use this filter to perform peak picking (centroiding) on the input data.";
-            setToolTip(this.PeakPickingPanel, peakPickingHelp);
             // 
             // PeakPreferVendorBox
             // 
@@ -575,8 +696,6 @@ namespace MSConvertGUI
             this.PeakPreferVendorBox.TabIndex = 21;
             this.PeakPreferVendorBox.Text = "Prefer Vendor:";
             this.PeakPreferVendorBox.UseVisualStyleBackColor = true;
-            string preferVendorHelp = "Uncheck this box if you prefer ProteoWizard's peak picking algorithm to that provided by the vendor (normally the vendor code works better).  Not all input formats have vendor peakpicking, but it's OK to leave this checked.";
-            setToolTip(this.PeakPreferVendorBox, preferVendorHelp);
             // 
             // PeakMSLevelLabel
             // 
@@ -586,12 +705,11 @@ namespace MSConvertGUI
             this.PeakMSLevelLabel.Size = new System.Drawing.Size(60, 13);
             this.PeakMSLevelLabel.TabIndex = 20;
             this.PeakMSLevelLabel.Text = "MS Levels:";
-            setToolTip(this.PeakMSLevelLabel, "Selects the MS levels for scans on which to perform peak picking.");
             // 
             // PeakMSLevelSeperator
             // 
             this.PeakMSLevelSeperator.AutoSize = true;
-            this.PeakMSLevelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
+            this.PeakMSLevelSeperator.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.PeakMSLevelSeperator.Location = new System.Drawing.Point(134, 55);
             this.PeakMSLevelSeperator.Name = "PeakMSLevelSeperator";
             this.PeakMSLevelSeperator.Size = new System.Drawing.Size(15, 20);
@@ -605,7 +723,6 @@ namespace MSConvertGUI
             this.PeakMSLevelBox2.Size = new System.Drawing.Size(37, 20);
             this.PeakMSLevelBox2.TabIndex = 18;
             this.PeakMSLevelBox2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            setToolTip(this.PeakMSLevelBox2, "Highest MS level on which to perform peak picking (may be left blank).");
             // 
             // PeakMSLevelBox1
             // 
@@ -615,7 +732,6 @@ namespace MSConvertGUI
             this.PeakMSLevelBox1.TabIndex = 17;
             this.PeakMSLevelBox1.Text = "1";
             this.PeakMSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            setToolTip(this.PeakMSLevelBox1, "Lowest MS level on which to perform peak picking.");
             // 
             // ZeroSamplesPanel
             // 
@@ -631,8 +747,28 @@ namespace MSConvertGUI
             this.ZeroSamplesPanel.Size = new System.Drawing.Size(283, 91);
             this.ZeroSamplesPanel.TabIndex = 24;
             this.ZeroSamplesPanel.Visible = false;
-            setToolTip(this.ZeroSamplesPanel, "These filters help with missing or unwanted zero value samples.");
-
+            // 
+            // ZeroSamplesAddMissing
+            // 
+            this.ZeroSamplesAddMissing.AutoSize = true;
+            this.ZeroSamplesAddMissing.Location = new System.Drawing.Point(93, 12);
+            this.ZeroSamplesAddMissing.Name = "ZeroSamplesAddMissing";
+            this.ZeroSamplesAddMissing.Size = new System.Drawing.Size(127, 17);
+            this.ZeroSamplesAddMissing.TabIndex = 30;
+            this.ZeroSamplesAddMissing.TabStop = true;
+            this.ZeroSamplesAddMissing.Text = "Add missing, flank by:";
+            this.ZeroSamplesAddMissing.UseVisualStyleBackColor = true;
+            this.ZeroSamplesAddMissing.Click += new System.EventHandler(this.ZeroSamples_ModeChanged);
+            // 
+            // ZeroSamplesAddMissingFlankCountBox
+            // 
+            this.ZeroSamplesAddMissingFlankCountBox.Enabled = this.ZeroSamplesAddMissing.Checked;
+            this.ZeroSamplesAddMissingFlankCountBox.Location = new System.Drawing.Point(221, 12);
+            this.ZeroSamplesAddMissingFlankCountBox.Name = "ZeroSamplesAddMissingFlankCountBox";
+            this.ZeroSamplesAddMissingFlankCountBox.Size = new System.Drawing.Size(37, 20);
+            this.ZeroSamplesAddMissingFlankCountBox.TabIndex = 31;
+            this.ZeroSamplesAddMissingFlankCountBox.Text = "5";
+            this.ZeroSamplesAddMissingFlankCountBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
             // 
             // ZeroSamplesRemove
             // 
@@ -640,41 +776,12 @@ namespace MSConvertGUI
             this.ZeroSamplesRemove.Checked = true;
             this.ZeroSamplesRemove.Location = new System.Drawing.Point(20, 12);
             this.ZeroSamplesRemove.Name = "ZeroSamplesRemove";
-            this.ZeroSamplesRemove.Size = new System.Drawing.Size(51, 17);
+            this.ZeroSamplesRemove.Size = new System.Drawing.Size(65, 17);
             this.ZeroSamplesRemove.TabIndex = 29;
+            this.ZeroSamplesRemove.TabStop = true;
             this.ZeroSamplesRemove.Text = "Remove";
             this.ZeroSamplesRemove.UseVisualStyleBackColor = true;
             this.ZeroSamplesRemove.Click += new System.EventHandler(this.ZeroSamples_ModeChanged);
-            setToolTip(this.ZeroSamplesRemove, "Reduces output file sizes by removing zero values which are not adjacent to nonzero values.");
-
-            // 
-            // ZeroSamplesAddMissing
-            // 
-            this.ZeroSamplesAddMissing.AutoSize = true;
-            this.ZeroSamplesAddMissing.Checked = false;
-            this.ZeroSamplesAddMissing.Location = new System.Drawing.Point(93, 12);
-            this.ZeroSamplesAddMissing.Name = "ZeroSamplesAddMissing";
-            this.ZeroSamplesAddMissing.Size = new System.Drawing.Size(51, 17);
-            this.ZeroSamplesAddMissing.TabIndex = 30;
-            this.ZeroSamplesAddMissing.TabStop = true;
-            this.ZeroSamplesAddMissing.Text = "Add missing, flank by:";
-            this.ZeroSamplesAddMissing.UseVisualStyleBackColor = true;
-            this.ZeroSamplesAddMissing.Click += new System.EventHandler(this.ZeroSamples_ModeChanged);
-            string addZerosHelp = "Adds flanking zero values next to nonzero values where needed, to help with things like smoothing.";
-            setToolTip(this.ZeroSamplesAddMissing, addZerosHelp);
-
-            // 
-            // AddMissingFlankCountBox
-            // 
-            this.ZeroSamplesAddMissingFlankCountBox.Location = new System.Drawing.Point(221, 12);
-            this.ZeroSamplesAddMissingFlankCountBox.Enabled = this.ZeroSamplesAddMissing.Checked;
-            this.ZeroSamplesAddMissingFlankCountBox.Name = "ZeroSamplesAddMissingFlankCountBox";
-            this.ZeroSamplesAddMissingFlankCountBox.Size = new System.Drawing.Size(37, 20);
-            this.ZeroSamplesAddMissingFlankCountBox.Text = "5";
-            this.ZeroSamplesAddMissingFlankCountBox.TabIndex = 31;
-            this.ZeroSamplesAddMissingFlankCountBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            setToolTip(this.ZeroSamplesAddMissingFlankCountBox, addZerosHelp);
-
             // 
             // ZeroSamplesMSLevelLabel
             // 
@@ -684,8 +791,6 @@ namespace MSConvertGUI
             this.ZeroSamplesMSLevelLabel.Size = new System.Drawing.Size(60, 13);
             this.ZeroSamplesMSLevelLabel.TabIndex = 25;
             this.ZeroSamplesMSLevelLabel.Text = "MS Levels:";
-            setToolTip(this.ZeroSamplesMSLevelLabel, "Perform this filter only on scans with these MS Levels.");
-            
             // 
             // ZeroSamplesMSLevelSeperator
             // 
@@ -704,7 +809,6 @@ namespace MSConvertGUI
             this.ZeroSamplesMSLevelBox2.Size = new System.Drawing.Size(37, 20);
             this.ZeroSamplesMSLevelBox2.TabIndex = 28;
             this.ZeroSamplesMSLevelBox2.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            setToolTip(this.ZeroSamplesMSLevelBox2, "Highest MS level for scans to be treated with this filter (may be left blank).");
             // 
             // ZeroSamplesMSLevelBox1
             // 
@@ -712,8 +816,8 @@ namespace MSConvertGUI
             this.ZeroSamplesMSLevelBox1.Name = "ZeroSamplesMSLevelBox1";
             this.ZeroSamplesMSLevelBox1.Size = new System.Drawing.Size(37, 20);
             this.ZeroSamplesMSLevelBox1.TabIndex = 27;
-            this.ZeroSamplesMSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);            // 
-            setToolTip(this.ZeroSamplesMSLevelBox2, "Lowest MS level for scans to be treated with this filter.");
+            this.ZeroSamplesMSLevelBox1.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
+            // 
             // ETDFilterPanel
             // 
             this.ETDFilterPanel.Controls.Add(this.ETDBlanketRemovalBox);
@@ -725,8 +829,6 @@ namespace MSConvertGUI
             this.ETDFilterPanel.Size = new System.Drawing.Size(283, 91);
             this.ETDFilterPanel.TabIndex = 3;
             this.ETDFilterPanel.Visible = false;
-            // TODO setToolTip(this.ETDFilterPanel, "whatisthis");
-
             // 
             // ETDBlanketRemovalBox
             // 
@@ -738,7 +840,6 @@ namespace MSConvertGUI
             this.ETDBlanketRemovalBox.TabIndex = 9;
             this.ETDBlanketRemovalBox.Text = "Blanket Removal:";
             this.ETDBlanketRemovalBox.UseVisualStyleBackColor = true;
-            // TODO setToolTip(this.ETDBlanketRemovalBox, "whatisthis");
             // 
             // ETDRemoveChargeReducedBox
             // 
@@ -752,7 +853,6 @@ namespace MSConvertGUI
             this.ETDRemoveChargeReducedBox.TabIndex = 8;
             this.ETDRemoveChargeReducedBox.Text = "Remove Charge Reduced:";
             this.ETDRemoveChargeReducedBox.UseVisualStyleBackColor = true;
-            // TODO setToolTip(ETDRemoveChargeReducedBox, "whatisthis");
             // 
             // ETDRemoveNeutralLossBox
             // 
@@ -766,7 +866,6 @@ namespace MSConvertGUI
             this.ETDRemoveNeutralLossBox.TabIndex = 7;
             this.ETDRemoveNeutralLossBox.Text = "Remove Neutral Loss:";
             this.ETDRemoveNeutralLossBox.UseVisualStyleBackColor = true;
-            // TODO setToolTip(ETDRemoveNeutralLossBox, "whatisthis");
             // 
             // ETDRemovePrecursorBox
             // 
@@ -780,113 +879,6 @@ namespace MSConvertGUI
             this.ETDRemovePrecursorBox.TabIndex = 6;
             this.ETDRemovePrecursorBox.Text = "Remove Precursor:";
             this.ETDRemovePrecursorBox.UseVisualStyleBackColor = true;
-            // TODO setToolTip(ETDRemovePrecursorBox, "whatisthis");
-            // 
-            // ChargeStatePredictorPanel
-            // 
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMaxLabel);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMaxBox);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMinBox);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaMCMinLabel);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleBox);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaSingleLabel);
-            this.ChargeStatePredictorPanel.Controls.Add(this.ChaOverwriteCharge);
-            this.ChargeStatePredictorPanel.Location = new System.Drawing.Point(22, 46);
-            this.ChargeStatePredictorPanel.Name = "ChargeStatePredictorPanel";
-            this.ChargeStatePredictorPanel.Size = new System.Drawing.Size(283, 91);
-            this.ChargeStatePredictorPanel.TabIndex = 4;
-            this.ChargeStatePredictorPanel.Visible = false;
-            setToolTip(ChargeStatePredictorPanel, "Use this filter to add missing (and optionally overwrite existing) charge state information.");
-
-            // 
-            // ChaMCMaxLabel
-            // 
-            this.ChaMCMaxLabel.AutoSize = true;
-            this.ChaMCMaxLabel.Location = new System.Drawing.Point(182, 66);
-            this.ChaMCMaxLabel.Name = "ChaMCMaxLabel";
-            this.ChaMCMaxLabel.Size = new System.Drawing.Size(30, 13);
-            this.ChaMCMaxLabel.TabIndex = 19;
-            this.ChaMCMaxLabel.Text = "Max:";
-            string maxChargeHelp = "Maximum charge state to be used.";
-            string minChargeHelp = "Minimum charge state to be used.";
-            setToolTip(this.ChaMCMaxLabel, maxChargeHelp);
-            // 
-            // ChaMCMaxBox
-            // 
-            this.ChaMCMaxBox.Location = new System.Drawing.Point(215, 62);
-            this.ChaMCMaxBox.Name = "ChaMCMaxBox";
-            this.ChaMCMaxBox.Size = new System.Drawing.Size(37, 20);
-            this.ChaMCMaxBox.TabIndex = 18;
-            this.ChaMCMaxBox.Text = "3";
-            this.ChaMCMaxBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            setToolTip(this.ChaMCMaxBox, maxChargeHelp);
-            // 
-            // ChaMCMinBox
-            // 
-            this.ChaMCMinBox.Location = new System.Drawing.Point(133, 62);
-            this.ChaMCMinBox.Name = "ChaMCMinBox";
-            this.ChaMCMinBox.Size = new System.Drawing.Size(37, 20);
-            this.ChaMCMinBox.TabIndex = 17;
-            this.ChaMCMinBox.Text = "2";
-            this.ChaMCMinBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.NumTextBox_KeyPress);
-            setToolTip(this.ChaMCMinBox, minChargeHelp);
-            // 
-            // ChaMCMinLabel
-            // 
-            this.ChaMCMinLabel.AutoSize = true;
-            this.ChaMCMinLabel.Location = new System.Drawing.Point(30, 66);
-            this.ChaMCMinLabel.Name = "ChaMCMinLabel";
-            this.ChaMCMinLabel.Size = new System.Drawing.Size(103, 13);
-            this.ChaMCMinLabel.TabIndex = 9;
-            this.ChaMCMinLabel.Text = "Multiple Charge Min:";
-            setToolTip(this.ChaMCMinLabel, minChargeHelp);
-            // 
-            // ChaSingleBox
-            // 
-            this.ChaSingleBox.DecimalPlaces = 2;
-            this.ChaSingleBox.Increment = new decimal(new int[] {
-            1,
-            0,
-            0,
-            65536});
-            this.ChaSingleBox.Location = new System.Drawing.Point(174, 36);
-            this.ChaSingleBox.Maximum = new decimal(new int[] {
-            1,
-            0,
-            0,
-            0});
-            this.ChaSingleBox.Name = "ChaSingleBox";
-            this.ChaSingleBox.Size = new System.Drawing.Size(41, 20);
-            this.ChaSingleBox.TabIndex = 8;
-            this.ChaSingleBox.Value = new decimal(new int[] {
-            9,
-            0,
-            0,
-            65536});
-            // TODO string chaSingleHelp = "what is this";
-            // TODO setToolTip(this.ChaSingleBox,chaSingleHelp);
-            // 
-            // ChaSingleLabel
-            // 
-            this.ChaSingleLabel.AutoSize = true;
-            this.ChaSingleLabel.Location = new System.Drawing.Point(67, 38);
-            this.ChaSingleLabel.Name = "ChaSingleLabel";
-            this.ChaSingleLabel.Size = new System.Drawing.Size(107, 13);
-            this.ChaSingleLabel.TabIndex = 7;
-            this.ChaSingleLabel.Text = "Single Charge % TIC:";
-            // TODO setToolTip(this.ChaSingleLabel,chaSingleHelp);
-            // 
-            // ChaOverwriteCharge
-            // 
-            this.ChaOverwriteCharge.AutoSize = true;
-            this.ChaOverwriteCharge.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ChaOverwriteCharge.Location = new System.Drawing.Point(86, 12);
-            this.ChaOverwriteCharge.Name = "ChaOverwriteCharge";
-            this.ChaOverwriteCharge.Size = new System.Drawing.Size(111, 17);
-            this.ChaOverwriteCharge.TabIndex = 6;
-            this.ChaOverwriteCharge.Text = "Overwrite Charge:";
-            this.ChaOverwriteCharge.UseVisualStyleBackColor = true;
-            // TODO setToolTip(this.ChaOverwriteCharge,"whatisthis");
             // 
             // RemoveFilterButton
             // 
@@ -898,7 +890,6 @@ namespace MSConvertGUI
             this.RemoveFilterButton.Text = "Remove";
             this.RemoveFilterButton.UseVisualStyleBackColor = true;
             this.RemoveFilterButton.Click += new System.EventHandler(this.RemoveFilterButton_Click);
-            setToolTip(this.RemoveFilterButton, "Select a filter in the list below then click here to remove it.");
             // 
             // AddFilterButton
             // 
@@ -910,7 +901,6 @@ namespace MSConvertGUI
             this.AddFilterButton.Text = "Add";
             this.AddFilterButton.UseVisualStyleBackColor = true;
             this.AddFilterButton.Click += new System.EventHandler(this.AddFilterButton_Click);
-            setToolTip(this.AddFilterButton, "Add the filter specifed above to the list below.");
             // 
             // TextFileRadio
             // 
@@ -921,7 +911,6 @@ namespace MSConvertGUI
             this.TextFileRadio.TabIndex = 2;
             this.TextFileRadio.Text = "File of file names";
             this.TextFileRadio.UseVisualStyleBackColor = true;
-            setToolTip(this.TextFileRadio, "Click this if your input file actually contains a list of files to be converted.");
             // 
             // FileListRadio
             // 
@@ -935,7 +924,6 @@ namespace MSConvertGUI
             this.FileListRadio.Text = "List of Files";
             this.FileListRadio.UseVisualStyleBackColor = true;
             this.FileListRadio.CheckedChanged += new System.EventHandler(this.FileListRadio_CheckedChanged);
-            setToolTip(this.TextFileRadio, "Click this for normal operation.");
             // 
             // OutputFormatBox
             // 
@@ -954,8 +942,6 @@ namespace MSConvertGUI
             this.OutputFormatBox.Size = new System.Drawing.Size(60, 21);
             this.OutputFormatBox.TabIndex = 1;
             this.OutputFormatBox.SelectedIndexChanged += new System.EventHandler(this.OutputFormatBox_SelectedIndexChanged);
-            string outputFormatHelp = "Selects the output format for the conversion";
-            setToolTip(this.OutputFormatBox, outputFormatHelp);
             // 
             // FormatLabel
             // 
@@ -965,7 +951,6 @@ namespace MSConvertGUI
             this.FormatLabel.Size = new System.Drawing.Size(74, 13);
             this.FormatLabel.TabIndex = 13;
             this.FormatLabel.Text = "Output format:";
-            setToolTip(this.FormatLabel, outputFormatHelp);
             // 
             // BrowseFileButton
             // 
@@ -995,8 +980,6 @@ namespace MSConvertGUI
             this.OutputLabel.Size = new System.Drawing.Size(87, 13);
             this.OutputLabel.TabIndex = 16;
             this.OutputLabel.Text = "Output Directory:";
-            string outputHelp = "Choose the directory for writing the converted file(s).";
-            setToolTip(this.OutputLabel, outputHelp);
             // 
             // OutputBox
             // 
@@ -1006,7 +989,6 @@ namespace MSConvertGUI
             this.OutputBox.Name = "OutputBox";
             this.OutputBox.Size = new System.Drawing.Size(210, 20);
             this.OutputBox.TabIndex = 1;
-            setToolTip(this.OutputBox, outputHelp);
             // 
             // PrecisionLabel
             // 
@@ -1016,13 +998,10 @@ namespace MSConvertGUI
             this.PrecisionLabel.Size = new System.Drawing.Size(131, 13);
             this.PrecisionLabel.TabIndex = 18;
             this.PrecisionLabel.Text = "Binary encoding precision:";
-            string precisionHelp = "Sets output precision for writing binary m/z and intensity information.  Most input formats store m/z and intensity as 32 bit values, so choosing 64 bit output precision usually just creates unnecessarily large output files.";
-            setToolTip(this.PrecisionLabel, precisionHelp);
             // 
             // OptionsGB
             // 
-            this.OptionsGB.Controls.Add(this.ConfigurationFileGB);
-            this.OptionsGB.Controls.Add(this.UseCFGButton);
+            this.OptionsGB.Controls.Add(this.MakeTPPCompatibleOutputButton);
             this.OptionsGB.Controls.Add(this.UseZlibBox);
             this.OptionsGB.Controls.Add(this.GzipBox);
             this.OptionsGB.Controls.Add(this.OutputExtensionBox);
@@ -1039,64 +1018,32 @@ namespace MSConvertGUI
             this.OptionsGB.TabIndex = 3;
             this.OptionsGB.TabStop = false;
             this.OptionsGB.Text = "Options";
-            setToolTip(this.OptionsGB, "Useful options for controlling output format and file size.");
             // 
-            // ConfigurationFileGB
+            // MakeTPPCompatibleOutputButton
             // 
-            this.ConfigurationFileGB.Controls.Add(this.BrowseConfigButton);
-            this.ConfigurationFileGB.Controls.Add(this.ConfigBox);
-            this.ConfigurationFileGB.Location = new System.Drawing.Point(3, 115);
-            this.ConfigurationFileGB.Name = "ConfigurationFileGB";
-            this.ConfigurationFileGB.Size = new System.Drawing.Size(260, 42);
-            this.ConfigurationFileGB.TabIndex = 9;
-            this.ConfigurationFileGB.TabStop = false;
-            this.ConfigurationFileGB.Text = "Configuration File";
-            this.ConfigurationFileGB.Visible = false;
-            string configFileHelp = "Specify a msconvert configuration file to include in this conversion.";
-            setToolTip(this.ConfigurationFileGB, configFileHelp);
-            // 
-            // BrowseConfigButton
-            // 
-            this.BrowseConfigButton.Location = new System.Drawing.Point(204, 13);
-            this.BrowseConfigButton.Name = "BrowseConfigButton";
-            this.BrowseConfigButton.Size = new System.Drawing.Size(50, 23);
-            this.BrowseConfigButton.TabIndex = 21;
-            this.BrowseConfigButton.Text = "Browse";
-            this.BrowseConfigButton.UseVisualStyleBackColor = true;
-            // 
-            // ConfigBox
-            // 
-            this.ConfigBox.Location = new System.Drawing.Point(13, 15);
-            this.ConfigBox.Name = "ConfigBox";
-            this.ConfigBox.Size = new System.Drawing.Size(185, 20);
-            this.ConfigBox.TabIndex = 20;
-            setToolTip(this.ConfigBox, configFileHelp);
-            // 
-            // UseCFGButton
-            // 
-            this.UseCFGButton.AutoSize = true;
-            this.UseCFGButton.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.UseCFGButton.Location = new System.Drawing.Point(16, 92);
-            this.UseCFGButton.Name = "UseCFGButton";
-            this.UseCFGButton.Size = new System.Drawing.Size(96, 17);
-            this.UseCFGButton.TabIndex = 7;
-            this.UseCFGButton.Text = "Use config file:";
-            this.UseCFGButton.UseVisualStyleBackColor = true;
-            this.UseCFGButton.CheckedChanged += new System.EventHandler(this.UseCFGButton_CheckedChanged);
-            setToolTip(this.UseCFGButton, configFileHelp);
+            this.MakeTPPCompatibleOutputButton.AutoSize = true;
+            this.MakeTPPCompatibleOutputButton.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.MakeTPPCompatibleOutputButton.Checked = true;
+            this.MakeTPPCompatibleOutputButton.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.MakeTPPCompatibleOutputButton.Location = new System.Drawing.Point(2, 92);
+            this.MakeTPPCompatibleOutputButton.Name = "MakeTPPCompatibleOutputButton";
+            this.MakeTPPCompatibleOutputButton.Size = new System.Drawing.Size(110, 17);
+            this.MakeTPPCompatibleOutputButton.TabIndex = 7;
+            this.MakeTPPCompatibleOutputButton.Text = "TPP compatibility:";
+            this.MakeTPPCompatibleOutputButton.UseVisualStyleBackColor = true;
             // 
             // UseZlibBox
             // 
             this.UseZlibBox.AutoSize = true;
             this.UseZlibBox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.UseZlibBox.Checked = true;
+            this.UseZlibBox.CheckState = System.Windows.Forms.CheckState.Checked;
             this.UseZlibBox.Location = new System.Drawing.Point(125, 69);
             this.UseZlibBox.Name = "UseZlibBox";
             this.UseZlibBox.Size = new System.Drawing.Size(128, 17);
             this.UseZlibBox.TabIndex = 6;
-            this.UseZlibBox.Checked = true;
             this.UseZlibBox.Text = "Use zlib compression:";
             this.UseZlibBox.UseVisualStyleBackColor = true;
-            setToolTip(this.UseZlibBox, "Using zlib to compress peak lists results in much smaller mzML and mzXML output files.");
             // 
             // GzipBox
             // 
@@ -1108,7 +1055,6 @@ namespace MSConvertGUI
             this.GzipBox.TabIndex = 8;
             this.GzipBox.Text = "Package in gzip:";
             this.GzipBox.UseVisualStyleBackColor = true;
-            setToolTip(this.GzipBox, "This compresses the entire output file using gzip, and adds \".gz\" to the end of the filename.");
             // 
             // OutputExtensionBox
             // 
@@ -1116,8 +1062,6 @@ namespace MSConvertGUI
             this.OutputExtensionBox.Name = "OutputExtensionBox";
             this.OutputExtensionBox.Size = new System.Drawing.Size(43, 20);
             this.OutputExtensionBox.TabIndex = 2;
-            string OutputExtensionHelp = "Sets the filename extension for the output file(s)";
-            setToolTip(this.OutputExtensionBox, OutputExtensionHelp);
             // 
             // OutputExtensionLabel
             // 
@@ -1127,7 +1071,6 @@ namespace MSConvertGUI
             this.OutputExtensionLabel.Size = new System.Drawing.Size(56, 13);
             this.OutputExtensionLabel.TabIndex = 23;
             this.OutputExtensionLabel.Text = "Extension:";
-            setToolTip(this.OutputExtensionLabel, OutputExtensionHelp);
             // 
             // WriteIndexBox
             // 
@@ -1141,7 +1084,6 @@ namespace MSConvertGUI
             this.WriteIndexBox.TabIndex = 5;
             this.WriteIndexBox.Text = "Write index:";
             this.WriteIndexBox.UseVisualStyleBackColor = true;
-            setToolTip(this.WriteIndexBox, "Include an index in mzML and mzXML output files.");
             // 
             // Precision32
             // 
@@ -1152,7 +1094,6 @@ namespace MSConvertGUI
             this.Precision32.TabIndex = 4;
             this.Precision32.Text = "32-bit";
             this.Precision32.UseVisualStyleBackColor = true;
-            setToolTip(this.Precision32, precisionHelp);
             // 
             // Precision64
             // 
@@ -1165,30 +1106,43 @@ namespace MSConvertGUI
             this.Precision64.TabStop = true;
             this.Precision64.Text = "64-bit";
             this.Precision64.UseVisualStyleBackColor = true;
-            setToolTip(this.Precision64, precisionHelp);
             // 
             // SlidingPanel
             // 
-            this.SlidingPanel.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.SlidingPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.SlidingPanel.Controls.Add(this.OutputBrowse);
             this.SlidingPanel.Controls.Add(this.OptionsGB);
             this.SlidingPanel.Controls.Add(this.OutputLabel);
             this.SlidingPanel.Controls.Add(this.OutputBox);
-            this.SlidingPanel.Location = new System.Drawing.Point(13, 261);
+            this.SlidingPanel.Location = new System.Drawing.Point(15, 261);
             this.SlidingPanel.Name = "SlidingPanel";
-            this.SlidingPanel.Size = new System.Drawing.Size(275, 211);
+            this.SlidingPanel.Size = new System.Drawing.Size(275, 163);
             this.SlidingPanel.TabIndex = 8;
             // 
             // SetDefaultsButton
             // 
-            this.SetDefaultsButton.Location = new System.Drawing.Point(21, 430);
+            this.SetDefaultsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.SetDefaultsButton.Location = new System.Drawing.Point(15, 433);
             this.SetDefaultsButton.Name = "SetDefaultsButton";
-            this.SetDefaultsButton.Size = new System.Drawing.Size(360, 23);
+            this.SetDefaultsButton.Size = new System.Drawing.Size(305, 23);
             this.SetDefaultsButton.TabIndex = 32;
-            this.SetDefaultsButton.Text = "Use these settings next time I start MSConvertGUI";
+            this.SetDefaultsButton.Text = "Use these settings next time I start MSConvert";
             this.SetDefaultsButton.UseVisualStyleBackColor = true;
             this.SetDefaultsButton.Click += new System.EventHandler(this.SetDefaultsButton_Click);
-            setToolTip(this.SetDefaultsButton,"Saves the current settings and uses them as the defaults next time you use MSConvertGUI without a recognized input file type.");
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn1.FillWeight = 50F;
+            this.dataGridViewTextBoxColumn1.HeaderText = "Filter";
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            this.dataGridViewTextBoxColumn2.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn2.HeaderText = "Parameters";
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -1210,10 +1164,15 @@ namespace MSConvertGUI
             this.Controls.Add(this.FileBox);
             this.Controls.Add(this.SlidingPanel);
             this.Name = "MainForm";
-            this.Text = "MSConvertGUI" + (Environment.Is64BitProcess ? " (64-bit)" : "");
+            this.Text = "MSConvert";
             this.Load += new System.EventHandler(this.MainForm_Load);
-            ((System.ComponentModel.ISupportInitialize) (this.FilterDGV)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.FilterDGV)).EndInit();
             this.FilterGB.ResumeLayout(false);
+            this.ChargeStatePredictorPanel.ResumeLayout(false);
+            this.ChargeStatePredictorPanel.PerformLayout();
+            this.ThresholdFilterPanel.ResumeLayout(false);
+            this.ThresholdFilterPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ChaSingleBox)).EndInit();
             this.ActivationPanel.ResumeLayout(false);
             this.ActivationPanel.PerformLayout();
             this.SubsetPanel.ResumeLayout(false);
@@ -1226,13 +1185,8 @@ namespace MSConvertGUI
             this.ZeroSamplesPanel.PerformLayout();
             this.ETDFilterPanel.ResumeLayout(false);
             this.ETDFilterPanel.PerformLayout();
-            this.ChargeStatePredictorPanel.ResumeLayout(false);
-            this.ChargeStatePredictorPanel.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.ChaSingleBox)).EndInit();
             this.OptionsGB.ResumeLayout(false);
             this.OptionsGB.PerformLayout();
-            this.ConfigurationFileGB.ResumeLayout(false);
-            this.ConfigurationFileGB.PerformLayout();
             this.SlidingPanel.ResumeLayout(false);
             this.SlidingPanel.PerformLayout();
             this.ResumeLayout(false);
@@ -1269,12 +1223,9 @@ namespace MSConvertGUI
         private System.Windows.Forms.CheckBox WriteIndexBox;
         private System.Windows.Forms.TextBox OutputExtensionBox;
         private System.Windows.Forms.Label OutputExtensionLabel;
-        private System.Windows.Forms.GroupBox ConfigurationFileGB;
-        private System.Windows.Forms.CheckBox UseCFGButton;
+        private System.Windows.Forms.CheckBox MakeTPPCompatibleOutputButton;
         private System.Windows.Forms.CheckBox UseZlibBox;
         private System.Windows.Forms.CheckBox GzipBox;
-        private System.Windows.Forms.Button BrowseConfigButton;
-        private System.Windows.Forms.TextBox ConfigBox;
         private System.Windows.Forms.Panel SlidingPanel;
         private System.Windows.Forms.Panel MSLevelPanel;
         private System.Windows.Forms.ComboBox FilterBox;
@@ -1327,6 +1278,15 @@ namespace MSConvertGUI
         private System.Windows.Forms.TextBox mzWinLow;
         private System.Windows.Forms.DataGridViewTextBoxColumn OptionTab;
         private System.Windows.Forms.DataGridViewTextBoxColumn ValueTab;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private System.Windows.Forms.Panel ThresholdFilterPanel;
+        private System.Windows.Forms.Label thresholdValueLabel;
+        private System.Windows.Forms.Label thresholdOrientationLabel;
+        private System.Windows.Forms.Label thresholdTypeLabel;
+        private System.Windows.Forms.ComboBox thresholdOrientationComboBox;
+        private System.Windows.Forms.TextBox thresholdValueTextBox;
+        private System.Windows.Forms.ComboBox thresholdTypeComboBox;
     }
 }
 
