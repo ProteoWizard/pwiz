@@ -25,6 +25,9 @@
 
 #include "SpectrumList_TitleMaker.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
+#include <boost/range/algorithm/find_if.hpp>
 
 
 namespace pwiz {
@@ -59,6 +62,119 @@ void replaceCvParam(ParamContainer& pc, CVID cvid, const value_type& value)
         itr->value = lexical_cast<string>(value);
 }
 
+// TODO: Make this a public function? It's copied and modified from Serializer_mzXML.cpp;
+//       instead of returning basename, it returns the full file or directory name.
+string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType)
+{
+    string nameExtension = bal::to_lower_copy(bfs::extension(sf.name));
+    string locationExtension = bal::to_lower_copy(bfs::extension(sf.location));
+
+    switch (sourceFileType)
+    {
+        // location="file://path/to" name="source.RAW"
+        case MS_Thermo_RAW_file:
+            if (nameExtension == ".raw")
+                return sf.name;
+            return "";
+
+        // sane: location="file://path/to/source.raw" name="_FUNC001.DAT"
+        // insane: location="file://path/to" name="source.raw"
+        case MS_Waters_raw_file:
+            if (nameExtension == ".dat" && locationExtension == ".raw")
+                return bfs::path(sf.location).filename();
+            else if (nameExtension == ".raw")
+                return sf.name;
+            return "";
+
+        // location="file://path/to/source.d" name="Analysis.yep"
+        case MS_Bruker_Agilent_YEP_file:
+            if (nameExtension == ".yep" && locationExtension == ".d")
+                return bfs::path(sf.location).filename();
+            return "";
+            
+        // location="file://path/to/source.d" name="Analysis.baf"
+        case MS_Bruker_BAF_file:
+            if (nameExtension == ".baf" && locationExtension == ".d")
+                return bfs::path(sf.location).filename();
+            return "";
+
+        // location="file://path/to/source.d/AcqData" name="msprofile.bin"
+        case MS_Agilent_MassHunter_file:
+            if (nameExtension == ".bin" && bfs::path(sf.location).filename() == "AcqData")
+                return bfs::path(sf.location).parent_path().filename();
+            return "";
+
+        // location="file://path/to" name="source.mzXML"
+        // location="file://path/to" name="source.mz.xml"
+        // location="file://path/to" name="source.d" (ambiguous)
+        case MS_ISB_mzXML_file:
+            if (nameExtension == ".mzxml" || nameExtension == ".d")
+                return sf.name;
+            else if (bal::iends_with(sf.name, ".mz.xml"))
+                return sf.name.substr(0, sf.name.length()-7);
+            return "";
+
+        // location="file://path/to" name="source.mzData"
+        // location="file://path/to" name="source.mz.data" ???
+        case MS_PSI_mzData_file:
+            if (nameExtension == ".mzdata")
+                return sf.name;
+            return "";
+
+        // location="file://path/to" name="source.mgf"
+        case MS_Mascot_MGF_file:
+            if (nameExtension == ".mgf")
+                return sf.name;
+            return "";
+
+        // location="file://path/to" name="source.wiff"
+        case MS_ABI_WIFF_file:
+            if (nameExtension == ".wiff")
+                return sf.name;
+            return "";
+
+        // location="file://path/to/source/maldi-spot/1/1SRef" name="fid"
+        // location="file://path/to/source/1/1SRef" name="fid"
+        case MS_Bruker_FID_file:
+            return (bfs::path(sf.location) / sf.name).string().substr(7);
+
+        // location="file://path/to/source" name="spectrum-id.t2d"
+        // location="file://path/to/source/MS" name="spectrum-id.t2d"
+        // location="file://path/to/source/MSMS" name="spectrum-id.t2d"
+        case MS_AB_SCIEX_TOF_TOF_T2D_file:
+            return (bfs::path(sf.location) / sf.name).string().substr(7);
+
+        default:
+            return "";
+    }
+}
+
+struct SourceFilePtrIdEquals
+{
+    SourceFilePtrIdEquals(const string& id) : id(id) {}
+    bool operator() (const SourceFilePtr& sf) const {return sf->id == id;}
+
+    private: const string& id;
+};
+
+SourceFilePtr spectrumSourceFilePtr(const Spectrum& s, const MSData& msd)
+{
+    if (s.sourceFilePtr.get())
+        return s.sourceFilePtr;
+
+    if (bal::starts_with(s.id, "file="))
+    {
+        string sourceFileId = s.id.substr(5);
+        pwiz::minimxml::decode_xml_id(sourceFileId);
+        vector<SourceFilePtr>::const_iterator itr = boost::find_if(msd.fileDescription.sourceFilePtrs, SourceFilePtrIdEquals(sourceFileId));
+        if (itr == msd.fileDescription.sourceFilePtrs.end())
+            throw runtime_error("id \"" + s.id + "\" does not match the id of a source file");
+        return *itr;
+    }
+
+    return msd.run.defaultSourceFilePtr;
+}
+
 } // namespace
 
 
@@ -67,6 +183,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_TitleMaker::spectrum(size_t index, bool g
     SpectrumPtr s = inner_->spectrum(index, getBinaryData);
 
     /// <RunId> - Run::id
+    /// <SourcePath> - "Data.d" from "C:/Agilent/Data.d/AcqData/mspeak.bin"
     /// <Index> - SpectrumIdentity::index
     /// <Id> - SpectrumIdentity::id (nativeID)
     /// <ScanNumber> - if the nativeID can be represented as a single number, that number, else index
@@ -87,6 +204,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_TitleMaker::spectrum(size_t index, bool g
     bal::replace_all(title, "<RunId>", msd_.run.id);
     bal::replace_all(title, "<Index>", lexical_cast<string>(s->index));
     bal::replace_all(title, "<Id>", s->id);
+
+    if (bal::contains(title, "<SourcePath>"))
+    {
+        string nativeSourcePath;
+        SourceFilePtr sfp = spectrumSourceFilePtr(*s, msd_);
+        if (sfp.get())
+        {
+            const SourceFile& sf = *sfp;
+            CVID nativeFileFormat = sf.cvParamChild(MS_mass_spectrometer_file_format).cvid;
+            nativeSourcePath = translate_SourceFileTypeToRunID(sf, nativeFileFormat);
+        }
+        bal::replace_all(title, "<SourcePath>", nativeSourcePath);
+    }
 
     string scanNumberStr = id::translateNativeIDToScanNumber(nativeIdFormat_, s->id);
     if (scanNumberStr.empty())

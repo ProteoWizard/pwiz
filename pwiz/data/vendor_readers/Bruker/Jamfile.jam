@@ -84,9 +84,21 @@ rule vendor-api-requirements ( properties * )
     return $(result) ;
 }
 
+rule filesystem-shared ( properties * )
+{
+    # HACK: <link>shared isn't being passed in properties like I'd expect, so I also check the command-line
+    if <link>shared in $(properties) || link=shared in [ modules.peek : ARGV ]
+    {
+        result += <library>/ext/boost//filesystem/<link>shared ;
+    }
+    else
+    {
+        result += <library>/ext/boost//filesystem ;
+    }
+}
 
 # shared with pwiz_vendor_api_bruker
-obj Reader_Bruker_Detail : Reader_Bruker_Detail.cpp : <library>/ext/boost//filesystem : : <library>/ext/boost//filesystem ;
+obj Reader_Bruker_Detail : Reader_Bruker_Detail.cpp : <conditional>@filesystem-shared : : <conditional>@filesystem-shared ;
 
 
 lib pwiz_reader_bruker
