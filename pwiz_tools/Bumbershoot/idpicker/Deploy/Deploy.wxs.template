@@ -106,6 +106,7 @@
 <Component Feature="MainFeature"><File Id="_NHibernate.dll" Name="NHibernate.dll" Source="msvc-release\NHibernate.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_ObjectListView.dll" Name="ObjectListView.dll" Source="msvc-release\ObjectListView.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_PopupControl.dll" Name="PopupControl.dll" Source="msvc-release\PopupControl.dll" KeyPath="yes"/></Component>
+<Component Feature="MainFeature"><File Id="_QuasiTel_V2.R" Name="QuasiTel V2.R" Source="msvc-release\QuasiTel V2.R" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_Remotion.Data.Linq.dll" Name="Remotion.Data.Linq.dll" Source="msvc-release\Remotion.Data.Linq.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_System.Data.SQLite.dll" Name="System.Data.SQLite.dll" Source="msvc-release\System.Data.SQLite.dll" KeyPath="yes"/></Component>
 <Component Feature="MainFeature"><File Id="_SharpSvn.dll" Name="SharpSvn.dll" Source="msvc-release\SharpSvn.dll" KeyPath="yes"/></Component>
