@@ -232,7 +232,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (IsFragment)
             {
                 Restrict = reader.GetAttribute(ATTR.no_cut);
-                Terminus = reader.GetAttribute<SequenceTerminus>(ATTR.sense, ToSeqTerminus);
+                Terminus = reader.GetAttribute(ATTR.sense, ToSeqTerminus);
                 MinFragmentLength = reader.GetNullableIntAttribute(ATTR.min_length) ??
                     DEFAULT_MIN_FRAGMENT_LENGTH;
             }

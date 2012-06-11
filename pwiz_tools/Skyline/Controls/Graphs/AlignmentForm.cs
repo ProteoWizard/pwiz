@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public partial class AlignmentForm : Form
     {
         private LoadedRetentionTimes _loadedRetentionTimes;
-        private BindingList<DataRow> _dataRows = new BindingList<DataRow>();
+        private readonly BindingList<DataRow> _dataRows = new BindingList<DataRow>();
         public AlignmentForm(SkylineWindow skylineWindow)
         {
             InitializeComponent();
@@ -111,9 +111,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 for (int i = 0; i < peptideTimes.Count; i++)
                 {
                     var peptideTime = peptideTimes[i];
-                    var point =
-                        new PointPair(alignedFile.OriginalTimes.GetRetentionTime(peptideTime.PeptideSequence).Value,
-                                      peptideTime.RetentionTime, peptideTime.PeptideSequence);
+                    double? alignedTime = alignedFile.OriginalTimes.GetRetentionTime(peptideTime.PeptideSequence);
+                    if (!alignedTime.HasValue)
+                        continue;
+                    var point = new PointPair(alignedTime.Value,
+                                              peptideTime.RetentionTime,
+                                              peptideTime.PeptideSequence);
                     if (outlierIndexes.Contains(i))
                     {
                         outliers.Add(point);
@@ -187,7 +190,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var filePaths = libEntry.Value.Keys.ToArray();
                     Array.Sort(filePaths);
-                    items.AddRange(filePaths.Select(filePath=>new DataFileKey(libEntry.Key, filePath)));
+                    var retentionTimes = libEntry.Key;
+                    items.AddRange(filePaths.Select(filePath => new DataFileKey(retentionTimes, filePath)));
                 }
             }
             if (items.SequenceEqual(comboAlignAgainst.Items.Cast<DataFileKey>()))

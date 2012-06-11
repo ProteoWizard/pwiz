@@ -33,7 +33,7 @@ namespace pwiz.Common.DataAnalysis
     /// </summary>
     public sealed class NelderMeadSimplex
     {
-        private static readonly double JITTER = 1e-10d;           // a small value used to protect against floating point noise
+        private const double JITTER = 1e-10d; // a small value used to protect against floating point noise
 
         public static RegressionResult Regress(SimplexConstant[] simplexConstants, double convergenceTolerance, int maxEvaluations, 
                                         ObjectiveFunctionDelegate objectiveFunction)
@@ -49,13 +49,12 @@ namespace pwiz.Common.DataAnalysis
             int numDimensions = simplexConstants.Length;
             int numVertices = numDimensions + 1;
             Vector[] vertices = _initializeVertices(simplexConstants);
-            double[] errorValues = new double[numVertices];
 
             int evaluationCount = 0;
-            TerminationReason terminationReason = TerminationReason.Unspecified;
+            TerminationReason terminationReason;
             ErrorProfile errorProfile;
 
-            errorValues = _initializeErrorValues(vertices, objectiveFunction);
+            double[] errorValues = _initializeErrorValues(vertices, objectiveFunction);
 
             // iterate until we converge, or complete our permitted number of iterations
             while (true)
@@ -75,7 +74,7 @@ namespace pwiz.Common.DataAnalysis
                 if (reflectionPointValue <= errorValues[errorProfile.LowestIndex])
                 {
                     // it's better than the best point, so attempt an expansion of the simplex
-                    double expansionPointValue = _tryToScaleSimplex(2.0, ref errorProfile, vertices, errorValues, objectiveFunction);
+                    _tryToScaleSimplex(2.0, ref errorProfile, vertices, errorValues, objectiveFunction);
                     ++evaluationCount;
                 }
                 else if (reflectionPointValue >= errorValues[errorProfile.NextHighestIndex])
@@ -110,8 +109,6 @@ namespace pwiz.Common.DataAnalysis
         /// Evaluate the objective function at each vertex to create a corresponding
         /// list of error values for each vertex
         /// </summary>
-        /// <param name="vertices"></param>
-        /// <returns></returns>
         private static double[] _initializeErrorValues(Vector[] vertices, ObjectiveFunctionDelegate objectiveFunction)
         {
             double[] errorValues = new double[vertices.Length];
@@ -126,9 +123,6 @@ namespace pwiz.Common.DataAnalysis
         /// Check whether the points in the error profile have so little range that we
         /// consider ourselves to have converged
         /// </summary>
-        /// <param name="errorProfile"></param>
-        /// <param name="errorValues"></param>
-        /// <returns></returns>
         private static bool _hasConverged(double convergenceTolerance, ErrorProfile errorProfile, double[] errorValues)
         {
             double range = 2 * Math.Abs(errorValues[errorProfile.HighestIndex] - errorValues[errorProfile.LowestIndex]) /
@@ -147,8 +141,6 @@ namespace pwiz.Common.DataAnalysis
         /// <summary>
         /// Examine all error values to determine the ErrorProfile
         /// </summary>
-        /// <param name="errorValues"></param>
-        /// <returns></returns>
         private static ErrorProfile _evaluateSimplex(double[] errorValues)
         {
             ErrorProfile errorProfile = new ErrorProfile();
@@ -188,8 +180,6 @@ namespace pwiz.Common.DataAnalysis
         /// Construct an initial simplex, given starting guesses for the constants, and
         /// initial step sizes for each dimension
         /// </summary>
-        /// <param name="simplexConstants"></param>
-        /// <returns></returns>
         private static Vector[] _initializeVertices(SimplexConstant[] simplexConstants)
         {
             int numDimensions = simplexConstants.Length;
@@ -218,11 +208,6 @@ namespace pwiz.Common.DataAnalysis
         /// <summary>
         /// Test a scaling operation of the high point, and replace it if it is an improvement
         /// </summary>
-        /// <param name="scaleFactor"></param>
-        /// <param name="errorProfile"></param>
-        /// <param name="vertices"></param>
-        /// <param name="errorValues"></param>
-        /// <returns></returns>
         private static double _tryToScaleSimplex(double scaleFactor, ref ErrorProfile errorProfile, Vector[] vertices, 
                                           double[] errorValues, ObjectiveFunctionDelegate objectiveFunction)
         {
@@ -251,9 +236,6 @@ namespace pwiz.Common.DataAnalysis
         /// <summary>
         /// Contract the simplex uniformly around the lowest point
         /// </summary>
-        /// <param name="errorProfile"></param>
-        /// <param name="vertices"></param>
-        /// <param name="errorValues"></param>
         private static void _shrinkSimplex(ErrorProfile errorProfile, Vector[] vertices, double[] errorValues, 
                                       ObjectiveFunctionDelegate objectiveFunction)
         {
@@ -291,44 +273,30 @@ namespace pwiz.Common.DataAnalysis
 
         private sealed class ErrorProfile
         {
-            private int _highestIndex;
-            private int _nextHighestIndex;
-            private int _lowestIndex;
+            public int HighestIndex { get; set; }
 
-            public int HighestIndex
-            {
-                get { return _highestIndex; }
-                set { _highestIndex = value; }
-            }
+            public int NextHighestIndex { get; set; }
 
-            public int NextHighestIndex
-            {
-                get { return _nextHighestIndex; }
-                set { _nextHighestIndex = value; }
-            }
-
-            public int LowestIndex
-            {
-                get { return _lowestIndex; }
-                set { _lowestIndex = value; }
-            }
+            public int LowestIndex { get; set; }
         }
         public delegate double ObjectiveFunctionDelegate(double[] constants);
 
+        // ReSharper disable InconsistentNaming
         public enum TerminationReason
         {
             MaxFunctionEvaluations,
             Converged,
             Unspecified
         }
+        // ReSharper restore InconsistentNaming
         public sealed class RegressionResult
         {
-            private NelderMeadSimplex.TerminationReason _terminationReason;
-            private double[] _constants;
-            private double _errorValue;
-            private int _evaluationCount;
+            private readonly TerminationReason _terminationReason;
+            private readonly double[] _constants;
+            private readonly double _errorValue;
+            private readonly int _evaluationCount;
 
-            public RegressionResult(NelderMeadSimplex.TerminationReason terminationReason, double[] constants, double errorValue, int evaluationCount)
+            public RegressionResult(TerminationReason terminationReason, double[] constants, double errorValue, int evaluationCount)
             {
                 _terminationReason = terminationReason;
                 _constants = constants;
@@ -336,7 +304,7 @@ namespace pwiz.Common.DataAnalysis
                 _evaluationCount = evaluationCount;
             }
 
-            public NelderMeadSimplex.TerminationReason TerminationReason
+            public TerminationReason TerminationReason
             {
                 get { return _terminationReason; }
             }
@@ -358,30 +326,19 @@ namespace pwiz.Common.DataAnalysis
         }
         public sealed class SimplexConstant
         {
-            private double _value;
-            private double _initialPerturbation;
-
             public SimplexConstant(double value, double initialPerturbation)
             {
-                _value = value;
-                _initialPerturbation = initialPerturbation;
+                Value = value;
+                InitialPerturbation = initialPerturbation;
             }
 
             /// <summary>
             /// The value of the constant
             /// </summary>
-            public double Value
-            {
-                get { return _value; }
-                set { _value = value; }
-            }
+            public double Value { get; set; }
 
             // The size of the initial perturbation
-            public double InitialPerturbation
-            {
-                get { return _initialPerturbation; }
-                set { _initialPerturbation = value; }
-            }
+            public double InitialPerturbation { get; set; }
         }
     }
 }

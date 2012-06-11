@@ -589,12 +589,7 @@ namespace pwiz.Skyline.Model
                 _dictAtomCounts = new Dictionary<string, int>();
             }
 
-            public FormulaBuilder Append(string formula)
-            {
-                return Append(formula, 0);
-            }
-
-            public FormulaBuilder Append(string formula, double unexplainedMass)
+            public FormulaBuilder Append(string formula, double unexplainedMass = 0)
             {
                 _unexplainedMass += unexplainedMass;
                 if (formula != null)

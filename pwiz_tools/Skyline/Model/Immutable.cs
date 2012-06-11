@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model
         /// <typeparam name="TProp">Type of the property to set</typeparam>
         /// <param name="immutable">The node instance to change</param>
         /// <param name="value">The value to assign to the property in the clone</param>
-        protected delegate void SetProperty<TIm, TProp>(TIm immutable, TProp value);
+        protected delegate void SetProperty<in TIm, in TProp>(TIm immutable, TProp value);
 
         /// <summary>
         /// Use to create concise single-property change methods for
@@ -154,7 +154,7 @@ namespace pwiz.Skyline.Model
         /// </summary>
         /// <typeparam name="TIm">Type of the node being changed</typeparam>
         /// <param name="immutable">The node instance to change</param>
-        protected delegate void SetLambda<TIm>(TIm immutable);
+        protected delegate void SetLambda<in TIm>(TIm immutable);
 
         /// <summary>
         /// Use to create more concise single-property change methods for

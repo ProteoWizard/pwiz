@@ -1070,7 +1070,7 @@ namespace pwiz.Skyline.Model.Lib
         private IDictionary<string, LibraryRetentionTimes> GetAllRetentionTimes()
         {
             var result = new Dictionary<string, LibraryRetentionTimes>();
-            var connectionStringBuilder = new SQLiteConnectionStringBuilder() { DataSource = FilePath };
+            var connectionStringBuilder = new SQLiteConnectionStringBuilder { DataSource = FilePath };
             using (var connection = new SQLiteConnection(connectionStringBuilder.ConnectionString))
             {
                 connection.Open();

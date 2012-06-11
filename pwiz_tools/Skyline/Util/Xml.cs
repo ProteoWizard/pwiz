@@ -479,7 +479,7 @@ namespace pwiz.Skyline.Util
 
         public static bool? GetNullableBoolAttribute(this XmlReader reader, Enum name)
         {
-            return reader.GetAttribute<bool>(name, ConvertToBoolean);
+            return reader.GetAttribute(name, ConvertToBoolean);
         }
 
         public static bool GetBoolAttribute(this XmlReader reader, Enum name)
@@ -494,7 +494,7 @@ namespace pwiz.Skyline.Util
 
         public static bool? GetNullableBoolAttribute(this XmlReader reader, string name)
         {
-            return reader.GetAttribute<bool>(name, ConvertToBoolean);
+            return reader.GetAttribute(name, ConvertToBoolean);
         }
 
         public static bool GetBoolAttribute(this XmlReader reader, string name)
@@ -514,7 +514,7 @@ namespace pwiz.Skyline.Util
 
         public static int? GetNullableIntAttribute(this XmlReader reader, Enum name)
         {
-            return reader.GetAttribute<int>(name, ConvertToInt32);
+            return reader.GetAttribute(name, ConvertToInt32);
         }
 
         public static int GetIntAttribute(this XmlReader reader, Enum name)
@@ -529,7 +529,7 @@ namespace pwiz.Skyline.Util
 
         public static int? GetNullableIntAttribute(this XmlReader reader, string name)
         {
-            return reader.GetAttribute<int>(name, ConvertToInt32);
+            return reader.GetAttribute(name, ConvertToInt32);
         }
 
         public static int GetIntAttribute(this XmlReader reader, string name)
@@ -549,7 +549,7 @@ namespace pwiz.Skyline.Util
 
         public static double? GetNullableDoubleAttribute(this XmlReader reader, Enum name)
         {
-            return reader.GetAttribute<double>(name, ConvertToDouble);
+            return reader.GetAttribute(name, ConvertToDouble);
         }
 
         public static double GetDoubleAttribute(this XmlReader reader, Enum name)
@@ -564,7 +564,7 @@ namespace pwiz.Skyline.Util
 
         public static double? GetNullableDoubleAttribute(this XmlReader reader, string name)
         {
-            return reader.GetAttribute<double>(name, ConvertToDouble);
+            return reader.GetAttribute(name, ConvertToDouble);
         }
 
         public static double GetDoubleAttribute(this XmlReader reader, string name)
@@ -584,7 +584,7 @@ namespace pwiz.Skyline.Util
 
         public static float? GetNullableFloatAttribute(this XmlReader reader, Enum name)
         {
-            return reader.GetAttribute<float>(name, ConvertToSingle);
+            return reader.GetAttribute(name, ConvertToSingle);
         }
 
         public static float GetFloatAttribute(this XmlReader reader, Enum name)
@@ -599,7 +599,7 @@ namespace pwiz.Skyline.Util
 
         public static float? GetNullableFloatAttribute(this XmlReader reader, string name)
         {
-            return reader.GetAttribute<float>(name, ConvertToSingle);
+            return reader.GetAttribute(name, ConvertToSingle);
         }
 
         public static float GetFloatAttribute(this XmlReader reader, string name)
@@ -829,7 +829,7 @@ namespace pwiz.Skyline.Util
 
     }
 
-    public interface IXmlElementHelper<TElem>
+    public interface IXmlElementHelper<out TElem>
     {
         string[] ElementNames { get; }
 

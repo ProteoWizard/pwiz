@@ -1259,10 +1259,11 @@ namespace pwiz.Skyline.Controls.Graphs
             if (settings.TransitionSettings.FullScan.IsEnabled &&
                     settings.PeptideSettings.Libraries.IsLoaded)
             {
+                var transitionGroups = nodeGroups.Select(nodeGroup => nodeGroup.TransitionGroup).ToArray();
                 if (Settings.Default.ShowPeptideIdTimes)
                 {
                     var listTimes = new List<double>();
-                    foreach (var group in nodeGroups.Select(nodeGroup => nodeGroup.TransitionGroup))
+                    foreach (var group in transitionGroups)
                     {
                         IsotopeLabelType labelType;
                         double[] retentionTimes;
@@ -1282,12 +1283,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Settings.Default.ShowAlignedPeptideIdTimes)
                 {
-                    RetentionTimesAlignedToFile retentionTimesAlignedToFile = null;
-                    retentionTimesAlignedToFile = GetRetentionTimesAlignedToFile(FilePath);
+                    RetentionTimesAlignedToFile retentionTimesAlignedToFile = GetRetentionTimesAlignedToFile(FilePath);
                     if (retentionTimesAlignedToFile != null)
                     {
                         var listTimes = new List<double>();
-                        foreach (var group in nodeGroups.Select(nodeGroup => nodeGroup.TransitionGroup))
+                        foreach (var group in transitionGroups)
                         {
                             listTimes.AddRange(settings.GetAlignedRetentionTimes(retentionTimesAlignedToFile, group.Peptide.Sequence, mods));
                         }

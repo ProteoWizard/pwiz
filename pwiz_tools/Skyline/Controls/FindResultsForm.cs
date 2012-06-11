@@ -71,8 +71,7 @@ namespace pwiz.Skyline.Controls
         public void ChangeResults(IEnumerable<FindResult> findResults)
         {
             listView.Items.Clear();
-            listView.Items.AddRange(findResults.Select(
-                findResult => MakeListViewItem(findResult)).ToArray());
+            listView.Items.AddRange(findResults.Select(MakeListViewItem).ToArray());
         }
         ListViewItem MakeListViewItem(FindResult findResult)
         {

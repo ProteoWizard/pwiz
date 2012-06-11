@@ -225,8 +225,7 @@ namespace pwiz.Skyline.Model.DocSettings
             base.ReadXml(reader);
             Cleavage = reader.GetAttribute(ATTR.cut);
             Restrict = reader.GetAttribute(ATTR.no_cut);
-            Type = reader.GetAttribute<SequenceTerminus>(ATTR.sense, ToSeqTerminus) ??
-                   SequenceTerminus.C;
+            Type = reader.GetAttribute(ATTR.sense, ToSeqTerminus) ?? SequenceTerminus.C;
             // Consume tag
             reader.Read();
 

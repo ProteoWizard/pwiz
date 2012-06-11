@@ -89,7 +89,7 @@ namespace pwiz.Skyline.Model.Irt
 
                 // Calculate the minimal set of peptides needed for this document
                 var dbPeptides = _database.GetPeptides().ToList();
-                var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(pep => NewPeptide(pep)).ToList();
+                var persistPeptides = dbPeptides.Where(pep => pep.Standard).Select(NewPeptide).ToList();
                 var dictPeptides = dbPeptides.Where(pep => !pep.Standard).ToDictionary(pep => pep.PeptideModSeq);
                 foreach (var nodePep in document.Peptides)
                 {

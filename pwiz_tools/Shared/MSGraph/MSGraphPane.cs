@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Linq;
 using ZedGraph;
 
 namespace pwiz.MSGraph
@@ -367,12 +368,7 @@ namespace pwiz.MSGraph
             textBoundsRegion.Intersect( pane.Chart.Rect );
             RectangleF[] textBoundsRectangles = textBoundsRegion.GetRegionScans( g.Transform );
 
-            for( int j = 0; j < textBoundsRectangles.Length; ++j )
-            {
-                if( IsVisibleToClip( g, textBoundsRectangles[j] ) )
-                    return true;
-            }
-            return false;
+            return textBoundsRectangles.Any(t => IsVisibleToClip(g, t));
         }
 
         /// <summary>

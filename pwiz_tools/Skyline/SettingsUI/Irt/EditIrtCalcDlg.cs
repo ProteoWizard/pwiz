@@ -645,7 +645,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             private static IEnumerable<IRetentionTimeProvider> GetRetentionTimeProviders(SrmDocument document)
             {
                 return document.Settings.MeasuredResults.MSDataFileInfos.Select(fileInfo =>
-                    new DocumentRetentionTimeProvider(document, fileInfo)).Cast<IRetentionTimeProvider>();
+                            new DocumentRetentionTimeProvider(document, fileInfo));
             }
 
             private sealed class DocumentRetentionTimeProvider : IRetentionTimeProvider

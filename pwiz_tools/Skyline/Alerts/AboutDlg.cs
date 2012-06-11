@@ -20,7 +20,6 @@
 using System;
 using System.Deployment.Application;
 using System.Diagnostics;
-using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
 

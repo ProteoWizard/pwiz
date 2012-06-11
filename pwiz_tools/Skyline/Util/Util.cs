@@ -38,7 +38,7 @@ namespace pwiz.Skyline.Util
     /// Implement on an element for use with <see cref="MappedList{TKey,TValue}"/>.
     /// </summary>
     /// <typeparam name="TKey">Key type in the map</typeparam>
-    public interface IKeyContainer<TKey>
+    public interface IKeyContainer<out TKey>
     {
         TKey GetKey();
     }
@@ -91,7 +91,7 @@ namespace pwiz.Skyline.Util
     /// editing.
     /// </summary>
     /// <typeparam name="TItem">The type of the items in the collection</typeparam>
-    public interface IListDefaults<TItem>
+    public interface IListDefaults<out TItem>
     {
         /// <summary>
         /// Gets the current revision index for this list

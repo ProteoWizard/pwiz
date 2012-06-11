@@ -19,7 +19,6 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
-using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;

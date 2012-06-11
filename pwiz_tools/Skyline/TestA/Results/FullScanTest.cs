@@ -89,7 +89,7 @@ namespace pwiz.SkylineTestA.Results
 
             // Refilter allowing multiple precursors per spectrum
             SrmDocument docMulti = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(
-                fs => fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, new IsolationScheme("Test", 2, null))));
+                fs => fs.ChangeAcquisitionMethod(FullScanAcquisitionMethod.DIA, new IsolationScheme("Test", 2))));
             AssertEx.Serializable(docMulti, AssertEx.DocumentCloned);
             // Release data cache file
             Assert.IsTrue(docContainer.SetDocument(docMulti, docResults));

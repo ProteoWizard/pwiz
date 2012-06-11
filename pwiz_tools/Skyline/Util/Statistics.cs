@@ -808,10 +808,10 @@ namespace pwiz.Skyline.Util
         public double AngleSqrt(Statistics s)
         {
             var listNormal1 = new List<double>(_list);
-            listNormal1 = listNormal1.ConvertAll(val => Math.Sqrt(val));
+            listNormal1 = listNormal1.ConvertAll(Math.Sqrt);
             var stat1 = new Statistics(listNormal1);
             var listNormal2 = new List<double>(s._list);
-            listNormal2 = listNormal2.ConvertAll(val => Math.Sqrt(val));
+            listNormal2 = listNormal2.ConvertAll(Math.Sqrt);
             var stat2 = new Statistics(listNormal2);
 
             return stat1.Angle(stat2);

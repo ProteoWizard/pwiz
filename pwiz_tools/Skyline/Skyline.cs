@@ -70,7 +70,6 @@ namespace pwiz.Skyline
     {
         private SrmDocument _document;  // Interlocked access only
         private SrmDocument _documentUI;
-        private string _savedPath;      // Interlocked access only
         private int _savedVersion;
         private bool _closing;
         private readonly UndoManager _undoManager;
@@ -290,11 +289,7 @@ namespace pwiz.Skyline
         /// <summary>
         /// The currently saved location of the document
         /// </summary>
-        public string DocumentFilePath
-        {
-            get { return _savedPath; }
-            set { _savedPath = value; }
-        }
+        public string DocumentFilePath { get; set; }
 
         public SequenceTree SequenceTree
         {

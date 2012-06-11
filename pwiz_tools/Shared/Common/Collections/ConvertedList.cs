@@ -27,7 +27,7 @@ namespace pwiz.Common.Collections
 
         public IEnumerator<TTarget> GetEnumerator()
         {
-            return SourceList.Select(source => Convert(source)).GetEnumerator();
+            return SourceList.Select(Convert).GetEnumerator();
         }
 
         public void Add(TTarget item)

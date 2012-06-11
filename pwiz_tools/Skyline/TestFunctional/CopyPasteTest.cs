@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 
-using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;

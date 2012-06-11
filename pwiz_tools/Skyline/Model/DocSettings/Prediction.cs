@@ -561,7 +561,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Save statistics
             RegressionLine rlBest = new RegressionLine(slope, intercept);
-            var listPredicted = listBest.Select(score => rlBest.GetY(score)).ToList();
+            var listPredicted = listBest.Select(rlBest.GetY).ToList();
             statistics = new RetentionTimeStatistics(r, calcPeptides[bestCalcIndex], listBest, listPredicted, listRTs[bestCalcIndex]);
 
             // Get MeasuredRetentionTimes for only those peptides chosen by the calculator

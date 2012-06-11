@@ -113,12 +113,7 @@ namespace pwiz.Skyline
             private Cursor _cursorBegin;
             private bool _locked;
 
-            public DockPanelLayoutLock(DockPanel dockPanel)
-                : this(dockPanel, false)
-            {
-            }
-
-            public DockPanelLayoutLock(DockPanel dockPanel, bool startLocked)
+            public DockPanelLayoutLock(DockPanel dockPanel, bool startLocked = false)
             {
                 _dockPanel = dockPanel;
                 if (startLocked)
@@ -417,7 +412,7 @@ namespace pwiz.Skyline
         // Load view layout from the given stream.
         public void LoadLayout(Stream layoutStream)
         {
-            using (var layoutLock = new DockPanelLayoutLock(dockPanel, true))
+            using (new DockPanelLayoutLock(dockPanel, true))
             {
                 LoadLayoutLocked(layoutStream);
             }

@@ -159,7 +159,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         protected override void UpdateChildren(bool materialize)
         {
-            UpdateNodes<TransitionGroupTreeNode>(SequenceTree, Nodes, DocNode.Children, materialize,
+            UpdateNodes(SequenceTree, Nodes, DocNode.Children, materialize,
                                                  TransitionGroupTreeNode.CreateInstance);
         }
 

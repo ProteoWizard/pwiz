@@ -38,7 +38,7 @@ namespace pwiz.Skyline.SettingsUI
         { 
             get
             {
-                int windowsPerScan = 0;
+                int windowsPerScan;
                 int.TryParse(textWindowsPerScan.Text, out windowsPerScan);
                 return windowsPerScan;
             }

@@ -351,7 +351,7 @@ namespace pwiz.Skyline.Model
         /// <param name="traversal">The active traversal object</param>
         /// <param name="tag">The tag instance that will be used to perform the action</param>
         /// <returns>An altered copy of the parent node</returns>
-        public delegate DocNodeParent Recurse<TTag>(DocNodeParent parent, IdentityPathTraversal traversal, TTag tag);
+        public delegate DocNodeParent Recurse<in TTag>(DocNodeParent parent, IdentityPathTraversal traversal, TTag tag);
 
         /// <summary>
         /// Action function provided by the caller of <see cref="IdentityPathTraversal.Traverse{T}"/>
@@ -359,7 +359,7 @@ namespace pwiz.Skyline.Model
         /// <typeparam name="TTag">Type of the tag object used at the final node to perform the action</typeparam>
         /// <param name="tag">The tag instance that will be used to perform the action</param>
         /// <returns>An altered copy of the node on which the action was performed</returns>
-        public delegate DocNodeParent Act<TTag>(TTag tag);
+        public delegate DocNodeParent Act<in TTag>(TTag tag);
 
         /// <summary>
         /// Traverses the <see cref="DocNode"/> tree, performing an action on the

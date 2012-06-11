@@ -535,7 +535,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         /// <param name="tree">The <see cref="SequenceTree"/> instance which will contain the node</param>
         /// <param name="nodeDoc">The <see cref="DocNode"/> for which a tree node is required</param>
         /// <returns>A new tree node</returns>
-        public delegate TNode CreateTreeNode<TNode>(SequenceTree tree, DocNode nodeDoc)
+        public delegate TNode CreateTreeNode<out TNode>(SequenceTree tree, DocNode nodeDoc)
             where TNode : SrmTreeNode;
 
         /// <summary>

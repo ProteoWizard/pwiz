@@ -259,7 +259,7 @@ namespace pwiz.Skyline.Controls
 
                 BeginUpdateMS();
 
-                SrmTreeNodeParent.UpdateNodes<PeptideGroupTreeNode>(this, Nodes, document.Children,
+                SrmTreeNodeParent.UpdateNodes(this, Nodes, document.Children,
                     true, PeptideGroupTreeNode.CreateInstance);
             }
             finally

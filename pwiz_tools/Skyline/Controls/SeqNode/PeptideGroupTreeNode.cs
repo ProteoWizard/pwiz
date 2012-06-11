@@ -93,7 +93,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         protected override void UpdateChildren(bool materialize)
         {
-            UpdateNodes<PeptideTreeNode>(SequenceTree, Nodes, DocNode.Children, materialize, PeptideTreeNode.CreateInstance);
+            UpdateNodes(SequenceTree, Nodes, DocNode.Children, materialize, PeptideTreeNode.CreateInstance);
         }
 
         public static string DisplayText(PeptideGroupDocNode node, DisplaySettings settings)
