@@ -1,0 +1,23 @@
+libLSID	numSpecs	majorVersion	minorVersion
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:omssa.blib	2	1	1
+id	RefSpectraID	position	mass
+1	1	1	15.995005
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	retentionTime	fileID	SpecIDinFile	score	scoreType
+1	MPCTEDYLSLILNR	842.345337	2	M[+16.0]PCTEDYLSLILNR	-	-	1	316	54.4525	1	11633	0.0	10
+2	MPCTEDYLSLILNR	834.345215	2	MPCTEDYLSLILNR	-	-	1	553	55.564167	1	11885	0.0	10
+id	fileName
+1	/BiblioSpec/tests/inputs/OMSSA.mzXML
+id	scoreType
+0	UNKNOWN
+1	PERCOLATOR QVALUE
+2	PEPTIDE PROPHET SOMETHING
+3	SPECTRUM MILL
+4	IDPICKER FDR
+5	MASCOT IONS SCORE
+6	TANDEM EXPECTATION VALUE
+7	PROTEIN PILOT CONFIDENCE
+8	SCAFFOLD SOMETHING
+9	WATERS MSE PEPTIDE SCORE
+10	OMSSA EXPECTATION SCORE
+11	PROTEIN PROSPECTOR EXPECTATION SCORE
+12	SEQUEST XCORR

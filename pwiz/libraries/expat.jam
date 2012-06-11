@@ -1,0 +1,122 @@
+#~ Copyright Redshift Software, Inc. 2006.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+### Support for building eXpat library <http://expat.sourceforge.net/>.
+### Targets:
+###     /ext/expat//expat
+
+import extension ;
+import tar ;
+
+
+import property ;
+import project ;
+import feature ;
+import common ;
+
+extension.declare expat ;
+
+rule config_h ( targets * : sources * : properties * )
+{
+    local define ;
+    local undef ;
+    switch [ property.select <target-os> : $(properties) ]
+    {
+        case *linux* :
+        define +=
+            HAVE_BCOPY HAVE_DLFCN_H HAVE_FCNTL_H HAVE_GETPAGESIZE HAVE_INTTYPES_H
+            HAVE_MEMMOVE HAVE_MEMORY_H HAVE_MMAP HAVE_STDINT_H HAVE_STDLIB_H
+            HAVE_STRINGS_H HAVE_STRING_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H
+            HAVE_UNISTD_H STDC_HEADERS XML_DTD XML_NS
+            ;
+        undef +=
+            WORDS_BIGENDIAN const off_t size_t
+            ;
+        BYTEORDER on $(<) = 1234 ;
+        
+        case *windows* :
+        define +=
+            HAVE_DLFCN_H HAVE_FCNTL_H HAVE_INTTYPES_H
+            HAVE_MEMMOVE HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H
+            HAVE_STRINGS_H HAVE_STRING_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H
+            HAVE_UNISTD_H STDC_HEADERS XML_DTD XML_NS
+            ;
+        undef +=
+            HAVE_BCOPY HAVE_GETPAGESIZE HAVE_MMAP WORDS_BIGENDIAN const off_t size_t
+            ;
+        BYTEORDER on $(<) = 1234 ;
+    }
+    local version = [ property.select <expat-version> : $(properties) ] ;
+    VERSION on $(<) = $(version:G=) ;
+    CONFIG on $(<) =
+        "#define $(define) 1"
+        "#undef $(undef)" ;
+    NL on $(<) = "
+" ;
+}
+actions config_h
+{
+    @($(STDOUT):E=
+#ifndef EXPAT_CONFIG_H
+#define EXPAT_CONFIG_H
+
+#define PACKAGE_BUGREPORT "expat-bugs@lists.sourceforge.net"
+#define PACKAGE_NAME "expat"
+#define PACKAGE_STRING "expat $(VERSION)"
+#define PACKAGE_TARNAME "expat"
+#define PACKAGE_VERSION "$(VERSION)"
+#define XML_CONTEXT_BYTES 1024
+#define BYTEORDER $(BYTEORDER)
+$(CONFIG:J=$(NL))
+
+#endif // EXPAT_CONFIG_H
+) > "$(<)"
+}
+
+rule init ( version ? : location : options * )
+{
+
+  if ! $(.initialized)
+  {
+     .initialized = true ;
+
+     tar.extract $(location).tar.bz2 : *.c *.h : : : check-last-file-only ;
+     
+    version ?= default ;
+    local requirements = [ extension.define expat $(version) : $(location) : $(options) ] ;
+    
+    make expat_config.h : : @config_h
+        :   <expat-version>$(version)
+            <location-prefix>src
+        ;
+        explicit expat_config.h ;
+    
+    lib expat
+        :   $(location)/lib/xmlparse.c
+            $(location)/lib/xmltok.c
+            $(location)/lib/xmlrole.c
+        :   $(requirements)
+            <expat-version>$(version)
+            <expat-location>$(location)
+            <include>$(location)/lib
+            <location-prefix>expat
+            <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+            <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+            <define>HAVE_EXPAT_CONFIG_H
+            <implicit-dependency>expat_config.h
+            <dependency>expat_config.h
+            #~ <link>shared:<define>EXPAT_EXPORTS
+            #~ <link>shared:<define>XML_BUILDING_EXPAT
+            <link>static
+            <link>static:<define>XML_STATIC
+        :
+        :   <include>$(location)/lib
+            <define>HAVE_EXPAT_CONFIG_H
+            <implicit-dependency>expat_config.h
+            <dependency>expat_config.h
+            <link>static:<define>XML_STATIC
+        ;
+  }
+}

@@ -1,0 +1,155 @@
+#
+# $Id: Jamfile.jam 1328 2009-09-16 17:50:26Z chambm $
+#
+#
+# Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+#                  MacCoss Lab, Department of Genome Sciences, UW
+#
+# Copyright 2009 University of Washington - Seattle, WA
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); 
+# you may not use this file except in compliance with the License. 
+# You may obtain a copy of the License at 
+# 
+# http://www.apache.org/licenses/LICENSE-2.0
+# 
+# Unless required by applicable law or agreed to in writing, software 
+# distributed under the License is distributed on an "AS IS" BASIS, 
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+# See the License for the specific language governing permissions and 
+# limitations under the License.
+#
+
+
+import modules ;
+if [ modules.peek : NT ] && --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+{
+    import path feature ;
+    path-constant TOPOGRAPH_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Topograph ;
+    path-constant PWIZ_WRAPPER_PATH : $(PWIZ_ROOT_PATH)/pwiz_tools/Shared/ProteowizardWrapper ;
+
+    # read these from global module
+    TEST_PRECOMMAND = [ modules.peek : TEST_PRECOMMAND ] ;
+    TEST_POSTCOMMAND = [ modules.peek : TEST_POSTCOMMAND ] ;
+
+    rule build-properties ( targets + : sources * : properties * )
+    {
+        if <variant>debug in $(properties) ||
+           <debug-symbols>on in $(properties)
+        {
+            CONFIGURATION on $(<[1]) = "Debug" ;
+        }
+        else
+        {
+            CONFIGURATION on $(<[1]) = "Release" ;
+        }
+
+        local location = [ path.make [ feature.get-values location : $(properties) ] ] ;
+        OUTPUT_PATH on $(<[1]) = [ path.native $(location)/ ] ; # OutDir requires trailing slash
+        JAM_SEMAPHORE on $(targets) = "dotNetSemaphore" ;
+    }
+    
+    rule do_topograph_build ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_topograph_build
+    {
+        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        echo Building Topograph in $(CONFIGURATION:L) configuration...
+        msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographApp /nologo /verbosity:minimal
+    }
+    
+    rule build-location ( properties * )
+    {
+        local result ;
+        # don't override the location when it's already set
+        if ! <location> in $(properties:G)
+        {
+            if <variant>debug in $(properties) ||
+               <debug-symbols>on in $(properties)
+            {
+                result = <location>$(TOPOGRAPH_PATH)/bin/$(PLATFORM)/Debug ;
+            }
+            else
+            {
+                result = <location>$(TOPOGRAPH_PATH)/bin/$(PLATFORM)/Release ;
+            }
+            return $(result) ;
+        }
+        else
+        {
+            return $(properties) ;
+        }
+    }
+
+
+    make Topograph.exe
+        : # sources
+        : # actions
+            @do_topograph_build
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
+            <conditional>@build-location
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/$(PLATFORM)
+        ;
+#Test
+    rule do_topograph_test ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_topograph_test
+    {
+        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        echo Unit testing Topograph in $(CONFIGURATION:L) configuration...
+        set name="Topograph unit test"
+        $(TEST_PRECOMMAND)
+        msbuild $(TOPOGRAPH_PATH)/Topograph.sln /p:Configuration=$(CONFIGURATION);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH) /t:TopographTestProject /nologo /verbosity:minimal
+        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /nologo /verbosity:minimal
+        set status=%ERRORLEVEL%
+        $(TEST_POSTCOMMAND)
+    }
+
+    rule do_topograph_test_passed ( targets + : sources * : properties * )
+    {
+        return [ build-properties $(targets) : $(sources) : $(properties) ] ;
+    }
+
+    actions do_topograph_test_passed
+    {
+        IF EXIST "%VS100COMNTOOLS%" CALL "%VS100COMNTOOLS%\..\..\VC\vcvarsall.bat" $(PROCESSOR_ARCHITECTURE) >nul
+        echo Copying Topograph test output in $(CONFIGURATION:L) configuration...
+        msbuild $(TOPOGRAPH_PATH)/Topograph.test.proj /p:SolutionDir=$(TOPOGRAPH_PATH);Platform=$(PLATFORM);OutDir=$(OUTPUT_PATH);TestProject=TopographTestProject /t:MSTest:Clean /nologo /verbosity:minimal
+    }
+
+    make TopographTestProject.dll
+        : # sources
+        : # actions
+            @do_topograph_test
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>Topograph.exe
+        ;
+    make Topograph.passed
+        : # sources
+        : # actions
+            @do_topograph_test_passed
+        : # requirements
+            <link>shared:<build>no
+            <conditional>@no-express-requirement
+            <conditional>@msvc-dotnet-requirement
+            <conditional>@build-location
+            <dependency>TopographTestProject.dll
+        ;
+
+}

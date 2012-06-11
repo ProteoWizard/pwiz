@@ -1,0 +1,27 @@
+libLSID	numSpecs	majorVersion	minorVersion
+urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:scaffold.blib	4	1	1
+id	RefSpectraID	position	mass
+1	2	2	57.0
+2	2	8	57.0
+id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	retentionTime	fileID	SpecIDinFile	score	scoreType
+1	GEQYVLEK	483.228638	2	GEQYVLEK	-	-	1	85	0.0	1	ScaffoldIDNumber_126_bovine_spot_06.252.252.2.dta	0.990266	8
+2	RCELTAECPNLTESLLEK	1082.203638	2	RC[+57.0]ELTAEC[+57.0]PNLTESLLEK	-	-	1	256	0.0	1	ScaffoldIDNumber_177_bovine_spot_06.532.532.2.dta	1.0	8
+3	ENFLGR	728.518638	1	ENFLGR	-	-	1	168	0.0	2	ScaffoldIDNumber_1023_bovine_spot_10.237.237.1.dta	0.950278	8
+4	ENFIGR	728.518638	1	ENFIGR	-	-	1	168	0.0	2	ScaffoldIDNumber_1023_bovine_spot_10.237.237.1.dta	0.950278	8
+id	fileName
+1	C:/Users/Jason/Documents/Users manual project/Users manual data/bovine_lens_gel_swissprot_Sequest/bovine_spot_06.zip
+2	C:/Users/Jason/Documents/Users manual project/Users manual data/bovine_lens_gel_swissprot_Sequest/bovine_spot_10.zip
+id	scoreType
+0	UNKNOWN
+1	PERCOLATOR QVALUE
+2	PEPTIDE PROPHET SOMETHING
+3	SPECTRUM MILL
+4	IDPICKER FDR
+5	MASCOT IONS SCORE
+6	TANDEM EXPECTATION VALUE
+7	PROTEIN PILOT CONFIDENCE
+8	SCAFFOLD SOMETHING
+9	WATERS MSE PEPTIDE SCORE
+10	OMSSA EXPECTATION SCORE
+11	PROTEIN PROSPECTOR EXPECTATION SCORE
+12	SEQUEST XCORR

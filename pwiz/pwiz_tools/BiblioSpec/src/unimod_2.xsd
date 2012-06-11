@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- edited with XMLSpy v2007 (http://www.altova.com) by John S Cottrell (Matrix Science Ltd) -->
+<!--
+  @(#)$Source: /vol/cvsroot/parser/xml/schema/unimod_2.xsd,v $
+  @(#)$Revision: 1.7 $
+  @(#)$Name: MSPARSER_RELBRN_2_4_0 $
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:umod="http://www.unimod.org/xmlns/schema/unimod_2" targetNamespace="http://www.unimod.org/xmlns/schema/unimod_2" elementFormDefault="qualified" attributeFormDefault="unqualified">
+	<xs:annotation>
+		<xs:documentation>
+        Schema document for unimod.xml file version 2.0
+    </xs:documentation>
+	</xs:annotation>
+	<xs:element name="unimod" type="umod:unimod_t">
+		<xs:unique name="elem_title_unique">
+			<xs:selector xpath="umod:elements/umod:elem"/>
+			<xs:field xpath="@title"/>
+		</xs:unique>
+		<xs:key name="elem_title_key">
+			<xs:selector xpath="umod:elements/umod:elem"/>
+			<xs:field xpath="@title"/>
+		</xs:key>
+		<xs:unique name="mod_title_unique">
+			<xs:selector xpath="umod:modifications/umod:mod"/>
+			<xs:field xpath="@title"/>
+		</xs:unique>
+		<xs:keyref name="specificity_aa_keyref" refer="umod:aa_title_key">
+			<xs:selector xpath="umod:modifications/umod:mod/umod:specificity"/>
+			<xs:field xpath="@site"/>
+		</xs:keyref>
+		<xs:keyref name="specificity_NeutralLoss_elem_keyref" refer="umod:elem_title_key">
+			<xs:selector xpath="umod:modifications/umod:mod/umod:specificity/umod:NeutralLoss/umod:element"/>
+			<xs:field xpath="@symbol"/>
+		</xs:keyref>
+		<xs:keyref name="delta_elem_keyref" refer="umod:elem_title_key">
+			<xs:selector xpath="umod:modifications/umod:mod/umod:delta/umod:element"/>
+			<xs:field xpath="@symbol"/>
+		</xs:keyref>
+		<xs:keyref name="PepNeutralLoss_elem_keyref" refer="umod:elem_title_key">
+			<xs:selector xpath="umod:modifications/umod:mod/umod:PepNeutralLoss/umod:element"/>
+			<xs:field xpath="@symbol"/>
+		</xs:keyref>
+		<xs:keyref name="Ignore_elem_keyref" refer="umod:elem_title_key">
+			<xs:selector xpath="umod:modifications/umod:mod/umod:Ignore/umod:element"/>
+			<xs:field xpath="@symbol"/>
+		</xs:keyref>
+		<xs:unique name="brick_title_unique">
+			<xs:selector xpath="umod:mod_bricks/umod:brick"/>
+			<xs:field xpath="@title"/>
+		</xs:unique>
+		<xs:keyref name="brick_elem_keyref" refer="umod:elem_title_key">
+			<xs:selector xpath="umod:mod_bricks/umod:brick/umod:element"/>
+			<xs:field xpath="@symbol"/>
+		</xs:keyref>
+		<xs:unique name="aa_title_unique">
+			<xs:selector xpath="umod:amino_acids/umod:aa"/>
+			<xs:field xpath="@title"/>
+		</xs:unique>
+		<xs:key name="aa_title_key">
+			<xs:selector xpath="umod:amino_acids/umod:aa"/>
+			<xs:field xpath="@title"/>
+		</xs:key>
+		<xs:keyref name="aa_elem_keyref" refer="umod:elem_title_key">
+			<xs:selector xpath="umod:amino_acids/umod:aa/umod:element"/>
+			<xs:field xpath="@symbol"/>
+		</xs:keyref>
+	</xs:element>
+	<xs:complexType name="unimod_t">
+		<xs:sequence>
+			<xs:element name="elements" type="umod:elements_t" minOccurs="0"/>
+			<xs:element name="modifications" type="umod:modifications_t" minOccurs="0"/>
+			<xs:element name="amino_acids" type="umod:amino_acids_t" minOccurs="0"/>
+			<xs:element name="mod_bricks" type="umod:mod_bricks_t" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="majorVersion" type="xs:unsignedShort" use="required" fixed="2"/>
+		<xs:attribute name="minorVersion" type="umod:minorVersion_t" use="required"/>
+	</xs:complexType>
+	<xs:simpleType name="minorVersion_t">
+		<xs:annotation>
+			<xs:documentation>Schema minor version number</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:unsignedShort">
+			<xs:maxInclusive value="0"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="elements_t">
+		<xs:sequence>
+			<xs:element name="elem" type="umod:elem_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="modifications_t">
+		<xs:sequence>
+			<xs:element name="mod" type="umod:mod_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="amino_acids_t">
+		<xs:sequence>
+			<xs:element name="aa" type="umod:aa_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="mod_bricks_t">
+		<xs:sequence>
+			<xs:element name="brick" type="umod:brick_t" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="elem_t">
+		<xs:attribute name="title" type="xs:string" use="required"/>
+		<xs:attribute name="full_name" type="xs:string" use="required"/>
+		<xs:attribute name="avge_mass" type="xs:double" use="required"/>
+		<xs:attribute name="mono_mass" type="xs:double" use="required"/>
+	</xs:complexType>
+	<xs:complexType name="mod_t">
+		<xs:sequence>
+			<xs:element name="specificity" type="umod:specificity_t" maxOccurs="unbounded"/>
+			<xs:element name="delta" type="umod:composition_t">
+				<xs:annotation>
+					<xs:documentation>The modification delta defined as a composition</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="Ignore" type="umod:composition_t" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>Artefact peaks associated with this modification</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="alt_name" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="xref" type="umod:xref_t" minOccurs="0" maxOccurs="unbounded"/>
+			<xs:element name="misc_notes" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="title" type="xs:string" use="required"/>
+		<xs:attribute name="full_name" type="xs:string" use="required"/>
+		<xs:attribute name="username_of_poster" type="xs:string" use="required"/>
+		<xs:attribute name="group_of_poster" type="xs:string" use="optional"/>
+		<xs:attribute name="date_time_posted" type="xs:string" use="required"/>
+		<xs:attribute name="date_time_modified" type="xs:string" use="required"/>
+		<xs:attribute name="approved" type="xs:boolean" use="optional"/>
+		<xs:attribute name="ex_code_name" type="xs:string" use="optional"/>
+		<xs:attribute name="record_id" type="xs:long" use="optional"/>
+	</xs:complexType>
+	<xs:complexType name="aa_t">
+		<xs:sequence>
+			<xs:element name="element" type="umod:elem_ref_t" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>This will refer to a chemical element</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="title" type="xs:string"/>
+		<xs:attribute name="three_letter" type="xs:string"/>
+		<xs:attribute name="full_name" type="xs:string"/>
+		<xs:attribute name="mono_mass" type="xs:double" use="optional"/>
+		<xs:attribute name="avge_mass" type="xs:double" use="optional"/>
+	</xs:complexType>
+	<xs:complexType name="brick_t">
+		<xs:sequence>
+			<xs:element name="element" type="umod:elem_ref_t" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>This will refer to a chemical element</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="title" type="xs:string"/>
+		<xs:attribute name="full_name" type="xs:string"/>
+		<xs:attribute name="mono_mass" type="xs:double" use="optional"/>
+		<xs:attribute name="avge_mass" type="xs:double" use="optional"/>
+	</xs:complexType>
+	<xs:complexType name="specificity_t">
+		<xs:sequence>
+			<xs:element name="NeutralLoss" type="umod:NeutralLoss_t" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A neutral loss for the sequence ions, e.g. loss of phosphate</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="PepNeutralLoss" type="umod:PepNeutralLoss_t" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>A neutral loss from the precursor</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+			<xs:element name="misc_notes" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+		<xs:attribute name="hidden" type="xs:boolean" use="optional" default="false"/>
+		<xs:attribute name="site" type="xs:string" use="required">
+			<xs:annotation>
+				<xs:documentation>References an aa-entry in amino_acids-table</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="position" type="umod:position_t" use="required">
+			<xs:annotation>
+				<xs:documentation>E.g. Anywhere</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="classification" type="umod:classification_t" use="required"/>
+		<xs:attribute name="spec_group" type="xs:integer" use="optional" default="1">
+			<xs:annotation>
+				<xs:documentation>Several specificities (non-conflicting) can be grouped into 
+one mod when outputting it to mod_file. One can group two or more specificities if they have 
+the same spec_group-value. If the attribute is omitted then we assume that all specificities
+for the current modification are non-conflicting and belong to a group number 1.</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:complexType name="composition_t">
+		<xs:sequence>
+			<xs:element name="element" type="umod:elem_ref_t" minOccurs="0" maxOccurs="unbounded">
+				<xs:annotation>
+					<xs:documentation>This will refer to a chemical element</xs:documentation>
+				</xs:annotation>
+			</xs:element>
+		</xs:sequence>
+		<xs:attribute name="composition" type="xs:string" use="required"/>
+		<xs:attribute name="mono_mass" type="xs:double" use="optional"/>
+		<xs:attribute name="avge_mass" type="xs:double" use="optional"/>
+	</xs:complexType>
+	<xs:complexType name="NeutralLoss_t">
+		<xs:complexContent>
+			<xs:extension base="umod:composition_t">
+				<xs:attribute name="flag" type="xs:boolean" use="optional" default="false">
+					<xs:annotation>
+						<xs:documentation>
+Neutral losses can be potentially a scoring series (false) or non-scoring satellite peaks (true)
+                    </xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="PepNeutralLoss_t">
+		<xs:complexContent>
+			<xs:extension base="umod:composition_t">
+				<xs:attribute name="required" type="xs:boolean" use="optional" default="false">
+					<xs:annotation>
+						<xs:documentation>True if this is a required neutral loss</xs:documentation>
+					</xs:annotation>
+				</xs:attribute>
+			</xs:extension>
+		</xs:complexContent>
+	</xs:complexType>
+	<xs:complexType name="elem_ref_t">
+		<xs:attribute name="symbol" type="xs:string" use="required">
+			<xs:annotation>
+				<xs:documentation>Symbol for chemical element, isotope or a brick title</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+		<xs:attribute name="number" type="xs:integer" use="optional" default="1">
+			<xs:annotation>
+				<xs:documentation>Count for this element or isotope. Can be negative</xs:documentation>
+			</xs:annotation>
+		</xs:attribute>
+	</xs:complexType>
+	<xs:simpleType name="position_t">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Anywhere"/>
+			<xs:enumeration value="Any N-term"/>
+			<xs:enumeration value="Any C-term"/>
+			<xs:enumeration value="Protein N-term"/>
+			<xs:enumeration value="Protein C-term"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="xref_t">
+		<xs:sequence>
+			<xs:element name="text" type="xs:string"/>
+			<xs:element name="source" type="umod:xref_source_t"/>
+			<xs:element name="url" type="xs:string" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="xref_source_t">
+		<xs:annotation>
+			<xs:documentation>This list can be updated in future.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="-"/>
+			<xs:enumeration value="PubMed PMID"/>
+			<xs:enumeration value="CAS Registry"/>
+			<xs:enumeration value="CarbBank"/>
+			<xs:enumeration value="RESID"/>
+			<xs:enumeration value="Swiss-Prot"/>
+			<xs:enumeration value="Prosite"/>
+			<xs:enumeration value="Entrez"/>
+			<xs:enumeration value="Book"/>
+			<xs:enumeration value="Journal"/>
+			<xs:enumeration value="Misc. URL"/>
+			<xs:enumeration value="FindMod"/>
+			<xs:enumeration value="Other"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="classification_t">
+		<xs:annotation>
+			<xs:documentation>This list can be updated in future.</xs:documentation>
+		</xs:annotation>
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="-"/>
+			<xs:enumeration value="Post-translational"/>
+			<xs:enumeration value="Co-translational"/>
+			<xs:enumeration value="Pre-translational"/>
+			<xs:enumeration value="Chemical derivative"/>
+			<xs:enumeration value="Artefact"/>
+			<xs:enumeration value="N-linked glycosylation"/>
+			<xs:enumeration value="O-linked glycosylation"/>
+			<xs:enumeration value="Other glycosylation"/>
+			<xs:enumeration value="Synth. pep. protect. gp."/>
+			<xs:enumeration value="Isotopic label"/>
+			<xs:enumeration value="Non-standard residue"/>
+			<xs:enumeration value="Multiple"/>
+			<xs:enumeration value="Other"/>
+			<xs:enumeration value="AA substitution"/>
+		</xs:restriction>
+	</xs:simpleType>
+</xs:schema>

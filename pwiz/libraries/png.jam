@@ -1,0 +1,69 @@
+#
+# $Id$
+#
+
+#~ Copyright Redshift Software, Inc. 2006.
+#~ Distributed under the Boost Software License, Version 1.0.
+#~ (See accompanying file LICENSE_1_0.txt or copy at
+#~ http://www.boost.org/LICENSE_1_0.txt)
+
+### Support for building PNG library <http://www.libpng.org/>.
+### Targets:
+###     /ext/png//png
+
+import extension ;
+
+import property ;
+import project ;
+import feature ;
+import common ;
+import set ;
+import tar ;
+import errors ;
+
+extension.declare png ;
+
+rule init ( version ? : location : options * )
+{
+    if ! $(.initialized)
+    {
+        .initialized = true ;
+
+        version ?= default ;
+        local requirements = [ extension.define png $(version) : $(location) : $(options) ] ;
+
+        local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
+        zlib-src-location ?= $(location)/../zlib-1.2.3 ;
+        path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
+        using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+
+        tar.extract $(location).tar.bz2 : *.c *.h *.prebuilt : : : check-last-file-only ;
+
+        local sources = [ set.difference [ glob $(location)/png*.c ] : [ glob $(location)/pngtest.c ] ] ;
+        if ! $(sources) { errors.error "No sources found for LibPNG at \"$(location)\". Check that you're passing a valid location." ; }
+
+        make $(location)/pnglibconf.h : $(location)/scripts/pnglibconf.h.prebuilt : common.copy ;
+
+        lib png
+            :   [ set.difference [ glob $(location)/png*.c ] : [ glob $(location)/pngtest.c ] ]
+            :   $(requirements)
+                <png-version>$(version)
+                <png-location>$(location)
+                <include>$(location)
+                <location-prefix>png
+                <dependency>$(location)/pnglibconf.h
+                <target-os>windows,<link>shared:<define>PNG_BUILD_DLL
+                <library>/ext/zlib//z
+                
+                <toolset>msvc,<link>shared:<define>PNG_IMPEXP=__declspec(dllexport)
+                <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
+                <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+            :
+            :   <include>$(location)
+                <target-os>windows,<link>shared:<define>PNG_USE_DLL
+                <library>/ext/zlib//z
+                
+                <toolset>msvc,<link>shared:<define>PNG_IMPEXP=__declspec(dllimport)
+            ;
+    }
+}

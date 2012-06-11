@@ -1,0 +1,166 @@
+<html>
+<!--
+FILE: fileFormats.html
+AUTHOR: Barbara Frewen
+CREATE DATE: 5/9/11
+PROJECT: BiblioSpec
+-->
+<head>
+<title>BiblioSpec file formats</title>
+</head>
+
+
+<body bgcolor=white>
+<center><h1>BiblioSpec input and output file formats</h1></center>
+
+<blockquote>
+
+<p>
+BiblioSpec makes use of several file formats for input and output.
+Below are descriptions of these along with links to additional information</p>
+
+<!-- formats for sqlite tables, ms2 as output-->
+
+<a name="ssl"></a>
+<h3>BlibBuild .ssl file</h3>
+
+<p>
+In most cases libraries are built from database search result files.
+For peptide identificatiosn that do not come from one of the supported
+database searches, BiblioSpec supports a generic tab-delimited text
+file format refered to as ssl (spectrum sequence list).  Here is a
+small <a href="egssl.txt">example file</a>.  An ssl file
+must begin with this header line<p><pre> 
+file	scan	charge	sequence	modifications
+</pre>
+
+<p>
+Each of the following lines contains information for one spectrum.
+The first column contains a full or relative path to a file containing
+the spectrum.  The second column has an id for that spectrum,
+typically a scan number or index number.  The third column is the
+charge state of the spectrum, followed by the peptide sequence.  The
+final column contains the same sequence, this time with the addition
+of any modifications given as a mass shift (the difference between the
+modified and unmodified residue).  For example, 
+<pre>TASEFDC[+57.0]SAIO[+16.0]AQDK</pre>
+
+<p>
+<i>Known bug:</i> There is currently no way to include the score or
+search type from this file.
+
+<a name="lib"></a>
+<h3>Library files</h3>
+
+<p>
+BiblioSpec library files are in the sqlite3 format.  Each library is a
+small database that you can search and manipulate with standard SQL
+commands using, for example, the sqlite3 command line tools.
+BiblioSpec does not require that you know any SQL, but should you be
+interested in using these files outside of the BiblioSpec context, we
+give you the schema.
+
+<p>
+The libraries consist of these tables: LibInfo, RefSpectra,
+SpectrumSourceFiles, ScoreTypes. <i>Coming soon:</i> the complete
+schema for each table with a description of each field.
+
+<a name="ms2"></a>
+<h3>Library as text (MS2)</h3>
+
+<p>
+<a href="BlibToMs2.html">BlibToMs2</a> allows you to view the spectra in
+your library in the .ms2 text format.  This format is recongnized by
+<a href="http://proteowizard.sourceforge.net">proteowizard's</a> 
+msconvert and can be converted into other formats such as .mzXML.  
+
+<p>
+In an .ms2 file there are four types of lines.  Lines beginning with
+'H' are header lines and contain information about how the data was
+collected as well as comments.  They appear at the beginning of the
+file.  Lines beginning with 'S' are followed by the scan number and
+the precursor m/z.  Lines beginning with 'Z' give the charge state
+followed by the mass of the ion at that charge state.  Lines beginning
+with 'D' contain information relevant to the preceeding charge state.
+BlibToMs2's output will include D-lines with the sequence and modified
+sequence.  The file is arranged with these S, Z and D lines for one
+spectrum followed by a peak list: a pair of values giving each peaks
+m/z and intensity. Here is an example <a href="egms2">file</a></p>
+
+<a name="report"></a>
+<h3>Report files</h3>
+
+<p>
+<a href="BlibSearch.html">BlibSearch</a> writes results to a tab-delimited
+text file refered to as the report file.  The header (lines beginning
+with '#') contains details of the search parameters.  Next is a line
+naming each of the fields. Subsequent rows summarize one query-library
+match. The fields are as follows:
+<ul>
+<li>
+<code>Query</code> The identifier for the query spectrum.
+
+<li>
+<code>LibId</code> The number of the library with the match.  The
+header lines will list all libraries being searched and assign each a
+number referenced in this column.
+
+<li>
+<code>LibSpec</code> The identifier for the library spectrum.
+
+<li>
+<code>rank</code> The rank of the match for this query spectrum.  By
+default, ranks 1-5 are printed.  In case of a tie (two matches with
+the same score) both matches will be given the same rank.
+
+<li>
+<code>dotp</code> The score given to this match (a dot product).
+Ranges from 0 (poor match) to 1 (two identical spectra).
+
+<li>
+<code>query-mz</code> The precursor m/z of the query spectrum.
+
+<li>
+<code>query-z</code> The charge of the query spectrum.  If there was
+more than one in the spectrum file, they will be listed separated by comas.
+
+<li>
+<code>lib-mz</code> The precursor m/z of the library spectrum.
+
+<li>
+<code>lib-z</code> The charge of the library spectrum.
+
+<li>
+<code>copies</code> The number of spectra in the redundant library for
+this same sequence and charge state.
+
+<li>
+<code>candidates</code> The number of library spectra the query was
+compared to.
+
+<li>
+<code>sequence</code> The peptide sequence of the library spectrum.
+
+</ul>
+
+<p>
+
+<a name="param">
+<h3>Parameter files</h3>
+
+<p>
+All BibliSpec tools (with the exception of BlibBuild and LibToSqlite3) 
+will accept a parameter file in which additional options can be
+specified.  See each tool's documentation page for the specific
+options allowed.  The file should contain one option per line with the
+full option name and value separated by an equals sign (=).  Here is
+an <a href="soon.html">example parameter file</a>.
+
+
+
+</blockquote>
+
+<hr><a href="index.html">BiblioSpec</a>
+</body>
+
+</html>

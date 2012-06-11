@@ -1,0 +1,2 @@
+exe msmucker
+    : msmucker.cpp MuckedMSRun.cpp ..//msrun ..//boost_program_options ;
