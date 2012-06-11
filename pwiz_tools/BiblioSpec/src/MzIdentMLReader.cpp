@@ -48,7 +48,10 @@ MzIdentMLReader::MzIdentMLReader
     scoreThreshold_ = getScoreThreshold(SCAFFOLD);
 }
 
-MzIdentMLReader::~MzIdentMLReader(){}
+MzIdentMLReader::~MzIdentMLReader()
+{
+    delete pwizReader_;
+}
     
 /**
  * Implementation of BuildParser virtual method.  Reads the .mzid file,
