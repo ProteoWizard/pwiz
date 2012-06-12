@@ -103,6 +103,7 @@
     <Reference Include="System.XML" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbsoluteQuantTutorialTest.cs" />
     <Compile Include="CEOptimizationTutorialTest.cs" />
     <Compile Include="CustomReportsTutorialTest.cs" />
     <Compile Include="ExistingExperimentsTutorialTest.cs" />

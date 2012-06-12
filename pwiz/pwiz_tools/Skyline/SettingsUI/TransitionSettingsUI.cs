@@ -910,6 +910,18 @@ namespace pwiz.Skyline.SettingsUI
             set { textIonTypes.Text = value; }
         }
 
+        public string RangeFrom
+        {
+            get { return comboRangeFrom.SelectedItem.ToString(); }
+            set { comboRangeFrom.SelectedItem = value; }
+        }
+
+        public string RangeTo
+        {
+            get { return comboRangeTo.SelectedItem.ToString(); }
+            set { comboRangeTo.SelectedItem = value; }
+        }
+
         public int InstrumentMaxMz
         {
             get { return Int32.Parse(textMaxMz.Text); }
@@ -956,6 +968,12 @@ namespace pwiz.Skyline.SettingsUI
         public DeclusteringPotentialRegression RegressionDP
         {
             get { return (DeclusteringPotentialRegression) comboDeclusterPotential.SelectedItem; }
+            set { comboDeclusterPotential.SelectedItem = value; }
+        }
+
+        public string RegressionDPName
+        {
+            get { return comboDeclusterPotential.SelectedItem.ToString(); }
             set { comboDeclusterPotential.SelectedItem = value; }
         }
 

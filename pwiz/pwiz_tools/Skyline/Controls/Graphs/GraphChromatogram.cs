@@ -424,7 +424,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                var graphItem = (ChromGraphItem)graphControl.GraphPane.CurveList.First().Tag;
+                var graphItem = graphControl.GraphPane.CurveList.Select(c => c.Tag).Cast<ChromGraphItem>()
+                    .First(g => g.BestPeakTime > 0);
                 return graphItem.BestPeakTime;
             }
         }
