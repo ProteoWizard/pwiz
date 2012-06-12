@@ -82,7 +82,6 @@ namespace pwiz.Topograph.ui.Forms
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.progressBar1);
             this.Controls.Add(this.tbxMessage);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "LongWaitDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "LongWaitDialog";

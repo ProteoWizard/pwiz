@@ -252,7 +252,6 @@
             this.ClientSize = new System.Drawing.Size(647, 400);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MercuryForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "Isotope Distributions";

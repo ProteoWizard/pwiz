@@ -21,6 +21,7 @@ using System.Collections;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Util;
+using pwiz.Topograph.ui.Properties;
 
 namespace pwiz.Topograph.ui.Forms
 {
@@ -29,6 +30,7 @@ namespace pwiz.Topograph.ui.Forms
         public ErrorForm()
         {
             InitializeComponent();
+            Icon = Resources.TopographIcon;
         }
 
         protected override void OnHandleCreated(EventArgs e)

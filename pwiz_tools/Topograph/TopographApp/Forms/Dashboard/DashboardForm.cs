@@ -28,6 +28,7 @@ namespace pwiz.Topograph.ui.Forms.Dashboard
         {
             InitializeComponent();
             TurnoverForm = turnoverForm;
+            Icon = Properties.Resources.TopographIcon;
             var frames = new List<Control>();
             foreach (var step in new DashboardStep[]
                                      {

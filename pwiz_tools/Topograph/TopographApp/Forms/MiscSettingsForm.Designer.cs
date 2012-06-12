@@ -187,7 +187,6 @@ namespace pwiz.Topograph.ui.Forms
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.tbxMassAccuracy);
             this.Controls.Add(this.btnOK);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MiscSettingsForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "MachineSettingsForm";

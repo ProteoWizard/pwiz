@@ -30,9 +30,9 @@ namespace pwiz.Topograph.ui.Forms
     {
         private WorkspaceForm()
         {
-            
+            Icon = Properties.Resources.TopographIcon;
         }
-        public WorkspaceForm(Workspace workspace)
+        public WorkspaceForm(Workspace workspace) : this()
         {
             Workspace = workspace;
         }

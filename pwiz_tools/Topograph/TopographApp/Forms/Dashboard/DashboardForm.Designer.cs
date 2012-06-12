@@ -60,7 +60,6 @@
             this.ClientSize = new System.Drawing.Size(288, 482);
             this.Controls.Add(this.panelSteps);
             this.Controls.Add(this.label1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "DashboardForm";
             this.TabText = "Dashboard";
             this.Text = "Dashboard";

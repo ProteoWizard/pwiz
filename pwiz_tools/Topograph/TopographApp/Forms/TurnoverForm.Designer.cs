@@ -472,7 +472,6 @@
             this.ClientSize = new System.Drawing.Size(984, 564);
             this.Controls.Add(this.dockPanel);
             this.Controls.Add(this.menuStrip1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
             this.Name = "TurnoverForm";
             this.Text = "Topograph";

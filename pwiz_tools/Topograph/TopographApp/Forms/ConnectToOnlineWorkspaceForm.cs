@@ -31,6 +31,7 @@ namespace pwiz.Topograph.ui.Forms
         public ConnectToOnlineWorkspaceForm()
         {
             InitializeComponent();
+            Icon = Resources.TopographIcon;
             comboDatabaseType.SelectedIndex = 0;
             var connectionSettings = Settings.Default.ConnectionSettings;
             tbxServer.Text = connectionSettings.Server ?? "";

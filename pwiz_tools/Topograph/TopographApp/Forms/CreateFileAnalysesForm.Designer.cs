@@ -97,7 +97,6 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.checkedListBox1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "CreateFileAnalysesForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "CreateFileAnalysesForm";

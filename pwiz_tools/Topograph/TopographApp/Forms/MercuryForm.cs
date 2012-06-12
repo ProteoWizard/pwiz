@@ -19,7 +19,6 @@ namespace pwiz.Topograph.ui.Forms
     {
         private MSGraphControl _msGraphControl;
         
-        
         public MercuryForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();

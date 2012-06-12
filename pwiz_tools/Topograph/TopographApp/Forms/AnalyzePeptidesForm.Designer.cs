@@ -306,7 +306,6 @@
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.tbxStatus);
             this.Controls.Add(this.tableLayoutPanel1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AnalyzePeptidesForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "AnalyzePeptidesForm";

@@ -253,7 +253,6 @@
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panelStatus);
             this.Controls.Add(this.panel1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AlignmentForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.TabText = "Retention Time Alignment";

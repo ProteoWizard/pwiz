@@ -46,6 +46,7 @@ namespace pwiz.Topograph.ui.Forms
         public TurnoverForm()
         {
             InitializeComponent();
+            Icon = Resources.TopographIcon;
             Instance = this;
             ShowDashboard();
             var activationArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments;

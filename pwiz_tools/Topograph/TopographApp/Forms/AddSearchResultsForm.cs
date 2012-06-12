@@ -30,7 +30,6 @@ using log4net;
 using NHibernate;
 using NHibernate.Criterion;
 using pwiz.Topograph.Data;
-using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Search;
 using pwiz.Topograph.ui.Properties;

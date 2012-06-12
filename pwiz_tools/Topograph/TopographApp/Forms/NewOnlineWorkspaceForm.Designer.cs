@@ -228,7 +228,6 @@
             this.Controls.Add(this.tbxDatabase);
             this.Controls.Add(this.tbxServer);
             this.Controls.Add(this.label1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "NewOnlineWorkspaceForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "New Online Workspace";
