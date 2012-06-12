@@ -39,8 +39,7 @@ import errors ;
 
 extension.declare boost ;
 
-# FIXME: how to get the path to the current jamfile?
-path-constant THIS_PATH : ../../libraries ;
+path-constant THIS_PATH : [ path.join [ modules.peek : search-path ] .. ] ;
 
 .boost-version = ;
 .boost-src-location = ;
@@ -166,7 +165,10 @@ rule init ( version : location : options * )
         local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
         zlib-src-location ?= $(location)/../zlib-1.2.3 ;
         path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
-        using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+        if [ path.exists $(ZLIB_SOURCE) ]
+        {
+            using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
+        }
 
         .boost-src-location = $(location) ;
         .boost-version = $(version) ;
@@ -397,11 +399,11 @@ rule init ( version : location : options * )
                 <use>boost
                 <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
                 <link>static:<define>BOOST_DATE_TIME_STATIC_LINK
-                <define>DATE_TIME_INLINE
+                #<define>NO_BOOST_DATE_TIME_INLINE
                 <define>BOOST_DATE_TIME_NO_LIB=1
             :
             :   <link>shared:<define>BOOST_DATE_TIME_DYN_LINK=1
-                <define>DATE_TIME_INLINE
+                #<define>NO_BOOST_DATE_TIME_INLINE
                 <define>BOOST_DATE_TIME_NO_LIB=1
             ;
 
