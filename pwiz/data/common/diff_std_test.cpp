@@ -150,10 +150,10 @@ void testCVParam()
 {
     if (os_) *os_ << "testCVParam()\n";
 
-    CVParam a, b;
+    CVParam a, b, c;
     a.cvid = MS_ionization_type; 
     a.value = "420";
-    b = a;
+    c = b = a;
 
     Diff<CVParam> diff(a, b);
     unit_assert(!diff);
@@ -168,6 +168,17 @@ void testCVParam()
     unit_assert(diff.b_a.cvid == MS_ionization_type);
     unit_assert(diff.a_b.value == "420");
     unit_assert(diff.b_a.value == "value_changed");
+
+    c.value = "421"; // prove fix for bug that wouldn't catch diff in int values
+    diff(a,c);
+    unit_assert(diff);
+    if (os_) *os_ << diff << endl;
+    unit_assert(diff.a_b.cvid == MS_ionization_type);
+    unit_assert(diff.b_a.cvid == MS_ionization_type);
+    unit_assert(diff.a_b.value == "420");
+    unit_assert(diff.b_a.value == "421");
+
+
 }
 
 

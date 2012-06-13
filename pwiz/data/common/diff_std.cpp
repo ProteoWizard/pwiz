@@ -50,14 +50,17 @@ void diff(const boost::logic::tribool& a,
           boost::logic::tribool& b_a,
           const BaseDiffConfig& config)
 {
-    a_b = boost::logic::indeterminate;
-    b_a = boost::logic::indeterminate;
-    
     if (a != b)
     {
         a_b = a;
         b_a = b;
     }
+    else
+    {
+        a_b = boost::logic::indeterminate;
+        b_a = boost::logic::indeterminate;
+    }    
+
 }
 
 
@@ -82,11 +85,14 @@ void diff(CVID a,
           CVID& b_a,
           const BaseDiffConfig& config)
 {
-    a_b = b_a = CVID_Unknown;
     if (a!=b)  
     {
         a_b = a;
         b_a = b;
+    }
+    else
+    {
+        a_b = b_a = CVID_Unknown;
     }
 }
 
@@ -100,29 +106,48 @@ void diff(const CVParam& a,
 {
     diff(a.cvid, b.cvid, a_b.cvid, b_a.cvid, config);
 
-    // use precision to compare floating point values
-    try
+    // start with a cheap string compare
+    if (a.value==b.value)
     {
-        lexical_cast<int>(a.value);
-        lexical_cast<int>(b.value);
-    }
-    catch (boost::bad_lexical_cast&)
+        a_b.value.clear();
+        b_a.value.clear();
+    } 
+    else
     {
         try
         {
-            double aValue = lexical_cast<double>(a.value);
-            double bValue = lexical_cast<double>(b.value);
-            double a_bValue, b_aValue;
-            diff_floating<double>(aValue, bValue, a_bValue, b_aValue, config);
-            a_b.value = lexical_cast<string>(a_bValue);
-            b_a.value = lexical_cast<string>(b_aValue);
+            // compare as ints if possible
+            int ia = lexical_cast<int>(a.value);
+            int ib = lexical_cast<int>(b.value);
+            if (ia != ib) 
+            {
+                a_b.value = lexical_cast<string>(ia);
+                b_a.value = lexical_cast<string>(ib);
+            }
+            else
+            {
+                a_b.value.clear();
+                b_a.value.clear();
+            }
         }
         catch (boost::bad_lexical_cast&)
         {
-            diff_string(a.value, b.value, a_b.value, b_a.value);
+            // use precision to compare floating point values
+            try
+            {
+                double aValue = lexical_cast<double>(a.value);
+                double bValue = lexical_cast<double>(b.value);
+                double a_bValue, b_aValue;
+                diff_floating<double>(aValue, bValue, a_bValue, b_aValue, config);
+                a_b.value = lexical_cast<string>(a_bValue);
+                b_a.value = lexical_cast<string>(b_aValue);
+            }
+            catch (boost::bad_lexical_cast&)
+            {
+                diff_string(a.value, b.value, a_b.value, b_a.value);
+            }
         }
     }
-
     diff(a.units, b.units, a_b.units, b_a.units, config);
 
     // provide names for context
