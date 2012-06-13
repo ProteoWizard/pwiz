@@ -134,7 +134,11 @@ void ProteinPilotReader::startElement(const XML_Char* name,
         }
     } else if (isElement("MSMSPEAKS", name)) {
         state_ = PEAKS_STATE;
-        expectedNumPeaks_ = getIntRequiredAttrValue("size", attr);
+		// HACK: Workaround for variable casing produced by Protein Pilot
+		const char* attrName = "Size";
+		if (strcmp(getAttrValue(attrName, attr), "") == 0)
+		    attrName = "size";
+        expectedNumPeaks_ = getIntRequiredAttrValue(attrName, attr);
         curPeaks_.clear();
         peaksStr_.clear();
     }
