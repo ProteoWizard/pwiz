@@ -2274,11 +2274,11 @@ namespace IDPicker
 
         private void aboutToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            MessageBox.Show(String.Format("IDPicker {0}\r\n" +
+            MessageBox.Show(String.Format("IDPicker {0} {1}\r\n" +
                                           "Copyright 2012 Vanderbilt University\r\n" +
                                           "Developers: Matt Chambers, Jay Holman, Surendra Dasari, Zeqiang Ma\r\n" +
                                           "Thanks to: David Tabb",
-                                          Util.Version),
+                                          Util.Version, Environment.Is64BitProcess ? "64-bit" : "32-bit"),
                             "About IDPicker");
         }
 
