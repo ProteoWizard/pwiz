@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.Diagnostics;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
 
@@ -38,9 +37,9 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
-        private static void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement");
+            WebHelpers.OpenLink(this, "https://skyline.gs.washington.edu/labkey/wiki/home/software/Skyline/page.view?name=LicenseAgreement");
         }
     }
 }

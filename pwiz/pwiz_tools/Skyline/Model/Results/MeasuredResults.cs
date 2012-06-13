@@ -432,7 +432,8 @@ namespace pwiz.Skyline.Model.Results
                     if (!IsValidCache(cache, true))
                     {
                         cache.ReadStream.CloseStream();
-                        File.Delete(cache.CachePath);
+                        var cachePath = cache.CachePath;
+                        Helpers.TryTwice(() => File.Delete(cachePath));
                         listPartialCaches.Remove(cache);
                     }
                 }

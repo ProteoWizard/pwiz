@@ -105,7 +105,7 @@ namespace pwiz.Skyline.Alerts
             // LinkData property of the Link object.
             string target = e.Link.LinkData.ToString();
 
-            System.Diagnostics.Process.Start(target);
+            WebHelpers.OpenLink(this, target);
         }
     }
 }

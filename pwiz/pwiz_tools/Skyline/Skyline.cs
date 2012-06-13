@@ -2014,39 +2014,27 @@ namespace pwiz.Skyline
 
         private void homeMenuItem_Click(object sender, EventArgs e)
         {
-            ShowUrl("http://proteome.gs.washington.edu/software/skyline/");
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/skyline/");
         }
 
         private void videosMenuItem_Click(object sender, EventArgs e)
         {
-            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/videos.html");
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/videos.html");
         }
 
         private void tutorialsMenuItem_Click(object sender, EventArgs e)
         {
-            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/tutorials.html");
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/tutorials.html");
         }
 
         private void supportMenuItem_Click(object sender, EventArgs e)
         {
-            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/support.html");
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/support.html");
         }
 
         private void issuesMenuItem_Click(object sender, EventArgs e)
         {
-            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/issues.html");
-        }
-
-        private void ShowUrl(string url)
-        {
-            try
-            {
-                Process.Start(url);
-            }
-            catch (Exception)
-            {
-                MessageDlg.Show(this, string.Format("Failure attempting to show a web browser for the URL\n{0}", url));
-            }            
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/issues.html");
         }
 
         private void aboutMenuItem_Click(object sender, EventArgs e)

@@ -17,10 +17,7 @@
  * limitations under the License.
  */
 
-using System;
 using System.Deployment.Application;
-using System.Diagnostics;
-using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Util;
 
@@ -40,29 +37,17 @@ namespace pwiz.Skyline.Alerts
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            ShowUrl("http://proteome.gs.washington.edu");
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu");
         }
 
         private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            ShowUrl("http://proteowizard.sourceforge.net/");
+            WebHelpers.OpenLink(this, "http://proteowizard.sourceforge.net/");
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/funding.html");
-        }
-
-        private void ShowUrl(string url)
-        {
-            try
-            {
-                Process.Start(url);
-            }
-            catch (Exception)
-            {
-                MessageDlg.Show(this, string.Format("Failure attempting to show a web browser for the URL\n{0}", url));
-            }
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/funding.html");
         }
     }
 }

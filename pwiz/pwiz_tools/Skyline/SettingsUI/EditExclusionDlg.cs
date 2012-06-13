@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
@@ -112,11 +111,9 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
-// ReSharper disable MemberCanBeMadeStatic.Local
         private void linkRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            Process.Start("http://www.regular-expressions.info/reference.html");
+            WebHelpers.OpenLink(this, "http://www.regular-expressions.info/reference.html");
         }
-// ReSharper restore MemberCanBeMadeStatic.Local
     }
 }

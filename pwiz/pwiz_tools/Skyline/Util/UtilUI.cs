@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 
 namespace pwiz.Skyline.Util
@@ -197,5 +199,23 @@ namespace pwiz.Skyline.Util
         public int Position { get; set; }
         public int Width { get; set; }
         public bool IsPlainText { get; set; }
+    }
+
+    /// <summary>
+    /// Helpers for doing web stuff.
+    /// </summary>
+    public sealed class WebHelpers
+    {
+        public static void OpenLink(IWin32Window parent, string link)
+        {
+            try
+            {
+                Process.Start(link);
+            }
+            catch (Exception)
+            {
+                AlertLinkDlg.Show(parent, "Could not open web browser to show link:", link, link, false);
+            }
+        }
     }
 }

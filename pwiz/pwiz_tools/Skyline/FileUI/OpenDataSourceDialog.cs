@@ -271,47 +271,42 @@ namespace pwiz.Skyline.FileUI
             {
                 foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
                 {
-                    string label;
+                    string label = "";
                     string sublabel = driveInfo.Name;
-                    int imageIndex;
+                    int imageIndex = 0;
+                    _driveReadiness[sublabel] = false;
                     try
                     {
-                        _driveReadiness[sublabel] = driveInfo.IsReady;
                         switch (driveInfo.DriveType)
                         {
                             case DriveType.Fixed:
-                                label = driveInfo.VolumeLabel.Length > 0 ? driveInfo.VolumeLabel : "Local Drive";
                                 imageIndex = 3;
+                                label = "Local Drive";
+                                if (driveInfo.VolumeLabel.Length > 0)
+                                    label = driveInfo.VolumeLabel;
                                 break;
                             case DriveType.CDRom:
+                                imageIndex = 4;
+                                label = "Optical Drive";
                                 if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
                                     label = driveInfo.VolumeLabel;
-                                else
-                                    label = "Optical Drive";
-                                imageIndex = 4;
                                 break;
                             case DriveType.Removable:
+                                imageIndex = 4;
+                                label = "Removable Drive";
                                 if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
                                     label = driveInfo.VolumeLabel;
-                                else
-                                    label = "Removable Drive";
-                                imageIndex = 4;
                                 break;
                             case DriveType.Network:
-                                label = "Network Share";
                                 imageIndex = 5;
-                                break;
-                            default:
-                                label = "";
-                                imageIndex = 0;
+                                label = "Network Share";
                                 break;
                         }
+                        _driveReadiness[sublabel] = driveInfo.IsReady;
                     }
-                    catch (UnauthorizedAccessException)
+                    catch (Exception)
                     {
-                        _driveReadiness[sublabel] = false;
-                        label = "Network Share (access failure)";
-                        imageIndex = 5;
+                        label += " (access failure)";
                     }
 
                     string name = driveInfo.Name;
@@ -430,48 +425,43 @@ namespace pwiz.Skyline.FileUI
             int driveCount = 0;
             foreach( DriveInfo driveInfo in DriveInfo.GetDrives() )
             {
-                string label;
+                string label = "";
                 string sublabel = driveInfo.Name;
-                int imageIndex;
+                int imageIndex = 8;
                 ++driveCount;
+                _driveReadiness[sublabel] = false;
                 try
                 {
-                    _driveReadiness[sublabel] = driveInfo.IsReady;
                     switch (driveInfo.DriveType)
                     {
                         case DriveType.Fixed:
-                            label = driveInfo.VolumeLabel.Length > 0 ? driveInfo.VolumeLabel : "Local Drive";
                             imageIndex = 5;
+                            label = "Local Drive";
+                            if (driveInfo.VolumeLabel.Length > 0)
+                                label = driveInfo.VolumeLabel;
                             break;
                         case DriveType.CDRom:
+                            imageIndex = 6;
+                            label = "Optical Drive";
                             if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
                                 label = driveInfo.VolumeLabel;
-                            else
-                                label = "Optical Drive";
-                            imageIndex = 6;
                             break;
                         case DriveType.Removable:
+                            imageIndex = 6;
+                            label = "Removable Drive";
                             if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
                                 label = driveInfo.VolumeLabel;
-                            else
-                                label = "Removable Drive";
-                            imageIndex = 6;
                             break;
                         case DriveType.Network:
-                            label = "Network Share";
                             imageIndex = 7;
-                            break;
-                        default:
-                            label = "";
-                            imageIndex = 8;
+                            label = "Network Share";
                             break;
                     }
+                    _driveReadiness[sublabel] = driveInfo.IsReady;
                 }
-                catch (UnauthorizedAccessException)
+                catch (Exception)
                 {
-                    _driveReadiness[sublabel] = false;
-                    label = "Network Share (access failure)";
-                    imageIndex = 7;
+                    label += " (access failure)";
                 }
                 TreeNode driveNode = myComputerNode.Nodes.Add(sublabel,
                                                               label.Length > 0
