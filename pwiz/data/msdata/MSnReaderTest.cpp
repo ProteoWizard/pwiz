@@ -202,6 +202,12 @@ int main(int argc, char* argv[])
 
         std::string buildparent(argv[0]);
         size_t pos = buildparent.find("build");
+        if (string::npos==pos)
+        {
+            buildparent = __FILE__; // nonstandard build, maybe?  try using source file name
+            // something like \ProteoWizard\pwiz\pwiz\data\msdata\RAMPAdapterTest.cpp
+            pos = buildparent.rfind("pwiz");
+        }
         buildparent.resize(pos);
         bfs::path example_data_dir = buildparent + "example_data/";
         test(example_data_dir);
