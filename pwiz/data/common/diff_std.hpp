@@ -40,8 +40,9 @@ namespace data {
     
 struct BaseDiffConfig
 {
-    BaseDiffConfig(double _precision = 1e-6) : precision(_precision) {}
+    BaseDiffConfig(double _precision = 1e-6) : precision(_precision), partialDiffOK(false) {}
     double precision;
+    bool partialDiffOK; // if true, can stop checking at first difference found
 };
 
 
@@ -412,12 +413,15 @@ void vector_diff_deep(const std::vector< boost::shared_ptr<object_type> >& a,
     a_b.clear();
     b_a.clear();
 
+    config_type quick_config(config);
+    quick_config.partialDiffOK = true; // for fastest check in SameDeep
+
     for (typename std::vector< boost::shared_ptr<object_type> >::const_iterator it=a.begin(); it!=a.end(); ++it)
-        if (std::find_if(b.begin(), b.end(), SameDeep<object_type, config_type>(**it, config)) == b.end())
+        if (std::find_if(b.begin(), b.end(), SameDeep<object_type, config_type>(**it, quick_config)) == b.end())
             a_b.push_back(*it);
 
     for (typename std::vector< boost::shared_ptr<object_type> >::const_iterator it=b.begin(); it!=b.end(); ++it)
-        if (std::find_if(a.begin(), a.end(), SameDeep<object_type, config_type>(**it, config)) == a.end())
+        if (std::find_if(a.begin(), a.end(), SameDeep<object_type, config_type>(**it, quick_config)) == a.end())
             b_a.push_back(*it);
 }
 

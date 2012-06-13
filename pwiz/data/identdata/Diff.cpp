@@ -56,6 +56,8 @@ void diff(const FragmentArray& a,
                 valuesDiff = true;
                 a_b.values.push_back(a.values[i] - b.values[i]);
                 b_a.values.push_back(b.values[i] - a.values[i]);
+                if (config.partialDiffOK)
+                    return; // we just want to know that they differ, not how they differ
             }
             else
             {
@@ -70,6 +72,8 @@ void diff(const FragmentArray& a,
                 a_b.values.push_back(a.values[i]);
             else
                 b_a.values.push_back(b.values[i]);
+            if (config.partialDiffOK)
+                return; // we just want to know that they differ, not how they differ
         }
     }
 
@@ -138,6 +142,11 @@ void diff(const DataCollection& a,
     diff(a.analysisData, b.analysisData, a_b.analysisData, b_a.analysisData, config);
 }
 
+#define QUICKCHECK() \
+    if (config.partialDiffOK && \
+        (!a_b.id.empty() || !b_a.id.empty() || \
+         !a_b.name.empty() || !b_a.name.empty())) \
+        return; // we just want to know that they differ, not how they differ
 
 PWIZ_API_DECL
 void diff(const PeptideEvidence& a,
@@ -147,6 +156,7 @@ void diff(const PeptideEvidence& a,
           const DiffConfig& config)
 {
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     ptr_diff(a.peptidePtr, b.peptidePtr, a_b.peptidePtr, b_a.peptidePtr, config);
     ptr_diff(a.dbSequencePtr, b.dbSequencePtr, a_b.dbSequencePtr, b_a.dbSequencePtr, config);
     diff_integral(a.start, b.start, a_b.start, b_a.start, config);
@@ -179,6 +189,8 @@ void diff(const SpectrumIdentificationItem& a,
                   a_b.calculatedMassToCharge, b_a.calculatedMassToCharge,
                   config);
     diff_floating(a.calculatedPI, b.calculatedPI, a_b.calculatedPI, b_a.calculatedPI, config);
+    if (config.partialDiffOK && (!a_b.empty() || !b_a.empty()))
+        return; // we just want to know that they differ, not how they differ
     ptr_diff(a.peptidePtr, b.peptidePtr, a_b.peptidePtr, b_a.peptidePtr, config);
     diff_integral(a.rank, b.rank, a_b.rank, b_a.rank, config);
 
@@ -207,6 +219,8 @@ void diff(const SpectrumIdentificationResult& a,
           const DiffConfig& config)
 {
     diff(a.spectrumID, b.spectrumID, a_b.spectrumID, b_a.spectrumID, config);
+    if (config.partialDiffOK && (!a_b.empty() || !b_a.empty()))
+        return; // we just want to know that they differ, not how they differ
     ptr_diff(a.spectraDataPtr, b.spectraDataPtr, a_b.spectraDataPtr, b_a.spectraDataPtr, config);
 
     vector_diff_deep(a.spectrumIdentificationItem, b.spectrumIdentificationItem,
@@ -303,6 +317,7 @@ void diff(const ProteinDetectionList& a,
           const DiffConfig& config)
 {    
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     vector_diff_deep(a.proteinAmbiguityGroup, b.proteinAmbiguityGroup,
                      a_b.proteinAmbiguityGroup, b_a.proteinAmbiguityGroup,
                      config);
@@ -334,6 +349,7 @@ void diff(const SearchDatabase& a,
           const DiffConfig& config)
 {
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     diff(a.location, b.location, a_b.location, b_a.location, config);
     diff(a.version, b.version, a_b.version, b_a.version, config);
     diff(a.releaseDate, b.releaseDate, a_b.releaseDate, b_a.releaseDate, config);
@@ -409,6 +425,7 @@ void diff(const Enzyme& a,
           const DiffConfig& config)
 {
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     diff(a.nTermGain, b.nTermGain, a_b.nTermGain, b_a.nTermGain,config);
     diff(a.cTermGain, b.cTermGain, a_b.cTermGain, b_a.cTermGain,config);
     diff_integral(a.terminalSpecificity, b.terminalSpecificity,
@@ -641,6 +658,7 @@ void diff(const BibliographicReference& a,
           const DiffConfig& config)
 {
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     diff(a.authors, b.authors, a_b.authors, b_a.authors, config);
     diff(a.publication, b.publication, a_b.publication, b_a.publication, config);
     diff(a.publisher, b.publisher, a_b.publisher, b_a.publisher, config);
@@ -710,6 +728,7 @@ void diff(const DBSequence& a,
           const DiffConfig& config)
 {
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     diff_integral(a.length, b.length, a_b.length, b_a.length, config);
     diff(a.accession, b.accession, a_b.accession, b_a.accession, config);
     ptr_diff(a.searchDatabasePtr, b.searchDatabasePtr, a_b.searchDatabasePtr, b_a.searchDatabasePtr, config);
@@ -725,6 +744,7 @@ void diff(const Peptide& a,
           const DiffConfig& config)
 {
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     diff(a.peptideSequence, b.peptideSequence, a_b.peptideSequence, b_a.peptideSequence, config);
     vector_diff_deep(a.modification, b.modification, a_b.modification, b_a.modification, config);
     vector_diff_deep(a.substitutionModification, b.substitutionModification,
@@ -809,6 +829,7 @@ void diff(const Provider& a,
           const DiffConfig& config)
 {
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     ptr_diff(a.contactRolePtr, b.contactRolePtr, a_b.contactRolePtr, b_a.contactRolePtr, config);
     ptr_diff(a.analysisSoftwarePtr, b.analysisSoftwarePtr,
              a_b.analysisSoftwarePtr, b_a.analysisSoftwarePtr, config);
@@ -835,6 +856,7 @@ void diff(const AnalysisSoftware& a,
           const DiffConfig& config)
 {
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     diff(a.version, b.version, a_b.version, b_a.version, config);
     ptr_diff(a.contactRolePtr, b.contactRolePtr, a_b.contactRolePtr, b_a.contactRolePtr, config);
     diff(a.softwareName, b.softwareName, a_b.softwareName, b_a.softwareName, config);
@@ -854,6 +876,7 @@ void diff(const IdentData& a,
 
     // Attributes
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
+    QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     diff(a.version(), b.version(), a_b_version, b_a_version, config);
     diff(a.creationDate, b.creationDate, a_b.creationDate, b_a.creationDate, config);
 
