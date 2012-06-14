@@ -191,8 +191,10 @@ namespace pwiz.Skyline
             this.integrateAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolsMenuSeparator = new System.Windows.Forms.ToolStripSeparator();
+            this.toolStripSeparator46 = new System.Windows.Forms.ToolStripSeparator();
             this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator47 = new System.Windows.Forms.ToolStripSeparator();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusGeneral = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusProgress = new System.Windows.Forms.ToolStripProgressBar();
@@ -559,47 +561,47 @@ namespace pwiz.Skyline
             // homeMenuItem
             // 
             this.homeMenuItem.Name = "homeMenuItem";
-            this.homeMenuItem.Size = new System.Drawing.Size(120, 22);
+            this.homeMenuItem.Size = new System.Drawing.Size(152, 22);
             this.homeMenuItem.Text = "&Home";
             this.homeMenuItem.Click += new System.EventHandler(this.homeMenuItem_Click);
             // 
             // videosMenuItem
             // 
             this.videosMenuItem.Name = "videosMenuItem";
-            this.videosMenuItem.Size = new System.Drawing.Size(120, 22);
+            this.videosMenuItem.Size = new System.Drawing.Size(152, 22);
             this.videosMenuItem.Text = "&Videos";
             this.videosMenuItem.Click += new System.EventHandler(this.videosMenuItem_Click);
             // 
             // tutorialsMenuItem
             // 
             this.tutorialsMenuItem.Name = "tutorialsMenuItem";
-            this.tutorialsMenuItem.Size = new System.Drawing.Size(120, 22);
+            this.tutorialsMenuItem.Size = new System.Drawing.Size(152, 22);
             this.tutorialsMenuItem.Text = "&Tutorials";
             this.tutorialsMenuItem.Click += new System.EventHandler(this.tutorialsMenuItem_Click);
             // 
             // supportMenuItem
             // 
             this.supportMenuItem.Name = "supportMenuItem";
-            this.supportMenuItem.Size = new System.Drawing.Size(120, 22);
+            this.supportMenuItem.Size = new System.Drawing.Size(152, 22);
             this.supportMenuItem.Text = "&Support";
             this.supportMenuItem.Click += new System.EventHandler(this.supportMenuItem_Click);
             // 
             // issuesMenuItem
             // 
             this.issuesMenuItem.Name = "issuesMenuItem";
-            this.issuesMenuItem.Size = new System.Drawing.Size(120, 22);
+            this.issuesMenuItem.Size = new System.Drawing.Size(152, 22);
             this.issuesMenuItem.Text = "&Issues";
             this.issuesMenuItem.Click += new System.EventHandler(this.issuesMenuItem_Click);
             // 
             // toolStripSeparator29
             // 
             this.toolStripSeparator29.Name = "toolStripSeparator29";
-            this.toolStripSeparator29.Size = new System.Drawing.Size(117, 6);
+            this.toolStripSeparator29.Size = new System.Drawing.Size(149, 6);
             // 
             // aboutMenuItem
             // 
             this.aboutMenuItem.Name = "aboutMenuItem";
-            this.aboutMenuItem.Size = new System.Drawing.Size(120, 22);
+            this.aboutMenuItem.Size = new System.Drawing.Size(152, 22);
             this.aboutMenuItem.Text = "&About";
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
             // 
@@ -1690,8 +1692,10 @@ namespace pwiz.Skyline
             // 
             this.toolsMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.placeholderToolsMenuItem,
-            this.toolsMenuSeparator,
-            this.configureToolsMenuItem});
+            this.toolStripSeparator46,
+            this.configureToolsMenuItem,
+            this.toolStripSeparator47,
+            this.optionsToolStripMenuItem});
             this.toolsMenu.Name = "toolsMenu";
             this.toolsMenu.Size = new System.Drawing.Size(48, 20);
             this.toolsMenu.Text = "&Tools";
@@ -1704,10 +1708,10 @@ namespace pwiz.Skyline
             this.placeholderToolsMenuItem.Size = new System.Drawing.Size(152, 22);
             this.placeholderToolsMenuItem.Text = "<placeholder>";
             // 
-            // toolsMenuSeparator
+            // toolStripSeparator46
             // 
-            this.toolsMenuSeparator.Name = "toolsMenuSeparator";
-            this.toolsMenuSeparator.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator46.Name = "toolStripSeparator46";
+            this.toolStripSeparator46.Size = new System.Drawing.Size(149, 6);
             // 
             // configureToolsMenuItem
             // 
@@ -1715,6 +1719,18 @@ namespace pwiz.Skyline
             this.configureToolsMenuItem.Size = new System.Drawing.Size(152, 22);
             this.configureToolsMenuItem.Text = "&Configure...";
             this.configureToolsMenuItem.Click += new System.EventHandler(this.configureToolsMenuItem_Click);
+            // 
+            // toolStripSeparator47
+            // 
+            this.toolStripSeparator47.Name = "toolStripSeparator47";
+            this.toolStripSeparator47.Size = new System.Drawing.Size(149, 6);
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.optionsToolStripMenuItem.Text = "Options";
+            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
             // 
             // statusStrip
             // 
@@ -3416,8 +3432,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem toolsMenu;
         private System.Windows.Forms.ToolStripMenuItem placeholderToolsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem configureToolsMenuItem;
-        private System.Windows.Forms.ToolStripSeparator toolsMenuSeparator;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator47;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator46;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
     }
 }
 

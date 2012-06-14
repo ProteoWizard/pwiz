@@ -124,6 +124,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AccessServerTest.cs" />
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="CalculateIsolationWindowsTest.cs" />
     <Compile Include="ConfigureToolsDlgTest.cs" />

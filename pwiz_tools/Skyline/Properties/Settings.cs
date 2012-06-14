@@ -577,6 +577,26 @@ namespace pwiz.Skyline.Properties
                 this["AnnotationDefList"] = value;
             }
         }
+
+        [System.Configuration.UserScopedSettingAttribute]
+        public ServerList ServerList
+        {
+            get
+            {
+                var list = (ServerList) this["ServerList"];
+                if (list == null)
+                {
+                    list = new ServerList();
+                    list.AddDefaults();
+                    ServerList = list;
+                }
+                return list;
+            }
+            set
+            {
+                this["ServerList"] = value;
+            }
+        }
     }
 
     /// <summary>
@@ -679,6 +699,34 @@ namespace pwiz.Skyline.Properties
         public override string Title { get { return "Edit Exclusions"; } }
 
         public override string Label { get { return "&Exclusions:"; } }
+    }
+
+    public sealed class ServerList : SettingsList<Server>
+    {
+        public override IEnumerable<Server>  GetDefaults(int revisionIndex)
+        {
+            yield break;
+        }
+
+        public override string Title { get { return "Edit Servers"; } }
+
+        public override string Label { get { return "&Servers"; } }
+
+        public override Server EditItem(Control owner, Server item, IEnumerable<Server> existing, object tag)
+        {
+            using (EditServerDlg editServer = new EditServerDlg(existing ?? this) {Server = item})
+            {
+                if (editServer.ShowDialog(owner) == DialogResult.OK)
+                    return editServer.Server;
+
+                return null;
+            }
+        }
+
+        public override Server CopyItem(Server item)
+        {
+            return (Server) item.ChangeName(string.Empty);
+        }
     }
 
     public sealed class SpectralLibraryList : SettingsList<LibrarySpec>

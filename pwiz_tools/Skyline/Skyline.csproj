@@ -102,6 +102,9 @@
       <HintPath>..\Shared\Lib\MathNet.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>..\Shared\JSON\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="NHibernate, Version=2.0.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Shared\Lib\NHibernate\bin\net-2.0\NHibernate.dll</HintPath>
@@ -668,6 +671,12 @@
     <Compile Include="SettingsUI\EditIsolationSchemeDlg.Designer.cs">
       <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\EditServerDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\EditServerDlg.Designer.cs">
+      <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\Irt\AddIrtCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -778,6 +787,12 @@
     </Compile>
     <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
     <Compile Include="SettingsUI\SimpleGridViewDriver.cs" />
+    <Compile Include="SettingsUI\ToolOptionsUI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\ToolOptionsUI.Designer.cs">
+      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfo.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepMatching.cs" />
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
@@ -918,6 +933,9 @@
       <DependentUpon>EditRTDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\EditServerDlg.resx">
+      <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditStaticModDlg.resx">
       <DependentUpon>EditStaticModDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -938,6 +956,9 @@
     <EmbeddedResource Include="SettingsUI\SaveSettingsDlg.resx">
       <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\ToolOptionsUI.resx">
+      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.resx">
       <DependentUpon>TransitionSettingsUI.cs</DependentUpon>

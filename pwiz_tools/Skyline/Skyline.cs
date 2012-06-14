@@ -2080,12 +2080,12 @@ namespace pwiz.Skyline
             if (show)
             {
                 if (_sequenceTreeForm != null)
-                {
+        {
                     _sequenceTreeForm.Activate();
                     _sequenceTreeForm.Focus();
-                }
+        }
                 else
-                {
+        {
                     _sequenceTreeForm = CreateSequenceTreeForm();
                     _sequenceTreeForm.Show(dockPanel, DockState.DockLeft);
                 }
@@ -2093,15 +2093,15 @@ namespace pwiz.Skyline
                 ActiveDocumentChanged();
             }
             else if (_sequenceTreeForm != null)
-            {
+                {
                 // Save current setting for showing spectra
                 show = Settings.Default.ShowPeptides;
                 // Close the spectrum graph window
                 _sequenceTreeForm.Hide();
                 // Restore setting and menuitem from saved value
                 Settings.Default.ShowPeptides = show;
+                }
             }
-        }
 
         private SequenceTreeForm CreateSequenceTreeForm()
         {
@@ -2122,7 +2122,7 @@ namespace pwiz.Skyline
             _sequenceTreeForm.SequenceTree.UseKeysOverride = _useKeysOverride;
             _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;
             return _sequenceTreeForm;
-        }
+            }
 
         private void DestroySequenceTreeForm()
         {
@@ -2149,17 +2149,17 @@ namespace pwiz.Skyline
         private void sequenceTreeForm_VisibleChanged(object sender, EventArgs e)
         {
             Settings.Default.ShowPeptides = _sequenceTreeForm.Visible;
-        }
+            }
 
         private void sequenceTreeForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
+            {
             // Update settings and menu check
             Settings.Default.ShowPeptides = false;
             _sequenceTreeForm = null;
-        }
+            }
 
         private void sequenceTree_BeforeNodeEdit(object sender, NodeLabelEditEventArgs e)
-        {
+            {
             if (e.Node is EmptyNode)
                 e.Node.Text = "";
             else
@@ -2250,7 +2250,7 @@ namespace pwiz.Skyline
                     {
                         modifyMessage = "Add " + labelText;
                         bool isExSequence = FastaSequence.IsExSequence(labelText) &&
-                                            FastaSequence.StripModifications(labelText).Length >=
+                                            FastaSequence.StripModifications(labelText).Length >= 
                                             settings.PeptideSettings.Filter.MinPeptideLength;
                         if (isExSequence)
                         {
@@ -2278,7 +2278,7 @@ namespace pwiz.Skyline
                             {
                                 matcher = new ModificationMatcher();
                                 matcher.CreateMatches(settings, new List<string> { labelText }, Settings.Default.StaticModList, Settings.Default.HeavyModList);
-                                var strNameMatches = matcher.FoundMatches;
+                                           var strNameMatches = matcher.FoundMatches;
                                 if (!string.IsNullOrEmpty(strNameMatches))
                                 {
                                     using (var dlg = new MultiButtonMsgDlg(
@@ -2302,7 +2302,7 @@ namespace pwiz.Skyline
                                 matcher = null;
                             }
                         }
-                        if (!isExSequence)
+                        if(!isExSequence)
                         {
                             peptideGroupName = labelText;
                             peptideGroup = new PeptideGroup();
@@ -2316,7 +2316,7 @@ namespace pwiz.Skyline
                             peptideDocNodes.ToArray(), peptideSequence == null);
                         ModifyDocument(modifyMessage, doc =>
                         {
-                            var docNew = (SrmDocument)doc.Add(newPeptideGroupDocNode.ChangeSettings(doc.Settings, SrmSettingsDiff.ALL));
+                            var docNew = (SrmDocument) doc.Add(newPeptideGroupDocNode.ChangeSettings(doc.Settings, SrmSettingsDiff.ALL));
                             if (matcher != null)
                             {
                                 var pepModsNew = matcher.GetDocModifications(docNew);
@@ -2334,7 +2334,7 @@ namespace pwiz.Skyline
                         ModifyDocument(modifyMessage, doc =>
                         {
                             var docNew =
-                            (SrmDocument)doc.ReplaceChild(newPeptideGroupDocNode);
+                            (SrmDocument) doc.ReplaceChild(newPeptideGroupDocNode);
                             if (matcher != null)
                             {
                                 var pepModsNew = matcher.GetDocModifications(docNew);
@@ -2457,8 +2457,8 @@ namespace pwiz.Skyline
                     dataObj.SetData(typeof(PeptideTreeNode), listDragNodes);
                 else
                     dataObj.SetData(typeof(PeptideGroupTreeNode), listDragNodes);
-
-                DoDragDrop(dataObj, DragDropEffects.Move);
+                
+                DoDragDrop(dataObj, DragDropEffects.Move);              
             }
         }
 
@@ -2496,8 +2496,8 @@ namespace pwiz.Skyline
 
         private void sequenceTree_DragDrop(object sender, DragEventArgs e)
         {
-            List<SrmTreeNode> nodeSources = (List<SrmTreeNode>)e.Data.GetData(typeof(PeptideGroupTreeNode).FullName) ??
-                (List<SrmTreeNode>)e.Data.GetData(typeof(PeptideTreeNode));
+            List<SrmTreeNode> nodeSources = (List<SrmTreeNode>) e.Data.GetData(typeof (PeptideGroupTreeNode).FullName) ??
+                (List<SrmTreeNode>) e.Data.GetData(typeof(PeptideTreeNode));
 
             if (nodeSources == null)
                 return;
@@ -2509,7 +2509,7 @@ namespace pwiz.Skyline
 
             SrmTreeNode nodeDrop = GetSrmTreeNodeAt(e.X, e.Y);
             IdentityPath pathTarget = SrmTreeNode.GetSafePath(nodeDrop);
-
+            
             for (int i = 0; i < nodeSourcesArray.Length; i++)
             {
                 var nodeSource = nodeSourcesArray[i];
@@ -2518,7 +2518,7 @@ namespace pwiz.Skyline
                     return;
 
                 IdentityPath pathSource = SrmTreeNode.GetSafePath(nodeSource);
-
+                
                 // Dropping inside self also requires no work.
                 if (pathSource.Length < pathTarget.Length &&
                     Equals(pathSource, pathTarget.GetPathTo(pathSource.Length - 1)))
@@ -2532,15 +2532,15 @@ namespace pwiz.Skyline
             SequenceTree.SelectedPaths = sourcePaths;
 
             ModifyDocument("Drag and drop", doc =>
-            {
-                foreach (IdentityPath pathSource in sourcePaths)
-                {
-                    IdentityPath selectPath;
-                    doc = doc.MoveNode(pathSource, pathTarget, out selectPath);
-                    selectedPaths.Add(selectPath);
-                }
-                return doc;
-            });
+                                                {
+                                                    foreach (IdentityPath pathSource in sourcePaths)
+                                                    {
+                                                        IdentityPath selectPath;
+                                                        doc = doc.MoveNode(pathSource, pathTarget, out selectPath);
+                                                        selectedPaths.Add(selectPath);
+                                                    }
+                                                    return doc;
+                                                });
 
             SequenceTree.SelectedPath = selectedPaths.First();
             SequenceTree.SelectedPaths = selectedPaths;
@@ -3037,7 +3037,7 @@ namespace pwiz.Skyline
             }
             public List<ToolDescription> Tools { get; set; }
         }
-
+    
         public static void SaveEvent(object sender, SenderArgs args)
         {
             Settings.Default.ToolList = args.Tools;
@@ -3092,6 +3092,17 @@ namespace pwiz.Skyline
             ShowConfigureToolsDlg();
         }
 
+        public void ShowToolOptionsUI()
+        {
+            using (ToolOptionsUI dlg = new ToolOptionsUI())
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // At this point the dialog does everything by itself.
+                }
+            }
+        }
+
         public void ShowConfigureToolsDlg()
         {
             using (ConfigureToolsDlg dlg = new ConfigureToolsDlg(Copier(Settings.Default.ToolList)))
@@ -3125,7 +3136,7 @@ namespace pwiz.Skyline
             toolsMenu.Visible = true;
 
             // Remove all items from the toolToolStripMenuItem.
-            while (!ReferenceEquals(toolsMenu.DropDownItems[0], toolsMenuSeparator))
+            while (!ReferenceEquals(toolsMenu.DropDownItems[0], toolStripSeparator47))
             {
                 toolsMenu.DropDownItems.RemoveAt(0);
             }
@@ -3134,11 +3145,11 @@ namespace pwiz.Skyline
             List<ToolDescription> toolList = Settings.Default.ToolList;
             if (toolList.Count == 0)
             {
-                toolsMenuSeparator.Visible = false;
+                toolStripSeparator47.Visible = false;
             }
             else
             {
-                toolsMenuSeparator.Visible = true;
+                toolStripSeparator47.Visible = true;
                 foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t) {Text = t.Title}))
             
                     toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
@@ -3161,7 +3172,7 @@ namespace pwiz.Skyline
 
         public bool ConfigMenuPresent()
         {
-            return toolsMenu.DropDownItems.Contains(toolsMenuSeparator) &&
+            return toolsMenu.DropDownItems.Contains(toolStripSeparator47) &&
                    toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
         }
 
@@ -3177,6 +3188,12 @@ namespace pwiz.Skyline
         }
 
         #endregion 
+
+        private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowToolOptionsUI();
+        }
+
     }
 }
 
