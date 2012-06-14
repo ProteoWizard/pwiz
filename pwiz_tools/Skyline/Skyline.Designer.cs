@@ -1699,6 +1699,7 @@ namespace pwiz.Skyline
             this.toolsMenu.Name = "toolsMenu";
             this.toolsMenu.Size = new System.Drawing.Size(48, 20);
             this.toolsMenu.Text = "&Tools";
+            this.toolsMenu.Visible = false;
             this.toolsMenu.DropDownOpening += new System.EventHandler(this.toolsMenu_DropDownOpening);
             // 
             // placeholderToolsMenuItem
