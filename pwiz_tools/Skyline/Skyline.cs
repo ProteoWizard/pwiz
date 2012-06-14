@@ -3172,8 +3172,8 @@ namespace pwiz.Skyline
 
         public bool ConfigMenuPresent()
         {
-            return toolsMenu.DropDownItems.Contains(toolStripSeparator47) &&
-                   toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
+            return toolsMenu.DropDownItems.Contains(toolStripSeparator47) && 
+                    toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
         }
 
         private ToolMenuItem GetToolMenuItem(int i)
