@@ -104,8 +104,9 @@ zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line 
 
 # TODO: get version from boost/version.hpp
 import regex ;
-local boost_version_suffix = [ MATCH "boost_(._.._.)" : $(boost_src:L) ] ;
-constant BOOST_VERSION : [ regex.split $(boost_version_suffix) _ ] ;
+local boost_version_suffix = [ MATCH "boost_(._..(_.)?)" : $(boost_src:L) ] ;
+if ! $(boost_version_suffix) { errors.user-error "Unable to determine version from external Boost source; expected x_xx[_xx] format." ; }
+constant BOOST_VERSION : [ regex.split $(boost_version_suffix[1]) _ ] ;
 
 
 if ( "--without-binary-msdata" in  [ modules.peek : ARGV ] ) # support only text formats like mzML, mzXML, MGF etc
