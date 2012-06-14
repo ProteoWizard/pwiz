@@ -110,12 +110,18 @@ namespace pwiz.Skyline
             this.toolStripSeparator30 = new System.Windows.Forms.ToolStripSeparator();
             this.manageResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.viewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.textZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.defaultTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.largeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.extraLargeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator41 = new System.Windows.Forms.ToolStripSeparator();
+            this.spectralLibrariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator32 = new System.Windows.Forms.ToolStripSeparator();
             this.arrangeGraphsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.arrangeTiledMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.arrangedTabbedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupedMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator32 = new System.Windows.Forms.ToolStripSeparator();
-            this.spectralLibrariesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator39 = new System.Windows.Forms.ToolStripSeparator();
             this.graphsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionTypesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -168,11 +174,6 @@ namespace pwiz.Skyline
             this.areaPeptideComparisonMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.resultsGridMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator36 = new System.Windows.Forms.ToolStripSeparator();
-            this.textZoomToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.defaultTextToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.largeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.extraLargeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator41 = new System.Windows.Forms.ToolStripSeparator();
             this.toolBarToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -216,11 +217,6 @@ namespace pwiz.Skyline
             this.replicatesTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleReplicateTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.bestReplicateTreeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.splitMain = new System.Windows.Forms.SplitContainer();
-            this.toolBarResults = new System.Windows.Forms.ToolStrip();
-            this.labelResults = new System.Windows.Forms.ToolStripLabel();
-            this.comboResults = new System.Windows.Forms.ToolStripComboBox();
-            this.sequenceTree = new pwiz.Skyline.Controls.SequenceTree();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
             this.contextMenuSpectrum = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.aionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -360,19 +356,16 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.panel1 = new System.Windows.Forms.Panel();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
-            this.splitMain.Panel1.SuspendLayout();
-            this.splitMain.Panel2.SuspendLayout();
-            this.splitMain.SuspendLayout();
-            this.toolBarResults.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
             this.mainToolStrip.SuspendLayout();
             this.contextMenuRetentionTimes.SuspendLayout();
             this.contextMenuPeakAreas.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // fileToolStripMenuItem
@@ -1012,9 +1005,12 @@ namespace pwiz.Skyline
             // viewToolStripMenuItem
             // 
             this.viewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.arrangeGraphsToolStripMenuItem,
-            this.toolStripSeparator32,
+            this.peptidesMenuItem,
+            this.textZoomToolStripMenuItem,
+            this.toolStripSeparator41,
             this.spectralLibrariesToolStripMenuItem,
+            this.toolStripSeparator32,
+            this.arrangeGraphsToolStripMenuItem,
             this.toolStripSeparator39,
             this.graphsToolStripMenuItem,
             this.ionTypesMenuItem,
@@ -1030,14 +1026,67 @@ namespace pwiz.Skyline
             this.peakAreasMenuItem,
             this.resultsGridMenuItem,
             this.toolStripSeparator36,
-            this.textZoomToolStripMenuItem,
-            this.toolStripSeparator41,
             this.toolBarToolStripMenuItem,
             this.statusToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "&View";
             this.viewToolStripMenuItem.DropDownOpening += new System.EventHandler(this.viewToolStripMenuItem_DropDownOpening);
+            // 
+            // peptidesMenuItem
+            // 
+            this.peptidesMenuItem.Name = "peptidesMenuItem";
+            this.peptidesMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.peptidesMenuItem.Text = "Targ&ets";
+            this.peptidesMenuItem.Click += new System.EventHandler(this.peptidesMenuItem_Click);
+            // 
+            // textZoomToolStripMenuItem
+            // 
+            this.textZoomToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.defaultTextToolStripMenuItem,
+            this.largeToolStripMenuItem,
+            this.extraLargeToolStripMenuItem});
+            this.textZoomToolStripMenuItem.Name = "textZoomToolStripMenuItem";
+            this.textZoomToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.textZoomToolStripMenuItem.Text = "Text &Zoom";
+            // 
+            // defaultTextToolStripMenuItem
+            // 
+            this.defaultTextToolStripMenuItem.Name = "defaultTextToolStripMenuItem";
+            this.defaultTextToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.defaultTextToolStripMenuItem.Text = "Default";
+            this.defaultTextToolStripMenuItem.Click += new System.EventHandler(this.defaultToolStripMenuItem_Click);
+            // 
+            // largeToolStripMenuItem
+            // 
+            this.largeToolStripMenuItem.Name = "largeToolStripMenuItem";
+            this.largeToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.largeToolStripMenuItem.Text = "Large";
+            this.largeToolStripMenuItem.Click += new System.EventHandler(this.largeToolStripMenuItem_Click);
+            // 
+            // extraLargeToolStripMenuItem
+            // 
+            this.extraLargeToolStripMenuItem.Name = "extraLargeToolStripMenuItem";
+            this.extraLargeToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
+            this.extraLargeToolStripMenuItem.Text = "Extra Large";
+            this.extraLargeToolStripMenuItem.Click += new System.EventHandler(this.extraLargeToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator41
+            // 
+            this.toolStripSeparator41.Name = "toolStripSeparator41";
+            this.toolStripSeparator41.Size = new System.Drawing.Size(188, 6);
+            // 
+            // spectralLibrariesToolStripMenuItem
+            // 
+            this.spectralLibrariesToolStripMenuItem.Name = "spectralLibrariesToolStripMenuItem";
+            this.spectralLibrariesToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.spectralLibrariesToolStripMenuItem.Text = "Spectral &Libraries";
+            this.spectralLibrariesToolStripMenuItem.Click += new System.EventHandler(this.spectralLibrariesToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator32
+            // 
+            this.toolStripSeparator32.Name = "toolStripSeparator32";
+            this.toolStripSeparator32.Size = new System.Drawing.Size(188, 6);
             // 
             // arrangeGraphsToolStripMenuItem
             // 
@@ -1072,18 +1121,6 @@ namespace pwiz.Skyline
             this.groupedMenuItem.Size = new System.Drawing.Size(187, 22);
             this.groupedMenuItem.Text = "&Grouped...";
             this.groupedMenuItem.Click += new System.EventHandler(this.arrangeGroupedMenuItem_Click);
-            // 
-            // toolStripSeparator32
-            // 
-            this.toolStripSeparator32.Name = "toolStripSeparator32";
-            this.toolStripSeparator32.Size = new System.Drawing.Size(188, 6);
-            // 
-            // spectralLibrariesToolStripMenuItem
-            // 
-            this.spectralLibrariesToolStripMenuItem.Name = "spectralLibrariesToolStripMenuItem";
-            this.spectralLibrariesToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.spectralLibrariesToolStripMenuItem.Text = "Spectral &Libraries";
-            this.spectralLibrariesToolStripMenuItem.Click += new System.EventHandler(this.spectralLibrariesToolStripMenuItem_Click);
             // 
             // toolStripSeparator39
             // 
@@ -1499,7 +1536,7 @@ namespace pwiz.Skyline
             this.peakAreasMenuItem.Enabled = false;
             this.peakAreasMenuItem.Name = "peakAreasMenuItem";
             this.peakAreasMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.peakAreasMenuItem.Text = "&Peak Areas";
+            this.peakAreasMenuItem.Text = "Pea&k Areas";
             this.peakAreasMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
             // 
             // areaReplicateComparisonMenuItem
@@ -1531,42 +1568,6 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator36.Name = "toolStripSeparator36";
             this.toolStripSeparator36.Size = new System.Drawing.Size(188, 6);
-            // 
-            // textZoomToolStripMenuItem
-            // 
-            this.textZoomToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.defaultTextToolStripMenuItem,
-            this.largeToolStripMenuItem,
-            this.extraLargeToolStripMenuItem});
-            this.textZoomToolStripMenuItem.Name = "textZoomToolStripMenuItem";
-            this.textZoomToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
-            this.textZoomToolStripMenuItem.Text = "Text &Zoom";
-            // 
-            // defaultTextToolStripMenuItem
-            // 
-            this.defaultTextToolStripMenuItem.Name = "defaultTextToolStripMenuItem";
-            this.defaultTextToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
-            this.defaultTextToolStripMenuItem.Text = "Default";
-            this.defaultTextToolStripMenuItem.Click += new System.EventHandler(this.defaultToolStripMenuItem_Click);
-            // 
-            // largeToolStripMenuItem
-            // 
-            this.largeToolStripMenuItem.Name = "largeToolStripMenuItem";
-            this.largeToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
-            this.largeToolStripMenuItem.Text = "Large";
-            this.largeToolStripMenuItem.Click += new System.EventHandler(this.largeToolStripMenuItem_Click);
-            // 
-            // extraLargeToolStripMenuItem
-            // 
-            this.extraLargeToolStripMenuItem.Name = "extraLargeToolStripMenuItem";
-            this.extraLargeToolStripMenuItem.Size = new System.Drawing.Size(131, 22);
-            this.extraLargeToolStripMenuItem.Text = "Extra Large";
-            this.extraLargeToolStripMenuItem.Click += new System.EventHandler(this.extraLargeToolStripMenuItem_Click);
-            // 
-            // toolStripSeparator41
-            // 
-            this.toolStripSeparator41.Name = "toolStripSeparator41";
-            this.toolStripSeparator41.Size = new System.Drawing.Size(188, 6);
             // 
             // toolBarToolStripMenuItem
             // 
@@ -1920,96 +1921,15 @@ namespace pwiz.Skyline
             this.bestReplicateTreeContextMenuItem.Text = "Best";
             this.bestReplicateTreeContextMenuItem.Click += new System.EventHandler(this.bestReplicateTreeContextMenuItem_Click);
             // 
-            // splitMain
-            // 
-            this.splitMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitMain.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.splitMain.Location = new System.Drawing.Point(0, 49);
-            this.splitMain.Name = "splitMain";
-            // 
-            // splitMain.Panel1
-            // 
-            this.splitMain.Panel1.Controls.Add(this.toolBarResults);
-            this.splitMain.Panel1.Controls.Add(this.sequenceTree);
-            // 
-            // splitMain.Panel2
-            // 
-            this.splitMain.Panel2.Controls.Add(this.dockPanel);
-            this.splitMain.Size = new System.Drawing.Size(734, 443);
-            this.splitMain.SplitterDistance = 270;
-            this.splitMain.TabIndex = 4;
-            this.splitMain.TabStop = false;
-            this.splitMain.SplitterMoved += new System.Windows.Forms.SplitterEventHandler(this.splitMain_SplitterMoved);
-            this.splitMain.MouseDown += new System.Windows.Forms.MouseEventHandler(this.splitMain_MouseDown);
-            this.splitMain.MouseUp += new System.Windows.Forms.MouseEventHandler(this.splitMain_MouseUp);
-            // 
-            // toolBarResults
-            // 
-            this.toolBarResults.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
-            this.toolBarResults.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.labelResults,
-            this.comboResults});
-            this.toolBarResults.Location = new System.Drawing.Point(0, 0);
-            this.toolBarResults.Name = "toolBarResults";
-            this.toolBarResults.Size = new System.Drawing.Size(270, 25);
-            this.toolBarResults.TabIndex = 3;
-            this.toolBarResults.Visible = false;
-            this.toolBarResults.Resize += new System.EventHandler(this.toolBarResults_Resize);
-            // 
-            // labelResults
-            // 
-            this.labelResults.Name = "labelResults";
-            this.labelResults.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.labelResults.Size = new System.Drawing.Size(63, 22);
-            this.labelResults.Text = "&Replicates:";
-            // 
-            // comboResults
-            // 
-            this.comboResults.AutoSize = false;
-            this.comboResults.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboResults.MaxDropDownItems = 12;
-            this.comboResults.Name = "comboResults";
-            this.comboResults.Overflow = System.Windows.Forms.ToolStripItemOverflow.Never;
-            this.comboResults.Size = new System.Drawing.Size(160, 23);
-            this.comboResults.SelectedIndexChanged += new System.EventHandler(this.comboResults_SelectedIndexChanged);
-            // 
-            // sequenceTree
-            // 
-            this.sequenceTree.AllowDrop = true;
-            this.sequenceTree.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.sequenceTree.AutoExpandSingleNodes = true;
-            this.sequenceTree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.sequenceTree.Cursor = System.Windows.Forms.Cursors.Arrow;
-            this.sequenceTree.HideSelection = false;
-            this.sequenceTree.ItemHeight = 16;
-            this.sequenceTree.LabelEdit = true;
-            this.sequenceTree.Location = new System.Drawing.Point(-1, 0);
-            this.sequenceTree.Name = "sequenceTree";
-            this.sequenceTree.Size = new System.Drawing.Size(271, 444);
-            this.sequenceTree.TabIndex = 2;
-            this.sequenceTree.UseKeysOverride = false;
-            this.sequenceTree.PickedChildrenEvent += new System.EventHandler<pwiz.Skyline.Controls.SeqNode.PickedChildrenEventArgs>(this.sequenceTree_PickedChildrenEvent);
-            this.sequenceTree.SelectedNodeChanged += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_SelectedNodeChanged);
-            this.sequenceTree.BeforeNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_BeforeLabelEdit);
-            this.sequenceTree.AfterNodeEdit += new System.EventHandler<System.Windows.Forms.NodeLabelEditEventArgs>(this.sequenceTree_AfterLabelEdit);
-            this.sequenceTree.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.sequenceTree_ItemDrag);
-            this.sequenceTree.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.sequenceTree_AfterSelect);
-            this.sequenceTree.DragDrop += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragDrop);
-            this.sequenceTree.DragEnter += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragEnter);
-            this.sequenceTree.DragOver += new System.Windows.Forms.DragEventHandler(this.sequenceTree_DragOver);
-            this.sequenceTree.MouseUp += new System.Windows.Forms.MouseEventHandler(this.sequenceTree_MouseUp);
-            // 
             // dockPanel
             // 
             this.dockPanel.ActiveAutoHideContent = null;
             this.dockPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.dockPanel.Location = new System.Drawing.Point(0, 0);
+            this.dockPanel.Location = new System.Drawing.Point(-1, 0);
             this.dockPanel.Name = "dockPanel";
-            this.dockPanel.Size = new System.Drawing.Size(461, 444);
+            this.dockPanel.Size = new System.Drawing.Size(736, 444);
             this.dockPanel.TabIndex = 0;
             this.dockPanel.ActiveDocumentChanged += new System.EventHandler(this.dockPanel_ActiveDocumentChanged);
             // 
@@ -3130,12 +3050,21 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
+            // panel1
+            // 
+            this.panel1.Controls.Add(this.dockPanel);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.panel1.Location = new System.Drawing.Point(0, 49);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(734, 443);
+            this.panel1.TabIndex = 0;
+            // 
             // SkylineWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(734, 514);
-            this.Controls.Add(this.splitMain);
+            this.Controls.Add(this.panel1);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.mainToolStrip);
             this.Controls.Add(this.menuMain);
@@ -3151,19 +3080,13 @@ namespace pwiz.Skyline
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
             this.contextMenuTreeNode.ResumeLayout(false);
-            this.splitMain.Panel1.ResumeLayout(false);
-            this.splitMain.Panel1.PerformLayout();
-            this.splitMain.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitMain)).EndInit();
-            this.splitMain.ResumeLayout(false);
-            this.toolBarResults.ResumeLayout(false);
-            this.toolBarResults.PerformLayout();
             this.contextMenuSpectrum.ResumeLayout(false);
             this.contextMenuChromatogram.ResumeLayout(false);
             this.mainToolStrip.ResumeLayout(false);
             this.mainToolStrip.PerformLayout();
             this.contextMenuRetentionTimes.ResumeLayout(false);
             this.contextMenuPeakAreas.ResumeLayout(false);
+            this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -3179,7 +3102,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.MenuStrip menuMain;
         private System.Windows.Forms.ToolStripSeparator mruAfterToolStripSeparator;
         private System.Windows.Forms.ToolStripMenuItem exitMenuItem;
-        private Skyline.Controls.SequenceTree sequenceTree;
         private System.Windows.Forms.ToolStripMenuItem saveMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveAsMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
@@ -3226,7 +3148,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem editNoteContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator8;
         private System.Windows.Forms.ToolStripMenuItem editNoteToolStripMenuItem;
-        private System.Windows.Forms.SplitContainer splitMain;
         private System.Windows.Forms.ToolStripMenuItem viewToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem graphsToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator9;
@@ -3277,9 +3198,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem autoZoomNoneContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomBestPeakContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem autoZoomRTWindowContextMenuItem;
-        private System.Windows.Forms.ToolStrip toolBarResults;
-        private System.Windows.Forms.ToolStripLabel labelResults;
-        private System.Windows.Forms.ToolStripComboBox comboResults;
         private System.Windows.Forms.ToolStrip mainToolStrip;        
         private System.Windows.Forms.ToolStripButton newToolBarButton;        
         private System.Windows.Forms.ToolStripSplitButton undoToolBarButton;        
@@ -3491,6 +3409,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem peptideIDTimesContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem generateDecoysMenuItem;
         private System.Windows.Forms.ToolStripMenuItem eSPFeaturesMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem peptidesMenuItem;
         private System.Windows.Forms.ToolStripMenuItem alignedPeptideIDTimesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem retentionTimeAlignmentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportIsolationListMenuItem;
@@ -3498,6 +3417,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem placeholderToolsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem configureToolsMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolsMenuSeparator;
+        private System.Windows.Forms.Panel panel1;
     }
 }
 

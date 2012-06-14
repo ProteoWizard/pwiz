@@ -69,7 +69,8 @@ namespace pwiz.Skyline
             IProgressMonitor,
             ILibraryBuildNotificationContainer
     {
-        private SrmDocument _document;  // Interlocked access only
+        private SequenceTreeForm _sequenceTreeForm;
+        private SrmDocument _document;
         private SrmDocument _documentUI;
         private int _savedVersion;
         private bool _closing;
@@ -148,19 +149,13 @@ namespace pwiz.Skyline
             {
                 toolBarToolStripMenuItem_Click(this, new EventArgs());
             }
-            // Hide graph panel by default, since doing this in the designer
-            // makes the UI hard to work with. The first document update will
-            // update the collapsed state to match the document
-            splitMain.Panel2Collapsed = true;
-            splitMain.SplitterDistance = Settings.Default.SplitMainX;
 
             largeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.LRG_TEXT_FACTOR;
             extraLargeToolStripMenuItem.Checked = Settings.Default.TextZoom == TreeViewMS.XLRG_TEXT_FACTOR;
             defaultTextToolStripMenuItem.Checked = 
                 !(largeToolStripMenuItem.Checked || extraLargeToolStripMenuItem.Checked);
 
-            // Initialize sequence tree control
-            sequenceTree.InitializeTree(this);
+            ShowSequenceTreeForm(true);
 
             // Force the handle into existence before any background threads
             // are started by setting the initial document.  Otherwise, calls
@@ -291,9 +286,26 @@ namespace pwiz.Skyline
         /// </summary>
         public string DocumentFilePath { get; set; }
 
+        private bool _useKeysOverride;
+
+        public bool UseKeysOverride
+        {
+            get { return _useKeysOverride; }
+            set
+            {
+                _useKeysOverride = value;
+                if (SequenceTree != null)
+                    SequenceTree.UseKeysOverride = _useKeysOverride;
+            }
+        }
         public SequenceTree SequenceTree
         {
-            get { return sequenceTree; }
+            get { return _sequenceTreeForm != null ? _sequenceTreeForm.SequenceTree : null; }
+        }
+
+        public ToolStripComboBox ComboResults
+        {
+            get { return _sequenceTreeForm != null ? _sequenceTreeForm.ComboResults : null; }
         }
 
         /// <summary>
@@ -355,6 +367,7 @@ namespace pwiz.Skyline
 
         private void OnDocumentUIChanged(SrmDocument documentPrevious)
         {
+            SrmSettings settingsNew = DocumentUI.Settings;
             SrmSettings settingsOld = SrmSettingsList.GetDefault();
             bool docIdChanged = false;
             if (documentPrevious != null)
@@ -364,7 +377,8 @@ namespace pwiz.Skyline
             }
 
             // Update results combo UI
-            UpdateResultsUI(settingsOld);
+            if (_sequenceTreeForm != null)
+                _sequenceTreeForm.UpdateResultsUI(settingsNew, settingsOld);
 
             // Fire event to allow listeners to update.
             // This has to be done before the graph UI updates, since it updates
@@ -379,7 +393,7 @@ namespace pwiz.Skyline
             UpdateTitle();
             UpdateNodeCountStatus();
 
-            integrateAllMenuItem.Checked = DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll;
+            integrateAllMenuItem.Checked = settingsNew.TransitionSettings.Integration.IsIntegrateAll;
         }
 
         /// <summary>
@@ -533,8 +547,8 @@ namespace pwiz.Skyline
             {
                 _window = window;
                 _document = window.DocumentUI;
-                _treeSelections = window.sequenceTree.SelectedPaths;
-                _treeSelection = window.sequenceTree.SelectedPath;
+                _treeSelections = window.SequenceTree.SelectedPaths;
+                _treeSelection = window.SequenceTree.SelectedPath;
                 _resultName = ResultNameCurrent;
             }
 
@@ -552,19 +566,18 @@ namespace pwiz.Skyline
             {
                 get
                 {
-                    var selItem = _window.comboResults.SelectedItem;
+                    var selItem = _window.ComboResults.SelectedItem;
                     return (selItem != null ? selItem.ToString() : null);
                 }
             }
 
             public IUndoState Restore()
             {
-
                 // Get current tree selections
-                IList<IdentityPath> treeSelections = _window.sequenceTree.SelectedPaths;
+                IList<IdentityPath> treeSelections = _window.SequenceTree.SelectedPaths;
 
                 // Get current tree selection
-                IdentityPath treeSelection = _window.sequenceTree.SelectedPath;
+                IdentityPath treeSelection = _window.SequenceTree.SelectedPath;
 
                 // Get results name
                 string resultName = ResultNameCurrent;
@@ -573,7 +586,7 @@ namespace pwiz.Skyline
                 SrmDocument docReplaced = _window.RestoreDocument(_document);
 
                 // Restore previous tree selection
-                _window.sequenceTree.SelectedPath = _treeSelection;
+                _window.SequenceTree.SelectedPath = _treeSelection;
 
                 // Restore previous tree selections
                 _window.SequenceTree.SelectedPaths = _treeSelections;
@@ -582,7 +595,7 @@ namespace pwiz.Skyline
 
                 // Restore selected result
                 if (_resultName != null)
-                    _window.comboResults.SelectedItem = _resultName;
+                    _window.ComboResults.SelectedItem = _resultName;
 
                 // Return a record that can be used to restore back to the state
                 // before this action.
@@ -617,7 +630,8 @@ namespace pwiz.Skyline
 
         public void FocusDocument()
         {
-            sequenceTree.Focus();
+            if (SequenceTree != null)
+                SequenceTree.Focus();   
         }
 
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
@@ -625,10 +639,10 @@ namespace pwiz.Skyline
             switch (keyData)
             {
                 case Keys.F3 | Keys.Shift:
-                    sequenceTree.UseKeysOverride = true;
-                    sequenceTree.KeysOverride = Keys.None;
+                    SequenceTree.UseKeysOverride = true;
+                    SequenceTree.KeysOverride = Keys.None;
                     FindNext(true);
-                    sequenceTree.UseKeysOverride = false;
+                    SequenceTree.UseKeysOverride = false;
                     return true;
             }
             return base.ProcessCmdKey(ref msg, keyData);
@@ -696,15 +710,15 @@ namespace pwiz.Skyline
         private void sequenceTree_AfterSelect(object sender, TreeViewEventArgs e)
         {
             // Hide any tool tips when selection changes
-            sequenceTree.HideEffects();
+            SequenceTree.HideEffects();
 
             // Update edit menus
             UpdateClipboardMenuItems();
-            SrmTreeNode nodeTree = sequenceTree.SelectedNode as SrmTreeNode;
+            SrmTreeNode nodeTree = SequenceTree.SelectedNode as SrmTreeNode;
             var enabled = nodeTree != null;
             editNoteToolStripMenuItem.Enabled = enabled;
             manageUniquePeptidesMenuItem.Enabled = enabled;
-            var nodePepTree = sequenceTree.GetNodeOfType<PeptideTreeNode>();
+            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             modifyPeptideMenuItem.Enabled = nodePepTree != null;
 
             // Update active replicate, if using best replicate
@@ -722,7 +736,7 @@ namespace pwiz.Skyline
 
         private bool StatementCompletionAction(Action<TextBox> act)
         {
-            var completionEditBox = sequenceTree.StatementCompletionEditBox;
+            var completionEditBox = SequenceTree.StatementCompletionEditBox;
             if (completionEditBox == null)
                 return false;
 
@@ -761,7 +775,7 @@ namespace pwiz.Skyline
             TreeNodeMS nodeVisible = curNode;
             while (nodeVisible != prevNode)
             {
-                if (!sequenceTree.SelectedNodes.Contains(nodeVisible) && nodeVisible.Level < curNode.Level)
+                if (!SequenceTree.SelectedNodes.Contains(nodeVisible) && nodeVisible.Level < curNode.Level)
                     return count + 1;
                 nodeVisible = (TreeNodeMS)nodeVisible.PrevVisibleNode;
                 if (nodeVisible == null)
@@ -773,7 +787,7 @@ namespace pwiz.Skyline
         private void copyMenuItem_Click(object sender, EventArgs e) { Copy(); }
         public void Copy()
         {
-            if (StatementCompletionAction(textBox => textBox.Copy()) || sequenceTree.SelectedNodes.Count < 0)
+            if (StatementCompletionAction(textBox => textBox.Copy()) || SequenceTree.SelectedNodes.Count < 0)
                 return;
             
             List<TreeNode> sortedNodes = new List<TreeNode>();
@@ -817,7 +831,7 @@ namespace pwiz.Skyline
             bool selectionContainsProteins = SequenceTree.SelectedDocNodes.Contains(node =>
                 node is PeptideGroupDocNode); 
 
-            var docCopy = DocumentUI.RemoveAllBut(sequenceTree.SelectedDocNodes);
+            var docCopy = DocumentUI.RemoveAllBut(SequenceTree.SelectedDocNodes);
             docCopy = docCopy.ChangeMeasuredResults(null);
             var stringWriter = new XmlStringWriter();
             using (var writer = new XmlTextWriter(stringWriter) { Formatting = Formatting.Indented })
@@ -872,7 +886,7 @@ namespace pwiz.Skyline
         
             if (dataObjectSkyline != null)
             {
-                SrmTreeNode nodePaste = sequenceTree.SelectedNode as SrmTreeNode;
+                SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
 
                 bool pasteToPeptideList  = false;
 
@@ -898,7 +912,7 @@ namespace pwiz.Skyline
                         pasteToPeptideList));
 
                 if (selectPath != null)
-                    sequenceTree.SelectedPath = selectPath;
+                    SequenceTree.SelectedPath = selectPath;
             }
             else
             {
@@ -1165,7 +1179,7 @@ namespace pwiz.Skyline
             string undoText = "items";
             if (SequenceTree.SelectedNodes.Count == 1)
             {
-                SrmTreeNode node = sequenceTree.SelectedNode as SrmTreeNode;
+                SrmTreeNode node = SequenceTree.SelectedNode as SrmTreeNode;
                 if (node != null)
                     undoText = node.Text;
             }
@@ -1206,15 +1220,15 @@ namespace pwiz.Skyline
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
         {
-            IList<IdentityPath> selPaths = sequenceTree.SelectedPaths;
+            IList<IdentityPath> selPaths = SequenceTree.SelectedPaths;
             using (EditNoteDlg dlg = new EditNoteDlg
             {
                 Text = selPaths.Count > 1 ? "Edit Note" :
-                    string.Format("Edit Note {0} {1}", ((SrmTreeNode)sequenceTree.SelectedNode).Heading, sequenceTree.SelectedNode.Text)
+                    string.Format("Edit Note {0} {1}", ((SrmTreeNode)SequenceTree.SelectedNode).Heading, SequenceTree.SelectedNode.Text)
 
             })
             {
-                dlg.Init(((SrmTreeNode) sequenceTree.SelectedNode).Document, selPaths);
+                dlg.Init(((SrmTreeNode) SequenceTree.SelectedNode).Document, selPaths);
 
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
@@ -1254,7 +1268,7 @@ namespace pwiz.Skyline
         {
             BulkUpdateTreeNodes<TreeNode>(() =>
             {
-                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
                     node.Expand();
             });
             Settings.Default.SequenceTreeExpandProteins = true;
@@ -1265,7 +1279,7 @@ namespace pwiz.Skyline
         {
             BulkUpdateTreeNodes<TreeNode>(() =>
             {
-                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
                 {
                     node.Expand();
                     foreach (TreeNode nodeChild in node.Nodes)
@@ -1281,7 +1295,7 @@ namespace pwiz.Skyline
         {
             BulkUpdateTreeNodes<TreeNode>(() =>
             {
-                foreach (TreeNode node in sequenceTree.Nodes)
+                foreach (TreeNode node in SequenceTree.Nodes)
                     node.ExpandAll();
             });
             Settings.Default.SequenceTreeExpandPrecursors =
@@ -1294,7 +1308,7 @@ namespace pwiz.Skyline
         {
             BulkUpdateTreeNodes<PeptideGroupTreeNode>(() =>
             {
-                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
                     node.Collapse();
             });
             Settings.Default.SequenceTreeExpandProteins =
@@ -1307,7 +1321,7 @@ namespace pwiz.Skyline
         {
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
             {
-                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
                     foreach (TreeNode child in node.Nodes)
                         child.Collapse();
             });
@@ -1320,7 +1334,7 @@ namespace pwiz.Skyline
         {
             BulkUpdateTreeNodes<PeptideTreeNode>(() =>
             {
-                foreach (PeptideGroupTreeNode node in sequenceTree.GetSequenceNodes())
+                foreach (PeptideGroupTreeNode node in SequenceTree.GetSequenceNodes())
                     foreach (TreeNode child in node.Nodes)
                         foreach (TreeNode grandChild in child.Nodes)
                             grandChild.Collapse();
@@ -1331,15 +1345,15 @@ namespace pwiz.Skyline
         private void BulkUpdateTreeNodes<TNode>(Action update)
             where TNode : TreeNode
         {
-            TreeNode nodeTop = sequenceTree.GetNodeOfType<TNode>(sequenceTree.TopNode) ??
-                sequenceTree.TopNode;
+            TreeNode nodeTop = SequenceTree.GetNodeOfType<TNode>(SequenceTree.TopNode) ??
+                SequenceTree.TopNode;
 
-            using (sequenceTree.BeginLargeUpdate())
+            using (SequenceTree.BeginLargeUpdate())
             {
                 update();
             }
             if (nodeTop != null)
-                sequenceTree.TopNode = nodeTop;
+                SequenceTree.TopNode = nodeTop;
         }
 
         private void findMenuItem_Click(object sender, EventArgs e)
@@ -1369,11 +1383,11 @@ namespace pwiz.Skyline
         {
             var findOptions = FindOptions.ReadFromSettings(Settings.Default);
             findOptions = findOptions.ChangeForward(!reverse);
-            var startPath = sequenceTree.SelectedPath;
+            var startPath = SequenceTree.SelectedPath;
             // If the insert node is selected, start from the root.
-            if (sequenceTree.IsInsertPath(startPath))
+            if (SequenceTree.IsInsertPath(startPath))
                 startPath = IdentityPath.ROOT;
-            var displaySettings = sequenceTree.GetDisplaySettings(null);
+            var displaySettings = SequenceTree.GetDisplaySettings(null);
             var bookmark = new Bookmark(startPath);
             if (_resultsGridForm != null && _resultsGridForm.Visible)
             {
@@ -1398,7 +1412,7 @@ namespace pwiz.Skyline
         public void FindAll(Control parent)
         {
             var findOptions = FindOptions.ReadFromSettings(Settings.Default);
-            var findPredicate = new FindPredicate(findOptions, sequenceTree.GetDisplaySettings(null));
+            var findPredicate = new FindPredicate(findOptions, SequenceTree.GetDisplaySettings(null));
             IList<FindResult> results = null;
             var longWaitDlg = new LongWaitDlg(this);
             longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
@@ -1421,7 +1435,6 @@ namespace pwiz.Skyline
             {
                 findResultsForm = new FindResultsForm(this, results);
                 findResultsForm.Show(dockPanel, DockState.DockBottom);
-                splitMain.Panel2Collapsed = false;
             }
             else
             {
@@ -1462,7 +1475,7 @@ namespace pwiz.Skyline
             int resultsIndex = bookmarkEnumerator.ResultsIndex;
             if (resultsIndex >= 0)
             {
-                comboResults.SelectedIndex = resultsIndex;
+                ComboResults.SelectedIndex = resultsIndex;
             }
             bool isAnnotationOrNote = findResult.FindMatch.AnnotationName != null || findResult.FindMatch.Note;
             if (isAnnotationOrNote && bookmarkEnumerator.CurrentChromInfo != null)
@@ -1481,7 +1494,7 @@ namespace pwiz.Skyline
 
         public void ModifyPeptide()
         {
-            PeptideTreeNode nodePeptideTree = sequenceTree.GetNodeOfType<PeptideTreeNode>();
+            PeptideTreeNode nodePeptideTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             if (nodePeptideTree != null)
             {
                 PeptideDocNode nodePeptide = nodePeptideTree.DocNode;
@@ -1516,7 +1529,7 @@ namespace pwiz.Skyline
                     "Choose a background proteome in the Digestions tab of the Peptide Settings.");
                 return;
             }
-            var treeNode = sequenceTree.SelectedNode;
+            var treeNode = SequenceTree.SelectedNode;
             while (treeNode != null && !(treeNode is PeptideGroupTreeNode))
             {
                 treeNode = treeNode.Parent;
@@ -1678,23 +1691,23 @@ namespace pwiz.Skyline
 
         private void contextMenuTreeNode_Opening(object sender, CancelEventArgs e)
         {
-            var treeNode = sequenceTree.SelectedNode as TreeNodeMS;
-            bool enabled = (sequenceTree.SelectedNode is IClipboardDataProvider && treeNode != null
+            var treeNode = SequenceTree.SelectedNode as TreeNodeMS;
+            bool enabled = (SequenceTree.SelectedNode is IClipboardDataProvider && treeNode != null
                 && treeNode.IsInSelection);
             copyContextMenuItem.Enabled = enabled;
             cutContextMenuItem.Enabled = enabled;
             deleteContextMenuItem.Enabled = enabled;
-            pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(sequenceTree.SelectedNode) && enabled;
-            editNoteContextMenuItem.Enabled = (sequenceTree.SelectedNode is SrmTreeNode && enabled);
-            removePeakContextMenuItem.Visible = (sequenceTree.SelectedNode is TransitionTreeNode && enabled);
-            modifyPeptideContextMenuItem.Visible = (sequenceTree.SelectedNode is PeptideTreeNode && enabled);
+            pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(SequenceTree.SelectedNode) && enabled;
+            editNoteContextMenuItem.Enabled = (SequenceTree.SelectedNode is SrmTreeNode && enabled);
+            removePeakContextMenuItem.Visible = (SequenceTree.SelectedNode is TransitionTreeNode && enabled);
+            modifyPeptideContextMenuItem.Visible = (SequenceTree.SelectedNode is PeptideTreeNode && enabled);
         }
 
         private void pickChildrenContextMenuItem_Click(object sender, EventArgs e) { ShowPickChildrenInternal(true); }
 
         public void ShowPickChildrenInternal(bool okOnDeactivate)
         {
-            sequenceTree.ShowPickList(okOnDeactivate);
+            SequenceTree.ShowPickList(okOnDeactivate);
         }
 
         /// <summary>
@@ -1716,7 +1729,7 @@ namespace pwiz.Skyline
             SequenceTree.ShowReplicate = ReplicateDisplay.best;
 
             // Make sure the best result index is active for the current peptide.
-            var nodePepTree = sequenceTree.GetNodeOfType<PeptideTreeNode>();
+            var nodePepTree = SequenceTree.GetNodeOfType<PeptideTreeNode>();
             if (nodePepTree != null)
             {
                 int iBest = nodePepTree.DocNode.BestResult;
@@ -2055,129 +2068,108 @@ namespace pwiz.Skyline
 
         #endregion
 
-        #region Main splitter events
-
-        // Temp variable to store a previously focused control
-        private Control _focused;
-
-        private void splitMain_MouseDown(object sender, MouseEventArgs e)
-        {
-            // Get the focused control before the splitter is focused
-            _focused = GetFocused(Controls);
-        }
-
-        private void splitMain_MouseUp(object sender, MouseEventArgs e)
-        {
-            // If a previous control had focus
-            if (_focused != null)
-            {
-                // Return focus and clear the temp variable
-                _focused.Focus();
-                _focused = null;
-            }
-        }
-
-// ReSharper disable MemberCanBeMadeStatic.Local
-        private void splitMain_SplitterMoved(object sender, SplitterEventArgs e)
-        {
-            Settings.Default.SplitMainX = e.SplitX;
-        }
-// ReSharper restore MemberCanBeMadeStatic.Local
-
-        private static Control GetFocused(Control.ControlCollection controls)
-        {
-            foreach (Control c in controls)
-            {
-                if (c.Focused)
-                {
-                    // Return the focused control
-                    return c;
-                }
-                if (c.ContainsFocus)
-                {
-                    // If the focus is contained inside a control's children
-                    // return the child
-                    return GetFocused(c.Controls);
-                }
-            }
-            // No control on the form has focus
-            return null;
-        }
-
-        #endregion
-
         #region SequenceTree events
 
-        private void sequenceTree_MouseUp(object sender, MouseEventArgs e)
+        private void peptidesMenuItem_Click(object sender, EventArgs e)
         {
-            // Show context menu on right-click of SrmTreeNode.
-            if (e.Button == MouseButtons.Right)
+            ShowSequenceTreeForm(Settings.Default.ShowPeptides = true);            
+        }
+
+        public void ShowSequenceTreeForm(bool show)
+        {
+            if (show)
             {
-                Point pt = e.Location;
-                TreeNode nodeTree = sequenceTree.GetNodeAt(pt);
-                sequenceTree.SelectedNode = nodeTree;
-                sequenceTree.HideEffects();
-                var settings = DocumentUI.Settings;
-                // Show the ratios sub-menu when there are results and a choice of
-                // internal standard types.
-                ratiosContextMenuItem.Visible =
-                    settings.HasResults &&
-                    settings.PeptideSettings.Modifications.InternalStandardTypes.Count > 1 &&
-                    settings.PeptideSettings.Modifications.HasHeavyModifications;
-                contextMenuTreeNode.Show(sequenceTree, pt);
+                if (_sequenceTreeForm != null)
+                {
+                    _sequenceTreeForm.Activate();
+                    _sequenceTreeForm.Focus();
+                }
+                else
+                {
+                    _sequenceTreeForm = CreateSequenceTreeForm();
+                    _sequenceTreeForm.Show(dockPanel, DockState.DockLeft);
+                }
+                // Make sure ComboResults has the right selection
+                ActiveDocumentChanged();
+            }
+            else if (_sequenceTreeForm != null)
+            {
+                // Save current setting for showing spectra
+                show = Settings.Default.ShowPeptides;
+                // Close the spectrum graph window
+                _sequenceTreeForm.Hide();
+                // Restore setting and menuitem from saved value
+                Settings.Default.ShowPeptides = show;
             }
         }
 
-        private void ratiosContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        private SequenceTreeForm CreateSequenceTreeForm()
         {
-            ToolStripMenuItem menu = ratiosContextMenuItem;
-            menu.DropDownItems.Clear();
-            var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.InternalStandardTypes;
-            for (int i = 0; i < standardTypes.Count; i++)
+            // Initialize sequence tree control
+            _sequenceTreeForm = new SequenceTreeForm(this);
+            _sequenceTreeForm.FormClosed += sequenceTreeForm_FormClosed;
+            _sequenceTreeForm.VisibleChanged += sequenceTreeForm_VisibleChanged;
+            _sequenceTreeForm.SequenceTree.SelectedNodeChanged += sequenceTree_SelectedNodeChanged;
+            _sequenceTreeForm.SequenceTree.AfterSelect += sequenceTree_AfterSelect;
+            _sequenceTreeForm.SequenceTree.BeforeNodeEdit += sequenceTree_BeforeNodeEdit;
+            _sequenceTreeForm.SequenceTree.AfterNodeEdit += sequenceTree_AfterNodeEdit;
+            _sequenceTreeForm.SequenceTree.MouseUp += sequenceTree_MouseUp;
+            _sequenceTreeForm.SequenceTree.PickedChildrenEvent += sequenceTree_PickedChildrenEvent;
+            _sequenceTreeForm.SequenceTree.ItemDrag += sequenceTree_ItemDrag;
+            _sequenceTreeForm.SequenceTree.DragEnter += sequenceTree_DragEnter;
+            _sequenceTreeForm.SequenceTree.DragOver += sequenceTree_DragOver;
+            _sequenceTreeForm.SequenceTree.DragEnter += sequenceTree_DragDrop;
+            _sequenceTreeForm.SequenceTree.UseKeysOverride = _useKeysOverride;
+            _sequenceTreeForm.ComboResults.SelectedIndexChanged += comboResults_SelectedIndexChanged;
+            return _sequenceTreeForm;
+        }
+
+        private void DestroySequenceTreeForm()
+        {
+            if (_sequenceTreeForm != null)
             {
-                var handler = new SelectRatioHandler(this, i);
-                var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
-                    {Checked = (sequenceTree.RatioIndex == i)};
-                menu.DropDownItems.Add(item);
+                _sequenceTreeForm.FormClosed -= sequenceTreeForm_FormClosed;
+                _sequenceTreeForm.VisibleChanged -= sequenceTreeForm_VisibleChanged;
+                _sequenceTreeForm.SequenceTree.SelectedNodeChanged -= sequenceTree_SelectedNodeChanged;
+                _sequenceTreeForm.SequenceTree.AfterSelect -= sequenceTree_AfterSelect;
+                _sequenceTreeForm.SequenceTree.BeforeNodeEdit -= sequenceTree_BeforeNodeEdit;
+                _sequenceTreeForm.SequenceTree.AfterNodeEdit -= sequenceTree_AfterNodeEdit;
+                _sequenceTreeForm.SequenceTree.MouseUp -= sequenceTree_MouseUp;
+                _sequenceTreeForm.SequenceTree.PickedChildrenEvent -= sequenceTree_PickedChildrenEvent;
+                _sequenceTreeForm.SequenceTree.ItemDrag -= sequenceTree_ItemDrag;
+                _sequenceTreeForm.SequenceTree.DragEnter -= sequenceTree_DragEnter;
+                _sequenceTreeForm.SequenceTree.DragOver -= sequenceTree_DragOver;
+                _sequenceTreeForm.SequenceTree.DragEnter -= sequenceTree_DragDrop;
+                _sequenceTreeForm.ComboResults.SelectedIndexChanged -= comboResults_SelectedIndexChanged;
+                _sequenceTreeForm.Close();
+                _sequenceTreeForm = null;
             }
         }
 
-        private class SelectRatioHandler
+        private void sequenceTreeForm_VisibleChanged(object sender, EventArgs e)
         {
-            protected readonly SkylineWindow _skyline;
-            private readonly int _ratioIndex;
-
-            public SelectRatioHandler(SkylineWindow skyline, int ratioIndex)
-            {
-                _skyline = skyline;
-                _ratioIndex = ratioIndex;
-            }
-
-            public void ToolStripMenuItemClick(object sender, EventArgs e)
-            {
-                OnMenuItemClick();
-            }
-
-            protected virtual void OnMenuItemClick()
-            {
-                _skyline.sequenceTree.RatioIndex = _ratioIndex;
-                if (_skyline._graphPeakArea != null)
-                    _skyline._graphPeakArea.RatioIndex = _ratioIndex;                
-            }
+            Settings.Default.ShowPeptides = _sequenceTreeForm.Visible;
         }
 
-        private void sequenceTree_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
+        private void sequenceTreeForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            // Update settings and menu check
+            Settings.Default.ShowPeptides = false;
+            _sequenceTreeForm = null;
+        }
+
+        private void sequenceTree_BeforeNodeEdit(object sender, NodeLabelEditEventArgs e)
         {
             if (e.Node is EmptyNode)
                 e.Node.Text = "";
             else
-                e.CancelEdit = !sequenceTree.IsEditableNode(e.Node);
-            ClipboardControlGotFocus(sequenceTree);
+                e.CancelEdit = !SequenceTree.IsEditableNode(e.Node);
+            ClipboardControlGotFocus(SequenceTree);
         }
 
-        private void sequenceTree_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
+        private void sequenceTree_AfterNodeEdit(object sender, NodeLabelEditEventArgs e)
         {
-            ClipboardControlLostFocus(sequenceTree);
+            ClipboardControlLostFocus(SequenceTree);
             if (e.Node is EmptyNode)
             {
                 string labelText = (!e.CancelEdit ? e.Label.Trim() : null);
@@ -2235,7 +2227,7 @@ namespace pwiz.Skyline
                                     if (Equals(peptideDocNode.Peptide.Sequence, peptideSequence))
                                     {
                                         e.Node.Text = EmptyNode.TEXT_EMPTY;
-                                        sequenceTree.Focus();
+                                        SequenceTree.Focus();
                                         return;
                                     }
                                     peptideDocNodes.Add(peptideDocNode);
@@ -2258,7 +2250,7 @@ namespace pwiz.Skyline
                     {
                         modifyMessage = "Add " + labelText;
                         bool isExSequence = FastaSequence.IsExSequence(labelText) &&
-                                            FastaSequence.StripModifications(labelText).Length >= 
+                                            FastaSequence.StripModifications(labelText).Length >=
                                             settings.PeptideSettings.Filter.MinPeptideLength;
                         if (isExSequence)
                         {
@@ -2272,7 +2264,7 @@ namespace pwiz.Skyline
 
                             if (oldPeptideGroupDocNode == null)
                             {
-                                peptideGroupName = Document.GetPeptideGroupId(true);
+                                peptideGroupName = document.GetPeptideGroupId(true);
                                 peptideGroup = new PeptideGroup();
                             }
                             else
@@ -2286,7 +2278,7 @@ namespace pwiz.Skyline
                             {
                                 matcher = new ModificationMatcher();
                                 matcher.CreateMatches(settings, new List<string> { labelText }, Settings.Default.StaticModList, Settings.Default.HeavyModList);
-                                           var strNameMatches = matcher.FoundMatches;
+                                var strNameMatches = matcher.FoundMatches;
                                 if (!string.IsNullOrEmpty(strNameMatches))
                                 {
                                     using (var dlg = new MultiButtonMsgDlg(
@@ -2310,7 +2302,7 @@ namespace pwiz.Skyline
                                 matcher = null;
                             }
                         }
-                        if(!isExSequence)
+                        if (!isExSequence)
                         {
                             peptideGroupName = labelText;
                             peptideGroup = new PeptideGroup();
@@ -2324,7 +2316,7 @@ namespace pwiz.Skyline
                             peptideDocNodes.ToArray(), peptideSequence == null);
                         ModifyDocument(modifyMessage, doc =>
                         {
-                            var docNew = (SrmDocument) doc.Add(newPeptideGroupDocNode.ChangeSettings(doc.Settings, SrmSettingsDiff.ALL));
+                            var docNew = (SrmDocument)doc.Add(newPeptideGroupDocNode.ChangeSettings(doc.Settings, SrmSettingsDiff.ALL));
                             if (matcher != null)
                             {
                                 var pepModsNew = matcher.GetDocModifications(docNew);
@@ -2342,7 +2334,7 @@ namespace pwiz.Skyline
                         ModifyDocument(modifyMessage, doc =>
                         {
                             var docNew =
-                            (SrmDocument) doc.ReplaceChild(newPeptideGroupDocNode);
+                            (SrmDocument)doc.ReplaceChild(newPeptideGroupDocNode);
                             if (matcher != null)
                             {
                                 var pepModsNew = matcher.GetDocModifications(docNew);
@@ -2367,7 +2359,65 @@ namespace pwiz.Skyline
                 }
             }
             // Put the focus back on the sequence tree
-            sequenceTree.Focus();
+            SequenceTree.Focus();
+        }
+
+        private void sequenceTree_MouseUp(object sender, MouseEventArgs e)
+        {
+            // Show context menu on right-click of SrmTreeNode.
+            if (e.Button == MouseButtons.Right)
+            {
+                Point pt = e.Location;
+                TreeNode nodeTree = SequenceTree.GetNodeAt(pt);
+                SequenceTree.SelectedNode = nodeTree;
+                SequenceTree.HideEffects();
+                var settings = DocumentUI.Settings;
+                // Show the ratios sub-menu when there are results and a choice of
+                // internal standard types.
+                ratiosContextMenuItem.Visible =
+                    settings.HasResults &&
+                    settings.PeptideSettings.Modifications.InternalStandardTypes.Count > 1 &&
+                    settings.PeptideSettings.Modifications.HasHeavyModifications;
+                contextMenuTreeNode.Show(SequenceTree, pt);
+            }
+        }
+
+        private void ratiosContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            ToolStripMenuItem menu = ratiosContextMenuItem;
+            menu.DropDownItems.Clear();
+            var standardTypes = DocumentUI.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            for (int i = 0; i < standardTypes.Count; i++)
+            {
+                var handler = new SelectRatioHandler(this, i);
+                var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
+                    {Checked = (SequenceTree.RatioIndex == i)};
+                menu.DropDownItems.Add(item);
+            }
+        }
+
+        private class SelectRatioHandler
+        {
+            protected readonly SkylineWindow _skyline;
+            private readonly int _ratioIndex;
+
+            public SelectRatioHandler(SkylineWindow skyline, int ratioIndex)
+            {
+                _skyline = skyline;
+                _ratioIndex = ratioIndex;
+            }
+
+            public void ToolStripMenuItemClick(object sender, EventArgs e)
+            {
+                OnMenuItemClick();
+            }
+
+            protected virtual void OnMenuItemClick()
+            {
+                _skyline.SequenceTree.RatioIndex = _ratioIndex;
+                if (_skyline._graphPeakArea != null)
+                    _skyline._graphPeakArea.RatioIndex = _ratioIndex;                
+            }
         }
 
         private void sequenceTree_PickedChildrenEvent(object sender, PickedChildrenEventArgs e)
@@ -2381,7 +2431,7 @@ namespace pwiz.Skyline
         {
             var listDragNodes = new List<SrmTreeNode>();
 
-            foreach (var node in SelectedNodes)
+            foreach (var node in SequenceTree.SelectedNodes)
             {
                 SrmTreeNode srmNode = node as SrmTreeNode;
                 if (srmNode != null)
@@ -2407,8 +2457,8 @@ namespace pwiz.Skyline
                     dataObj.SetData(typeof(PeptideTreeNode), listDragNodes);
                 else
                     dataObj.SetData(typeof(PeptideGroupTreeNode), listDragNodes);
-                
-                DoDragDrop(dataObj, DragDropEffects.Move);              
+
+                DoDragDrop(dataObj, DragDropEffects.Move);
             }
         }
 
@@ -2425,29 +2475,29 @@ namespace pwiz.Skyline
             else
             {
                 e.Effect = DragDropEffects.Move;
-                sequenceTree.SelectedNode = node;
+                SequenceTree.SelectedNode = node;
             }
 
             // Auto-scroll if near the top or bottom edge.
-            Point ptView = sequenceTree.PointToClient(new Point(e.X, e.Y));
+            Point ptView = SequenceTree.PointToClient(new Point(e.X, e.Y));
             if (ptView.Y < 10)
             {
-                TreeNode nodeTop = sequenceTree.TopNode;
+                TreeNode nodeTop = SequenceTree.TopNode;
                 if (nodeTop != null && nodeTop.PrevVisibleNode != null)
-                    sequenceTree.TopNode = nodeTop.PrevVisibleNode;
+                    SequenceTree.TopNode = nodeTop.PrevVisibleNode;
             }
-            if (ptView.Y > sequenceTree.Bottom - 10)
+            if (ptView.Y > SequenceTree.Bottom - 10)
             {
-                TreeNode nodeTop = sequenceTree.TopNode;
+                TreeNode nodeTop = SequenceTree.TopNode;
                 if (nodeTop != null && nodeTop.NextVisibleNode != null)
-                    sequenceTree.TopNode = nodeTop.NextVisibleNode;
+                    SequenceTree.TopNode = nodeTop.NextVisibleNode;
             }
         }
 
         private void sequenceTree_DragDrop(object sender, DragEventArgs e)
         {
-            List<SrmTreeNode> nodeSources = (List<SrmTreeNode>) e.Data.GetData(typeof (PeptideGroupTreeNode).FullName) ??
-                (List<SrmTreeNode>) e.Data.GetData(typeof(PeptideTreeNode));
+            List<SrmTreeNode> nodeSources = (List<SrmTreeNode>)e.Data.GetData(typeof(PeptideGroupTreeNode).FullName) ??
+                (List<SrmTreeNode>)e.Data.GetData(typeof(PeptideTreeNode));
 
             if (nodeSources == null)
                 return;
@@ -2459,7 +2509,7 @@ namespace pwiz.Skyline
 
             SrmTreeNode nodeDrop = GetSrmTreeNodeAt(e.X, e.Y);
             IdentityPath pathTarget = SrmTreeNode.GetSafePath(nodeDrop);
-            
+
             for (int i = 0; i < nodeSourcesArray.Length; i++)
             {
                 var nodeSource = nodeSourcesArray[i];
@@ -2468,7 +2518,7 @@ namespace pwiz.Skyline
                     return;
 
                 IdentityPath pathSource = SrmTreeNode.GetSafePath(nodeSource);
-                
+
                 // Dropping inside self also requires no work.
                 if (pathSource.Length < pathTarget.Length &&
                     Equals(pathSource, pathTarget.GetPathTo(pathSource.Length - 1)))
@@ -2478,23 +2528,23 @@ namespace pwiz.Skyline
             }
 
             // Reselect the original paths, so they will be stored on the undo bufferS
-            sequenceTree.SelectedPath = sourcePaths.First();
-            sequenceTree.SelectedPaths = sourcePaths;
+            SequenceTree.SelectedPath = sourcePaths.First();
+            SequenceTree.SelectedPaths = sourcePaths;
 
             ModifyDocument("Drag and drop", doc =>
-                                                {
-                                                    foreach (IdentityPath pathSource in sourcePaths)
-                                                    {
-                                                        IdentityPath selectPath;
-                                                        doc = doc.MoveNode(pathSource, pathTarget, out selectPath);
-                                                        selectedPaths.Add(selectPath);
-                                                    }
-                                                    return doc;
-                                                });
+            {
+                foreach (IdentityPath pathSource in sourcePaths)
+                {
+                    IdentityPath selectPath;
+                    doc = doc.MoveNode(pathSource, pathTarget, out selectPath);
+                    selectedPaths.Add(selectPath);
+                }
+                return doc;
+            });
 
-            sequenceTree.SelectedPath = selectedPaths.First();
-            sequenceTree.SelectedPaths = selectedPaths;
-            sequenceTree.Invalidate();
+            SequenceTree.SelectedPath = selectedPaths.First();
+            SequenceTree.SelectedPaths = selectedPaths;
+            SequenceTree.Invalidate();
         }
 
         private TreeNode GetDropTarget(DragEventArgs e)
@@ -2561,8 +2611,8 @@ namespace pwiz.Skyline
 
         private TreeNode GetTreeNodeAt(int x, int y)
         {
-            Point ptView = sequenceTree.PointToClient(new Point(x, y));
-            return sequenceTree.GetNodeAt(ptView);
+            Point ptView = SequenceTree.PointToClient(new Point(x, y));
+            return SequenceTree.GetNodeAt(ptView);
         }
 
         private void comboResults_SelectedIndexChanged(object sender, EventArgs e)
@@ -2572,92 +2622,30 @@ namespace pwiz.Skyline
                 return;
 
             // Update the summary graphs if necessary.
-            if (_graphRetentionTime != null && _graphRetentionTime.ResultsIndex != comboResults.SelectedIndex)
-                _graphRetentionTime.ResultsIndex = comboResults.SelectedIndex;
-            if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != comboResults.SelectedIndex)
-                _graphPeakArea.ResultsIndex = comboResults.SelectedIndex;
-            if (_resultsGridForm != null && _resultsGridForm.ResultsIndex != comboResults.SelectedIndex)
-                _resultsGridForm.ResultsIndex = comboResults.SelectedIndex;
-            if (sequenceTree.ResultsIndex != comboResults.SelectedIndex)
+            if (_graphRetentionTime != null && _graphRetentionTime.ResultsIndex != ComboResults.SelectedIndex)
+                _graphRetentionTime.ResultsIndex = ComboResults.SelectedIndex;
+            if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != ComboResults.SelectedIndex)
+                _graphPeakArea.ResultsIndex = ComboResults.SelectedIndex;
+            if (_resultsGridForm != null && _resultsGridForm.ResultsIndex != ComboResults.SelectedIndex)
+                _resultsGridForm.ResultsIndex = ComboResults.SelectedIndex;
+            if (SequenceTree.ResultsIndex != ComboResults.SelectedIndex)
             {
                 // Show the right result set in the tree view.
-                sequenceTree.ResultsIndex = comboResults.SelectedIndex;
+                SequenceTree.ResultsIndex = ComboResults.SelectedIndex;
 
                 // Make sure the graphs for the result set are visible.
                 if (GetGraphChrom(name) != null)
                 {
-                    bool focus = comboResults.Focused;
+                    bool focus = ComboResults.Focused;
 
                     ShowGraphChrom(name, true);
 
                     if (focus)
                         // Keep focus on the combo box
-                        comboResults.Focus();
+                        ComboResults.Focus();
                 }
 
 //                UpdateReplicateMenuItems(DocumentUI.Settings.HasResults);
-            }
-        }
-
-        private void UpdateResultsUI(SrmSettings settingsOld)
-        {
-            var results = DocumentUI.Settings.MeasuredResults;
-            if (!ReferenceEquals(results, settingsOld.MeasuredResults))
-            {
-                if (results == null || results.Chromatograms.Count < 2)
-                {
-                    if (toolBarResults.Visible)
-                    {
-                        toolBarResults.Visible = false;
-                        sequenceTree.Top = toolBarResults.Top;
-                        sequenceTree.Height += toolBarResults.Height;
-                    }
-
-                    // Make sure the combo contains the results name, if one is
-                    // available, because graph handling depends on this.
-                    if (results != null)
-                    {
-                        string resultsName = results.Chromatograms[0].Name;
-                        if (comboResults.Items.Count != 1 || !Equals(comboResults.SelectedItem, resultsName))
-                        {
-                            comboResults.Items.Clear();
-                            comboResults.Items.Add(resultsName);
-                            comboResults.SelectedIndex = 0;
-                        }
-                    }
-                }
-                else
-                {
-                    // Check to see if the list of files has changed.
-                    var listNames = new List<string>();
-                    foreach (var chromSet in results.Chromatograms)
-                        listNames.Add(chromSet.Name);
-                    var listExisting = new List<string>();
-                    foreach (var item in comboResults.Items)
-                        listExisting.Add(item.ToString());
-                    if (!ArrayUtil.EqualsDeep(listNames, listExisting))
-                    {
-                        // If it has, update the list, trying to maintain selection, if possible.
-                        object selected = comboResults.SelectedItem;
-                        comboResults.Items.Clear();
-                        foreach (string name in listNames)
-                            comboResults.Items.Add(name);
-                        if (selected == null || comboResults.Items.IndexOf(selected) == -1)
-                            comboResults.SelectedIndex = 0;
-                        else
-                            comboResults.SelectedItem = selected;
-                        ComboHelper.AutoSizeDropDown(comboResults);
-                    }
-
-                    // Show the toolbar after updating the files
-                    if (!toolBarResults.Visible)
-                    {
-                        toolBarResults.Visible = true;
-                        EnsureResultsComboSize();
-                        sequenceTree.Top = toolBarResults.Bottom;
-                        sequenceTree.Height -= toolBarResults.Height;
-                    }
-                }
             }
         }
 
@@ -2669,7 +2657,10 @@ namespace pwiz.Skyline
         {
             var selectedPath = SelectedPath;
             int[] positions;
-            if (selectedPath != null && !SequenceTree.IsInsertPath(selectedPath))
+            if (selectedPath != null &&
+                SequenceTree != null &&
+                !SequenceTree.IsInUpdateDoc &&
+                !SequenceTree.IsInsertPath(selectedPath))
             {
                 positions = DocumentUI.GetNodePositions(SelectedPath);
             }
@@ -2870,17 +2861,6 @@ namespace pwiz.Skyline
                 act(arg);
         }
 
-        private void toolBarResults_Resize(object sender, EventArgs e)
-        {
-            EnsureResultsComboSize();
-        }
-
-        private void EnsureResultsComboSize()
-        {
-            comboResults.Width = toolBarResults.Width - labelResults.Width - 6;
-            ComboHelper.AutoSizeDropDown(comboResults);
-        }
-
         private Control _activeClipboardControl;
         public void ClipboardControlGotFocus(Control clipboardControl)
         {
@@ -2909,12 +2889,12 @@ namespace pwiz.Skyline
                 deleteMenuItem.Enabled = false;
                 return;
             }
-            int countSelected = sequenceTree.SelectedNodes.Count;
-            SrmTreeNode nodeTree = (countSelected > 0 ? sequenceTree.SelectedNode as SrmTreeNode : null);
+            int countSelected = SequenceTree.SelectedNodes.Count;
+            SrmTreeNode nodeTree = (countSelected > 0 ? SequenceTree.SelectedNode as SrmTreeNode : null);
 
             // Allow deletion, copy/paste for a single selection that is not the insert node,
             // or any multiple selection.
-            bool enabled = (nodeTree != null || sequenceTree.SelectedNodes.Count > 1);
+            bool enabled = (nodeTree != null || SequenceTree.SelectedNodes.Count > 1);
             cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
             pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;

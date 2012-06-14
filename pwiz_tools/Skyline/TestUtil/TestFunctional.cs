@@ -486,7 +486,7 @@ namespace pwiz.SkylineTestUtil
         private void RunTest()
         {
             // Clean-up before running the test
-            RunUI(() => SkylineWindow.SequenceTree.UseKeysOverride = true);
+            RunUI(() => SkylineWindow.UseKeysOverride = true);
             
             // Use internal clipboard for testing so that we don't collide with other processes
             // using the clipboard during a test run.

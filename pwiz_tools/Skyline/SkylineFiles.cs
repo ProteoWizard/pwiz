@@ -187,8 +187,13 @@ namespace pwiz.Skyline
                     // this document.
                     document.Settings.UpdateLists();
 
-                    // Switch over to the opened document
-                    SwitchDocument(document, path);
+                    using (new SequenceTreeForm.LockDoc(_sequenceTreeForm))
+                    {
+                        // Switch over to the opened document
+                        SwitchDocument(document, path);
+                    }
+                    // Locking the sequenceTree can throw off the node count status
+                    UpdateNodeCountStatus();
                 }
             }
             catch (Exception x)
@@ -197,7 +202,8 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            sequenceTree.SelectedNode = sequenceTree.Nodes[0];
+            if (SequenceTree != null && SequenceTree.Nodes.Count > 0)
+                SequenceTree.SelectedNode = SequenceTree.Nodes[0];
 
             return true;
         }
@@ -857,7 +863,7 @@ namespace pwiz.Skyline
 
         private void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description)
         {
-            SrmTreeNode nodePaste = sequenceTree.SelectedNode as SrmTreeNode;
+            SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath = null;
             var to = nodePaste != null ? nodePaste.Path : null;
             
@@ -965,7 +971,7 @@ namespace pwiz.Skyline
             });
 
             if (selectPath != null)
-                sequenceTree.SelectedPath = selectPath;
+                SequenceTree.SelectedPath = selectPath;
         }
 
         private void importMassListMenuItem_Click(object sender, EventArgs e)
@@ -1019,7 +1025,7 @@ namespace pwiz.Skyline
 
         private void ImportMassList(TextReader reader, IFormatProvider provider, char separator, string description)
         {
-            SrmTreeNode nodePaste = sequenceTree.SelectedNode as SrmTreeNode;
+            SrmTreeNode nodePaste = SequenceTree.SelectedNode as SrmTreeNode;
 
             IdentityPath selectPath = null;
 
@@ -1028,7 +1034,7 @@ namespace pwiz.Skyline
                 nodePaste != null ? nodePaste.Path : null, out selectPath));
 
             if (selectPath != null)
-                sequenceTree.SelectedPath = selectPath;
+                SequenceTree.SelectedPath = selectPath;
         }
 
         private void importDocumentMenuItem_Click(object sender, EventArgs e)
@@ -1080,7 +1086,7 @@ namespace pwiz.Skyline
                     mergePeptides = dlgResults.IsMergePeptides;
                 }
             }
-            SrmTreeNode nodeSel = sequenceTree.SelectedNode as SrmTreeNode;
+            SrmTreeNode nodeSel = SequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath = null;
 
             const string description = "Import Skyline document data";
@@ -1118,7 +1124,7 @@ namespace pwiz.Skyline
             });
 
             if (selectPath != null)
-                sequenceTree.SelectedPath = selectPath;
+                SequenceTree.SelectedPath = selectPath;
         }
 
         private static bool HasResults(IEnumerable<string> filePaths)
@@ -1255,8 +1261,8 @@ namespace pwiz.Skyline
                                    doc => ImportResults(doc, namedResults, dlg.OptimizationName));
 
                     // Select the first replicate to which results were added.
-                    if (toolBarResults.Visible)
-                        comboResults.SelectedItem = namedResults[0].Key;
+                    if (ComboResults.Visible)
+                        ComboResults.SelectedItem = namedResults[0].Key;
                 }
             }
         }

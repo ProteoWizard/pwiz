@@ -62,27 +62,18 @@ namespace pwiz.Skyline
             }
         }
 
-        private bool VisibleDockContent
-        {
-            get
-            {
-                foreach (var pane in dockPanel.Panes)
-                {
-                    foreach (IDockableForm form in pane.Contents)
-                    {
-                        if (!form.DockingHandler.IsHidden)
-                            return true;
-                    }
-                }
-                return false;
-            }
-        }
-
         private void dockPanel_ActiveDocumentChanged(object sender, EventArgs e)
         {
+            ActiveDocumentChanged();
+        }
+
+        private void ActiveDocumentChanged()
+        {
+            if (DocumentUI == null)
+                return;
             var settings = DocumentUI.Settings;
-            if (_closing || comboResults.IsDisposed || _inGraphUpdate || !settings.HasResults ||
-                    settings.MeasuredResults.Chromatograms.Count < 2)
+            if (_closing || ComboResults == null || ComboResults.IsDisposed || _inGraphUpdate || !settings.HasResults ||
+                settings.MeasuredResults.Chromatograms.Count < 2)
                 return;
 
             var activeForm = dockPanel.ActiveDocument;
@@ -97,7 +88,7 @@ namespace pwiz.Skyline
             foreach (var graphChrom in _listGraphChrom)
             {
                 if (ReferenceEquals(graphChrom, activeForm))
-                    comboResults.SelectedItem = graphChrom.TabText;
+                    ComboResults.SelectedItem = graphChrom.TabText;
             }
         }
 
@@ -395,6 +386,12 @@ namespace pwiz.Skyline
                 }
             } // layoutLock.Dispose()
 
+            // Do this after layout is unlocked, because it messes up the selected graph otherwise
+            if (_sequenceTreeForm == null)
+            {
+                ShowSequenceTreeForm(true);
+            }
+
             // Just about any change could potentially change these panes.
             if (settingsNew.HasResults)
             {
@@ -423,6 +420,7 @@ namespace pwiz.Skyline
         {
             // Get rid of any existing graph windows, since the layout
             // deserialization has problems using existing windows.
+            DestroySequenceTreeForm();
             DestroyGraphSpectrum();
             DestroyGraphRetentionTime();
             DestroyGraphPeakArea();
@@ -431,9 +429,6 @@ namespace pwiz.Skyline
                 DestroyGraphChrom(graphChrom);
             _listGraphChrom.Clear();
             dockPanel.LoadFromXml(layoutStream, DeserializeForm);
-            // Hide the graph panel, if nothing remains
-            if (FirstDocumentPane == -1)
-                splitMain.Panel2Collapsed = true;
             EnsureFloatingWindowsVisible();
         }
 
@@ -462,7 +457,11 @@ namespace pwiz.Skyline
 
         private IDockableForm DeserializeForm(string persistentString)
         {
-            if (Equals(persistentString, typeof(GraphSpectrum).ToString()))
+            if (Equals(persistentString, typeof(SequenceTreeForm).ToString()))
+            {
+                return _sequenceTreeForm ?? CreateSequenceTreeForm();
+            }
+            else if (Equals(persistentString, typeof(GraphSpectrum).ToString()))
             {
                 return _graphSpectrum ?? CreateGraphSpectrum();                
             }
@@ -807,9 +806,7 @@ namespace pwiz.Skyline
                     if (firstDocumentPane == -1)
                         _graphSpectrum.Show(dockPanel, DockState.Document);
                     else
-                        _graphSpectrum.Show(dockPanel.Panes[firstDocumentPane], DockPaneAlignment.Top, 0.5);
-                    // Make sure the dock panel is visible
-                    splitMain.Panel2Collapsed = false;                    
+                        _graphSpectrum.Show(dockPanel.Panes[firstDocumentPane], DockPaneAlignment.Right, 0.5);
                 }
             }
             else if (_graphSpectrum != null)
@@ -855,18 +852,12 @@ namespace pwiz.Skyline
         private void graphSpectrum_VisibleChanged(object sender, EventArgs e)
         {
             Settings.Default.ShowSpectra = _graphSpectrum.Visible;
-            splitMain.Panel2Collapsed = !VisibleDockContent;
         }
 
         private void graphSpectrum_FormClosed(object sender, FormClosedEventArgs e)
         {
             // Update settings and menu check
             Settings.Default.ShowSpectra = false;
-
-            // Hide the dock panel, if this is its last graph pane.
-            if (dockPanel.Contents.Count == 0 ||
-                    (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _graphSpectrum))
-                splitMain.Panel2Collapsed = true;
             _graphSpectrum = null;
         }
 
@@ -1054,7 +1045,7 @@ namespace pwiz.Skyline
             var nodeTree = SelectedNode;
             if (nodeTree is TransitionTreeNode && GraphChromatogram.IsSingleTransitionDisplay)
             {
-                if (HasPeak(comboResults.SelectedIndex, ((TransitionTreeNode)nodeTree).DocNode))
+                if (HasPeak(SelectedResultsIndex, ((TransitionTreeNode)nodeTree).DocNode))
                 {
                     menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator33);                    
@@ -1064,10 +1055,10 @@ namespace pwiz.Skyline
                     (nodeTree is TransitionGroupTreeNode) ||
                     (nodeTree is PeptideTreeNode && ((PeptideTreeNode)nodeTree).DocNode.Children.Count == 1))
             {
-                var nodeGroupTree = sequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+                var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
                 var nodeGroup = nodeGroupTree != null ? nodeGroupTree.DocNode :
                     (TransitionGroupDocNode)((PeptideTreeNode)nodeTree).ChildDocNodes[0];
-                if (HasPeak(comboResults.SelectedIndex, nodeGroup))
+                if (HasPeak(SelectedResultsIndex, nodeGroup))
                 {
                     menuStrip.Items.Insert(iInsert++, removePeaksGraphMenuItem);
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator33);                    
@@ -1293,7 +1284,7 @@ namespace pwiz.Skyline
         {
             ToolStripMenuItem menu = removePeaksGraphMenuItem;
 
-            var nodeGroupTree = sequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+            var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
             TransitionGroupDocNode nodeGroup;
             IdentityPath pathGroup;
             if (nodeGroupTree != null)
@@ -1312,7 +1303,7 @@ namespace pwiz.Skyline
             }
 
             int i = 0;
-            int iResults = sequenceTree.ResultsIndex;
+            int iResults = SequenceTree.ResultsIndex;
             foreach (TransitionDocNode nodeTran in nodeGroup.Children)
             {
                 var chromInfo = GetTransitionChromInfo(nodeTran, iResults);
@@ -1389,7 +1380,7 @@ namespace pwiz.Skyline
             ChromInfo chromInfo;
             Transition transition;
 
-            int iResults = sequenceTree.ResultsIndex;
+            int iResults = SequenceTree.ResultsIndex;
             if (nodeTran == null)
             {
                 message = string.Format("Remove all peaks from {0}", ChromGraphItem.GetTitle(nodeGroup));
@@ -1411,8 +1402,7 @@ namespace pwiz.Skyline
                 return;
 
             ModifyDocument(message,
-                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, false));
-            
+                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, false));            
         }
 
         private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults)
@@ -1669,7 +1659,7 @@ namespace pwiz.Skyline
             get
             {
                 string temp;
-                return GetGraphChromStrings(comboResults.SelectedIndex, null, out temp);
+                return GetGraphChromStrings(SelectedResultsIndex, null, out temp);
             }
         }
 
@@ -1694,7 +1684,6 @@ namespace pwiz.Skyline
         {
             var graphChrom = new GraphChromatogram(name, this);
             graphChrom.FormClosed += graphChromatogram_FormClosed;
-            graphChrom.VisibleChanged += graphChromatogram_VisibleChanged;
             graphChrom.PickedPeak += graphChromatogram_PickedPeak;
             graphChrom.ChangedPeakBounds += graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum += graphChromatogram_PickedSpectrum;
@@ -1707,7 +1696,6 @@ namespace pwiz.Skyline
         {
             // Detach event handlers and dispose
             graphChrom.FormClosed -= graphChromatogram_FormClosed;
-            graphChrom.VisibleChanged -= graphChromatogram_VisibleChanged;
             graphChrom.PickedPeak -= graphChromatogram_PickedPeak;
             graphChrom.ChangedPeakBounds -= graphChromatogram_ChangedPeakBounds;
             graphChrom.PickedSpectrum -= graphChromatogram_PickedSpectrum;
@@ -1729,7 +1717,7 @@ namespace pwiz.Skyline
                 IDockableForm formBefore;
                 DockPane paneExisting = FindChromatogramPane(graphPosition, out formBefore);
                 if (paneExisting == null)
-                    graphChrom.Show(dockPanel.Panes[firstDocumentPane], DockPaneAlignment.Bottom, 0.5);
+                    graphChrom.Show(dockPanel.Panes[firstDocumentPane], DockPaneAlignment.Left, 0.5);
                 else if (!split)
                 {
                     graphChrom.Show(paneExisting, paneExisting.Contents[0]);
@@ -1741,8 +1729,6 @@ namespace pwiz.Skyline
                     graphChrom.Show(paneExisting, alignment, 0.5);
                 }
             }
-            // Make sure the dock panel is visible
-            splitMain.Panel2Collapsed = false;
         }
 
         private int FirstDocumentPane
@@ -1778,17 +1764,8 @@ namespace pwiz.Skyline
             return (iPane != -1 ? dockPanel.Panes[iPane] : null);
         }
 
-        private void graphChromatogram_VisibleChanged(object sender, EventArgs e)
-        {
-            splitMain.Panel2Collapsed = !VisibleDockContent;
-        }
-
         private void graphChromatogram_FormClosed(object sender, FormClosedEventArgs e)
         {
-            // Hide the dock panel, if this is its last graph pane.
-            if (dockPanel.Contents.Count == 0 ||
-                    (dockPanel.Contents.Count == 1 && ReferenceEquals(dockPanel.Contents[0], sender)))
-                splitMain.Panel2Collapsed = true;
             _listGraphChrom.Remove((GraphChromatogram)sender);
         }
 
@@ -1953,7 +1930,6 @@ namespace pwiz.Skyline
         {
             Settings.Default.ShowRetentionTimeGraph =
                 (_graphRetentionTime != null && _graphRetentionTime.Visible);
-            splitMain.Panel2Collapsed = !VisibleDockContent;
         }
 
         private void graphRetentinTime_FormClosed(object sender, FormClosedEventArgs e)
@@ -1961,10 +1937,6 @@ namespace pwiz.Skyline
             // Update settings and menu check
             Settings.Default.ShowRetentionTimeGraph = false;
 
-            // Hide the dock panel, if this is its last graph pane.
-            if (dockPanel.Contents.Count == 0 ||
-                    (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _graphRetentionTime))
-                splitMain.Panel2Collapsed = true;
             _graphRetentionTime = null;
         }
 
@@ -1980,29 +1952,29 @@ namespace pwiz.Skyline
 
         public TreeNodeMS SelectedNode
         {
-            get { return sequenceTree.SelectedNode as TreeNodeMS; }
+            get { return SequenceTree != null ? SequenceTree.SelectedNode as TreeNodeMS : null; }
         }
 
         public IdentityPath SelectedPath
         {
-            get { return sequenceTree.SelectedPath; }
-            set { sequenceTree.SelectedPath = value; }
+            get { return SequenceTree != null ? SequenceTree.SelectedPath : new IdentityPath(); }
+            set { SequenceTree.SelectedPath = value; }
         }
 
         public IList<TreeNodeMS> SelectedNodes
         {
-            get { return sequenceTree.SelectedNodes.ToList(); }
+            get { return SequenceTree != null ? SequenceTree.SelectedNodes.ToArray() : new TreeNodeMS[0]; }
         }
 
         public int SelectedResultsIndex
         {
-            get { return comboResults.SelectedIndex; }
+            get { return ComboResults != null ? ComboResults.SelectedIndex : -1; }
             set
             {
-                if (0 <= value && value < comboResults.Items.Count)
+                if (0 <= value && value < ComboResults.Items.Count)
                 {
                     var focusStart = User32.GetFocusedControl();
-                    comboResults.SelectedIndex = value;
+                    ComboResults.SelectedIndex = value;
                     if (focusStart != null)
                         focusStart.Focus();
                 }
@@ -2630,7 +2602,6 @@ namespace pwiz.Skyline
         private void graphPeakArea_VisibleChanged(object sender, EventArgs e)
         {
             Settings.Default.ShowPeakAreaGraph = (_graphPeakArea != null && _graphPeakArea.Visible);
-            splitMain.Panel2Collapsed = !VisibleDockContent;
         }
 
         private void graphPeakArea_FormClosed(object sender, FormClosedEventArgs e)
@@ -2638,10 +2609,6 @@ namespace pwiz.Skyline
             // Update settings and menu check
             Settings.Default.ShowPeakAreaGraph = false;
 
-            // Hide the dock panel, if this is its last graph pane.
-            if (dockPanel.Contents.Count == 0 ||
-                    (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _graphPeakArea))
-                splitMain.Panel2Collapsed = true;
             _graphPeakArea = null;
         }
 
@@ -2967,7 +2934,7 @@ namespace pwiz.Skyline
                     var item = new ToolStripMenuItem(standardTypes[i].Title, null, handler.ToolStripMenuItemClick)
                                    {
                                        Checked =
-                                           (sequenceTree.RatioIndex == i &&
+                                           (SequenceTree.RatioIndex == i &&
                                             areaView == AreaNormalizeToView.area_ratio_view)
                                    };
                     menu.DropDownItems.Insert(i, item);
@@ -3110,7 +3077,6 @@ namespace pwiz.Skyline
         private void resultsGrid_VisibleChanged(object sender, EventArgs e)
         {
             Settings.Default.ShowResultsGrid = (_resultsGridForm != null && _resultsGridForm.Visible);
-            splitMain.Panel2Collapsed = !VisibleDockContent;
         }
 
         void resultsGrid_FormClosed(object sender, FormClosedEventArgs e)
@@ -3118,10 +3084,6 @@ namespace pwiz.Skyline
             // Update settings and menu check
             Settings.Default.ShowResultsGrid = false;
 
-            // Hide the dock panel, if this is its last graph pane.
-            if (dockPanel.Contents.Count == 0 ||
-                    (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _resultsGridForm))
-                splitMain.Panel2Collapsed = true;
             _resultsGridForm = null;
         }
 

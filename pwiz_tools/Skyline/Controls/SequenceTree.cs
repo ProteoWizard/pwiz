@@ -142,6 +142,16 @@ namespace pwiz.Skyline.Controls
             _nodeTip = new NodeTip(this);
 
             OnTextZoomChanged();
+            OnDocumentChanged(this, new DocumentChangedEventArgs(null));
+        }
+
+        protected override void  Dispose(bool disposing)
+        {
+            if (_pickTimer != null)
+                _pickTimer.Tick -= tick_ShowPickList;
+            if (DocumentContainer != null)
+                DocumentContainer.UnlistenUI(OnDocumentChanged);
+            base.Dispose(disposing);
         }
 
         [Browsable(true)]
@@ -212,6 +222,28 @@ namespace pwiz.Skyline.Controls
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
         public SrmDocument Document { get { return DocumentContainer.Document; } }
 
+        private int _updateLockCountDoc;
+        private SrmDocument _updateDocPrevious;
+
+        public bool IsInUpdateDoc { get { return _updateLockCountDoc > 0; } }
+
+        public void BeginUpdateDoc()
+        {
+            _updateLockCountDoc++;
+            _updateDocPrevious = Document;
+        }
+
+        public void EndUpdateDoc()
+        {
+            if (_updateLockCountDoc == 0)
+                return;
+            if (--_updateLockCountDoc == 0 && !ReferenceEquals(_updateDocPrevious, Document))
+            {
+                OnDocumentChanged(this, new DocumentChangedEventArgs(_updateDocPrevious));
+                _updateDocPrevious = null;
+            }
+        }
+
         /// <summary>
         /// Handler for a document changed event raised on the main document
         /// window.  Tip and capture are removed, and all nodes in the tree updated.
@@ -220,7 +252,13 @@ namespace pwiz.Skyline.Controls
         /// <param name="e"></param>
         private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
+            if (_updateLockCountDoc > 0)
+                return;
+
             SrmDocument document = DocumentContainer.DocumentUI;
+            if (document == null)
+                return;
+
             // If none of the children changed, then do nothing
             if (e.DocumentPrevious != null &&
                     ReferenceEquals(document.Children, e.DocumentPrevious.Children))
@@ -764,7 +802,8 @@ namespace pwiz.Skyline.Controls
             else
             {
                 node = null;
-                _nodeTip.HideTip();                
+                if (_nodeTip != null)
+                    _nodeTip.HideTip();                
             }
             NodeCapture = node;
         }

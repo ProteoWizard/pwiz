@@ -314,6 +314,12 @@
     <Compile Include="Controls\PopupPickList.Designer.cs">
       <DependentUpon>PopupPickList.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\SequenceTreeForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\SequenceTreeForm.Designer.cs">
+      <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\StatementCompletionTextBox.cs">
     </Compile>
     <Compile Include="Controls\TreeViewMS.cs">
@@ -874,6 +880,9 @@
     <EmbeddedResource Include="Controls\PopupPickList.resx">
       <DependentUpon>PopupPickList.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\SequenceTreeForm.resx">
+      <DependentUpon>SequenceTreeForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportMethodDlg.resx">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>

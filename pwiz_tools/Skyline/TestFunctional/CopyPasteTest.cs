@@ -50,6 +50,7 @@ namespace pwiz.SkylineTestFunctional
         protected override void DoTest()
         {
             RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_withMod.sky")));
+            WaitForGraphs();
 
             RunUI(() =>
             {
@@ -69,6 +70,7 @@ namespace pwiz.SkylineTestFunctional
 
                 // Test multiple selection disjoint, reverse order copy.
                 CheckCopiedNodes(0, 1);
+                Assert.AreSame(sequenceTree, SkylineWindow.SequenceTree);
                 sequenceTree.KeysOverride = Keys.None;
                 sequenceTree.SelectedNode = sequenceTree.Nodes[1].Nodes[0];
                 sequenceTree.KeysOverride = Keys.Control;
@@ -81,6 +83,7 @@ namespace pwiz.SkylineTestFunctional
                 sequenceTree.SelectedNode = sequenceTree.Nodes[0].Nodes[0];
                 sequenceTree.KeysOverride = Keys.Control;
                 sequenceTree.SelectedNode = sequenceTree.Nodes[1].Nodes[0];
+                Assert.AreSame(sequenceTree, SkylineWindow.SequenceTree);
                 CheckCopiedNodes(1, 2);
 
                 // Test no space between parent and descendents if immediate child is not selected.

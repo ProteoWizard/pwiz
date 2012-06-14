@@ -1578,5 +1578,17 @@ namespace pwiz.Skyline.Properties {
                 this["ExportMultiQuant"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowPeptides {
+            get {
+                return ((bool)(this["ShowPeptides"]));
+            }
+            set {
+                this["ShowPeptides"] = value;
+            }
+        }
     }
 }

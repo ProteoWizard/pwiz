@@ -175,25 +175,25 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_0_2 = 0.2;
         public const double FORMAT_VERSION_0_8 = 0.8;
         public const double FORMAT_VERSION_1_2 = 1.2;   // Used briefly during development of v1.3
-        public const double FORMAT_VERSION = 1.3;
+        public const double FORMAT_VERSION_1_3 = 1.3;
+        public const double FORMAT_VERSION = FORMAT_VERSION_1_3;
 
         public const int MAX_PEPTIDE_COUNT = 100*1000;
         public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;
 
         // Version of this document in deserialized XML
-        private double _formatVersion;
 
         public SrmDocument(SrmSettings settings)
             : base(new SrmDocumentId(), Annotations.EMPTY, new PeptideGroupDocNode[0], false)
         {
-            _formatVersion = FORMAT_VERSION;
+            FormatVersion = FORMAT_VERSION;
             Settings = settings;
         }
 
         public SrmDocument(SrmDocument doc, SrmSettings settings, IList<DocNode> children)
             : base(doc.Id, Annotations.EMPTY, children, false)
         {
-            _formatVersion = doc._formatVersion;
+            FormatVersion = doc.FormatVersion;
             RevisionIndex = doc.RevisionIndex + 1;
             Settings = settings;
         }
@@ -201,6 +201,8 @@ namespace pwiz.Skyline.Model
         public override AnnotationDef.AnnotationTarget AnnotationTarget { 
             get { throw new InvalidOperationException();}
         }
+
+        public double FormatVersion { get; private set; }
 
         /// <summary>
         /// Monotonically increasing index, incremented each time a modified
@@ -1154,11 +1156,11 @@ namespace pwiz.Skyline.Model
         /// <param name="reader">The reader positioned at the document start tag</param>
         public void ReadXml(XmlReader reader)
         {
-            _formatVersion = reader.GetDoubleAttribute(ATTR.format_version);
-            if (_formatVersion == 0)
-                _formatVersion = FORMAT_VERSION_0_1;
-            else if (_formatVersion > FORMAT_VERSION)
-                throw new InvalidDataException(string.Format("The document format version {0} is not supported.", _formatVersion));
+            FormatVersion = reader.GetDoubleAttribute(ATTR.format_version);
+            if (FormatVersion == 0)
+                FormatVersion = FORMAT_VERSION_0_1;
+            else if (FormatVersion > FORMAT_VERSION)
+                throw new InvalidDataException(string.Format("The document format version {0} is not supported.", FormatVersion));
 
             reader.ReadStartElement();  // Start document element
 
@@ -1493,7 +1495,7 @@ namespace pwiz.Skyline.Model
                         // For format version 0.2 and earlier it was not possible
                         // to have unmodified types.  The absence of a type simply
                         // meant it had no modifications.
-                        else if (_formatVersion <= FORMAT_VERSION_0_2)
+                        else if (FormatVersion <= FORMAT_VERSION_0_2)
                         {
                             staticTypedMods = new TypedExplicitModifications(peptide,
                                 IsotopeLabelType.light, new ExplicitMod[0]);
@@ -1508,7 +1510,7 @@ namespace pwiz.Skyline.Model
                         heavyMods = heavyMods.AddModMasses(staticTypedMods);
                         listHeavyMods.Add(heavyMods);
                     }
-                    if (_formatVersion <= FORMAT_VERSION_0_2 && listHeavyMods.Count == 0)
+                    if (FormatVersion <= FORMAT_VERSION_0_2 && listHeavyMods.Count == 0)
                     {
                         listHeavyMods.Add(new TypedExplicitModifications(peptide,
                             IsotopeLabelType.heavy, new ExplicitMod[0]));
