@@ -142,8 +142,6 @@ rule init ( version : location : options * )
     {
         .initialized = true ;
 
-        if ! [ path.exists $(location) ] { errors.user-error "Boost source tree not found at $(location)" ; }
-
         local version-tokens = [ regex.split $(version) \\. ] ;
         local boost-basename = "boost_$(version-tokens:J=_)" ;
 
@@ -162,6 +160,10 @@ rule init ( version : location : options * )
                 : # usage-requirements
                 : check-last-file-only   
                 ;
+        }
+        else if ! [ path.exists $(location) ]
+        {
+            errors.user-error "Boost source tree not found at $(location)" ;
         }
 
         local zlib-src-location = [ feature.get-values <zlib-src-location> : $(options) ] ;
