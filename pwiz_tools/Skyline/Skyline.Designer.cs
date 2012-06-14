@@ -192,9 +192,9 @@ namespace pwiz.Skyline
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator46 = new System.Windows.Forms.ToolStripSeparator();
-            this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator47 = new System.Windows.Forms.ToolStripSeparator();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator47 = new System.Windows.Forms.ToolStripSeparator();
+            this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.statusGeneral = new System.Windows.Forms.ToolStripStatusLabel();
             this.statusProgress = new System.Windows.Forms.ToolStripProgressBar();
@@ -1699,7 +1699,6 @@ namespace pwiz.Skyline
             this.toolsMenu.Name = "toolsMenu";
             this.toolsMenu.Size = new System.Drawing.Size(48, 20);
             this.toolsMenu.Text = "&Tools";
-            this.toolsMenu.Visible = false;
             this.toolsMenu.DropDownOpening += new System.EventHandler(this.toolsMenu_DropDownOpening);
             // 
             // placeholderToolsMenuItem
@@ -1713,24 +1712,24 @@ namespace pwiz.Skyline
             this.toolStripSeparator46.Name = "toolStripSeparator46";
             this.toolStripSeparator46.Size = new System.Drawing.Size(149, 6);
             // 
-            // configureToolsMenuItem
-            // 
-            this.configureToolsMenuItem.Name = "configureToolsMenuItem";
-            this.configureToolsMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.configureToolsMenuItem.Text = "&Configure...";
-            this.configureToolsMenuItem.Click += new System.EventHandler(this.configureToolsMenuItem_Click);
-            // 
-            // toolStripSeparator47
-            // 
-            this.toolStripSeparator47.Name = "toolStripSeparator47";
-            this.toolStripSeparator47.Size = new System.Drawing.Size(149, 6);
-            // 
             // optionsToolStripMenuItem
             // 
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
             this.optionsToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.optionsToolStripMenuItem.Text = "Options";
             this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator47
+            // 
+            this.toolStripSeparator47.Name = "toolStripSeparator47";
+            this.toolStripSeparator47.Size = new System.Drawing.Size(149, 6);
+            // 
+            // configureToolsMenuItem
+            // 
+            this.configureToolsMenuItem.Name = "configureToolsMenuItem";
+            this.configureToolsMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.configureToolsMenuItem.Text = "&Configure...";
+            this.configureToolsMenuItem.Click += new System.EventHandler(this.configureToolsMenuItem_Click);
             // 
             // statusStrip
             // 

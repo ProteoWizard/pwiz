@@ -3136,7 +3136,7 @@ namespace pwiz.Skyline
             toolsMenu.Visible = true;
 
             // Remove all items from the toolToolStripMenuItem.
-            while (!ReferenceEquals(toolsMenu.DropDownItems[0], toolStripSeparator47))
+            while (!ReferenceEquals(toolsMenu.DropDownItems[0], toolStripSeparator46))
             {
                 toolsMenu.DropDownItems.RemoveAt(0);
             }
@@ -3145,11 +3145,11 @@ namespace pwiz.Skyline
             List<ToolDescription> toolList = Settings.Default.ToolList;
             if (toolList.Count == 0)
             {
-                toolStripSeparator47.Visible = false;
+                toolStripSeparator46.Visible = false;
             }
             else
             {
-                toolStripSeparator47.Visible = true;
+                toolStripSeparator46.Visible = true;
                 foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t) {Text = t.Title}))
             
                     toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
@@ -3172,7 +3172,7 @@ namespace pwiz.Skyline
 
         public bool ConfigMenuPresent()
         {
-            return toolsMenu.DropDownItems.Contains(toolStripSeparator47) && 
+            return toolsMenu.DropDownItems.Contains(toolStripSeparator46) && 
                     toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
         }
 
