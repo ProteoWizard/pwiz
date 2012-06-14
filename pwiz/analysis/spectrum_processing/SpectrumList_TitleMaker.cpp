@@ -68,6 +68,7 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
 {
     string nameExtension = bal::to_lower_copy(bfs::extension(sf.name));
     string locationExtension = bal::to_lower_copy(bfs::extension(sf.location));
+    string result; // MSVC10 is happier with a copy before return?
 
     switch (sourceFileType)
     {
@@ -81,7 +82,7 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
         // insane: location="file://path/to" name="source.raw"
         case MS_Waters_raw_file:
             if (nameExtension == ".dat" && locationExtension == ".raw")
-                return BFS_STRING(bfs::path(sf.location).filename());
+                return result=BFS_STRING(bfs::path(sf.location).filename());
             else if (nameExtension == ".raw")
                 return sf.name;
             return "";
@@ -89,19 +90,19 @@ string translate_SourceFileTypeToRunID(const SourceFile& sf, CVID sourceFileType
         // location="file://path/to/source.d" name="Analysis.yep"
         case MS_Bruker_Agilent_YEP_file:
             if (nameExtension == ".yep" && locationExtension == ".d")
-                return BFS_STRING(bfs::path(sf.location).filename());
+                return result=BFS_STRING(bfs::path(sf.location).filename());
             return "";
             
         // location="file://path/to/source.d" name="Analysis.baf"
         case MS_Bruker_BAF_file:
             if (nameExtension == ".baf" && locationExtension == ".d")
-                return BFS_STRING(bfs::path(sf.location).filename());
+                return result=BFS_STRING(bfs::path(sf.location).filename());
             return "";
 
         // location="file://path/to/source.d/AcqData" name="msprofile.bin"
         case MS_Agilent_MassHunter_file:
             if (nameExtension == ".bin" && bfs::path(sf.location).filename() == "AcqData")
-                return BFS_STRING(bfs::path(sf.location).parent_path().filename());
+                return result=BFS_STRING(bfs::path(sf.location).parent_path().filename());
             return "";
 
         // location="file://path/to" name="source.mzXML"
