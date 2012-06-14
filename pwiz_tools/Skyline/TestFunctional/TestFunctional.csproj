@@ -126,6 +126,7 @@
   <ItemGroup>
     <Compile Include="AnnotationTest.cs" />
     <Compile Include="CalculateIsolationWindowsTest.cs" />
+    <Compile Include="ConfigureToolsDlgTest.cs" />
     <Compile Include="EmptyFunctionalTest.cs" />
     <Compile Include="ExportIsolationListTest.cs" />
     <Compile Include="ExportDiaListTest.cs" />

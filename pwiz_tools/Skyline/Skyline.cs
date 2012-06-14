@@ -49,6 +49,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using PasteFormat = pwiz.Skyline.EditUI.PasteFormat;
 using Timer = System.Windows.Forms.Timer;
@@ -203,7 +204,6 @@ namespace pwiz.Skyline
                 // CONSIDER: Reload last document?
                 NewDocument();
             }
-
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -3046,6 +3046,157 @@ namespace pwiz.Skyline
             }
             return form;
         }
+
+        #region Tools Menu
+
+        public class SenderArgs : EventArgs
+        {
+            public SenderArgs(List<ToolDescription> tools )
+            {
+                Tools = tools;
+            }
+            public List<ToolDescription> Tools { get; set; }
+        }
+
+        public static void SaveEvent(object sender, SenderArgs args)
+        {
+            Settings.Default.ToolList = args.Tools;
+        }
+
+        public class ToolMenuItem : ToolStripMenuItem
+        {
+            public ToolMenuItem(ToolDescription tool)
+            {
+                Title = tool.Title;
+                Command = tool.Command;
+                Arguments = tool.Arguments;
+                InitialDirectory = tool.InitialDirectory;
+                Click += HandleClick;
+            }
+
+            public string Title { get; set; }
+            public string Command { get; set; }
+            private string Arguments { get; set; }
+            private string InitialDirectory { get; set; }
+
+            private void HandleClick(object sender, EventArgs e)
+            {
+                DoClick();
+            }
+
+            public void DoClick()
+            {
+                ProcessStartInfo startInfo = new ProcessStartInfo(Command, Arguments)
+                                                 {WorkingDirectory = InitialDirectory};
+                try
+                {
+                    Process.Start(startInfo);
+                }
+                catch (FileNotFoundException)
+                {
+                    MessageDlg.Show(Parent, "File Not Found: \n\n Please check the command location is correct for this tool");
+                }
+                catch (Win32Exception)
+                {
+                    MessageDlg.Show(Parent, "File Not Found: \n\n Please check the command location is correct for this tool");
+                }
+                catch (Exception)
+                {
+                    MessageDlg.Show(Parent, "Please reconfigure that tool, it failed to execute. ");
+                }
+            }
+        }
+
+        private void configureToolsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowConfigureToolsDlg();
+        }
+
+        public void ShowConfigureToolsDlg()
+        {
+            using (ConfigureToolsDlg dlg = new ConfigureToolsDlg(Copier(Settings.Default.ToolList)))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
+        public static List<ToolDescription> Copier(List<ToolDescription> list)
+        {
+            List<ToolDescription> output = new List<ToolDescription>();          
+           
+            foreach (var t in list)
+            {
+                if (!t.Equals( new ToolDescription("", "", "", "")))
+                {
+                    ToolDescription temp = new ToolDescription(t.Title, t.Command, t.Arguments, t.InitialDirectory);
+                    output.Add(temp);
+                }                
+            }
+            return output;
+        }
+
+        private void toolsMenu_DropDownOpening(object sender, EventArgs e)
+        {
+            PopulateToolsMenu();
+        }
+
+        public void PopulateToolsMenu()
+        {
+            toolsMenu.Visible = true;
+
+            // Remove all items from the toolToolStripMenuItem.
+            while (!ReferenceEquals(toolsMenu.DropDownItems[0], toolsMenuSeparator))
+            {
+                toolsMenu.DropDownItems.RemoveAt(0);
+            }
+
+            int lastInsertIndex = 0;
+            List<ToolDescription> toolList = Settings.Default.ToolList;
+            if (toolList.Count == 0)
+            {
+                toolsMenuSeparator.Visible = false;
+            }
+            else
+            {
+                toolsMenuSeparator.Visible = true;
+                foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t) {Text = t.Title}))
+            
+                    toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
+            }            
+        }
+
+        /// <summary>
+        /// Runs a tool by index from the tools menu. (for testing)
+        /// </summary>
+        /// <param name="i">Index of tool in the menu</param>
+        public void RunTool(int i)
+        {
+            GetToolMenuItem(i).DoClick();
+        }
+
+        public string GetToolText(int i)
+        {
+            return GetToolMenuItem(i).Text;
+        }
+
+        public bool ConfigMenuPresent()
+        {
+            return toolsMenu.DropDownItems.Contains(toolsMenuSeparator) &&
+                   toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
+        }
+
+        private ToolMenuItem GetToolMenuItem(int i)
+        {
+            foreach (var item in toolsMenu.DropDownItems)
+            {
+                var toolMenuItem = item as ToolMenuItem;
+                if (toolMenuItem != null && i-- == 0)
+                    return toolMenuItem;
+            }
+            return null;
+        }
+
+        #endregion 
     }
 }
 

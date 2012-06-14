@@ -639,6 +639,7 @@
     <Compile Include="Model\SrmDocumentExtensions.cs" />
     <Compile Include="Model\SrmDocumentSharing.cs" />
     <Compile Include="Model\ModificationMatcher.cs" />
+    <Compile Include="Model\ToolDescription.cs" />
     <Compile Include="Model\Transition.cs" />
     <Compile Include="Model\TransitionCalc.cs" />
     <Compile Include="Model\TransitionDocNode.cs" />
@@ -942,6 +943,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.resx">
+      <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -978,6 +982,12 @@
     </Compile>
     <Compile Include="SkylineGraphs.cs">
       <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ConfigureToolsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ConfigureToolsDlg.designer.cs">
+      <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
@@ -1682,6 +1692,7 @@
       <FileType>Assembly</FileType>
     </PublishFile>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

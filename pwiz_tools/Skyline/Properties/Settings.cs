@@ -65,6 +65,21 @@ namespace pwiz.Skyline.Properties
         }
 
         [System.Configuration.UserScopedSettingAttribute]
+        public List<ToolDescription> ToolList
+        {
+            get
+            {
+                if (this["ToolList"] == null)
+                    ToolList = new List<ToolDescription>();
+                return (List<ToolDescription>)(this["ToolList"]);
+            }
+            set
+            {
+                this["ToolList"] = value;
+            }
+        }
+
+        [System.Configuration.UserScopedSettingAttribute]
         public List<string> MruList
         {
             get
