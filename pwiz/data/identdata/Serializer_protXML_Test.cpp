@@ -91,16 +91,10 @@ int main(int argc, char** argv)
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        std::string buildparent(argv[0]);
-        size_t pos = buildparent.find("build");
-        if (string::npos==pos)
-        {
-            buildparent = __FILE__; // nonstandard build, maybe?  try using source file name
-            // something like \ProteoWizard\pwiz\pwiz\data\msdata\RAMPAdapterTest.cpp
-            pos = buildparent.rfind("pwiz");
-        }
-        buildparent.resize(pos);
-        string example_data_dir = buildparent + "example_data/";
+        std::string srcparent(__FILE__); // something like \ProteoWizard\pwiz\pwiz\data\msdata\RAMPAdapterTest.cpp
+        size_t pos = srcparent.rfind("pwiz");
+        srcparent.resize(pos);
+        string example_data_dir = srcparent + "example_data/";
         testSerialize(example_data_dir);
         return 0;
     }
