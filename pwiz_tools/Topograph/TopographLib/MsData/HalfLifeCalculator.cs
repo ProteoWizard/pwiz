@@ -876,7 +876,7 @@ namespace pwiz.Topograph.MsData
             }
             public override string ToString()
             {
-                return HalfLife + " [" + MinHalfLife + "," + MaxHalfLife + "]";
+                return HalfLife.ToString("0.00") + " [" + MinHalfLife.ToString("0.00") + "," + MaxHalfLife.ToString("0.00") + "]";
             }
 
             public int CompareTo(object obj)
