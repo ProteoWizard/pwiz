@@ -163,6 +163,17 @@ Config parseCommandLine(int argc, const char* argv[])
           << "# convert sequest.pepXML to sequest.mzid\n"
           << "idconvert sequest.pepXML\n"
           << endl
+          << "# convert sequest.protXML to sequest.mzid\n"
+          << "# Also reads any pepXML file referenced in the \n"
+          << "# protXML file if available.  If the protXML \n"
+          << "# file has been moved from its original location, \n"
+          << "# the pepXML will still be found if it has also \n"
+          << "# been moved to the same position relative to the \n"
+          << "# protXML file. This relative position is determined \n"
+          << "# by reading the protXML protein_summary:summary_xml \n"
+          << "# and protein_summary_header:source_files values.\n"
+          << "idconvert sequest.protXML\n"
+          << endl
           << "# convert mascot.mzid to mascot.pepXML\n"
           << "idconvert mascot.mzid --pepXML\n"
           << endl

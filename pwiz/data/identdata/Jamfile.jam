@@ -82,6 +82,7 @@ lib pwiz_data_identdata
         IO.cpp
         Serializer_mzid.cpp
         Serializer_pepXML.cpp
+        Serializer_protXML.cpp
         Serializer_Text.cpp
         Pep2MzIdent.cpp
         DelimWriter.cpp
@@ -169,6 +170,7 @@ unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_identdata ;
 unit-test-if-exists IOTest : IOTest.cpp pwiz_data_identdata pwiz_data_identdata_examples ;
 unit-test-if-exists Serializer_mzid_Test : Serializer_mzid_Test.cpp pwiz_data_identdata_examples ;
 unit-test-if-exists Serializer_pepXML_Test : Serializer_pepXML_Test.cpp pwiz_data_identdata_examples ;
+unit-test-if-exists Serializer_protXML_Test : Serializer_protXML_Test.cpp pwiz_data_identdata_examples ;
 unit-test-if-exists Serializer_Text_Test : Serializer_Text_Test.cpp pwiz_data_identdata_examples ;
 unit-test-if-exists KwCVMapTest : KwCVMapTest.cpp pwiz_data_identdata_examples ;
 #unit-test-if-exists Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_identdata ;

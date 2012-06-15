@@ -29,6 +29,7 @@
 #include "DefaultReaderList.hpp"
 #include "Serializer_mzid.hpp"
 #include "Serializer_pepXML.hpp"
+#include "Serializer_protXML.hpp"
 #include "MascotReader.hpp"
 //#include "References.hpp"
 #include "pwiz/data/identdata/Version.hpp"
@@ -149,6 +150,8 @@ class Reader_mzid : public Reader
 
 class Reader_pepXML : public Reader
 {
+public:
+
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
         string result;
@@ -190,6 +193,106 @@ class Reader_pepXML : public Reader
 };
 
 
+class Reader_protXML : public Reader
+{
+    virtual std::string identify(const std::string& filename, const std::string& head) const
+    {
+        string result;
+        try {
+            result = string(xml_root_element(head) == "protein_summary" ? getType() : "");
+        } catch(...) {
+        }
+        return result;
+    }
+
+    virtual void read(const std::string& filename, const std::string& head, IdentData& result, const Config& config) const
+    {
+        shared_ptr<istream> is(new random_access_compressed_ifstream(filename.c_str()));
+        if (!is.get() || !*is)
+            throw runtime_error("[Reader_protXML::read] Unable to open file " + filename);
+
+        Serializer_protXML serializer(Serializer_protXML::Config(!config.ignoreSequenceCollectionAndAnalysisData));
+        if (result.empty())
+        {
+            // no preexisting info - see if we can read corresponding pepXML
+            // data referred to in the protXML file
+            std::vector<std::string> sourceFiles;
+            serializer.read(is, result, &sourceFiles, NULL);
+            // now sourceFiles[0] should contain protXML file's original name
+            // and sourceFiles[1] should contain source pepXML file's original name
+            if (2==sourceFiles.size())
+            {
+                // likely that files are not in the original locations - let's
+                // assume (actually require) that they moved together
+                std::string srcFile(boost::replace_all_copy(filename,"\\","/"));
+                std::string protFile(boost::replace_all_copy(sourceFiles[0],"\\","/"));
+                std::string pepFile(boost::replace_all_copy(sourceFiles[1],"\\","/"));
+                // find common trailing part of actual and declared protxml filenames
+                int l,r=0;
+                for (l=0;l < (int)srcFile.length();l++)
+                {
+                    for (r=0;r < (int)protFile.length();r++)
+                    {
+                        if (srcFile.substr(l)==protFile.substr(r))
+                        {
+                            break;
+                        }
+                    }
+                    if (r < (int)protFile.length())
+                    {
+                        break;
+                    }
+                }
+                // find common leading part of declared protxml and pepxml filenames
+                int ll;
+                for (ll=0;ll<(int)pepFile.length();ll++)
+                {
+                    if (pepFile.substr(0,ll)!=protFile.substr(0,ll))
+                    {
+                        // retreat to path sep
+                        while (ll && (pepFile[ll] != '/'))
+                            ll--;
+                        break;
+                    }
+                }
+                // now try to populate the idendata's peptides
+                std::string pepx = srcFile.substr(0,l)+pepFile.substr(ll);
+                try
+                {
+                    std::string head;
+                    Reader_pepXML reader;
+                    reader.read(pepx, head, result, config);
+                }
+                catch(...) 
+                {
+                    // not a crisis, much peptide info can be read from protXML itself
+                }
+            }
+        }
+        // and proceed with protXML reading
+        serializer.read(is, result, NULL, config.iterationListenerRegistry);
+        fillInCommonMetadata(filename, result);
+    }
+
+    virtual void read(const std::string& filename, const std::string& head, IdentDataPtr& result, const Config& config) const
+    {
+        if (!result.get())
+            throw ReaderFail("[Reader_protXML::read] NULL valued IdentDataPtr passed in.");
+        return read(filename, head, *result, config);
+    }
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<IdentDataPtr>& results,
+                      const Config& config) const
+    {
+        results.push_back(IdentDataPtr(new IdentData));
+        read(filename, head, *results.back(), config);
+    }
+
+    virtual const char *getType() const {return "protXML";}
+};
+
 } // namespace
 
 
@@ -198,6 +301,7 @@ PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
 {
     push_back(ReaderPtr(new Reader_mzid));
     push_back(ReaderPtr(new Reader_pepXML));
+    push_back(ReaderPtr(new Reader_protXML));
     push_back(ReaderPtr(new MascotReader));
 }
 

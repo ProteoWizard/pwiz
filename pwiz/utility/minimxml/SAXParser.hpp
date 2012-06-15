@@ -365,6 +365,14 @@ class Handler
               setParserIndex(); // ready for eventual parsing
               test_invariant(); // everything correct?
         };
+        Attributes() :
+          index(0),index_end(0),autoUnescape(false),firstread(true),attrs()
+        {
+              size=0;
+              textbuff = NULL;
+              managemem = true;
+              test_invariant(); // everything correct?
+        };
         Attributes(saxstring &str, bool _autoUnescape) :
           index(0),index_end(0),autoUnescape(_autoUnescape),firstread(true),attrs() 
         {
@@ -381,6 +389,7 @@ class Handler
         }
         Attributes(const Attributes &rhs) 
         {
+            textbuff = NULL;
             *this = rhs;
         }
         Attributes & operator = (const Attributes &rhs) {
@@ -389,7 +398,10 @@ class Handler
             index_end = rhs.index_end; // string bounds for attribute parsing
             autoUnescape = rhs.autoUnescape; // do XML escape of attribute?
             firstread = rhs.firstread; // may change during const access
-            textbuff = (char *)malloc(size+1);
+            if (managemem)
+                textbuff = (char *)realloc(textbuff,size+1);
+            else
+                textbuff = (char *)malloc(size+1);
             managemem = true; // we need to free textbuff at dtor
             memcpy(textbuff,rhs.textbuff,size+1);
             attrs.resize(rhs.attrs.size()); 
