@@ -35,8 +35,8 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private readonly IPanoramaClient _testClient = new TestPanoramaClient();    // Use null for WebClient
-        private const string VALID_USER_NAME = "saj9191@gmail.com";
-        private const string VALID_PASSWORD = "kittycat";
+        private const string VALID_USER_NAME = "user";
+        private const string VALID_PASSWORD = "password";
 
         private const string VALID_PANORAMA_SERVER = "128.208.10.133:8070";
         private const string VALID_NON_PANORAMA_SERVER = "www.google.com";
