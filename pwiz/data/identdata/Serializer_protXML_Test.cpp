@@ -51,6 +51,8 @@ void testSerialize(const string &example_data_dir)
 {
     DefaultReaderList readers;
     Reader::Config readerConfig;
+	DiffConfig diffconfig;
+    diffconfig.ignoreVersions = true;
 
     {
     // verify that loading protXML with reachable pepXML source files gives more 
@@ -58,8 +60,9 @@ void testSerialize(const string &example_data_dir)
     IdentData mzid0,mzid1;
     readers.read(example_data_dir+"/example.pep.xml", mzid0, readerConfig);
     readers.read(example_data_dir+"/example.prot.xml", mzid1, readerConfig);
-    Diff<IdentData, DiffConfig> diff0(mzid0, mzid1);
-    unit_assert(diff0);
+    Diff<IdentData, DiffConfig> diff(diffconfig);
+	diff(mzid0, mzid1);
+    unit_assert(diff);
     }
 
     {
@@ -69,9 +72,10 @@ void testSerialize(const string &example_data_dir)
     readers.read(example_data_dir+"/example.pep.xml", mzid0, readerConfig);
     readers.read(example_data_dir+"/example.prot.xml", mzid0, readerConfig);
     readers.read(example_data_dir+"/example.prot.xml", mzid1, readerConfig);
-    Diff<IdentData, DiffConfig> diff1(mzid0, mzid1);
-    if (os_ && diff1) *os_ << diff1 << endl; 
-    unit_assert(!diff1);
+    Diff<IdentData, DiffConfig> diff(diffconfig);
+	diff(mzid0, mzid1);
+    if (os_ && diff) *os_ << diff << endl; 
+    unit_assert(!diff);
     }
 
     {
@@ -79,9 +83,10 @@ void testSerialize(const string &example_data_dir)
     IdentData mzid0,mzid1;
     readers.read(example_data_dir+"/example.prot.xml", mzid0, readerConfig);
     readers.read(example_data_dir+"/example.prot.mzid", mzid1, readerConfig);
-    Diff<IdentData, DiffConfig> diff2(mzid0, mzid1);
-    if (os_ && diff2) *os_ << diff2 << endl; 
-    unit_assert(!diff2);
+    Diff<IdentData, DiffConfig> diff(diffconfig);
+	diff(mzid0, mzid1);
+    if (os_ && diff) *os_ << diff << endl; 
+    unit_assert(!diff);
     }
 }
 

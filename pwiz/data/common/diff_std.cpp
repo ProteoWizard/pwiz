@@ -74,7 +74,8 @@ void diff(const CV& a,
     diff_string(a.URI, b.URI, a_b.URI, b_a.URI);
     diff_string(a.id, b.id, a_b.id, b_a.id);
     diff_string(a.fullName, b.fullName, a_b.fullName, b_a.fullName);
-    diff_string(a.version, b.version, a_b.version, b_a.version);
+	if (!config.ignoreVersions)
+        diff_string(a.version, b.version, a_b.version, b_a.version);
 }
 
 

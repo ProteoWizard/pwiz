@@ -101,7 +101,8 @@ void diff(const Software& a,
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    diff(a.version, b.version, a_b.version, b_a.version, config);
+	if (!config.ignoreVersions)
+        diff(a.version, b.version, a_b.version, b_a.version, config);
 
     // provide id for context
     if (!a_b.empty() || !b_a.empty()) 
@@ -323,7 +324,8 @@ void diff(const TraData& a,
     string a_b_version, b_a_version;
 
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    diff(a.version(), b.version(), a_b_version, b_a_version, config);
+	if (!config.ignoreVersions)
+        diff(a.version(), b.version(), a_b_version, b_a_version, config);
     vector_diff_diff(a.cvs, b.cvs, a_b.cvs, b_a.cvs, config);
     vector_diff_deep(a.contactPtrs, b.contactPtrs, a_b.contactPtrs, b_a.contactPtrs, config);
     vector_diff_diff(a.publications, b.publications, a_b.publications, b_a.publications, config);

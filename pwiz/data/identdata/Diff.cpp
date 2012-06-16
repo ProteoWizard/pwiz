@@ -351,7 +351,8 @@ void diff(const SearchDatabase& a,
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
     QUICKCHECK(); // in case we just want to know that they differ, not how they differ
     diff(a.location, b.location, a_b.location, b_a.location, config);
-    diff(a.version, b.version, a_b.version, b_a.version, config);
+	if (!config.ignoreVersions)
+        diff(a.version, b.version, a_b.version, b_a.version, config);
     diff(a.releaseDate, b.releaseDate, a_b.releaseDate, b_a.releaseDate, config);
     if (a.numDatabaseSequences != b.numDatabaseSequences)
     {
@@ -857,7 +858,8 @@ void diff(const AnalysisSoftware& a,
 {
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
     QUICKCHECK(); // in case we just want to know that they differ, not how they differ
-    diff(a.version, b.version, a_b.version, b_a.version, config);
+	if (!config.ignoreVersions)
+        diff(a.version, b.version, a_b.version, b_a.version, config);
     ptr_diff(a.contactRolePtr, b.contactRolePtr, a_b.contactRolePtr, b_a.contactRolePtr, config);
     diff(a.softwareName, b.softwareName, a_b.softwareName, b_a.softwareName, config);
     diff(a.URI, b.URI, a_b.URI, b_a.URI, config);
@@ -877,7 +879,8 @@ void diff(const IdentData& a,
     // Attributes
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
     QUICKCHECK(); // in case we just want to know that they differ, not how they differ
-    diff(a.version(), b.version(), a_b_version, b_a_version, config);
+	if (!config.ignoreVersions)
+        diff(a.version(), b.version(), a_b_version, b_a_version, config);
     diff(a.creationDate, b.creationDate, a_b.creationDate, b_a.creationDate, config);
 
     // Elements

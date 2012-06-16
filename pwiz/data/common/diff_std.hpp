@@ -40,9 +40,10 @@ namespace data {
     
 struct BaseDiffConfig
 {
-    BaseDiffConfig(double _precision = 1e-6) : precision(_precision), partialDiffOK(false) {}
+    BaseDiffConfig(double _precision = 1e-6) : precision(_precision), partialDiffOK(false), ignoreVersions(false) {}
     double precision;
     bool partialDiffOK; // if true, can stop checking at first difference found
+	bool ignoreVersions; // if true, don't sweat version number mismatches
 };
 
 
