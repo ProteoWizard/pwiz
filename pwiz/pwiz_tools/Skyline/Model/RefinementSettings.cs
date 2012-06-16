@@ -73,12 +73,14 @@ namespace pwiz.Skyline.Model
         public bool AddLabelType { get; set; }
         public double? MinPeakFoundRatio { get; set; }
         public double? MaxPeakFoundRatio { get; set; }
+        public double? MaxPepPeakRank { get; set; }
         public double? MaxPeakRank { get; set; }
         public bool PreferLargeIons { get; set; }
         public bool RemoveMissingResults { get; set; }
         public double? RTRegressionThreshold { get; set; }
         public int? RTRegressionPrecision { get; set; }
         public double? DotProductThreshold { get; set; }
+        public double? IdotProductThreshold { get; set; }
         public bool UseBestResult { get; set; }
         public PickLevel AutoPickChildrenAll { get; set; }
         public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
@@ -240,6 +242,45 @@ namespace pwiz.Skyline.Model
                 listPeptides.Add(nodePepRefined);
             }
 
+            if (MaxPepPeakRank.HasValue)
+            {
+                // Calculate the average peak area for each transition
+                int countPeps = listPeptides.Count;
+                var listAreaIndexes = new List<PepAreaSortInfo>();
+                var internalStandardTypes = document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+                for (int i = 0; i < countPeps; i++)
+                {
+                    var nodePep = listPeptides[i];
+                    // Only peptides with children can possible be ranked by area
+                    // Those without should be removed by this operation
+                    if (nodePep.Children.Count == 0)
+                        continue;                    
+                    int bestResultIndex = (UseBestResult ? nodePep.BestResult : -1);
+                    var sortInfo = new PepAreaSortInfo(nodePep, internalStandardTypes, bestResultIndex, i);
+                    listAreaIndexes.Add(sortInfo);
+                }
+
+                listAreaIndexes.Sort((p1, p2) => Comparer.Default.Compare(p2.Area, p1.Area));
+                
+                // Store area ranks
+                var arrayAreaIndexes = new PepAreaSortInfo[listAreaIndexes.Count];
+                int iRank = 1;
+                foreach (var areaIndex in listAreaIndexes)
+                {
+                    areaIndex.Rank = iRank++;
+                    arrayAreaIndexes[areaIndex.Index] = areaIndex;
+                }
+
+                // Add back all transitions with low enough rank.
+                listPeptides.Clear();
+                foreach (var areaIndex in arrayAreaIndexes)
+                {
+                    if (areaIndex.Area == 0 || areaIndex.Rank > MaxPepPeakRank.Value)
+                        continue;
+                    listPeptides.Add(areaIndex.Peptide);
+                }
+            }
+
             // Change the children, but only change auto-management, if the child
             // identities have changed, not if their contents changed.
             var childrenNew = listPeptides.ToArray();
@@ -247,9 +288,7 @@ namespace pwiz.Skyline.Model
             return (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(childrenNew, updateAutoManage);
         }
 
-// ReSharper disable SuggestBaseTypeForParameter
         private PeptideDocNode Refine(PeptideDocNode nodePep, SrmDocument document, int bestResultIndex)
-// ReSharper restore SuggestBaseTypeForParameter
         {
             int minTrans = MinTransitionsPepPrecursor ?? 0;
 
@@ -300,6 +339,12 @@ namespace pwiz.Skyline.Model
                     {
                         float? dotProduct = nodeGroupRefined.GetLibraryDotProduct(bestResultIndex);
                         if (dotProduct.HasValue && dotProduct.Value < DotProductThreshold.Value)
+                            continue;
+                    }
+                    if (IdotProductThreshold.HasValue)
+                    {
+                        float? idotProduct = nodeGroupRefined.GetIsotopeDotProduct(bestResultIndex);
+                        if (idotProduct.HasValue && idotProduct.Value < IdotProductThreshold.Value)
                             continue;
                     }
                 }
@@ -447,7 +492,9 @@ namespace pwiz.Skyline.Model
                 var ranks = new int[countTrans];
                 for (int i = 0, iRank = 1; i < countTrans; i++)
                 {
-                    ranks[listAreaIndexes[i].Index] = iRank++;
+                    var areaIndex = listAreaIndexes[i];
+                    // Never keep a transition with no peak area
+                    ranks[areaIndex.Index] = (areaIndex.Area > 0 ? iRank++ : int.MaxValue);
                 }
 
                 // Add back all transitions with low enough rank.
@@ -699,6 +746,47 @@ namespace pwiz.Skyline.Model
             }
             Array.Sort(arrayMods, (mod1, mod2) => Comparer.Default.Compare(mod1.IndexAA, mod2.IndexAA));
             return arrayMods;
+        }
+
+        private sealed class PepAreaSortInfo
+        {
+            private readonly PeptideDocNode _nodePep;
+            private readonly int _bestCharge;
+
+            public PepAreaSortInfo(PeptideDocNode nodePep,
+                                   ICollection<IsotopeLabelType> internalStandardTypes,
+                                   int bestResultIndex,
+                                   int index)
+            {
+                _nodePep = nodePep;
+
+                // Get transition group areas by charge state
+                var chargeGroups =
+                    from nodeGroup in nodePep.TransitionGroups
+                    where !internalStandardTypes.Contains(nodeGroup.TransitionGroup.LabelType)
+                    group nodeGroup by nodeGroup.TransitionGroup.PrecursorCharge into g
+                    select new {Charge = g.Key, Area = g.Sum(ng => ng.GetPeakArea(bestResultIndex))};
+
+                // Store the best charge state and its area
+                var bestChargeGroup = chargeGroups.OrderBy(cg => cg.Area).First();
+                _bestCharge = bestChargeGroup.Charge;
+                Area = bestChargeGroup.Area ?? 0;
+
+                Index = index;
+            }
+
+            public float Area { get; private set; }
+            public int Index { get; private set; }
+            public int Rank { get; set; }
+
+            public PeptideDocNode Peptide
+            {
+                get
+                {
+                    return (PeptideDocNode) _nodePep.ChangeChildrenChecked(_nodePep.TransitionGroups.Where(
+                        nodeGroup => nodeGroup.TransitionGroup.PrecursorCharge == _bestCharge).ToArray());
+                }
+            }
         }
 
         private sealed class AreaSortInfo

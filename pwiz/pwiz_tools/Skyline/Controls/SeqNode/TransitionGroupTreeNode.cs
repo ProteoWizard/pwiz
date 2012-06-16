@@ -409,8 +409,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             HashSet<IonType> setTypes = new HashSet<IonType>(filter.IonTypes);
             foreach (TransitionDocNode nodTran in chosen)
             {
+                var type = nodTran.Transition.IonType;
+                if (type == IonType.precursor)
+                    continue;
                 setCharges.Add(nodTran.Transition.Charge);
-                setTypes.Add(nodTran.Transition.IonType);
+                setTypes.Add(type);
             }
             setTypes.Remove(IonType.precursor);
             int[] charges = setCharges.ToArray();

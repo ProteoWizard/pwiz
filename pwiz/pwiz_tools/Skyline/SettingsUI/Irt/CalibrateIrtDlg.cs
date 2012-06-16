@@ -274,7 +274,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (pep.SchedulingTime.HasValue)
                     {
-                        docPeptides.Add(new MeasuredPeptide(pep.Peptide.Sequence, pep.SchedulingTime.Value));
+                        docPeptides.Add(new MeasuredPeptide(doc.Settings.GetModifiedSequence(pep), pep.SchedulingTime.Value));
 
                         if (pep.SchedulingTime.Value < minRT)
                             minRT = pep.SchedulingTime.Value;

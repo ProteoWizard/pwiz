@@ -136,7 +136,7 @@ namespace pwiz.SkylineTestA
             refineSettings.MaxPeakFoundRatio = 1.0;
             Assert.AreSame(document, refineSettings.Refine(document));
             refineSettings.MinPeakFoundRatio = refineSettings.MaxPeakFoundRatio = null;
-            refineSettings.MaxPeakRank = 15;
+            // refineSettings.MaxPeakRank = 15;  This will remove unmeasured transitions
             Assert.AreSame(document, refineSettings.Refine(document));
 
             // Remove nodes without results
@@ -208,6 +208,13 @@ namespace pwiz.SkylineTestA
                     Assert.AreEqual(nodeTranOld.Results[0][0].Rank, nodeTran.Results[0][0].Rank);
                 }
             }
+
+            // Pick only most intenst peptides
+            refineSettings = new RefinementSettings { MaxPepPeakRank = 5 };
+            var docRefinePepMaxPeaks = refineSettings.Refine(document);
+            // 4 groups, one unmeasured and one with only 3 peptides
+            Assert.AreEqual(13, docRefinePepMaxPeaks.PeptideCount);
+            Assert.AreEqual(docRefinePepMaxPeaks.PeptideCount, docRefinePepMaxPeaks.TransitionGroupCount);
 
             // Add heavy labeled precursors for everything
             var settingsNew = docRefineMaxPeaks.Settings.ChangeTransitionFilter(f => f.ChangeAutoSelect(false));
