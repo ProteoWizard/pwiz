@@ -698,9 +698,17 @@ string BuildParser::getFilenameFromID(const string& idStr){
 
     size_t start = idStr.find("File:");
     if( start != string::npos ){ // found it
-        start += strlen("File: ");
-        size_t end = idStr.find_first_of(",\"", start);
-        filename = idStr.substr(start, end - start);
+        start = idStr.find_first_not_of(' ', start + strlen("File:"));
+        if ( start != string::npos ){
+            size_t end = idStr[start] != '"'
+                ? idStr.find_first_of(',', start)
+                : idStr.find_first_of('"', ++start);
+
+            if ( end == string::npos )
+                end = idStr.length();
+
+            filename = idStr.substr(start, end - start);
+        }
     }
     if (filename.empty()){
         // check for TPP/SEQUEST format <basename>.<start scan>.<end scan>.<charge>[.dta]
