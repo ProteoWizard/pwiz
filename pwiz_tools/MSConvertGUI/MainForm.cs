@@ -64,6 +64,13 @@ namespace MSConvertGUI
             Text = "MSConvert" + (Environment.Is64BitProcess ? " (64-bit)" : "");
         }
 
+        private void setFileBoxText(string text)
+        {
+            if (""!=text)
+                lastFileboxText = text; // for use in setting browse directory
+            FileBox.Text = text;
+        }
+
         private void MainForm_Load (object sender, EventArgs e)
         {
             assignTooltips();
@@ -74,13 +81,13 @@ namespace MSConvertGUI
             for (int i = 0; i < cmdline_args.Length; i++)
             {
                 // mimic user adding file via filebox
-                FileBox.Text = cmdline_args[i];
+                setFileBoxText(cmdline_args[i]);
                 AddFileButton_Click(sender, e);
                 if (FileBox.Text.Length > 0)
                 {
                     // if it didn't get added, field will still contain file or dir name
-                    MessageBox.Show("Don't know how to read \"" + FileBox.Text + "\", ignored");
-                    FileBox.Text = "";
+                    MessageBox.Show("Don't know how to read \"" + FileBox.Text + "\", ignored",this.Text);
+                    setFileBoxText("");
                 }
             }
             OutputFormatBox.Text = "mzML";
@@ -170,12 +177,12 @@ namespace MSConvertGUI
         {
             if (FileListBox.SelectedItems.Count == 1)
             {
-                FileBox.Text = (string)FileListBox.Items[FileListBox.SelectedIndex];
+                setFileBoxText((string)FileListBox.Items[FileListBox.SelectedIndex]);
                 FileListBox.Items.RemoveAt(FileListBox.SelectedIndex);
             }
             else if (FileListBox.SelectedItems.Count > 1)
             {
-                FileBox.Text = (string)FileListBox.SelectedItems[0];
+                setFileBoxText((string)FileListBox.SelectedItems[0]);
                 var itemsToDelete = FileListBox.SelectedItems.Cast<object>().ToList();
                 foreach (var item in itemsToDelete)
                     FileListBox.Items.Remove(item);
@@ -199,7 +206,7 @@ namespace MSConvertGUI
 
             OpenDataSourceDialog browseToFileDialog;
             browseToFileDialog = String.IsNullOrEmpty(FileBox.Text)
-                                     ? new OpenDataSourceDialog(fileList)
+                                     ? new OpenDataSourceDialog(fileList, lastFileboxText)
                                      : new OpenDataSourceDialog(fileList, FileBox.Text);
 
             #region Set up Delegates
@@ -227,7 +234,7 @@ namespace MSConvertGUI
             if (browseToFileDialog.ShowDialog() == DialogResult.OK)
             {
                 if (browseToFileDialog.DataSources.Count == 1)
-                    FileBox.Text = browseToFileDialog.DataSources[0];
+                    setFileBoxText(browseToFileDialog.DataSources[0]);
                 else if (browseToFileDialog.DataSources.Count > 1)
                 {
                     foreach (string dataSource in browseToFileDialog.DataSources)

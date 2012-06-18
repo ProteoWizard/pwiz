@@ -54,6 +54,7 @@ namespace MSConvertGUI
             this.components = new System.ComponentModel.Container();
             this.ctlToolTip = new System.Windows.Forms.ToolTip(this.components);
             this.FileBox = new System.Windows.Forms.TextBox();
+            this.lastFileboxText = "";
             this.FileLabel = new System.Windows.Forms.Label();
             this.AddFileButton = new System.Windows.Forms.Button();
             this.FilterDGV = new System.Windows.Forms.DataGridView();
@@ -1287,6 +1288,7 @@ namespace MSConvertGUI
         private System.Windows.Forms.ComboBox thresholdOrientationComboBox;
         private System.Windows.Forms.TextBox thresholdValueTextBox;
         private System.Windows.Forms.ComboBox thresholdTypeComboBox;
+        private string lastFileboxText;
     }
 }
 
