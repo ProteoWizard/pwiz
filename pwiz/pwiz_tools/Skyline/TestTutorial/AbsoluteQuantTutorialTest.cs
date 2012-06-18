@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -42,12 +43,16 @@ namespace pwiz.SkylineTestTutorial
         [TestMethod]
         public void TestAbsoluteQuantificationTutorial()
         {
-            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuant.zip";
+
+            TestFilesZip = ExtensionTestContext.CanImportThermoRaw
+                               ? @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuant.zip"
+                               : @"https://skyline.gs.washington.edu/tutorials/AbsoluteQuantMzml.zip";
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            var folderAbsoluteQuant = ExtensionTestContext.CanImportThermoRaw ? "AbsoluteQuant" : "AbsoluteQuantMzml";
             // Generating a Transition List, p. 4
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI,
                                          transitionSettingsUI =>
@@ -86,8 +91,8 @@ namespace pwiz.SkylineTestTutorial
 
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 1, 1, 2, 10);
 
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("test_file.sky")));
-            WaitForCondition(() => File.Exists(TestFilesDir.GetTestPath("test_file.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
+            WaitForCondition(() => File.Exists(TestFilesDir.GetTestPath(folderAbsoluteQuant + @"test_file.sky")));
 
             // Exporting a transition list p. 6
             // TODO: Export name never specified in tutorial.
@@ -210,31 +215,35 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(editReportListDlg.OkDialog);
             WaitForClosedForm(editReportListDlg);
+
+            var columnSeparator = Equals(CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator, '.')
+                                      ? ','
+                                      : '.';
             RunUI(() =>
             {
                 exportReportDlg.ReportName = reportName;
-                exportReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), ',');
+                exportReportDlg.OkDialog(TestFilesDir.GetTestPath("Calibration.csv"), columnSeparator);
             });
 
             // Check if export file is correct. 
             string filePath = TestFilesDir.GetTestPath("Calibration.csv");
             Assert.IsTrue(File.Exists(filePath));
             string[] lines = File.ReadAllLines(filePath);
-            string[] line0 = lines[0].Split(',');
+            string[] line0 = lines[0].Split(columnSeparator);
             int count = line0.Length;
             Assert.IsTrue(lines.Count() == SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count + 1);
             Assert.IsTrue(count == columnsToAdd.Length);
 
             // Check export file data
-            double ratio1 = Convert.ToDouble(lines[1].Split(',')[3]);
-            double ratio2 = Convert.ToDouble(lines[2].Split(',')[3]);
-            double ratio3 = Convert.ToDouble(lines[3].Split(',')[3]);
-            double ratio4 = Convert.ToDouble(lines[4].Split(',')[3]);
-            double ratio5 = Convert.ToDouble(lines[5].Split(',')[3]);
-            double ratio6 = Convert.ToDouble(lines[6].Split(',')[3]);
-            double ratio7 = Convert.ToDouble(lines[7].Split(',')[3]);
-            double ratio8 = Convert.ToDouble(lines[8].Split(',')[3]);
-            double ratio9 = Convert.ToDouble(lines[9].Split(',')[3]);
+            double ratio1 = Double.Parse(lines[1].Split(new[] {columnSeparator},4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio2 = Double.Parse(lines[2].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio3 = Double.Parse(lines[3].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio4 = Double.Parse(lines[4].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio5 = Double.Parse(lines[5].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio6 = Double.Parse(lines[6].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio7 = Double.Parse(lines[7].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio8 = Double.Parse(lines[8].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio9 = Double.Parse(lines[9].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
 
             Assert.AreEqual(21.4513, ratio1, 0.1);
             Assert.AreEqual(6.2568, ratio2, 0.1);
