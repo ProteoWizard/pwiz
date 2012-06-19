@@ -525,7 +525,8 @@ namespace pwiz.Skyline.Controls.SeqNode
             foreach (TransitionGroup group in DocNode.Peptide.GetTransitionGroups(DocSettings, mods, useFilter))
             {
                 // The maximum allowable precursor charge may be larger than it makes sense to show
-                if (group.PrecursorCharge <= TransitionGroup.MAX_PRECURSOR_CHARGE_PICK)
+                if (group.PrecursorCharge <= TransitionGroup.MAX_PRECURSOR_CHARGE_PICK ||
+                        DocSettings.TransitionSettings.Filter.PrecursorCharges.Contains(group.PrecursorCharge))
                     listChildrenNew.Add(CreateChoice(group, mods));
             }
             var nodePep = (PeptideDocNode)DocNode.ChangeChildren(listChildrenNew);

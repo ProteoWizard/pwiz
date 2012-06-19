@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -200,19 +199,10 @@ namespace pwiz.Skyline.SettingsUI
             SpecLibLinkClicked(linkGPM, LibraryLink.GPM.Link);
         }
 
-        private static void SpecLibLinkClicked(LinkLabel linkLabel, string link)
+        private void SpecLibLinkClicked(LinkLabel linkLabel, string link)
         {
-            try
-            {
-                linkLabel.LinkVisited = true;
-                //Call the Process.Start method to open the default browser 
-                //with a URL:
-                Process.Start(link);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(string.Format("Unable to open link. Error was {0}", ex.Message));
-            }
+            linkLabel.LinkVisited = true;
+            WebHelpers.OpenLink(this, link);
         }
     }
 }

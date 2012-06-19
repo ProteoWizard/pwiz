@@ -33,12 +33,16 @@
             this.labelMessage = new System.Windows.Forms.Label();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.btnOk = new System.Windows.Forms.Button();
+            this.btnCopyLink = new System.Windows.Forms.Button();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
             this.SuspendLayout();
             // 
             // panel1
             // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.AutoSize = true;
             this.panel1.BackColor = System.Drawing.SystemColors.Window;
             this.panel1.Controls.Add(this.labelLink);
@@ -47,7 +51,7 @@
             this.panel1.Location = new System.Drawing.Point(1, 1);
             this.panel1.Name = "panel1";
             this.panel1.Padding = new System.Windows.Forms.Padding(0, 0, 0, 15);
-            this.panel1.Size = new System.Drawing.Size(325, 68);
+            this.panel1.Size = new System.Drawing.Size(324, 68);
             this.panel1.TabIndex = 0;
             // 
             // labelLink
@@ -83,7 +87,8 @@
             // 
             // btnOk
             // 
-            this.btnOk.Location = new System.Drawing.Point(233, 75);
+            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOk.Location = new System.Drawing.Point(233, 80);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -91,13 +96,25 @@
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
+            // btnCopyLink
+            // 
+            this.btnCopyLink.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCopyLink.Location = new System.Drawing.Point(152, 79);
+            this.btnCopyLink.Name = "btnCopyLink";
+            this.btnCopyLink.Size = new System.Drawing.Size(75, 23);
+            this.btnCopyLink.TabIndex = 2;
+            this.btnCopyLink.Text = "Copy link";
+            this.btnCopyLink.UseVisualStyleBackColor = true;
+            this.btnCopyLink.Click += new System.EventHandler(this.btnCopyLink_Click);
+            // 
             // AlertLinkDlg
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoSize = true;
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(321, 106);
+            this.ClientSize = new System.Drawing.Size(321, 111);
+            this.Controls.Add(this.btnCopyLink);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.panel1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
@@ -107,6 +124,7 @@
             this.Padding = new System.Windows.Forms.Padding(0, 0, 0, 15);
             this.ShowIcon = false;
             this.SizeGripStyle = System.Windows.Forms.SizeGripStyle.Hide;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).EndInit();
@@ -122,6 +140,7 @@
         private System.Windows.Forms.LinkLabel labelLink;
         private System.Windows.Forms.Label labelMessage;
         private System.Windows.Forms.Button btnOk;
+        private System.Windows.Forms.Button btnCopyLink;
 
     }
 }

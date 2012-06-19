@@ -623,7 +623,7 @@ namespace pwiz.Skyline.SettingsUI
             get { return !Equals(_peptideSettings, ValidateNewSettings(false)); }
         }
 
-        public void ShowViewLibraryDlg()
+        public void ShowViewLibraryDlg(string libName = null)
         {
             CheckDisposed();
 
@@ -663,9 +663,12 @@ namespace pwiz.Skyline.SettingsUI
             {
                 // Selected library name should be the ListBox selected item if possible, else the first checked item, 
                 // else the empty string. 
-                string libName = _driverLibrary.ListBox.SelectedItem != null
-                                     ? _driverLibrary.ListBox.SelectedItem.ToString()
-                                     : (_driverLibrary.CheckedNames.Any() ? _driverLibrary.CheckedNames[0] : "");
+                if (libName == null)
+                {
+                    libName = _driverLibrary.ListBox.SelectedItem != null
+                                  ? _driverLibrary.ListBox.SelectedItem.ToString()
+                                  : (_driverLibrary.CheckedNames.Any() ? _driverLibrary.CheckedNames[0] : "");
+                }
                 var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libName, _parent) { Owner = Owner };
                 viewLibraryDlg.Show();
             }

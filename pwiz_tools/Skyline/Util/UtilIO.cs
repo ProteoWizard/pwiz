@@ -472,7 +472,7 @@ namespace pwiz.Skyline.Util
             catch (Exception x)
             {
                 // Make sure exceptions thrown from this method are only IOExceptions
-                if ((x is IOException))
+                if (!(x is IOException))
                     throw new IOException(string.Format("Unexpected error opening {0}", path), x);
                 throw;
             }

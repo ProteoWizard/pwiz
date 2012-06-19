@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Threading;
@@ -59,6 +60,8 @@ namespace pwiz.Skyline
         [STAThread]
         public static void Main(string[] args = null)
         {
+            MessageBox.Show(CultureInfo.CurrentUICulture.NativeName);
+
             // don't allow 64-bit Skyline to run in a 32-bit process
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {

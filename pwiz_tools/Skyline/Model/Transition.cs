@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -106,8 +107,10 @@ namespace pwiz.Skyline.Model
 
         public static string GetChargeIndicator(int charge)
         {
-            const string pluses = "+++++++++++++++++++++++++++++++";
-            return pluses.Substring(0, Math.Min(charge, pluses.Length-1));
+            const string pluses = "++++";
+            return charge < 5
+                ? pluses.Substring(0, Math.Min(charge, pluses.Length))
+                : string.Format("{0} +{1}", CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator, charge);
         }
 
         public static string GetMassIndexText(int massIndex)

@@ -198,41 +198,43 @@ namespace pwiz.SkylineTestA
                 mod.Modification.AminoAcids.Contains(c => c == 'I')));
 
 
-            var testDir = new TestFilesDir(TestContext, ZIP_FILE);
-            var modMatchDocContainer = InitMatchDocContainer(testDir);
-            var libkeyModMatcher = new LibKeyModificationMatcher();
-            var anlLibSpec = new BiblioSpecLiteSpec("ANL_Combo", testDir.GetTestPath("ANL_Combined.blib"));
-            var yeastLibSpec = new BiblioSpecLiteSpec("Yeast", testDir.GetTestPath("Yeast_atlas_small.blib"));
-            modMatchDocContainer.ChangeLibSpecs(new List<LibrarySpec> { anlLibSpec, yeastLibSpec });
-            var docLibraries = modMatchDocContainer.Document.Settings.PeptideSettings.Libraries.Libraries;
-            int anlLibIndex = docLibraries.IndexOf(library => Equals(library.Name, anlLibSpec.Name));
-            int yeastLibIndex = docLibraries.IndexOf(library => Equals(library.Name, yeastLibSpec.Name));
+            using (var testDir = new TestFilesDir(TestContext, ZIP_FILE))
+            {
+                var modMatchDocContainer = InitMatchDocContainer(testDir);
+                var libkeyModMatcher = new LibKeyModificationMatcher();
+                var anlLibSpec = new BiblioSpecLiteSpec("ANL_Combo", testDir.GetTestPath("ANL_Combined.blib"));
+                var yeastLibSpec = new BiblioSpecLiteSpec("Yeast", testDir.GetTestPath("Yeast_atlas_small.blib"));
+                modMatchDocContainer.ChangeLibSpecs(new[] { anlLibSpec, yeastLibSpec });
+                var docLibraries = modMatchDocContainer.Document.Settings.PeptideSettings.Libraries.Libraries;
+                int anlLibIndex = docLibraries.IndexOf(library => Equals(library.Name, anlLibSpec.Name));
+                int yeastLibIndex = docLibraries.IndexOf(library => Equals(library.Name, yeastLibSpec.Name));
 
-            libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
-                docLibraries[anlLibIndex].Keys, defSetSetLight, defSetHeavy);
+                libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
+                    docLibraries[anlLibIndex].Keys, defSetSetLight, defSetHeavy);
 
-            // Test can match 15N
-            Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
-                match.HeavyMod != null && match.HeavyMod.Equivalent(LABEL15_N)));
+                // Test can match 15N
+                Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
+                    match.HeavyMod != null && match.HeavyMod.Equivalent(LABEL15_N)));
 
-            var uniModMetOx = UniMod.GetModification("Oxidation (M)", true);
+                var uniModMetOx = UniMod.GetModification("Oxidation (M)", true);
 
-            // Test can match Met Ox
-            Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
-                match.StructuralMod != null && match.StructuralMod.Equivalent(uniModMetOx)));
+                // Test can match Met Ox
+                Assert.IsTrue(libkeyModMatcher.Matches.Values.Contains(match =>
+                    match.StructuralMod != null && match.StructuralMod.Equivalent(uniModMetOx)));
 
-            // Test can match 15N and Met ox!
-            Assert.IsTrue(libkeyModMatcher.Matches.Contains(match => match.Key.Mass == 17
-                && match.Value.StructuralMod != null && match.Value.StructuralMod.Equivalent(uniModMetOx)
-                && match.Value.HeavyMod != null && match.Value.HeavyMod.Equivalent(LABEL15_N)));
+                // Test can match 15N and Met ox!
+                Assert.IsTrue(libkeyModMatcher.Matches.Contains(match => match.Key.Mass == 17
+                    && match.Value.StructuralMod != null && match.Value.StructuralMod.Equivalent(uniModMetOx)
+                    && match.Value.HeavyMod != null && match.Value.HeavyMod.Equivalent(LABEL15_N)));
 
-            // Test can match Cysteine (Implicit) and Met Ox (variable)
-            libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
-                docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy);
-            Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod => 
-                mod.Formula.Equals("C2H3ON") && !mod.IsVariable));
-            Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod => 
-                mod.Formula.Equals("O") && mod.IsVariable));
+                // Test can match Cysteine (Implicit) and Met Ox (variable)
+                libkeyModMatcher.CreateMatches(modMatchDocContainer.Document.Settings,
+                    docLibraries[yeastLibIndex].Keys, defSetSetLight, defSetHeavy);
+                Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>
+                    mod.Formula.Equals("C2H3ON") && !mod.IsVariable));
+                Assert.IsTrue(libkeyModMatcher.MatcherPepMods.StaticModifications.Contains(mod =>
+                    mod.Formula.Equals("O") && mod.IsVariable));
+            }
         }
 
         private const string ZIP_FILE = @"TestA\ModMatch.zip";

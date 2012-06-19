@@ -1981,6 +1981,17 @@ namespace pwiz.Skyline
             }
         }
 
+        public void ActivateReplicate(string name)
+        {
+            int index;
+            ChromatogramSet chromatogramSet;
+
+            if (DocumentUI.Settings.MeasuredResults.TryGetChromatogramSet(name, out chromatogramSet, out index))
+            {
+                SelectedResultsIndex = index;
+            }
+        }
+
         public SpectrumDisplayInfo SelectedSpectrum
         {
             get { return _graphSpectrum != null ? _graphSpectrum.SelectedSpectrum : null; }

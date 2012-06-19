@@ -220,6 +220,28 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public float? GetPeakArea(int i)
+        {
+            if (i == -1)
+                return AveragePeakArea;
+
+            // CONSIDER: Also specify the file index?
+            var chromInfo = GetChromInfoEntry(i);
+            if (chromInfo == null)
+                return null;
+            return chromInfo.Area;
+        }
+
+        public float? AveragePeakArea
+        {
+            get
+            {
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep != 0
+                                                              ? (float?)null
+                                                              : chromInfo.Area);
+            }
+        }
+
         public float? GetIsotopeDotProduct(int i)
         {
             if (i == -1)
@@ -542,7 +564,10 @@ namespace pwiz.Skyline.Model
                 var massDist = calc.GetMzDistribution(seq, charge, fullScan.IsotopeAbundances);
                 isotopeDist = new IsotopeDistInfo(massDist, massH, charge,
                     settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
-                    TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES,
+                    // Centering resolution must be inversely proportional to charge state
+                    // High charge states can bring major peaks close enough toghether to
+                    // cause them to be combined and centered in isotope distribution valleys
+                    TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES / (1 + charge/15.0),
                     TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
             }
             return mz;

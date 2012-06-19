@@ -115,6 +115,7 @@
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
+    <Compile Include="FullScanPrecursorTest.cs" />
     <Compile Include="InstrumentInfoUtilTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
@@ -173,6 +174,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="CommandLineTest.zip" />
+    <None Include="FullScanPrecursor.zip" />
     <None Include="ImportAllCmdLineTest.zip" />
     <None Include="PwizFileInfoTest.zip" />
     <None Include="modmatch.sky" />

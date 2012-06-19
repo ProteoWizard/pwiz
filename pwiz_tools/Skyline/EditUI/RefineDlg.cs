@@ -60,9 +60,11 @@ namespace pwiz.Skyline.EditUI
 
             if (settings.PeptideSettings.Libraries.HasLibraries)
             {
-                groupLibCorr.Enabled = true;
-                labelMinDotProduct.Enabled = true;
-                textMinDotProduct.Enabled = true;
+                labelMinDotProduct.Enabled = textMinDotProduct.Enabled = groupLibCorr.Enabled = true;
+            }
+            if (settings.TransitionSettings.FullScan.IsHighResPrecursor)
+            {
+                labelMinIdotProduct.Enabled = textMinIdotProduct.Enabled = groupLibCorr.Enabled = true;
             }
         }
 
@@ -171,6 +173,14 @@ namespace pwiz.Skyline.EditUI
                 return;
             }
 
+            int? maxPepPeakRank = null;
+            if (!string.IsNullOrEmpty(textMaxPepPeakRank.Text))
+            {
+                int maxVal;
+                if (!helper.ValidateNumberTextBox(e, tabControl1, 1, textMaxPepPeakRank, 2, 10, out maxVal))
+                    return;
+                maxPepPeakRank = maxVal;
+            }
             int? maxPeakRank = null;
             if (!string.IsNullOrEmpty(textMaxPeakRank.Text))
             {
@@ -200,6 +210,15 @@ namespace pwiz.Skyline.EditUI
                 dotProductThreshold = minVal;
             }
 
+            double? idotProductThreshold = null;
+            if (!string.IsNullOrEmpty(textMinIdotProduct.Text))
+            {
+                double minVal;
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, 1, textMinIdotProduct, 0, 1, out minVal))
+                    return;
+                idotProductThreshold = minVal;
+            }
+
             bool useBestResult = comboReplicateUse.SelectedIndex > 0;
 
             RefinementSettings = new RefinementSettings
@@ -212,11 +231,13 @@ namespace pwiz.Skyline.EditUI
                                          AddLabelType = addLabelType,
                                          MinPeakFoundRatio = minPeakFoundRatio,
                                          MaxPeakFoundRatio = maxPeakFoundRatio,
+                                         MaxPepPeakRank = maxPepPeakRank,
                                          MaxPeakRank = maxPeakRank,
                                          PreferLargeIons = cbPreferLarger.Checked,
                                          RemoveMissingResults = removeMissingResults,
                                          RTRegressionThreshold = rtRegressionThreshold,
                                          DotProductThreshold = dotProductThreshold,
+                                         IdotProductThreshold = idotProductThreshold,
                                          UseBestResult = useBestResult,
                                          AutoPickChildrenAll = (cbAutoPeptides.Checked ? PickLevel.peptides : 0) |
                                                                (cbAutoPrecursors.Checked ? PickLevel.precursors : 0) |

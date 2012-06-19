@@ -19,6 +19,7 @@
 using System;
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -401,6 +402,13 @@ namespace pwiz.Skyline.SettingsUI
                         min, max, out maxTimeTemp))
                     return;
                 maxTime = maxTimeTemp;
+            }
+            if (minTime.HasValue && maxTime.HasValue && maxTime.Value - minTime.Value < TransitionInstrument.MIN_TIME_RANGE)
+            {
+                helper.ShowTextBoxError(tabControl1, (int)TABS.Instrument, textMaxTime,
+                    string.Format("The allowable retention time range {0} to {1} must be at least {2} minutes apart.",
+                    minTime, maxTime, TransitionInstrument.MIN_TIME_RANGE));
+                return;
             }
 
             TransitionInstrument instrument = new TransitionInstrument(minMz,
@@ -910,6 +918,18 @@ namespace pwiz.Skyline.SettingsUI
             set { textIonTypes.Text = value; }
         }
 
+        public string RangeFrom
+        {
+            get { return comboRangeFrom.SelectedItem.ToString(); }
+            set { comboRangeFrom.SelectedItem = value; }
+        }
+
+        public string RangeTo
+        {
+            get { return comboRangeTo.SelectedItem.ToString(); }
+            set { comboRangeTo.SelectedItem = value; }
+        }
+
         public int InstrumentMaxMz
         {
             get { return Int32.Parse(textMaxMz.Text); }
@@ -956,6 +976,12 @@ namespace pwiz.Skyline.SettingsUI
         public DeclusteringPotentialRegression RegressionDP
         {
             get { return (DeclusteringPotentialRegression) comboDeclusterPotential.SelectedItem; }
+            set { comboDeclusterPotential.SelectedItem = value; }
+        }
+
+        public string RegressionDPName
+        {
+            get { return comboDeclusterPotential.SelectedItem.ToString(); }
             set { comboDeclusterPotential.SelectedItem = value; }
         }
 

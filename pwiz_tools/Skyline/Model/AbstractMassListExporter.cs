@@ -262,10 +262,7 @@ namespace pwiz.Skyline.Model
 
                         if (IsolationList)
                         {
-                            foreach (TransitionDocNode transition in group.Children)
-                            {
-                                fileIterator.WriteTransition(this, seq, peptide, group, transition, 0);
-                            }
+                            fileIterator.WriteTransition(this, seq, peptide, group, null, 0);
                         }
                         else
                         {
