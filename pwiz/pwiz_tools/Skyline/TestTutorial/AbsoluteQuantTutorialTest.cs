@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 
@@ -216,9 +217,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(editReportListDlg.OkDialog);
             WaitForClosedForm(editReportListDlg);
 
-            var columnSeparator = Equals(CultureInfo.CurrentCulture.NumberFormat.CurrencyDecimalSeparator, '.')
-                                      ? ','
-                                      : '.';
+            var columnSeparator = TextUtil.CsvSeparator;
             RunUI(() =>
             {
                 exportReportDlg.ReportName = reportName;
@@ -235,15 +234,15 @@ namespace pwiz.SkylineTestTutorial
             Assert.IsTrue(count == columnsToAdd.Length);
 
             // Check export file data
-            double ratio1 = Double.Parse(lines[1].Split(new[] {columnSeparator},4)[3], CultureInfo.CurrentCulture.NumberFormat);
-            double ratio2 = Double.Parse(lines[2].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
-            double ratio3 = Double.Parse(lines[3].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
-            double ratio4 = Double.Parse(lines[4].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
-            double ratio5 = Double.Parse(lines[5].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
-            double ratio6 = Double.Parse(lines[6].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
-            double ratio7 = Double.Parse(lines[7].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
-            double ratio8 = Double.Parse(lines[8].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
-            double ratio9 = Double.Parse(lines[9].Split(new[] { columnSeparator }, 4)[3], CultureInfo.CurrentCulture.NumberFormat);
+            double ratio1 = Double.Parse(lines[1].Split(new[] { columnSeparator }, 4)[3]);
+            double ratio2 = Double.Parse(lines[2].Split(new[] { columnSeparator }, 4)[3]);
+            double ratio3 = Double.Parse(lines[3].Split(new[] { columnSeparator }, 4)[3]);
+            double ratio4 = Double.Parse(lines[4].Split(new[] { columnSeparator }, 4)[3]);
+            double ratio5 = Double.Parse(lines[5].Split(new[] { columnSeparator }, 4)[3]);
+            double ratio6 = Double.Parse(lines[6].Split(new[] { columnSeparator }, 4)[3]);
+            double ratio7 = Double.Parse(lines[7].Split(new[] { columnSeparator }, 4)[3]);
+            double ratio8 = Double.Parse(lines[8].Split(new[] { columnSeparator }, 4)[3]);
+            double ratio9 = Double.Parse(lines[9].Split(new[] { columnSeparator }, 4)[3]);
 
             Assert.AreEqual(21.4513, ratio1, 0.1);
             Assert.AreEqual(6.2568, ratio2, 0.1);
