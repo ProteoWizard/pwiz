@@ -34,7 +34,7 @@ namespace MSConvertGUI
 {
     public partial class MainForm : Form
     {
-        string[] cmdline_args;
+        IList<string> cmdline_args;
         string SetDefaultsDataType = ""; // watch last-added filetype, offer to set defaults for that type
 
         private IList<KeyValuePair<string, string>> thresholdTypes = new KeyValuePair<string, string>[]
@@ -56,7 +56,7 @@ namespace MSConvertGUI
             return Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) + "\\MSConvertGUI" + ext + "cmdline";
         }
 
-        public MainForm(string[] args)
+        public MainForm(IList<string> args)
         {
             cmdline_args = args;
             InitializeComponent();
@@ -78,7 +78,7 @@ namespace MSConvertGUI
             foreach(DataGridViewColumn column in FilterDGV.Columns)
                 column.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
 
-            for (int i = 0; i < cmdline_args.Length; i++)
+            for (int i = 0; i < cmdline_args.Count; i++)
             {
                 // mimic user adding file via filebox
                 setFileBoxText(cmdline_args[i]);

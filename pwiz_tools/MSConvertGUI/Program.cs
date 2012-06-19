@@ -28,15 +28,42 @@ namespace MSConvertGUI
 {
     static class Program
     {
+        public static MainForm MainWindow { get; private set; }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
         [STAThread]
         static void Main(string[] args)
         {
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm(args));
+            // single instance code taken from
+            // http://forge.fenchurch.mc.vanderbilt.edu/scm/viewvc.php/branches/IDPicker-3/Program.cs?revision=431&root=idpicker&view=markup
+
+            var singleInstanceHandler = new SingleInstanceHandler(Application.ExecutablePath) { Timeout = 200 };
+
+            singleInstanceHandler.Launching += (sender, e) =>
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
+                var singleInstanceArgs = e.Args.ToList();
+                MainWindow = new MainForm(singleInstanceArgs);
+                Application.Run(MainWindow);
+            };
+            try
+            {
+                singleInstanceHandler.Connect(args);
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
+            }
         }
+        #region Exception handling
+        public static void HandleException (Exception e)
+        {
+            MessageBox.Show(e.ToString(), "Error");
+            return;
+        }
+        #endregion
     }
 }
