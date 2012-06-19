@@ -26,6 +26,7 @@ IF EXIST libraries\libpng-1.5.6 rmdir /s /q libraries\libpng-1.5.6
 IF EXIST libraries\freetype-2.4.7 rmdir /s /q libraries\freetype-2.4.7
 IF EXIST libraries\hdf5-1.8.7 rmdir /s /q libraries\hdf5-1.8.7
 IF EXIST libraries\fftw-3.1.2 rmdir /s /q libraries\fftw-3.1.2
+IF EXIST libraries\expat-2.0.1 rmdir /s /q libraries\expat-2.0.1
 
 del /q libraries\libfftw3-3.d* > nul 2>&1
 
