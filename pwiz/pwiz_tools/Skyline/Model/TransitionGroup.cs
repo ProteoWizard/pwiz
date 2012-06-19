@@ -145,13 +145,6 @@ namespace pwiz.Skyline.Model
             // picking cannot use library information
             else if (!settings.PeptideSettings.Libraries.HasLibraries || libInfo == null)
                 pick = TransitionLibraryPick.none;
-            // If picking relies on library information
-            else if (pick != TransitionLibraryPick.none)
-            {
-                // If it is not yet loaded, or nothing got ranked, return an empty enumeration
-                if (!settings.PeptideSettings.Libraries.IsLoaded || transitionRanks.Count == 0)
-                    yield break;
-            }
 
             // If filtering without library picking, then don't include the losses
             if (pick == TransitionLibraryPick.none)
@@ -160,9 +153,21 @@ namespace pwiz.Skyline.Model
             // Return precursor ions
             if (!useFilter || types.Contains(IonType.precursor))
             {
+                bool libraryFilter = (pick == TransitionLibraryPick.all || pick == TransitionLibraryPick.filter);
                 foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcFilterPre, calcPredict,
-                        precursorMz, isotopeDist, potentialLosses, transitionRanks, useFilter))
+                        precursorMz, isotopeDist, potentialLosses, transitionRanks, libraryFilter, useFilter))
                     yield return nodeTran;
+            }
+
+            // If picking relies on library information
+            if (useFilter && pick != TransitionLibraryPick.none)
+            {
+                // If it is not yet loaded, or nothing got ranked, return an empty enumeration
+                if (!settings.PeptideSettings.Libraries.IsLoaded ||
+                        (transitionRanks != null && transitionRanks.Count == 0))
+                {
+                    yield break;
+                }
             }
 
             double[,] massesPredict = calcPredict.GetFragmentIonMasses(sequence);
@@ -224,8 +229,7 @@ namespace pwiz.Skyline.Model
                                 }
                                 else
                                 {
-                                    LibraryRankedSpectrumInfo.RankedMI rmi;
-                                    if (transitionRanks.TryGetValue(ionMz, out rmi) && rmi.IonType == type && rmi.Charge == charge && Equals(rmi.Losses, losses))
+                                    if (IsMatched(transitionRanks, ionMz, type, charge, losses))
                                         yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                     // If allowing library or filter, check the filter to decide whether to accept
                                     else if (pick == TransitionLibraryPick.all_plus &&
@@ -241,9 +245,8 @@ namespace pwiz.Skyline.Model
                                     yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                 else
                                 {
-                                    LibraryRankedSpectrumInfo.RankedMI rmi;
-                                    if (transitionRanks.TryGetValue(ionMz, out rmi) && rmi.IonType == type && rmi.Charge == charge && Equals(rmi.Losses, losses))
-                                         yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
+                                    if (IsMatched(transitionRanks, ionMz, type, charge, losses))
+                                        yield return CreateTransitionNode(type, i, charge, massH, losses, transitionRanks);
                                 }
                             }
                         }
@@ -260,6 +263,7 @@ namespace pwiz.Skyline.Model
                                                              IsotopeDistInfo isotopeDist,
                                                              IList<IList<ExplicitLoss>> potentialLosses,
                                                              IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
+                                                             bool libraryFilter,
                                                              bool useFilter)
         {
             string sequence = Peptide.Sequence;
@@ -274,6 +278,7 @@ namespace pwiz.Skyline.Model
 
             foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
             {
+                double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorCharge);
                 if (losses == null)
                 {
                     if (precursorMS1 && isotopeDist != null)
@@ -281,7 +286,7 @@ namespace pwiz.Skyline.Model
                         foreach (int i in fullScan.SelectMassIndices(isotopeDist, useFilter))
                         {
                             double precursorMS1Mass = isotopeDist.GetMassI(i);
-                            double ionMz = SequenceMassCalc.GetMZ(precursorMS1Mass, PrecursorCharge);
+                            ionMz = SequenceMassCalc.GetMZ(precursorMS1Mass, PrecursorCharge);
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;
                             var isotopeDistInfo = new TransitionIsotopeDistInfo(
@@ -293,15 +298,32 @@ namespace pwiz.Skyline.Model
                 }
                 // If there was loss, it is possible (though not likely) that the ion m/z value
                 // will now fall below the minimum measurable value for the instrument
-                else
+                else if (minMz > ionMz)
                 {
-                    double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorCharge);
-                    if (minMz > ionMz)
-                        continue;
+                    continue;
                 }
 
-                yield return CreateTransitionNode(0, precursorMassPredict, null, losses, transitionRanks);
+                // If filtering precursors from MS1 scans, then ranking in MS/MS does not apply
+                bool precursorIsProduct = !settings.TransitionSettings.FullScan.IsEnabledMs;
+                if (!useFilter || !precursorIsProduct ||
+                        !libraryFilter || IsMatched(transitionRanks, ionMz, IonType.precursor,
+                                                    PrecursorCharge, losses))
+                {
+                    yield return CreateTransitionNode(0, precursorMassPredict, null, losses,
+                                                      precursorIsProduct ? transitionRanks : null);
+                }
             }            
+        }
+
+        public bool IsMatched(IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
+                              double ionMz, IonType type, int charge, TransitionLosses losses)
+        {
+            LibraryRankedSpectrumInfo.RankedMI rmi;
+            return (transitionRanks != null &&
+                    transitionRanks.TryGetValue(ionMz, out rmi) &&
+                    rmi.IonType == type &&
+                    rmi.Charge == charge &&
+                    Equals(rmi.Losses, losses));
         }
 
         public static IList<IList<ExplicitLoss>> CalcPotentialLosses(string sequence,

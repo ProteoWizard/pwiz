@@ -132,12 +132,12 @@ namespace pwiz.SkylineTestUtil
             return docResults;
         }
 
-        public SrmDocument ChangeLibSpecs(List<LibrarySpec> libSpecs)
+        public SrmDocument ChangeLibSpecs(IList<LibrarySpec> libSpecs)
         {
             var doc = Document;
             var settings = Document.Settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(libSpecs));
             var docLibraries = doc.ChangeSettings(settings);
-            Assert.IsTrue(SetDocument(docLibraries, doc, true));
+            Assert.IsTrue(SetDocument(docLibraries, doc, libSpecs.Count > 0));
             AssertComplete();
             return Document;
         }

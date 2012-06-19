@@ -204,7 +204,7 @@ namespace pwiz.Skyline.SettingsUI
             var indexPepSetUI = Program.MainWindow.OwnedForms.IndexOf(form => form is PeptideSettingsUI);
             if (indexPepSetUI != -1)
             {
-                ((PeptideSettingsUI)Program.MainWindow.OwnedForms[indexPepSetUI]).ShowViewLibraryDlg();
+                ((PeptideSettingsUI)Program.MainWindow.OwnedForms[indexPepSetUI]).ShowViewLibraryDlg(libName);
             }          
             var indexViewLibDlg = Program.MainWindow.OwnedForms.IndexOf(form => form is ViewLibraryDlg);
             if (indexViewLibDlg == -1)

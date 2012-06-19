@@ -980,23 +980,24 @@ namespace pwiz.Skyline.SettingsUI
 
         private void LibraryComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // The user has selected a different library. We need to reload 
-            // everything in the dialog. 
-            if (comboLibrary.SelectedItem.ToString() != _selectedLibName)
-            {
-                ChangeSelectedLibrary(comboLibrary.SelectedItem.ToString());
-                _matcher.ClearMatches();
-                if (MatchModifications())
-                    UpdateListPeptide(0);
-            }
+            ChangeSelectedLibrary(comboLibrary.SelectedItem.ToString());
         }
 
         public void ChangeSelectedLibrary(string libName)
         {
-            comboLibrary.SelectedItem = libName;
-            _selectedLibName = libName;
-            _matcher = new LibKeyModificationMatcher();
-            UpdateViewLibraryDlg();
+            // The user has selected a different library. We need to reload 
+            // everything in the dialog. 
+            if (comboLibrary.SelectedItem.ToString() != _selectedLibName)
+            {
+                comboLibrary.SelectedItem = libName;
+                _selectedLibName = libName;
+                _matcher = new LibKeyModificationMatcher();
+                UpdateViewLibraryDlg();
+
+                _matcher.ClearMatches();
+                if (MatchModifications())
+                    UpdateListPeptide(0);
+            }
         }
 
         private void cbShowModMasses_CheckedChanged(object sender, EventArgs e)

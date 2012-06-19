@@ -215,7 +215,10 @@ namespace pwiz.Skyline.Model.Results
 //            if (MSDataFilePaths.Contains(path => !cache.CachedFiles.Contains(cachedFile =>
 //                    Equals(path, cachedFile.FilePath))))
 //                return false;
-            return !current || cache.IsCurrentDisk;
+            // No longer ever check modified times of files, since removing .skyd files
+            // and rebuilding is no longer trivial.
+//            return !current || cache.IsCurrentDisk;
+            return true;
         }
 // ReSharper restore MemberCanBeMadeStatic.Local
 
