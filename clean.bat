@@ -41,6 +41,8 @@ if %VERBOSE%==1 echo   Cleaning vendor dlls...
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\install_pwiz_vendor_api_abi > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc9 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc10 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\vc9_x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86 > nul 2>&1
@@ -49,6 +51,7 @@ del /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.* > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.xml > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\install_pwiz_vendor_api_bruker_stub > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
@@ -61,7 +64,7 @@ rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-1 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_x86_scl-0 > nul 2>&1
-rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9__x86_scl-1 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_x86_scl-1 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x64_scl-0 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
