@@ -135,7 +135,8 @@ namespace pwiz.SkylineTestUtil
         public SrmDocument ChangeLibSpecs(IList<LibrarySpec> libSpecs)
         {
             var doc = Document;
-            var settings = Document.Settings.ChangePeptideLibraries(l => l.ChangeLibrarySpecs(libSpecs));
+            var libraries = new Library[libSpecs.Count];
+            var settings = Document.Settings.ChangePeptideLibraries(l => l.ChangeLibraries(libSpecs, libraries));
             var docLibraries = doc.ChangeSettings(settings);
             Assert.IsTrue(SetDocument(docLibraries, doc, libSpecs.Count > 0));
             AssertComplete();
