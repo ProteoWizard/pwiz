@@ -39,12 +39,12 @@
     <MapFileExtensions>true</MapFileExtensions>
     <InstallUrl>https://skyline.gs.washington.edu/software/Skyline-daily/</InstallUrl>
     <SupportUrl>https://skyline.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
-    <ProductName>Skyline-daily</ProductName>
+    <ProductName>Skyline</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3573</ApplicationRevision>
-    <ApplicationVersion>1.2.1.3573</ApplicationVersion>
+    <ApplicationRevision>3729</ApplicationRevision>
+    <ApplicationVersion>1.3.0.3729</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
