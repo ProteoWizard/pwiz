@@ -196,7 +196,7 @@ namespace pwiz.Skyline.FileUI
 
         public bool IsInclusionListMethod
         {
-            get { return ExportInstrumentType.IsInclusionListMethod(_document); }
+            get { return IsFullScanInstrument && ExportInstrumentType.IsInclusionListMethod(_document); }
         }
 
         public bool IsSingleDwellInstrument
@@ -925,7 +925,14 @@ namespace pwiz.Skyline.FileUI
             StrategyCheckChanged();
         }
 
-        private bool IsDia { get { return _document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA; } }
+        private bool IsDia
+        {
+            get
+            {
+                return IsFullScanInstrument &&
+                    _document.Settings.TransitionSettings.FullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA;
+            }
+        }
 
         private void StrategyCheckChanged()
         {

@@ -922,6 +922,8 @@ namespace pwiz.Skyline.Model
             writer.Write("Fragmentor");
             writer.Write(FieldSeparator);
             writer.Write("Collision Energy");
+            writer.Write(FieldSeparator);
+            writer.Write("Cell Accelerator Voltage");
             if (MethodType != ExportMethodType.Standard)
             {
                 writer.Write(FieldSeparator);
@@ -954,11 +956,11 @@ namespace pwiz.Skyline.Model
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write("Unit");
+            writer.Write("Unit");   // MS1 Res
             writer.Write(FieldSeparator);
             writer.Write(GetProductMz(SequenceMassCalc.PersistentMZ(nodeTran.Mz), step).ToString(CultureInfo));
             writer.Write(FieldSeparator);
-            writer.Write("Unit");
+            writer.Write("Unit");   // MS2 Res
             writer.Write(FieldSeparator);
 
             if (MethodType == ExportMethodType.Standard)
@@ -970,6 +972,8 @@ namespace pwiz.Skyline.Model
             writer.Write(Fragmentor.ToString(CultureInfo));
             writer.Write(FieldSeparator);
             writer.Write(Math.Round(GetCollisionEnergy(nodePep, nodeTranGroup, nodeTran, step), 1).ToString(CultureInfo));
+            writer.Write(FieldSeparator);
+            writer.Write(4);    // Cell Accelerator Voltage
             writer.Write(FieldSeparator);
 
             if (MethodType != ExportMethodType.Standard)
