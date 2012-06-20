@@ -42,7 +42,7 @@ namespace pwiz.Skyline
     /// </summary>
     public static class Program
     {
-        private const int LICENSE_VERSION_CURRENT = 3;
+        private const int LICENSE_VERSION_CURRENT = 4;
         
         // Parameters for stress testing.
         public static bool StressTest { get; set; }                 // Set true when doing stress testing.
@@ -103,13 +103,13 @@ namespace pwiz.Skyline
                     // they must have agreed to the current license agreement during
                     // installation.  Otherwise, make sure they agree to the new
                     // license agreement.
-// Update Skyline-daily users to the new license automatically.
-//                    if (licenseVersion != 0 || !Settings.Default.MainWindowSize.IsEmpty)
-//                    {
-//                        var dlg = new UpgradeDlg(licenseVersion);
-//                        if (dlg.ShowDialog() == DialogResult.Cancel)
-//                            return;
-//                    }
+                    if (Install.Type == Install.InstallType.release &&
+                            (licenseVersion != 0 || !Settings.Default.MainWindowSize.IsEmpty))
+                    {
+                        var dlg = new UpgradeDlg(licenseVersion);
+                        if (dlg.ShowDialog() == DialogResult.Cancel)
+                            return;
+                    }
 
                     try
                     {

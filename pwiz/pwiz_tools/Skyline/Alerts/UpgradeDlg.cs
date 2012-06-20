@@ -26,15 +26,6 @@ namespace pwiz.Skyline.Alerts
         public UpgradeDlg(int licenseVersion)
         {
             InitializeComponent();
-
-            if (licenseVersion == 2)
-            {
-                labelABSciex.Visible = false;
-                labelAnd.Visible = false;
-                int delta = labelWaters.Top - labelABSciex.Top;
-                labelWaters.Top -= delta;
-                Height -= delta;
-            }
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
