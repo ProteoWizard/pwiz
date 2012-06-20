@@ -45,7 +45,7 @@ void testIdentifiable()
     if (os_) *os_ << "testIdentifiable()\n";
 
     Identifiable a, b;
-    a.id="a";
+    a.id="id1";
     a.name="a_name";
     b = a;
 
@@ -53,12 +53,38 @@ void testIdentifiable()
     if (diff && os_) *os_ << diff_string<TextWriter>(diff) << endl;
     unit_assert(!diff);
 
-    b.id="b";
+    b.id="id2";
     b.name="b_name";
 
     diff(a, b);
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
     unit_assert(diff);
+
+    //
+    // test handling for ids which often differ only 
+    // by a trailing version number
+    //
+    b=a;
+    a.id += "_1.2.3";
+    b.id += "_1.2.4";
+    DiffConfig config;
+    Diff<Identifiable, DiffConfig> diff0(config);
+    diff0(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff0) << endl;
+    unit_assert(diff0);
+
+    config.ignoreVersions = true;   
+    Diff<Identifiable, DiffConfig> diff1(config);
+    diff1(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff1) << endl;
+    unit_assert(!diff1);
+
+    a.id += "x"; // no longer looks like one of our version strings
+    Diff<Identifiable, DiffConfig> diff2(config);
+    diff2(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff2) << endl;
+    unit_assert(diff2);
+
 }
 
 void testFragmentArray()

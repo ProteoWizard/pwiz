@@ -1200,7 +1200,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
             bal::to_lower(getAttribute(attributes, "type", type));
 
             if (searchDatabase->id.empty())
-                searchDatabase->id = searchDatabase->location.empty() ? "DB_1" : BFS_STRING(bfs::path(searchDatabase->location).filename());
+                searchDatabase->id = searchDatabase->location.empty() ? "DB_1" : BFS_STRING(bfs::path(bal::replace_all_copy(searchDatabase->location,"\\","/")).filename());
 
             if (type == "aa")
                 searchDatabase->set(MS_database_type_amino_acid);

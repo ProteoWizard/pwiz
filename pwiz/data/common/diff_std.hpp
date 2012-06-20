@@ -57,6 +57,15 @@ void diff(const std::string& a,
           std::string& b_a,
           const BaseDiffConfig& config);
 
+// special handling for strings which are likely
+// to differ only by a trailing version number
+PWIZ_API_DECL
+void diff_ids(const std::string& a,
+              const std::string& b,
+              std::string& a_b,
+              std::string& b_a,
+              const BaseDiffConfig& config);
+
 PWIZ_API_DECL
 void diff(const boost::logic::tribool& a, 
           const boost::logic::tribool& b, 

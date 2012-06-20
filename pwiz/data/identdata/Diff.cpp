@@ -917,7 +917,7 @@ void diff(const Identifiable& a,
           Identifiable& b_a,
           const DiffConfig& config)
 {
-    diff(a.id, b.id, a_b.id, b_a.id, config);
+    diff_ids(a.id, b.id, a_b.id, b_a.id, config);
     diff(a.name, b.name, a_b.name, b_a.name, config);
 }
 

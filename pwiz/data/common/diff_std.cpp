@@ -43,6 +43,43 @@ void diff(const std::string& a,
 }
 
 
+// special string matching for ids, which
+// tend to have versions embedded at the end
+PWIZ_API_DECL
+void diff_ids(const std::string& a,
+              const std::string& b,
+              std::string& a_b,
+              std::string& b_a,
+              const BaseDiffConfig& config)
+{
+    if (config.ignoreVersions && (a != b))
+    {
+        // look for x.x.x at the of each string
+        int aa,bb;
+        int ndotsa=0;
+        int ndotsb=0;
+        for (aa=a.length();aa--;)
+        {
+            if (a[aa]=='.')
+                ndotsa++;
+            else if (!isdigit(a[aa]))
+                break;
+        }
+        for (bb=b.length();bb--;)
+        {
+            if (b[bb]=='.')
+                ndotsb++;
+            else if (!isdigit(b[bb]))
+                break;
+        }
+        if ((2==ndotsa) && (2==ndotsb) && 
+            (bb > 0) && (aa > 0) &&
+            (a.substr(0,aa) == b.substr(0,bb)))
+            return;
+    }
+    diff_string(a, b, a_b, b_a);
+}
+
 PWIZ_API_DECL
 void diff(const boost::logic::tribool& a, 
           const boost::logic::tribool& b, 
@@ -196,7 +233,7 @@ void diff(const ParamGroup& a,
           const BaseDiffConfig& config)
 {
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-    diff_string(a.id, b.id, a_b.id, b_a.id);
+    diff_ids(a.id, b.id, a_b.id, b_a.id, config);
 
     // provide id for context
     if (!a_b.empty() || !b_a.empty()) 

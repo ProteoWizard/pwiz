@@ -60,9 +60,9 @@ void testSerialize(const string &example_data_dir)
     IdentData mzid0,mzid1;
     readers.read(example_data_dir+"/example.pep.xml", mzid0, readerConfig);
     readers.read(example_data_dir+"/example.prot.xml", mzid1, readerConfig);
-    Diff<IdentData, DiffConfig> diff(diffconfig);
-	diff(mzid0, mzid1);
-    unit_assert(diff);
+    Diff<IdentData, DiffConfig> diff0(diffconfig);
+    diff0(mzid0, mzid1);
+    unit_assert(diff0);
     }
 
     {
@@ -72,10 +72,10 @@ void testSerialize(const string &example_data_dir)
     readers.read(example_data_dir+"/example.pep.xml", mzid0, readerConfig);
     readers.read(example_data_dir+"/example.prot.xml", mzid0, readerConfig);
     readers.read(example_data_dir+"/example.prot.xml", mzid1, readerConfig);
-    Diff<IdentData, DiffConfig> diff(diffconfig);
-	diff(mzid0, mzid1);
-    if (os_ && diff) *os_ << diff << endl; 
-    unit_assert(!diff);
+    Diff<IdentData, DiffConfig> diff1(diffconfig);
+    diff1(mzid0, mzid1);
+    if (os_ && diff1) *os_ << diff1 << endl; 
+    unit_assert(!diff1);
     }
 
     {
@@ -83,10 +83,11 @@ void testSerialize(const string &example_data_dir)
     IdentData mzid0,mzid1;
     readers.read(example_data_dir+"/example.prot.xml", mzid0, readerConfig);
     readers.read(example_data_dir+"/example.prot.mzid", mzid1, readerConfig);
-    Diff<IdentData, DiffConfig> diff(diffconfig);
-	diff(mzid0, mzid1);
-    if (os_ && diff) *os_ << diff << endl; 
-    unit_assert(!diff);
+    Diff<IdentData, DiffConfig> diff2(diffconfig);
+    diff2(mzid0, mzid1);
+    if (os_ && diff2) *os_ << diff2 << endl; 
+    else if (diff2) cout << diff2 << endl; 
+    unit_assert(!diff2);
     }
 }
 
@@ -96,10 +97,16 @@ int main(int argc, char** argv)
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        std::string srcparent(__FILE__); // something like \ProteoWizard\pwiz\pwiz\data\msdata\RAMPAdapterTest.cpp
-        size_t pos = srcparent.rfind("pwiz");
+        std::string srcparent(argv[0]);
+        size_t pos = srcparent.find("build");
+
+        if (pos == std::string::npos) {
+            srcparent = __FILE__; // nonstandard build, maybe?  try using source file name
+            // something like \ProteoWizard\pwiz\pwiz\data\identdata\Serializer_ProtXML_Test.cpp
+            pos = srcparent.rfind("pwiz");
+        }
         srcparent.resize(pos);
-        string example_data_dir = srcparent + "example_data/";
+        string example_data_dir = srcparent + "example_data";
         testSerialize(example_data_dir);
         return 0;
     }
