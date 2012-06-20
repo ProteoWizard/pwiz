@@ -1805,7 +1805,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Libraries and library specs must match.  If they do not, then
             // there was a coding error.
-            Debug.Assert(LibrariesMatch());
+            Helpers.Assume(LibrariesMatch(), "Libraries and library specifications do not match.");
 
             // Leave connecting the libraries to the LibrarySpecs in the
             // SpectralLibraryList until the root settings object is validated.
