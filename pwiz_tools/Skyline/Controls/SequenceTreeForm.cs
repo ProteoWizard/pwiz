@@ -84,7 +84,8 @@ namespace pwiz.Skyline.Controls
             SequenceTree.EndUpdateDoc();
             if (--_updateLockCountDoc == 0 && !ReferenceEquals(_updateDocPrevious, SequenceTree.Document))
             {
-                UpdateResultsUI(SequenceTree.Document.Settings, _updateDocPrevious.Settings);
+                var settingsPrevious = _updateDocPrevious != null ? _updateDocPrevious.Settings : null;
+                UpdateResultsUI(SequenceTree.Document.Settings, settingsPrevious);
                 _updateDocPrevious = null;
             }
         }
@@ -111,11 +112,7 @@ namespace pwiz.Skyline.Controls
                 if (results == null || results.Chromatograms.Count < 2)
                 {
                     if (toolBarResults.Visible)
-                    {
                         toolBarResults.Visible = false;
-                        SequenceTree.Top = toolBarResults.Top;
-                        SequenceTree.Height += toolBarResults.Height;
-                    }
 
                     // Make sure the combo contains the results name, if one is
                     // available, because graph handling depends on this.
