@@ -619,13 +619,16 @@ namespace pwiz.Skyline
 
         private void SkylineWindow_Activated(object sender, EventArgs e)
         {
-            FocusDocument();
+            if (_sequenceTreeForm != null && !_sequenceTreeForm.IsFloating)
+                FocusDocument();
         }
 
         protected override void OnGotFocus(EventArgs e)
         {
             base.OnGotFocus(e);
-            FocusDocument();
+
+            if (_sequenceTreeForm != null && !_sequenceTreeForm.IsFloating)
+                FocusDocument();
         }
 
         public void FocusDocument()
