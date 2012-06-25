@@ -111,23 +111,13 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
 template<class CLIHandle> inline void ValidateCopyToArrayArgs(array<CLIHandle>^ array, int arrayIndex, size_t elementCount)
 {
     if (!array)
-    {
         throw gcnew System::ArgumentNullException("array");
-    }
     if (array->Rank != 1)
-    {
         throw gcnew System::ArgumentException("Array must be of rank 1");
-    }
     if (array->GetLowerBound(0) != 0)
-    {
         throw gcnew System::ArgumentException("Array must have lower bound 0");
-    }
     if (arrayIndex < 0)
-    {
         throw gcnew System::ArgumentOutOfRangeException("arrayIndex");
-    }
-    if (elementCount > INT_MAX || array->Length - arrayIndex < (int) elementCount)
-    {
+    if (elementCount >= INT_MAX || array->Length - arrayIndex < (int) elementCount)
         throw gcnew System::ArgumentException("Insufficient space");
-    }
 }
