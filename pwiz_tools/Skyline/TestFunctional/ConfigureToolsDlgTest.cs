@@ -55,11 +55,16 @@ namespace pwiz.SkylineTestFunctional
             TestNewToolName();
         }
 
-        // Opens dlg assuming no tools exist exits with no tools.
         private static void TestEmptyOpen()
         {
+            // Empty the tools list just in case.
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {
+                    while (configureToolsDlg.ToolList.Count > 0)
+                    {
+                        configureToolsDlg.Delete();
+                    }
+                    configureToolsDlg.Add();
                     AssertEx.NoDiff(configureToolsDlg.ToolList[0].Title, "[New Tool1]");
                     Assert.IsTrue(configureToolsDlg.ToolList.Count == 1);
                     Assert.IsTrue(configureToolsDlg.btnMoveUp.Enabled == false);
@@ -151,12 +156,10 @@ namespace pwiz.SkylineTestFunctional
                 // Test response to selected index changing.
                 RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(0), messageDlg =>
                 {
-                    AssertEx.Contains(
-                        messageDlg.
-                            Message,
+                    AssertEx.Contains(messageDlg.Message,
                         "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
-                    messageDlg.
-                        BtnCancelClick();
+                    // Because of the way MultiButtonMsgDlg is written CancelClick is actually no when only yes/no options are avalible. 
+                    messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
@@ -169,7 +172,6 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual(configureToolsDlg._previouslySelectedIndex, 0);
                     // Test btnMoveDown.
                     configureToolsDlg.MoveDown();
-
                     Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
                     Assert.AreEqual("example1", configureToolsDlg.textTitle.Text);
                     Assert.AreEqual("example1.exe", configureToolsDlg.textCommand.Text);
@@ -177,16 +179,16 @@ namespace pwiz.SkylineTestFunctional
                     Assert.AreEqual("", configureToolsDlg.textInitialDirectory.Text);
                     Assert.IsTrue(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsTrue(configureToolsDlg.btnMoveDown.Enabled);
-                    Assert.AreEqual("example2", configureToolsDlg.ToolList[2].Title);
-                    Assert.AreEqual("example1", configureToolsDlg.ToolList[1].Title);
                     Assert.AreEqual("example3", configureToolsDlg.ToolList[0].Title);
-                });
+                    Assert.AreEqual("example1", configureToolsDlg.ToolList[1].Title);
+                    Assert.AreEqual("example2", configureToolsDlg.ToolList[2].Title);
+            });
                 // Save and return to skylinewindow.
                 RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
                 {
                     AssertEx.Contains(messageDlg.Message,
-                                    "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
-                    messageDlg.BtnCancelClick();
+                            "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
+                    messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
@@ -211,8 +213,8 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(1), messageDlg =>
                 {
                     AssertEx.Contains(messageDlg.Message,
-                                      "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
-                    messageDlg.BtnCancelClick();
+                            "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
+                    messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
@@ -224,8 +226,8 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
                 {
                     AssertEx.Contains(messageDlg.Message,
-                                    "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
-                    messageDlg.BtnCancelClick();
+                            "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
+                    messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
@@ -243,8 +245,8 @@ namespace pwiz.SkylineTestFunctional
                 RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(1), messageDlg =>
                 {
                     AssertEx.Contains(messageDlg.Message,
-                                    "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
-                    messageDlg.BtnCancelClick();
+                         "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
+                    messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
@@ -286,7 +288,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
                 AssertEx.Contains(messageDlg.Message, "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
-                messageDlg.Btn1Click();
+                messageDlg.Btn1Click(); //Dialog response yes.
             });
             RunUI(() =>
             {
@@ -307,7 +309,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.SaveTools(), messageDlg =>
             {
                 AssertEx.Contains(messageDlg.Message, "Warning: \n The command for example may not exist in that location. Would you like to edit it?");
-                messageDlg.BtnCancelClick();
+                messageDlg.BtnCancelClick(); // Dialog response no.
             });
             RunUI(configureToolsDlg.Delete);
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.Cancel, messageDlg =>

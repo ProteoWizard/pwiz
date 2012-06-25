@@ -3178,12 +3178,12 @@ namespace pwiz.Skyline
             return null;
         }
 
-        #endregion 
-
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowToolOptionsUI();
         }
+
+        #endregion 
 
     }
 }

@@ -261,11 +261,18 @@ namespace pwiz.Skyline.ToolsUI
             }
             else if (spot == ToolList.Count)
             {
+                // If the deleted Index was the last in the list, the selected index is the new last element.
                 listTools.SelectedIndex = spot - 1;
             }
             else
             {
                 listTools.SelectedIndex = spot;
+                //In this case the selected index doesn't actually change so the textBoxes still need to be updated.
+                ToolDescription highlighted = ToolList[listTools.SelectedIndex];
+                textTitle.Text = highlighted.Title;
+                textCommand.Text = highlighted.Command;
+                textArguments.Text = highlighted.Arguments;
+                textInitialDirectory.Text = highlighted.InitialDirectory;
             }
             Unsaved = true;
         }
