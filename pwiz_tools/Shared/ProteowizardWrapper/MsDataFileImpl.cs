@@ -44,12 +44,9 @@ namespace pwiz.ProteowizardWrapper
 
         private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
 
-        private static double[] ToArray(IList<double> list)
+        private static double[] ToArray(BinaryDataArray binaryDataArray)
         {
-            double[] result = new double[list.Count];
-            for (int i = 0; i < result.Length; i++)
-                result[i] = list[i];
-            return result;
+            return binaryDataArray.data.ToArray();
         }
 
         private static float[] ToFloatArray(IList<double> list)
@@ -533,8 +530,8 @@ namespace pwiz.ProteowizardWrapper
                                    RetentionTime = GetStartTime(spectrum),
                                    Precursors = GetPrecursors(spectrum),
                                    Centroided = IsCentroided(spectrum),
-                                   Mzs = ToArray(spectrum.getMZArray().data),
-                                   Intensities = ToArray(spectrum.getIntensityArray().data)
+                                   Mzs = ToArray(spectrum.getMZArray()),
+                                   Intensities = ToArray(spectrum.getIntensityArray())
                                };
                 }
                 catch (NullReferenceException)

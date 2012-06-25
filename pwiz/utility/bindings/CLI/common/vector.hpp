@@ -26,6 +26,7 @@
 #define INTERNAL internal
 #endif
 
+
 #define RANGE_CHECK(index) \
     if (index < 0 || index >= static_cast<int>(base_->size())) \
         throw gcnew System::IndexOutOfRangeException(); 
@@ -63,7 +64,11 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
     virtual void Add(CLIHandle item) {base_->push_back(CLIToNative(NativeType, item));} \
     virtual void Clear() {base_->clear();} \
     virtual bool Contains(CLIHandle item) {return std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item)) != base_->end();} \
-    virtual void CopyTo(array<CLIHandle>^ arrayTarget, int arrayIndex) {throw gcnew System::Exception("method not implemented");} \
+    virtual void CopyTo(array<CLIHandle>^ arrayTarget, int arrayIndex) \
+    { \
+        ValidateCopyToArrayArgs(arrayTarget, arrayIndex, base_->size()); \
+        for (int i = 0; i < (int) base_->size(); i++) {arrayTarget[i + arrayIndex] = NativeToCLI(NativeType, CLIType, (*base_)[i]);} \
+    } \
     virtual bool Remove(CLIHandle item) {WrappedType::iterator itr = std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item)); if(itr == base_->end()) return false; base_->erase(itr); return true;} \
     virtual int IndexOf(CLIHandle item) {return (int) (std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item))-base_->begin());} \
     virtual void Insert(int index, CLIHandle item) {base_->insert(base_->begin() + index, CLIToNative(NativeType, item));} \
@@ -102,3 +107,27 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
     DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType^, NativeToCLI, CLIToNative)
 #define DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(WrapperName, NativeType, CLIType, NativeToCLI, CLIToNative) \
     DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIType, NativeToCLI, CLIToNative)
+
+template<class CLIHandle> inline void ValidateCopyToArrayArgs(array<CLIHandle>^ array, int arrayIndex, size_t elementCount)
+{
+    if (!array)
+    {
+        throw gcnew System::ArgumentNullException("array");
+    }
+    if (array->Rank != 1)
+    {
+        throw gcnew System::ArgumentException("Array must be of rank 1");
+    }
+    if (array->GetLowerBound(0) != 0)
+    {
+        throw gcnew System::ArgumentException("Array must have lower bound 0");
+    }
+    if (arrayIndex < 0)
+    {
+        throw gcnew System::ArgumentOutOfRangeException("arrayIndex");
+    }
+    if (elementCount > INT_MAX || array->Length - arrayIndex < (int) elementCount)
+    {
+        throw gcnew System::ArgumentException("Insufficient space");
+    }
+}
