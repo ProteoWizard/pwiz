@@ -72,28 +72,43 @@ void BuildParser::setSpecFileName(
 
     curSpecFileName_.clear();
 
-    // try the location of the result file, then all dirs in the list
-    for(int i=-1; i<(int)directories.size(); i++) {
+    string fileroot = specfileroot;
+    do {
+        // try the location of the result file, then all dirs in the list
+        for(int i=-1; i<(int)directories.size(); i++) {
 
-        string path = filepath_.c_str();
-        if( i >= 0 ) {
-            path += directories.at(i);
-        }
-
-        for(int i=0; i<(int)extensions.size(); i++) {
-            string trialName = path + specfileroot + extensions.at(i);
-            ifstream file(trialName.c_str());
-            if(file.good()) {
-                curSpecFileName_ = trialName;
-                break;
+            string path = filepath_.c_str();
+            if( i >= 0 ) {
+                path += directories.at(i);
             }
 
-        }// next extension
+            for(int i=0; i<(int)extensions.size(); i++) {
+                string trialName = path + fileroot + extensions.at(i);
+                ifstream file(trialName.c_str());
+                if(file.good()) {
+                    curSpecFileName_ = trialName;
+                    break;
+                }
 
-        if( !curSpecFileName_.empty() )
-            break;
+            }// next extension
 
-    }// next dir
+            if( !curSpecFileName_.empty() )
+                break;
+
+        }// next dir
+
+        // if nothing found, try removing possible file extensions in search of true
+        // base file name.  Proteome Discoverer leaves .msf on its pepXML base names.
+        if ( curSpecFileName_.empty() ) {
+            size_t slash = fileroot.find_last_of("/\\");
+            size_t dot = fileroot.find_last_of(".");
+            if (dot == string::npos || (slash != string::npos && dot < slash))
+                fileroot = "";  // no extenstion to remove
+            else
+                fileroot = fileroot.erase(dot);
+        }
+
+    } while (curSpecFileName_.empty() && !fileroot.empty());
 
     if( curSpecFileName_.empty() ) {
         string extString = fileNotFoundMessage(specfileroot,

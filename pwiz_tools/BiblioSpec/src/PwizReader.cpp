@@ -69,6 +69,8 @@ void PwizReader::openFile(const char* filename, bool mzSort){
         BiblioSpec::Verbosity::debug("Found %d spectra in %s.",
                                      allSpectra_->size(), filename);
         nativeIdFormat_ = id::getDefaultNativeIDFormat(*fileReader_);
+        if (nativeIdFormat_ == MS_no_nativeID_format)   // This never works
+            nativeIdFormat_ = MS_scan_number_only_nativeID_format;
         
         // HACK!  Without this block, I get an index out of bounds
         // error in getSpectrum(1, data, INDEX_ID)
