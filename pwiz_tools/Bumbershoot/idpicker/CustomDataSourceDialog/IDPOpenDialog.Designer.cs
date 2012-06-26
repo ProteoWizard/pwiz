@@ -66,12 +66,12 @@ namespace CustomDataSourceDialog
             this.SubfolderBox = new System.Windows.Forms.CheckBox();
             this.VertSplit = new System.Windows.Forms.SplitContainer();
             this.progressPanel = new System.Windows.Forms.Panel();
+            this.importProgressCancelButton = new System.Windows.Forms.Button();
             this.importProgressBar = new System.Windows.Forms.ProgressBar();
             this.RemoveNodeButton = new System.Windows.Forms.Button();
             this.AddNode = new System.Windows.Forms.Button();
             this.FileTreeView = new System.Windows.Forms.TreeView();
             this.TopSplit = new System.Windows.Forms.SplitContainer();
-            this.importProgressCancelButton = new System.Windows.Forms.Button();
             this.ArrowPicture = new System.Windows.Forms.PictureBox();
             this.ForwardPicture = new System.Windows.Forms.PictureBox();
             this.BackPicture = new System.Windows.Forms.PictureBox();
@@ -245,6 +245,17 @@ namespace CustomDataSourceDialog
             this.progressPanel.Size = new System.Drawing.Size(409, 28);
             this.progressPanel.TabIndex = 3;
             // 
+            // importProgressCancelButton
+            // 
+            this.importProgressCancelButton.Anchor = System.Windows.Forms.AnchorStyles.Left;
+            this.importProgressCancelButton.Location = new System.Drawing.Point(357, 3);
+            this.importProgressCancelButton.Name = "importProgressCancelButton";
+            this.importProgressCancelButton.Size = new System.Drawing.Size(49, 23);
+            this.importProgressCancelButton.TabIndex = 2;
+            this.importProgressCancelButton.Text = "Cancel";
+            this.importProgressCancelButton.UseVisualStyleBackColor = true;
+            this.importProgressCancelButton.Click += new System.EventHandler(this.importProgressCancelButton_Click);
+            // 
             // importProgressBar
             // 
             this.importProgressBar.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -311,17 +322,6 @@ namespace CustomDataSourceDialog
             this.TopSplit.Size = new System.Drawing.Size(658, 23);
             this.TopSplit.SplitterDistance = 481;
             this.TopSplit.TabIndex = 45;
-            // 
-            // importProgressCancelButton
-            // 
-            this.importProgressCancelButton.Anchor = System.Windows.Forms.AnchorStyles.Left;
-            this.importProgressCancelButton.Location = new System.Drawing.Point(357, 3);
-            this.importProgressCancelButton.Name = "importProgressCancelButton";
-            this.importProgressCancelButton.Size = new System.Drawing.Size(49, 23);
-            this.importProgressCancelButton.TabIndex = 2;
-            this.importProgressCancelButton.Text = "Cancel";
-            this.importProgressCancelButton.UseVisualStyleBackColor = true;
-            this.importProgressCancelButton.Click += new System.EventHandler(this.importProgressCancelButton_Click);
             // 
             // ArrowPicture
             // 

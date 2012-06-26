@@ -495,7 +495,7 @@ namespace IDPicker.Forms
         {
             if (e.DataObject.GetType().ToString() == "System.Windows.Forms.DataObject")
                 e.Effect = DragDropEffects.Move;
-            else if (e.DataObject is OLVDataObject
+            else if (e.DataObject is OLVDataObject && e.DropTargetItem != null
                      && (e.DropTargetItem.RowObject is tlvBranch
                          && ((e.DropTargetItem.RowObject as tlvBranch).Data is SpectrumSourceGroup
                               || (e.DropTargetItem.RowObject as tlvBranch).Data is SpectrumSource)))

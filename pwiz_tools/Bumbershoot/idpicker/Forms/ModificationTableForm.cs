@@ -520,6 +520,21 @@ namespace IDPicker.Forms
 
             Text = TabText = "Loading modification view...";
 
+            if (workerThread.IsBusy)
+            {
+                workerThread.RunWorkerCompleted -= renderData;
+                workerThread.RunWorkerCompleted -= rerunSet;
+                workerThread.RunWorkerCompleted += rerunSet;
+            }
+            else
+                workerThread.RunWorkerAsync();
+        }
+
+        private void rerunSet(object sender, RunWorkerCompletedEventArgs e)
+        {
+            workerThread.RunWorkerCompleted -= renderData;
+            workerThread.RunWorkerCompleted -= rerunSet;
+            workerThread.RunWorkerCompleted += renderData;
             workerThread.RunWorkerAsync();
         }
 
@@ -771,8 +786,11 @@ namespace IDPicker.Forms
                         if (dataGridView.Columns.Contains(columnName) && oldSelectedRow != null)
                         {
                             var oldSelectedCell = dataGridView[columnName, oldSelectedRow.Index];
-                            dataGridView.FirstDisplayedCell = oldSelectedCell;
-                            oldSelectedCell.Selected = true;
+                            if (oldSelectedCell.Visible)
+                            {
+                                dataGridView.FirstDisplayedCell = oldSelectedCell;
+                                oldSelectedCell.Selected = true;
+                            }
                         }
                     }
                 }

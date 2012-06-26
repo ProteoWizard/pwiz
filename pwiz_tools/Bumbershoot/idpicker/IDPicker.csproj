@@ -520,7 +520,6 @@
     <None Include="Resources\Collapse_large.bmp" />
     <None Include="Resources\Expand_large.bmp" />
     <None Include="Resources\XPfolder_closed.png" />
-    <None Include="Resources\file.png" />
     <None Include="Resources\Export.png" />
     <None Include="Resources\DataProcessing.png" />
     <None Include="Resources\Annotation.png" />
@@ -557,6 +556,8 @@
     <Content Include="QuasiTel V2.R">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="Resources\file.png" />
+    <None Include="Resources\ChargeIcon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

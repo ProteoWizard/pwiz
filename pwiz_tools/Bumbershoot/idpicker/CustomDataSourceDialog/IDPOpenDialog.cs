@@ -994,7 +994,15 @@ namespace CustomDataSourceDialog
             if (SubfolderBox.Checked)
             {
                 if (firstLayer)
-                    VertSplit.Enabled = false;
+                {
+                    if (InvokeRequired)
+                    {
+                        var action = new Action(() => VertSplit.Enabled = false);
+                        Invoke(action);
+                    }
+                    else
+                        VertSplit.Enabled = false;
+                }
                 foreach (var path in di.GetDirectories())
                 {
                     TreeNode subNode;
@@ -1012,7 +1020,15 @@ namespace CustomDataSourceDialog
                     newNode.Nodes.Add(subNode);
                 }
                 if (firstLayer)
-                    VertSplit.Enabled = true;
+                {
+                    if (InvokeRequired)
+                    {
+                        var action = new Action(() => VertSplit.Enabled = true);
+                        Invoke(action);
+                    }
+                    else
+                        VertSplit.Enabled = true;
+                }
             }
             //Here is what takes the most time
             foreach (var file in di.GetFiles())
