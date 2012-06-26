@@ -19,6 +19,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -33,6 +34,10 @@ namespace pwiz.Skyline.ToolsUI
         {
             InitializeComponent();
 
+            PopulateMacroList();
+
+            // Value for keeping track of the previously selected tool 
+            // Used to check if the tool meets requirements before allowing you to navigate away from it.
             _previouslySelectedIndex = -1;
             
             ToolList = new List<ToolDescription>();
@@ -143,7 +148,7 @@ namespace pwiz.Skyline.ToolsUI
             }            
         }
 
-        private static readonly string[] EXTENSIONS = new[]{".exe", ".com", ".pif", ".cmd", ".bat"};
+        public static readonly string[] EXTENSIONS = new[]{".exe", ".com", ".pif", ".cmd", ".bat"};
 
         public static bool checkExtension(string path)
         {
@@ -259,6 +264,7 @@ namespace pwiz.Skyline.ToolsUI
                 btnDelete.Enabled = false;
                 _previouslySelectedIndex = -1;
             }
+            // If the deleted Index was the last in the list, the selected index is the new last element.
             else if (spot == ToolList.Count)
             {
                 // If the deleted Index was the last in the list, the selected index is the new last element.
@@ -396,6 +402,8 @@ namespace pwiz.Skyline.ToolsUI
                 textInitialDirectory.Enabled = false;
                 btnFindCommand.Enabled = false;
                 btnInitialDirectory.Enabled = false;
+                btnArguments.Enabled = false;
+                btnInitialDirectoryMacros.Enabled = false;
             }
             else
             {
@@ -405,6 +413,8 @@ namespace pwiz.Skyline.ToolsUI
                 textInitialDirectory.Enabled = true;
                 btnFindCommand.Enabled = true;
                 btnInitialDirectory.Enabled = true;
+                btnArguments.Enabled = true;
+                btnInitialDirectoryMacros.Enabled = true;
             }
         }
 
@@ -444,5 +454,114 @@ namespace pwiz.Skyline.ToolsUI
                 textInitialDirectory.Text = dlg.SelectedPath;
             }
         }
+
+
+        #region Macros
+
+        public List<MacroMenuItem> _macroListArguments = new List<MacroMenuItem>();
+        public List<MacroMenuItem> _macroListInitialDirectory = new List<MacroMenuItem>();
+
+        private void PopulateMacroList()
+        {
+            // Populate _macroListArguments.            
+            foreach (Macro macro in ToolMacros._listArguments)
+            {
+                _macroListArguments.Add(new MacroMenuItem(macro, textArguments, true));
+            }
+            // Populate _macroListInitialDirectory.
+            foreach (Macro macro in ToolMacros._listInitialDirectory)
+            {
+                _macroListInitialDirectory.Add(new MacroMenuItem(macro, textInitialDirectory, false));
+            }            
+        }
+
+        
+        public class MacroMenuItem : MenuItem
+        { 
+            private readonly Macro _macro; 
+
+            /// <summary>
+            /// Initiates a new MacroMenuItem
+            /// </summary>
+            /// <param name="macro"> The macro the item represents </param>
+            /// <param name="targetTextBox"> The text box the macro should be written to. </param>
+            /// <param name="multiMacro"> A bool that says if multiple macros are accepted.
+            /// initialDirectory only makes sense to have one argument
+            /// when true: append the macro to the txtBox,
+            /// when false: replace the text in the txtbox with the macro. </param>
+            public MacroMenuItem(Macro macro, TextBox targetTextBox, bool multiMacro)
+            {
+                _macro = macro;
+                Click += HandleClick;
+                Text = macro.PlainText;
+                _targetTextBox = targetTextBox;
+                _multiMacro = multiMacro;
+            }
+
+            public string ShortText { get { return _macro.ShortText; } }
+            private readonly TextBox _targetTextBox;
+            private readonly bool _multiMacro;
+
+            private void HandleClick(object sender, EventArgs e)
+            {
+                DoClick();
+            }
+
+            public void DoClick()
+            {
+                if (_multiMacro) 
+                    // If multiple macros are allowed, append the macro ShortText.
+                    _targetTextBox.Text += ShortText;
+                else
+                {               
+                    // If Multiple Macros are NOT allowed, replace with macro ShortText.
+                    _targetTextBox.Text = ShortText;
+                }
+            }
+        }
+
+        // Used in automated testing.
+        public void ClickMacro (List<MacroMenuItem> list, int index)
+        {
+            list[index].DoClick();
+        }
+
+        private void btnArguments_Click(object sender, EventArgs e)
+        {
+            btnArgumentsOpen();
+        }
+
+        public void btnArgumentsOpen()
+        {
+            // Show the ContextMenu full of macros next to btnArguments.
+            MacroMenuArguments.Show(btnArguments, new Point(btnArguments.Width, 0));
+        }
+
+        // Populate the macroMenu on popup. (Arguments)
+        private void MacroMenuArguments_Popup(object sender, EventArgs e)
+        {
+            foreach (MacroMenuItem menuItem in _macroListArguments)
+                MacroMenuArguments.MenuItems.Add(menuItem);
+        }
+
+        // Populate the macroMenu on popup. (initialDirectory)
+        private void MacroMenuInitialDirectory_Popup(object sender, EventArgs e)
+        {                            
+            foreach (MacroMenuItem menuItem in _macroListInitialDirectory)
+                MacroMenuInitialDirectory.MenuItems.Add(menuItem);                            
+        }
+
+        private void btnInitialDirectoryMacros_Click(object sender, EventArgs e)
+        {
+            btnInitialDirectoryOpen();
+        }
+       
+        public void btnInitialDirectoryOpen()
+        {
+            // Show the ContextMenu full of macros next to btnInitialDirectory.
+            MacroMenuInitialDirectory.Show(btnInitialDirectoryMacros, new Point(btnInitialDirectoryMacros.Width, 0));
+        }
+
+        #endregion // Macros
     }
 }

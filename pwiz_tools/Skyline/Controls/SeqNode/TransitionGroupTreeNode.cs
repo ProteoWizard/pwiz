@@ -55,6 +55,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public TransitionGroupDocNode DocNode { get { return (TransitionGroupDocNode) Model; } }
 
+        public string ModifiedSequence
+        {
+            get { return GetModifiedSequence(PepNode, DocNode, SequenceTree.Document.Settings); }
+        }
+
         public PeptideDocNode PepNode
         {
             get { return (Parent != null ? ((PeptideTreeNode)Parent).DocNode : null); }
@@ -425,10 +430,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             using (RenderTools rt = new RenderTools())
             {
-                var calcPre = settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, mods);
-                string seq = nodeGroup.TransitionGroup.Peptide.Sequence;
-                string seqModified = calcPre.GetModifiedSequence(seq, true);
-                if (!Equals(seq, seqModified))
+                string seqModified = GetModifiedSequence(nodePep, nodeGroup, settings);
+                if (!Equals(seqModified, nodeGroup.TransitionGroup.Peptide.Sequence))
                     tableDetails.AddDetailRow("Modified", seqModified, rt);
 
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
@@ -530,6 +533,16 @@ namespace pwiz.Skyline.Controls.SeqNode
                 int height = (int) Math.Round(sizeDetails.Height + size.Height);
                 return new Size(width + 2, height + 2);
             }
+        }
+
+        private static string GetModifiedSequence(PeptideDocNode nodePep,
+                                                  TransitionGroupDocNode nodeGroup,
+                                                  SrmSettings settings)
+        {
+            ExplicitMods mods = (nodePep != null ? nodePep.ExplicitMods : null);
+            var calcPre = settings.GetPrecursorCalc(nodeGroup.TransitionGroup.LabelType, mods);
+            string seq = nodeGroup.TransitionGroup.Peptide.Sequence;
+            return calcPre.GetModifiedSequence(seq, true);            
         }
 
         private static CellDesc CreateHead(string text, RenderTools rt)

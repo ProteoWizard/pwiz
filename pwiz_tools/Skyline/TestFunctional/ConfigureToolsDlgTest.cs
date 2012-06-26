@@ -16,8 +16,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
 using pwiz.SkylineTestUtil;
 
@@ -53,28 +56,55 @@ namespace pwiz.SkylineTestFunctional
             TestProcessStart();
 
             TestNewToolName();
+
+            TestMacros();
+
+            TestMacroComplaint();
+        
+            TestMacroReplacement(); 
+
         }
 
+        private static void TestMacros()
+        {
+            RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
+            {
+                configureToolsDlg.Delete();
+                configureToolsDlg.AddDialog("example", "example.exe", "", "");
+                Assert.AreEqual("", configureToolsDlg.textArguments.Text);
+                configureToolsDlg.ClickMacro(configureToolsDlg._macroListArguments, 0);
+                string shortText = configureToolsDlg._macroListArguments[0].ShortText; 
+                Assert.AreEqual(shortText, configureToolsDlg.textArguments.Text);
+                Assert.AreEqual("", configureToolsDlg.textInitialDirectory.Text);
+                string shortText2 = configureToolsDlg._macroListInitialDirectory[0].ShortText; 
+                configureToolsDlg.ClickMacro(configureToolsDlg._macroListInitialDirectory, 0);
+                Assert.AreEqual(shortText2, configureToolsDlg.textInitialDirectory.Text);
+                configureToolsDlg.Delete();
+                configureToolsDlg.OkDialog();
+            });
+        }
+
+        // Opens dlg assuming no tools exist exits with no tools.
         private static void TestEmptyOpen()
         {
             // Empty the tools list just in case.
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
-                {
+                {                    
                     while (configureToolsDlg.ToolList.Count > 0)
                     {
                         configureToolsDlg.Delete();
                     }
                     configureToolsDlg.Add();
-                    AssertEx.NoDiff(configureToolsDlg.ToolList[0].Title, "[New Tool1]");
-                    Assert.IsTrue(configureToolsDlg.ToolList.Count == 1);
-                    Assert.IsTrue(configureToolsDlg.btnMoveUp.Enabled == false);
-                    Assert.IsTrue(configureToolsDlg.btnMoveDown.Enabled == false);
+                    Assert.AreEqual("[New Tool1]", configureToolsDlg.ToolList[0].Title);
+                    Assert.AreEqual(1, configureToolsDlg.ToolList.Count);
+                    Assert.IsFalse(configureToolsDlg.btnMoveUp.Enabled);
+                    Assert.IsFalse(configureToolsDlg.btnMoveDown.Enabled);
                     configureToolsDlg.Delete();
                     configureToolsDlg.SaveTools();
-                    Assert.IsTrue(configureToolsDlg.btnApply.Enabled == false);
-                    Assert.IsTrue(configureToolsDlg.ToolList.Count == 0);
-                    Assert.IsTrue(configureToolsDlg.listTools.SelectedIndex == -1);
-                    Assert.IsTrue(configureToolsDlg._previouslySelectedIndex == -1);
+                    Assert.IsFalse(configureToolsDlg.btnApply.Enabled);
+                    Assert.AreEqual(0, configureToolsDlg.ToolList.Count);
+                    Assert.AreEqual(-1, configureToolsDlg.listTools.SelectedIndex);
+                    Assert.AreEqual(-1, configureToolsDlg._previouslySelectedIndex);
                     configureToolsDlg.OkDialog();
                 });
         }
@@ -403,7 +433,7 @@ namespace pwiz.SkylineTestFunctional
                 configureToolsDlg.OkDialog();
             });
         }
-
+        
         private static void TestProcessStart()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
@@ -448,5 +478,62 @@ namespace pwiz.SkylineTestFunctional
                 configureToolsDlg.OkDialog();
             });
         }
+
+        // Check that a complaint dialog is displayed when the user tries to run a tool missing a macro. 
+        private static void TestMacroComplaint()
+        {
+            var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            RunUI(() =>
+            {
+                while (configureToolsDlg.ToolList.Count > 0)
+                {
+                    configureToolsDlg.Delete();
+                }
+                configureToolsDlg.AddDialog("example3", "example.exe", "$(DocumentPath)", "");
+            });
+            RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
+            {
+                AssertEx.Contains(messageDlg.Message, "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
+                messageDlg.BtnCancelClick();
+            });
+            RunUI(() =>
+            {
+                ToolDescription toolMenuItem = Settings.Default.ToolList[0];
+                Assert.AreEqual("$(DocumentPath)", toolMenuItem.Arguments);
+            });
+            RunDlg<MessageDlg>(() => Settings.Default.ToolList[0].GetArguments(SkylineWindow), messageDlg =>
+            {
+                AssertEx.Contains(messageDlg.Message, "This tool requires a Document Path to run");
+                messageDlg.OkDialog();
+            });
+
+        }
+
+        // Checks macro replacement method GetArguments works.
+        private void TestMacroReplacement()
+        {
+            RunUI(() =>
+            {
+                while (Settings.Default.ToolList.Count > 0)
+                {
+                    Settings.Default.ToolList.RemoveAt(0);
+                }
+                Settings.Default.ToolList.Add(new ToolDescription("example2", "example.exe", "$(DocumentPath)", "$(DocumentDir)"));
+
+                SkylineWindow.Paste("PEPTIDER");
+                bool saved = SkylineWindow.SaveDocument(TestContext.GetTestPath("ConfigureToolsTest.sky"));
+                //Todo: figure out why this fails to save in the dotCover context.
+                Assert.IsTrue(saved);
+                ToolDescription toolMenuItem = Settings.Default.ToolList[0];
+                Assert.AreEqual("$(DocumentPath)", toolMenuItem.Arguments);
+                Assert.AreEqual("$(DocumentDir)", toolMenuItem.InitialDirectory);
+                string args = toolMenuItem.GetArguments(SkylineWindow);
+                string initDir = toolMenuItem.GetInitialDirectory(SkylineWindow);
+                Assert.AreEqual(System.IO.Path.GetDirectoryName(args), initDir);
+                string path = TestContext.GetTestPath("ConfigureToolsTest.sky");
+                Assert.AreEqual(args, path);
+            });
+        }
+
     }
 }

@@ -28,31 +28,40 @@ namespace pwiz.Skyline.ToolsUI
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ConfigureToolsDlg));
+            this.MacroMenuArguments = new System.Windows.Forms.ContextMenu();
             this.btnOK = new System.Windows.Forms.Button();
-            this.btnCancel = new System.Windows.Forms.Button();
-            this.btnApply = new System.Windows.Forms.Button();
-            this.btnAdd = new System.Windows.Forms.Button();
-            this.btnDelete = new System.Windows.Forms.Button();
-            this.btnMoveUp = new System.Windows.Forms.Button();
-            this.btnMoveDown = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.textTitle = new System.Windows.Forms.TextBox();
-            this.textCommand = new System.Windows.Forms.TextBox();
-            this.textArguments = new System.Windows.Forms.TextBox();
-            this.textInitialDirectory = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.listTools = new System.Windows.Forms.ListBox();
-            this.btnFindCommand = new System.Windows.Forms.Button();
+            this.btnArguments = new System.Windows.Forms.Button();
             this.btnInitialDirectory = new System.Windows.Forms.Button();
+            this.btnFindCommand = new System.Windows.Forms.Button();
+            this.listTools = new System.Windows.Forms.ListBox();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.textInitialDirectory = new System.Windows.Forms.TextBox();
+            this.textArguments = new System.Windows.Forms.TextBox();
+            this.textCommand = new System.Windows.Forms.TextBox();
+            this.textTitle = new System.Windows.Forms.TextBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.btnMoveDown = new System.Windows.Forms.Button();
+            this.btnMoveUp = new System.Windows.Forms.Button();
+            this.btnDelete = new System.Windows.Forms.Button();
+            this.btnAdd = new System.Windows.Forms.Button();
+            this.btnApply = new System.Windows.Forms.Button();
+            this.btnCancel = new System.Windows.Forms.Button();
+            this.btnInitialDirectoryMacros = new System.Windows.Forms.Button();
+            this.MacroMenuInitialDirectory = new System.Windows.Forms.ContextMenu();
             this.SuspendLayout();
+            // 
+            // MacroMenuArguments
+            // 
+            this.MacroMenuArguments.Popup += new System.EventHandler(this.MacroMenuArguments_Popup);
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(125, 260);
+            this.btnOK.Location = new System.Drawing.Point(125, 273);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 14;
@@ -60,39 +69,165 @@ namespace pwiz.Skyline.ToolsUI
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
-            // btnCancel
+            // btnArguments
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(206, 260);
-            this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 15;
-            this.btnCancel.Text = "Cancel";
-            this.btnCancel.UseVisualStyleBackColor = true;
-            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
+            this.btnArguments.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnArguments.Image = ((System.Drawing.Image)(resources.GetObject("btnArguments.Image")));
+            this.btnArguments.Location = new System.Drawing.Point(340, 215);
+            this.btnArguments.Name = "btnArguments";
+            this.btnArguments.Size = new System.Drawing.Size(21, 23);
+            this.btnArguments.TabIndex = 20;
+            this.btnArguments.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnArguments.UseVisualStyleBackColor = true;
+            this.btnArguments.Click += new System.EventHandler(this.btnArguments_Click);
             // 
-            // btnApply
+            // btnInitialDirectory
             // 
-            this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnApply.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.btnApply.Location = new System.Drawing.Point(287, 260);
-            this.btnApply.Name = "btnApply";
-            this.btnApply.Size = new System.Drawing.Size(75, 23);
-            this.btnApply.TabIndex = 16;
-            this.btnApply.Text = "App&ly";
-            this.btnApply.UseVisualStyleBackColor = true;
-            this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
+            this.btnInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnInitialDirectory.Location = new System.Drawing.Point(314, 244);
+            this.btnInitialDirectory.Name = "btnInitialDirectory";
+            this.btnInitialDirectory.Size = new System.Drawing.Size(21, 23);
+            this.btnInitialDirectory.TabIndex = 18;
+            this.btnInitialDirectory.Text = "...";
+            this.btnInitialDirectory.UseVisualStyleBackColor = true;
+            this.btnInitialDirectory.Click += new System.EventHandler(this.btnInitialDirectory_Click);
             // 
-            // btnAdd
+            // btnFindCommand
             // 
-            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAdd.Location = new System.Drawing.Point(287, 25);
-            this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(75, 23);
-            this.btnAdd.TabIndex = 2;
-            this.btnAdd.Text = "&Add";
-            this.btnAdd.UseVisualStyleBackColor = true;
-            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
+            this.btnFindCommand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnFindCommand.Location = new System.Drawing.Point(341, 186);
+            this.btnFindCommand.Name = "btnFindCommand";
+            this.btnFindCommand.Size = new System.Drawing.Size(21, 23);
+            this.btnFindCommand.TabIndex = 17;
+            this.btnFindCommand.Text = "...";
+            this.btnFindCommand.UseVisualStyleBackColor = true;
+            this.btnFindCommand.Click += new System.EventHandler(this.btnFindCommand_Click);
+            // 
+            // listTools
+            // 
+            this.listTools.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listTools.FormattingEnabled = true;
+            this.listTools.Location = new System.Drawing.Point(15, 25);
+            this.listTools.Name = "listTools";
+            this.listTools.Size = new System.Drawing.Size(266, 121);
+            this.listTools.TabIndex = 1;
+            this.listTools.SelectedIndexChanged += new System.EventHandler(this.listTools_SelectedIndexChanged);
+            // 
+            // label5
+            // 
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(12, 249);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(74, 13);
+            this.label5.TabIndex = 12;
+            this.label5.Text = "&Initial directory";
+            // 
+            // label4
+            // 
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(12, 220);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(60, 13);
+            this.label4.TabIndex = 10;
+            this.label4.Text = "A&rguments:";
+            // 
+            // label3
+            // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(12, 191);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(57, 13);
+            this.label3.TabIndex = 8;
+            this.label3.Text = "&Command:";
+            // 
+            // label2
+            // 
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 162);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(30, 13);
+            this.label2.TabIndex = 6;
+            this.label2.Text = "&Title:";
+            // 
+            // textInitialDirectory
+            // 
+            this.textInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textInitialDirectory.Location = new System.Drawing.Point(102, 246);
+            this.textInitialDirectory.Name = "textInitialDirectory";
+            this.textInitialDirectory.Size = new System.Drawing.Size(206, 20);
+            this.textInitialDirectory.TabIndex = 13;
+            this.textInitialDirectory.TextChanged += new System.EventHandler(this.textInitialDirectory_TextChanged);
+            // 
+            // textArguments
+            // 
+            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textArguments.Location = new System.Drawing.Point(102, 217);
+            this.textArguments.Name = "textArguments";
+            this.textArguments.Size = new System.Drawing.Size(233, 20);
+            this.textArguments.TabIndex = 11;
+            this.textArguments.TextChanged += new System.EventHandler(this.textArguments_TextChanged);
+            // 
+            // textCommand
+            // 
+            this.textCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textCommand.Location = new System.Drawing.Point(102, 188);
+            this.textCommand.Name = "textCommand";
+            this.textCommand.Size = new System.Drawing.Size(233, 20);
+            this.textCommand.TabIndex = 9;
+            this.textCommand.TextChanged += new System.EventHandler(this.textCommand_TextChanged);
+            // 
+            // textTitle
+            // 
+            this.textTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.textTitle.Location = new System.Drawing.Point(102, 159);
+            this.textTitle.Name = "textTitle";
+            this.textTitle.Size = new System.Drawing.Size(260, 20);
+            this.textTitle.TabIndex = 7;
+            this.textTitle.TextChanged += new System.EventHandler(this.textTitle_TextChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(12, 9);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(81, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "&Menu contents:";
+            // 
+            // btnMoveDown
+            // 
+            this.btnMoveDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnMoveDown.Location = new System.Drawing.Point(286, 123);
+            this.btnMoveDown.Name = "btnMoveDown";
+            this.btnMoveDown.Size = new System.Drawing.Size(75, 23);
+            this.btnMoveDown.TabIndex = 5;
+            this.btnMoveDown.Text = "M&ove Down";
+            this.btnMoveDown.UseVisualStyleBackColor = true;
+            this.btnMoveDown.Click += new System.EventHandler(this.btnMoveDown_Click);
+            // 
+            // btnMoveUp
+            // 
+            this.btnMoveUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnMoveUp.Location = new System.Drawing.Point(287, 94);
+            this.btnMoveUp.Name = "btnMoveUp";
+            this.btnMoveUp.Size = new System.Drawing.Size(75, 23);
+            this.btnMoveUp.TabIndex = 4;
+            this.btnMoveUp.Text = "Move &Up";
+            this.btnMoveUp.UseVisualStyleBackColor = true;
+            this.btnMoveUp.Click += new System.EventHandler(this.btnMoveUp_Click);
             // 
             // btnDelete
             // 
@@ -106,160 +241,64 @@ namespace pwiz.Skyline.ToolsUI
             this.btnDelete.EnabledChanged += new System.EventHandler(this.btnDelete_EnabledChanged);
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
-            // btnMoveUp
+            // btnAdd
             // 
-            this.btnMoveUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMoveUp.Location = new System.Drawing.Point(287, 94);
-            this.btnMoveUp.Name = "btnMoveUp";
-            this.btnMoveUp.Size = new System.Drawing.Size(75, 23);
-            this.btnMoveUp.TabIndex = 4;
-            this.btnMoveUp.Text = "Move &Up";
-            this.btnMoveUp.UseVisualStyleBackColor = true;
-            this.btnMoveUp.Click += new System.EventHandler(this.btnMoveUp_Click);
+            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnAdd.Location = new System.Drawing.Point(287, 25);
+            this.btnAdd.Name = "btnAdd";
+            this.btnAdd.Size = new System.Drawing.Size(75, 23);
+            this.btnAdd.TabIndex = 2;
+            this.btnAdd.Text = "&Add";
+            this.btnAdd.UseVisualStyleBackColor = true;
+            this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
-            // btnMoveDown
+            // btnApply
             // 
-            this.btnMoveDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMoveDown.Location = new System.Drawing.Point(286, 123);
-            this.btnMoveDown.Name = "btnMoveDown";
-            this.btnMoveDown.Size = new System.Drawing.Size(75, 23);
-            this.btnMoveDown.TabIndex = 5;
-            this.btnMoveDown.Text = "M&ove Down";
-            this.btnMoveDown.UseVisualStyleBackColor = true;
-            this.btnMoveDown.Click += new System.EventHandler(this.btnMoveDown_Click);
+            this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnApply.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.btnApply.Location = new System.Drawing.Point(286, 273);
+            this.btnApply.Name = "btnApply";
+            this.btnApply.Size = new System.Drawing.Size(75, 23);
+            this.btnApply.TabIndex = 16;
+            this.btnApply.Text = "App&ly";
+            this.btnApply.UseVisualStyleBackColor = true;
+            this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
             // 
-            // label1
+            // btnCancel
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(12, 9);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(81, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Menu contents:";
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnCancel.Location = new System.Drawing.Point(206, 273);
+            this.btnCancel.Name = "btnCancel";
+            this.btnCancel.Size = new System.Drawing.Size(75, 23);
+            this.btnCancel.TabIndex = 15;
+            this.btnCancel.Text = "Cancel";
+            this.btnCancel.UseVisualStyleBackColor = true;
+            this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
-            // textTitle
+            // btnInitialDirectoryMacros
             // 
-            this.textTitle.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textTitle.Location = new System.Drawing.Point(102, 156);
-            this.textTitle.Name = "textTitle";
-            this.textTitle.Size = new System.Drawing.Size(260, 20);
-            this.textTitle.TabIndex = 7;
-            this.textTitle.TextChanged += new System.EventHandler(this.textTitle_TextChanged);
+            this.btnInitialDirectoryMacros.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnInitialDirectoryMacros.Image = ((System.Drawing.Image)(resources.GetObject("btnInitialDirectoryMacros.Image")));
+            this.btnInitialDirectoryMacros.Location = new System.Drawing.Point(340, 244);
+            this.btnInitialDirectoryMacros.Name = "btnInitialDirectoryMacros";
+            this.btnInitialDirectoryMacros.Size = new System.Drawing.Size(21, 23);
+            this.btnInitialDirectoryMacros.TabIndex = 21;
+            this.btnInitialDirectoryMacros.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnInitialDirectoryMacros.UseVisualStyleBackColor = true;
+            this.btnInitialDirectoryMacros.Click += new System.EventHandler(this.btnInitialDirectoryMacros_Click);
             // 
-            // textCommand
+            // MacroMenuInitialDirectory
             // 
-            this.textCommand.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textCommand.Location = new System.Drawing.Point(102, 182);
-            this.textCommand.Name = "textCommand";
-            this.textCommand.Size = new System.Drawing.Size(222, 20);
-            this.textCommand.TabIndex = 9;
-            this.textCommand.TextChanged += new System.EventHandler(this.textCommand_TextChanged);
-            // 
-            // textArguments
-            // 
-            this.textArguments.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textArguments.Location = new System.Drawing.Point(102, 208);
-            this.textArguments.Name = "textArguments";
-            this.textArguments.Size = new System.Drawing.Size(260, 20);
-            this.textArguments.TabIndex = 11;
-            this.textArguments.TextChanged += new System.EventHandler(this.textArguments_TextChanged);
-            // 
-            // textInitialDirectory
-            // 
-            this.textInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.textInitialDirectory.Location = new System.Drawing.Point(102, 234);
-            this.textInitialDirectory.Name = "textInitialDirectory";
-            this.textInitialDirectory.Size = new System.Drawing.Size(222, 20);
-            this.textInitialDirectory.TabIndex = 13;
-            this.textInitialDirectory.TextChanged += new System.EventHandler(this.textInitialDirectory_TextChanged);
-            // 
-            // label2
-            // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 159);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(30, 13);
-            this.label2.TabIndex = 6;
-            this.label2.Text = "&Title:";
-            // 
-            // label3
-            // 
-            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 185);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(57, 13);
-            this.label3.TabIndex = 8;
-            this.label3.Text = "&Command:";
-            // 
-            // label4
-            // 
-            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(12, 211);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(60, 13);
-            this.label4.TabIndex = 10;
-            this.label4.Text = "A&rguments:";
-            // 
-            // label5
-            // 
-            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(12, 237);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(74, 13);
-            this.label5.TabIndex = 12;
-            this.label5.Text = "&Initial directory";
-            // 
-            // listTools
-            // 
-            this.listTools.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.listTools.FormattingEnabled = true;
-            this.listTools.Location = new System.Drawing.Point(15, 25);
-            this.listTools.Name = "listTools";
-            this.listTools.Size = new System.Drawing.Size(266, 121);
-            this.listTools.TabIndex = 1;
-            this.listTools.SelectedIndexChanged += new System.EventHandler(this.listTools_SelectedIndexChanged);
-            // 
-            // btnFindCommand
-            // 
-            this.btnFindCommand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFindCommand.Location = new System.Drawing.Point(331, 179);
-            this.btnFindCommand.Name = "btnFindCommand";
-            this.btnFindCommand.Size = new System.Drawing.Size(31, 23);
-            this.btnFindCommand.TabIndex = 17;
-            this.btnFindCommand.Text = "...";
-            this.btnFindCommand.UseVisualStyleBackColor = true;
-            this.btnFindCommand.Click += new System.EventHandler(this.btnFindCommand_Click);
-            // 
-            // btnInitialDirectory
-            // 
-            this.btnInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnInitialDirectory.Location = new System.Drawing.Point(330, 231);
-            this.btnInitialDirectory.Name = "btnInitialDirectory";
-            this.btnInitialDirectory.Size = new System.Drawing.Size(31, 23);
-            this.btnInitialDirectory.TabIndex = 18;
-            this.btnInitialDirectory.Text = "...";
-            this.btnInitialDirectory.UseVisualStyleBackColor = true;
-            this.btnInitialDirectory.Click += new System.EventHandler(this.btnInitialDirectory_Click);
+            this.MacroMenuInitialDirectory.Popup += new System.EventHandler(this.MacroMenuInitialDirectory_Popup);
             // 
             // ConfigureToolsDlg
             // 
             this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(374, 295);
+            this.ClientSize = new System.Drawing.Size(374, 308);
+            this.Controls.Add(this.btnInitialDirectoryMacros);
+            this.Controls.Add(this.btnArguments);
             this.Controls.Add(this.btnInitialDirectory);
             this.Controls.Add(this.btnFindCommand);
             this.Controls.Add(this.listTools);
@@ -316,5 +355,9 @@ namespace pwiz.Skyline.ToolsUI
         public System.Windows.Forms.ListBox listTools;
         private System.Windows.Forms.Button btnFindCommand;
         private System.Windows.Forms.Button btnInitialDirectory;
+        private System.Windows.Forms.Button btnArguments;
+        public System.Windows.Forms.ContextMenu MacroMenuArguments;
+        private System.Windows.Forms.Button btnInitialDirectoryMacros;
+        private System.Windows.Forms.ContextMenu MacroMenuInitialDirectory;
     }
 }

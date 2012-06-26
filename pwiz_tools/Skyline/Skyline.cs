@@ -67,7 +67,8 @@ namespace pwiz.Skyline
             IUndoable,
             IDocumentUIContainer,
             IProgressMonitor,
-            ILibraryBuildNotificationContainer
+            ILibraryBuildNotificationContainer,
+            IToolMacroProvider
     {
         private SequenceTreeForm _sequenceTreeForm;
         private SrmDocument _document;
@@ -562,7 +563,7 @@ namespace pwiz.Skyline
                 _resultName = resultName;
             }
 
-            private string ResultNameCurrent
+            public string ResultNameCurrent
             {
                 get
                 {
@@ -3034,21 +3035,62 @@ namespace pwiz.Skyline
             Settings.Default.ToolList = args.Tools;
         }
 
+        #region Implementation of IToolMacroProvider
+
+        public string SelectedPrecursor
+        {
+            get
+            {
+                var selprec = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
+                if (selprec != null)
+                {
+                    return selprec.ModifiedSequence +
+                           Transition.GetChargeIndicator(selprec.DocNode.TransitionGroup.PrecursorCharge);
+                }
+                return null;                
+            }            
+        }
+
+        //Todo: (danny) check with brendan this is correct for Active Replicate Name
+        public string ResultNameCurrent
+        {
+            get { return (new UndoState(this).ResultNameCurrent); }
+        }
+
+        public string SelectedPeptideSequence
+        {
+            get
+            {
+                var peptTreeNode = SequenceTree.GetNodeOfType<PeptideTreeNode>(); 
+                return peptTreeNode != null ? peptTreeNode.DocNode.Peptide.Sequence : null;
+            }
+        }
+
+        public string SelectedProteinName
+        {
+            get
+            {
+                var protTreeNode = SequenceTree.GetNodeOfType<PeptideGroupTreeNode>();
+                return protTreeNode != null ? protTreeNode.DocNode.Name : null;
+            }
+        }
+
+        #endregion
+
         public class ToolMenuItem : ToolStripMenuItem
         {
-            public ToolMenuItem(ToolDescription tool)
+            public readonly ToolDescription _tool;
+
+            public ToolMenuItem(ToolDescription tool, SkylineWindow parent)
             {
-                Title = tool.Title;
-                Command = tool.Command;
-                Arguments = tool.Arguments;
-                InitialDirectory = tool.InitialDirectory;
+                _tool = tool;
                 Click += HandleClick;
+                _parent = parent;
             }
 
-            public string Title { get; set; }
-            public string Command { get; set; }
-            private string Arguments { get; set; }
-            private string InitialDirectory { get; set; }
+            private readonly SkylineWindow _parent;
+            public string Title { get { return _tool.Title; } }
+            public string Command { get { return _tool.Command; } }
 
             private void HandleClick(object sender, EventArgs e)
             {
@@ -3057,23 +3099,35 @@ namespace pwiz.Skyline
 
             public void DoClick()
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo(Command, Arguments)
-                                                 {WorkingDirectory = InitialDirectory};
-                try
+                // If one of the macros cannot be replaced a messageDlg is displayed and null is returned. 
+                string args = _tool.GetArguments(_parent, _parent);
+                string initDir = null;
+                if (args != null)
                 {
-                    Process.Start(startInfo);
+                    initDir = _tool.GetInitialDirectory(_parent, _parent);
                 }
-                catch (FileNotFoundException)
+                if (args != null && initDir != null)
                 {
-                    MessageDlg.Show(Parent, "File Not Found: \n\n Please check the command location is correct for this tool");
-                }
-                catch (Win32Exception)
-                {
-                    MessageDlg.Show(Parent, "File Not Found: \n\n Please check the command location is correct for this tool");
-                }
-                catch (Exception)
-                {
-                    MessageDlg.Show(Parent, "Please reconfigure that tool, it failed to execute. ");
+                    ProcessStartInfo startInfo = new ProcessStartInfo(Command, args) {WorkingDirectory = initDir};
+
+                    try
+                    {
+                        Process.Start(startInfo);
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        MessageDlg.Show(_parent,
+                                        "File Not Found: \n\n Please check the command location is correct for this tool");
+                    }
+                    catch (Win32Exception)
+                    {
+                        MessageDlg.Show(_parent,
+                                        "File Not Found: \n\n Please check the command location is correct for this tool");
+                    }
+                    catch (Exception)
+                    {
+                        MessageDlg.Show(_parent, "Please reconfigure that tool, it failed to execute. ");
+                    }
                 }
             }
         }
@@ -3124,8 +3178,6 @@ namespace pwiz.Skyline
 
         public void PopulateToolsMenu()
         {
-            toolsMenu.Visible = true;
-
             // Remove all items from the toolToolStripMenuItem.
             while (!ReferenceEquals(toolsMenu.DropDownItems[0], toolStripSeparator46))
             {
@@ -3141,7 +3193,7 @@ namespace pwiz.Skyline
             else
             {
                 toolStripSeparator46.Visible = true;
-                foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t) {Text = t.Title}))
+                foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t, this) {Text = t.Title}))
             
                     toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
             }            
@@ -3167,7 +3219,7 @@ namespace pwiz.Skyline
                     toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
         }
 
-        private ToolMenuItem GetToolMenuItem(int i)
+        public ToolMenuItem GetToolMenuItem(int i)
         {
             foreach (var item in toolsMenu.DropDownItems)
             {
