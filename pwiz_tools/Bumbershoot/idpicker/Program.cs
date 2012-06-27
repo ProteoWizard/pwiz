@@ -139,7 +139,8 @@ namespace IDPicker
 
             // for certain exception types, the InnerException is a better representative of the real error
             if ((e is NHibernate.ADOException || e.GetType() == typeof(Exception)) &&
-                e.InnerException != null)
+                e.InnerException != null &&
+                e.InnerException.StackTrace.Contains("IDPicker"))
                 e = e.InnerException;
 
             using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.choice))

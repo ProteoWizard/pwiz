@@ -222,7 +222,7 @@ namespace IDPicker.Forms
                 "LEFT JOIN PeptideModification pm ON psm.Id=pm.PeptideSpectrumMatch " +
                 "LEFT JOIN Modification mod ON pm.Modification=mod.Id " +
                 "LEFT JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
-                "JOIN Spectrum s ON psm.Spectrum=s.Id " +
+                "JOIN UnfilteredSpectrum s ON psm.Spectrum=s.Id " +
                 "JOIN SpectrumSource ss ON s.Source=ss.Id " +
                 "JOIN SpectrumSourceGroup ssg ON ss.Group_=ssg.Id " +
                 "JOIN Analysis a ON psm.Analysis=a.Id " +
@@ -239,7 +239,7 @@ namespace IDPicker.Forms
                 "LEFT JOIN PeptideModification pm ON psm.Id=pm.PeptideSpectrumMatch " +
                 "LEFT JOIN Modification mod ON pm.Modification=mod.Id " +
                 "LEFT JOIN DistinctMatch dm ON psm.Id=dm.PsmId " +
-                "JOIN Spectrum s ON psm.Spectrum=s.Id " +
+                "JOIN UnfilteredSpectrum s ON psm.Spectrum=s.Id " +
                 "JOIN SpectrumSource ss ON s.Source=ss.Id " +
                 "JOIN SpectrumSourceGroup ssg ON ss.Group_=ssg.Id " +
                 "JOIN Analysis a ON psm.Analysis=a.Id ";

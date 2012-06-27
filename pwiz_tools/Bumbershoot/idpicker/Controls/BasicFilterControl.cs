@@ -70,7 +70,10 @@ namespace IDPicker.Controls
             set
             {
                 settingDataFilter = true;
-                maxQValueComboBox.Text = (value.MaximumQValue * 100).ToString();
+                int presetIndex = maxQValueComboBox.Items.IndexOf((value.MaximumQValue * 100).ToString());
+                maxQValueComboBox.SelectedIndex = presetIndex;
+                if (presetIndex == -1)
+                    maxQValueComboBox.Text = (value.MaximumQValue * 100).ToString();
                 minDistinctPeptidesTextBox.Text = value.MinimumDistinctPeptidesPerProtein.ToString();
                 //minDistinctMatches
                 minAdditionalPeptidesTextBox.Text = value.MinimumAdditionalPeptidesPerProtein.ToString();

@@ -726,11 +726,20 @@ namespace IDPicker
             if (args.IsNullOrEmpty())
                 return;
 
-            var missingFiles = args.Where(o => !File.Exists(o));
+            var expandedFilepaths = new List<string>();
+            foreach (string filemask in args)
+            {
+                if (filemask.IndexOfAny("*?".ToCharArray()) != -1)
+                    expandedFilepaths.AddRange(Directory.GetFiles(Path.GetDirectoryName(filemask), Path.GetFileName(filemask)));
+                else
+                    expandedFilepaths.Add(filemask);
+            }
+
+            var missingFiles = expandedFilepaths.Where(o => !File.Exists(o));
             if (missingFiles.Any())
                 throw new ArgumentException("some files do not exist: " + String.Join(" ", missingFiles.ToArray()));
 
-            new Thread(() => { OpenFiles(args, null); }).Start();
+            new Thread(() => { OpenFiles(expandedFilepaths, null); }).Start();
         }
 
         /// <summary>
