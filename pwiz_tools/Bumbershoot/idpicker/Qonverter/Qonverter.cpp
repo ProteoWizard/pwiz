@@ -25,6 +25,7 @@
 
 #include "../Lib/SQLite/sqlite3pp.h"
 #include "pwiz/utility/misc/Std.hpp"
+#include "SchemaUpdater.hpp"
 #include "Qonverter.hpp"
 #include "StaticWeightQonverter.hpp"
 #include "SVMQonverter.hpp"
@@ -430,6 +431,11 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
         // normalize scores (according to qonverterSettings)
         normalize(qonverterSettings, psmRowReader.psmRows);
 
+        /*cout << qonverterSettings.qonverterMethod << endl
+             << qonverterSettings.decoyPrefix << endl;
+        BOOST_FOREACH_FIELD((const string& name)(const Qonverter::Settings::ScoreInfo& scoreInfo), qonverterSettings.scoreInfoByName)
+            cout << name << " " << scoreInfo.weight << " " << scoreInfo.order << " " << scoreInfo.normalizationMethod << endl;*/
+
         switch (qonverterSettings.qonverterMethod.index())
         {
             default:
@@ -446,6 +452,27 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
                 break;
         }
 
+        /*for(int i=0; i < 10; ++i)
+        {
+            const PeptideSpectrumMatch& psm = psmRowReader.psmRows[i];
+            cout << psm.id;
+            cout << " " << psm.spectrum;
+            cout << " " << psm.originalRank;
+            cout << " " << psm.decoyState;
+            cout << " " << psm.chargeState;
+            cout << " " << psm.bestSpecificity;
+            cout << " " << psm.missedCleavages;
+            cout << " " << psm.massError;
+            cout << " " << psm.newRank;
+            cout << " " << psm.totalScore;
+            cout << " " << psm.qValue;
+            cout << " " << psm.fdrScore;
+            cout << " |";
+            for(int j=0; j < psm.scores.size(); ++j)
+                cout << " " << psm.scores[j];
+            cout << endl;
+        }*/
+
         // update the database with the new Q values
         updatePsmRows(db, logQonversionDetails, psmRowReader.psmRows);
 
@@ -459,6 +486,8 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
 
 void Qonverter::reset(const string& idpDbFilepath)
 {
+    SchemaUpdater::update(idpDbFilepath);
+
     sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
     db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
@@ -478,7 +507,8 @@ void Qonverter::reset(sqlite3* idpDb)
     string dropFilteredTables = "DROP TABLE IF EXISTS FilteredProtein;"
                                 "DROP TABLE IF EXISTS FilteredPeptideInstance;"
                                 "DROP TABLE IF EXISTS FilteredPeptide;"
-                                "DROP TABLE IF EXISTS FilteredPeptideSpectrumMatch";
+                                "DROP TABLE IF EXISTS FilteredPeptideSpectrumMatch;"
+                                "DROP TABLE IF EXISTS FilteredSpectrum;";
     CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, dropFilteredTables.c_str(), NULL, NULL, &errorBuf));
 
     // restore Unfiltered* tables as the main tables
@@ -492,10 +522,12 @@ void Qonverter::reset(sqlite3* idpDb)
                                         "DROP TABLE IF EXISTS PeptideInstance;"
                                         "DROP TABLE IF EXISTS Peptide;"
                                         "DROP TABLE IF EXISTS PeptideSpectrumMatch;"
+                                        "DROP TABLE IF EXISTS Spectrum;"
                                         "ALTER TABLE UnfilteredProtein RENAME TO Protein;"
                                         "ALTER TABLE UnfilteredPeptideInstance RENAME TO PeptideInstance;"
                                         "ALTER TABLE UnfilteredPeptide RENAME TO Peptide;"
-                                        "ALTER TABLE UnfilteredPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch";
+                                        "ALTER TABLE UnfilteredPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch;"
+                                        "ALTER TABLE UnfilteredSpectrum RENAME TO Spectrum;";
         CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, renameUnfilteredTables.c_str(), NULL, NULL, &errorBuf));
     }
     catch (runtime_error&)

@@ -72,6 +72,7 @@ namespace IDPicker
         AnalysisTableForm analysisTableForm;
         FragmentationStatisticsForm fragmentationStatisticsForm;
         PeakStatisticsForm peakStatisticsForm;
+        DistributionStatisticsForm distributionStatisticsForm;
         RescuePSMsForm reassignPSMsForm;
 
         LogForm logForm = null;
@@ -132,6 +133,10 @@ namespace IDPicker
             peakStatisticsForm = new PeakStatisticsForm(this);
             peakStatisticsForm.Show(dockPanel, DockState.DockBottomAutoHide);
             peakStatisticsForm.AutoHidePortion = 0.5;
+
+            distributionStatisticsForm = new DistributionStatisticsForm(this);
+            distributionStatisticsForm.Show(dockPanel, DockState.DockBottomAutoHide);
+            distributionStatisticsForm.AutoHidePortion = 0.5;
 
             reassignPSMsForm = new RescuePSMsForm(this);
             reassignPSMsForm.Show(dockPanel, DockState.DockBottomAutoHide);
@@ -672,6 +677,7 @@ namespace IDPicker
             if (analysisTableForm != null) analysisTableForm.ClearData(true);
             fragmentationStatisticsForm.ClearData(true);
             peakStatisticsForm.ClearData(true);
+            distributionStatisticsForm.ClearData();
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.ClearData());
             if (reassignPSMsForm != null) reassignPSMsForm.ClearData(true);
         }
@@ -685,6 +691,7 @@ namespace IDPicker
             analysisTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             fragmentationStatisticsForm.SetData(session, viewFilter);
             peakStatisticsForm.SetData(session, viewFilter);
+            distributionStatisticsForm.SetData(session, viewFilter);
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
             reassignPSMsForm.SetData(session, basicFilter);
         }
@@ -698,6 +705,7 @@ namespace IDPicker
             analysisTableForm.ClearSession();
             fragmentationStatisticsForm.ClearSession();
             peakStatisticsForm.ClearSession();
+            distributionStatisticsForm.ClearSession();
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.ClearSession());
 
             if (session != null)
@@ -817,24 +825,25 @@ namespace IDPicker
 
 
                 // determine if merged filepath exists and that it's a valid idpDB
-                string commonFilename = Util.GetCommonFilename(filepaths);
+                string commonFilepath = Util.GetCommonFilename(filepaths);
+                string mergeTargetFilepath = commonFilepath;
                 bool workToBeDone = filepaths.Count > 1 || (filepaths.Count > 0 && !filepaths[0].ToLower().EndsWith(".idpdb"));
-                bool fileExists = File.Exists(commonFilename);
-                bool fileIsValid = fileExists && SessionFactoryFactory.IsValidFile(commonFilename);
+                bool fileExists = File.Exists(mergeTargetFilepath);
+                bool fileIsValid = fileExists && SessionFactoryFactory.IsValidFile(mergeTargetFilepath);
                 var potentialPaths = filepaths.Select(item =>
                                                       Path.Combine(Path.GetDirectoryName(item) ?? string.Empty,
                                                                    Path.GetFileNameWithoutExtension(item) ??
 
                                                                    string.Empty) + ".idpDB").ToList();
                 if (fileExists && Program.IsHeadless)
-                    File.Delete(commonFilename);
+                    File.Delete(mergeTargetFilepath);
                 else if ((fileExists ||
-                    potentialPaths.Contains(commonFilename)) && filepaths.Count > 1 && workToBeDone)
+                    potentialPaths.Contains(mergeTargetFilepath)) && filepaths.Count > 1 && workToBeDone)
                 {
-                    if(filepaths.Contains(commonFilename))
+                    if(filepaths.Contains(mergeTargetFilepath))
                     {
                         MessageBox.Show("File list contains the default output name, please select a new name.");
-                        if (!saveFileDialog(ref commonFilename))
+                        if (!saveFileDialog(ref mergeTargetFilepath))
                             return;
                     }
                     else
@@ -847,20 +856,20 @@ namespace IDPicker
                                     "Click 'Yes' to overwrite file{1}" +
                                     "Click 'No' to merge to a different file{1}" +
                                     "Click 'Cancel' to abort"
-                                    , commonFilename, Environment.NewLine),
+                                    , mergeTargetFilepath, Environment.NewLine),
                                 "Merged result already exists",
                                 MessageBoxButtons.YesNoCancel,
                                 MessageBoxIcon.Exclamation,
                                 MessageBoxDefaultButton.Button2))
                         {
                             case DialogResult.Yes:
-                                if (!potentialPaths.Contains(commonFilename) && fileExists)
+                                if (!potentialPaths.Contains(mergeTargetFilepath) && fileExists)
                                 {
-                                    File.Delete(commonFilename);
+                                    File.Delete(mergeTargetFilepath);
                                 }
                                 break;
                             case DialogResult.No:
-                                if (!saveFileDialog(ref commonFilename))
+                                if (!saveFileDialog(ref mergeTargetFilepath))
                                     return;
                                 break;
                             case DialogResult.Cancel:
@@ -873,7 +882,7 @@ namespace IDPicker
                 while (true)
                 {
                     DirectoryInfo directoryInfo = null;
-                    var possibleDirectory = Path.GetDirectoryName(commonFilename);
+                    var possibleDirectory = Path.GetDirectoryName(mergeTargetFilepath);
                     if (possibleDirectory != null && Directory.Exists(possibleDirectory))
                         directoryInfo = new DirectoryInfo(possibleDirectory);
 
@@ -894,13 +903,29 @@ namespace IDPicker
                         }
                     }
 
-                    if (!saveFileDialog(ref commonFilename))
+                    if (!saveFileDialog(ref mergeTargetFilepath))
                         return;
+
+                    // if the output file already exists (i.e. it's being opened instead of created by a merge), copy it to a writable location
+                    try
+                    {
+                        if (File.Exists(commonFilepath))
+                            File.Copy(commonFilepath, mergeTargetFilepath);
+                    }
+                    catch (IOException)
+                    {
+                        // repeat loop
+                    }
                 }
                 //Environment.CurrentDirectory = possibleDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
+                // if the common filepath hasn't already been changed and there is some merging or parsing to be done,
+                // then give the user a chance to override the target location
+                if (commonFilepath == mergeTargetFilepath && (idpDB_filepaths.Count() > 1 || xml_filepaths.Any()))
+                    saveFileDialog(ref mergeTargetFilepath); // cancelling keeps the existing filepath
+
                 // set main window title
-                BeginInvoke(new MethodInvoker(() => Text = commonFilename));
+                BeginInvoke(new MethodInvoker(() => Text = mergeTargetFilepath));
 
                 //set up delayed messages so non-fatal errors that occur at the end arent lost
                 var delayedMessages = new List<string[]>();
@@ -960,12 +985,12 @@ namespace IDPicker
 
                 if (idpDB_filepaths.Count() > 1)
                 {
-                    var merger = new Merger(commonFilename, idpDB_filepaths);
+                    var merger = new Merger(mergeTargetFilepath, idpDB_filepaths);
                     toolStripStatusLabel.Text = "Merging results...";
                     merger.MergingProgress += progressMonitor.UpdateProgress;
                     merger.Start();
 
-                    idpDB_filepaths = new List<string>() {commonFilename};
+                    idpDB_filepaths = new List<string>() {mergeTargetFilepath};
                 }
 
                 // HACK: this needs to be handled more gracefully
@@ -973,9 +998,9 @@ namespace IDPicker
                     return;
 
                 if (Properties.GUI.Settings.Default.WarnAboutNonFixedDrive &&
-                    DriveType.Fixed != new DriveInfo(Path.GetPathRoot(commonFilename)).DriveType)
+                    DriveType.Fixed != new DriveInfo(Path.GetPathRoot(mergeTargetFilepath)).DriveType)
                 {
-                    string oldFilename = commonFilename;
+                    string oldFilename = mergeTargetFilepath;
                     bool copyLocal = true;
                     Invoke(new MethodInvoker(() =>
                                                  {
@@ -986,11 +1011,13 @@ namespace IDPicker
 
                     if (copyLocal)
                     {
-                        if (!saveFileDialog(ref commonFilename))
+                        string newFilename = Path.GetFileName(mergeTargetFilepath);
+                        if (!saveFileDialog(ref newFilename))
                             return;
 
                         toolStripStatusLabel.Text = "Copying idpDB...";
-                        File.Copy(oldFilename, commonFilename, true);
+                        File.Copy(oldFilename, newFilename, true);
+                        mergeTargetFilepath = newFilename;
                     }
                 }
 
@@ -999,11 +1026,11 @@ namespace IDPicker
 
                 // if the database is on a hard drive and can fit in the available RAM, populate the disk cache
                 long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
-                if (ramBytesAvailable > new FileInfo(commonFilename).Length &&
-                    DriveType.Fixed == new DriveInfo(Path.GetPathRoot(commonFilename)).DriveType)
+                if (ramBytesAvailable > new FileInfo(mergeTargetFilepath).Length &&
+                    DriveType.Fixed == new DriveInfo(Path.GetPathRoot(mergeTargetFilepath)).DriveType)
                 {
                     toolStripStatusLabel.Text = "Precaching idpDB...";
-                    using (var fs = new FileStream(commonFilename, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
+                    using (var fs = new FileStream(mergeTargetFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
                     {
                         var buffer = new byte[UInt16.MaxValue];
                         while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
@@ -1015,8 +1042,14 @@ namespace IDPicker
 
                 BeginInvoke(new MethodInvoker(() =>
                 {
-                    var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
+                    toolStripStatusLabel.Text = "Upgrading schema and creating session factory...";
+                    statusStrip.Refresh();
+                }));
 
+                var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath, new SessionFactoryConfig { WriteSqlToConsoleOut = true });
+
+                BeginInvoke(new MethodInvoker(() =>
+                {
                     // reload qonverter settings because the ids may change after merging
                     toolStripStatusLabel.Text = "Loading qonverter settings...";
                     statusStrip.Refresh();

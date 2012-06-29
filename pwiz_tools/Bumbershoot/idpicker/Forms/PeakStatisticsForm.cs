@@ -450,6 +450,12 @@ namespace IDPicker.Forms
 
         public void ClearData ()
         {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(() => ClearData()));
+                return;
+            }
+
             Text = TabText = "Peak Statistics";
 
             //dataGridView.Rows.Clear();

@@ -26,6 +26,7 @@ using System.Collections;
 using System.Text;
 using System.Linq;
 using System.Data.Linq;
+using System.IO;
 using NHibernate;
 using NHibernate.SqlCommand;
 using NHibernate.Cfg;
@@ -100,6 +101,19 @@ namespace IDPicker.DataModel
         static object mutex = new object();
         public static ISessionFactory CreateSessionFactory (string path, SessionFactoryConfig config)
         {
+            // update the existing database's schema if necessary, and if updated, recreate the indexes
+            if (File.Exists(path) &&
+                IsValidFile(path) &&
+                SchemaUpdater.Update(path, null))
+            {
+                using (var conn = new SQLiteConnection(String.Format("Data Source={0};Version=3", path)))
+                {
+                    conn.Open();
+                    DropIndexes(conn);
+                    CreateIndexes(conn);
+                }
+            }
+
             bool pooling = path == ":memory:";
 
             var configuration = new Configuration()
@@ -122,6 +136,7 @@ namespace IDPicker.DataModel
                 configuration.ClassMappings.Single(o => o.Table.Name == "Peptide").Table.Name = "UnfilteredPeptide";
                 configuration.ClassMappings.Single(o => o.Table.Name == "PeptideInstance").Table.Name = "UnfilteredPeptideInstance";
                 configuration.ClassMappings.Single(o => o.Table.Name == "PeptideSpectrumMatch").Table.Name = "UnfilteredPeptideSpectrumMatch";
+                configuration.ClassMappings.Single(o => o.Table.Name == "Spectrum").Table.Name = "UnfilteredSpectrum";
             }
 
             ISessionFactory sessionFactory = null;
@@ -184,6 +199,9 @@ namespace IDPicker.DataModel
             foreach (string sql in createSql)
                 cmd.ExecuteNonQuery(sql);
 
+            cmd.ExecuteNonQuery(String.Format("INSERT INTO About VALUES (1, 'IDPicker', '{0}', datetime('now'), {1})",
+                                              Util.Version, SchemaUpdater.CurrentSchemaRevision));
+
             cmd.ExecuteNonQuery(@"CREATE TABLE PeptideSpectrumMatchScoreName (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);
                                   CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY);");
             CreateIndexes(conn);
@@ -230,26 +248,26 @@ namespace IDPicker.DataModel
                                    CREATE INDEX PeptideSpectrumMatch_SpectrumAnalysisPeptide ON PeptideSpectrumMatch (Spectrum, Analysis, Peptide);
                                    CREATE INDEX PeptideSpectrumMatch_QValue ON PeptideSpectrumMatch (QValue);
                                    CREATE INDEX PeptideSpectrumMatch_Rank ON PeptideSpectrumMatch (Rank);
-                                   CREATE INDEX PeptideModification_PeptideSpectrumMatch ON PeptideModification (PeptideSpectrumMatch);
-                                   CREATE INDEX PeptideModification_Modification ON PeptideModification (Modification);
+                                   CREATE INDEX PeptideModification_PeptideSpectrumMatchModification ON PeptideModification (PeptideSpectrumMatch, Modification);
+                                   CREATE INDEX PeptideModification_ModificationPeptideSpectrumMatch ON PeptideModification (Modification, PeptideSpectrumMatch);
                                   ");
         }
 
         public static void DropIndexes (System.Data.IDbConnection conn)
         {
-            conn.ExecuteNonQuery(@"DROP INDEX Protein_Accession;
-                                   DROP INDEX PeptideInstance_PeptideProtein;
-                                   DROP INDEX PeptideInstance_ProteinOffsetLength;
-                                   DROP INDEX SpectrumSourceGroupLink_SourceGroup;
-                                   DROP INDEX Spectrum_SourceIndex;
-                                   DROP INDEX Spectrum_SourceNativeID;
-                                   DROP INDEX PeptideSpectrumMatch_AnalysisPeptideSpectrum;
-                                   DROP INDEX PeptideSpectrumMatch_PeptideSpectrumAnalysis;
-                                   DROP INDEX PeptideSpectrumMatch_SpectrumAnalysisPeptide;
-                                   DROP INDEX PeptideSpectrumMatch_QValue;
-                                   DROP INDEX PeptideSpectrumMatch_Rank;
-                                   DROP INDEX PeptideModification_PeptideSpectrumMatch;
-                                   DROP INDEX PeptideModification_Modification;
+            conn.ExecuteNonQuery(@"DROP INDEX IF EXISTS Protein_Accession;
+                                   DROP INDEX IF EXISTS PeptideInstance_PeptideProtein;
+                                   DROP INDEX IF EXISTS PeptideInstance_ProteinOffsetLength;
+                                   DROP INDEX IF EXISTS SpectrumSourceGroupLink_SourceGroup;
+                                   DROP INDEX IF EXISTS Spectrum_SourceIndex;
+                                   DROP INDEX IF EXISTS Spectrum_SourceNativeID;
+                                   DROP INDEX IF EXISTS PeptideSpectrumMatch_AnalysisPeptideSpectrum;
+                                   DROP INDEX IF EXISTS PeptideSpectrumMatch_PeptideSpectrumAnalysis;
+                                   DROP INDEX IF EXISTS PeptideSpectrumMatch_SpectrumAnalysisPeptide;
+                                   DROP INDEX IF EXISTS PeptideSpectrumMatch_QValue;
+                                   DROP INDEX IF EXISTS PeptideSpectrumMatch_Rank;
+                                   DROP INDEX IF EXISTS PeptideModification_PeptideSpectrumMatchModification;
+                                   DROP INDEX IF EXISTS PeptideModification_ModificationPeptideSpectrumMatch;
                                   ");
         }
     }

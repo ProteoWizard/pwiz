@@ -24,7 +24,7 @@
 
 lib Qonverter
     : # sources
-        [ glob *Qonverter.cpp ]
+        [ glob *Qonverter.cpp ] SchemaUpdater.cpp
     : # requirements
         <library>../Lib/SQLite//sqlite3pp
         <library>..//svm

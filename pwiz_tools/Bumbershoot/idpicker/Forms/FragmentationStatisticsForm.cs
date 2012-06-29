@@ -607,6 +607,12 @@ namespace IDPicker.Forms
 
         public void ClearData ()
         {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(() => ClearData()));
+                return;
+            }
+
             Text = TabText = "Fragmentation Statistics";
             Refresh();
         }

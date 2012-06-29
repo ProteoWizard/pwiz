@@ -281,8 +281,7 @@ namespace Test
                                               Peptide = peptide,
                                               Spectrum = spectrum,
                                               Analysis = analysis,
-                                              MonoisotopicMass = pwizPeptide.monoisotopicMass(),
-                                              MolecularWeight = pwizPeptide.molecularWeight(),
+                                              ObservedNeutralMass = neutralPrecursorMass,
                                               MonoisotopicMassError = neutralPrecursorMass - pwizPeptide.monoisotopicMass(),
                                               MolecularWeightError = neutralPrecursorMass - pwizPeptide.molecularWeight(),
                                               Charge = peptideTuple.Charge,
@@ -850,8 +849,8 @@ namespace Test
             Assert.AreEqual("C2H2O1", ss1s1psm1.Modifications[0].Modification.Formula);
             Assert.AreEqual(int.MinValue, ss1s1psm1.Modifications[0].Offset);
             Assert.AreEqual(2, ss1s1psm1.Charge);
-            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss1s1psm1.MonoisotopicMass, 1e-12);
-            Assert.AreEqual(pwizPeptide.molecularWeight(), ss1s1psm1.MolecularWeight, 1e-12);
+            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss1s1psm1.ObservedNeutralMass - ss1s1psm1.MonoisotopicMassError, 1e-12);
+            Assert.AreEqual(pwizPeptide.molecularWeight(), ss1s1psm1.ObservedNeutralMass - ss1s1psm1.MolecularWeightError, 1e-12);
             Assert.AreEqual(12.0, ss1s1psm1.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / 12.0, ss1s1psm1.Scores["score2"], 1e-12);
 
@@ -865,8 +864,8 @@ namespace Test
             Assert.IsTrue(a2.Matches.Contains(ss1s1psm1e2));
             Assert.AreEqual(0, ss1s1psm1e2.Modifications.Count);
             Assert.AreEqual(4, ss1s1psm1e2.Charge);
-            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss1s1psm1e2.MonoisotopicMass, 1e-12);
-            Assert.AreEqual(pwizPeptide.molecularWeight(), ss1s1psm1e2.MolecularWeight, 1e-12);
+            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss1s1psm1e2.ObservedNeutralMass - ss1s1psm1e2.MonoisotopicMassError, 1e-12);
+            Assert.AreEqual(pwizPeptide.molecularWeight(), ss1s1psm1e2.ObservedNeutralMass - ss1s1psm1e2.MolecularWeightError, 1e-12);
             Assert.AreEqual(120.0, ss1s1psm1e2.Scores["score1"], 1e-12);
             Assert.AreEqual(1 / 120.0, ss1s1psm1e2.Scores["score2"], 1e-12);
 
@@ -902,8 +901,8 @@ namespace Test
             Assert.AreEqual(0, ss2s1psm2.Modifications[0].Offset);
             Assert.AreEqual("O4P1", ss2s1psm2.Modifications[1].Modification.Formula);
             Assert.AreEqual(3, ss2s1psm2.Modifications[1].Offset);
-            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss2s1psm2.MonoisotopicMass, 1e-12);
-            Assert.AreEqual(pwizPeptide.molecularWeight(), ss2s1psm2.MolecularWeight, 1e-12);
+            Assert.AreEqual(pwizPeptide.monoisotopicMass(), ss2s1psm2.ObservedNeutralMass - ss2s1psm2.MonoisotopicMassError, 1e-12);
+            Assert.AreEqual(pwizPeptide.molecularWeight(), ss2s1psm2.ObservedNeutralMass - ss2s1psm2.MolecularWeightError, 1e-12);
 
             var ss4s1psm1 = session.UniqueResult<PeptideSpectrumMatch>(o => o.Spectrum.Source.Id == ss4.Id &&
                                                                             o.Spectrum.Index == 0 &&

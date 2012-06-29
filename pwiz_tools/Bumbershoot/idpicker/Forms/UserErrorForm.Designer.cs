@@ -63,7 +63,7 @@ namespace IDPicker.Forms
             // copyToClipboardButton
             // 
             this.copyToClipboardButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.copyToClipboardButton.Location = new System.Drawing.Point(12, 127);
+            this.copyToClipboardButton.Location = new System.Drawing.Point(12, 151);
             this.copyToClipboardButton.Name = "copyToClipboardButton";
             this.copyToClipboardButton.Size = new System.Drawing.Size(135, 23);
             this.copyToClipboardButton.TabIndex = 8;
@@ -86,7 +86,7 @@ namespace IDPicker.Forms
             this.label1.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
-            this.label1.Location = new System.Drawing.Point(12, 78);
+            this.label1.Location = new System.Drawing.Point(12, 102);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(395, 18);
             this.label1.TabIndex = 10;
@@ -98,7 +98,7 @@ namespace IDPicker.Forms
             this.emailLinkLabel.AutoSize = true;
             this.emailLinkLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 11F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte) (0)));
             this.emailLinkLabel.LinkBehavior = System.Windows.Forms.LinkBehavior.AlwaysUnderline;
-            this.emailLinkLabel.Location = new System.Drawing.Point(12, 96);
+            this.emailLinkLabel.Location = new System.Drawing.Point(12, 120);
             this.emailLinkLabel.Name = "emailLinkLabel";
             this.emailLinkLabel.Size = new System.Drawing.Size(291, 18);
             this.emailLinkLabel.TabIndex = 11;
@@ -116,14 +116,14 @@ namespace IDPicker.Forms
             this.errorMessageTextBox.Multiline = true;
             this.errorMessageTextBox.Name = "errorMessageTextBox";
             this.errorMessageTextBox.ReadOnly = true;
-            this.errorMessageTextBox.Size = new System.Drawing.Size(847, 40);
+            this.errorMessageTextBox.Size = new System.Drawing.Size(847, 64);
             this.errorMessageTextBox.TabIndex = 12;
             // 
             // okButton
             // 
             this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.okButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.okButton.Location = new System.Drawing.Point(784, 127);
+            this.okButton.Location = new System.Drawing.Point(784, 151);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
             this.okButton.TabIndex = 13;
@@ -136,7 +136,7 @@ namespace IDPicker.Forms
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.okButton;
-            this.ClientSize = new System.Drawing.Size(871, 162);
+            this.ClientSize = new System.Drawing.Size(871, 186);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.errorMessageTextBox);
             this.Controls.Add(this.emailLinkLabel);

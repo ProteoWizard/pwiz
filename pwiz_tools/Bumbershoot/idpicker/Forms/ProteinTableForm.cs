@@ -61,11 +61,12 @@ namespace IDPicker.Forms
 
             protected static IDictionary<TKey, object[]> GetDetailedColumnsByKey<TKey> (NHibernate.ISession session, DataFilter dataFilter, string keyColumn)
             {
-                // these columns are not affected by the view filter
+                // these columns are not affected by peptide view filters
+                var dataFilter2 = new DataFilter(dataFilter) { Peptide = null, PeptideGroup = null, DistinctMatchKey = null };
                 return session.CreateQuery("SELECT " + keyColumn +
                                            ", DISTINCT_GROUP_CONCAT(pep.Sequence)" +
                                            ", DISTINCT_GROUP_CONCAT(pep.PeptideGroup)" +
-                                           dataFilter.GetBasicQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
+                                           dataFilter2.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
                                            "GROUP BY " + keyColumn)
                               .List<object[]>()
                               .ToDictionary(o => (TKey) o[0]);

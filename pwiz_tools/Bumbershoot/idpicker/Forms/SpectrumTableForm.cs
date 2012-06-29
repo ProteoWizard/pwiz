@@ -207,7 +207,8 @@ namespace IDPicker.Forms
 
             private static string SqlQueryFormat =
                 "SELECT {{s.*}}, {{ss.*}}, {{ssg.*}}, {{a.*}}," +
-                "       psm.Id, Rank, Charge, QValue, psm.MonoisotopicMass," +
+                "       psm.Id, Rank, Charge, QValue, psm.ObservedNeutralMass," +
+                "       psm.MonoisotopicMassError, psm.MolecularWeightError," +
                 "       IFNULL(dm.DistinctMatchKey, " +
                 "              (SELECT GROUP_CONCAT(DISTINCT ROUND(mod.MonoMassDelta, 4) || '@' || pm.Offset)" +
                 "               FROM PeptideModification pm" +
@@ -246,7 +247,8 @@ namespace IDPicker.Forms
 
             private static string HqlQueryFormat =
                 "SELECT s, ss, ssg, a," +
-                "       psm.Id, psm.Rank, psm.Charge, psm.QValue, psm.MonoisotopicMass," +
+                "       psm.Id, psm.Rank, psm.Charge, psm.QValue, psm.ObservedNeutralMass," +
+                "       psm.MonoisotopicMassError, psm.MolecularWeightError," +
                 "       psm.DistinctMatchKey," +
                 "       pep.Sequence ";
 
@@ -279,7 +281,9 @@ namespace IDPicker.Forms
                         .AddScalar("Rank", NHibernate.NHibernateUtil.Int32)
                         .AddScalar("Charge", NHibernate.NHibernateUtil.Int32)
                         .AddScalar("QValue", NHibernate.NHibernateUtil.Double)
-                        .AddScalar("MonoisotopicMass", NHibernate.NHibernateUtil.Double)
+                        .AddScalar("ObservedNeutralMass", NHibernate.NHibernateUtil.Double)
+                        .AddScalar("MonoisotopicMassError", NHibernate.NHibernateUtil.Double)
+                        .AddScalar("MolecularWeightError", NHibernate.NHibernateUtil.Double)
                         .AddScalar("DistinctMatchKey", NHibernate.NHibernateUtil.String)
                         .AddScalar("Sequence", NHibernate.NHibernateUtil.String);
                 }
@@ -329,8 +333,13 @@ namespace IDPicker.Forms
                 Charge = Convert.ToInt32(queryRow[++column]);
                 QValue = Convert.ToDouble(queryRow[++column]);
 
-                ExactMass = Convert.ToDouble(queryRow[++column]); // TODO: psm.MonoisotopicMassError < psm.MolecularWeightError
-                ObservedMass = Spectrum.PrecursorMZ * Charge - Charge * pwiz.CLI.chemistry.Proton.Mass;
+                ObservedMass = Convert.ToDouble(queryRow[++column]);
+                double monoisotopicError = Convert.ToDouble(queryRow[++column]);
+                double averageError = Convert.ToDouble(queryRow[++column]);
+                if (Math.Abs(monoisotopicError) < Math.Abs(averageError))
+                    ExactMass = ObservedMass - monoisotopicError;
+                else
+                    ExactMass = ObservedMass - averageError;
 
                 string modificationString = (string) queryRow[++column];
                 ModifiedSequence = (string) queryRow[++column];
@@ -879,7 +888,7 @@ namespace IDPicker.Forms
                 if (columnIndex == keyColumn.Index) return row.Key;
                 else if (columnIndex == observedMassColumn.Index) return row.ObservedMass;
                 else if (columnIndex == exactMassColumn.Index) return row.ExactMass;
-                else if (columnIndex == massErrorColumn.Index) return row.ExactMass - row.ObservedMass;
+                else if (columnIndex == massErrorColumn.Index) return row.ObservedMass - row.ExactMass;
                 else if (columnIndex == analysisColumn.Index) return String.Format("{0} {1}", row.Analysis.Id, row.Analysis.Name);
                 else if (columnIndex == chargeColumn.Index) return row.Charge;
                 else if (columnIndex == qvalueColumn.Index) return row.QValue > 1 ? Double.PositiveInfinity : row.QValue;
@@ -1525,7 +1534,7 @@ namespace IDPicker.Forms
                                           "'" + match.Rank + "'",
                                           match.Charge.ToString(),
                                           Math.Round(observedMass,decimalPlaces).ToString(),
-                                          Math.Round(match.MonoisotopicMass,decimalPlaces).ToString(),
+                                          Math.Round(match.ObservedNeutralMass,decimalPlaces).ToString(),
                                           Math.Round(match.MonoisotopicMassError,decimalPlaces).ToString(),
                                           Math.Round(match.QValue,decimalPlaces).ToString(),
                                           "'" + match.Peptide.Sequence + "'"

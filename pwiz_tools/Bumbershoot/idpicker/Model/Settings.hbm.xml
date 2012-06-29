@@ -26,30 +26,40 @@
 -->
 <hibernate-mapping xmlns="urn:nhibernate-mapping-2.2" namespace="IDPicker.DataModel" assembly="IDPicker.DataModel" auto-import="true">
 
-	<class name="QonverterSettings">
-		<id name="Id">
-			<generator class="foreign">
-				<param name="property">Analysis</param>
-			</generator>
-		</id>
-		<one-to-one name="Analysis" constrained="true"/>
-		<property name="QonverterMethod"/>
-		<property name="DecoyPrefix"/>
-		<property name="RerankMatches"/>
-		<property name="Kernel"/>
-		<property name="MassErrorHandling"/>
-		<property name="MissedCleavagesHandling"/>
-		<property name="TerminalSpecificityHandling"/>
-		<property name="ChargeStateHandling"/>
-		<property name="ScoreInfoByName" type="ScoreInfoUserType"/>
-	</class>
+    <class name="About">
+        <id name="Id"><generator class="native"/></id>
+        <component name="Software">
+            <property name="Name" column="SoftwareName"/>
+            <property name="Version" column="SoftwareVersion"/>
+        </component>
+        <property name="StartTime"/>
+        <property name="SchemaRevision"/>
+    </class>
 
-	<class name="LayoutProperty">
-		<id name="Id"><generator class="native"/></id>
-		<property name="Name"/>
-		<property name="PaneLocations"/>
-		<property name="HasCustomColumnSettings"/>
-		<property name="FormProperties" type="FormPropertiesUserType"/>
-	</class>
+    <class name="QonverterSettings">
+        <id name="Id">
+            <generator class="foreign">
+                <param name="property">Analysis</param>
+            </generator>
+        </id>
+        <one-to-one name="Analysis" constrained="true"/>
+        <property name="QonverterMethod"/>
+        <property name="DecoyPrefix"/>
+        <property name="RerankMatches"/>
+        <property name="Kernel"/>
+        <property name="MassErrorHandling"/>
+        <property name="MissedCleavagesHandling"/>
+        <property name="TerminalSpecificityHandling"/>
+        <property name="ChargeStateHandling"/>
+        <property name="ScoreInfoByName" type="ScoreInfoUserType"/>
+    </class>
+
+    <class name="LayoutProperty">
+        <id name="Id"><generator class="native"/></id>
+        <property name="Name"/>
+        <property name="PaneLocations"/>
+        <property name="HasCustomColumnSettings"/>
+        <property name="FormProperties" type="FormPropertiesUserType"/>
+    </class>
 
 </hibernate-mapping>

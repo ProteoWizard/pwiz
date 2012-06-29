@@ -31,8 +31,8 @@ namespace IDPicker
 {
     public static partial class Util
     {
-        public static string Version { get { return GetAssemblyVersion(Assembly.GetEntryAssembly().GetName()); } }
-        public static DateTime LastModified { get { return GetAssemblyLastModified(Assembly.GetEntryAssembly().GetName()); } }
+        public static string Version { get { return GetAssemblyVersion(Assembly.GetCallingAssembly().GetName()); } }
+        public static DateTime LastModified { get { return GetAssemblyLastModified(Assembly.GetCallingAssembly().GetName()); } }
 
         public static AssemblyName GetAssemblyByName (string assemblyName)
         {

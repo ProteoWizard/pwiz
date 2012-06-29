@@ -125,7 +125,7 @@ namespace IDPicker.DataModel
             insertCommandByTable[(int) Table.PeptideSpectrumMatch].Key.CommandText =
                 createInsertSql("PeptideSpectrumMatch",
                                 "Id, Peptide, Spectrum, Analysis, " +
-                                "MonoisotopicMass, MolecularWeight, " +
+                                "ObservedNeutralMass, " +
                                 "MonoisotopicMassError, MolecularWeightError, " +
                                 "Rank, QValue, Charge");
 
@@ -331,7 +331,7 @@ namespace IDPicker.DataModel
             insertRow(Table.PeptideSpectrumMatch, new object[]
                                                         {
                                                             psm.Id, psm.Peptide.Id, psm.Spectrum.Id, psm.Analysis.Id,
-                                                            psm.MonoisotopicMass, psm.MolecularWeight,
+                                                            psm.ObservedNeutralMass,
                                                             psm.MonoisotopicMassError, psm.MolecularWeightError,
                                                             psm.Rank, psm.QValue, psm.Charge
                                                         });

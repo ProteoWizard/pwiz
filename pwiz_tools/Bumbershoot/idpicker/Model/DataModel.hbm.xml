@@ -174,8 +174,7 @@
 		<property name="QValue">
 			<column name="QValue" sql-type="DOUBLE"/>
 		</property>
-		<property name="MonoisotopicMass"/>
-		<property name="MolecularWeight"/>
+		<property name="ObservedNeutralMass"/>
 		<property name="MonoisotopicMassError"/>
 		<property name="MolecularWeightError"/>
 		<property name="Rank"/>

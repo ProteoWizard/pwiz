@@ -74,7 +74,7 @@ namespace IDPicker.Forms
             this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Enabled = false;
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
-            this.exportButton.Location = new System.Drawing.Point(700, 2);
+            this.exportButton.Location = new System.Drawing.Point(501, 2);
             this.exportButton.Name = "exportButton";
             this.exportButton.Size = new System.Drawing.Size(30, 23);
             this.exportButton.TabIndex = 4;
@@ -117,7 +117,7 @@ namespace IDPicker.Forms
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.spectrumFiltersTextBox.Location = new System.Drawing.Point(44, 4);
             this.spectrumFiltersTextBox.Name = "spectrumFiltersTextBox";
-            this.spectrumFiltersTextBox.Size = new System.Drawing.Size(360, 20);
+            this.spectrumFiltersTextBox.Size = new System.Drawing.Size(161, 20);
             this.spectrumFiltersTextBox.TabIndex = 6;
             this.spectrumFiltersTextBox.Text = "threshold count 50 most-intense;";
             this.spectrumFiltersTextBox.TextChanged += new System.EventHandler(this.spectrumFiltersTextBox_TextChanged);
@@ -128,7 +128,7 @@ namespace IDPicker.Forms
             this.lockZoomCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lockZoomCheckBox.Appearance = System.Windows.Forms.Appearance.Button;
             this.lockZoomCheckBox.AutoSize = true;
-            this.lockZoomCheckBox.Location = new System.Drawing.Point(591, 2);
+            this.lockZoomCheckBox.Location = new System.Drawing.Point(392, 2);
             this.lockZoomCheckBox.Name = "lockZoomCheckBox";
             this.lockZoomCheckBox.Size = new System.Drawing.Size(71, 23);
             this.lockZoomCheckBox.TabIndex = 7;
@@ -138,7 +138,7 @@ namespace IDPicker.Forms
             // refreshButton
             // 
             this.refreshButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.refreshButton.Location = new System.Drawing.Point(666, 2);
+            this.refreshButton.Location = new System.Drawing.Point(467, 2);
             this.refreshButton.Name = "refreshButton";
             this.refreshButton.Size = new System.Drawing.Size(30, 23);
             this.refreshButton.TabIndex = 9;
@@ -153,7 +153,7 @@ namespace IDPicker.Forms
             this.fragmentToleranceUnitsComboBox.Items.AddRange(new object[] {
             "m/z",
             "ppm"});
-            this.fragmentToleranceUnitsComboBox.Location = new System.Drawing.Point(538, 3);
+            this.fragmentToleranceUnitsComboBox.Location = new System.Drawing.Point(339, 3);
             this.fragmentToleranceUnitsComboBox.Name = "fragmentToleranceUnitsComboBox";
             this.fragmentToleranceUnitsComboBox.Size = new System.Drawing.Size(47, 21);
             this.fragmentToleranceUnitsComboBox.TabIndex = 22;
@@ -162,7 +162,7 @@ namespace IDPicker.Forms
             // 
             this.label4.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(411, 7);
+            this.label4.Location = new System.Drawing.Point(212, 7);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(87, 13);
             this.label4.TabIndex = 21;
@@ -171,7 +171,7 @@ namespace IDPicker.Forms
             // fragmentToleranceTextBox
             // 
             this.fragmentToleranceTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.fragmentToleranceTextBox.Location = new System.Drawing.Point(499, 4);
+            this.fragmentToleranceTextBox.Location = new System.Drawing.Point(300, 4);
             this.fragmentToleranceTextBox.Name = "fragmentToleranceTextBox";
             this.fragmentToleranceTextBox.Size = new System.Drawing.Size(41, 20);
             this.fragmentToleranceTextBox.TabIndex = 20;
@@ -200,14 +200,14 @@ namespace IDPicker.Forms
             this.dockPanel.DockTopPortion = 0.5;
             this.dockPanel.Location = new System.Drawing.Point(-2, 27);
             this.dockPanel.Name = "dockPanel";
-            this.dockPanel.Size = new System.Drawing.Size(746, 369);
+            this.dockPanel.Size = new System.Drawing.Size(547, 369);
             this.dockPanel.TabIndex = 24;
             // 
             // FragmentationStatisticsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(743, 395);
+            this.ClientSize = new System.Drawing.Size(544, 395);
             this.Controls.Add(this.dockPanel);
             this.Controls.Add(this.fragmentToleranceUnitsComboBox);
             this.Controls.Add(this.label1);
@@ -221,6 +221,7 @@ namespace IDPicker.Forms
                         | DigitalRune.Windows.Docking.DockAreas.Top)
                         | DigitalRune.Windows.Docking.DockAreas.Bottom)
                         | DigitalRune.Windows.Docking.DockAreas.Document)));
+            this.MinimumSize = new System.Drawing.Size(560, 100);
             this.Name = "FragmentationStatisticsForm";
             this.TabText = "FragmentationStatisticsForm";
             this.Text = "FragmentationStatisticsForm";

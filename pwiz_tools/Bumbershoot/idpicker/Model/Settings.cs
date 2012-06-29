@@ -38,6 +38,13 @@ using SortOrder = System.Windows.Forms.SortOrder;
 
 namespace IDPicker.DataModel
 {
+    public class About : Entity<About>
+    {
+        public virtual AnalysisSoftware Software { get; set; }
+        public virtual DateTime StartTime { get; set; }
+        public virtual int SchemaRevision { get; set; }
+    }
+
     public class QonverterSettings : Entity<QonverterSettings>
     {
         /// <summary>

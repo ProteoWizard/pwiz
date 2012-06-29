@@ -232,8 +232,7 @@ namespace IDPicker.DataModel
         public virtual Peptide Peptide { get; set; }
         public virtual IList<PeptideModification> Modifications { get; set; }
         public virtual double QValue { get; set; }
-        public virtual double MonoisotopicMass { get; set; }
-        public virtual double MolecularWeight { get; set; }
+        public virtual double ObservedNeutralMass { get; set; }
         public virtual double MonoisotopicMassError { get; set; }
         public virtual double MolecularWeightError { get; set; }
         public virtual int Rank { get; set; }
@@ -259,8 +258,7 @@ namespace IDPicker.DataModel
             Peptide = other.Peptide;
             Modifications = other.Modifications;
             QValue = other.QValue;
-            MonoisotopicMass = other.MonoisotopicMass;
-            MolecularWeight = other.MolecularWeight;
+            ObservedNeutralMass = other.ObservedNeutralMass;
             MonoisotopicMassError = other.MonoisotopicMassError;
             MolecularWeightError = other.MolecularWeightError;
             Rank = other.Rank;

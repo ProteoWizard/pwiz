@@ -35,7 +35,7 @@ RESCAN ;
 
 # separate library needed because native code uses the native IDPICKER_NAMESPACE
 lib NativeQonverter
- : [ glob ../*Qonverter.cpp ]
+ : [ glob ../*Qonverter.cpp ] ../SchemaUpdater.cpp
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <link>static
    <library>../../Lib/SQLite//sqlite3pp
@@ -74,7 +74,7 @@ lib NativeParser
 
 
 lib InteropQonverter
- : Qonverter.cpp Parser.cpp Embedder.cpp NativeParser
+ : Qonverter.cpp Parser.cpp Embedder.cpp SchemaUpdater.cpp NativeParser
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <toolset>msvc:<using-clr>true
    <toolset>msvc:<link>shared

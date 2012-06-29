@@ -218,7 +218,11 @@ namespace IDPicker.DataModel
                         }
                     }
 
-                    using (var newConn = new SQLiteConnection("Data Source=\"" + mergeSourceFilepath + "\""))
+                    // update source database schema
+                    SchemaUpdater.Update(tempMergeSourceFilepath, null);
+
+                    // drop source database's basic data filters
+                    using (var newConn = new SQLiteConnection("Data Source=\"" + tempMergeSourceFilepath + "\""))
                     {
                         newConn.Open();
                         DataFilter.DropFilters(newConn);
@@ -579,7 +583,7 @@ namespace IDPicker.DataModel
         static string addNewPeptideSpectrumMatchesSql =
               @"INSERT INTO merged.PeptideSpectrumMatch
                 SELECT newPSM.Id+{1}, sMerge.AfterMergeId, aMerge.AfterMergeId, AfterMergePeptide,
-                       QValue, MonoisotopicMass, MolecularWeight, MonoisotopicMassError, MolecularWeightError,
+                       QValue, ObservedNeutralMass, MonoisotopicMassError, MolecularWeightError,
                        Rank, Charge
                 FROM {0}.PeptideSpectrumMatch newPSM
                 JOIN PeptideInstanceMergeMap piMerge ON Peptide = BeforeMergePeptide

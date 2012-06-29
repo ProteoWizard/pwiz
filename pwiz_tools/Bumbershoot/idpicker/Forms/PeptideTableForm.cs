@@ -62,12 +62,13 @@ namespace IDPicker.Forms
 
             protected static IDictionary<TKey, object[]> GetDetailedColumnsByKey<TKey> (NHibernate.ISession session, DataFilter dataFilter, string keyColumn)
             {
-                // these columns are not affected by the view filter
+                // these columns are not affected by protein view filters
+                var dataFilter2 = new DataFilter(dataFilter) { Cluster = null, Protein = null, ProteinGroup = null };
                 return session.CreateQuery("SELECT " + keyColumn +
                                            ", COUNT(DISTINCT pro.id)" +
                                            ", DISTINCT_GROUP_CONCAT(pro.Accession)" +
                                            ", DISTINCT_GROUP_CONCAT(pro.ProteinGroup)" +
-                                           dataFilter.GetBasicQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
+                                           dataFilter2.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
                                            "GROUP BY " + keyColumn)
                               .List<object[]>()
                               .ToDictionary(o => (TKey) o[0]);
@@ -494,8 +495,8 @@ namespace IDPicker.Forms
             {
                 var row = baseRow as DistinctMatchRow;
                 if (columnIndex == keyColumn.Index) return row.DistinctMatch;
-                else if (columnIndex == monoisotopicMassColumn.Index) return row.PeptideSpectrumMatch.MonoisotopicMass;
-                else if (columnIndex == molecularWeightColumn.Index) return row.PeptideSpectrumMatch.MolecularWeight;
+                else if (columnIndex == monoisotopicMassColumn.Index) return row.PeptideSpectrumMatch.ObservedNeutralMass - row.PeptideSpectrumMatch.MonoisotopicMassError;
+                else if (columnIndex == molecularWeightColumn.Index) return row.PeptideSpectrumMatch.ObservedNeutralMass - row.PeptideSpectrumMatch.MolecularWeightError;
                 else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
                 else if (columnIndex == peptideGroupColumn.Index) return row.Peptide.PeptideGroup;
                 else if (columnIndex == proteinsColumn.Index) return row.Proteins;
