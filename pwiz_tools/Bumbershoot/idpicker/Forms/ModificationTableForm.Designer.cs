@@ -131,52 +131,52 @@ namespace IDPicker.Forms
             this.exportSelectedCellsToFileToolStripMenuItem,
             this.showSelectedCellsInExcelToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
-            this.exportMenu.Size = new System.Drawing.Size(241, 142);
+            this.exportMenu.Size = new System.Drawing.Size(247, 142);
             // 
             // copyToClipboardToolStripMenuItem
             // 
             this.copyToClipboardToolStripMenuItem.Name = "copyToClipboardToolStripMenuItem";
-            this.copyToClipboardToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.copyToClipboardToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.copyToClipboardToolStripMenuItem.Text = "Copy to Clipboard";
             this.copyToClipboardToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // exportToFileToolStripMenuItem
             // 
             this.exportToFileToolStripMenuItem.Name = "exportToFileToolStripMenuItem";
-            this.exportToFileToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.exportToFileToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.exportToFileToolStripMenuItem.Text = "Export to File";
             this.exportToFileToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // showInExcelToolStripMenuItem
             // 
             this.showInExcelToolStripMenuItem.Name = "showInExcelToolStripMenuItem";
-            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.showInExcelToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(237, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(243, 6);
             // 
             // copySelectedCellsToClipboardToolStripMenuItem
             // 
             this.copySelectedCellsToClipboardToolStripMenuItem.Name = "copySelectedCellsToClipboardToolStripMenuItem";
-            this.copySelectedCellsToClipboardToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.copySelectedCellsToClipboardToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.copySelectedCellsToClipboardToolStripMenuItem.Text = "Copy Selected Cells to Clipboard";
             this.copySelectedCellsToClipboardToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // exportSelectedCellsToFileToolStripMenuItem
             // 
             this.exportSelectedCellsToFileToolStripMenuItem.Name = "exportSelectedCellsToFileToolStripMenuItem";
-            this.exportSelectedCellsToFileToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.exportSelectedCellsToFileToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.exportSelectedCellsToFileToolStripMenuItem.Text = "Export Selected Cells to File";
             this.exportSelectedCellsToFileToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // showSelectedCellsInExcelToolStripMenuItem
             // 
             this.showSelectedCellsInExcelToolStripMenuItem.Name = "showSelectedCellsInExcelToolStripMenuItem";
-            this.showSelectedCellsInExcelToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.showSelectedCellsInExcelToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.showSelectedCellsInExcelToolStripMenuItem.Text = "Show Selected Cells in Excel";
             this.showSelectedCellsInExcelToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
@@ -198,8 +198,8 @@ namespace IDPicker.Forms
             this.MinRowBox.Size = new System.Drawing.Size(47, 20);
             this.MinRowBox.TabIndex = 3;
             this.MinRowBox.Text = "2";
-            this.MinRowBox.Leave += new System.EventHandler(this.ModFilter_Leave);
             this.MinRowBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
+            this.MinRowBox.Leave += new System.EventHandler(this.ModFilter_Leave);
             // 
             // MinColumnBox
             // 
@@ -209,8 +209,8 @@ namespace IDPicker.Forms
             this.MinColumnBox.Size = new System.Drawing.Size(47, 20);
             this.MinColumnBox.TabIndex = 2;
             this.MinColumnBox.Text = "2";
-            this.MinColumnBox.Leave += new System.EventHandler(this.ModFilter_Leave);
             this.MinColumnBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
+            this.MinColumnBox.Leave += new System.EventHandler(this.ModFilter_Leave);
             // 
             // MinColumnLabel
             // 
@@ -324,9 +324,9 @@ namespace IDPicker.Forms
             this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.AllowUserToResizeColumns = false;
             this.dataGridView.AllowUserToResizeRows = false;
-            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -428,8 +428,8 @@ namespace IDPicker.Forms
             this.tablePeptidesFilterBox.Size = new System.Drawing.Size(47, 20);
             this.tablePeptidesFilterBox.TabIndex = 2;
             this.tablePeptidesFilterBox.Text = "2";
-            this.tablePeptidesFilterBox.Leave += new System.EventHandler(this.ModFilter_Leave);
             this.tablePeptidesFilterBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.MinCountFilter_KeyPress);
+            this.tablePeptidesFilterBox.Leave += new System.EventHandler(this.ModFilter_Leave);
             // 
             // label2
             // 
@@ -445,9 +445,9 @@ namespace IDPicker.Forms
             // 
             this.detailDataGridView.AllowUserToAddRows = false;
             this.detailDataGridView.AllowUserToDeleteRows = false;
-            this.detailDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.detailDataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.detailDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.detailDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.siteColumn,
@@ -506,52 +506,52 @@ namespace IDPicker.Forms
             this.exportSelectedCellsToFileDetailToolStripMenuItem,
             this.showSelectedCellsInExcelDetailToolStripMenuItem});
             this.exportDetailMenu.Name = "contextMenuStrip1";
-            this.exportDetailMenu.Size = new System.Drawing.Size(241, 142);
+            this.exportDetailMenu.Size = new System.Drawing.Size(247, 142);
             // 
             // copyToClipboardDetailToolStripMenuItem
             // 
             this.copyToClipboardDetailToolStripMenuItem.Name = "copyToClipboardDetailToolStripMenuItem";
-            this.copyToClipboardDetailToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.copyToClipboardDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.copyToClipboardDetailToolStripMenuItem.Text = "Copy to Clipboard";
             this.copyToClipboardDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // exportToFileDetailToolStripMenuItem
             // 
             this.exportToFileDetailToolStripMenuItem.Name = "exportToFileDetailToolStripMenuItem";
-            this.exportToFileDetailToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.exportToFileDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.exportToFileDetailToolStripMenuItem.Text = "Export to File";
             this.exportToFileDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // showInExcelDetailToolStripMenuItem
             // 
             this.showInExcelDetailToolStripMenuItem.Name = "showInExcelDetailToolStripMenuItem";
-            this.showInExcelDetailToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.showInExcelDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.showInExcelDetailToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(237, 6);
+            this.toolStripSeparator2.Size = new System.Drawing.Size(243, 6);
             // 
             // copySelectedCellsToClipboardDetailToolStripMenuItem
             // 
             this.copySelectedCellsToClipboardDetailToolStripMenuItem.Name = "copySelectedCellsToClipboardDetailToolStripMenuItem";
-            this.copySelectedCellsToClipboardDetailToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.copySelectedCellsToClipboardDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.copySelectedCellsToClipboardDetailToolStripMenuItem.Text = "Copy Selected Cells to Clipboard";
             this.copySelectedCellsToClipboardDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // exportSelectedCellsToFileDetailToolStripMenuItem
             // 
             this.exportSelectedCellsToFileDetailToolStripMenuItem.Name = "exportSelectedCellsToFileDetailToolStripMenuItem";
-            this.exportSelectedCellsToFileDetailToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.exportSelectedCellsToFileDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.exportSelectedCellsToFileDetailToolStripMenuItem.Text = "Export Selected Cells to File";
             this.exportSelectedCellsToFileDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // showSelectedCellsInExcelDetailToolStripMenuItem
             // 
             this.showSelectedCellsInExcelDetailToolStripMenuItem.Name = "showSelectedCellsInExcelDetailToolStripMenuItem";
-            this.showSelectedCellsInExcelDetailToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.showSelectedCellsInExcelDetailToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.showSelectedCellsInExcelDetailToolStripMenuItem.Text = "Show Selected Cells in Excel";
             this.showSelectedCellsInExcelDetailToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
@@ -574,7 +574,7 @@ namespace IDPicker.Forms
             // spectraColumn
             // 
             this.spectraColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.spectraColumn.HeaderText = "Filtered Specrtra";
+            this.spectraColumn.HeaderText = "Filtered Spectra";
             this.spectraColumn.MinimumWidth = 20;
             this.spectraColumn.Name = "spectraColumn";
             // 
@@ -609,10 +609,10 @@ namespace IDPicker.Forms
             this.ClientSize = new System.Drawing.Size(751, 262);
             this.Controls.Add(this.TablePanel);
             this.Controls.Add(this.GridPanel);
-            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
-                        | DigitalRune.Windows.Docking.DockAreas.Top)
-                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
-                        | DigitalRune.Windows.Docking.DockAreas.Document)));
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right) 
+            | DigitalRune.Windows.Docking.DockAreas.Top) 
+            | DigitalRune.Windows.Docking.DockAreas.Bottom) 
+            | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.Name = "ModificationTableForm";
             this.TabText = "ModificationTableForm";
             this.Text = "ModificationTableForm";

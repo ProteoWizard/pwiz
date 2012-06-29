@@ -424,6 +424,16 @@ namespace IDPicker.Forms
             totalRow[deltaMassColumnName] = Double.PositiveInfinity;
             deltaMassTable.Rows.Add(totalRow);
 
+            int cellValueIndexInQueryRow;
+            if (pivotModeComboBox.Text == "Spectra")
+                cellValueIndexInQueryRow = 2;
+            else if (pivotModeComboBox.Text == "Distinct Matches")
+                cellValueIndexInQueryRow = 3;
+            else if (pivotModeComboBox.Text == "Distinct Peptides")
+                cellValueIndexInQueryRow = 4;
+            else
+                throw new InvalidDataException("unknown modification view pivot type");
+
             foreach (var tuple in queryRows)
             {
                 var mod = tuple[1] as DataModel.Modification;
@@ -449,7 +459,7 @@ namespace IDPicker.Forms
                 else
                     row = deltaMassTable.Rows.Find(roundedMass);
 
-                int siteMods = Convert.ToInt32(tuple[2]);
+                int siteMods = Convert.ToInt32(tuple[cellValueIndexInQueryRow]);
                 row[siteColumnName] = siteMods;
                 row[totalColumn] = (int) row[totalColumn] + siteMods;
                 totalRow[siteColumnName] = (int) totalRow[siteColumnName] + siteMods;
@@ -624,7 +634,7 @@ namespace IDPicker.Forms
                     newRow[2] = tuple[2];
                     newRow[3] = tuple[3];
                     newRow[4] = tuple[4];
-                    newRow[5] = string.Join(" | ", explanations.ToArray());
+                    newRow[5] = string.Join("; ", explanations.ToArray());
 
                     var rowIndex = detailDataGridView.Rows.Add(newRow);
                 }
