@@ -65,9 +65,15 @@ namespace pwiz.SkylineTestA
         // public void MyTestInitialize() { }
         //
         // Use TestCleanup to run code after each test has run
-        // [TestCleanup()]
-        // public void MyTestCleanup() { }
-        //
+         [TestCleanup]
+         public void MyTestCleanup()
+         {
+             if (Settings.Default.ToolList.Count > 0)
+             {
+                 Settings.Default.ToolList.RemoveAll(t => true);
+             }
+         }
+        
 
         #endregion
 
@@ -427,7 +433,6 @@ namespace pwiz.SkylineTestA
 
             //This test uses a broken Skyline file to test the InvalidDataException catch
             var invalidFile = commandFilesDir.GetTestPath("InvalidFile.sky");
-
             output = RunCommand("--in=" + invalidFile);
             Assert.AreEqual(1, CountInstances("Error", output));
             AssertEx.Contains(output, new[] {"line", "column"});
@@ -867,6 +872,237 @@ namespace pwiz.SkylineTestA
                     string.Format(
                         "Error: Replicate REP01 in the document has an unexpected file {0}",
                         rawPath3)), msg);
+
+        }
+
+        [TestMethod]
+        public void ConsoleAddToolTest()
+        {
+
+            // Get a unique tool title.
+            string title = GetTitleHelper();
+            const string command = @"C:\Windows\Notepad.exe";
+            const string arguments = "$(DocumentDir) Other";
+            const string initialDirectory = @"C:\";
+
+
+            // Test adding a tool.
+            RunCommand("--tool-add=" + title,
+                     "--tool-command=" + command,
+                     "--tool-arguments=" + arguments,
+                     "--tool-initial-dir=" + initialDirectory);
+            int index = Settings.Default.ToolList.Count -1;
+            ToolDescription tool = Settings.Default.ToolList[index];
+            Assert.AreEqual(title, tool.Title);
+            Assert.AreEqual(command,tool.Command);
+            Assert.AreEqual(arguments,tool.Arguments);
+            Assert.AreEqual(initialDirectory,tool.InitialDirectory);
+            // Remove that tool.
+            Settings.Default.ToolList.RemoveAt(index);
+
+            // Test a tool with no Initial Directory and no arguments
+            RunCommand("--tool-add=" + title,
+                     "--tool-command=" + command);
+            int index1 = Settings.Default.ToolList.Count - 1;
+            ToolDescription tool1 = Settings.Default.ToolList[index1];
+            Assert.AreEqual(title, tool1.Title);
+            Assert.AreEqual(command, tool1.Command);
+            Assert.AreEqual("", tool1.Arguments);
+            Assert.AreEqual("", tool1.InitialDirectory);
+            // Remove that Tool.
+            Settings.Default.ToolList.RemoveAt(index1);
+
+            // Test failure to add tool
+            string output = RunCommand("--tool-add=" + title);
+            Assert.IsTrue(output.Contains("The tool was not imported"));
+
+            string output2 = RunCommand("--tool-command=" + command);
+            Assert.IsTrue(output2.Contains("The tool was not imported"));
+
+            const string badCommand = "test";
+            string output3 = RunCommand("--tool-add=" + title,"--tool-command=" + badCommand);
+            Assert.IsTrue(output3.Contains("Supported Types are: *.exe; *.com; *.pif; *.cmd; *.bat"));
+            Assert.IsTrue(output3.Contains("The tool was not imported"));
+
+            // Now test conflicting titles.
+            // Add the tool.
+            RunCommand("--tool-add=" + title,
+                     "--tool-command=" + command,
+                     "--tool-arguments=" + arguments,
+                     "--tool-initial-dir=" + initialDirectory);         
+            ToolDescription tool2 = Settings.Default.ToolList[Settings.Default.ToolList.Count - 1];
+            Assert.AreEqual(title, tool2.Title); // tool with title of title exists.
+            // Add another tool with the same title.
+            string output4 = RunCommand("--tool-add=" + title,
+                     "--tool-command=" + command);
+            Assert.IsTrue(output4.Contains(("Error:")));
+
+            ToolDescription tool3 = Settings.Default.ToolList.Last();
+            Assert.AreNotEqual("", tool3.Arguments);
+            Assert.AreNotEqual("", tool3.InitialDirectory);
+            // Specify overwrite
+            string output5 = RunCommand("--tool-add=" + title,
+                     "--tool-command=" + command,
+                     "--resolve-tool-conflicts=overwrite");
+            Assert.IsTrue((output5.Contains("Warning: overwriting")));
+            // Check arguments and initialDir were written over.
+            ToolDescription tool4 = Settings.Default.ToolList.Last();
+            Assert.AreEqual(title,tool4.Title);
+            Assert.AreEqual("", tool4.Arguments);
+            Assert.AreEqual("", tool4.InitialDirectory);
+            // Specify skip
+            string output6 = RunCommand("--tool-add=" + title,
+                     "--tool-command=" + command,
+                     "--tool-arguments=thisIsATest",
+                     "--resolve-tool-conflicts=skip");
+            Assert.IsTrue((output6.Contains("Warning: skipping")));
+            // Check Arguments
+            ToolDescription tool5 = Settings.Default.ToolList.Last();
+            Assert.AreEqual(title, tool5.Title);
+            Assert.AreEqual("", tool5.Arguments); // unchanged.
+            
+            // It now complains in this case.
+            string output7 = RunCommand( "--tool-arguments=" + arguments,
+                     "--tool-initial-dir=" + initialDirectory);
+            Assert.IsTrue(output7.Contains("Error"));            
+            Assert.IsTrue(output7.Contains("Exiting..."));            
+        }
+
+        [TestMethod]
+        public void ConsoleAddSkyrTest()
+        {
+            int initialNumber = Settings.Default.ReportSpecList.Count;
+            // Assumes the title TextREportexam is a unique title. 
+            // Add test.skyr which only has one report type named TextREportexam
+            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            var skyrFile = commandFilesDir.GetTestPath("test.skyr");
+            string output = RunCommand("--skyr-add=" + skyrFile);
+            Assert.AreEqual(initialNumber+1, Settings.Default.ReportSpecList.Count);
+            Assert.AreEqual("TextREportexam", Settings.Default.ReportSpecList.Last().GetKey());
+            Assert.IsTrue(output.Contains("Success"));
+            var skyrAdded = Settings.Default.ReportSpecList.Last();
+
+            // Attempt to add the same skyr again.
+            string output2 = RunCommand("--skyr-add=" + skyrFile);
+            Assert.IsTrue(output2.Contains("Error"));
+            // Do want to use == to show it is the same object, unchanged
+            Assert.IsTrue(skyrAdded == Settings.Default.ReportSpecList.Last());
+
+            // Specify skip
+            string output4 = RunCommand("--skyr-add=" + skyrFile,
+                "--resolve-skyr-conflicts=skip");
+            Assert.IsTrue(output4.Contains("skipping"));
+            // Do want to use == to show it is the same object, unchanged
+            Assert.IsTrue(skyrAdded == Settings.Default.ReportSpecList.Last());
+
+
+            // Specify overwrite
+            string output3 = RunCommand("--skyr-add=" + skyrFile,
+                "--resolve-skyr-conflicts=overwrite");
+            Assert.IsTrue(output3.Contains("overwriting"));
+            // Do want to use == to show it is not the same object, changed
+            Assert.IsFalse(skyrAdded == Settings.Default.ReportSpecList.Last());
+
+        }
+
+        [TestMethod]
+        public void ConsoleRunCommandsTest()
+        {
+            int toolListCount = Settings.Default.ToolList.Count;
+            var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+            var commandsToRun = commandFilesDir.GetTestPath("ToolList2.txt");
+            string output = RunCommand("--run-commands=" + commandsToRun);            
+            Assert.IsTrue(output.Contains("NeWtOOl was added to the Tools Menu"));
+            Assert.IsTrue(output.Contains("iHope was added to the Tools Menu"));
+            Assert.IsTrue(output.Contains("thisWorks was added to the Tools Menu"));
+            Assert.IsTrue(output.Contains("FirstTry was added to the Tools Menu"));
+            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
+            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
+            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "thisWorks"));
+            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "FirstTry"));
+            Assert.AreEqual(toolListCount+4, Settings.Default.ToolList.Count);
+
+            // run the same command again. this time each should be skipped.
+            string output2 = RunCommand("--run-commands=" + commandsToRun);
+            Assert.IsFalse(output2.Contains("NeWtOOl was added to the Tools Menu"));
+            Assert.IsFalse(output2.Contains("iHope was added to the Tools Menu"));
+            Assert.IsFalse(output2.Contains("thisWorks was added to the Tools Menu"));
+            Assert.IsFalse(output2.Contains("FirstTry was added to the Tools Menu"));
+            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
+            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
+            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "thisWorks"));
+            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "FirstTry"));
+            // the number of tools is unchanged.
+            Assert.AreEqual(toolListCount + 4, Settings.Default.ToolList.Count);
+
+        }
+
+        [TestMethod]
+        public void ConsoleParserTest()
+        {            
+            // Assert.AreEqual(new[] { "--test=foo bar", "--new" }, CommandLine.ParseInput("\"--test=foo bar\" --new"));
+            // The above line of code would not pass so this other form works better.
+            // Test case "--test=foo bar" --new
+            string[] expected1 = new[] { "--test=foo bar", "--new" };
+            string[] actual1 = CommandLine.ParseInput("\"--test=foo bar\" --new");
+            Assert.AreEqual(expected1[0], actual1[0]);
+            Assert.AreEqual(expected1[1], actual1[1]);
+            // Or even better. A function that does the same assertion as above.
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo bar", "--new" }, CommandLine.ParseInput("\"--test=foo bar\" --new")));
+
+           // Test case --test="foo bar" --new
+            string[] expected2 = new[] {"--test=foo bar", "--new"};
+            string[] actual2 = CommandLine.ParseInput("--test=\"foo bar\" --new");
+            Assert.AreEqual(expected2[0],actual2[0]);
+            Assert.AreEqual(expected2[1],actual2[1]);
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo bar", "--new" }, CommandLine.ParseInput("--test=\"foo bar\" --new")));
+
+
+            // Test case --test="i said ""foo bar""" -new
+            string[] expected3 = new[] { "--test=i said \"foo bar\"", "--new" };
+            string[] actual3 = CommandLine.ParseInput("--test=\"i said \"\"foo bar\"\"\" --new");
+            Assert.AreEqual(expected3[0], actual3[0]);
+            Assert.AreEqual(expected3[1], actual3[1]);
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=i said \"foo bar\"", "--new" }, CommandLine.ParseInput("--test=\"i said \"\"foo bar\"\"\" --new")));
+
+            // Test case "--test=foo --new --bar"
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=foo --new --bar" }, CommandLine.ParseInput("\"--test=foo --new --bar\"")));
+            
+            // Test case --test="" --new --bar
+            Assert.IsTrue(ParserTestHelper(new[] { "--test=", "--new", "--bar" }, CommandLine.ParseInput("--test=\"\" --new --bar")));
+
+            // Test case of all spaces
+            string[] test = CommandLine.ParseInput("     ");
+            Assert.IsTrue(ParserTestHelper(new string[] {}, test));
+        }
+
+        private string GetTitleHelper()
+        {
+            int i = 1;
+            do
+            {
+                if (Settings.Default.ToolList.All(item => item.Title != (string.Format("TestTool{0}", i))))
+                {
+                    return string.Format("TestTool{0}", i);
+                }
+                i++;
+            } while (true);
+        }
+
+        // Compare two string arrays. Check each actual string is equal to the expected one.
+        private static bool ParserTestHelper (string[] actual, string[] expected )
+        {
+            if (actual.Length == expected.Length)
+            {
+                for (int i = 0; i < actual.Length; i++)
+                {
+                    if (!actual[i].Equals(expected[i]))
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
 
         }
 

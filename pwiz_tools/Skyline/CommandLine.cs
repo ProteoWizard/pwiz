@@ -28,11 +28,13 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -76,6 +78,41 @@ namespace pwiz.Skyline
         {
             get { return !string.IsNullOrEmpty(ReportName); }
         }
+
+        // For importing a tool.
+        public string ToolName { get; private set; }
+        public string ToolCommand { get; private set; }
+        public string ToolArguments { get; private set; }
+        public string ToolInitialDirectory { get; private set; }        
+        private bool _importingTool;
+        public bool ImportingTool
+        {
+            get { return !string.IsNullOrEmpty(ToolName) || _importingTool; }
+            set { _importingTool = value; }
+        }
+        public bool? ResolveToolConflictsBySkipping { get; set; }
+
+        // For keeping track of when an in command is required.
+        public bool _requiresInCommand;
+
+        // For --run-commands parameter
+        public string CommandListPath { get; private set; }
+        private bool _runningCommandList;
+        public bool RunningCommandList
+        {
+            get { return !string.IsNullOrEmpty(CommandListPath) || _runningCommandList; }
+            set { _runningCommandList = value; }
+        }
+
+        // For adding a skyr file to user.config
+        public string SkyrPath { get; private set; }
+        private bool _importingSkyr;
+        public bool ImportingSkyr
+        {
+            get { return !string.IsNullOrEmpty(SkyrPath) || _importingSkyr; }
+            set { _importingSkyr = value; }
+        }
+        public bool? ResolveSkyrConflictsBySkipping { get; set; }
 
         private string _transListInstrumentType;
         public string TransListInstrumentType
@@ -232,6 +269,8 @@ namespace pwiz.Skyline
 
         public CommandArgs(TextWriter output)
         {
+            ResolveToolConflictsBySkipping = null;
+            ResolveSkyrConflictsBySkipping = null;
             _out = output;
 
             ReportColumnSeparator = ',';
@@ -269,244 +308,393 @@ namespace pwiz.Skyline
             foreach (string s in args)
             {
                 var pair = new NameValuePair(s);
+                    if (pair.Name.Equals("in"))
+                    {
+                        SkylineFile = Path.GetFullPath(pair.Value);
+                        // Set requiresInCommand to be true so if SkylineFile is null or empty it still complains.
+                        _requiresInCommand = true;
+                    }
 
-                if (pair.Name.Equals("in"))
-                {
-                    SkylineFile = Path.GetFullPath(pair.Value);
-                }
+//                    // A command that exports all the tools to a text file in a SkylineRunner form for --run-commands
+//                    else if (pair.Name.Equals("tool-list-export"))
+//                    {
+//                        string pathToOutputFile = pair.Value;
+//                        using (StreamWriter sw = new StreamWriter(pathToOutputFile))
+//                        {
+//                            foreach (var tool in Settings.Default.ToolList)
+//                            {
+//                                sw.WriteLine("--tool-add=" + tool.Title +
+//                                             " --tool-command=" + tool.Command +
+//                                             " --tool-arguments=" + tool.Arguments +
+//                                             " --tool-initial-dir=" + tool.InitialDirectory);
+//                            }
+//                        }
+//                    }
 
-                else if (pair.Name.Equals("save"))
-                {
-                    Saving = true;
-                }
-                else if (pair.Name.Equals("out"))
-                {
-                    SaveFile = Path.GetFullPath(pair.Value);
-                }
+                    // Import a skyr file.
+                    else if (pair.Name.Equals("skyr-add"))
+                    {
+                        ImportingSkyr = true;
+                        SkyrPath = pair.Value;
+                    }
 
-                else if (pair.Name.Equals("import-file"))
-                {
-                    ReplicateFile = Path.GetFullPath(pair.Value);
-                }
+                    else if (pair.Name.Equals("resolve-skyr-conflicts"))
+                    {
+                        string input = pair.Value.ToLower();
+                        if (input == "overwrite")
+                        {
+                            ResolveSkyrConflictsBySkipping = false;
+                        }
+                        if (input == "skip")
+                        {
+                            ResolveSkyrConflictsBySkipping = true;
+                        }
+                    }
 
-                else if (pair.Name.Equals("import-replicate-name"))
-                {
-                    ReplicateName = pair.Value;
-                }
-                else if (pair.Name.Equals("import-append"))
-                {
-                    ImportAppend = true;
-                }
+                    else if (pair.Name.Equals("tool-add"))
+                    {
+                        ImportingTool = true;
+                        ToolName = pair.Value;
+                    }
 
-                else if (pair.Name.Equals("import-all"))
-                {
-                    ImportSourceDirectory = Path.GetFullPath(pair.Value);
-                }
+                    else if (pair.Name.Equals("tool-command"))
+                    {
+                        ImportingTool = true;
+                        ToolCommand = pair.Value;
+                    }
 
-                else if (pair.Name.Equals("import-naming-pattern"))
-                {
-                    var importNamingPatternVal = pair.Value;
-                    if (importNamingPatternVal != null)
+                    else if (pair.Name.Equals("tool-arguments"))
+                    {
+                        ImportingTool = true;
+                        ToolArguments = pair.Value;
+                    }
+
+                    else if (pair.Name.Equals("tool-initial-dir"))
+                    {
+                        ImportingTool = true;
+                        ToolInitialDirectory = pair.Value;
+                    }
+
+                    else if (pair.Name.Equals("resolve-tool-conflicts"))
+                    {
+                        string input = pair.Value.ToLower();
+                        if (input == "overwrite")
+                        {
+                            ResolveToolConflictsBySkipping = false;
+                        }
+                        if (input == "skip")
+                        {
+                            ResolveToolConflictsBySkipping = true;
+                        }
+                    }
+
+                    // Run each line of a text file like a SkylineRunner command
+                    else if (pair.Name.Equals("run-commands"))
+                    {
+                        CommandListPath = pair.Value;
+                        RunningCommandList = true;
+                    }
+
+                    else if (pair.Name.Equals("save"))
+                    {
+                        Saving = true;
+                        _requiresInCommand = true;
+                    }
+
+                    else if (pair.Name.Equals("out"))
+                    {
+                        SaveFile = Path.GetFullPath(pair.Value);
+                        _requiresInCommand = true;
+                    }
+
+                    else if (pair.Name.Equals("import-file"))
+                    {
+                        ReplicateFile = Path.GetFullPath(pair.Value);
+                        _requiresInCommand = true;
+                    }
+
+                    else if (pair.Name.Equals("import-replicate-name"))
+                    {
+                        ReplicateName = pair.Value;
+                        _requiresInCommand = true;
+                    }
+
+                    else if (pair.Name.Equals("import-append"))
+                    {
+                        ImportAppend = true;
+                        _requiresInCommand = true;
+                    }
+
+                    else if (pair.Name.Equals("import-all"))
+                    {
+                        ImportSourceDirectory = Path.GetFullPath(pair.Value);
+                        _requiresInCommand = true;
+                    }
+
+                    else if (pair.Name.Equals("import-naming-pattern"))
+                    {
+                        var importNamingPatternVal = pair.Value;
+                        _requiresInCommand = true;
+                        if (importNamingPatternVal != null)
+                        {
+                            try
+                            {
+                                ImportNamingPattern = new Regex(importNamingPatternVal);
+                            }
+                            catch (Exception e)
+                            {
+                                _out.WriteLine("Error: Regular expression {0} cannot be parsed.", importNamingPatternVal);
+                                _out.WriteLine(e.Message);
+                                return false;
+                            }
+
+                            Match match = Regex.Match(importNamingPatternVal, @".*\(.+\).*");
+                            if (!match.Success)
+                            {
+                                _out.WriteLine("Error: Regular expression '{0}' does not have any groups.",
+                                               importNamingPatternVal);
+                                _out.WriteLine(
+                                    "       One group is required. The part of the file or sub-directory name");
+                                _out.WriteLine(
+                                    "       that matches the first group in the regular expression is used as");
+                                _out.WriteLine("       the replicate name.");
+                                return false;
+                            }
+                        }
+                    }
+
+                    else if (pair.Name.Equals("report-name"))
+                    {
+                        ReportName = pair.Value;
+                        _requiresInCommand = true;
+                    }
+
+                    else if (pair.Name.Equals("report-file"))
+                    {
+                        ReportFile = Path.GetFullPath(pair.Value);
+                        _requiresInCommand = true;
+                    }
+
+                    else if (pair.Name.Equals("report-format"))
+                    {
+                        if (pair.Value.Equals("TSV", StringComparison.CurrentCultureIgnoreCase))
+                            ReportColumnSeparator = '\t';
+                        else if (pair.Value.Equals("CSV", StringComparison.CurrentCultureIgnoreCase))
+                            ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
+                        else
+                        {
+                            _out.WriteLine(
+                                "Warning: The report format {0} is invalid. It must be either \"CSV\" or \"TSV\".",
+                                pair.Value);
+                            _out.WriteLine("Defaulting to CSV.");
+                            ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
+                        }
+                    }
+
+                    else if (pair.Name.Equals("exp-translist-instrument"))
                     {
                         try
                         {
-                            ImportNamingPattern = new Regex(importNamingPatternVal);
+                            TransListInstrumentType = pair.Value;
+                            _requiresInCommand = true;
                         }
-                        catch (Exception e)
+                        catch (ArgumentException)
                         {
-                            _out.WriteLine("Error: Regular expression {0} cannot be parsed.", importNamingPatternVal);
-                            _out.WriteLine(e.Message);
-                            return false;
+                            _out.WriteLine("Warning: The instrument type {0} is not valid. Please choose from:",
+                                           pair.Value);
+                            foreach (string str in ExportInstrumentType.TRANSITION_LIST_TYPES)
+                            {
+                                _out.WriteLine(str);
+                            }
+                            _out.WriteLine("No transition list will be exported.");
                         }
-
-                        Match match = Regex.Match(importNamingPatternVal, @".*\(.+\).*");
-                        if (!match.Success)
+                    }
+                    else if (pair.Name.Equals("exp-method-instrument"))
+                    {
+                        try
                         {
-                            _out.WriteLine("Error: Regular expression '{0}' does not have any groups.", importNamingPatternVal);
-                            _out.WriteLine("       One group is required. The part of the file or sub-directory name");
-                            _out.WriteLine("       that matches the first group in the regular expression is used as");
-                            _out.WriteLine("       the replicate name.");
-                            return false;
+                            MethodInstrumentType = pair.Value;
+                            _requiresInCommand = true;
                         }
-                    }
-                }
-
-                else if (pair.Name.Equals("report-name"))
-                {
-                    ReportName = pair.Value;
-                }
-
-                else if (pair.Name.Equals("report-file"))
-                {
-                    ReportFile = Path.GetFullPath(pair.Value);
-                }
-
-                else if (pair.Name.Equals("report-format"))
-                {
-                    if (pair.Value.Equals("TSV", StringComparison.CurrentCultureIgnoreCase))
-                        ReportColumnSeparator = '\t';
-                    else if (pair.Value.Equals("CSV", StringComparison.CurrentCultureIgnoreCase))
-                        ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
-                    else
-                    {
-                        _out.WriteLine("Warning: The report format {0} is invalid. It must be either \"CSV\" or \"TSV\".", pair.Value);
-                        _out.WriteLine("Defaulting to CSV.");
-                        ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
-                    }
-                }
-
-                else if (pair.Name.Equals("exp-translist-instrument"))
-                {
-                    try
-                    {
-                        TransListInstrumentType = pair.Value;
-                    }
-                    catch (ArgumentException)
-                    {
-                        _out.WriteLine("Warning: The instrument type {0} is not valid. Please choose from:", pair.Value);
-                        foreach (string str in ExportInstrumentType.TRANSITION_LIST_TYPES)
+                        catch (ArgumentException)
                         {
-                            _out.WriteLine(str);
+                            _out.WriteLine("Warning: The instrument type {0} is not valid. Please choose from:",
+                                           pair.Value);
+                            foreach (string str in ExportInstrumentType.METHOD_TYPES)
+                            {
+                                _out.WriteLine(str);
+                            }
+                            _out.WriteLine("No method will be exported.");
                         }
-                        _out.WriteLine("No transition list will be exported.");
                     }
-                }
-                else if (pair.Name.Equals("exp-method-instrument"))
-                {
-                    try
+                    else if (pair.Name.Equals("exp-file"))
                     {
-                        MethodInstrumentType = pair.Value;
+                        ExportPath = Path.GetFullPath(pair.Value);
+                        _requiresInCommand = true;
                     }
-                    catch (ArgumentException)
+                    else if (pair.Name.Equals("exp-strategy"))
                     {
-                        _out.WriteLine("Warning: The instrument type {0} is not valid. Please choose from:", pair.Value);
-                        foreach (string str in ExportInstrumentType.METHOD_TYPES)
+                        ExportStrategySet = true;
+                        _requiresInCommand = true;
+
+                        string strategy = pair.Value;
+
+                        if (strategy.Equals("single", StringComparison.CurrentCultureIgnoreCase))
                         {
-                            _out.WriteLine(str);
+                            //default
                         }
-                        _out.WriteLine("No method will be exported.");
+                        else if (strategy.Equals("protein", StringComparison.CurrentCultureIgnoreCase))
+                            ExportStrategy = ExportStrategy.Protein;
+                        else if (strategy.Equals("buckets", StringComparison.CurrentCultureIgnoreCase))
+                            ExportStrategy = ExportStrategy.Buckets;
+                        else
+                        {
+                            _out.WriteLine("Warning: The export strategy {0} is not valid. It must be one of",
+                                           pair.Value);
+                            _out.WriteLine("\"single\", \"protein\" or \"buckets\". Defaulting to single.");
+                            //already set to Single
+                        }
                     }
-                }
-                else if (pair.Name.Equals("exp-file"))
-                {
-                    ExportPath = Path.GetFullPath(pair.Value);
-                }
-                else if (pair.Name.Equals("exp-strategy"))
-                {
-                    ExportStrategySet = true;
 
-                    string strategy = pair.Value;
+                    else if (pair.Name.Equals("exp-method-type"))
+                    {
+                        var type = pair.Value;
+                        _requiresInCommand = true;
+                        if (type.Equals("scheduled", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            ExportMethodType = ExportMethodType.Scheduled;
+                        }
+                        else if (type.Equals("standard", StringComparison.CurrentCultureIgnoreCase))
+                        {
+                            //default
+                        }
+                        else
+                        {
+                            _out.WriteLine(
+                                "Warning: The method type {0} is invalid. It must be \"standard\" or \"scheduled\".",
+                                pair.Value);
+                            _out.WriteLine("Defaulting to standard.");
+                        }
+                    }
 
-                    if (strategy.Equals("single", StringComparison.CurrentCultureIgnoreCase))
+                    else if (pair.Name.Equals("exp-max-trans"))
                     {
-                        //default
+                        //This one can't be kept within bounds because the bounds depend on the instrument
+                        //and the document. 
+                        try
+                        {
+                            MaxTransitionsPerInjection = pair.ValueInt;
+                        }
+                        catch
+                        {
+                            _out.WriteLine("Warning: Invalid max transitions per injection parameter ({0}).", pair.Value);
+                            _out.WriteLine("It must be a number. Defaulting to " +
+                                           AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT + ".");
+                            MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
+                        }
+                        _requiresInCommand = true;
                     }
-                    else if (strategy.Equals("protein", StringComparison.CurrentCultureIgnoreCase))
-                        ExportStrategy = ExportStrategy.Protein;
-                    else if (strategy.Equals("buckets", StringComparison.CurrentCultureIgnoreCase))
-                        ExportStrategy = ExportStrategy.Buckets;
-                    else
-                    {
-                        _out.WriteLine("Warning: The export strategy {0} is not valid. It must be one of", pair.Value);
-                        _out.WriteLine("\"single\", \"protein\" or \"buckets\". Defaulting to single.");
-                        //already set to Single
-                    }
-                }
 
-                else if (pair.Name.Equals("exp-method-type"))
-                {
-                    var type = pair.Value;
-                    if (type.Equals("scheduled", StringComparison.CurrentCultureIgnoreCase))
+                    else if (pair.Name.Equals("exp-optimizing"))
                     {
-                        ExportMethodType = ExportMethodType.Scheduled;
+                        try
+                        {
+                            OptimizeType = pair.Value;
+                        }
+                        catch (ArgumentException)
+                        {
+                            _out.WriteLine(
+                                "Warning: Invalid optimization parameter ({0}). Use \"ce\", \"dp\", or \"none\".",
+                                pair.Value);
+                            _out.WriteLine("Defaulting to none.");
+                        }
+                        _requiresInCommand = true;
                     }
-                    else if (type.Equals("standard", StringComparison.CurrentCultureIgnoreCase))
+                    else if (pair.Name.Equals("exp-scheduling-replicate"))
                     {
-                        //default
+                        SchedulingReplicate = pair.Value;
+                        _requiresInCommand = true;
                     }
-                    else
+                    else if (pair.Name.Equals("exp-template"))
                     {
-                        _out.WriteLine("Warning: The method type {0} is invalid. It must be \"standard\" or \"scheduled\".", pair.Value);
-                        _out.WriteLine("Defaulting to standard.");
+                        TemplateFile = Path.GetFullPath(pair.Value);
+                        _requiresInCommand = true;
                     }
-                }
-
-                else if (pair.Name.Equals("exp-max-trans"))
-                {
-                    //This one can't be kept within bounds because the bounds depend on the instrument
-                    //and the document. 
-                    try
+                    else if (pair.Name.Equals("exp-ignore-proteins"))
                     {
-                        MaxTransitionsPerInjection = pair.ValueInt;
+                        IgnoreProteins = true;
+                        _requiresInCommand = true;
                     }
-                    catch
+                    else if (pair.Name.Equals("exp-dwell-time"))
                     {
-                        _out.WriteLine("Warning: Invalid max transitions per injection parameter ({0}).", pair.Value);
-                        _out.WriteLine("It must be a number. Defaulting to " + AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT + ".");
-                        MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
+                        try
+                        {
+                            DwellTime = pair.ValueInt;
+                        }
+                        catch
+                        {
+                            _out.WriteLine(
+                                "Warning: The dwell time {0} is invalid. it must be a number between {1} and {2}.",
+                                pair.Value,
+                                AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX);
+                            _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.DWELL_TIME_DEFAULT);
+                        }
+                        _requiresInCommand = true;
                     }
-                }
-
-                else if (pair.Name.Equals("exp-optimizing"))
-                {
-                    try
+                    else if (pair.Name.Equals("exp-add-energy-ramp"))
                     {
-                        OptimizeType = pair.Value;
-                    } catch (ArgumentException) {
-                        _out.WriteLine("Warning: Invalid optimization parameter ({0}). Use \"ce\", \"dp\", or \"none\".", pair.Value);
-                        _out.WriteLine("Defaulting to none.");
+                        AddEnergyRamp = true;
+                        _requiresInCommand = true;
                     }
-                }
-                else if (pair.Name.Equals("exp-scheduling-replicate"))
-                {
-                    SchedulingReplicate = pair.Value;
-                }
-                else if (pair.Name.Equals("exp-template"))
-                {
-                    TemplateFile = Path.GetFullPath(pair.Value);
-                }
-                else if (pair.Name.Equals("exp-ignore-proteins"))
-                {
-                    IgnoreProteins = true;
-                }
-                else if (pair.Name.Equals("exp-dwell-time"))
-                {
-                    try
+                    else if (pair.Name.Equals("exp-run-length"))
                     {
-                        DwellTime = pair.ValueInt;
-                    }
-                    catch
-                    {
-                        _out.WriteLine("Warning: The dwell time {0} is invalid. it must be a number between {1} and {2}.", pair.Value,
-                            AbstractMassListExporter.DWELL_TIME_MIN, AbstractMassListExporter.DWELL_TIME_MAX);
-                        _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.DWELL_TIME_DEFAULT);
-                    }
-                }
-                else if (pair.Name.Equals("exp-add-energy-ramp"))
-                {
-                    AddEnergyRamp = true;
-                }
-                else if (pair.Name.Equals("exp-run-length"))
-                {
-                    try
-                    {
-                        RunLength = pair.ValueInt;
-                    }
-                    catch
-                    {
-                        _out.WriteLine("Warning: The run length {0} is invalid. It must be a number between {1} and {2}.", pair.Value,
-                            AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX);
-                        _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.RUN_LENGTH_DEFAULT);
-                    }
-                }
+                        try
+                        {
+                            RunLength = pair.ValueInt;
+                        }
+                        catch
+                        {
+                            _out.WriteLine(
+                                "Warning: The run length {0} is invalid. It must be a number between {1} and {2}.",
+                                pair.Value,
+                                AbstractMassListExporter.RUN_LENGTH_MIN, AbstractMassListExporter.RUN_LENGTH_MAX);
+                            _out.WriteLine("Defaulting to {0}.", AbstractMassListExporter.RUN_LENGTH_DEFAULT);
+                        }
+                        _requiresInCommand = true;
+                    }                
             }
 
-            if (String.IsNullOrEmpty(SkylineFile))
+            // First come the commands that do not depend on an --in command to run.
+            // These commands modify Settings.Default instead of working with an open skyline document.
+
+            if (ImportingTool)
+            {                
+                CommandLine.ImportTool(ToolName,ToolCommand,ToolArguments,ToolInitialDirectory, _out, ResolveToolConflictsBySkipping);                             
+            }            
+            if (RunningCommandList)
+            {
+                CommandLine.RunCommandList(CommandListPath, _out);
+            }
+            if (ImportingSkyr)
+            {
+                CommandLine.ImportSkyr(SkyrPath, _out, ResolveSkyrConflictsBySkipping);
+            }
+            
+            // All commands that do not depend on an --in command have now run 
+
+            // If skylineFile isn't set and one of the commands that requires --in is called, complain.
+            if (String.IsNullOrEmpty(SkylineFile) && _requiresInCommand)
             {
                 _out.WriteLine("Error: Use --in to specify a Skyline document to open.");
                 return false;
             }
-
+            // If _requiresInCommand was not set to true and all commands
+            // that dont depend on --in have already been run, we are done.
+            if (!_requiresInCommand)
+            {
+                // Returning false has the desired effect of exiting.
+                return false;
+            }
             
             if(ImportingReplicateFile && ImportingSourceDirectory)
             {
@@ -529,7 +717,6 @@ namespace pwiz.Skyline
             {
                 SaveFile = SkylineFile;
             }
-
             return true;
         }
 
@@ -1057,6 +1244,175 @@ namespace pwiz.Skyline
             {
                 _out.WriteLine("Error: Failure attempting to save {0} report to {1}.", reportName, reportFile);
                 _out.WriteLine(x.Message);
+            }
+        }
+
+        // A function for adding tools to the Tools Menu.
+        public static void ImportTool (string title, string command, string arguments, string initialDirectory, TextWriter _out, bool? resolveToolConflictsBySkipping)
+        {
+            if (title == null | command == null)
+            {
+                _out.WriteLine("Error: to import a tool it must have a name and a command");
+                _out.WriteLine("       Use --tool-add to specify a name");
+                _out.WriteLine("       Use --tool-command to specify a command");
+                _out.WriteLine("       The tool was not imported...");
+                return;
+            }
+            // Check if the command is of a supported type.
+            else if (!ConfigureToolsDlg.checkExtension(command))
+            {
+                string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS);
+                supportedTypes = supportedTypes.Replace(".", "*.");
+                _out.WriteLine(string.Format("Error: the provided command for the tool {0} is not of a supported type", title));
+                _out.WriteLine(string.Format("       Supported Types are: {0}", supportedTypes));
+                _out.WriteLine("       The tool was not imported...");
+                return;
+            }
+            // Check for a name conflict. 
+            ToolDescription toolToRemove = null;
+            foreach (var tool  in Settings.Default.ToolList)
+            {                
+                if (tool.Title == title)
+                {
+                    // Conflict. 
+                    if (resolveToolConflictsBySkipping == null)
+                    {
+                        // Complain. No resolution specified.
+                        _out.WriteLine(string.Format("Error: A tool titled {0} already exists.", tool.Title));
+                        _out.WriteLine(              "       Please use --resolve-tool-conflicts=< overwrite | skip >");
+                        _out.WriteLine(string.Format("       tool titled {0} was not added.", tool.Title));
+                        return; // Dont add.
+                    }
+                    // Skip conflicts
+                    if (resolveToolConflictsBySkipping == true)
+                    {
+                        _out.WriteLine(string.Format("Warning: skipping tool {0} due to a name conflict.", tool.Title));
+//                        _out.WriteLine(string.Format("         tool {0} was not modified.", tool.Title));
+                        return;
+                    }
+                    // Ovewrite conflicts
+                    if (resolveToolConflictsBySkipping == false)
+                    {
+                        _out.WriteLine(string.Format("Warning: overwriting tool {0}", tool.Title));
+//                      _out.WriteLine(string.Format("         tool {0} was modified.", tool.Title));
+                        if (toolToRemove == null) // If there are multiple tools with the same name this makes sure the first one with a naming conflict is overwritten.
+                            toolToRemove = tool;
+                    }
+                }
+            }
+            // Remove the tool to be overwritten.
+            if (toolToRemove !=null)
+                Settings.Default.ToolList.Remove(toolToRemove);          
+            // If no tool was overwritten then its a new tool. Show this message. 
+            if (toolToRemove == null)
+            {
+                _out.WriteLine(string.Format("{0} was added to the Tools Menu", title));
+            }
+            // Conflicts have been dealt with now add the tool.                       
+            // Adding the tool. ToolArguments and ToolInitialDirectory are optional. 
+            // If arguments or initialDirectory is null set it to be an empty string.
+            arguments = arguments ?? ""; 
+            initialDirectory = initialDirectory ?? ""; 
+            Settings.Default.ToolList.Add(new ToolDescription(title, command, arguments, initialDirectory));
+            Settings.Default.Save();        
+        }
+
+        // A function for running each line of a text file like a SkylineRunner command
+        public static void RunCommandList(string path, TextWriter _out)
+        {
+            if (!File.Exists(path))
+            {
+                _out.WriteLine(string.Format("Error: {0} does not exist. --run-commands command failed.", path));
+            }
+            else
+            {
+                try
+                {
+                    using (StreamReader sr = File.OpenText(path))
+                    {
+                        string input;
+                        // Run each line like its own command.
+                        while ((input = sr.ReadLine()) != null)
+                        {
+                            // Parse the line and run it.
+                            string[] args = ParseInput(input);
+                            CommandArgs comandArgs = new CommandArgs(_out);
+                            comandArgs.ParseArgs(args);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    _out.WriteLine(string.Format("Error: failed to open file {0} --run-commands command failed.", path));
+                }
+            }            
+        }
+        
+        /// <summary>
+        ///  A method for parsing command line inputs to accept quotes arround strings and double quotes within those strings.
+        ///  See CommandLineTest.cs ConsoleParserTest() for specific examples of its behavior. 
+        /// </summary>
+        /// <param name="inputs"> string on inputs </param>
+        /// <returns> string[] of parsed commands </returns>
+        public static string[] ParseInput (string inputs)
+        {            
+            List<string> output = new List<string>();
+            bool foundSingle = false;
+            string current = null; 
+            // Loop char by char through inputs building an ouput 
+            for (int i = 0; i < inputs.Length; i++)
+            {
+                char c = inputs[i];
+                if (c == '"')
+                {
+                    // If you have not yet encountered a quote, its an open quote
+                    if (!foundSingle)
+                        foundSingle = true;
+                    // If you have already encountered a quote, it could be a close quote or escaped quote
+                    else if (foundSingle)
+                    {
+                        // In this case its an escaped quote
+                        if ((i < inputs.Length - 1) && inputs[i + 1] == '"')
+                        {
+                            current += c;
+                            i++;
+                        }
+                        // Its a close quote
+                        else
+                            foundSingle = false;
+                    }                   
+                }
+                // If not within a quote and the current string being built isn't blank, a space is a place to break.
+                else if (c == ' ' && !foundSingle && (!String.IsNullOrEmpty(current)))
+                {
+                    output.Add(current);
+                    current = null;
+                }   
+                else if (c != ' ' || (c == ' ' && foundSingle))
+                    current += c;
+
+                // Catch the corner case at the end of the string, make sure the last chunk is added to output array.
+                if (i == inputs.Length - 1 && (!String.IsNullOrEmpty(current)))
+                {
+                    output.Add(current);
+                }
+            }                
+            return output.ToArray();
+        }
+
+        public static void ImportSkyr (string path, TextWriter _out, bool? resolveSkyrConflictsBySkipping)
+        {          
+            if (!File.Exists(path))
+            {
+                _out.WriteLine(string.Format("Error: {0} does not exist. --skyr-add command failed.", path));
+            }
+            else
+            {           
+                if (ShareListDlg<ReportSpecList, ReportSpec>.ImportFile(_out, Settings.Default.ReportSpecList, path, resolveSkyrConflictsBySkipping))
+                {
+                    Settings.Default.Save();
+                    _out.WriteLine(string.Format("Success! Imported Reports from {0}", Path.GetFileNameWithoutExtension(path)));
+                }           
             }
         }
 

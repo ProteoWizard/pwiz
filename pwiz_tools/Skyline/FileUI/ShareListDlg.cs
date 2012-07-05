@@ -251,6 +251,70 @@ namespace pwiz.Skyline.FileUI
             return true;
         }
 
+        // Another implementation of the above ImportFile used for importing a skyr file in a command line scenario 
+        // Maybe move this to a more sensable location.
+        public static bool ImportFile(TextWriter _out, TList listDest, string fileName, bool? resolveSkyrConflictsBySkipping)
+        {
+            if (string.IsNullOrEmpty(fileName))
+                return false;
+
+            XmlSerializer xmlSerializer = new XmlSerializer(listDest.SerialType);
+            TList loadedItems;
+            try
+            {
+                using (var stream = File.OpenRead(fileName))
+                {
+                    loadedItems = (TList)xmlSerializer.Deserialize(stream);
+                }
+            }
+
+            catch (Exception exception)
+            {
+                _out.WriteLine(string.Format("Failure loading {0}. \n {1}", fileName, exception));
+                return false;
+            }
+
+            // Check for and warn about existing reports.
+            List<string> existing = new List<string>(from reportSpec in loadedItems
+                                                     where listDest.ContainsKey(reportSpec.GetKey())
+                                                     select reportSpec.GetKey());
+
+            if (existing.Count > 0)
+            {
+                string messageFormat = existing.Count == 1 ?
+                   "The name '{0}' already exists." :
+                   "The following names already exist:\n\n{0}\n\n";
+                _out.WriteLine(string.Format(messageFormat, string.Join("\n", existing.ToArray())));
+                if (resolveSkyrConflictsBySkipping == null)
+                {
+                    _out.WriteLine("Error: Please specify a way to resolve conflicts.");
+                    _out.WriteLine("       Use command --resolve-skyr-conflicts=< overwrite | skip >");
+                    return false;
+                }
+                if (resolveSkyrConflictsBySkipping == true)
+                {
+                    _out.WriteLine("Resolving conflicts by skipping.");
+                    // The objects are skipped below for being in the list called existing
+                }
+                if (resolveSkyrConflictsBySkipping == false)
+                {
+                    _out.WriteLine("Resolving conflicts by overwriting.");
+                    existing.Clear();
+                    // All conflicts are overwritten because existing is empty. 
+                }
+            }
+
+            foreach (TItem reportSpec in loadedItems)
+            {
+                // Skip anything still in the existing list
+                if (existing.Contains(reportSpec.GetKey()))
+                    continue;
+                RemoveReport(listDest, reportSpec.GetKey());
+                listDest.Add(reportSpec);
+            }
+            return true;
+        }
+
         private static void RemoveReport(IList<TItem> reportSpecList, String name)
         {
             for (int i = 0; i < reportSpecList.Count; i++)

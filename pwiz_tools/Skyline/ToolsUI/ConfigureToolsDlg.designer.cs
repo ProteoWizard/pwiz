@@ -61,7 +61,7 @@ namespace pwiz.Skyline.ToolsUI
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(125, 273);
+            this.btnOK.Location = new System.Drawing.Point(136, 273);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 14;
@@ -73,9 +73,9 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.btnArguments.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnArguments.Image = ((System.Drawing.Image)(resources.GetObject("btnArguments.Image")));
-            this.btnArguments.Location = new System.Drawing.Point(340, 215);
+            this.btnArguments.Location = new System.Drawing.Point(349, 215);
             this.btnArguments.Name = "btnArguments";
-            this.btnArguments.Size = new System.Drawing.Size(21, 23);
+            this.btnArguments.Size = new System.Drawing.Size(24, 23);
             this.btnArguments.TabIndex = 20;
             this.btnArguments.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnArguments.UseVisualStyleBackColor = true;
@@ -84,9 +84,9 @@ namespace pwiz.Skyline.ToolsUI
             // btnInitialDirectory
             // 
             this.btnInitialDirectory.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnInitialDirectory.Location = new System.Drawing.Point(314, 244);
+            this.btnInitialDirectory.Location = new System.Drawing.Point(319, 244);
             this.btnInitialDirectory.Name = "btnInitialDirectory";
-            this.btnInitialDirectory.Size = new System.Drawing.Size(21, 23);
+            this.btnInitialDirectory.Size = new System.Drawing.Size(24, 23);
             this.btnInitialDirectory.TabIndex = 18;
             this.btnInitialDirectory.Text = "...";
             this.btnInitialDirectory.UseVisualStyleBackColor = true;
@@ -95,9 +95,9 @@ namespace pwiz.Skyline.ToolsUI
             // btnFindCommand
             // 
             this.btnFindCommand.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnFindCommand.Location = new System.Drawing.Point(341, 186);
+            this.btnFindCommand.Location = new System.Drawing.Point(349, 186);
             this.btnFindCommand.Name = "btnFindCommand";
-            this.btnFindCommand.Size = new System.Drawing.Size(21, 23);
+            this.btnFindCommand.Size = new System.Drawing.Size(24, 23);
             this.btnFindCommand.TabIndex = 17;
             this.btnFindCommand.Text = "...";
             this.btnFindCommand.UseVisualStyleBackColor = true;
@@ -110,7 +110,7 @@ namespace pwiz.Skyline.ToolsUI
             this.listTools.FormattingEnabled = true;
             this.listTools.Location = new System.Drawing.Point(15, 25);
             this.listTools.Name = "listTools";
-            this.listTools.Size = new System.Drawing.Size(266, 121);
+            this.listTools.Size = new System.Drawing.Size(277, 121);
             this.listTools.TabIndex = 1;
             this.listTools.SelectedIndexChanged += new System.EventHandler(this.listTools_SelectedIndexChanged);
             // 
@@ -164,7 +164,7 @@ namespace pwiz.Skyline.ToolsUI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textInitialDirectory.Location = new System.Drawing.Point(102, 246);
             this.textInitialDirectory.Name = "textInitialDirectory";
-            this.textInitialDirectory.Size = new System.Drawing.Size(206, 20);
+            this.textInitialDirectory.Size = new System.Drawing.Size(211, 20);
             this.textInitialDirectory.TabIndex = 13;
             this.textInitialDirectory.TextChanged += new System.EventHandler(this.textInitialDirectory_TextChanged);
             // 
@@ -174,7 +174,7 @@ namespace pwiz.Skyline.ToolsUI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textArguments.Location = new System.Drawing.Point(102, 217);
             this.textArguments.Name = "textArguments";
-            this.textArguments.Size = new System.Drawing.Size(233, 20);
+            this.textArguments.Size = new System.Drawing.Size(241, 20);
             this.textArguments.TabIndex = 11;
             this.textArguments.TextChanged += new System.EventHandler(this.textArguments_TextChanged);
             // 
@@ -184,7 +184,7 @@ namespace pwiz.Skyline.ToolsUI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textCommand.Location = new System.Drawing.Point(102, 188);
             this.textCommand.Name = "textCommand";
-            this.textCommand.Size = new System.Drawing.Size(233, 20);
+            this.textCommand.Size = new System.Drawing.Size(241, 20);
             this.textCommand.TabIndex = 9;
             this.textCommand.TextChanged += new System.EventHandler(this.textCommand_TextChanged);
             // 
@@ -194,7 +194,7 @@ namespace pwiz.Skyline.ToolsUI
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textTitle.Location = new System.Drawing.Point(102, 159);
             this.textTitle.Name = "textTitle";
-            this.textTitle.Size = new System.Drawing.Size(260, 20);
+            this.textTitle.Size = new System.Drawing.Size(271, 20);
             this.textTitle.TabIndex = 7;
             this.textTitle.TextChanged += new System.EventHandler(this.textTitle_TextChanged);
             // 
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.ToolsUI
             // btnMoveDown
             // 
             this.btnMoveDown.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMoveDown.Location = new System.Drawing.Point(286, 123);
+            this.btnMoveDown.Location = new System.Drawing.Point(297, 123);
             this.btnMoveDown.Name = "btnMoveDown";
             this.btnMoveDown.Size = new System.Drawing.Size(75, 23);
             this.btnMoveDown.TabIndex = 5;
@@ -221,7 +221,7 @@ namespace pwiz.Skyline.ToolsUI
             // btnMoveUp
             // 
             this.btnMoveUp.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMoveUp.Location = new System.Drawing.Point(287, 94);
+            this.btnMoveUp.Location = new System.Drawing.Point(298, 94);
             this.btnMoveUp.Name = "btnMoveUp";
             this.btnMoveUp.Size = new System.Drawing.Size(75, 23);
             this.btnMoveUp.TabIndex = 4;
@@ -232,7 +232,7 @@ namespace pwiz.Skyline.ToolsUI
             // btnDelete
             // 
             this.btnDelete.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnDelete.Location = new System.Drawing.Point(287, 54);
+            this.btnDelete.Location = new System.Drawing.Point(298, 54);
             this.btnDelete.Name = "btnDelete";
             this.btnDelete.Size = new System.Drawing.Size(75, 23);
             this.btnDelete.TabIndex = 3;
@@ -244,7 +244,7 @@ namespace pwiz.Skyline.ToolsUI
             // btnAdd
             // 
             this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAdd.Location = new System.Drawing.Point(287, 25);
+            this.btnAdd.Location = new System.Drawing.Point(298, 25);
             this.btnAdd.Name = "btnAdd";
             this.btnAdd.Size = new System.Drawing.Size(75, 23);
             this.btnAdd.TabIndex = 2;
@@ -256,7 +256,7 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.btnApply.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnApply.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.btnApply.Location = new System.Drawing.Point(286, 273);
+            this.btnApply.Location = new System.Drawing.Point(297, 273);
             this.btnApply.Name = "btnApply";
             this.btnApply.Size = new System.Drawing.Size(75, 23);
             this.btnApply.TabIndex = 16;
@@ -267,7 +267,7 @@ namespace pwiz.Skyline.ToolsUI
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(206, 273);
+            this.btnCancel.Location = new System.Drawing.Point(217, 273);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 15;
@@ -279,9 +279,9 @@ namespace pwiz.Skyline.ToolsUI
             // 
             this.btnInitialDirectoryMacros.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnInitialDirectoryMacros.Image = ((System.Drawing.Image)(resources.GetObject("btnInitialDirectoryMacros.Image")));
-            this.btnInitialDirectoryMacros.Location = new System.Drawing.Point(340, 244);
+            this.btnInitialDirectoryMacros.Location = new System.Drawing.Point(349, 244);
             this.btnInitialDirectoryMacros.Name = "btnInitialDirectoryMacros";
-            this.btnInitialDirectoryMacros.Size = new System.Drawing.Size(21, 23);
+            this.btnInitialDirectoryMacros.Size = new System.Drawing.Size(24, 23);
             this.btnInitialDirectoryMacros.TabIndex = 21;
             this.btnInitialDirectoryMacros.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
             this.btnInitialDirectoryMacros.UseVisualStyleBackColor = true;
@@ -296,7 +296,7 @@ namespace pwiz.Skyline.ToolsUI
             this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(374, 308);
+            this.ClientSize = new System.Drawing.Size(385, 308);
             this.Controls.Add(this.btnInitialDirectoryMacros);
             this.Controls.Add(this.btnArguments);
             this.Controls.Add(this.btnInitialDirectory);
