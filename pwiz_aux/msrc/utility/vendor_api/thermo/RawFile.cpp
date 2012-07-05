@@ -199,7 +199,7 @@ RawFileImpl::RawFileImpl(const string& filename)
     string decimalSeparator = buf;
     delete buf;
     if (decimalSeparator != ".")
-        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the decimal separator to be '.' - adjust regional/language settings in the Control Panel.");
+        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the decimal separator to be '.' (yours is '" + decimalSeparator + "') - adjust regional/language settings in the Control Panel.");
 
     // XRawfile requires ',' as a list separator
     int listSeparatorLength = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SLIST, 0, 0);
@@ -208,7 +208,7 @@ RawFileImpl::RawFileImpl(const string& filename)
     string listSeparator = buf;
     delete buf;
     if (listSeparator != ",")
-        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the list separator to be ',' - adjust regional/language settings in the Control Panel.");
+        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the list separator to be ',' (yours is '" + listSeparator + "') - adjust regional/language settings in the Control Panel.");
 
     COMInitializer::initialize();
 
