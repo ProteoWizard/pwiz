@@ -56,6 +56,19 @@ static void Embed(String^ idpDbFilepath,
                   String^ sourceExtensionPriorityList,
                   pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
+/// search for source files of the idpDB using the given search path, using the provided source extensions,
+/// and embed scan start times of the source's spectra in the ScanTimeInSeconds column of the idpDB
+static void EmbedScanTime(String^ idpDbFilepath,
+                          String^ sourceSearchPath,
+                          pwiz::CLI::util::IterationListenerRegistry^ ilr);
+
+/// search for source files of the idpDB using the given search path, using the provided source extensions,
+/// and embed scan start times of the source's spectra in the ScanTimeInSeconds column of the idpDB
+static void EmbedScanTime(String^ idpDbFilepath,
+                          String^ sourceSearchPath,
+                          String^ sourceExtensionPriorityList,
+                          pwiz::CLI::util::IterationListenerRegistry^ ilr);
+
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
 static void Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath);
 

@@ -35,6 +35,7 @@
 #include "pwiz/utility/chemistry/Ion.hpp"
 #include "Parser.hpp"
 #include "Qonverter.hpp"
+#include "SchemaUpdater.hpp"
 #include "../freicore/AhoCorasickTrie.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/thread/thread.hpp"
@@ -349,10 +350,14 @@ struct ParserImpl
         sqlite::transaction transaction(idpDb);
 
         // initialize the tables
+        idpDb.execute("DROP TABLE IF EXISTS About;"
+                      "CREATE TABLE About (Id INTEGER PRIMARY KEY, SoftwareName TEXT, SoftwareVersion TEXT, StartTime DATETIME, SchemaRevision INT);"
+                      "INSERT INTO About VALUES (1, 'IDPicker', '3.0', datetime('now'), " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + ");");
+
         idpDb.execute("CREATE TABLE IF NOT EXISTS SpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB);"
                       "CREATE TABLE IF NOT EXISTS SpectrumSourceGroup (Id INTEGER PRIMARY KEY, Name TEXT);"
                       "CREATE TABLE IF NOT EXISTS SpectrumSourceGroupLink (Id INTEGER PRIMARY KEY, Source INT, Group_ INT);"
-                      "CREATE TABLE IF NOT EXISTS Spectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC);"
+                      "CREATE TABLE IF NOT EXISTS Spectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);"
                       "CREATE TABLE IF NOT EXISTS Analysis (Id INTEGER PRIMARY KEY, Name TEXT, SoftwareName TEXT, SoftwareVersion TEXT, Type INT, StartTime DATETIME);"
                       "CREATE TABLE IF NOT EXISTS AnalysisParameter (Id INTEGER PRIMARY KEY, Analysis INT, Name TEXT, Value TEXT);"
                       "CREATE TABLE IF NOT EXISTS Modification (Id INTEGER PRIMARY KEY, MonoMassDelta NUMERIC, AvgMassDelta NUMERIC, Formula TEXT, Name TEXT);"
@@ -481,7 +486,7 @@ struct ParserImpl
             throw runtime_error("no spectrum identification list");
 
         // create commands for inserting results
-        sqlite::command insertSpectrum(idpDb, "INSERT INTO Spectrum (Id, Source, Index_, NativeID, PrecursorMZ) VALUES (?,1,?,?,?)");
+        sqlite::command insertSpectrum(idpDb, "INSERT INTO Spectrum (Id, Source, Index_, NativeID, PrecursorMZ, ScanTimeInSeconds) VALUES (?,1,?,?,?,?)");
         sqlite::command insertPeptide(idpDb, "INSERT INTO Peptide (Id, MonoisotopicMass, MolecularWeight, PeptideGroup, DecoySequence) VALUES (?,?,?,0,?)");
         sqlite::command insertPSM(idpDb, "INSERT INTO PeptideSpectrumMatch (Id, Spectrum, Analysis, Peptide, QValue, ObservedNeutralMass, MonoisotopicMassError, MolecularWeightError, Rank, Charge) VALUES (?,?,?,?,?,?,?,?,?,?)");
         sqlite::command insertPeptideModification(idpDb, "INSERT INTO PeptideModification (Id, PeptideSpectrumMatch, Modification, Offset, Site) VALUES (?,?,?,?,?)");
@@ -521,7 +526,8 @@ struct ParserImpl
                 throw runtime_error("non-unique spectrumIDs not supported");
 
             double firstPrecursorMZ = sir->spectrumIdentificationItem[0]->experimentalMassToCharge;
-            insertSpectrum.binder() << nextSpectrumId << nextSpectrumId << sir->spectrumID << firstPrecursorMZ;
+            double scanTimeInSeconds = sir->cvParam(MS_scan_start_time).timeInSeconds();
+            insertSpectrum.binder() << nextSpectrumId << nextSpectrumId << sir->spectrumID << firstPrecursorMZ << scanTimeInSeconds;
             insertSpectrum.execute();
             insertSpectrum.reset();
 

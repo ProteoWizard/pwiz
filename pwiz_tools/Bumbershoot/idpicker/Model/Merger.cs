@@ -561,7 +561,7 @@ namespace IDPicker.DataModel
 
         static string addNewSpectraSql =
               @"INSERT INTO merged.Spectrum
-                SELECT sMerge.AfterMergeId, ssMerge.AfterMergeId, Index_, NativeID, PrecursorMZ
+                SELECT sMerge.AfterMergeId, ssMerge.AfterMergeId, Index_, NativeID, PrecursorMZ, ScanTimeInSeconds
                 FROM {0}.Spectrum newSpectrum
                 JOIN SpectrumSourceMergeMap ssMerge ON newSpectrum.Source = ssMerge.BeforeMergeId
                 JOIN SpectrumMergeMap sMerge ON newSpectrum.Id = sMerge.BeforeMergeId

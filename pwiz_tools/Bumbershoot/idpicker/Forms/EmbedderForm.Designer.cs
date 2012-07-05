@@ -53,6 +53,8 @@ namespace IDPicker.Forms
         private void InitializeComponent ()
         {
             this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.sourceNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.okButton = new System.Windows.Forms.Button();
             this.embedAllButton = new System.Windows.Forms.Button();
             this.deleteAllButton = new System.Windows.Forms.Button();
@@ -62,18 +64,17 @@ namespace IDPicker.Forms
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.extensionsTextBox = new System.Windows.Forms.TextBox();
-            this.sourceNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).BeginInit();
+            this.scanTimeOnlyCheckBox = new System.Windows.Forms.CheckBox();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView
             // 
             this.dataGridView.AllowUserToAddRows = false;
             this.dataGridView.AllowUserToDeleteRows = false;
-            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.sourceNameColumn,
@@ -85,9 +86,24 @@ namespace IDPicker.Forms
             this.dataGridView.Size = new System.Drawing.Size(784, 502);
             this.dataGridView.TabIndex = 1;
             // 
+            // sourceNameColumn
+            // 
+            this.sourceNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.sourceNameColumn.HeaderText = "Source";
+            this.sourceNameColumn.Name = "sourceNameColumn";
+            this.sourceNameColumn.ReadOnly = true;
+            // 
+            // embeddedSourceColumn
+            // 
+            this.embeddedSourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.embeddedSourceColumn.HeaderText = "Embedded Status";
+            this.embeddedSourceColumn.Name = "embeddedSourceColumn";
+            this.embeddedSourceColumn.ReadOnly = true;
+            this.embeddedSourceColumn.Width = 250;
+            // 
             // okButton
             // 
-            this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.okButton.Location = new System.Drawing.Point(702, 534);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
@@ -98,7 +114,7 @@ namespace IDPicker.Forms
             // 
             // embedAllButton
             // 
-            this.embedAllButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.embedAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.embedAllButton.Location = new System.Drawing.Point(621, 534);
             this.embedAllButton.Name = "embedAllButton";
             this.embedAllButton.Size = new System.Drawing.Size(75, 23);
@@ -109,7 +125,7 @@ namespace IDPicker.Forms
             // 
             // deleteAllButton
             // 
-            this.deleteAllButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.deleteAllButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.deleteAllButton.Location = new System.Drawing.Point(540, 534);
             this.deleteAllButton.Name = "deleteAllButton";
             this.deleteAllButton.Size = new System.Drawing.Size(75, 23);
@@ -133,8 +149,8 @@ namespace IDPicker.Forms
             // 
             // searchPathTextBox
             // 
-            this.searchPathTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.searchPathTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.searchPathTextBox.Location = new System.Drawing.Point(81, 508);
             this.searchPathTextBox.Name = "searchPathTextBox";
             this.searchPathTextBox.Size = new System.Drawing.Size(696, 20);
@@ -142,7 +158,7 @@ namespace IDPicker.Forms
             // 
             // label1
             // 
-            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(7, 511);
             this.label1.Name = "label1";
@@ -152,7 +168,7 @@ namespace IDPicker.Forms
             // 
             // label2
             // 
-            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label2.AutoSize = true;
             this.label2.Location = new System.Drawing.Point(14, 537);
             this.label2.Name = "label2";
@@ -162,27 +178,23 @@ namespace IDPicker.Forms
             // 
             // extensionsTextBox
             // 
-            this.extensionsTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.extensionsTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.extensionsTextBox.Location = new System.Drawing.Point(81, 534);
             this.extensionsTextBox.Name = "extensionsTextBox";
             this.extensionsTextBox.Size = new System.Drawing.Size(240, 20);
             this.extensionsTextBox.TabIndex = 8;
             // 
-            // sourceNameColumn
+            // scanTimeOnlyCheckBox
             // 
-            this.sourceNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.sourceNameColumn.HeaderText = "Source";
-            this.sourceNameColumn.Name = "sourceNameColumn";
-            this.sourceNameColumn.ReadOnly = true;
-            // 
-            // embeddedSourceColumn
-            // 
-            this.embeddedSourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.embeddedSourceColumn.HeaderText = "Embedded Status";
-            this.embeddedSourceColumn.Name = "embeddedSourceColumn";
-            this.embeddedSourceColumn.ReadOnly = true;
-            this.embeddedSourceColumn.Width = 250;
+            this.scanTimeOnlyCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.scanTimeOnlyCheckBox.AutoSize = true;
+            this.scanTimeOnlyCheckBox.Location = new System.Drawing.Point(392, 537);
+            this.scanTimeOnlyCheckBox.Name = "scanTimeOnlyCheckBox";
+            this.scanTimeOnlyCheckBox.Size = new System.Drawing.Size(142, 17);
+            this.scanTimeOnlyCheckBox.TabIndex = 9;
+            this.scanTimeOnlyCheckBox.Text = "Only Embed Scan Times";
+            this.scanTimeOnlyCheckBox.UseVisualStyleBackColor = true;
             // 
             // EmbedderForm
             // 
@@ -190,6 +202,7 @@ namespace IDPicker.Forms
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 562);
+            this.Controls.Add(this.scanTimeOnlyCheckBox);
             this.Controls.Add(this.extensionsTextBox);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
@@ -200,7 +213,7 @@ namespace IDPicker.Forms
             this.Controls.Add(this.dataGridView);
             this.Name = "EmbedderForm";
             this.Text = "Embed Subset Spectra";
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -220,5 +233,6 @@ namespace IDPicker.Forms
         private System.Windows.Forms.TextBox extensionsTextBox;
         private System.Windows.Forms.DataGridViewTextBoxColumn sourceNameColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn embeddedSourceColumn;
+        private System.Windows.Forms.CheckBox scanTimeOnlyCheckBox;
     }
 }

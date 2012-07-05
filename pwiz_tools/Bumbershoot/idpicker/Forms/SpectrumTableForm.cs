@@ -866,6 +866,7 @@ namespace IDPicker.Forms
                 var row = baseRow as SpectrumRow;
                 if (columnIndex == keyColumn.Index) return row.Key;
                 else if (columnIndex == precursorMzColumn.Index) return row.Spectrum.PrecursorMZ;
+                else if (columnIndex == scanTimeColumn.Index) return row.Spectrum.ScanTimeInSeconds / 60.0;
             }
             else if (baseRow is AnalysisRow)
             {
@@ -896,6 +897,7 @@ namespace IDPicker.Forms
                 else if (checkedGroupings.Count(o => o.Mode == GroupBy.Spectrum) == 0)
                 {
                     if (columnIndex == precursorMzColumn.Index) return row.Spectrum.PrecursorMZ;
+                    else if (columnIndex == scanTimeColumn.Index) return row.Spectrum.ScanTimeInSeconds / 60.0;
                 }
             }
             else if (baseRow is PeptideSpectrumMatchScoreRow)
@@ -1031,6 +1033,7 @@ namespace IDPicker.Forms
                 { distinctChargesColumn, new ColumnProperty() {Type = typeof(int)}},
                 { proteinGroupsColumn, new ColumnProperty() {Type = typeof(int)}},
                 { precursorMzColumn, new ColumnProperty() {Type = typeof(float), Precision = 4}},
+                { scanTimeColumn, new ColumnProperty() {Type = typeof(float), Precision = 4}},
                 { observedMassColumn, new ColumnProperty() {Type = typeof(float), Precision = 4}},
                 { exactMassColumn, new ColumnProperty() {Type = typeof(float), Precision = 4}},
                 { massErrorColumn, new ColumnProperty() {Type = typeof(float), Precision = 4}},

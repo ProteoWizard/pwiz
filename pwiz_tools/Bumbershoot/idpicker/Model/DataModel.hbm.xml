@@ -63,6 +63,7 @@
 		<property name="Index" column="Index_"/>
 		<property name="NativeID"/>
 		<property name="PrecursorMZ"/>
+        <property name="ScanTimeInSeconds"/>
 		<bag name="Matches" inverse="true" batch-size="500" lazy="true">
 			<key column="Spectrum"/>
 			<one-to-many class="PeptideSpectrumMatch"/>

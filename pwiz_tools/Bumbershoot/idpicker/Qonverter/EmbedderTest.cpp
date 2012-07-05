@@ -35,6 +35,7 @@
 #include "Parser.hpp"
 
 
+using namespace pwiz::cv;
 using namespace pwiz::util;
 using namespace boost::assign;
 using namespace IDPicker;
@@ -139,6 +140,8 @@ void test()
             sl->spectra.back()->set(MS_ms_level, 2);
             sl->spectra.back()->set(MS_centroid_spectrum);
             sl->spectra.back()->setMZIntensityArrays(mzArray, intensityArray, MS_number_of_counts);
+            sl->spectra.back()->scanList.scans.push_back(Scan());
+            sl->spectra.back()->scanList.scans[0].set(MS_scan_start_time, i / 100.0, UO_second);
         }
 
         bfs::create_directories("testEmbedder.dir");
@@ -174,6 +177,7 @@ void test()
         pwiz::msdata::MSDataFile testEmbedder("testEmbedder.mz5");
         unit_assert(testEmbedder.run.spectrumListPtr.get());
         unit_assert_operator_equal(4, testEmbedder.run.spectrumListPtr->size());
+        unit_assert(0 < testEmbedder.run.spectrumListPtr->spectrum(1)->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds());
     }
 
     bfs::remove("testEmbedder.mz5");

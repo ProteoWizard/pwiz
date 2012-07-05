@@ -31,6 +31,8 @@
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
+#include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
 #include "boost/foreach_field.hpp"
 #include "boost/throw_exception.hpp"
 
@@ -173,6 +175,14 @@ const string defaultSourceExtensionPriorityList("mz5;mzML;mzXML;ms2;cms2;mgf");
 #endif
 
 
+// convenient macro for one-line status and cancellation updates
+#define ITERATION_UPDATE(ilr, index, count, message) \
+{ \
+    if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage((index), (count), (message))) == IterationListener::Status_Cancel) \
+        return; \
+}
+
+
 namespace {
 
 struct SpectrumSource
@@ -204,24 +214,12 @@ string findNameInPath(const string& filenameWithoutExtension,
     return "";
 }
 
-} // namespace
-
-// convenient macro for one-line status and cancellation updates
-#define ITERATION_UPDATE(ilr, index, count, message) \
-{ \
-    if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage((index), (count), (message))) == IterationListener::Status_Cancel) \
-        return; \
-}
-
-void embed(const string& idpDbFilepath, const string& sourceSearchPath, pwiz::util::IterationListenerRegistry* ilr)
-{
-    embed(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, ilr);
-}
-
-void embed(const string& idpDbFilepath,
-           const string& sourceSearchPath,
-           const string& sourceExtensionPriorityList,
-           pwiz::util::IterationListenerRegistry* ilr)
+void getSources(sqlite::database& idpDb,
+                vector<SpectrumSource>& sources,
+                const string& idpDbFilepath,
+                const string& sourceSearchPath,
+                const string& sourceExtensionPriorityList,
+                pwiz::util::IterationListenerRegistry* ilr)
 {
     string databaseName = bfs::path(idpDbFilepath).replace_extension("").filename();
 
@@ -230,24 +228,23 @@ void embed(const string& idpDbFilepath,
     bal::split(paths, sourceSearchPath, bal::is_any_of(";"));
 
     if (paths.empty())
-        throw runtime_error("[embed] empty search path");
+        throw runtime_error("empty search path");
 
     // parse the extension list
     vector<string> extensions;
     bal::split(extensions, sourceExtensionPriorityList, bal::is_any_of(";"));
 
     if (extensions.empty())
-        throw runtime_error("[embed] empty source extension list");
+        throw runtime_error("empty source extension list");
 
     ITERATION_UPDATE(ilr, 0, 0, "opening database \"" + databaseName + "\"");
 
     // open the database
-    sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
+    idpDb.connect(idpDbFilepath, sqlite::no_mutex);
 
     ITERATION_UPDATE(ilr, 0, 0, "querying sources and spectra");
 
     // get a list of sources from the database
-    vector<SpectrumSource> sources;
     sqlite::query sourceQuery(idpDb, "SELECT Id, Name FROM SpectrumSource ORDER BY Id");
     BOOST_FOREACH(sqlite::query::rows row, sourceQuery)
     {
@@ -257,18 +254,23 @@ void embed(const string& idpDbFilepath,
     }
 
     if (sources.empty())
-        throw runtime_error("[embed] query returned no sources for \"" + databaseName + "\"");
+        throw runtime_error("query returned no sources for \"" + databaseName + "\"");
+
+    // use UnfilteredSpectrum table if present
+    string spectrumTable = "UnfilteredSpectrum";
+    try { sqlite::query(idpDb, "SELECT Id FROM UnfilteredSpectrum LIMIT 1").begin(); }
+    catch (sqlite::database_error&) { spectrumTable = "Spectrum"; }
 
     // get a list of spectra for each source
     vector<SpectrumSource>::iterator itr = sources.begin();
-    sqlite::query spectrumQuery(idpDb, "SELECT Source, NativeID FROM Spectrum ORDER BY Source");
+    sqlite::query spectrumQuery(idpDb, ("SELECT Source, NativeID FROM " + spectrumTable + " ORDER BY Source").c_str());
     BOOST_FOREACH(sqlite::query::rows row, spectrumQuery)
     {
         sqlite3_int64 sourceId = row.get<sqlite3_int64>(0);
         if (itr->id != sourceId)
         {
             if (itr->spectrumNativeIds.empty())
-                throw runtime_error("[embed] query returned no spectra for source \"" + itr->name + "\"");
+                throw runtime_error("query returned no spectra for source \"" + itr->name + "\"");
             ++itr;
         }
         itr->spectrumNativeIds.push_back(row.get<string>(1));
@@ -286,9 +288,88 @@ void embed(const string& idpDbFilepath,
     }
 
     if (missingSources.size() == 1)
-        throw runtime_error("[embed] no filepath could be found corresponding to source \"" + missingSources[0] + "\"");
+        throw runtime_error("no filepath could be found corresponding to source \"" + missingSources[0] + "\"");
     else if (missingSources.size() > 1)
-        throw runtime_error("[embed] no filepath could be found corresponding these sources:\n" + bal::join(missingSources, "\n"));
+        throw runtime_error("no filepath could be found corresponding these sources:\n" + bal::join(missingSources, "\n"));
+}
+
+struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_Filter::Predicate
+{
+    SpectrumList_FilterPredicate_ScanStartTimeUpdater(sqlite::database& idpDb)
+        : idpDb(idpDb),
+          updateScanTime(idpDb, "UPDATE Spectrum SET ScanTimeInSeconds = ? WHERE NativeID = ?")
+    {
+        try
+        {
+            sqlite::query(idpDb, "SELECT Id FROM UnfilteredSpectrum LIMIT 1").begin();
+            updateUnfilteredScanTime.reset(new sqlite::command(idpDb, "UPDATE UnfilteredSpectrum SET ScanTimeInSeconds = ? WHERE NativeID = ?"));
+            hasUnfilteredTables = true;
+        }
+        catch (sqlite::database_error&)
+        {
+            hasUnfilteredTables = false;
+        }
+    }
+
+    virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const
+    {
+        return boost::logic::indeterminate;
+    }
+
+    virtual boost::logic::tribool accept(const Spectrum& spectrum) const
+    {
+        if (spectrum.scanList.scans.empty())
+            return boost::logic::indeterminate;
+
+        double scanTime = spectrum.scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
+
+        updateScanTime.bind(1, scanTime);
+        updateScanTime.bind(2, spectrum.id);
+        updateScanTime.execute();
+        updateScanTime.reset();
+
+        if (hasUnfilteredTables)
+        {
+            updateUnfilteredScanTime->bind(1, scanTime);
+            updateUnfilteredScanTime->bind(2, spectrum.id);
+            updateUnfilteredScanTime->execute();
+            updateUnfilteredScanTime->reset();
+        }
+
+        return true;
+    }
+
+    private:
+    sqlite::database& idpDb;
+    mutable sqlite::command updateScanTime;
+    mutable boost::scoped_ptr<sqlite::command> updateUnfilteredScanTime;
+    bool hasUnfilteredTables;
+};
+
+} // namespace
+
+void embed(const string& idpDbFilepath, const string& sourceSearchPath, pwiz::util::IterationListenerRegistry* ilr)
+{
+    embed(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, ilr);
+}
+
+void embed(const string& idpDbFilepath,
+           const string& sourceSearchPath,
+           const string& sourceExtensionPriorityList,
+           pwiz::util::IterationListenerRegistry* ilr)
+{
+    sqlite::database idpDb;
+
+    // get a list of sources from the database
+    vector<SpectrumSource> sources;
+    try
+    {
+        getSources(idpDb, sources, idpDbFilepath, sourceSearchPath, sourceExtensionPriorityList, ilr);
+    }
+    catch (runtime_error& e)
+    {
+        throw runtime_error(string("[embed] ") + e.what());
+    }
 
     ExtendedReaderList readerList;
 
@@ -317,8 +398,15 @@ void embed(const string& idpDbFilepath,
                 throw runtime_error("[embed] nativeID '" + nativeID + "' not found in \"" + sourceFilename + "\"");
             filteredIndexes.insert((int) index);
         }
+        
+        sqlite::transaction transaction(idpDb);
+
         SpectrumList_FilterPredicate_IndexSet slfp(filteredIndexes);
+        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb);
+        SpectrumDataFilterPtr sdf(new ThresholdFilter(ThresholdFilter::ThresholdingBy_Count, 150.));
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slfp));
+        msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slstu));
+        msd.run.spectrumListPtr.reset(new SpectrumList_PeakFilter(msd.run.spectrumListPtr, sdf));
 
         ITERATION_UPDATE(ilr, i, sources.size(), "creating subset spectra of \"" + sourceFilename + "\"");
 
@@ -344,12 +432,74 @@ void embed(const string& idpDbFilepath,
         ITERATION_UPDATE(ilr, i, sources.size(), "embedding subset spectra for \"" + source.name + "\"");
 
         // embed the file as a blob in the database
-        sqlite::transaction transaction(idpDb);
         sqlite::command cmd(idpDb, "UPDATE SpectrumSource SET MSDataBytes = ? WHERE Id = ?");
         cmd.bind(1, static_cast<void*>(tmpBuffer), tmpSize);
         cmd.bind(2, source.id);
         cmd.execute();
         cmd.reset();
+        transaction.commit();
+    }
+}
+
+
+void embedScanTime(const string& idpDbFilepath, const string& sourceSearchPath, pwiz::util::IterationListenerRegistry* ilr)
+{
+    embedScanTime(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, ilr);
+}
+
+void embedScanTime(const string& idpDbFilepath,
+                   const string& sourceSearchPath,
+                   const string& sourceExtensionPriorityList,
+                   pwiz::util::IterationListenerRegistry* ilr)
+{
+    sqlite::database idpDb;
+
+    // get a list of sources from the database
+    vector<SpectrumSource> sources;
+    try
+    {
+        getSources(idpDb, sources, idpDbFilepath, sourceSearchPath, sourceExtensionPriorityList, ilr);
+    }
+    catch (runtime_error& e)
+    {
+        throw runtime_error(string("[embedScanTime] ") + e.what());
+    }
+
+    ExtendedReaderList readerList;
+
+    for(size_t i=0; i < sources.size(); ++i)
+    {
+        SpectrumSource& source = sources[i];
+
+        string sourceFilename = bfs::path(source.filepath).filename();
+
+        ITERATION_UPDATE(ilr, i, sources.size(), "opening source \"" + sourceFilename + "\"");
+
+        MSDataFile msd(source.filepath, &readerList);
+
+        if (!msd.run.spectrumListPtr.get())
+            throw runtime_error("[embedScanTime] null spectrum list in \"" + sourceFilename + "\"");
+
+        ITERATION_UPDATE(ilr, i, sources.size(), "filtering spectra from \"" + sourceFilename + "\"");
+
+        // create a filtered spectrum list
+        IntegerSet filteredIndexes;
+        const SpectrumList& sl = *msd.run.spectrumListPtr;
+        BOOST_FOREACH(const string& nativeID, source.spectrumNativeIds)
+        {
+            size_t index = sl.find(nativeID);
+            if (index == sl.size())
+                throw runtime_error("[embedScanTime] nativeID '" + nativeID + "' not found in \"" + sourceFilename + "\"");
+            filteredIndexes.insert((int) index);
+        }
+        
+        sqlite::transaction transaction(idpDb);
+
+        SpectrumList_FilterPredicate_IndexSet slfp(filteredIndexes);
+        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb);
+        msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slfp));
+        msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slstu));
+
         transaction.commit();
     }
 }

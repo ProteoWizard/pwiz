@@ -64,6 +64,7 @@ namespace IDPicker.Forms
             this.distinctChargesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.proteinGroupsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.precursorMzColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.scanTimeColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.analysisColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.chargeColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.observedMassColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -139,6 +140,13 @@ namespace IDPicker.Forms
             this.precursorMzColumn.ReadOnly = true;
             this.precursorMzColumn.Width = 80;
             // 
+            // scanTimeColumn
+            // 
+            this.scanTimeColumn.HeaderText = "Scan Time";
+            this.scanTimeColumn.Name = "scanTimeColumn";
+            this.scanTimeColumn.ReadOnly = true;
+            this.scanTimeColumn.Width = 80;
+            // 
             // analysisColumn
             // 
             this.analysisColumn.HeaderText = "Analysis";
@@ -197,6 +205,7 @@ namespace IDPicker.Forms
                                               distinctAnalysesColumn,
                                               distinctChargesColumn,
                                               proteinGroupsColumn,
+                                              scanTimeColumn,
                                               precursorMzColumn,
                                               observedMassColumn,
                                               exactMassColumn,
@@ -233,6 +242,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctChargesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn proteinGroupsColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn precursorMzColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn scanTimeColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn observedMassColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn exactMassColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn massErrorColumn;

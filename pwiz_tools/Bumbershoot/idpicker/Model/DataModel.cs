@@ -82,6 +82,7 @@ namespace IDPicker.DataModel
         public virtual int Index { get; set; }
         public virtual string NativeID { get; set; }
         public virtual double PrecursorMZ { get; set; }
+        public virtual double ScanTimeInSeconds { get; set; }
         public virtual IList<PeptideSpectrumMatch> Matches { get; set; }
 
         public virtual msdata.Spectrum Metadata
@@ -412,6 +413,9 @@ namespace IDPicker.DataModel
         public TemporaryMSDataFile(string tempFilepath) : base(tempFilepath)
         {
             Filepath = tempFilepath;
+
+            lock (temporaryFiles)
+                temporaryFiles.Add(this);
         }
 
         public new void Dispose ()
@@ -420,6 +424,9 @@ namespace IDPicker.DataModel
             {
                 base.Dispose();
                 File.Delete(Filepath);
+
+                lock (temporaryFiles)
+                    temporaryFiles.Remove(this);
             }
             catch (Exception)
             {
@@ -428,6 +435,17 @@ namespace IDPicker.DataModel
         }
 
         public string Filepath { get; private set; }
+
+        static List<TemporaryMSDataFile> temporaryFiles = new List<TemporaryMSDataFile>();
+        public static void ForceCleanup()
+        {
+            lock (temporaryFiles)
+            {
+                foreach (var file in temporaryFiles)
+                    try { file.Dispose(); } catch {}
+                temporaryFiles.Clear();
+            }
+        }
     }
 
     public class SpectrumSourceMetadataUserType : NHibernate.UserTypes.IUserType

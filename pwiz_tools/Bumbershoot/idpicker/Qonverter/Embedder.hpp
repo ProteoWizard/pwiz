@@ -73,6 +73,19 @@ void embed(const string& idpDbFilepath,
            const string& sourceExtensionPriorityList,
            pwiz::util::IterationListenerRegistry* ilr = 0);
 
+/// search for source files of the idpDB using the given search path, using the provided source extensions,
+/// and embed scan start times of the source's spectra in the ScanTimeInSeconds column of the idpDB
+void embedScanTime(const string& idpDbFilepath,
+                   const string& sourceSearchPath,
+                   pwiz::util::IterationListenerRegistry* ilr = 0);
+
+/// search for source files of the idpDB using the given search path, using the provided source extensions,
+/// and embed scan start times of the source's spectra in the ScanTimeInSeconds column of the idpDB
+void embedScanTime(const string& idpDbFilepath,
+                   const string& sourceSearchPath,
+                   const string& sourceExtensionPriorityList,
+                   pwiz::util::IterationListenerRegistry* ilr = 0);
+
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
 void extract(const string& idpDbFilepath, const string& sourceName, const string& outputFilepath);
 

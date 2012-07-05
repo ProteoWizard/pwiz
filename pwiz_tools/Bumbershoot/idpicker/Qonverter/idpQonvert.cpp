@@ -496,7 +496,7 @@ int main( int argc, char* argv[] )
                  << left << setw(9) << totalPeptides
                  << "Total\n" << endl;
 
-        if (g_rtConfig->EmbedSpectrumSources)
+        if (g_rtConfig->EmbedSpectrumSources || g_rtConfig->EmbedSpectrumScanTimes)
         {
             BOOST_FOREACH(const string& filepath, parserFilepaths)
                 idpDbFilepaths.push_back(Parser::outputFilepath(filepath).string());
@@ -504,7 +504,10 @@ int main( int argc, char* argv[] )
             for (size_t i=0 ; i < idpDbFilepaths.size(); ++i)
             {
                 cout << "\rEmbedding subset spectra: " << (i+1) << "/" << idpDbFilepaths.size() << flush;
-                Embedder::embed(idpDbFilepaths[i], g_rtConfig->SourceSearchPath);
+                if (g_rtConfig->EmbedSpectrumSources)
+                    Embedder::embed(idpDbFilepaths[i], g_rtConfig->SourceSearchPath);
+                else
+                    Embedder::embedScanTime(idpDbFilepaths[i], g_rtConfig->SourceSearchPath);
             }
         }
     }

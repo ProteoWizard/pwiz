@@ -1293,7 +1293,9 @@ namespace IDPicker
                 _layoutManager.SaveUserLayoutList();
             }
 
-            // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit
+            // HACK: until the "invalid string binding" error is resolved, this will prevent an error dialog at exit;
+            //       but it also prevents automatic cleanup of TemporaryMSDataFile objects, which can build up in %TEMP%
+            TemporaryMSDataFile.ForceCleanup();
             Process.GetCurrentProcess().Kill();
         }
 

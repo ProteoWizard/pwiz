@@ -36,17 +36,45 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 1;
+const int CURRENT_SCHEMA_REVISION = 2;
 
 namespace SchemaUpdater {
 
 
 namespace {
 
+void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    try
+    {
+        {
+            sqlite::query q(db, "SELECT Id FROM UnfilteredSpectrum LIMIT 1");
+            q.begin()->get<int>(0);
+        }
+
+        // if UnfilteredSpectrum exists, add an empty ScanTimeInSeconds column
+        db.execute("CREATE TABLE NewSpectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);"
+                   "INSERT INTO NewSpectrum SELECT Id, Source, Index_, NativeID, PrecursorMZ, 0 FROM UnfilteredSpectrum;"
+                   "DROP TABLE UnfilteredSpectrum;"
+                   "ALTER TABLE NewSpectrum RENAME TO UnfilteredSpectrum;");
+    }
+    catch (sqlite::database_error& e)
+    {
+        if (!bal::contains(e.what(), "no such")) // column or table
+            throw runtime_error(e.what());
+    }
+
+    // add an empty ScanTimeInSeconds column
+    db.execute("CREATE TABLE NewSpectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);"
+               "INSERT INTO NewSpectrum SELECT Id, Source, Index_, NativeID, PrecursorMZ, 0 FROM Spectrum;"
+               "DROP TABLE Spectrum;"
+               "ALTER TABLE NewSpectrum RENAME TO Spectrum;");
+}
+
 void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
 {
     db.execute("CREATE TABLE About (Id INTEGER PRIMARY KEY, SoftwareName TEXT, SoftwareVersion TEXT, StartTime DATETIME, SchemaRevision INT);"
-               "INSERT INTO About VALUES (1, 'IDPicker', '3.0', datetime('now'), 1);");
+               "INSERT INTO About VALUES (1, 'IDPicker', '3.0', datetime('now'), " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + ");");
 
     try
     {
@@ -82,7 +110,7 @@ void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
         if (!bal::contains(e.what(), "no such")) // column or table
             throw runtime_error(e.what());
     }
-    
+
     // replace PeptideSpectrumMatch's MonoisotopicMass/MolecularWeight columns with a single ObservedNeutralMass column
     try
     {
@@ -98,7 +126,10 @@ void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
                    "INSERT INTO NewPeptideSpectrumMatch SELECT Id, Spectrum, Analysis, Peptide, QValue, MonoisotopicMass, MonoisotopicMassError, MolecularWeightError, Rank, Charge FROM PeptideSpectrumMatch;"
                    "DROP TABLE PeptideSpectrumMatch;"
                    "ALTER TABLE NewPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch;");
-    }    
+    }
+
+    // continue updating schema
+    update_1_to_2(db, ilr);
 }
 
 } // namespace
@@ -121,6 +152,8 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
 
     if (schemaRevision == 0)
         update_0_to_1(db, ilr);
+    else if (schemaRevision == 1)
+        update_1_to_2(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

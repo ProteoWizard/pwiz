@@ -445,7 +445,7 @@ namespace IDPicker.DataModel
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering spectra...", ++stepsCompleted, null)))
                 return;
             string filterSpectraSql =
-                @"CREATE TABLE FilteredSpectrum (Id INTEGER PRIMARY KEY, Source INTEGER, Index_ INTEGER, NativeID TEXT, PrecursorMZ NUMERIC);
+                @"CREATE TABLE FilteredSpectrum (Id INTEGER PRIMARY KEY, Source INTEGER, Index_ INTEGER, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);
                   INSERT INTO FilteredSpectrum SELECT s.*
                   FROM PeptideSpectrumMatch psm
                   JOIN Spectrum s ON psm.Spectrum = s.Id

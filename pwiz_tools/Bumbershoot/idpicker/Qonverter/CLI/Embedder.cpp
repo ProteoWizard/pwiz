@@ -67,6 +67,35 @@ void Embedder::Embed(String^ idpDbFilepath,
 }
 
 
+void Embedder::EmbedScanTime(String^ idpDbFilepath,
+                             String^ sourceSearchPath,
+                             pwiz::CLI::util::IterationListenerRegistry^ ilr)
+{
+    try
+    {
+        NativeEmbedder::embedScanTime(ToStdString(idpDbFilepath),
+                                      ToStdString(sourceSearchPath),
+                                      ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
+    }
+    CATCH_AND_FORWARD
+}
+
+void Embedder::EmbedScanTime(String^ idpDbFilepath,
+                             String^ sourceSearchPath,
+                             String^ sourceExtensionPriorityList,
+                             pwiz::CLI::util::IterationListenerRegistry^ ilr)
+{
+    try
+    {
+        NativeEmbedder::embedScanTime(ToStdString(idpDbFilepath),
+                                      ToStdString(sourceSearchPath),
+                                      ToStdString(sourceExtensionPriorityList),
+                                      ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
+    }
+    CATCH_AND_FORWARD
+}
+
+
 void Embedder::Extract(String^ idpDbFilepath, String^ sourceName, String^ outputFilepath)
 {
     try
