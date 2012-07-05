@@ -660,11 +660,16 @@ namespace IDPicker
             if (owner.Protein.CoverageMask[currentResidueOffset] == 0)
                 return;
 
+            var newAminoAcidOffset = new List<int> { currentResidueOffset };
+            if (!viewFilter.AminoAcidOffset.IsNullOrEmpty() &&
+                (ModifierKeys & Keys.Shift | ModifierKeys & Keys.Control) != 0)
+                newAminoAcidOffset.AddRange(viewFilter.AminoAcidOffset);
+
             var newDataFilter = new DataModel.DataFilter()
             {
                 FilterSource = owner,
                 Protein = new List<Protein> { owner.Protein },
-                AminoAcidOffset = new List<int> { currentResidueOffset }
+                AminoAcidOffset = newAminoAcidOffset
             };
 
             SequenceCoverageFilter(owner, newDataFilter);
