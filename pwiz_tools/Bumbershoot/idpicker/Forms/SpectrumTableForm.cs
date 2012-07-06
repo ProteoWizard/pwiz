@@ -413,13 +413,14 @@ namespace IDPicker.Forms
                 lock (session)
                 {
                     var total = session.CreateQuery("SELECT " +
-                                                    "COUNT(DISTINCT psm.Spectrum.Source.Group), " +
-                                                    "COUNT(DISTINCT psm.Spectrum.Source), " +
-                                                    "COUNT(DISTINCT psm.Spectrum), " +
-                                                    "COUNT(DISTINCT psm.Charge), " +
-                                                    "COUNT(DISTINCT psm.Analysis) " +
+                                                    "COUNT(DISTINCT psm.Spectrum.Source.Group.id), " +
+                                                    "COUNT(DISTINCT psm.Spectrum.Source.id), " +
+                                                    "COUNT(DISTINCT psm.Spectrum.id), " +
+                                                    "COUNT(DISTINCT psm.Charge.id), " +
+                                                    "COUNT(DISTINCT psm.Analysis.id) " +
                                                     dataFilter.GetFilteredQueryString(
-                                                        DataFilter.FromPeptideSpectrumMatch))
+                                                        DataFilter.FromPeptideSpectrumMatch,
+                                                        DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink))
                         .List<object[]>()[0];
 
                     Groups = Convert.ToInt32(total[0]);
@@ -678,10 +679,7 @@ namespace IDPicker.Forms
 
         private TotalCounts totalCounts, basicTotalCounts;
         private Dictionary<DataFilterKey, List<Row>> rowsBySource, basicRowsBySource;
-
-        // TODO: support multiple selected objects
-        List<string> oldSelectionPath = new List<string>();
-
+        
         DataGridViewColumn[] aggregateColumns, psmColumns;
 
         public SpectrumTableForm()
@@ -1212,33 +1210,8 @@ namespace IDPicker.Forms
             viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) { Spectrum = null, SpectrumSource = null, SpectrumSourceGroup = null };
 
-            /*oldSelectionPath = new List<string>();
-            for (int x = 0; x < treeListView.Items.Count; x++)
-            {
-                if (treeListView.IsExpanded(treeListView.GetModelObject(x)))
-                    oldSelectionPath.Add(treeListView.Items[x].Text);
-            }
-            oldSelectionPath.Add(treeListView.SelectedItem == null
-                                     ? "<<No Item Selected>>"
-                                     : treeListView.SelectedItem.Text);*/
-
-            /*if (treeListView.SelectedObject is SpectrumSourceGroupRow)
-            {
-                oldSelectionPath = getGroupTreePath((treeListView.SelectedObject as SpectrumSourceGroupRow).SpectrumSourceGroup);
-            }
-            else if (treeListView.SelectedObject is SpectrumSourceRow)
-            {
-                var source = (treeListView.SelectedObject as SpectrumSourceRow).SpectrumSource;
-                oldSelectionPath = getGroupTreePath(source.Group);
-                oldSelectionPath.Add(source.Name);
-            }
-            else if (treeListView.SelectedObject is SpectrumRow)
-            {
-                var spectrum = (treeListView.SelectedObject as SpectrumRow).Spectrum;
-                oldSelectionPath = getGroupTreePath(spectrum.Source.Group);
-                oldSelectionPath.Add(spectrum.Source.Name);
-                oldSelectionPath.Add(treeListView.SelectedItem.Text);
-            }*/
+            // remember the first selected row
+            saveSelectionPath();
 
             ClearData();
 
@@ -1309,7 +1282,7 @@ namespace IDPicker.Forms
                                            totalCounts.Spectra);
 
             // try to (re)set selected item
-            expandSelectionPath(oldSelectionPath);
+            restoreSelectionPath();
 
             // expand the root group automatically
             var rootGrouping = checkedGroupings.FirstOrDefault();
@@ -1331,31 +1304,6 @@ namespace IDPicker.Forms
             result.Add("/");
             result.Reverse();
             return result;
-        }
-
-        private void expandSelectionPath(IEnumerable<string> selectionPath)
-        {
-            /*OLVListItem selectedItem = null;
-            foreach (string branch in selectionPath)
-            {
-                int index = 0;
-                if (selectedItem != null)
-                {
-                    treeListView.Expand(selectedItem.RowObject);
-                    index = selectedItem.Index;
-                }
-
-                index = treeListView.FindMatchingRow(branch, index, SearchDirectionHint.Down);
-                if (index < 0)
-                    break;
-                selectedItem = treeListView.Items[index] as OLVListItem;
-            }
-
-            if (selectedItem != null)
-            {
-                treeListView.SelectedItem = selectedItem;
-                selectedItem.EnsureVisible();
-            }*/
         }
 
         private void editGroupsButton_Click(object sender, EventArgs e)

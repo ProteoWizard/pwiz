@@ -356,9 +356,6 @@ namespace IDPicker.Forms
         private Dictionary<long, SpectrumSource> sourceById;
         private Dictionary<long, SpectrumSourceGroup> groupById;
 
-        // TODO: support multiple selected objects
-        string[] oldSelectionPath = new string[] { };
-
         public ProteinTableForm ()
         {
             InitializeComponent();
@@ -781,21 +778,14 @@ namespace IDPicker.Forms
                 ProteinViewFilter(this, newDataFilter);
         }
 
-        public override void SetData (NHibernate.ISession session, DataFilter viewFilter)
+        public override void SetData(NHibernate.ISession session, DataFilter viewFilter)
         {
             this.session = session;
             this.viewFilter = viewFilter;
             this.dataFilter = new DataFilter(viewFilter) { Protein = null, Cluster = null, ProteinGroup = null };
 
-            /*if (treeListView.SelectedObject is ProteinGroupRow)
-            {
-                oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
-            }
-            else if (treeListView.SelectedObject is ProteinRow)
-            {
-                var proteinGroup = (treeListView.GetParent(treeListView.SelectedObject) as ProteinGroupRow).Proteins;
-                oldSelectionPath = new string[] { proteinGroup, treeListView.SelectedItem.Text };
-            }*/
+            // remember the first selected row
+            saveSelectionPath();
 
             ClearData();
 
@@ -916,27 +906,7 @@ namespace IDPicker.Forms
             addPivotColumns();
 
             // try to (re)set selected item
-            /*OLVListItem selectedItem = null;
-            foreach (string branch in oldSelectionPath)
-            {
-                int index = 0;
-                if (selectedItem != null)
-                {
-                    treeListView.Expand(selectedItem.RowObject);
-                    index = selectedItem.Index;
-                }
-
-                index = treeListView.FindMatchingRow(branch, index, SearchDirectionHint.Down);
-                if (index < 0)
-                    break;
-                selectedItem = treeListView.Items[index] as OLVListItem;
-            }
-
-            if (selectedItem != null)
-            {
-                treeListView.SelectedItem = selectedItem;
-                selectedItem.EnsureVisible();
-            }*/
+            restoreSelectionPath();
 
             treeDataGridView.Refresh();
         }

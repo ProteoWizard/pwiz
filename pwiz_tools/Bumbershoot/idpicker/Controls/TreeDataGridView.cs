@@ -258,16 +258,20 @@ namespace IDPicker.Controls
 
         #region Expand/Collapse methods
 
-        public void Expand (int index)
+        public int Expand (int index)
         {
-            base.RowCount += expand(index, expandedRowList[index].RowIndexHierarchy.Count);
+            int childRowCount = expand(index, expandedRowList[index].RowIndexHierarchy.Count);
+            base.RowCount += childRowCount;
             Refresh();
+            return childRowCount;
         }
 
-        public void Expand (int index, int maxDepth)
+        public int Expand(int index, int maxDepth)
         {
-            base.RowCount += expand(index, maxDepth);
+            int childRowCount = expand(index, maxDepth);
+            base.RowCount += childRowCount;
             Refresh();
+            return childRowCount;
         }
 
         public void ExpandAll (int maxDepth)
@@ -286,10 +290,12 @@ namespace IDPicker.Controls
 
         public void ExpandAll () { ExpandAll(int.MaxValue); }
 
-        public void Collapse (int index)
+        public int Collapse(int index)
         {
-            base.RowCount -= collapse(index);
+            int childRowCount = collapse(index);
+            base.RowCount -= childRowCount;
             Refresh();
+            return childRowCount;
         }
 
         public void CollapseAll ()

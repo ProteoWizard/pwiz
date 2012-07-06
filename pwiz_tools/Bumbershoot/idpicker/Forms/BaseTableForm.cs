@@ -137,6 +137,10 @@ namespace IDPicker.Forms
         protected List<DataGridViewColumn> pivotColumns = new List<DataGridViewColumn>();
         protected List<DataGridViewColumn> oldPivotColumns;
 
+        // TODO: support multiple selected objects
+        string[] oldSelectionPath;
+
+
         [Flags]
         protected enum RowFilterState
         {
@@ -318,6 +322,64 @@ namespace IDPicker.Forms
 
             // determine if checked groupings changed
             return !oldCheckedGroupings.SequenceEqual(checkedGroupings.Select(o => o.Mode));
+        }
+
+        protected void saveSelectionPath()
+        {
+            if (treeDataGridView.SelectedCells.Count == 0)
+                return;
+
+            int firstSelectedRowIndex = treeDataGridView.SelectedCells[0].RowIndex;
+            var firstSelectedRowHierarchy = treeDataGridView.GetRowHierarchyForRowIndex(firstSelectedRowIndex);
+            oldSelectionPath = new string[firstSelectedRowHierarchy.Count];
+            for (int i = 0; i < oldSelectionPath.Length; ++i)
+                oldSelectionPath[i] = treeDataGridView[0, firstSelectedRowHierarchy.Take(i + 1).ToArray()].Value.ToString();
+        }
+
+        protected void restoreSelectionPath()
+        {
+            //treeDataGridView.SetRedraw(false);
+
+            treeDataGridView.ClearSelection();
+
+            if (oldSelectionPath.IsNullOrEmpty())
+                return;
+
+            var visibleColumnIndexes = treeDataGridView.GetVisibleColumns().Select(o => o.Index);
+
+            for (int i = 0; i < treeDataGridView.Rows.Count; ++i)
+                if (treeDataGridView.Rows[i].Cells[0].Value.ToString() == oldSelectionPath[0])
+                {
+                    if (oldSelectionPath.Length > 1)
+                    {
+                        for (int j = 1; j < oldSelectionPath.Length; ++j)
+                        {
+                            int childRowCount = treeDataGridView.Expand(i);
+                            for (int k = 1; k <= childRowCount; ++k)
+                                if (treeDataGridView.Rows[i + k].Cells[0].Value.ToString() == oldSelectionPath[j])
+                                {
+                                    foreach (int column in visibleColumnIndexes)
+                                    {
+                                        treeDataGridView[column, i].Selected = false;
+                                        treeDataGridView[column, i + k].Selected = true;
+                                    }
+
+                                    i += k;
+                                    treeDataGridView.FirstDisplayedScrollingRowIndex = i;
+                                    break;
+                                }
+                        }
+                    }
+                    else
+                    {
+                        foreach (int column in visibleColumnIndexes)
+                            treeDataGridView[column, i].Selected = true;
+                        treeDataGridView.FirstDisplayedScrollingRowIndex = i;
+                    }
+                    break;
+                }
+
+            //treeDataGridView.SetRedraw(true);
         }
 
         protected virtual void setColumnVisibility ()

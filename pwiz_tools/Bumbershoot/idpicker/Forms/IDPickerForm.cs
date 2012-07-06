@@ -1132,7 +1132,7 @@ namespace IDPicker
 
                     toolStripStatusLabel.Text = "Ready";
 
-                    if (logForm != null) logForm.Show(dockPanel, DockState.DockBottomAutoHide);
+                    if (logForm != null) Invoke(new MethodInvoker(() => logForm.Show(dockPanel, DockState.DockBottomAutoHide)));
                 }));
 
                 //show list of delayed non-fatal errors

@@ -149,17 +149,33 @@ namespace IDPicker.DataModel
 
         public object FilterSource { get; set; }
 
-        public bool IsBasicFilter
+        public bool HasProteinFilter
+        {
+            get { return !Cluster.IsNullOrEmpty() || !ProteinGroup.IsNullOrEmpty() || !Protein.IsNullOrEmpty() || !AminoAcidOffset.IsNullOrEmpty(); }
+        }
+
+        public bool HasPeptideFilter
+        {
+            get { return !PeptideGroup.IsNullOrEmpty() || !Peptide.IsNullOrEmpty() || !DistinctMatchKey.IsNullOrEmpty() || !Composition.IsNullOrEmpty(); }
+        }
+
+        public bool HasSpectrumFilter
         {
             get
             {
-                return Cluster.IsNullOrEmpty() && ProteinGroup.IsNullOrEmpty() && Protein.IsNullOrEmpty() &&
-                       PeptideGroup.IsNullOrEmpty() && Peptide.IsNullOrEmpty() && DistinctMatchKey.IsNullOrEmpty() &&
-                       Modifications.IsNullOrEmpty() && ModifiedSite.IsNullOrEmpty() &&
-                       SpectrumSourceGroup.IsNullOrEmpty() && SpectrumSource.IsNullOrEmpty() &&
-                       Spectrum.IsNullOrEmpty() && Charge.IsNullOrEmpty() && Analysis.IsNullOrEmpty() &&
-                       AminoAcidOffset.IsNullOrEmpty() && Composition.IsNullOrEmpty();
+                return !SpectrumSourceGroup.IsNullOrEmpty() || !SpectrumSource.IsNullOrEmpty() || !Spectrum.IsNullOrEmpty() ||
+                       !Charge.IsNullOrEmpty() || !Analysis.IsNullOrEmpty();
             }
+        }
+
+        public bool HasModificationFilter
+        {
+            get { return !Modifications.IsNullOrEmpty() || !ModifiedSite.IsNullOrEmpty(); }
+        }
+
+        public bool IsBasicFilter
+        {
+            get { return !HasProteinFilter && !HasPeptideFilter && !HasSpectrumFilter && !HasModificationFilter; }
         }
 
         private static bool NullSafeSequenceEqual<T> (IEnumerable<T> lhs, IEnumerable<T> rhs)
@@ -901,6 +917,39 @@ namespace IDPicker.DataModel
         public static readonly string PeptideSpectrumMatchToSpectrumSourceGroup = PeptideSpectrumMatchToSpectrumSourceGroupLink + ";JOIN ssgl.Group ssg";
         #endregion
 
+        // pick the optimal source table and join order for the current view filters
+        public void optimizeQueryOrder(ref string fromTable, ref string[] joinTables)
+        {
+            if (fromTable == FromPeptideSpectrumMatch && HasProteinFilter && !HasSpectrumFilter)
+            {
+                fromTable = FromProtein;
+                var newJoinTables = new List<string> { ProteinToPeptideSpectrumMatch };
+                if (joinTables.Contains(PeptideSpectrumMatchToPeptide)) newJoinTables.Add(ProteinToPeptide);
+                if (joinTables.Contains(PeptideSpectrumMatchToAnalysis)) newJoinTables.Add(ProteinToAnalysis);
+                if (joinTables.Contains(PeptideSpectrumMatchToSpectrum)) newJoinTables.Add(ProteinToSpectrum);
+                if (joinTables.Contains(PeptideSpectrumMatchToPeptideModification)) newJoinTables.Add(ProteinToPeptideModification);
+                if (joinTables.Contains(PeptideSpectrumMatchToModification)) newJoinTables.Add(ProteinToModification);
+                if (joinTables.Contains(PeptideSpectrumMatchToSpectrumSource)) newJoinTables.Add(ProteinToSpectrumSource);
+                if (joinTables.Contains(PeptideSpectrumMatchToSpectrumSourceGroupLink)) newJoinTables.Add(ProteinToSpectrumSourceGroupLink);
+                if (joinTables.Contains(PeptideSpectrumMatchToSpectrumSourceGroup)) newJoinTables.Add(ProteinToSpectrumSourceGroup);
+                joinTables = newJoinTables.ToArray();
+            }
+            else if (fromTable == FromProtein && (HasSpectrumFilter || HasModificationFilter) && !HasProteinFilter)
+            {
+                fromTable = FromPeptideSpectrumMatch;
+                var newJoinTables = new List<string> { PeptideSpectrumMatchToProtein };
+                if (joinTables.Contains(ProteinToPeptide)) newJoinTables.Add(PeptideSpectrumMatchToPeptide);
+                if (joinTables.Contains(ProteinToAnalysis)) newJoinTables.Add(PeptideSpectrumMatchToAnalysis);
+                if (joinTables.Contains(ProteinToSpectrum)) newJoinTables.Add(PeptideSpectrumMatchToSpectrum);
+                if (joinTables.Contains(ProteinToPeptideModification)) newJoinTables.Add(PeptideSpectrumMatchToPeptideModification);
+                if (joinTables.Contains(ProteinToModification)) newJoinTables.Add(PeptideSpectrumMatchToModification);
+                if (joinTables.Contains(ProteinToSpectrumSource)) newJoinTables.Add(PeptideSpectrumMatchToSpectrumSource);
+                if (joinTables.Contains(ProteinToSpectrumSourceGroupLink)) newJoinTables.Add(PeptideSpectrumMatchToSpectrumSourceGroupLink);
+                if (joinTables.Contains(ProteinToSpectrumSourceGroup)) newJoinTables.Add(PeptideSpectrumMatchToSpectrumSourceGroup);
+                joinTables = newJoinTables.ToArray();
+            }
+        }
+
         public string GetBasicQueryString (string fromTable, params string[] joinTables)
         {
             var joins = new Map<int, object>();
@@ -920,6 +969,8 @@ namespace IDPicker.DataModel
 
         public string GetFilteredQueryString (string fromTable, params string[] joinTables)
         {
+            optimizeQueryOrder(ref fromTable, ref joinTables);
+
             var joins = new Map<int, object>();
             foreach (var join in joinTables)
                 foreach (var branch in join.ToString().Split(';'))
@@ -943,9 +994,10 @@ namespace IDPicker.DataModel
                     foreach (var branch in ProteinToPeptide.Split(';'))
                         joins.Add(joins.Count, branch);
 
-                if (!Modifications.IsNullOrEmpty() || !ModifiedSite.IsNullOrEmpty())
-                    foreach (var branch in ProteinToPeptideModification.Split(';'))
-                        joins.Add(joins.Count, branch);
+                // if filtered on modification, the modification joins should come first
+                if (HasModificationFilter)
+                    foreach (var branch in ProteinToPeptideModification.Split(';').Reverse())
+                        joins.Add((joins.Count == 0 ? 0 : joins.Min.Key) - 1, branch);
 
                 if (!DistinctMatchKey.IsNullOrEmpty() || !Analysis.IsNullOrEmpty() ||
                     !Spectrum.IsNullOrEmpty() || !Charge.IsNullOrEmpty())
@@ -983,9 +1035,10 @@ namespace IDPicker.DataModel
                     foreach (var branch in PeptideSpectrumMatchToPeptide.Split(';'))
                         joins.Add(joins.Count, branch);
 
-                if (!Modifications.IsNullOrEmpty() || !ModifiedSite.IsNullOrEmpty())
-                    foreach (var branch in PeptideSpectrumMatchToPeptideModification.Split(';'))
-                        joins.Add(joins.Count, branch);
+                // if filtered on modification, the modification joins should come first
+                if (HasModificationFilter)
+                    foreach (var branch in PeptideSpectrumMatchToPeptideModification.Split(';').Reverse())
+                        joins.Add((joins.Count == 0 ? 0 : joins.Min.Key) - 1, branch);
 
                 if (!SpectrumSource.IsNullOrEmpty())
                     foreach (var branch in PeptideSpectrumMatchToSpectrumSource.Split(';'))
@@ -995,6 +1048,12 @@ namespace IDPicker.DataModel
                     foreach (var branch in PeptideSpectrumMatchToSpectrumSourceGroupLink.Split(';'))
                         joins.Add(joins.Count, branch);
             }
+
+            // if filtered on modification, the modification joins should be inner joins instead of outer joins
+            if (HasModificationFilter)
+                foreach (var pair in joins)
+                    pair.Value = ((string) pair.Value).Replace("LEFT JOIN psm.Mod", "JOIN psm.Mod")
+                                                      .Replace("LEFT JOIN pm.Mod", "JOIN pm.Mod");
 
             if (!Cluster.IsNullOrEmpty())
                 clusterConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()).ToArray())));

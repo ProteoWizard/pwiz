@@ -342,9 +342,6 @@ namespace IDPicker.Forms
         private Map<long, Map<long, PivotData>> statsBySpectrumSource, basicStatsBySpectrumSource;
         private Map<long, Map<long, PivotData>> statsBySpectrumSourceGroup, basicStatsBySpectrumSourceGroup;
 
-        // TODO: support multiple selected objects
-        string[] oldSelectionPath = new string[] { };
-
         public PeptideTableForm ()
         {
             InitializeComponent();
@@ -718,10 +715,8 @@ namespace IDPicker.Forms
             viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) {Peptide = null, DistinctMatchKey = null};
 
-            /*if (treeListView.SelectedObject is PeptideRow)
-                oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
-            else if (treeListView.SelectedObject is PeptideSpectrumMatchRow)
-                oldSelectionPath = new string[] { (treeListView.SelectedObject as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Peptide.Sequence, treeListView.SelectedItem.Text };*/
+            // remember the first selected row
+            saveSelectionPath();
 
             ClearData();
 
@@ -967,34 +962,9 @@ namespace IDPicker.Forms
             addPivotColumns();
 
             // try to (re)set selected item
-            expandSelectionPath(oldSelectionPath);
+            restoreSelectionPath();
 
             treeDataGridView.Refresh();
-        }
-
-        private void expandSelectionPath (IEnumerable<string> selectionPath)
-        {
-            /*OLVListItem selectedItem = null;
-            foreach (string branch in selectionPath)
-            {
-                int index = 0;
-                if (selectedItem != null)
-                {
-                    treeListView.Expand(selectedItem.RowObject);
-                    index = selectedItem.Index;
-                }
-
-                index = treeListView.FindMatchingRow(branch, index, SearchDirectionHint.Down);
-                if (index < 0)
-                    break;
-                selectedItem = treeListView.Items[index] as OLVListItem;
-            }
-
-            if (selectedItem != null)
-            {
-                treeListView.SelectedItem = selectedItem;
-                selectedItem.EnsureVisible();
-            }*/
         }
 
         private void groupingSetupControl_GroupingChanging (object sender, GroupingChangingEventArgs<GroupBy> e)
