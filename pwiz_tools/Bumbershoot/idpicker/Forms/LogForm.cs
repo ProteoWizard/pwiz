@@ -59,9 +59,9 @@ namespace IDPicker.Forms
 
         private void logWriter_Wrote (object sender, NotifyingStringWriter.WroteEventArgs e)
         {
-            if (InvokeRequired)
+            if (dataGridView.InvokeRequired)
             {
-                BeginInvoke(new System.Windows.Forms.MethodInvoker(() => logWriter_Wrote(sender, e)));
+                dataGridView.BeginInvoke(new System.Windows.Forms.MethodInvoker(() => logWriter_Wrote(sender, e)));
                 return;
             }
 

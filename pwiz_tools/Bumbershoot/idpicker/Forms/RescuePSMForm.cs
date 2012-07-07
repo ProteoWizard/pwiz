@@ -391,7 +391,7 @@ namespace IDPicker.Forms
                     if (row.SourceName != currentSourceName)
                     {
                         currentSourceName = row.SourceName;
-                        currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName);
+                        currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName, session.Connection.GetDataSource());
                         msd = new pwiz.CLI.msdata.MSDataFile(currentSourcePath);
                                                 
                         SpectrumListFactory.wrap(msd, "threshold count 100 most-intense"); //only keep the top 100 peaks

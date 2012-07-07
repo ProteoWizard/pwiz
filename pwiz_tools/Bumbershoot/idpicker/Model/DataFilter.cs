@@ -65,13 +65,13 @@ namespace IDPicker.DataModel
 
         public DataFilter ()
         {
-            MaximumQValue = 0.02;
-            MinimumDistinctPeptidesPerProtein = 2;
-            MinimumSpectraPerProtein = 2;
-            MinimumAdditionalPeptidesPerProtein = 1;
-            MinimumSpectraPerDistinctMatch = 1;
-            MinimumSpectraPerDistinctPeptide = 1;
-            MaximumProteinGroupsPerPeptide = 5;
+            MaximumQValue = Properties.Settings.Default.DefaultMaxFDR;
+            MinimumDistinctPeptidesPerProtein = Properties.Settings.Default.DefaultMinDistinctPeptidesPerProtein;
+            MinimumSpectraPerProtein = Properties.Settings.Default.DefaultMinSpectraPerProtein;
+            MinimumAdditionalPeptidesPerProtein = Properties.Settings.Default.DefaultMinAdditionalPeptides;
+            MinimumSpectraPerDistinctMatch = Properties.Settings.Default.DefaultMinSpectraPerDistinctMatch;
+            MinimumSpectraPerDistinctPeptide = Properties.Settings.Default.DefaultMinSpectraPerDistinctPeptide;
+            MaximumProteinGroupsPerPeptide = Properties.Settings.Default.DefaultMaxProteinGroupsPerPeptide;
 
             DistinctMatchFormat = new DistinctMatchFormat()
             {

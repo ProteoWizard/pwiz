@@ -381,7 +381,7 @@ namespace IDPicker.Forms
                 if (row.SourceName != currentSourceName)
                 {
                     currentSourceName = row.SourceName;
-                    currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName);
+                    currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName, session.Connection.GetDataSource());
                     if (String.IsNullOrEmpty(currentSourcePath))
                         throw new FileNotFoundException("source file not found");
                     msd = new pwiz.CLI.msdata.MSDataFile(currentSourcePath);

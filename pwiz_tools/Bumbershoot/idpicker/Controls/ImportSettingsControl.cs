@@ -99,6 +99,7 @@ namespace IDPicker.Controls
                 {
                     var databaseName = Path.GetFileName(a.importSettings.proteinDatabaseFilepath);
                     if (databaseName != null)
+                    {
                         foreach (var item in a.filepaths)
                         {
                             var possibleLocation = Path.Combine(Path.GetDirectoryName(item) ?? string.Empty,
@@ -108,16 +109,27 @@ namespace IDPicker.Controls
                                 a.importSettings.proteinDatabaseFilepath = possibleLocation;
                                 break;
                             }
+
+                            try
+                            {
+                                a.importSettings.proteinDatabaseFilepath = Util.FindDatabaseInSearchPath(databaseName, Path.GetDirectoryName(item) ?? ".");
+                                break;
+                            }
+                            catch (ArgumentException)
+                            {
+                                // ignore
+                            }
                         }
+                    }
                 }
 
                 row.Tag = a;
                 row.Cells[analysisNameColumn.Index].Value = key;
                 row.Cells[databaseColumn.Index].Value = a.importSettings.proteinDatabaseFilepath;
                 row.Cells[databaseColumn.Index].Style.BackColor = File.Exists(a.importSettings.proteinDatabaseFilepath) ? SystemColors.Window : Color.LightSalmon;
-                row.Cells[decoyPrefixColumn.Index].Value = Properties.Settings.Default.DecoyPrefix;
+                row.Cells[decoyPrefixColumn.Index].Value = Properties.Settings.Default.DefaultDecoyPrefix;
                 row.Cells[maxRankColumn.Index].Value = Properties.Settings.Default.DefaultMaxRank;
-                row.Cells[maxFDRColumn.Index].Value = Properties.Settings.Default.DefaultMaxFDR;
+                row.Cells[maxFDRColumn.Index].Value = Properties.Settings.Default.DefaultMaxImportFDR;
                 row.Cells[ignoreUnmappedPeptidesColumn.Index].Value = Properties.Settings.Default.DefaultIgnoreUnmappedPeptides;
 
                 if (a.parameters.ContainsKey("Config: DecoyPrefix"))

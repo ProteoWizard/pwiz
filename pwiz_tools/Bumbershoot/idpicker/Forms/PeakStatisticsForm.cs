@@ -223,7 +223,7 @@ namespace IDPicker.Forms
                 if (row.SourceName != currentSourceName)
                 {
                     currentSourceName = row.SourceName;
-                    currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName);
+                    currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName, session.Connection.GetDataSource());
                     msd = new pwiz.CLI.msdata.MSDataFile(currentSourcePath);
 
                     //var param = session.Query<AnalysisParameter>().Where(o => o.Name == "SpectrumListFilters").Min(o => o.Value);

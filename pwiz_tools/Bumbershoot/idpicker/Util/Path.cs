@@ -115,33 +115,6 @@ namespace IDPicker
             return matches[0];
         }
 
-        public static string FindSearchInSearchPath (string source, string rootInputDirectory)
-        {
-            source = Path.GetFileNameWithoutExtension(source);
-            List<string> paths = new List<string>(StringCollectionToStringArray(Properties.Settings.Default.SearchPaths));
-            if (!paths.Contains("<RootInputDirectory>"))
-                paths.Add("<RootInputDirectory>");
-            KeyValuePair<string, string>[] replacePairs = new KeyValuePair<string, string>[]
-            {
-                new KeyValuePair<string, string>("<SourceName>", source),
-                new KeyValuePair<string, string>("<RootInputDirectory>", rootInputDirectory)
-            };
-            paths = new List<string>(ReplaceKeysWithValues(paths.ToArray(), replacePairs));
-
-            string[] extensions = new string[] { "pepXML", "idpXML" };
-            string[] matches = FindFileInSearchPath(source, extensions, paths.ToArray(), true);
-
-            if (matches.Length == 0)
-                throw new ArgumentException("Cannot find search file corresponding to \"" +
-                                            source + "\"\r\n\r\n" +
-                                            "Check that this search file can be " +
-                                            "found in the search file search paths " +
-                                            "(configured in Tools/Options) with a search file " +
-                                            "extension (pepXML or idpXML).");
-
-            return matches[0];
-        }
-
         /// <summary>
         /// Returns the root element (i.e. drive letter) of a path.
         /// If the path is relative, returns the root element of Environment.CurrentDirectory.

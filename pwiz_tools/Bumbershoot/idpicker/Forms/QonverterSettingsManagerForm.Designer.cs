@@ -54,12 +54,10 @@ namespace IDPicker.Forms
         {
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.listView = new System.Windows.Forms.ListView();
-            this.nameColumn = new System.Windows.Forms.ColumnHeader();
+            this.nameColumn = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.DeleteButton = new System.Windows.Forms.Button();
             this.RenameButton = new System.Windows.Forms.Button();
             this.AddButton = new System.Windows.Forms.Button();
-            this.DecoyPrefixLabel = new System.Windows.Forms.Label();
-            this.DecoyPrefixBox = new System.Windows.Forms.TextBox();
             this.cancelButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
             this.qonverterSettingsControl = new IDPicker.Controls.QonverterSettingsControl();
@@ -83,8 +81,6 @@ namespace IDPicker.Forms
             this.splitContainer.Panel2.Controls.Add(this.DeleteButton);
             this.splitContainer.Panel2.Controls.Add(this.RenameButton);
             this.splitContainer.Panel2.Controls.Add(this.AddButton);
-            this.splitContainer.Panel2.Controls.Add(this.DecoyPrefixLabel);
-            this.splitContainer.Panel2.Controls.Add(this.DecoyPrefixBox);
             this.splitContainer.Panel2.Controls.Add(this.cancelButton);
             this.splitContainer.Panel2.Controls.Add(this.okButton);
             this.splitContainer.Panel2.Controls.Add(this.qonverterSettingsControl);
@@ -147,24 +143,6 @@ namespace IDPicker.Forms
             this.AddButton.UseVisualStyleBackColor = true;
             this.AddButton.Click += new System.EventHandler(this.AddButton_Click);
             // 
-            // DecoyPrefixLabel
-            // 
-            this.DecoyPrefixLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.DecoyPrefixLabel.AutoSize = true;
-            this.DecoyPrefixLabel.Location = new System.Drawing.Point(3, 380);
-            this.DecoyPrefixLabel.Name = "DecoyPrefixLabel";
-            this.DecoyPrefixLabel.Size = new System.Drawing.Size(70, 13);
-            this.DecoyPrefixLabel.TabIndex = 4;
-            this.DecoyPrefixLabel.Text = "Decoy Prefix:";
-            // 
-            // DecoyPrefixBox
-            // 
-            this.DecoyPrefixBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.DecoyPrefixBox.Location = new System.Drawing.Point(74, 377);
-            this.DecoyPrefixBox.Name = "DecoyPrefixBox";
-            this.DecoyPrefixBox.Size = new System.Drawing.Size(92, 20);
-            this.DecoyPrefixBox.TabIndex = 3;
-            // 
             // cancelButton
             // 
             this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
@@ -225,8 +203,6 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Button okButton;
         private IDPicker.Controls.QonverterSettingsControl qonverterSettingsControl;
         private System.Windows.Forms.ColumnHeader nameColumn;
-        private System.Windows.Forms.Label DecoyPrefixLabel;
-        private System.Windows.Forms.TextBox DecoyPrefixBox;
         private System.Windows.Forms.Button DeleteButton;
         private System.Windows.Forms.Button RenameButton;
         private System.Windows.Forms.Button AddButton;

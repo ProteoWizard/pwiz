@@ -48,7 +48,6 @@ namespace IDPicker.Forms
             IDictionary<string, QonverterSettings> qonverterSettingsByName = QonverterSettings.LoadQonverterSettings();
             foreach (var kvp in qonverterSettingsByName)
                 listView.Items.Add(new ListViewItem(kvp.Key) { Tag = kvp.Value });
-            DecoyPrefixBox.Text = Properties.Settings.Default.DecoyPrefix;
 
             nameColumn.AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
 
@@ -86,7 +85,7 @@ namespace IDPicker.Forms
             var qonverterSettingsByName = new Dictionary<string, QonverterSettings>();
             foreach (ListViewItem item in listView.Items)
                 qonverterSettingsByName[item.Text] = item.Tag as QonverterSettings;
-            Properties.Settings.Default.DecoyPrefix = DecoyPrefixBox.Text;
+
             QonverterSettings.SaveQonverterSettings(qonverterSettingsByName);
 
             base.OnFormClosing(e);

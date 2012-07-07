@@ -348,14 +348,14 @@ namespace IDPicker
 
         #region Handling of events for spectrum/protein visualization
 
-        public static string LocateSpectrumSource (string spectrumSourceName)
+        public static string LocateSpectrumSource (string spectrumSourceName, string idpDbFilepath)
         {
             if (String.IsNullOrEmpty(spectrumSourceName))
                 return String.Empty;
 
             try
             {
-                return Util.FindSourceInSearchPath(spectrumSourceName, ".");
+                return Util.FindSourceInSearchPath(spectrumSourceName, Path.GetDirectoryName(idpDbFilepath));
             }
             catch
             {
@@ -417,7 +417,7 @@ namespace IDPicker
             }
             else
             {
-                sourcePath = LocateSpectrumSource(source.Name);
+                sourcePath = LocateSpectrumSource(source.Name, session.Connection.GetDataSource());
                 if (String.IsNullOrEmpty(sourcePath))
                     return; // file still not found, abort the visualization
             }
@@ -1097,14 +1097,7 @@ namespace IDPicker
 
                     if (basicFilter == null)
                     {
-                        basicFilter = new DataFilter()
-                        {
-                            MaximumQValue = 0.02,
-                            MinimumDistinctPeptidesPerProtein = 2,
-                            MinimumSpectraPerProtein = 2,
-                            MinimumAdditionalPeptidesPerProtein = 1
-                        };
-
+                        basicFilter = new DataFilter();
                         basicFilterControl.DataFilter = basicFilter;
 
                         viewFilter = basicFilter;
@@ -1340,12 +1333,12 @@ namespace IDPicker
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Close();
-    }
+        }
 
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var QOptions = new QonverterSettingsManagerForm();
-            QOptions.ShowDialog();
+            var form = new DefaultSettingsManagerForm { StartPosition = FormStartPosition.CenterParent };
+            form.ShowDialog(this);
         }
 
         private void ShowQonverterSettings(object sender, EventArgs e)

@@ -81,7 +81,7 @@ namespace IDPicker.Controls
                     key += String.Format("; {0}={1}", p.Name, p.Value);
 
                 string defaultDecoyPrefix = a.Parameters.Where(o => o.Name == "Config: DecoyPrefix").Select(o => o.Value).FirstOrDefault() ??
-                                            Properties.Settings.Default.DecoyPrefix;
+                                            Properties.Settings.Default.DefaultDecoyPrefix;
 
                 row.Tag = a;
                 row.Cells[0].Value = key;
