@@ -480,7 +480,7 @@ namespace IDPicker.Forms
             if (parentFilter != null && parentFilter.SpectrumSourceGroup != null)
             {
                 foreach (var item in parentFilter.SpectrumSourceGroup)
-                    result = result.Concat(ssRows.Where(o => o.SpectrumSource.Group.Id == item.Id).Cast<Row>());
+                    result = result.Concat(ssRows.Where(o => o.SpectrumSource.Group != null && o.SpectrumSource.Group.Id == item.Id).Cast<Row>());
             }
 
             return result.ToList();
@@ -823,7 +823,7 @@ namespace IDPicker.Forms
                                                     .Count(o => o.SpectrumSourceGroup.IsImmediateChildOf(row.SpectrumSourceGroup));
                 e.ChildRowCount += cachedRowsBySource.Where(o => o is SpectrumSourceRow)
                                                      .Select(o => o as SpectrumSourceRow)
-                                                     .Count(o => o.SpectrumSource.Group.Id == row.SpectrumSourceGroup.Id);
+                                                     .Count(o => o.SpectrumSource.Group != null && o.SpectrumSource.Group.Id == row.SpectrumSourceGroup.Id);
 
                 if (e.ChildRowCount == 0)
                     throw new InvalidDataException("no child rows for source group");

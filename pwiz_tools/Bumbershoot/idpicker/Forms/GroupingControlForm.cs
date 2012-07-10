@@ -164,7 +164,11 @@ namespace IDPicker.Forms
             // save ungrouped spectrum sources
             foreach (ListViewItem lvi in lvNonGroupedFiles.Items)
             {
-                var ss = (SpectrumSource)lvi.Tag;
+                SpectrumSource ss;
+                if (lvi.Tag is tlvBranch)
+                    ss = (SpectrumSource)(((tlvBranch)lvi.Tag).Data);
+                else
+                    ss = (SpectrumSource)lvi.Tag;
                 ss.Group = null;
                 currentSession.Update(ss);
             }
@@ -511,9 +515,13 @@ namespace IDPicker.Forms
                         break;
                     }
                 }
-                if (isValid)
-                    e.Effect = DragDropEffects.Move;
+            	if (isValid)
+            		e.Effect = DragDropEffects.Move;
+            	else
+            		e.Effect = DragDropEffects.None;
             }
+			else
+				e.Effect = DragDropEffects.None;
         }
 
         private void tlvGroupedFiles_Dropped(object sender, OlvDropEventArgs e)

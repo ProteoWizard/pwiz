@@ -167,6 +167,8 @@ namespace IDPicker.Forms
             for (int i = 1; i < rowIndexHierarchy.Count; ++i)
             {
                 getChildren(row); // get child rows if necessary
+                if (row.ChildRows == null)
+                    continue;
                 row = row.ChildRows[rowIndexHierarchy[i]];
             }
             return row;
