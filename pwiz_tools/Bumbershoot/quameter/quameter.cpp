@@ -683,6 +683,8 @@ namespace quameter
             map<int, int> scanCountByChargeState;
             string lastMS1NativeId;
 
+            accs::accumulator_set<double, accs::stats<accs::tag::min, accs::tag::max> > scanTimes;
+
             // For each spectrum
             size_t curIndex;
             try
@@ -719,6 +721,7 @@ namespace quameter
                             throw runtime_error("No scan start time for " + spectrum->id);
 
                         scanInfo.scanStartTime = scanTime.timeInSeconds();
+                        scanTimes(scanInfo.scanStartTime);
 
                         ms1ScanMap.push_back(scanInfo);
                     }
@@ -772,6 +775,7 @@ namespace quameter
                         if (scanTime.empty())
                             throw runtime_error("No scan start time for " + spectrum->id);
                         scanInfo.scanStartTime = scanTime.timeInSeconds();
+                        scanTimes(scanInfo.scanStartTime);
 
                         scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
                         if (si.cvParam(MS_selected_ion_m_z).empty() )
@@ -1089,7 +1093,9 @@ namespace quameter
                         "XIC-FWHM\t"
                         "XIC-Plus2Frac\t"
                         "XIC-HeightSpread\t"
-                        "TIC-Duration\t"
+                        "RT-TIC-Duration\t"
+                        "RT-Min\t"
+                        "RT-Max\t"
                         "MS1-TIC-MaxChange\t"
                         "MS1-Count\t"
                         "MS1-Density\t"
@@ -1105,6 +1111,8 @@ namespace quameter
             qout << "\t" << chargeStateMetric;
             qout << "\t" << (peakHeightIQR / peakHeightMedian);
             qout << "\t" << timeRangeOfCumulativeTIC_IQR;
+            qout << "\t" << accs::min(scanTimes);
+            qout << "\t" << accs::max(scanTimes);
             qout << "\t" << ms1StabilityOfTIC;
             qout << "\t" << ms1ScanMap.size();
             qout << "\t" << accs::percentile(ms1PeakCounts, accs::percentile_number = 50);
