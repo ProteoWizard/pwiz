@@ -754,7 +754,7 @@ namespace IDPicker
         /// Shows the user a SaveFileDialog (from the UI thread) for choosing a new location for an idpDB file.
         /// </summary>
         /// <returns>True if the dialog result is OK.</returns>
-        bool saveFileDialog (ref string commonFilename)
+        bool saveFileDialog (ref string commonFilename, string title = null)
         {
             string filename = commonFilename;
             bool cancel = false;
@@ -767,8 +767,12 @@ namespace IDPicker
                     AddExtension = true,
                     RestoreDirectory = true,
                     DefaultExt = "idpDB",
-                    Filter = "IDPicker Database|*.idpDB"
+                    Filter = "IDPicker Database|*.idpDB",
+                    InitialDirectory = Path.GetDirectoryName(filename).IsNullOrEmpty() ? "" : Path.GetDirectoryName(filename)
                 };
+
+                if (!title.IsNullOrEmpty())
+                    sfd.Title = title;
 
                 if (sfd.ShowDialog() != DialogResult.OK)
                     cancel = true;
@@ -783,12 +787,30 @@ namespace IDPicker
             return true;
         }
 
+        bool canReadWriteInDirectory(string path)
+        {
+            try
+            {
+                string randomTestFile = Path.Combine(path, Path.GetRandomFileName());
+                using (var tmp = File.Create(randomTestFile))
+                {
+                }
+                File.Delete(randomTestFile);
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
         void OpenFiles (IList<string> filepaths, TreeNode rootNode)
         {
             try
             {
                 var xml_filepaths = filepaths.Where(filepath => !filepath.EndsWith(".idpDB"));
                 var idpDB_filepaths = filepaths.Where(filepath => filepath.EndsWith(".idpDB"));
+                bool openSingleFile = xml_filepaths.IsNullOrEmpty() && idpDB_filepaths.Count() == 1;
 
                 if (xml_filepaths.Count() + idpDB_filepaths.Count() == 0)
                 {
@@ -825,104 +847,70 @@ namespace IDPicker
 
 
                 // determine if merged filepath exists and that it's a valid idpDB
-                string commonFilepath = Util.GetCommonFilename(filepaths);
-                string mergeTargetFilepath = commonFilepath;
-                bool workToBeDone = filepaths.Count > 1 || (filepaths.Count > 0 && !filepaths[0].ToLower().EndsWith(".idpdb"));
-                bool fileExists = File.Exists(mergeTargetFilepath);
-                bool fileIsValid = fileExists && SessionFactoryFactory.IsValidFile(mergeTargetFilepath);
                 var potentialPaths = filepaths.Select(item =>
                                                       Path.Combine(Path.GetDirectoryName(item) ?? string.Empty,
                                                                    Path.GetFileNameWithoutExtension(item) ??
 
                                                                    string.Empty) + ".idpDB").ToList();
-                if (fileExists && Program.IsHeadless)
+
+                string commonFilepath = Util.GetCommonFilename(filepaths);
+                if (!openSingleFile && potentialPaths.Contains(commonFilepath))
+                    commonFilepath = commonFilepath.Replace(".idpDB", " (merged).idpDB");
+                string mergeTargetFilepath = commonFilepath;
+                if (File.Exists(mergeTargetFilepath) && Program.IsHeadless)
                     File.Delete(mergeTargetFilepath);
-                else if ((fileExists ||
-                    potentialPaths.Contains(mergeTargetFilepath)) && filepaths.Count > 1 && workToBeDone)
+                else
                 {
-                    if(filepaths.Contains(mergeTargetFilepath))
+                    // check that the single idpDB is writable; if not, it needs to be copied
+                    if (openSingleFile)
                     {
-                        MessageBox.Show("File list contains the default output name, please select a new name.");
-                        if (!saveFileDialog(ref mergeTargetFilepath))
-                            return;
-                    }
-                    else
-                    {
-                        switch (
-                            MessageBox.Show(
-                                string.Format(
-                                    "The merged result \"{0}\" already exists, or will exist after processing files. " +
-                                    "Do you want to overwrite it?{1}{1}" +
-                                    "Click 'Yes' to overwrite file{1}" +
-                                    "Click 'No' to merge to a different file{1}" +
-                                    "Click 'Cancel' to abort"
-                                    , mergeTargetFilepath, Environment.NewLine),
-                                "Merged result already exists",
-                                MessageBoxButtons.YesNoCancel,
-                                MessageBoxIcon.Exclamation,
-                                MessageBoxDefaultButton.Button2))
+                        string oldFilename = mergeTargetFilepath;
+
+                        while (true)
                         {
-                            case DialogResult.Yes:
-                                if (!potentialPaths.Contains(mergeTargetFilepath) && fileExists)
-                                {
-                                    File.Delete(mergeTargetFilepath);
-                                }
+                            if (canReadWriteInDirectory(Path.GetDirectoryName(mergeTargetFilepath)))
                                 break;
-                            case DialogResult.No:
-                                if (!saveFileDialog(ref mergeTargetFilepath))
-                                    return;
-                                break;
-                            case DialogResult.Cancel:
+
+                            MessageBox.Show("IDPicker files cannot be opened from a read-only location, pick a writable path to copy it to.");
+
+                            if (!saveFileDialog(ref mergeTargetFilepath))
                                 return;
                         }
+
+                        // if location was changed, copy to the new location
+                        if (oldFilename != mergeTargetFilepath)
+                        {
+                            toolStripStatusLabel.Text = "Copying idpDB...";
+                            File.Copy(oldFilename, mergeTargetFilepath, true);
+                        }
                     }
-                }
-
-                // determine if merged filepath can be written, get new path if not
-                while (true)
-                {
-                    DirectoryInfo directoryInfo = null;
-                    var possibleDirectory = Path.GetDirectoryName(mergeTargetFilepath);
-                    if (possibleDirectory != null && Directory.Exists(possibleDirectory))
-                        directoryInfo = new DirectoryInfo(possibleDirectory);
-
-                    if (directoryInfo == null)
-                        MessageBox.Show("Automatic output folder cannot be found, please specify a new output name and location.");
                     else
                     {
-                        try
+                        // give the user a chance to override the merge target location
+                        if (!saveFileDialog(ref mergeTargetFilepath, "Choose where to create the merged idpDB."))
+                            return;
+
+                        bool firstIteration = true;
+                        while (true)
                         {
-                            string randomTestFile = Path.Combine(possibleDirectory, Path.GetRandomFileName());
-                            using (var tmp = File.Create(randomTestFile)) { }
-                            File.Delete(randomTestFile);
+                            if (!canReadWriteInDirectory(Path.GetDirectoryName(mergeTargetFilepath)))
+                            {
+                                MessageBox.Show("IDPicker files cannot be merged to a read-only location, pick a writable path.");
+
+                                if (!saveFileDialog(ref mergeTargetFilepath, "Pick a writable path in which to create the merged idpDB."))
+                                    return;
+
+                                continue;
+                            }
+
+                            // the SaveFileDialog already asked the user to confirm overwriting an existing file
+                            if (File.Exists(mergeTargetFilepath))
+                                File.Delete(mergeTargetFilepath);
+
                             break;
                         }
-                        catch (Exception)
-                        {
-                            MessageBox.Show("Output folder is read-only, please specify a new output name and location.");
-                        }
-                    }
-
-                    if (!saveFileDialog(ref mergeTargetFilepath))
-                        return;
-
-                    // if the output file already exists (i.e. it's being opened instead of created by a merge), copy it to a writable location
-                    try
-                    {
-                        if (File.Exists(commonFilepath))
-                            File.Copy(commonFilepath, mergeTargetFilepath);
-                    }
-                    catch (IOException)
-                    {
-                        // repeat loop
                     }
                 }
-                //Environment.CurrentDirectory = possibleDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-
-                // if the common filepath hasn't already been changed and there is some merging or parsing to be done,
-                // then give the user a chance to override the target location
-                if (commonFilepath == mergeTargetFilepath && (idpDB_filepaths.Count() > 1 || xml_filepaths.Any()))
-                    saveFileDialog(ref mergeTargetFilepath); // cancelling keeps the existing filepath
 
                 // set main window title
                 BeginInvoke(new MethodInvoker(() => Text = mergeTargetFilepath));
@@ -1012,7 +1000,7 @@ namespace IDPicker
                     if (copyLocal)
                     {
                         string newFilename = Path.GetFileName(mergeTargetFilepath);
-                        if (!saveFileDialog(ref newFilename))
+                        if (!saveFileDialog(ref newFilename, "Pick a local path to copy the idpDB to."))
                             return;
 
                         toolStripStatusLabel.Text = "Copying idpDB...";
@@ -1243,15 +1231,32 @@ namespace IDPicker
                 return;
             }
 
-            var result = UserDialog.Show(this, "Import Settings", new ImportSettingsControl(e.DistinctAnalyses, showQonverterSettingsManager));
-
-            if (e.DistinctAnalyses.Any(o => String.IsNullOrEmpty(o.importSettings.qonverterSettings.DecoyPrefix)))
+            while (true)
             {
-                MessageBox.Show("Decoy prefix cannot be empty.", "Error");
-                result = DialogResult.Cancel;
-            }
+                var result = UserDialog.Show(this, "Import Settings", new ImportSettingsControl(e.DistinctAnalyses, showQonverterSettingsManager));
 
-            importCancelled = e.Cancel = result == DialogResult.Cancel;
+                if (result == DialogResult.Cancel)
+                {
+                    importCancelled = e.Cancel = result == DialogResult.Cancel;
+                    break;
+                }
+
+                if (e.DistinctAnalyses.Any(o => String.IsNullOrEmpty(o.importSettings.qonverterSettings.DecoyPrefix)))
+                {
+                    MessageBox.Show("Decoy prefix cannot be empty.", "Error");
+                    continue;
+                }
+
+                var missingDatabases = e.DistinctAnalyses.Where(o => !File.Exists(o.importSettings.proteinDatabaseFilepath));
+                if (missingDatabases.Any())
+                {
+                    MessageBox.Show("Protein database(s) not found:\r\n" +
+                                    String.Join("\r\n", missingDatabases.Select(o => o.importSettings.proteinDatabaseFilepath).Distinct()));
+                    continue;
+                }
+
+                break;
+            }
         }
 
         IDictionary<Analysis, QonverterSettings> qonverterSettingsHandler (IDictionary<Analysis, QonverterSettings> oldSettings, out bool cancel)

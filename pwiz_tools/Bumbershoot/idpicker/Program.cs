@@ -33,6 +33,7 @@ using System.Net;
 using System.Text.RegularExpressions;
 using IDPicker.Forms;
 using SharpSvn;
+using SharpSvn.Security;
 
 namespace IDPicker
 {
@@ -245,14 +246,18 @@ namespace IDPicker
 
                 using (var client = new SvnClient())
                 {
+                    client.Authentication.Clear();
+                    client.Authentication.DefaultCredentials = new NetworkCredential("anonsvn", "anonsvn");
+
                     try
                     {
                         client.GetLog(new Uri("http://forge.fenchurch.mc.vanderbilt.edu/svn/idpicker/branches/IDPicker-3/"),
                                       new SvnLogArgs(new SvnRevisionRange(currentVersion.Build, latestVersion.Build)),
                                       out logItems);
                     }
-                    catch
+                    catch(Exception e)
                     {
+                        HandleException(e);
                     }
                 }
 

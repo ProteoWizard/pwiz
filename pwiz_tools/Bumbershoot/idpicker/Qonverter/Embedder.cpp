@@ -282,7 +282,12 @@ void getSources(sqlite::database& idpDb,
     vector<string> missingSources;
     BOOST_FOREACH(SpectrumSource& source, sources)
     {
-        source.filepath = findNameInPath(source.name, extensions, paths);
+        vector<string> perSourcePaths(paths);
+        string rootInputDirectory = bfs::path(idpDbFilepath).parent_path().string();
+        BOOST_FOREACH(string& path, perSourcePaths)
+            bal::replace_all(path, "<RootInputDirectory>", rootInputDirectory);
+
+        source.filepath = findNameInPath(source.name, extensions, perSourcePaths);
         if (source.filepath.empty())
             missingSources.push_back(source.name);
     }
