@@ -31,6 +31,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using BrightIdeasSoftware;
 using NHibernate;
@@ -400,7 +401,7 @@ namespace IDPicker.Forms
 
             foreach (tlvBranch tn in abandonedSpectraSources)
             {
-                var lvi = new ListViewItem {Text = Path.GetFileName(tn.Text), Tag = tn};
+                var lvi = new ListViewItem { Name = Path.GetFileName(tn.Text), Text = Path.GetFileName(tn.Text), Tag = tn };
                 lvNonGroupedFiles.Items.Add(lvi);
             }
         }
@@ -411,7 +412,7 @@ namespace IDPicker.Forms
             if (refresh)
                 tlvGroupedFiles.RefreshObject(selNode.Parent);
 
-            var lvi = new ListViewItem {Text = Path.GetFileName(selNode.Text), Tag = selNode};
+            var lvi = new ListViewItem { Name = Path.GetFileName(selNode.Text), Text = Path.GetFileName(selNode.Text), Tag = selNode };
             lvNonGroupedFiles.Items.Add(lvi);
         }
 
@@ -753,6 +754,138 @@ namespace IDPicker.Forms
                     return null;
             }
             return thisBranch;
+        }
+
+        private void miReadAssembleTxt_Click(object sender, EventArgs e)
+        {
+            var ofd = new OpenFileDialog
+                          {
+                              CheckPathExists = true,
+                              Filter = "Assemble.txt file|*.txt|All files|*.*",
+                              FilterIndex = 0,
+                              Title = "Select a text file describing your source hierarchy."
+                          };
+
+            if (ofd.ShowDialog(this) == DialogResult.Cancel)
+                return;
+
+            var spectrumSources = session.Query<SpectrumSource>().ToList();
+            var sourcesByGroup = new Map<string, List<SpectrumSource>>();
+            var alreadyGroupedSources = new Set<string>();
+
+            // open the assembly.txt file
+            using (var assembleTxtFile = File.OpenText(ofd.FileName))
+            {
+                string line;
+                while ((line = assembleTxtFile.ReadLine()) != null)
+                {
+                    if (line.Length == 0)
+                        continue;
+
+                    try
+                    {
+                        Regex groupFilemaskPair = new Regex("((\"(.+)\")|(\\S+))\\s+((\"(.+)\")|(\\S+))");
+                        Match lineMatch = groupFilemaskPair.Match(line);
+                        string group = lineMatch.Groups[3].ToString() + lineMatch.Groups[4].ToString();
+                        string filemask = lineMatch.Groups[7].ToString() + lineMatch.Groups[8].ToString();
+
+                        if (!Path.IsPathRooted(filemask))
+                            filemask = Path.Combine(Path.GetDirectoryName(ofd.FileName), filemask);
+
+                        if (!sourcesByGroup.Contains(group))
+                            sourcesByGroup[group] = new List<SpectrumSource>();
+
+                        if (!Directory.Exists(Path.GetDirectoryName(filemask)))
+                            continue;
+
+                        var files = Directory.GetFiles(Path.GetDirectoryName(filemask), Path.GetFileName(filemask));
+                        var sourceNames = files.Select(o => Path.GetFileNameWithoutExtension(o));
+                        foreach (string sourceName in sourceNames)
+                        {
+                            var spectrumSource = spectrumSources.SingleOrDefault(o => o.Name == sourceName);
+                            if (spectrumSource == null)
+                                continue;
+
+                            var insertResult = alreadyGroupedSources.Insert(sourceName);
+                            if (insertResult.WasInserted)
+                                sourcesByGroup[group].Add(spectrumSource);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Program.HandleException(new Exception("Error reading assembly text from \"" + ofd.FileName + "\": " + ex.Message, ex));
+                    }
+                }
+            }
+
+            // remove existing groups
+            RemoveGroupNode(_rootNode, false);
+
+            // build new group hierarchy
+            foreach (var itr in sourcesByGroup)
+            {
+                if (itr.Value.IsNullOrEmpty())
+                    continue;
+
+                var ssg = new SpectrumSourceGroup { Name = itr.Key };
+
+                // decompose group path into segments, e.g. /foo/bar/ -> {foo, bar}
+                IEnumerable<string> segments = ssg.Name.Split("/".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                segments = segments.Take(segments.Count() - 1); // ignore the last segment
+
+                var parentNode = _rootNode;
+                foreach(string segment in segments)
+                {
+                    var segmentNode = parentNode.Children.FirstOrDefault(o => o.Text == segment);
+                    if (segmentNode == null)
+                    {
+                        var segmentGroup = new SpectrumSourceGroup { Name = parentNode.Text + "/" + segment };
+
+                        segmentNode = new tlvBranch
+                        {
+                            Text = segment,
+                            cms = cmRightClickGroupNode,
+                            Parent = parentNode,
+                            Children = new List<tlvBranch>(),
+                            Data = segmentGroup
+                        };
+
+                        parentNode.Children.Add(segmentNode);
+                    }
+
+                    parentNode = segmentNode;
+                }
+
+                // parentNode is now the immediate parent of the current group
+
+                var groupNode = new tlvBranch
+                {
+                    Text = Path.GetFileName(ssg.Name),
+                    cms = cmRightClickGroupNode,
+                    Parent = parentNode,
+                    Children = new List<tlvBranch>(),
+                    Data = ssg
+                };
+
+                foreach (var source in itr.Value)
+                {
+                    var sourceNode = new tlvBranch
+                                         {
+                                             Text = Path.GetFileName(source.Name),
+                                             Parent = groupNode,
+                                             Data = source,
+                                             cms = cmRightClickFileNode
+                                         };
+
+                    groupNode.Children.Add(sourceNode);
+                    lvNonGroupedFiles.Items.RemoveByKey(sourceNode.Text);
+                }
+
+                parentNode.Children.Add(groupNode);
+            }
+            
+            tlvGroupedFiles.RefreshObject(_rootNode);
+            tlvGroupedFiles.ExpandAll();
         }
     }
 }
