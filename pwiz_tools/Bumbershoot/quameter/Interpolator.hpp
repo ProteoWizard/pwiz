@@ -37,7 +37,7 @@ struct Interpolator
     {
         _size = x.size();
 
-        if (_size < 3)
+        if (_size < 4)
             return;
 
         BOOST_ASSERT(x.size() == y.size());
@@ -53,6 +53,9 @@ struct Interpolator
     {
         BOOST_ASSERT(_size == x.size());
         BOOST_ASSERT(_size == y.size());
+
+        if (x.size() < 4)
+            return;
 
         double minSampleSize = x[1] - x[0];
         for (int i=2; i < _size; ++i)
@@ -78,7 +81,7 @@ struct Interpolator
 
     double interpolate(const vector<double>& xs, const vector<double>& ys, double x) const
     {
-        if (x < xs.front() || x > xs.back())
+        if (x < xs.front() || x > xs.back() || xs.size() < 4)
             return 0;
 
         //double ypval, yppval;

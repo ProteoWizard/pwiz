@@ -801,7 +801,7 @@ namespace quameter
             if (g_numWorkers == 1) cout << endl;
 
             if (missingPrecursorIntensities)
-                cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity." << endl;
+                cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;
 
             vector<UnidentifiedPrecursorInfo> unidentifiedPrecursors;
             unidentifiedPrecursors.reserve(ms2ScanMap.size());
@@ -1320,7 +1320,7 @@ namespace quameter
             } // finished cycling through all spectra
 
             if (missingPrecursorIntensities)
-                cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity." << endl;
+                cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;
 
             accs::accumulator_set<double, accs::stats<accs::tag::percentile> > firstScanTimeOfDistinctModifiedPeptides;
             BOOST_FOREACH_FIELD((size_t id)(double firstScanTime), firstScanTimeOfDistinctModifiedPeptide)
