@@ -1058,6 +1058,7 @@ namespace IDPicker.Forms
                 {distinctChargesColumn.Index, SortOrder.Descending},
                 {proteinGroupsColumn.Index, SortOrder.Descending},
                 {precursorMzColumn.Index, SortOrder.Ascending},
+                {scanTimeColumn.Index, SortOrder.Ascending},
                 {observedMassColumn.Index, SortOrder.Ascending},
                 {exactMassColumn.Index, SortOrder.Ascending},
                 {massErrorColumn.Index, SortOrder.Ascending},

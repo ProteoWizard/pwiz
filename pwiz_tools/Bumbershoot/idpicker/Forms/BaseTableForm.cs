@@ -248,7 +248,7 @@ namespace IDPicker.Forms
 
         protected virtual void OnPivotChanged(object sender, EventArgs e) { resetData(); }
 
-        protected virtual void OnGroupingChanged(object sender, EventArgs e) { resetData(); }
+        protected virtual void OnGroupingChanged(object sender, EventArgs e) { ClearData(true); resetData(); }
 
         public void Sort(int columnIndex)
         {
