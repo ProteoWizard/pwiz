@@ -91,6 +91,9 @@
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Reference Include="ZedGraph">
+      <HintPath>..\..\Shared\Lib\ZedGraph.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
@@ -102,6 +105,7 @@
     <Compile Include="DataBinding\PivoterTest.cs" />
     <Compile Include="DataBinding\SampleData\AminoAcid.cs" />
     <Compile Include="DataBinding\SampleData\Peptide.cs" />
+    <Compile Include="Graph\GraphDataTest.cs" />
     <Compile Include="ListViewHelperTest.cs" />
     <Compile Include="PeakFinderTest.cs" />
     <Compile Include="PrecursorPoolTest.cs" />
@@ -132,6 +136,7 @@
       <Name>TopographLib</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

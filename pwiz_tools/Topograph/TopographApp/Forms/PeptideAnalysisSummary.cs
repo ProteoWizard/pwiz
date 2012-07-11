@@ -213,7 +213,7 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         if (normalizeTo == null)
                         {
-                            pointPairList.Add(new PointPair(iFileAnalysis + 1, peak.StartTime, peak.EndTime));
+                            pointPairList.Add(new PointPair(iFileAnalysis + 1, peak.EndTime, peak.StartTime));
                         }
                         else
                         {
@@ -224,7 +224,7 @@ namespace pwiz.Topograph.ui.Forms
                             }
                             else
                             {
-                                pointPairList.Add(new PointPair(iFileAnalysis + 1, alignment.GetTargetTime(peak.StartTime), alignment.GetTargetTime(peak.EndTime), fileAnalysis));
+                                pointPairList.Add(new PointPair(iFileAnalysis + 1, alignment.GetTargetTime(peak.EndTime), alignment.GetTargetTime(peak.StartTime), fileAnalysis));
                             }
                         }
                     }

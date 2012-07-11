@@ -299,6 +299,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.zedGraphControl.ScrollMinY2 = 0D;
             this.zedGraphControl.Size = new System.Drawing.Size(709, 221);
             this.zedGraphControl.TabIndex = 0;
+            this.zedGraphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl_ContextMenuBuilder);
             // 
             // AlignmentForm
             // 

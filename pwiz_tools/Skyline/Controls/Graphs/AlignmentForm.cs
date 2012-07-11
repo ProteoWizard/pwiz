@@ -26,6 +26,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ZedGraph;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
@@ -338,6 +339,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private void bindingSource_CurrentChanged(object sender, EventArgs e)
         {
             UpdateGraph();
+        }
+
+        private void zedGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
+        {
+            CopyEmfToolStripMenuItem.AddToContextMenu(sender, menuStrip);
         }
     }
 }

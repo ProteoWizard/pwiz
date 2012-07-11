@@ -19,12 +19,14 @@
 using System;
 using System.Drawing;
 using ZedGraph;
+using pwiz.Common.Graph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
     /// BarItem with an error bar at the top indicating meand and standard deviation.
     /// </summary>
+    [CurveDataHandler(typeof(MeanErrorBarDataHandler))]
     public class MeanErrorBarItem : BarItem
     {
         public static bool IsMeanErrorList(PointPairList pointPairList)
@@ -52,7 +54,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public static double GetYTotal(PointPair pointPair)
         {
-            return pointPair.Y + ((ErrorTag) pointPair.Tag).Error;
+            var yTotal = pointPair.Y + ((ErrorTag) pointPair.Tag).Error;
+            return double.IsNaN(yTotal) ? 0 : yTotal;
         }
 
         public MeanErrorBarItem(String label, 
@@ -160,5 +163,31 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public double Error { get; private set; }
+    }
+
+    internal class MeanErrorBarDataHandler : CurveDataHandler
+    {
+        protected override DataFrameBuilder AddColumns(DataFrameBuilder dataFrameBuilder)
+        {
+            dataFrameBuilder = AddColumnForAxis(dataFrameBuilder, dataFrameBuilder.BaseAxis);
+            dataFrameBuilder = AddColumnForAxis(dataFrameBuilder, dataFrameBuilder.ValueAxis);
+            var points = dataFrameBuilder.Points;
+            var errors = new double?[points.Count];
+            for (int i = 0; i < points.Count; i++)
+            {
+                var point = points[i];
+                if (point.IsMissing)
+                {
+                    continue;
+                }
+                var errorTag = point.Tag as ErrorTag;
+                if (errorTag != null)
+                {
+                    errors[i] = errorTag.Error;
+                }
+            }
+            dataFrameBuilder = dataFrameBuilder.AddColumn(new DataColumn<double?>("StdErr", errors));
+            return dataFrameBuilder;
+        }
     }
 }

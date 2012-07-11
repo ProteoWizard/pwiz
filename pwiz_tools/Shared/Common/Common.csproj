@@ -90,6 +90,9 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
+    <Reference Include="ZedGraph">
+      <HintPath>..\Lib\ZedGraph.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Controls\DoubleBufferedListView.cs">
@@ -172,6 +175,13 @@
     <Compile Include="DataBinding\TreeList.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
     <Compile Include="DataBinding\ViewProperties.cs" />
+    <Compile Include="Graph\CurveDataHandler.cs" />
+    <Compile Include="Graph\DataColumn.cs" />
+    <Compile Include="Graph\DataFrame.cs" />
+    <Compile Include="Graph\CurveDataHandlers.cs" />
+    <Compile Include="Graph\DataFrameBuilder.cs" />
+    <Compile Include="Graph\GraphData.cs" />
+    <Compile Include="Graph\GraphPaneData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -227,6 +237,10 @@
     <Content Include="Resources\MatchCase.bmp" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\MSGraph\MSGraph.csproj">
+      <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
+      <Name>MSGraph</Name>
+    </ProjectReference>
     <ProjectReference Include="CommonUtil.csproj">
       <Project>{13BF2FFB-50A1-4AB1-83A4-5733E36905CE}</Project>
       <Name>CommonUtil</Name>

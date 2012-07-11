@@ -19,12 +19,14 @@
 using System;
 using System.Drawing;
 using ZedGraph;
+using pwiz.Common.Graph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
     /// <summary>
     /// HiLowBarItem with a tick mark somewhere in the middle that indicates some other value.
     /// </summary>
+    [CurveDataHandler(typeof(HiLowMiddleBarErrorDataHandler))]
     public class HiLowMiddleErrorBarItem : HiLowBarItem
     {
         public static bool IsHiLoMiddleErrorList(PointPairList pointPairList)
@@ -173,5 +175,43 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public double Middle { get; private set; }
         public double Error { get; private set; }
+        public override string ToString()
+        {
+            return string.Format("{0}+/-{1}", Middle, Error);
+        }
+    }
+
+    public class HiLowMiddleBarErrorDataHandler : CurveDataHandler
+    {
+        protected override DataFrameBuilder AddColumns(DataFrameBuilder dataFrameBuilder)
+        {
+            dataFrameBuilder = AddColumnForAxis(dataFrameBuilder, dataFrameBuilder.BaseAxis);
+            var points = dataFrameBuilder.Points;
+            var apexes = new double?[points.Count];
+            var starts = new double?[points.Count];
+            var fwhms = new double?[points.Count];
+            for (int i = 0; i < points.Count; i++)
+            {
+                var point = points[i];
+                if (point.IsMissing)
+                {
+                    continue;
+                }
+                starts[i] = point.Z;
+                var middleErrorTag = point.Tag as MiddleErrorTag;
+                if (middleErrorTag != null)
+                {
+                    apexes[i] = middleErrorTag.Middle;
+                    fwhms[i] = middleErrorTag.Error;
+                }
+            }
+            var dataFrame = new DataFrame(dataFrameBuilder.ValueAxis.Title.Text, dataFrameBuilder.Points.Count);
+            dataFrame = dataFrame.AddColumn(new DataColumn<double?>("Apex", apexes));
+            dataFrame = dataFrame.AddColumn(new DataColumn<double?>("Start", starts));
+            dataFrame = dataFrame.AddColumn(GetColumnForAxis(dataFrameBuilder, dataFrameBuilder.ValueAxis).SetTitle("End"));
+            dataFrame = dataFrame.AddColumn(new DataColumn<double?>("FWHM", fwhms));
+            dataFrameBuilder = dataFrameBuilder.AddColumn(dataFrame);
+            return dataFrameBuilder;
+        }
     }
 }
