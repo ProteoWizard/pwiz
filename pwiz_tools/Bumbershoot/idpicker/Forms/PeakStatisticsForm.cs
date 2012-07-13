@@ -177,6 +177,23 @@ namespace IDPicker.Forms
 
         private List<double> fragmentationStatistics, basicPeakStatistics;
 
+        private double fragmentMass(pwiz.CLI.proteome.Fragmentation f, IonSeries series, int length, int charge)
+        {
+            switch (series)
+            {
+                case IonSeries.a: return f.a(length, charge);
+                case IonSeries.b: return f.b(length, charge);
+                case IonSeries.c: return f.c(length, charge);
+                case IonSeries.cMinus1: return f.c(length, charge) - Proton.Mass / charge;
+                case IonSeries.x: return f.x(length, charge);
+                case IonSeries.y: return f.y(length, charge);
+                case IonSeries.z: return f.z(length, charge);
+                case IonSeries.zPlus1: return f.zRadical(length, charge);
+                case IonSeries.zPlus2: return f.zRadical(length, charge) + Proton.Mass / charge;
+                default: throw new ArgumentException();
+            }
+        }
+
         private List<double> getPeakStatistics ()
         {
             IList<object[]> queryRows;
@@ -252,163 +269,34 @@ namespace IDPicker.Forms
                 bool removeMatchedPeaks = false;
 
                 double tolerance = 0.03;
+                seems.PointMap.Enumerator itr;
+                IonSeries[] ionSeries = Enum.GetValues(typeof(IonSeries)).Cast<IonSeries>().Where(o => o != IonSeries.Count).ToArray();
 
                 for (int z = 1; z <= 1; ++z)
                 for (int length = 1, end = pwizPeptide.sequence.Length; length <= end; ++length)
                 {
-                    seems.PointMap.Enumerator itr;
-
-                    int series = 0;
-
                     string NTermFragment = row.ModifiedSequence.Substring(0, length);
                     string CTermFragment = row.ModifiedSequence.Substring(row.ModifiedSequence.Length - length);
 
-                    // a
-                    itr = pointMap.FindNear(fragmentation.a(length, z), tolerance);
-                    if (itr != null && itr.IsValid)
+                    foreach (IonSeries series in ionSeries)
                     {
-                        if (plotMatchedPeaks)
-                        {
-                            precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                            chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                        }
+                        if ((series == IonSeries.c || series == IonSeries.cMinus1 || series == IonSeries.x) &&
+                            length == pwizPeptide.sequence.Length)
+                            continue;
 
-                        if (removeMatchedPeaks)
-                            pointMap.Remove(itr);
-                    }
-                    else
-                        ++series;
-
-                    // b
-                    itr = pointMap.FindNear(fragmentation.b(length, z), tolerance);
-                    if (itr != null && itr.IsValid)
-                    {
-                        if (plotMatchedPeaks)
-                        {
-                            precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                            chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                        }
-
-                        if (removeMatchedPeaks)
-                            pointMap.Remove(itr);
-                    }
-                    else
-                        ++series;
-
-                    if (length != pwizPeptide.sequence.Length)
-                    {
-                        // c
-                        itr = pointMap.FindNear(fragmentation.c(length, z), tolerance);
+                        itr = pointMap.FindNear(fragmentMass(fragmentation, series, length, z), tolerance);
                         if (itr != null && itr.IsValid)
                         {
                             if (plotMatchedPeaks)
                             {
-                                precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                                chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
+                                precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, (int)series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[(int)series - 1], length)));
+                                chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, (int)series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[(int)series - 1], length)));
                             }
 
                             if (removeMatchedPeaks)
                                 pointMap.Remove(itr);
                         }
-                        else
-                            ++series;
-
-                        // c-1
-                        itr = pointMap.FindNear(fragmentation.c(length, z) - Proton.Mass / z, tolerance);
-                        if (itr != null && itr.IsValid)
-                        {
-                            if (plotMatchedPeaks)
-                            {
-                                precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                                chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, NTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                            }
-
-                            if (removeMatchedPeaks)
-                                pointMap.Remove(itr);
-                        }
-                        else
-                            ++series;
-
-                        // x
-                        itr = pointMap.FindNear(fragmentation.x(length, z), tolerance);
-                        if (itr != null && itr.IsValid)
-                        {
-                            if (plotMatchedPeaks)
-                            {
-                                precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                                chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                            }
-
-                            if (removeMatchedPeaks)
-                                pointMap.Remove(itr);
-                        }
-                        else
-                            ++series;
                     }
-                    else
-                        series += 3;
-
-                    // y
-                    itr = pointMap.FindNear(fragmentation.y(length, z), tolerance);
-                    if (itr != null && itr.IsValid)
-                    {
-                        if (plotMatchedPeaks)
-                        {
-                            precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                            chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                        }
-
-                        if (removeMatchedPeaks)
-                            pointMap.Remove(itr);
-                    }
-                    else
-                        ++series;
-
-                    // z
-                    itr = pointMap.FindNear(fragmentation.z(length, z), tolerance);
-                    if (itr != null && itr.IsValid)
-                    {
-                        if (plotMatchedPeaks)
-                        {
-                            precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                            chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                        }
-
-                        if (removeMatchedPeaks)
-                            pointMap.Remove(itr);
-                    }
-                    else
-                        ++series;
-
-                    // z+1
-                    itr = pointMap.FindNear(fragmentation.zRadical(length, z), tolerance);
-                    if (itr != null && itr.IsValid)
-                    {
-                        if (plotMatchedPeaks)
-                        {
-                            precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                            chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                        }
-
-                        if (removeMatchedPeaks)
-                            pointMap.Remove(itr);
-                    }
-
-                    // z+2
-                    itr = pointMap.FindNear(fragmentation.zRadical(length, z) + Proton.Mass / z, tolerance);
-                    if (itr != null && itr.IsValid)
-                    {
-                        if (plotMatchedPeaks)
-                        {
-                            precursorScatterPlot.AddPoint(new PointPair(itr.Current.Key - precursorMz, itr.Current.Value / tic, ++series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, precursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                            chargeReducedScatterPlot.AddPoint(new PointPair(itr.Current.Key - chargeReducedPrecursorMz, itr.Current.Value / tic, series, String.Format("{0} {1}\n{2} {3} {4} {5}", label, chargeReducedPrecursorMz, CTermFragment, itr.Current.Key, IonSeriesLabels[series - 1], length)));
-                        }
-
-                        if (removeMatchedPeaks)
-                            pointMap.Remove(itr);
-                    }
-                    else
-                        ++series;
                 }
 
                 foreach (var pair in pointMap)

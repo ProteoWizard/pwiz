@@ -164,7 +164,7 @@ namespace IDPicker.DataModel
             get
             {
                 return !SpectrumSourceGroup.IsNullOrEmpty() || !SpectrumSource.IsNullOrEmpty() || !Spectrum.IsNullOrEmpty() ||
-                       !Charge.IsNullOrEmpty() || !Analysis.IsNullOrEmpty();
+                       !Charge.IsNullOrEmpty();
             }
         }
 
@@ -175,7 +175,7 @@ namespace IDPicker.DataModel
 
         public bool IsBasicFilter
         {
-            get { return !HasProteinFilter && !HasPeptideFilter && !HasSpectrumFilter && !HasModificationFilter; }
+            get { return !HasProteinFilter && !HasPeptideFilter && !HasSpectrumFilter && !HasModificationFilter && Analysis.IsNullOrEmpty(); }
         }
 
         private static bool NullSafeSequenceEqual<T> (IEnumerable<T> lhs, IEnumerable<T> rhs)
@@ -504,7 +504,6 @@ namespace IDPicker.DataModel
                                      WHERE " + MaximumQValue + @" >= psm.QValue AND psm.Rank = 1
                                      GROUP BY psm.Id;
                                      CREATE INDEX FilteredPeptideSpectrumMatch_PeptideSpectrumAnalysis ON FilteredPeptideSpectrumMatch (Peptide, Spectrum, Analysis);
-                                     CREATE INDEX FilteredPeptideSpectrumMatch_AnalysisSpectrumPeptide ON FilteredPeptideSpectrumMatch (Analysis, Spectrum, Peptide);
                                      CREATE INDEX FilteredPeptideSpectrumMatch_SpectrumPeptideAnalysis ON FilteredPeptideSpectrumMatch (Spectrum, Peptide, Analysis);
                                     "
                                   ).ExecuteUpdate();
@@ -541,8 +540,6 @@ namespace IDPicker.DataModel
                                      FROM FilteredPeptide pep
                                      JOIN PeptideInstance pi ON pep.Id = pi.Peptide
                                      JOIN FilteredProtein pro ON pi.Protein = pro.Id;
-                                     CREATE INDEX FilteredPeptideInstance_Protein ON FilteredPeptideInstance (Protein);
-                                     CREATE INDEX FilteredPeptideInstance_Peptide ON FilteredPeptideInstance (Peptide);
                                      CREATE INDEX FilteredPeptideInstance_PeptideProtein ON FilteredPeptideInstance (Peptide, Protein);
                                      CREATE INDEX FilteredPeptideInstance_ProteinOffsetLength ON FilteredPeptideInstance (Protein, Offset, Length);"
                                   ).ExecuteUpdate();

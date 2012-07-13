@@ -243,7 +243,6 @@ namespace IDPicker.DataModel
                                    CREATE UNIQUE INDEX SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);
                                    CREATE INDEX Spectrum_SourceIndex ON Spectrum (Source, Index_);
                                    CREATE UNIQUE INDEX Spectrum_SourceNativeID ON Spectrum (Source, NativeID);
-                                   CREATE INDEX PeptideSpectrumMatch_AnalysisPeptideSpectrum ON PeptideSpectrumMatch (Analysis, Peptide, Spectrum);
                                    CREATE INDEX PeptideSpectrumMatch_PeptideSpectrumAnalysis ON PeptideSpectrumMatch (Peptide, Spectrum, Analysis);
                                    CREATE INDEX PeptideSpectrumMatch_SpectrumAnalysisPeptide ON PeptideSpectrumMatch (Spectrum, Analysis, Peptide);
                                    CREATE INDEX PeptideSpectrumMatch_QValue ON PeptideSpectrumMatch (QValue);
@@ -261,7 +260,6 @@ namespace IDPicker.DataModel
                                    DROP INDEX IF EXISTS SpectrumSourceGroupLink_SourceGroup;
                                    DROP INDEX IF EXISTS Spectrum_SourceIndex;
                                    DROP INDEX IF EXISTS Spectrum_SourceNativeID;
-                                   DROP INDEX IF EXISTS PeptideSpectrumMatch_AnalysisPeptideSpectrum;
                                    DROP INDEX IF EXISTS PeptideSpectrumMatch_PeptideSpectrumAnalysis;
                                    DROP INDEX IF EXISTS PeptideSpectrumMatch_SpectrumAnalysisPeptide;
                                    DROP INDEX IF EXISTS PeptideSpectrumMatch_QValue;

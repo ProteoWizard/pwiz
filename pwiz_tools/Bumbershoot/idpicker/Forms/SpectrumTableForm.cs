@@ -116,7 +116,7 @@ namespace IDPicker.Forms
         public class AnalysisRow : AggregateRow
         {
             public DataModel.Analysis Analysis { get; private set; }
-            public string Key { get; private set; }
+            public string Key { get { return Analysis.Name; } }
 
             #region Constructor
             public AnalysisRow(object[] queryRow, DataFilter dataFilter)
@@ -124,8 +124,6 @@ namespace IDPicker.Forms
             {
                 int column = AggregateRow.ColumnCount - 1;
                 Analysis = (DataModel.Analysis) queryRow[++column];
-
-                Key = String.Format("{0} {1} {2}", Analysis.Id, Analysis.Software.Name, Analysis.Software.Version);
             }
             #endregion
         }
@@ -1210,6 +1208,10 @@ namespace IDPicker.Forms
             this.session = session;
             viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) { Spectrum = null, SpectrumSource = null, SpectrumSourceGroup = null };
+
+            // if grouping by analysis, an analysis filter should not affect this view
+            if(checkedGroupings.Any(o => o.Mode == GroupBy.Analysis))
+                this.dataFilter.Analysis = null;
 
             // remember the first selected row
             saveSelectionPath();

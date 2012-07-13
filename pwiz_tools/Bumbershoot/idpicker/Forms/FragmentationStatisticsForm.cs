@@ -298,6 +298,20 @@ namespace IDPicker.Forms
             return observed - expected;
         }
 
+        private double fragmentMass(pwiz.CLI.proteome.Fragmentation f, IonSeries series, int length, int charge)
+        {
+            switch (series)
+            {
+                case IonSeries.a: return f.a(length, charge);
+                case IonSeries.b: return f.b(length, charge);
+                case IonSeries.c: return f.c(length, charge);
+                case IonSeries.x: return f.x(length, charge);
+                case IonSeries.y: return f.y(length, charge);
+                case IonSeries.z: return f.z(length, charge);
+                default: throw new ArgumentException();
+            }
+        }
+
         private List<double> getFragmentationStatistics ()
         {
             IList<object[]> queryRows;
@@ -409,104 +423,26 @@ namespace IDPicker.Forms
                 var percentPeakCountByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
                 var meanMzErrorByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
 
+                seems.PointMap.Enumerator itr;
+                double expected;
+                IonSeries[] ionSeries = Enum.GetValues(typeof(IonSeries)).Cast<IonSeries>().Where(o => o != IonSeries.Count).ToArray();
+
                 for (int z = 1; z <= 1; ++z)
                 for (int length = 1, end = pwizPeptide.sequence.Length; length <= end; ++length)
+                foreach (IonSeries series in ionSeries)
                 {
-                    seems.PointMap.Enumerator itr;
-                    double expected;
+                    if ((series == IonSeries.c || series == IonSeries.x) &&
+                        length == pwizPeptide.sequence.Length)
+                        continue;
 
-                    // a
-                    expected = fragmentation.a(length, z);
+                    expected = fragmentMass(fragmentation, series, length, z);
                     itr = pointMap.FindNear(expected, expected - (expected - tolerance));
                     if (itr != null && itr.IsValid)
                     {
-                        percentTicByFragmentType[(int) IonSeries.a] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[(int) IonSeries.a];
-                        meanMzErrorByFragmentType[(int) IonSeries.a] += mzError(itr.Current.Key, expected);
+                        percentTicByFragmentType[(int)series] += itr.Current.Value;
+                        ++percentPeakCountByFragmentType[(int)series];
+                        meanMzErrorByFragmentType[(int)series] += mzError(itr.Current.Key, expected);
                     }
-
-                    // b
-                    expected = fragmentation.b(length, z);
-                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
-                    if (itr != null && itr.IsValid)
-                    {
-                        percentTicByFragmentType[(int) IonSeries.b] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[(int) IonSeries.b];
-                        meanMzErrorByFragmentType[(int) IonSeries.b] += mzError(itr.Current.Key, expected);
-                    }
-
-                    if (length != pwizPeptide.sequence.Length)
-                    {
-                        // c
-                        expected = fragmentation.c(length, z);
-                        itr = pointMap.FindNear(expected, expected - (expected - tolerance));
-                        if (itr != null && itr.IsValid)
-                        {
-                            percentTicByFragmentType[(int) IonSeries.a] += itr.Current.Value;
-                            ++percentPeakCountByFragmentType[(int) IonSeries.a];
-                            meanMzErrorByFragmentType[(int) IonSeries.a] += mzError(itr.Current.Key, expected);
-                        }
-
-                        // c-1
-                        /*expected = fragmentation.c(length, z) - Proton.Mass / z;
-                        itr = pointMap.FindNear(expected, expected - (expected - tolerance));
-                        if (itr != null && itr.IsValid)
-                        {
-                            percentTicByFragmentType[3] += itr.Current.Value;
-                            ++percentPeakCountByFragmentType[3];
-                            meanMzErrorByFragmentType[3] += itr.Current.Key - fragmentation.c(length, z) - Proton.Mass / z;
-                        }*/
-
-                        // x
-                        expected = fragmentation.x(length, z);
-                        itr = pointMap.FindNear(expected, expected - (expected - tolerance));
-                        if (itr != null && itr.IsValid)
-                        {
-                            percentTicByFragmentType[(int) IonSeries.x] += itr.Current.Value;
-                            ++percentPeakCountByFragmentType[(int) IonSeries.x];
-                            meanMzErrorByFragmentType[(int) IonSeries.x] += mzError(itr.Current.Key, expected);
-                        }
-                    }
-
-                    // y
-                    expected = fragmentation.y(length, z);
-                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
-                    if (itr != null && itr.IsValid)
-                    {
-                        percentTicByFragmentType[(int) IonSeries.y] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[(int) IonSeries.y];
-                        meanMzErrorByFragmentType[(int) IonSeries.y] += mzError(itr.Current.Key, expected);
-                    }
-
-                    // z
-                    expected = fragmentation.z(length, z);
-                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
-                    if (itr != null && itr.IsValid)
-                    {
-                        percentTicByFragmentType[(int) IonSeries.z] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[(int) IonSeries.z];
-                        meanMzErrorByFragmentType[(int) IonSeries.z] += mzError(itr.Current.Key, expected);
-                    }
-
-                    // z+1
-                    /*expected = fragmentation.zRadical(length, z);
-                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
-                    if (itr != null && itr.IsValid)
-                    {
-                        percentTicByFragmentType[7] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[7];
-                        meanMzErrorByFragmentType[7] += mzError(itr.Current.Key, expected);
-                    }
-
-                    // z+2
-                    expected = fragmentation.zRadical(length, z) + Proton.Mass / z;
-                    itr = pointMap.FindNear(expected, expected - (expected - tolerance));
-                    if (itr != null && itr.IsValid)
-                    {
-                        percentTicByFragmentType[8] += itr.Current.Value;
-                        ++percentPeakCountByFragmentType[8];
-                        meanMzErrorByFragmentType[8] += itr.Current.Key - fragmentation.zRadical(length, z) + Proton.Mass / z;
-                    }*/
                 }
 
                 var rng = new Random();
@@ -530,9 +466,9 @@ namespace IDPicker.Forms
                     percentPeakCountBySpectrumByFragmentType[i].Add(jitter, percentPeakCountByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, percentPeakCountByFragmentType[i]));
                     meanMzErrorBySpectrumByFragmentType[i].Add(jitter, meanMzErrorByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, meanMzErrorByFragmentType[i]));
 
-                    percentTicListByFragmentType[i].Add(percentTicByFragmentType[i]);
-                    percentPeakCountListByFragmentType[i].Add(percentPeakCountByFragmentType[i]);
-                    meanMzErrorListByFragmentType[i].Add(meanMzErrorByFragmentType[i]);
+                    if (percentTicByFragmentType[i] > 0) percentTicListByFragmentType[i].Add(percentTicByFragmentType[i]);
+                    if (percentPeakCountByFragmentType[i] > 0) percentPeakCountListByFragmentType[i].Add(percentPeakCountByFragmentType[i]);
+                    if (meanMzErrorByFragmentType[i] > 0) meanMzErrorListByFragmentType[i].Add(meanMzErrorByFragmentType[i]);
                 }
 
                 if ((spectraCount % 100) == 0)

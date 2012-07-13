@@ -162,12 +162,13 @@ namespace IDPicker
             analysisTableForm.Show(dockPanel, DockState.Document);
             analysisTableForm.AutoHidePortion = 0.5;
 
-            spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
+            spectrumTableForm.SpectrumViewFilter += handleViewFilter;
             spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
-            proteinTableForm.ProteinViewFilter += proteinTableForm_ProteinViewFilter;
+            proteinTableForm.ProteinViewFilter += handleViewFilter;
             proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
-            peptideTableForm.PeptideViewFilter += peptideTableForm_PeptideViewFilter;
-            modificationTableForm.ModificationViewFilter += modificationTableForm_ModificationViewFilter;
+            peptideTableForm.PeptideViewFilter += handleViewFilter;
+            modificationTableForm.ModificationViewFilter += handleViewFilter;
+            analysisTableForm.AnalysisViewFilter += handleViewFilter;
 
             // hide DockPanel before initializing layout manager
             dockPanel.Visible = false;
@@ -528,82 +529,22 @@ namespace IDPicker
             var formSession = session.SessionFactory.OpenSession();
             var form = new SequenceCoverageForm(formSession, e.Protein, viewFilter);
             form.Show(modificationTableForm.Pane, null);
-            form.SequenceCoverageFilter += sequenceCoverageForm_SequenceCoverageFilter;
+            form.SequenceCoverageFilter += handleViewFilter;
             form.FormClosed += (s, e2) => formSession.Dispose();
         }
         #endregion
 
-        #region Handling of filter events from each view
-        void proteinTableForm_ProteinViewFilter (ProteinTableForm sender, DataFilter proteinViewFilter)
+        void handleViewFilter(object sender, DataFilter newViewFilter)
         {
-            var newFilter = proteinViewFilter;
-
-            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
+            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter)o.Tag == newViewFilter) > 0)
                 return;
 
-            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
+            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newViewFilter.ToString(), newViewFilter));
 
             // build a new DataFilter from the BreadCrumb list
             viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
             setData();
         }
-
-        void peptideTableForm_PeptideViewFilter (PeptideTableForm sender, DataFilter peptideViewFilter)
-        {
-            var newFilter = peptideViewFilter;
-
-            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
-                return;
-
-            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
-
-            // build a new DataFilter from the BreadCrumb list
-            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
-            setData();
-        }
-
-        void spectrumTableForm_SpectrumViewFilter (object sender, DataFilter spectrumViewFilter)
-        {
-            var newFilter = spectrumViewFilter;
-
-            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
-                return;
-
-            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
-
-            // build a new DataFilter from the BreadCrumb list
-            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
-            setData();
-        }
-
-        void modificationTableForm_ModificationViewFilter (ModificationTableForm sender, DataFilter modificationViewFilter)
-        {
-            var newFilter = modificationViewFilter;
-
-            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
-                return;
-
-            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
-
-            // build a new DataFilter from the BreadCrumb list
-            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
-            setData();
-        }
-
-        void sequenceCoverageForm_SequenceCoverageFilter (SequenceCoverageControl sender, DataFilter sequenceCoverageFilter)
-        {
-            var newFilter = sequenceCoverageFilter;
-
-            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
-                return;
-
-            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
-
-            // build a new DataFilter from the BreadCrumb list
-            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
-            setData();
-        }
-        #endregion
 
         void breadCrumbControl_BreadCrumbClicked (object sender, BreadCrumbClickedEventArgs e)
         {

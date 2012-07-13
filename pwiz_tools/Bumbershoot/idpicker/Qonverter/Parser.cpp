@@ -767,7 +767,6 @@ struct ParserImpl
                       "CREATE UNIQUE INDEX IF NOT EXISTS SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);"
                       "CREATE INDEX IF NOT EXISTS Spectrum_SourceIndex ON Spectrum (Source, Index_);"
                       "CREATE UNIQUE INDEX IF NOT EXISTS Spectrum_SourceNativeID ON Spectrum (Source, NativeID);"
-                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_AnalysisPeptideSpectrum ON PeptideSpectrumMatch (Analysis, Peptide, Spectrum);"
                       "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_PeptideSpectrumAnalysis ON PeptideSpectrumMatch (Peptide, Spectrum, Analysis);"
                       "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_SpectrumAnalysisPeptide ON PeptideSpectrumMatch (Spectrum, Analysis, Peptide);"
                       "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_QValue ON PeptideSpectrumMatch (QValue);"

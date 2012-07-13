@@ -106,10 +106,11 @@ namespace IDPicker.Forms
 
             sortColumns = new List<SortColumn>();
 
-            treeDataGridView.CellMouseClick += treeDataGridView_CellMouseClick;
+            treeDataGridView.CellDoubleClick += treeDataGridView_CellDoubleClick;
             treeDataGridView.DefaultCellStyleChanged += treeDataGridView_DefaultCellStyleChanged;
             treeDataGridView.DataError += treeDataGridView_DataError;
             treeDataGridView.CellValueNeeded += treeDataGridView_CellValueNeeded;
+            treeDataGridView.PreviewKeyDown += treeDataGridView_PreviewKeyDown;
         }
 
         public TreeDataGridView TreeDataGridView
@@ -122,22 +123,53 @@ namespace IDPicker.Forms
             get { return treeDataGridView.Columns.Cast<DataGridViewColumn>(); }
         }
 
-        void treeDataGridView_CellMouseClick (object sender, DataGridViewCellMouseEventArgs e)
+        void treeDataGridView_CellDoubleClick (object sender, TreeDataGridViewCellEventArgs e)
         {
-            if (e.Clicks < 2)
+            if (e.ColumnIndex < 0 || e.RowIndexHierarchy.Count > 1 || e.RowIndexHierarchy.First() < 0)
                 return;
+
+            var row = GetRowFromRowHierarchy(e.RowIndexHierarchy) as AnalysisRow;
 
             var newDataFilter = new DataFilter
             {
                 FilterSource = this,
-                Analysis = new List<Analysis> {}
+                Analysis = new List<Analysis> { row.Analysis }
             };
 
-            //if (PeptideViewFilter != null)
-            //    PeptideViewFilter(this, newDataFilter);
+            if (AnalysisViewFilter != null)
+                AnalysisViewFilter(this, newDataFilter);
         }
 
-        //public event PeptideViewFilterEventHandler PeptideViewFilter;
+        void treeDataGridView_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
+        {
+            if (e.KeyCode == Keys.Escape)
+                treeDataGridView.ClearSelection();
+
+            if (e.KeyCode != Keys.Enter)
+                return;
+
+            var newDataFilter = new DataFilter { FilterSource = this, Analysis = new List<Analysis>() };
+
+            if (treeDataGridView.SelectedCells.Count == 0)
+                return;
+
+            var processedRows = new Set<int>();
+
+            foreach (DataGridViewCell cell in treeDataGridView.SelectedCells)
+            {
+                if (!processedRows.Insert(cell.RowIndex).WasInserted)
+                    continue;
+
+                var rowIndexHierarchy = treeDataGridView.GetRowHierarchyForRowIndex(cell.RowIndex);
+                var row = GetRowFromRowHierarchy(rowIndexHierarchy) as AnalysisRow;
+                if (row != null) newDataFilter.Analysis.Add(row.Analysis);
+            }
+
+            if (AnalysisViewFilter != null)
+                AnalysisViewFilter(this, newDataFilter);
+        }
+
+        public event EventHandler<DataFilter> AnalysisViewFilter;
 
         private NHibernate.ISession session;
 
