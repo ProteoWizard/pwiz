@@ -135,7 +135,8 @@ namespace Test
 
                 // start GUI conversion
                 var config = logicAccessor.ParseCommandLine(outputDirectory, String.Format("{0}|{1}", String.Join("|", extraArgs).Replace("\"", String.Empty), filepath).Trim('|'));
-                logicAccessor.Work(config);
+                logicAccessor.QueueWork(config);
+                MainLogic.Work();
 
                 foreach (string runId in runIds)
                 {

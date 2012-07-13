@@ -97,14 +97,12 @@ namespace MSConvertGUI
         private string _errorMessage;
         bool _canceled;
 
+        static Queue<KeyValuePair<MainLogic, Config>> _workQueue = new Queue<KeyValuePair<MainLogic, Config>>();
+
         public MainLogic(ProgressForm.JobInfo info)
         {
             _info = info;
             _canceled = false;
-
-            int numThreads = Environment.ProcessorCount;
-            ThreadPool.SetMinThreads(numThreads, numThreads);
-            ThreadPool.SetMaxThreads(numThreads, numThreads);
         }
 
         public Config ParseCommandLine(string outputFolder, string argv)
@@ -412,12 +410,11 @@ namespace MSConvertGUI
         object calculateSHA1Mutex = new object();
         void processFile(string filename, Config config, ReaderList readers)
         {
-            if (LogUpdate != null) LogUpdate("Opening file...", _info);
-            if (StatusUpdate != null) StatusUpdate("Opening file...", ProgressBarStyle.Marquee, _info);
-
             // read in data file
             using (var msdList = new MSDataList())
             {
+                if (LogUpdate != null) LogUpdate("Opening file...", _info);
+                if (StatusUpdate != null) StatusUpdate("Opening file...", ProgressBarStyle.Marquee, _info);
                 readers.read(filename, msdList);
 
                 foreach (var msd in msdList)
@@ -427,12 +424,15 @@ namespace MSConvertGUI
                     if (filename == outputFilename)
                         throw new ArgumentException("Output filepath is the same as input filepath");
 
-                    if (LogUpdate != null) LogUpdate("Calculating SHA1 checksum...", _info);
-                    if (StatusUpdate != null) StatusUpdate("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, _info);
+                    if (StatusUpdate != null) StatusUpdate("Waiting...", ProgressBarStyle.Marquee, _info);
 
                     // only one thread 
                     lock (calculateSHA1Mutex)
+                    {
+                        if (LogUpdate != null) LogUpdate("Calculating SHA1 checksum...", _info);
+                        if (StatusUpdate != null) StatusUpdate("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, _info);
                         MSDataFile.calculateSHA1Checksums(msd);
+                    }
 
                     if (LogUpdate != null) LogUpdate("Processing...", _info);
                     if (StatusUpdate != null) StatusUpdate("Processing...", ProgressBarStyle.Marquee, _info);
@@ -486,22 +486,50 @@ namespace MSConvertGUI
             _canceled = true;
         }
 
-        public void WorkAsync(Config config)
+        public void QueueWork(Config config)
         {
             if (StatusUpdate != null) StatusUpdate("Waiting...", ProgressBarStyle.Continuous, _info);
 
             _canceled = false;
-            ThreadPool.QueueUserWorkItem(Work, config);
+
+            lock (_workQueue)
+                _workQueue.Enqueue(new KeyValuePair<MainLogic, Config>(this, config));
         }
 
-        public void Work(object state)
+        public static void RunQueue()
         {
-            var worker = new Thread((x) =>
+            var workThreads = new List<Thread>();
+            for (int i = 0; i < Math.Min(2, Environment.ProcessorCount); ++i)
             {
-                Config config = (Config) state;
+                var thread = new Thread(Work) {Priority = ThreadPriority.BelowNormal};
+                thread.SetApartmentState(ApartmentState.STA);
+                workThreads.Add(thread);
+            }
+            workThreads.ForEach(o => o.Start());
+        }
+
+        public static void Work()
+        {
+            while (true)
+            {
+                KeyValuePair<MainLogic, Config> item;
+                lock (_workQueue)
+                {
+                    if (!_workQueue.Any())
+                        return;
+                    item = _workQueue.Dequeue();
+                }
+
+                MainLogic logic = item.Key;
+                Config config = item.Value;
+                var LogUpdate = logic.LogUpdate;
+                var StatusUpdate = logic.StatusUpdate;
+                var PercentageUpdate = logic.PercentageUpdate;
+                var _info = logic._info;
+
                 try
                 {
-                    var result = Go(config) == 0 ? 100 : -99;
+                    var result = logic.Go(config) == 0 ? 100 : -99;
 
                     if (result == 100)
                     {
@@ -511,7 +539,7 @@ namespace MSConvertGUI
                     }
                     else
                     {
-                        if (LogUpdate != null) LogUpdate("Failed - " + _errorMessage, _info);
+                        if (LogUpdate != null) LogUpdate("Failed - " + logic._errorMessage, _info);
                         if (StatusUpdate != null) StatusUpdate("Failed", ProgressBarStyle.Continuous, _info);
                         if (PercentageUpdate != null) PercentageUpdate(-99, 100, _info);
                     }
@@ -529,11 +557,7 @@ namespace MSConvertGUI
                         //probably nothing left to report to
                     }
                 }
-            });
-            worker.SetApartmentState(ApartmentState.STA);
-            worker.Priority = ThreadPriority.BelowNormal;
-            worker.Start();
-            worker.Join();
+            }
         }
     }
 }

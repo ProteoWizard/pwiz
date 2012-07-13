@@ -156,8 +156,10 @@ namespace MSConvertGUI
                 info.workProcess = runProgram;
 
                 var config = runProgram.ParseCommandLine(_outputFolder, (item + "|" + _options).Trim('|'));
-                runProgram.WorkAsync(config);
+                runProgram.QueueWork(config);
             }
+
+            MainLogic.RunQueue();
         }
 
         private void ProgressForm_FormClosing(object sender, FormClosingEventArgs e)

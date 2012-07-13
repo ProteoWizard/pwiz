@@ -21,6 +21,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
@@ -102,6 +103,12 @@ namespace MSConvertGUI
             thresholdTypeComboBox.SelectedIndex = 0;
             thresholdOrientationComboBox.SelectedIndex = 0;
             thresholdValueTextBox.Text = "100";
+        }
+
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            // don't let running jobs prevent the process from exiting
+            Process.GetCurrentProcess().Kill();
         }
 
         private void FilterBox_SelectedIndexChanged(object sender, EventArgs e)
