@@ -52,7 +52,7 @@ namespace IDPicker.Controls
         /// </summary>
         private void InitializeComponent ()
         {
-            this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.dataGridView = new IDPicker.Controls.TreeDataGridView();
             this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridViewFileBrowseColumn1 = new CustomFileCell.DataGridViewFileBrowseColumn();
             this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -66,13 +66,11 @@ namespace IDPicker.Controls
             this.maxFDRColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ignoreUnmappedPeptidesColumn = new System.Windows.Forms.DataGridViewCheckBoxColumn();
             this.qonverterSettingsColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView
             // 
-            this.dataGridView.AllowUserToAddRows = false;
-            this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.AllowUserToResizeRows = false;
             this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
@@ -138,7 +136,6 @@ namespace IDPicker.Controls
             // 
             this.analysisNameColumn.HeaderText = "Analysis";
             this.analysisNameColumn.Name = "analysisNameColumn";
-            this.analysisNameColumn.ReadOnly = true;
             this.analysisNameColumn.Width = 150;
             // 
             // databaseColumn
@@ -188,19 +185,20 @@ namespace IDPicker.Controls
             this.Controls.Add(this.dataGridView);
             this.Name = "ImportSettingsControl";
             this.Size = new System.Drawing.Size(977, 144);
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView;
+        private TreeDataGridView dataGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
         private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
+        private CustomFileCell.DataGridViewFileBrowseColumn dataGridViewFileBrowseColumn1;
         private System.Windows.Forms.DataGridViewTextBoxColumn analysisNameColumn;
         private CustomFileCell.DataGridViewFileBrowseColumn databaseColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn decoyPrefixColumn;
@@ -208,6 +206,5 @@ namespace IDPicker.Controls
         private System.Windows.Forms.DataGridViewTextBoxColumn maxFDRColumn;
         private System.Windows.Forms.DataGridViewCheckBoxColumn ignoreUnmappedPeptidesColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn qonverterSettingsColumn;
-        private CustomFileCell.DataGridViewFileBrowseColumn dataGridViewFileBrowseColumn1;
     }
 }

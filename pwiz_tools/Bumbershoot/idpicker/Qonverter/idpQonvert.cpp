@@ -217,24 +217,6 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
                 }
                 else
                     error << "\tinputFilepath: " << analysis.filepaths[0] << endl;
-
-                if (i == 0)
-                {
-                    vector<string> firstParameters, secondParameters;
-                    BOOST_FOREACH(const AnalysisParameter& kvp, analysis.parameters)
-                        firstParameters.push_back(kvp.first + ": " + kvp.second);
-                    BOOST_FOREACH(const AnalysisParameter& kvp, distinctAnalyses[1]->parameters)
-                        secondParameters.push_back(kvp.first + ": " + kvp.second);
-
-                    vector<string> a_b, b_a;
-                    pwiz::data::diff_impl::vector_diff(firstParameters, secondParameters, a_b, b_a);
-
-                    error << "\tdistinct parameters in first analysis: " << bal::join(a_b, ", ") << endl;
-                    error << "\tdistinct parameters in second analysis: " << bal::join(b_a, ", ") << endl;
-                    //BOOST_FOREACH(const AnalysisParameter& kvp, analysis.parameters)
-                    //    cerr << "\t\t" << kvp.first << ": " << kvp.second << endl;
-                    //error << endl;
-                }
             }
             cerr << error.str() << endl;
         }

@@ -46,11 +46,21 @@ namespace IDPicker.Controls
     /// </summary>
     public partial class ImportSettingsControl : UserControl
     {
-        IEnumerable<Parser.Analysis> distinctAnalyses;
-
         QonverterSettingsManagerNeeded qonverterSettingsManagerNeeded;
-
         IDictionary<string, QonverterSettings> qonverterSettingsByName;
+
+        private class ImportSettingsRow
+        {
+            public Parser.Analysis Analysis { get; set; }
+            public Parser.Analysis.ImportSettings ImportSettings { get { return Analysis.importSettings; } }
+
+            public string OriginalAnalysisName { get; set; }
+            public string DecoyPrefix { get; set; }
+            public string QonverterSettingsPreset { get; set; }
+        }
+
+        IList<ImportSettingsRow> rows;
+
 
         public ImportSettingsControl (IEnumerable<Parser.Analysis> distinctAnalyses,
                                       QonverterSettingsManagerNeeded qonverterSettingsManagerNeeded)
@@ -66,7 +76,6 @@ namespace IDPicker.Controls
             if (qonverterSettingsManagerNeeded == null)
                 throw new NullReferenceException();
 
-            this.distinctAnalyses = distinctAnalyses;
             this.qonverterSettingsManagerNeeded = qonverterSettingsManagerNeeded;
 
             qonverterSettingsByName = QonverterSettings.LoadQonverterSettings();
@@ -74,25 +83,11 @@ namespace IDPicker.Controls
             qonverterSettingsByName.Keys.ToList().ForEach(o => qonverterSettingsColumn.Items.Add(o));
             qonverterSettingsColumn.Items.Add("Edit...");
 
+            rows = new List<ImportSettingsRow>();
+
             foreach (var a in distinctAnalyses)
             {
-                var row = new DataGridViewRow();
-                row.CreateCells(dataGridView);
-
-                var parameterSet = new Iesi.Collections.Generic.SortedSet<string>(a.parameters.Select(o => o.Key + "=" + o.Value).ToArray() as ICollection<string>);
-                Iesi.Collections.Generic.ISet<string> diffParameters = new Iesi.Collections.Generic.SortedSet<string>();
-                foreach (var a2 in distinctAnalyses)
-                {
-                    if (a.softwareName != a2.softwareName)
-                        continue;
-
-                    var parameterSet2 = new Iesi.Collections.Generic.SortedSet<string>(a.parameters.Select(o => o.Key + "=" + o.Value).ToArray() as ICollection<string>);
-                    diffParameters = diffParameters.Union(parameterSet.Minus(parameterSet2));
-                }
-
-                string key = a.name;
-                foreach (var p in diffParameters)
-                    key += p;
+                var row = new ImportSettingsRow {Analysis = a, OriginalAnalysisName = a.name};
 
                 // try to find valid protein database location
                 if (!File.Exists(a.importSettings.proteinDatabaseFilepath))
@@ -123,43 +118,109 @@ namespace IDPicker.Controls
                     }
                 }
 
-                row.Tag = a;
-                row.Cells[analysisNameColumn.Index].Value = key;
-                row.Cells[databaseColumn.Index].Value = a.importSettings.proteinDatabaseFilepath;
-                row.Cells[databaseColumn.Index].Style.BackColor = File.Exists(a.importSettings.proteinDatabaseFilepath) ? SystemColors.Window : Color.LightSalmon;
-                row.Cells[decoyPrefixColumn.Index].Value = Properties.Settings.Default.DefaultDecoyPrefix;
-                row.Cells[maxRankColumn.Index].Value = Properties.Settings.Default.DefaultMaxRank;
-                row.Cells[maxFDRColumn.Index].Value = Properties.Settings.Default.DefaultMaxImportFDR;
-                row.Cells[ignoreUnmappedPeptidesColumn.Index].Value = Properties.Settings.Default.DefaultIgnoreUnmappedPeptides;
+                row.DecoyPrefix = Properties.Settings.Default.DefaultDecoyPrefix;
+                row.ImportSettings.maxResultRank = Properties.Settings.Default.DefaultMaxRank;
+                row.ImportSettings.maxQValue = Properties.Settings.Default.DefaultMaxImportFDR;
+                row.ImportSettings.ignoreUnmappedPeptides = Properties.Settings.Default.DefaultIgnoreUnmappedPeptides;
+
+                // select a default qonverter settings preset
+                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.softwareName.ToLower()));
+                row.QonverterSettingsPreset = firstSoftwarePreset ?? qonverterSettingsByName.Keys.FirstOrDefault() ?? String.Empty;
+                row.ImportSettings.qonverterSettings = qonverterSettingsByName[row.QonverterSettingsPreset].ToQonverterSettings();
 
                 if (a.parameters.ContainsKey("Config: DecoyPrefix"))
-                    row.Cells[decoyPrefixColumn.Index].Value = a.parameters["Config: DecoyPrefix"];
+                    row.DecoyPrefix = a.parameters["Config: DecoyPrefix"];
 
-                var comboBox = row.Cells[qonverterSettingsColumn.Index] as DataGridViewComboBoxCell;
-                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.softwareName.ToLower()));
-                comboBox.Value = firstSoftwarePreset == null ? qonverterSettingsByName.Keys.FirstOrDefault() : firstSoftwarePreset;
-                dataGridView.Rows.Add(row);
-            }
+                row.ImportSettings.qonverterSettings.DecoyPrefix = row.DecoyPrefix;
 
-            foreach (DataGridViewRow row in dataGridView.Rows)
-            {
-                var analysis = row.Tag as Parser.Analysis;
-                analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[qonverterSettingsColumn.Index].Value].ToQonverterSettings();
-                analysis.importSettings.maxResultRank = Convert.ToInt32(row.Cells[maxRankColumn.Index].Value);
-                analysis.importSettings.maxQValue = Convert.ToDouble(row.Cells[maxFDRColumn.Index].Value);
-                analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
-                analysis.importSettings.ignoreUnmappedPeptides = (bool) row.Cells[ignoreUnmappedPeptidesColumn.Index].Value;
+                rows.Add(row);
             }
 
             dataGridView.CellBeginEdit += dataGridView_CellBeginEdit;
             dataGridView.CellEndEdit += dataGridView_CellEndEdit;
             dataGridView.CurrentCellDirtyStateChanged += dataGridView_CurrentCellDirtyStateChanged;
+            dataGridView.CellValueNeeded += dataGridView_CellValueNeeded;
+            dataGridView.CellValuePushed += dataGridView_CellValuePushed;
+            dataGridView.CellPainting += dataGridView_CellPainting;
+            dataGridView.CellFormatting += dataGridView_CellFormatting;
+
+            dataGridView.RootRowCount = rows.Count;
+        }
+
+        void dataGridView_CellFormatting(object sender, TreeDataGridViewCellFormattingEventArgs e)
+        {
+            if (e.RowIndexHierarchy.Count == 1 && e.ColumnIndex == databaseColumn.Index)
+                e.CellStyle.BackColor = File.Exists((string)e.Value) ? SystemColors.Window : Color.LightSalmon;
+            else if (e.RowIndexHierarchy.Count > 1)
+            {
+                // if the current analysis parameter is one of the differing paremeters (as stored in the original analysis name);
+                // make the text red
+                var analysisRow = rows[e.RowIndexHierarchy[0]];
+                var currentParameter = analysisRow.Analysis.parameters.ElementAt(e.RowIndexHierarchy[1]);
+                if (analysisRow.OriginalAnalysisName.Contains(currentParameter.Key.Replace("Config: ", "") + "="))
+                    e.CellStyle.ForeColor = Color.Red;
+            }
+        }
+
+        /// <summary>Prevents painting the editing controls for analysis parameter rows.</summary>
+        void dataGridView_CellPainting(object sender, TreeDataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndexHierarchy.Count > 1 && e.ColumnIndex > 1)
+            {
+                e.PaintBackground(e.ClipBounds, e.State.HasFlag(DataGridViewElementStates.Selected));
+                e.Handled = true;
+            }
+            else
+                e.Handled = false;
+        }
+
+        void dataGridView_CellValuePushed(object sender, TreeDataGridViewCellValueEventArgs e)
+        {
+            var importSettingsRow = rows[e.RowIndexHierarchy[0]];
+
+            if (e.RowIndexHierarchy.Count == 1)
+            {
+                if (e.ColumnIndex == analysisNameColumn.Index) importSettingsRow.Analysis.name = (string) e.Value;
+                else if (e.ColumnIndex == databaseColumn.Index) importSettingsRow.ImportSettings.proteinDatabaseFilepath = (string) e.Value;
+                else if (e.ColumnIndex == decoyPrefixColumn.Index) importSettingsRow.DecoyPrefix = (string) e.Value;
+                else if (e.ColumnIndex == maxFDRColumn.Index) importSettingsRow.ImportSettings.maxQValue = Convert.ToDouble(e.Value);
+                else if (e.ColumnIndex == maxRankColumn.Index) importSettingsRow.ImportSettings.maxResultRank = Convert.ToInt32(e.Value);
+                else if (e.ColumnIndex == ignoreUnmappedPeptidesColumn.Index) importSettingsRow.ImportSettings.ignoreUnmappedPeptides = (bool) e.Value;
+                else if (e.ColumnIndex == qonverterSettingsColumn.Index) importSettingsRow.QonverterSettingsPreset = (string) e.Value;
+            }
+        }
+
+        void dataGridView_CellValueNeeded(object sender, TreeDataGridViewCellValueEventArgs e)
+        {
+            var importSettingsRow = rows[e.RowIndexHierarchy[0]];
+
+            if (e.RowIndexHierarchy.Count == 1)
+            {
+                e.ChildRowCount = importSettingsRow.Analysis.parameters.Count;
+
+                if (e.ColumnIndex == analysisNameColumn.Index) e.Value = importSettingsRow.Analysis.name;
+                else if (e.ColumnIndex == databaseColumn.Index) e.Value = importSettingsRow.ImportSettings.proteinDatabaseFilepath;
+                else if (e.ColumnIndex == decoyPrefixColumn.Index) e.Value = importSettingsRow.DecoyPrefix;
+                else if (e.ColumnIndex == maxFDRColumn.Index) e.Value = importSettingsRow.ImportSettings.maxQValue;
+                else if (e.ColumnIndex == maxRankColumn.Index) e.Value = importSettingsRow.ImportSettings.maxResultRank;
+                else if (e.ColumnIndex == ignoreUnmappedPeptidesColumn.Index) e.Value = importSettingsRow.ImportSettings.ignoreUnmappedPeptides;
+                else if (e.ColumnIndex == qonverterSettingsColumn.Index) e.Value = importSettingsRow.QonverterSettingsPreset;
+            }
+            else if (e.ColumnIndex == 0) e.Value = importSettingsRow.Analysis.parameters.ElementAt(e.RowIndexHierarchy[1]).Key.Replace("Config: ", "");
+            else if (e.ColumnIndex == 1) e.Value = importSettingsRow.Analysis.parameters.ElementAt(e.RowIndexHierarchy[1]).Value;
         }
 
         string uneditedValue = null;
-        void dataGridView_CellBeginEdit (object sender, DataGridViewCellCancelEventArgs e)
+        void dataGridView_CellBeginEdit (object sender, TreeDataGridViewCellCancelEventArgs e)
         {
-            uneditedValue = (dataGridView[e.ColumnIndex, e.RowIndex].Value ?? String.Empty).ToString();
+            // child rows (analysis parameters) can't be edited
+            if (e.RowIndexHierarchy.Count > 1)
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            uneditedValue = (dataGridView[e.ColumnIndex, e.RowIndexHierarchy].Value ?? String.Empty).ToString();
 
             if (e.ColumnIndex == databaseColumn.Index)
             {
@@ -169,32 +230,38 @@ namespace IDPicker.Controls
             }
         }
 
-        void dataGridView_CellEndEdit (object sender, DataGridViewCellEventArgs e)
+        void dataGridView_CellEndEdit (object sender, TreeDataGridViewCellEventArgs e)
         {
-            var row = dataGridView.Rows[e.RowIndex];
-            var analysis = row.Tag as Parser.Analysis;
+            var row = dataGridView[e.ColumnIndex, e.RowIndexHierarchy].OwningRow;
+            var importSettingsRow = rows[e.RowIndexHierarchy[0]];
+            var analysis = importSettingsRow.Analysis;
 
-            if (e.ColumnIndex == databaseColumn.Index)
+            if (e.ColumnIndex == analysisNameColumn.Index)
+            {
+                if (String.IsNullOrEmpty((string) row.Cells[analysisNameColumn.Index].Value))
+                    row.Cells[analysisNameColumn.Index].Value = analysis.name = importSettingsRow.OriginalAnalysisName;
+            }
+            else if (e.ColumnIndex == databaseColumn.Index)
             {
                 analysis.importSettings.proteinDatabaseFilepath = (string) row.Cells[databaseColumn.Index].Value;
                 row.Cells[databaseColumn.Index].Style.BackColor = File.Exists((string) row.Cells[databaseColumn.Index].Value) ? SystemColors.Window : Color.LightSalmon;
 
                 // also set all databases equal to the uneditedValue
                 string originalFilename = Path.GetFileName(uneditedValue) ?? uneditedValue;
-                foreach (DataGridViewRow row2 in dataGridView.Rows)
+                foreach (var importSettingsRow2 in rows)
                 {
-                    if (row == row2) continue;
-                    string rowFilename = row2.Cells[databaseColumn.Index].Value.ToString();
+                    if (importSettingsRow == importSettingsRow2) continue;
+                    string rowFilename = importSettingsRow2.ImportSettings.proteinDatabaseFilepath;
                     rowFilename = Path.GetFileName(rowFilename) ?? rowFilename;
                     if (rowFilename == originalFilename)
-                    {
-                        row2.Cells[databaseColumn.Index].Value = (row2.Tag as Parser.Analysis).importSettings.proteinDatabaseFilepath = analysis.importSettings.proteinDatabaseFilepath;
-                        row2.Cells[databaseColumn.Index].Style.BackColor = row.Cells[databaseColumn.Index].Style.BackColor;
-                    }
+                        importSettingsRow2.ImportSettings.proteinDatabaseFilepath = importSettingsRow.ImportSettings.proteinDatabaseFilepath;
                 }
             }
             else if (e.ColumnIndex == decoyPrefixColumn.Index)
+            {
                 analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
+                importSettingsRow.DecoyPrefix = (string)row.Cells[decoyPrefixColumn.Index].Value;
+            }
             else if (e.ColumnIndex == maxRankColumn.Index &&
                      !Int32.TryParse(row.Cells[maxRankColumn.Index].Value.ToString(), out analysis.importSettings.maxResultRank) ||
                      analysis.importSettings.maxResultRank < 1)
@@ -207,6 +274,7 @@ namespace IDPicker.Controls
             {
                 analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[qonverterSettingsColumn.Index].Value].ToQonverterSettings();
                 analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
+                importSettingsRow.DecoyPrefix = (string)row.Cells[decoyPrefixColumn.Index].Value;
             }
             else if (e.ColumnIndex == ignoreUnmappedPeptidesColumn.Index)
                 analysis.importSettings.ignoreUnmappedPeptides = (bool) row.Cells[ignoreUnmappedPeptidesColumn.Index].Value;
@@ -228,6 +296,9 @@ namespace IDPicker.Controls
                 qonverterSettingsManagerNeeded();
 
                 qonverterSettingsByName = QonverterSettings.LoadQonverterSettings();
+                qonverterSettingsColumn.Items.Clear();
+                qonverterSettingsByName.Keys.ToList().ForEach(o => qonverterSettingsColumn.Items.Add(o));
+                qonverterSettingsColumn.Items.Add("Edit...");
 
                 cell.Value = uneditedValue;
                 dataGridView.RefreshEdit();

@@ -810,7 +810,7 @@ namespace IDPicker
             {
                 var xml_filepaths = filepaths.Where(filepath => !filepath.EndsWith(".idpDB"));
                 var idpDB_filepaths = filepaths.Where(filepath => filepath.EndsWith(".idpDB"));
-                bool openSingleFile = xml_filepaths.IsNullOrEmpty() && idpDB_filepaths.Count() == 1;
+                bool openSingleFile = xml_filepaths.Count() + idpDB_filepaths.Count() == 1;
 
                 if (xml_filepaths.Count() + idpDB_filepaths.Count() == 0)
                 {
@@ -890,7 +890,6 @@ namespace IDPicker
                         if (!saveFileDialog(ref mergeTargetFilepath, "Choose where to create the merged idpDB."))
                             return;
 
-                        bool firstIteration = true;
                         while (true)
                         {
                             if (!canReadWriteInDirectory(Path.GetDirectoryName(mergeTargetFilepath)))

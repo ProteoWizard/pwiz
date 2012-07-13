@@ -27,7 +27,6 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
-#include "pwiz/data/common/diff_std.hpp"
 #include "pwiz/data/identdata/IdentDataFile.hpp"
 #include "pwiz/data/identdata/TextWriter.hpp"
 #include "pwiz/data/proteome/ProteinListCache.hpp"
@@ -137,7 +136,7 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
     // determine analysis software used
     CVParam searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
     if (!searchEngine.empty())
-        analysis.softwareName = searchEngine.name();
+        analysis.softwareName = searchEngine.value.empty() ? searchEngine.name() : searchEngine.value;
     else if (!sip.analysisSoftwarePtr->softwareName.userParams.empty())
         analysis.softwareName = sip.analysisSoftwarePtr->softwareName.userParams[0].name;
     else
@@ -251,6 +250,26 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
     analysis.parameters.insert(parameters.begin(), parameters.end());
 }
 
+template <typename key_type, typename value_type>
+void map_diff(const std::map<key_type, value_type>& a,
+              const std::map<key_type, value_type>& b,
+              std::vector<pair<key_type, value_type> >& a_b,
+              std::vector<pair<key_type, value_type> >& b_a)
+{
+    // calculate set differences of two maps
+
+    a_b.clear();
+    b_a.clear();
+
+    for (typename std::map<key_type, value_type>::const_iterator it=a.begin(); it!=a.end(); ++it)
+        if (b.find(it->first) == b.end() || b.find(it->first)->second != it->second)
+            a_b.push_back(*it);
+
+    for (typename std::map<key_type, value_type>::const_iterator it=b.begin(); it!=b.end(); ++it)
+        if (a.find(it->first) == a.end() || a.find(it->first)->second != it->second)
+            b_a.push_back(*it);
+}
+
 // an analysis is distinct if its name is unique and it has at least one distinct parameter
 typedef map<string, AnalysisPtr> DistinctAnalysisMap;
 void findDistinctAnalyses(const vector<string>& inputFilepaths,
@@ -258,6 +277,9 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
                           const IterationListenerRegistry* ilr)
 {
     map<string, vector<AnalysisPtr> > sameNameAnalysesByName;
+    vector<pair<string, string> > a_b, b_a;
+    set<string> differingParameters;
+
     int iterationIndex = 0;
     IterationListener::Status status;
     BOOST_FOREACH(const string& filepath, inputFilepaths)
@@ -273,20 +295,20 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
         vector<AnalysisPtr>& sameNameAnalyses = sameNameAnalysesByName[analysis->name];
         AnalysisPtr sameAnalysis;
 
-        // do a set union of the current analysis' parameters with every same name analysis;
-        // if the union's size equals the current analysis' parameter size, the analysis is not distinct
+        // take the set difference of the current analysis' parameters with every same name analysis;
+        // if the set difference is empty, the analysis is not distinct
         BOOST_FOREACH(AnalysisPtr& otherAnalysis, sameNameAnalyses)
         {
-            vector<pair<string, string> > parameterUnion;
-            std::set_union(otherAnalysis->parameters.begin(), otherAnalysis->parameters.end(),
-                           analysis->parameters.begin(), analysis->parameters.end(),
-                           std::back_inserter(parameterUnion));
+            map_diff(analysis->parameters, otherAnalysis->parameters, a_b, b_a);
 
-            if (parameterUnion.size() == analysis->parameters.size())
+            if (a_b.empty() && b_a.empty())
             {
                 sameAnalysis = otherAnalysis;
                 break;
             }
+
+            BOOST_FOREACH_FIELD((string& key)(string& value), a_b) differingParameters.insert(key);
+            BOOST_FOREACH_FIELD((string& key)(string& value), b_a) differingParameters.insert(key);
         }
 
         if (!sameAnalysis.get())
@@ -300,8 +322,19 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
     typedef pair<string, vector<AnalysisPtr> > SameNameAnalysesPair;
     BOOST_FOREACH(const SameNameAnalysesPair& itr, sameNameAnalysesByName)
     BOOST_FOREACH(const AnalysisPtr& analysis, itr.second)
-    BOOST_FOREACH(const string& filepath, analysis->filepaths)
-        distinctAnalyses[filepath] = analysis;
+    {
+        // change the analysis names based on their values for the differing parameters
+        if (!differingParameters.empty())
+        {
+            vector<string> differingParametersWithValues;
+            BOOST_FOREACH(const string& key, differingParameters)
+                differingParametersWithValues.push_back(key + "=" + analysis->parameters[key]);
+            analysis->name += " (" + bal::join(differingParametersWithValues, ", ") + ")";
+        }
+
+        BOOST_FOREACH(const string& filepath, analysis->filepaths)
+            distinctAnalyses[filepath] = analysis;
+    }
 }
 
 
@@ -409,9 +442,6 @@ struct ParserImpl
 
         SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
 
-        Analysis analysis;
-        parseAnalysis(mzid, analysis);
-
         // insert the root group
         sqlite::command(idpDb, "INSERT INTO SpectrumSourceGroup (Id, Name) VALUES (1,'/')").execute();
         sqlite::command(idpDb, "INSERT INTO SpectrumSourceGroupLink (Id, Source, Group_) VALUES (1,1,1)").execute();
@@ -438,7 +468,7 @@ struct ParserImpl
         insertSpectrumSource.execute();
 
         insertAnalysis.binder() << 1
-                                << analysis.name
+                                << analysis.importSettings.analysisName
                                 << analysis.softwareName
                                 << analysis.softwareVersion
                                 << 0;

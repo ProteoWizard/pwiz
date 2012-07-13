@@ -93,6 +93,7 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
         {
             const NativeParser::Analysis& nativeAnalysis = *distinctAnalyses[i];
             Parser::Analysis^ analysis = args->DistinctAnalyses[i];
+            nativeAnalysis.importSettings.analysisName = ToStdString(analysis->name);
             nativeAnalysis.importSettings.proteinDatabaseFilepath = ToStdString(analysis->importSettings->proteinDatabaseFilepath);
             nativeAnalysis.importSettings.maxQValue = analysis->importSettings->maxQValue;
             nativeAnalysis.importSettings.maxResultRank = analysis->importSettings->maxResultRank;

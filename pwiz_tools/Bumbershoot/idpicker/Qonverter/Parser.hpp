@@ -74,6 +74,7 @@ struct Parser
 
         struct ImportSettings
         {
+            string analysisName;
             string proteinDatabaseFilepath;
             Qonverter::Settings qonverterSettings;
             double maxQValue; /// filter the database on Q-value before writing to disk

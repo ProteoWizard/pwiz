@@ -45,7 +45,7 @@ namespace IDPicker.Forms
             if (!checkboxShown)
                 inputCheckBox.Visible = false;
             inputTextBox.Text = initialText;
-            _inputFormat = new Regex(@"\w| ");
+            _inputFormat = new Regex(@"[a-zA-Z0-9 `~!@#$%&_=\-\+\.\^\*\(\)\[\]\{\}\|<>,;':/\\]");
         }
 
         private void inputTextBox_KeyPress(object sender, KeyPressEventArgs e)

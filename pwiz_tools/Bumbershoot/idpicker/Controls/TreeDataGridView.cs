@@ -30,6 +30,7 @@ using System.Drawing;
 using System.Data;
 using System.Drawing.Drawing2D;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Windows.Forms;
 using IDPicker.DataModel;
@@ -174,7 +175,10 @@ namespace IDPicker.Controls
         }
 
         public new event TreeDataGridViewCellValueEventHandler CellValueNeeded;
+        public new event TreeDataGridViewCellValueEventHandler CellValuePushed;
         public new event TreeDataGridViewCellFormattingEventHandler CellFormatting;
+        public new event TreeDataGridViewCellCancelEventHandler CellBeginEdit;
+        public new event TreeDataGridViewCellEventHandler CellEndEdit;
         public new event TreeDataGridViewCellEventHandler CellClick;
         public new event TreeDataGridViewCellEventHandler CellContentClick;
         public new event TreeDataGridViewCellEventHandler CellDoubleClick;
@@ -388,6 +392,22 @@ namespace IDPicker.Controls
             }
         }
 
+        protected override void OnCellValuePushed(DataGridViewCellValueEventArgs e)
+        {
+            if (CellValuePushed == null)
+                return;
+
+            // DataGridView may ask for cells after RowCount is set to 0 in order to commit changes
+            if (expandedRowList == null || e.RowIndex >= expandedRowList.Count)
+                return;
+
+            //converts row number into hierarchy list, understandable by user-specified value-retrieval function
+            var rowInfo = expandedRowList[e.RowIndex];
+            var cellValueEventArgs = new TreeDataGridViewCellValueEventArgs(e.ColumnIndex, rowInfo.RowIndexHierarchy);
+            cellValueEventArgs.Value = e.Value;
+            CellValuePushed(this, cellValueEventArgs);
+        }
+
         protected override void OnCellFormatting (DataGridViewCellFormattingEventArgs e)
         {
             // DataGridView may ask for cells after RowCount is set to 0 in order to commit changes
@@ -398,6 +418,22 @@ namespace IDPicker.Controls
                 CellFormatting(this, new TreeDataGridViewCellFormattingEventArgs(e.ColumnIndex, GetRowHierarchyForRowIndex(e.RowIndex), e.Value, e.DesiredType, e.CellStyle));
             else
                 base.OnCellFormatting(e);
+        }
+
+        protected override void OnCellBeginEdit(DataGridViewCellCancelEventArgs e)
+        {
+            var e2 = new TreeDataGridViewCellCancelEventArgs(e.ColumnIndex, GetRowHierarchyForRowIndex(e.RowIndex));
+            if (CellBeginEdit != null)
+                CellBeginEdit(this, e2);
+            e.Cancel = e2.Cancel;
+            base.OnCellBeginEdit(e);
+        }
+
+        protected override void OnCellEndEdit(DataGridViewCellEventArgs e)
+        {
+            base.OnCellEndEdit(e);
+            if (CellEndEdit != null)
+                CellEndEdit(this, new TreeDataGridViewCellEventArgs(e.ColumnIndex, GetRowHierarchyForRowIndex(e.RowIndex)));
         }
 
         protected override void OnCellClick (DataGridViewCellEventArgs e)
@@ -743,6 +779,10 @@ namespace IDPicker.Controls
                    e.RowIndex, e.ColumnIndex, e.State, e.Value, e.FormattedValue,
                    e.ErrorText, e.CellStyle, e.AdvancedBorderStyle, e.PaintParts)
         {
+            // for some reason this isn't being set properly in the base class constructor
+            var fieldInfo = typeof(DataGridViewCellPaintingEventArgs).GetField("dataGridView", BindingFlags.NonPublic | BindingFlags.Instance);
+            fieldInfo.SetValue(this, dgv);
+
             RowIndexHierarchy = rowIndexHierarchy;
         }
 
@@ -762,6 +802,20 @@ namespace IDPicker.Controls
         public IList<int> RowIndexHierarchy { get; protected set; }
     }
 
+    public class TreeDataGridViewCellCancelEventArgs : EventArgs
+    {
+        public TreeDataGridViewCellCancelEventArgs(int columnIndex, params int[] rowIndexHierarchy) : this(columnIndex, rowIndexHierarchy as IList<int>) { }
+        public TreeDataGridViewCellCancelEventArgs(int columnIndex, IList<int> rowIndexHierarchy)
+        {
+            ColumnIndex = columnIndex;
+            RowIndexHierarchy = rowIndexHierarchy;
+        }
+
+        public bool Cancel { get; set; }
+        public int ColumnIndex { get; protected set; }
+        public IList<int> RowIndexHierarchy { get; protected set; }
+    }
+
     public class TreeDataGridViewCellMouseEventArgs : DataGridViewCellMouseEventArgs
     {
         public TreeDataGridViewCellMouseEventArgs (int columnIndex, IList<int> rowIndexHierarchy,
@@ -777,7 +831,8 @@ namespace IDPicker.Controls
     public delegate void TreeDataGridViewCellValueEventHandler (object sender, TreeDataGridViewCellValueEventArgs e);
     public delegate void TreeDataGridViewCellFormattingEventHandler (object sender, TreeDataGridViewCellFormattingEventArgs e);
     public delegate void TreeDataGridViewCellPaintingEventHandler (object sender, TreeDataGridViewCellPaintingEventArgs e);
-    public delegate void TreeDataGridViewCellEventHandler (object sender, TreeDataGridViewCellEventArgs e);
+    public delegate void TreeDataGridViewCellEventHandler(object sender, TreeDataGridViewCellEventArgs e);
+    public delegate void TreeDataGridViewCellCancelEventHandler(object sender, TreeDataGridViewCellCancelEventArgs e);
     public delegate void TreeDataGridViewCellMouseEventHandler (object sender, TreeDataGridViewCellMouseEventArgs e);
     public delegate void TreeDataGridViewChildRowCountNeededEventHandler (object sender, TreeDataGridViewChildRowCountNeededEventArgs e);
 }
