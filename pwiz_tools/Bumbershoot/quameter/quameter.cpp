@@ -648,6 +648,21 @@ namespace quameter
         }
     };
 
+    struct UnidentifiedPrecursorPeakWidthLessThan
+    {
+        bool operator() (const UnidentifiedPrecursorInfo& lhs, const UnidentifiedPrecursorInfo& rhs) const
+        {
+            if (!lhs.chromatogram.bestPeak && !rhs.chromatogram.bestPeak)
+                return false;
+            else if (!lhs.chromatogram.bestPeak)
+                return true;
+            else if (!rhs.chromatogram.bestPeak)
+                return false;
+            else
+                return lhs.chromatogram.bestPeak->fwhm < rhs.chromatogram.bestPeak->fwhm;
+        }
+    };
+
     void IDFreeMetrics(const QuameterInput& currentFile)
     {
         try
@@ -684,6 +699,7 @@ namespace quameter
             string lastMS1NativeId;
 
             accs::accumulator_set<double, accs::stats<accs::tag::min, accs::tag::max> > scanTimes;
+            accs::accumulator_set<double, accs::stats<accs::tag::min, accs::tag::max, accs::tag::percentile> > ms1ScanTimes, ms2ScanTimes;
 
             // For each spectrum
             size_t curIndex;
@@ -722,6 +738,7 @@ namespace quameter
 
                         scanInfo.scanStartTime = scanTime.timeInSeconds();
                         scanTimes(scanInfo.scanStartTime);
+                        ms1ScanTimes(scanInfo.scanStartTime);
 
                         ms1ScanMap.push_back(scanInfo);
                     }
@@ -751,12 +768,10 @@ namespace quameter
 
                         CVParam chargeState = si.cvParam(MS_charge_state);
                         if (!chargeState.empty())
-                        {
                             scanInfo.precursorCharge = chargeState.valueAs<int>();
-                            ++scanCountByChargeState[scanInfo.precursorCharge];
-                        }
                         else
                             scanInfo.precursorCharge = 0;
+                        ++scanCountByChargeState[min(6, scanInfo.precursorCharge)]; // only track charges up to 5; anything higher is a '6'
 
                         if (precursor.spectrumID.empty())
                         {
@@ -776,6 +791,7 @@ namespace quameter
                             throw runtime_error("No scan start time for " + spectrum->id);
                         scanInfo.scanStartTime = scanTime.timeInSeconds();
                         scanTimes(scanInfo.scanStartTime);
+                        ms2ScanTimes(scanInfo.scanStartTime);
 
                         scanInfo.precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
                         if (si.cvParam(MS_selected_ion_m_z).empty() )
@@ -895,8 +911,8 @@ namespace quameter
 
                         const MS2ScanInfo& scanInfo = *ms2ScanMap.get<nativeID>().find(spectrum->id);
 
-                        // if charge states are unknown, keep a count of multiply charged MS2s
-                        if (scanCountByChargeState.empty())
+                        // if charge state is unknown, determine whether it's likely to be singly or multiply charged
+                        if (scanInfo.precursorCharge == 0)
                         {
                             double ticBelowPrecursorMz = 0;
                             double TIC = 0;
@@ -935,26 +951,13 @@ namespace quameter
                 throw runtime_error("unknown error reading spectrum index " + lexical_cast<string>(curIndex));
             }
 
-            double chargeStateMetric;
-            if (scanCountByChargeState.empty())
-            {
-                // the fraction of MS2s for which less than 90% of MS/MS intensity falls below the precursor
-                chargeStateMetric = (double) multiplyChargedMS2s / ms2ScanMap.size();
-            }
-            else
-            {
-                // the fraction of MS2s reported by the instrument to be doubly-charged of all those with determined charges
-                int charge2 = scanCountByChargeState[2];
-                int determinedCharges = 0;
-                BOOST_FOREACH_FIELD((int charge)(int scanCount), scanCountByChargeState)
-                    determinedCharges += scanCount;
-                chargeStateMetric = static_cast<double>(charge2) / determinedCharges;
-            }
+            int scansWithDeterminedCharges = ms2ScanMap.size() - scanCountByChargeState[0];
 
             if (g_numWorkers == 1) cout << endl;
             
-            // cycle through all chromatograms, passing each one to crawdad
+            // cycle through all chromatograms, passing each one to Crawdad
             size_t i = 0;
+            double peakWidthTotal = 0; // keep track of total peak width when running Crawdad
             BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
             {
                 ++i;
@@ -1009,6 +1012,9 @@ namespace quameter
                     if (!lc.bestPeak || fabs(peakTime - info.spectrum->scanStartTime) < fabs(lc.bestPeak->peakTime - info.spectrum->scanStartTime))
                         lc.bestPeak = peak;
                 }
+
+                if (lc.bestPeak)
+                    peakWidthTotal += lc.bestPeak->fwhm;
             }
 
             XICWindowList dummyPepWindows;
@@ -1018,61 +1024,126 @@ namespace quameter
                 writeChromatograms(sourceFilename, ms2ScanMap, dummyPepWindows, unidentifiedPrecursors);
 
             // TIC metrics
-            accs::accumulator_set<double, accs::stats<accs::tag::max, accs::tag::percentile> > ms1DeltaTICs;
+            accs::accumulator_set<double, accs::stats<accs::tag::max, accs::tag::percentile> > ms1DeltaTICs, ms1TICs_acc;
             vector<double> cumulativeTIC(ms1TICs.size());
             cumulativeTIC[0] = ms1TICs[0] / totalTIC;
             for (size_t i=1; i < ms1TICs.size(); ++i)
             {
+                ms1TICs_acc(ms1TICs[i]);
                 ms1DeltaTICs(fabs(ms1TICs[i] - ms1TICs[i-1]));
                 cumulativeTIC[i] = cumulativeTIC[i-1] + ms1TICs[i] / totalTIC;
             }
-            double ms1StabilityOfTIC = accs::max(ms1DeltaTICs) / accs::percentile(ms1DeltaTICs, accs::percentile_number = 50);
+
+            double ms1DeltaTIC_Q1 = log(accs::percentile(ms1DeltaTICs, accs::percentile_number = 25));
+            double ms1DeltaTIC_Q2 = log(accs::percentile(ms1DeltaTICs, accs::percentile_number = 50));
+            double ms1DeltaTIC_Q3 = log(accs::percentile(ms1DeltaTICs, accs::percentile_number = 75));
+            double ms1DeltaTIC_Q2_ratio = ms1DeltaTIC_Q2 - ms1DeltaTIC_Q1;
+            double ms1DeltaTIC_Q3_ratio = ms1DeltaTIC_Q3 - ms1DeltaTIC_Q2;
+            double ms1DeltaTIC_Q4_ratio = log(accs::max(ms1DeltaTICs)) - ms1DeltaTIC_Q3;
+
+            double ms1TIC_Q1 = log(accs::percentile(ms1TICs_acc, accs::percentile_number = 25));
+            double ms1TIC_Q2 = log(accs::percentile(ms1TICs_acc, accs::percentile_number = 50));
+            double ms1TIC_Q3 = log(accs::percentile(ms1TICs_acc, accs::percentile_number = 75));
+            double ms1TIC_Q2_ratio = ms1TIC_Q2 - ms1TIC_Q1;
+            double ms1TIC_Q3_ratio = ms1TIC_Q3 - ms1TIC_Q2;
+            double ms1TIC_Q4_ratio = log(accs::max(ms1TICs_acc)) - ms1TIC_Q3;
 
             vector<double>::const_iterator cumulativeTIC_Q1 = boost::lower_bound(cumulativeTIC, 0.25);
+            vector<double>::const_iterator cumulativeTIC_Q2 = boost::lower_bound(cumulativeTIC, 0.50);
             vector<double>::const_iterator cumulativeTIC_Q3 = boost::lower_bound(cumulativeTIC, 0.75);
             size_t cumulativeTIC_Q1_Index = cumulativeTIC_Q1 - cumulativeTIC.begin();
+            size_t cumulativeTIC_Q2_Index = cumulativeTIC_Q2 - cumulativeTIC.begin();
             size_t cumulativeTIC_Q3_Index = cumulativeTIC_Q3 - cumulativeTIC.begin();
-            double timeRangeOfCumulativeTIC_IQR = ms1ScanMap[cumulativeTIC_Q3_Index].scanStartTime -
-                                                  ms1ScanMap[cumulativeTIC_Q1_Index].scanStartTime;
+            double minScanTime = accs::min(scanTimes);
+            double maxScanTime = accs::max(scanTimes);
+            double scanTimeDuration = maxScanTime - minScanTime;
+            double durationOfCumulativeTIC_Q1 = ms1ScanMap[cumulativeTIC_Q1_Index].scanStartTime;
+            double durationOfCumulativeTIC_Q2 = ms1ScanMap[cumulativeTIC_Q2_Index].scanStartTime;
+            double durationOfCumulativeTIC_Q3 = ms1ScanMap[cumulativeTIC_Q3_Index].scanStartTime;
+            double durationOfCumulativeTIC_Q1_interval = (durationOfCumulativeTIC_Q1 - minScanTime) / scanTimeDuration;
+            double durationOfCumulativeTIC_Q2_interval = (durationOfCumulativeTIC_Q2 - durationOfCumulativeTIC_Q1) / scanTimeDuration;
+            double durationOfCumulativeTIC_Q3_interval = (durationOfCumulativeTIC_Q3 - durationOfCumulativeTIC_Q2) / scanTimeDuration;
+            double durationOfCumulativeTIC_Q4_interval = (maxScanTime - durationOfCumulativeTIC_Q3) / scanTimeDuration;
+
+            double ms1ScanTimes_Q1 = accs::percentile(ms1ScanTimes, accs::percentile_number = 25);
+            double ms1ScanTimes_Q2 = accs::percentile(ms1ScanTimes, accs::percentile_number = 50);
+            double ms1ScanTimes_Q3 = accs::percentile(ms1ScanTimes, accs::percentile_number = 75);
+            double ms1ScanTimes_Q1_interval = (ms1ScanTimes_Q1 - accs::min(ms1ScanTimes)) / scanTimeDuration;
+            double ms1ScanTimes_Q2_interval = (ms1ScanTimes_Q2 - ms1ScanTimes_Q1) / scanTimeDuration;
+            double ms1ScanTimes_Q3_interval = (ms1ScanTimes_Q3 - ms1ScanTimes_Q2) / scanTimeDuration;
+            double ms1ScanTimes_Q4_interval = (accs::max(ms1ScanTimes) - ms1ScanTimes_Q3) / scanTimeDuration;
+
+            double ms2ScanTimes_Q1 = accs::percentile(ms2ScanTimes, accs::percentile_number = 25);
+            double ms2ScanTimes_Q2 = accs::percentile(ms2ScanTimes, accs::percentile_number = 50);
+            double ms2ScanTimes_Q3 = accs::percentile(ms2ScanTimes, accs::percentile_number = 75);
+            double ms2ScanTimes_Q1_interval = (ms2ScanTimes_Q1 - accs::min(ms2ScanTimes)) / scanTimeDuration;
+            double ms2ScanTimes_Q2_interval = (ms2ScanTimes_Q2 - ms2ScanTimes_Q1) / scanTimeDuration;
+            double ms2ScanTimes_Q3_interval = (ms2ScanTimes_Q3 - ms2ScanTimes_Q2) / scanTimeDuration;
+            double ms2ScanTimes_Q4_interval = (accs::max(ms2ScanTimes) - ms2ScanTimes_Q3) / scanTimeDuration;
+
+            // calculate maximum scan frequency over any minute for MS1
+            double ms1MaxFrequency = ms1ScanMap.size() / scanTimeDuration;
+            {
+                int scanCount = 0;
+                MS1ScanMap::index<time>::type::const_iterator itr = ms1ScanMap.get<time>().begin(), end = ms1ScanMap.get<time>().end(), itr2;
+                for (itr2 = itr; itr != end; ++itr, --scanCount)
+                {
+                    // advance itr2 to be at least 1 minute ahead of itr
+                    while (itr2 != end && (itr2->scanStartTime - itr->scanStartTime) < 60) {++itr2; ++scanCount;}
+                    if (itr2 == end) break;
+
+                    double scanFrequency = scanCount / (itr2->scanStartTime - itr->scanStartTime);
+                    //if (scanFrequency > ms1MaxFrequency)
+                    //    cout << "New max ms1 frequency in range [" << itr->scanStartTime << "-" << itr2->scanStartTime << "]: " << scanFrequency << endl;
+                    ms1MaxFrequency = max(ms1MaxFrequency, scanFrequency);
+                }
+            }
+
+            // calculate maximum scan frequency over any minute for MS2
+            double ms2MaxFrequency = ms2ScanMap.size() / scanTimeDuration;
+            {
+                int scanCount = 0;
+                MS2ScanMap::index<time>::type::const_iterator itr = ms2ScanMap.get<time>().begin(), end = ms2ScanMap.get<time>().end(), itr2;
+                for (itr2 = itr; itr != end; ++itr, --scanCount)
+                {
+                    // advance itr2 to be at least 1 minute ahead of itr
+                    while (itr2 != end && (itr2->scanStartTime - itr->scanStartTime) < 60) {++itr2; ++scanCount;}
+                    if (itr2 == end) break;
+
+                    double scanFrequency = scanCount / (itr2->scanStartTime - itr->scanStartTime);
+                    //if (scanFrequency > ms2MaxFrequency)
+                    //    cout << "New max ms2 frequency in range [" << itr->scanStartTime << "-" << itr2->scanStartTime << "]: " << scanFrequency << endl;
+                    ms2MaxFrequency = max(ms2MaxFrequency, scanFrequency);
+                }
+            }
 
             // XIC peak metrics
-            double peakWidthMedian = 0;
-            double peakHeightMedian = 0;
-            double peakHeightIQR = 0;
-            double peakTimeIQR = 0;
             double halfOfTotalPeakWidthFraction = 0;
-            double halfOfTotalPeakWidthMedian = 0;
+            accs::accumulator_set<double, accs::stats<accs::tag::percentile> > peakWidths;
+            accs::accumulator_set<double, accs::stats<accs::tag::percentile, accs::tag::max> > peakHeights;
             {
-                accs::accumulator_set<double, accs::stats<accs::tag::percentile> > peakHeights;
-                vector<double> peakWidths;
-                double peakWidthTotal = 0;
-                BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
+                sort(unidentifiedPrecursors.rbegin(), unidentifiedPrecursors.rend(), UnidentifiedPrecursorPeakWidthLessThan()); // sort descending by peak width
+
+                // determine the set of peaks that account for 50% of the total peak width;
+                // summarize the widths and heights of those peaks
+                double peakWidthFraction = 0;
+                for (size_t i=0; i < unidentifiedPrecursors.size(); ++i)
+                {
+                    const UnidentifiedPrecursorInfo& info = unidentifiedPrecursors[i];
                     if (info.chromatogram.bestPeak)
                     {
                         peakHeights(info.chromatogram.bestPeak->intensity);
-                        peakWidths.push_back(info.chromatogram.bestPeak->fwhm);
-                        peakWidthTotal += peakWidths.back();
-                    }
-                peakHeightMedian = accs::percentile(peakHeights, accs::percentile_number = 50);
-                peakHeightIQR = accs::percentile(peakHeights, accs::percentile_number = 75) -
-                                accs::percentile(peakHeights, accs::percentile_number = 25);
-
-                // determine the set of peak widths that account for 50% of the total peak width;
-                // within those, find the median
-                sort(peakWidths.rbegin(), peakWidths.rend()); // sort descending
-                double peakWidthFraction = 0;
-                accs::accumulator_set<double, accs::stats<accs::tag::percentile> > peakWidthsInHalfTotal;
-                for (size_t i=0; i < peakWidths.size(); ++i)
-                {
-                    peakWidthFraction += peakWidths[i] / peakWidthTotal;
-                    peakWidthsInHalfTotal(peakWidths[i]);
-                    if (peakWidthFraction > 0.5)
-                    {
-                        halfOfTotalPeakWidthFraction = (double) i / peakWidths.size();
-                        break;
+                        peakWidths(info.chromatogram.bestPeak->fwhm);
+                        peakWidthFraction += info.chromatogram.bestPeak->fwhm / peakWidthTotal;
+                        peakWidths(info.chromatogram.bestPeak->fwhm);
+                        
+                        if (peakWidthFraction > 0.5)
+                        {
+                            halfOfTotalPeakWidthFraction = (double) i / unidentifiedPrecursors.size();
+                            break;
+                        }
                     }
                 }
-                halfOfTotalPeakWidthMedian = accs::percentile(peakWidthsInHalfTotal, accs::percentile_number = 50);
             }
             
             // File for quameter output, default is to save to same directory as input file
@@ -1090,34 +1161,98 @@ namespace quameter
                 qout << "Filename\t"
                         "StartTimeStamp\t"
                         "XIC-WideFrac\t"
-                        "XIC-FWHM\t"
-                        "XIC-Plus2Frac\t"
-                        "XIC-HeightSpread\t"
-                        "RT-TIC-Duration\t"
-                        "RT-Min\t"
-                        "RT-Max\t"
-                        "MS1-TIC-MaxChange\t"
+                        "XIC-FWHM-Q1\t"
+                        "XIC-FWHM-Q2\t"
+                        "XIC-FWHM-Q3\t"
+                        "XIC-Height-Q1\t"
+                        "XIC-Height-Q2\t"
+                        "XIC-Height-Q3\t"
+                        "RT-Duration\t"
+                        "RT-TIC-Q1\t"
+                        "RT-TIC-Q2\t"
+                        "RT-TIC-Q3\t"
+                        "RT-TIC-Q4\t"
+                        "RT-MS-Q1\t"
+                        "RT-MS-Q2\t"
+                        "RT-MS-Q3\t"
+                        "RT-MS-Q4\t"
+                        "RT-MSMS-Q1\t"
+                        "RT-MSMS-Q2\t"
+                        "RT-MSMS-Q3\t"
+                        "RT-MSMS-Q4\t"
+                        "MS1-TIC-Change-Q2\t"
+                        "MS1-TIC-Change-Q3\t"
+                        "MS1-TIC-Change-Q4\t"
+                        "MS1-TIC-Q2\t"
+                        "MS1-TIC-Q3\t"
+                        "MS1-TIC-Q4\t"
                         "MS1-Count\t"
-                        "MS1-Density\t"
+                        "MS1-Freq-Max\t"
+                        "MS1-Density-Q1\t"
+                        "MS1-Density-Q2\t"
+                        "MS1-Density-Q3\t"
                         "MS2-Count\t"
-                        "MS2-Density";
+                        "MS2-Freq-Max\t"
+                        "MS2-Density-Q1\t"
+                        "MS2-Density-Q2\t"
+                        "MS2-Density-Q3\t"
+                        "MS2-PrecZ-1\t"
+                        "MS2-PrecZ-2\t"
+                        "MS2-PrecZ-3\t"
+                        "MS2-PrecZ-4\t"
+                        "MS2-PrecZ-5\t"
+                        "MS2-PrecZ-more\t"
+                        "MS2-PrecZ-likely-1\t"
+                        "MS2-PrecZ-likely-multi";
             qout << "\n";
 
             // Tab delimited metrics
             qout << bfs::path(sourceFilename).filename();
             qout << "\t" << startTimeStamp;
             qout << "\t" << halfOfTotalPeakWidthFraction;
-            qout << "\t" << halfOfTotalPeakWidthMedian;
-            qout << "\t" << chargeStateMetric;
-            qout << "\t" << (peakHeightIQR / peakHeightMedian);
-            qout << "\t" << timeRangeOfCumulativeTIC_IQR;
-            qout << "\t" << accs::min(scanTimes);
-            qout << "\t" << accs::max(scanTimes);
-            qout << "\t" << ms1StabilityOfTIC;
+            qout << "\t" << accs::percentile(peakWidths, accs::percentile_number = 25);
+            qout << "\t" << accs::percentile(peakWidths, accs::percentile_number = 50);
+            qout << "\t" << accs::percentile(peakWidths, accs::percentile_number = 75);
+            qout << "\t" << log(accs::percentile(peakHeights, accs::percentile_number = 50) / accs::percentile(peakHeights, accs::percentile_number = 25));
+            qout << "\t" << log(accs::percentile(peakHeights, accs::percentile_number = 75) / accs::percentile(peakHeights, accs::percentile_number = 50));
+            qout << "\t" << log(accs::max(peakHeights) / accs::percentile(peakHeights, accs::percentile_number = 75));
+            qout << "\t" << scanTimeDuration;
+            qout << "\t" << durationOfCumulativeTIC_Q1_interval;
+            qout << "\t" << durationOfCumulativeTIC_Q2_interval;
+            qout << "\t" << durationOfCumulativeTIC_Q3_interval;
+            qout << "\t" << durationOfCumulativeTIC_Q4_interval;
+            qout << "\t" << ms1ScanTimes_Q1_interval;
+            qout << "\t" << ms1ScanTimes_Q2_interval;
+            qout << "\t" << ms1ScanTimes_Q3_interval;
+            qout << "\t" << ms1ScanTimes_Q4_interval;
+            qout << "\t" << ms2ScanTimes_Q1_interval;
+            qout << "\t" << ms2ScanTimes_Q2_interval;
+            qout << "\t" << ms2ScanTimes_Q3_interval;
+            qout << "\t" << ms2ScanTimes_Q4_interval;
+            qout << "\t" << ms1DeltaTIC_Q2_ratio;
+            qout << "\t" << ms1DeltaTIC_Q3_ratio;
+            qout << "\t" << ms1DeltaTIC_Q4_ratio;
+            qout << "\t" << ms1TIC_Q2_ratio;
+            qout << "\t" << ms1TIC_Q3_ratio;
+            qout << "\t" << ms1TIC_Q4_ratio;
             qout << "\t" << ms1ScanMap.size();
+            qout << "\t" << ms1MaxFrequency;
+            qout << "\t" << accs::percentile(ms1PeakCounts, accs::percentile_number = 25);
             qout << "\t" << accs::percentile(ms1PeakCounts, accs::percentile_number = 50);
+            qout << "\t" << accs::percentile(ms1PeakCounts, accs::percentile_number = 75);
             qout << "\t" << ms2ScanMap.size();
+            qout << "\t" << ms2MaxFrequency;
+            qout << "\t" << accs::percentile(ms2PeakCounts, accs::percentile_number = 25);
             qout << "\t" << accs::percentile(ms2PeakCounts, accs::percentile_number = 50);
+            qout << "\t" << accs::percentile(ms2PeakCounts, accs::percentile_number = 75);
+            qout << "\t" << (double) scanCountByChargeState[1] / ms2ScanMap.size();
+            qout << "\t" << (double) scanCountByChargeState[2] / ms2ScanMap.size();
+            qout << "\t" << (double) scanCountByChargeState[3] / ms2ScanMap.size();
+            qout << "\t" << (double) scanCountByChargeState[4] / ms2ScanMap.size();
+            qout << "\t" << (double) scanCountByChargeState[5] / ms2ScanMap.size();
+            qout << "\t" << (double) scanCountByChargeState[6] / ms2ScanMap.size();
+            qout << "\t" << (double) (scanCountByChargeState[0] - multiplyChargedMS2s) / ms2ScanMap.size();
+            qout << "\t" << (double) multiplyChargedMS2s / ms2ScanMap.size();
 
             cout << endl << sourceFilename << " took " << processingTimer.elapsed() << " seconds to analyze.\n";
             guard.unlock();
