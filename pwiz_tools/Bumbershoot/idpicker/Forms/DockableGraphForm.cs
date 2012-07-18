@@ -55,6 +55,9 @@ namespace IDPicker.Forms
             Controls.Add(zedGraphControl);
 
             zedGraphControl.ContextMenuBuilder += zedGraphControl_ContextMenuBuilder;
+
+            // graphs can't be closed
+            FormClosing += (sender, e) => { e.Cancel = true; };
         }
 
         void zedGraphControl_ContextMenuBuilder (ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)

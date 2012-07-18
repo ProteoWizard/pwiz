@@ -66,12 +66,14 @@ namespace IDPicker.Forms
             this.fragmentToleranceTextBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
+            this.refreshDataLabel = new System.Windows.Forms.LinkLabel();
             this.exportMenu.SuspendLayout();
+            this.dockPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Enabled = false;
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
             this.exportButton.Location = new System.Drawing.Point(501, 2);
@@ -113,8 +115,8 @@ namespace IDPicker.Forms
             // 
             // spectrumFiltersTextBox
             // 
-            this.spectrumFiltersTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) (((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.spectrumFiltersTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.spectrumFiltersTextBox.Location = new System.Drawing.Point(44, 4);
             this.spectrumFiltersTextBox.Name = "spectrumFiltersTextBox";
             this.spectrumFiltersTextBox.Size = new System.Drawing.Size(161, 20);
@@ -125,7 +127,7 @@ namespace IDPicker.Forms
             // 
             // lockZoomCheckBox
             // 
-            this.lockZoomCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.lockZoomCheckBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.lockZoomCheckBox.Appearance = System.Windows.Forms.Appearance.Button;
             this.lockZoomCheckBox.AutoSize = true;
             this.lockZoomCheckBox.Location = new System.Drawing.Point(392, 2);
@@ -137,7 +139,7 @@ namespace IDPicker.Forms
             // 
             // refreshButton
             // 
-            this.refreshButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.refreshButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.refreshButton.Location = new System.Drawing.Point(467, 2);
             this.refreshButton.Name = "refreshButton";
             this.refreshButton.Size = new System.Drawing.Size(30, 23);
@@ -147,7 +149,7 @@ namespace IDPicker.Forms
             // 
             // fragmentToleranceUnitsComboBox
             // 
-            this.fragmentToleranceUnitsComboBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.fragmentToleranceUnitsComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.fragmentToleranceUnitsComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.fragmentToleranceUnitsComboBox.FormattingEnabled = true;
             this.fragmentToleranceUnitsComboBox.Items.AddRange(new object[] {
@@ -160,7 +162,7 @@ namespace IDPicker.Forms
             // 
             // label4
             // 
-            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label4.AutoSize = true;
             this.label4.Location = new System.Drawing.Point(212, 7);
             this.label4.Name = "label4";
@@ -170,7 +172,7 @@ namespace IDPicker.Forms
             // 
             // fragmentToleranceTextBox
             // 
-            this.fragmentToleranceTextBox.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.fragmentToleranceTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.fragmentToleranceTextBox.Location = new System.Drawing.Point(300, 4);
             this.fragmentToleranceTextBox.Name = "fragmentToleranceTextBox";
             this.fragmentToleranceTextBox.Size = new System.Drawing.Size(41, 20);
@@ -192,16 +194,35 @@ namespace IDPicker.Forms
             // dockPanel
             // 
             this.dockPanel.ActiveAutoHideContent = null;
-            this.dockPanel.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.dockPanel.DockLeftPortion = 0.5;
-            this.dockPanel.DockRightPortion = 0.5;
-            this.dockPanel.DockTopPortion = 0.5;
+            this.dockPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dockPanel.Controls.Add(this.refreshDataLabel);
+            this.dockPanel.DockLeftPortion = 0.5D;
+            this.dockPanel.DockRightPortion = 0.5D;
+            this.dockPanel.DockTopPortion = 0.5D;
             this.dockPanel.Location = new System.Drawing.Point(-2, 27);
             this.dockPanel.Name = "dockPanel";
             this.dockPanel.Size = new System.Drawing.Size(547, 369);
             this.dockPanel.TabIndex = 24;
+            // 
+            // refreshDataLabel
+            // 
+            this.refreshDataLabel.AutoSize = true;
+            this.refreshDataLabel.BackColor = System.Drawing.SystemColors.AppWorkspace;
+            this.refreshDataLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.refreshDataLabel.LinkArea = new System.Windows.Forms.LinkArea(0, 10);
+            this.refreshDataLabel.LinkColor = System.Drawing.Color.Blue;
+            this.refreshDataLabel.Location = new System.Drawing.Point(100, 145);
+            this.refreshDataLabel.Name = "refreshDataLabel";
+            this.refreshDataLabel.Size = new System.Drawing.Size(347, 78);
+            this.refreshDataLabel.TabIndex = 9;
+            this.refreshDataLabel.TabStop = true;
+            this.refreshDataLabel.Text = "Click here or press the refresh button\r\nto load statistics based on the current f" +
+    "ilters.\r\n\r\nIf you change filters, you have to refresh again.";
+            this.refreshDataLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.refreshDataLabel.UseCompatibleTextRendering = true;
+            this.refreshDataLabel.VisitedLinkColor = System.Drawing.Color.Blue;
             // 
             // FragmentationStatisticsForm
             // 
@@ -217,15 +238,17 @@ namespace IDPicker.Forms
             this.Controls.Add(this.lockZoomCheckBox);
             this.Controls.Add(this.spectrumFiltersTextBox);
             this.Controls.Add(this.exportButton);
-            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas) (((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
-                        | DigitalRune.Windows.Docking.DockAreas.Top)
-                        | DigitalRune.Windows.Docking.DockAreas.Bottom)
-                        | DigitalRune.Windows.Docking.DockAreas.Document)));
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right) 
+            | DigitalRune.Windows.Docking.DockAreas.Top) 
+            | DigitalRune.Windows.Docking.DockAreas.Bottom) 
+            | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.MinimumSize = new System.Drawing.Size(560, 100);
             this.Name = "FragmentationStatisticsForm";
             this.TabText = "FragmentationStatisticsForm";
             this.Text = "FragmentationStatisticsForm";
             this.exportMenu.ResumeLayout(false);
+            this.dockPanel.ResumeLayout(false);
+            this.dockPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -246,6 +269,7 @@ namespace IDPicker.Forms
         public System.Windows.Forms.TextBox fragmentToleranceTextBox;
         private System.Windows.Forms.Label label1;
         private DigitalRune.Windows.Docking.DockPanel dockPanel;
+        private System.Windows.Forms.LinkLabel refreshDataLabel;
 
     }
 }

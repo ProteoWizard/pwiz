@@ -59,6 +59,8 @@ namespace IDPicker.Forms
 
             refreshButton.Image = new Icon(Properties.Resources.Refresh, refreshButton.Width / 2, refreshButton.Height / 2).ToBitmap();
 
+            refreshDataLabel.LinkClicked += (sender, e) => refreshButton_Click(sender, e);
+
             precursorMassErrorForm = new DockableGraphForm { Text = "Precursor Mass Error" };
             precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Title.Text = "Density";
             precursorMassErrorForm.ZedGraphControl.GraphPane.XAxis.Title.Text = "Observed - Expected Mass";
@@ -69,6 +71,17 @@ namespace IDPicker.Forms
             precursorMassErrorForm.ZedGraphControl.GraphPane.IsFontsScaled = false;
             precursorMassErrorForm.ZedGraphControl.GraphPane.IsPenWidthScaled = false;
             precursorMassErrorForm.ZedGraphControl.BorderStyle = BorderStyle.None;
+
+            scanTimeDistributionForm = new DockableGraphForm { Text = "Scan Time" };
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.YAxis.Title.Text = "Density";
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.XAxis.Title.Text = "Scan Time (minutes)";
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.XAxis.MajorTic.IsInside = false;
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.XAxis.MinorTic.IsInside = false;
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.Legend.IsVisible = false;
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.Border.IsVisible = false;
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.IsFontsScaled = false;
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.IsPenWidthScaled = false;
+            scanTimeDistributionForm.ZedGraphControl.BorderStyle = BorderStyle.None;
 
             chargeStatesForm = new DockableGraphForm { Text = "Charge States" };
             chargeStatesForm.ZedGraphControl.GraphPane.YAxis.Title.Text = "Spectra";
@@ -90,6 +103,11 @@ namespace IDPicker.Forms
             chargeStatesForm.ZedGraphControl.BorderStyle = BorderStyle.None;
 
             precursorMassErrorForm.ZedGraphControl.ZoomEvent += (sender, before, after) =>
+            {
+                precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Scale.Min = Math.Max(0, precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Scale.Min);
+            };
+
+            scanTimeDistributionForm.ZedGraphControl.ZoomEvent += (sender, before, after) =>
             {
                 precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Scale.Min = Math.Max(0, precursorMassErrorForm.ZedGraphControl.GraphPane.YAxis.Scale.Min);
             };
@@ -140,9 +158,7 @@ namespace IDPicker.Forms
                 e.DataTable.EndLoadData();
             };
 
-            precursorMassErrorForm.Show(dockPanel, DockState.Document);
-            chargeStatesForm.Show(dockPanel, DockState.Document);
-            precursorMassErrorForm.Activate();
+            lastActiveGraphForm = precursorMassErrorForm;
         }
 
         private IDPickerForm owner;
@@ -153,7 +169,18 @@ namespace IDPicker.Forms
 
         private ToolStripMenuItem ppmMassErrorMenuItem;
         private DockableGraphForm precursorMassErrorForm;
+        private DockableGraphForm scanTimeDistributionForm;
         private DockableGraphForm chargeStatesForm;
+
+        private DockableForm lastActiveGraphForm;
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            refreshDataLabel.Location = new Point((Width - refreshDataLabel.Width) / 2,
+                                                  (Height - refreshDataLabel.Height) / 2);
+
+            base.OnSizeChanged(e);
+        }
 
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
@@ -171,6 +198,17 @@ namespace IDPicker.Forms
                 Invoke(new MethodInvoker(() => ClearData()));
                 return;
             }
+
+            precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Clear();
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Clear();
+            chargeStatesForm.ZedGraphControl.GraphPane.CurveList.Clear();
+
+            lastActiveGraphForm = dockPanel.LastActiveContent as DockableForm ?? precursorMassErrorForm;
+            precursorMassErrorForm.Hide();
+            scanTimeDistributionForm.Hide();
+            chargeStatesForm.Hide();
+
+            refreshDataLabel.Visible = true;
 
             Text = TabText = "Distribution Statistics";
             Refresh();
@@ -214,16 +252,28 @@ namespace IDPicker.Forms
             return result;
         }
 
+        private class PSMRow
+        {
+            public double ObservedNeutralMass { get; set; }
+            public double MassError { get; set; }
+            public double ScanTime { get; set; }
+        }
+
         void setData (object sender, DoWorkEventArgs e)
         {
             try
             {
-                IList<MutableKeyValuePair<double, double>> precursorMassErrors;
+                IList<PSMRow> precursorMassErrors;
                 IDictionary<int, int> spectralCountByChargeState;
                 lock (session)
                 {
-                    var query = session.CreateQuery("SELECT psm.ObservedNeutralMass, psm.MonoisotopicMassError, psm.MolecularWeightError" + dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch));
-                    precursorMassErrors = query.List<object[]>().Select(o => new MutableKeyValuePair<double, double>((double) o[0], Math.Abs((double) o[1]) < Math.Abs((double) o[2]) ? (double) o[1] : (double) o[2])).ToList();
+                    var query = session.CreateQuery("SELECT psm.ObservedNeutralMass, psm.MonoisotopicMassError, psm.MolecularWeightError, s.ScanTimeInSeconds" + dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToSpectrum));
+                    precursorMassErrors = query.List<object[]>().Select(o => new PSMRow
+                    {
+                        ObservedNeutralMass = (double)o[0],
+                        MassError = Math.Abs((double)o[1]) < Math.Abs((double)o[2]) ? (double)o[1] : (double)o[2],
+                        ScanTime = (double)o[3] / 60 // convert to minutes
+                    }).ToList();
 
                     query = session.CreateQuery("SELECT psm.Charge, COUNT(DISTINCT psm.Spectrum.id) " +
                                                 dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
@@ -233,35 +283,46 @@ namespace IDPicker.Forms
 
                 // convert to PPM if the user requested it
                 if (!ppmMassErrorMenuItem.Text.Contains("PPM"))
-                    precursorMassErrors.ForEach(o => o.Value = o.Value / o.Key * 1e6);
-                var precursorMassErrorValues = precursorMassErrors.Select(o => o.Value).ToList();
+                    precursorMassErrors.ForEach(o => o.MassError = o.MassError / o.ObservedNeutralMass * 1e6);
 
-                precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Clear();
-                var densityCurve = new LineItem("", getDensityCurve(precursorMassErrorValues, 0), Color.Red, SymbolType.None);
-                var grassPlot = new LineItem("", precursorMassErrorValues.ToArray(), Enumerable.Repeat(0.0, precursorMassErrors.Count).ToArray(), Color.Gray, SymbolType.VDash);
-                densityCurve.Line.IsAntiAlias = true;
-                precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
-                precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                {
+                    precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Clear();
+                    var precursorMassErrorValues = precursorMassErrors.Select(o => o.MassError).ToList();
+                    var densityCurve = new LineItem("", getDensityCurve(precursorMassErrorValues, 0), Color.Red, SymbolType.None);
+                    var grassPlot = new LineItem("", precursorMassErrorValues.ToArray(), Enumerable.Repeat(0.0, precursorMassErrors.Count).ToArray(), Color.Gray, SymbolType.VDash);
+                    densityCurve.Line.IsAntiAlias = true;
+                    precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
+                    precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                }
+
+                {
+                    scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Clear();
+                    var scanTimeValues = precursorMassErrors.Select(o => o.ScanTime).ToList();
+                    var densityCurve = new LineItem("", getDensityCurve(scanTimeValues, 0), Color.Red, SymbolType.None);
+                    var grassPlot = new LineItem("", scanTimeValues.ToArray(), Enumerable.Repeat(0.0, scanTimeValues.Count).ToArray(), Color.Gray, SymbolType.VDash);
+                    densityCurve.Line.IsAntiAlias = true;
+                    scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
+                    scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                }
 
                 var colorRotator = new ColorSymbolRotator();
                 var colors = new Dictionary<int, Color[]>();
-                foreach(var kvp in spectralCountByChargeState)
+                foreach (var kvp in spectralCountByChargeState)
                 {
                     var color = colorRotator.NextColor;
                     colors[kvp.Key] = new Color[3] { color, Color.White, color };
                 }
 
                 chargeStatesForm.ZedGraphControl.GraphPane.CurveList.Clear();
-                foreach(var kvp in spectralCountByChargeState)
+                foreach (var kvp in spectralCountByChargeState)
                 {
-                    var barItem = chargeStatesForm.ZedGraphControl.GraphPane.AddBar("", new double[] {kvp.Key}, new double[] {kvp.Value}, Color.White) as BarItem;
+                    var barItem = chargeStatesForm.ZedGraphControl.GraphPane.AddBar("", new double[] { kvp.Key }, new double[] { kvp.Value }, Color.White) as BarItem;
                     barItem.Bar.Fill = new Fill(colors[kvp.Key]);
                 }
             }
             catch (Exception ex)
             {
-                ClearData();
-                Program.HandleException(ex);
+                e.Result = ex;
             }
         }
 
@@ -269,14 +330,32 @@ namespace IDPicker.Forms
         {
             Text = TabText = "Distribution Statistics";
 
+            if (e.Result is Exception)
+            {
+                ClearData();
+                Program.HandleException(e.Result as Exception);
+            }
+
+            precursorMassErrorForm.Show(dockPanel, DockState.Document);
+            scanTimeDistributionForm.Show(dockPanel, DockState.Document);
+            chargeStatesForm.Show(dockPanel, DockState.Document);
+            lastActiveGraphForm.Activate();
+
             precursorMassErrorForm.ZedGraphControl.GraphPane.AxisChange();
+            scanTimeDistributionForm.ZedGraphControl.GraphPane.AxisChange();
             chargeStatesForm.ZedGraphControl.GraphPane.AxisChange();
+
+            precursorMassErrorForm.ZedGraphControl.RestoreScale(precursorMassErrorForm.ZedGraphControl.GraphPane);
+            scanTimeDistributionForm.ZedGraphControl.RestoreScale(precursorMassErrorForm.ZedGraphControl.GraphPane);
+            chargeStatesForm.ZedGraphControl.RestoreScale(precursorMassErrorForm.ZedGraphControl.GraphPane);
             Refresh();
         }
 
         void refreshButton_Click (object sender, EventArgs e)
         {
             Text = TabText = "Loading distribution statistics...";
+
+            refreshDataLabel.Visible = false;
 
             var workerThread = new BackgroundWorker()
             {

@@ -300,14 +300,15 @@ void getSources(sqlite::database& idpDb,
 
 struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_Filter::Predicate
 {
-    SpectrumList_FilterPredicate_ScanStartTimeUpdater(sqlite::database& idpDb)
+    SpectrumList_FilterPredicate_ScanStartTimeUpdater(sqlite::database& idpDb, int sourceId)
         : idpDb(idpDb),
-          updateScanTime(idpDb, "UPDATE Spectrum SET ScanTimeInSeconds = ? WHERE NativeID = ?")
+          sourceId(sourceId),
+          updateScanTime(idpDb, "UPDATE Spectrum SET ScanTimeInSeconds = ? WHERE Source = ? AND NativeID = ?")
     {
         try
         {
             sqlite::query(idpDb, "SELECT Id FROM UnfilteredSpectrum LIMIT 1").begin();
-            updateUnfilteredScanTime.reset(new sqlite::command(idpDb, "UPDATE UnfilteredSpectrum SET ScanTimeInSeconds = ? WHERE NativeID = ?"));
+            updateUnfilteredScanTime.reset(new sqlite::command(idpDb, "UPDATE UnfilteredSpectrum SET ScanTimeInSeconds = ? WHERE SOURCE = ? AND NativeID = ?"));
             hasUnfilteredTables = true;
         }
         catch (sqlite::database_error&)
@@ -329,14 +330,16 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
         double scanTime = spectrum.scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
 
         updateScanTime.bind(1, scanTime);
-        updateScanTime.bind(2, spectrum.id);
+        updateScanTime.bind(2, sourceId);
+        updateScanTime.bind(3, spectrum.id);
         updateScanTime.execute();
         updateScanTime.reset();
 
         if (hasUnfilteredTables)
         {
             updateUnfilteredScanTime->bind(1, scanTime);
-            updateUnfilteredScanTime->bind(2, spectrum.id);
+            updateUnfilteredScanTime->bind(2, sourceId);
+            updateUnfilteredScanTime->bind(3, spectrum.id);
             updateUnfilteredScanTime->execute();
             updateUnfilteredScanTime->reset();
         }
@@ -346,6 +349,7 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
 
     private:
     sqlite::database& idpDb;
+    int sourceId;
     mutable sqlite::command updateScanTime;
     mutable boost::scoped_ptr<sqlite::command> updateUnfilteredScanTime;
     bool hasUnfilteredTables;
@@ -407,7 +411,7 @@ void embed(const string& idpDbFilepath,
         sqlite::transaction transaction(idpDb);
 
         SpectrumList_FilterPredicate_IndexSet slfp(filteredIndexes);
-        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb);
+        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb, source.id);
         SpectrumDataFilterPtr sdf(new ThresholdFilter(ThresholdFilter::ThresholdingBy_Count, 150.));
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slfp));
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slstu));
@@ -501,7 +505,7 @@ void embedScanTime(const string& idpDbFilepath,
         sqlite::transaction transaction(idpDb);
 
         SpectrumList_FilterPredicate_IndexSet slfp(filteredIndexes);
-        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb);
+        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb, source.id);
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slfp));
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slstu));
 

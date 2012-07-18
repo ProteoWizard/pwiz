@@ -124,6 +124,8 @@ namespace IDPicker.Forms
 
             refreshButton.Image = new Icon(Properties.Resources.Refresh, refreshButton.Width / 2, refreshButton.Height / 2).ToBitmap();
 
+            refreshDataLabel.LinkClicked += (sender, e) => refreshButton_Click(sender, e);
+
             percentTicGraphForm = new DockableForm { Text = "%TIC" };
             percentPeakCountGraphForm = new DockableForm { Text = "%PeakCount" };
             meanMzErrorGraphForm = new DockableForm { Text = "Mean m/z error" };
@@ -140,6 +142,7 @@ namespace IDPicker.Forms
             initializeGraphControl(percentPeakCountGraphControl);
             initializeGraphControl(meanMzErrorGraphControl);
 
+            lastActiveGraphForm = meanMzErrorGraphForm;
             graphControls = new List<ZedGraphControl>
             {
                 percentTicGraphControl,
@@ -147,14 +150,21 @@ namespace IDPicker.Forms
                 meanMzErrorGraphControl
             };
 
-            meanMzErrorGraphForm.Show(dockPanel, DockState.Document);
-            percentTicGraphForm.Show(dockPanel, DockState.Document);
-            percentPeakCountGraphForm.Show(dockPanel, DockState.Document);
-            meanMzErrorGraphForm.Activate();
+            percentTicGraphForm.FormClosing += (sender, e) => e.Cancel;
+            percentPeakCountGraphForm.FormClosing += (sender, e) => e.Cancel;
+            meanMzErrorGraphForm.FormClosing += (sender, e) => e.Cancel;
 
             fragmentTolerance = new MZTolerance(0.5, MZTolerance.Units.MZ);
             fragmentToleranceUnitsComboBox.Text = fragmentTolerance.value.ToString();
             fragmentToleranceUnitsComboBox.SelectedIndex = (int) fragmentTolerance.units;
+        }
+
+        protected override void OnSizeChanged(EventArgs e)
+        {
+            refreshDataLabel.Location = new Point((Width - refreshDataLabel.Width) / 2,
+                                                  (Height - refreshDataLabel.Height) / 2);
+
+            base.OnSizeChanged(e);
         }
 
         private IDPickerForm owner;
@@ -164,14 +174,15 @@ namespace IDPicker.Forms
         private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
         private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
 
-        private List<double> fragmentationStatistics, basicFragmentationStatistics;
-
         private DockableForm percentTicGraphForm, percentPeakCountGraphForm;
         private DockableForm meanMzErrorGraphForm;
 
         private ZedGraphControl percentTicGraphControl, percentPeakCountGraphControl;
         private ZedGraphControl meanMzErrorGraphControl;
 
+        private double maxPercentTic, maxPercentPeakCount, maxMeanMzError;
+
+        private DockableForm lastActiveGraphForm;
         private List<ZedGraphControl> graphControls;
 
         private MZTolerance fragmentTolerance;
@@ -312,7 +323,7 @@ namespace IDPicker.Forms
             }
         }
 
-        private List<double> getFragmentationStatistics ()
+        private void getFragmentationStatistics ()
         {
             IList<object[]> queryRows;
             lock (session)
@@ -354,9 +365,9 @@ namespace IDPicker.Forms
             }
 
             int spectraCount = 0;
-            double maxPercentTic = 10;
-            double maxPercentPeakCount = 10;
-            double maxMeanMzError = 0.1;
+            maxPercentTic = 10;
+            maxPercentPeakCount = 10;
+            maxMeanMzError = 0.1;
             var tolerance = fragmentTolerance;
 
             string spectrumListFilters = String.Empty;
@@ -367,20 +378,7 @@ namespace IDPicker.Forms
                 meanMzErrorGraphControl.GraphPane.YAxis.Title.Text = "Mean m/z error (" + tolerance.units.ToString() + ")";
 
                 spectrumListFilters = spectrumFiltersTextBox.Text;
-                if (!lockZoomCheckBox.Checked)
-                    for (int i = 0; i <= (int) IonSeries.Count; ++i)
-                    {
-                        percentTicGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxPercentTic;
-                        percentPeakCountGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxPercentPeakCount;
-                        meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxMeanMzError;
-                        meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = -maxMeanMzError;
-                    }
-
-                foreach (var graphControl in graphControls)
-                {
-                    graphControl.MasterPane.AxisChange();
-                    graphControl.Refresh();
-                }
+                setAutomaticScales();
             }));
 
             var points = new PointPairList();
@@ -421,7 +419,7 @@ namespace IDPicker.Forms
 
                 var percentTicByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
                 var percentPeakCountByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
-                var meanMzErrorByFragmentType = new List<double>(Enumerable.Repeat(0.0, (int) IonSeries.Count));
+                var meanMzErrorByFragmentType = new List<double>(Enumerable.Repeat(Double.NaN, (int) IonSeries.Count));
 
                 seems.PointMap.Enumerator itr;
                 double expected;
@@ -441,6 +439,7 @@ namespace IDPicker.Forms
                     {
                         percentTicByFragmentType[(int)series] += itr.Current.Value;
                         ++percentPeakCountByFragmentType[(int)series];
+                        if (Double.IsNaN(meanMzErrorByFragmentType[(int)series])) meanMzErrorByFragmentType[(int)series] = 0;
                         meanMzErrorByFragmentType[(int)series] += mzError(itr.Current.Key, expected);
                     }
                 }
@@ -459,38 +458,24 @@ namespace IDPicker.Forms
 
                     maxPercentTic = Math.Max(maxPercentTic, percentTicByFragmentType[i]);
                     maxPercentPeakCount = Math.Max(maxPercentPeakCount, percentPeakCountByFragmentType[i]);
-                    maxMeanMzError = Math.Max(maxMeanMzError, Math.Abs(meanMzErrorByFragmentType[i]));
 
                     double jitter = (rng.NextDouble() - 0.5);
                     percentTicBySpectrumByFragmentType[i].Add(jitter, percentTicByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, percentTicByFragmentType[i]));
                     percentPeakCountBySpectrumByFragmentType[i].Add(jitter, percentPeakCountByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, percentPeakCountByFragmentType[i]));
-                    meanMzErrorBySpectrumByFragmentType[i].Add(jitter, meanMzErrorByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, meanMzErrorByFragmentType[i]));
 
-                    if (percentTicByFragmentType[i] > 0) percentTicListByFragmentType[i].Add(percentTicByFragmentType[i]);
-                    if (percentPeakCountByFragmentType[i] > 0) percentPeakCountListByFragmentType[i].Add(percentPeakCountByFragmentType[i]);
-                    if (meanMzErrorByFragmentType[i] > 0) meanMzErrorListByFragmentType[i].Add(meanMzErrorByFragmentType[i]);
+                    percentTicListByFragmentType[i].Add(percentTicByFragmentType[i]);
+                    percentPeakCountListByFragmentType[i].Add(percentPeakCountByFragmentType[i]);
+
+                    if (!Double.IsNaN(meanMzErrorByFragmentType[i]))
+                    {
+                        maxMeanMzError = Math.Max(maxMeanMzError, Math.Abs(meanMzErrorByFragmentType[i]));
+                        meanMzErrorBySpectrumByFragmentType[i].Add(jitter, meanMzErrorByFragmentType[i], String.Format("{0}: {1:G4}%", spectrumId, meanMzErrorByFragmentType[i]));
+                        meanMzErrorListByFragmentType[i].Add(meanMzErrorByFragmentType[i]);
+                    }
                 }
 
                 if ((spectraCount % 100) == 0)
-                {
-                    Invoke(new MethodInvoker(() =>
-                    {
-                        if (!lockZoomCheckBox.Checked && ActiveGraphControl.GraphPane.IsZoomed)
-                            for (int i = 0; i <= (int) IonSeries.Count; ++i)
-                            {
-                                percentTicGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
-                                percentPeakCountGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
-                                meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError * 0.05;
-                                meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = -meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max;
-                            }
-
-                        foreach (var graphControl in graphControls)
-                        {
-                            graphControl.MasterPane.AxisChange();
-                            graphControl.Refresh();
-                        }
-                    }));
-                }
+                    setAutomaticScales();
             } // for each spectrum row
 
             Invoke(new MethodInvoker(() =>
@@ -499,37 +484,51 @@ namespace IDPicker.Forms
                 {
                     if (percentTicListByFragmentType[i].Count < 5)
                         continue;
-
                     percentTicListByFragmentType[i].Sort();
                     percentPeakCountListByFragmentType[i].Sort();
-                    meanMzErrorListByFragmentType[i].Sort();
-
                     addSixNumberSummary(percentTicGraphControl.MasterPane.PaneList[i + 1], percentTicListByFragmentType[i]);
                     addSixNumberSummary(percentPeakCountGraphControl.MasterPane.PaneList[i + 1], percentPeakCountListByFragmentType[i]);
+
+                    if (meanMzErrorListByFragmentType[i].Count < 5)
+                        continue;
+                    meanMzErrorListByFragmentType[i].Sort();
                     addSixNumberSummary(meanMzErrorGraphControl.MasterPane.PaneList[i + 1], meanMzErrorListByFragmentType[i]);
                 }
-
-                if (!lockZoomCheckBox.Checked)
-                {
-                    for (int i = 0; i <= (int) IonSeries.Count; ++i)
-                    {
-                        percentTicGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
-                        percentPeakCountGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
-                        meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError * 0.05;
-                        meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = -meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max;
-                    }
-
-                    foreach (var graphControl in graphControls)
-                        graphControl.ZoomOutAll(graphControl.GraphPane);
-                }
-
-                foreach (var graphControl in graphControls)
-                {
-                    graphControl.MasterPane.AxisChange();
-                    graphControl.Refresh();
-                }
             }));
-            return new List<double>(); //percentTicBySpectrumByFragmentType[1];
+        }
+
+        private void setAutomaticScales()
+        {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(() => setAutomaticScales()));
+                return;
+            }
+
+            if (meanMzErrorGraphForm.IsHidden)
+            {
+                meanMzErrorGraphForm.Show(dockPanel, DockState.Document);
+                percentTicGraphForm.Show(dockPanel, DockState.Document);
+                percentPeakCountGraphForm.Show(dockPanel, DockState.Document);
+                lastActiveGraphForm.Activate();
+            }
+            
+            foreach (var graphControl in graphControls)
+                graphControl.MasterPane.AxisChange();
+
+            if (!lockZoomCheckBox.Checked)
+                for (int i = 0; i <= (int) IonSeries.Count; ++i)
+                {
+                    percentTicGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentTic + 3);
+                    percentTicGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = 0;
+                    percentPeakCountGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = Math.Min(100, maxPercentPeakCount + 3);
+                    percentPeakCountGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = 0;
+                    meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max = maxMeanMzError + maxMeanMzError*0.05;
+                    meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Min = -meanMzErrorGraphControl.MasterPane.PaneList[i].YAxis.Scale.Max;
+                }
+
+            foreach (var graphControl in graphControls)
+                graphControl.Refresh();
         }
 
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
@@ -549,6 +548,17 @@ namespace IDPicker.Forms
                 return;
             }
 
+            refreshDataLabel.Visible = true;
+
+            percentTicGraphControl.GraphPane.CurveList.Clear();
+            percentPeakCountGraphControl.GraphPane.CurveList.Clear();
+            meanMzErrorGraphControl.GraphPane.CurveList.Clear();
+
+            lastActiveGraphForm = dockPanel.LastActiveContent as DockableForm ?? meanMzErrorGraphForm;
+            percentTicGraphForm.Hide();
+            percentPeakCountGraphForm.Hide();
+            meanMzErrorGraphForm.Hide();
+
             Text = TabText = "Fragmentation Statistics";
             Refresh();
         }
@@ -564,35 +574,30 @@ namespace IDPicker.Forms
         {
             try
             {
-                if (dataFilter.IsBasicFilter)
-                {
-                    // refresh basic data when basicDataFilter is unset or when the basic filter values have changed
-                    if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
-                    {
-                        basicDataFilter = new DataFilter(dataFilter);
-                        basicFragmentationStatistics = getFragmentationStatistics();
-                    }
-
-                    fragmentationStatistics = basicFragmentationStatistics;
-                }
-                else
-                    fragmentationStatistics = getFragmentationStatistics();
-            }
-            catch (FileNotFoundException)
-            {
-                // abort if the user canceled when locating the source
-                ClearData(true);
+                getFragmentationStatistics();
             }
             catch (Exception ex)
             {
-                ClearData(true);
-                Program.HandleException(ex);
+                e.Result = ex;
             }
         }
 
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
             Text = TabText = "Fragmentation Statistics";
+
+            if (e.Result is Exception)
+            {
+                ClearData(true);
+
+                // no error if the user canceled when locating the source
+                if (e.Result is FileNotFoundException)
+                    return;
+
+                Program.HandleException(e.Result as Exception);
+            }
+
+            setAutomaticScales();
         }
 
         #region Export stuff
@@ -717,6 +722,8 @@ namespace IDPicker.Forms
         private void refreshButton_Click (object sender, EventArgs e)
         {
             Text = TabText = "Loading fragmentation statistics...";
+
+            refreshDataLabel.Visible = false;
 
             var workerThread = new BackgroundWorker()
             {
