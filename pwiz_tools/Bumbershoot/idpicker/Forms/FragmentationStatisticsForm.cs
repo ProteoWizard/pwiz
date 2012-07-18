@@ -150,9 +150,9 @@ namespace IDPicker.Forms
                 meanMzErrorGraphControl
             };
 
-            percentTicGraphForm.FormClosing += (sender, e) => e.Cancel;
-            percentPeakCountGraphForm.FormClosing += (sender, e) => e.Cancel;
-            meanMzErrorGraphForm.FormClosing += (sender, e) => e.Cancel;
+            percentTicGraphForm.FormClosing += (sender, e) => e.Cancel = true;
+            percentPeakCountGraphForm.FormClosing += (sender, e) => e.Cancel = true;
+            meanMzErrorGraphForm.FormClosing += (sender, e) => e.Cancel = true;
 
             fragmentTolerance = new MZTolerance(0.5, MZTolerance.Units.MZ);
             fragmentToleranceUnitsComboBox.Text = fragmentTolerance.value.ToString();
