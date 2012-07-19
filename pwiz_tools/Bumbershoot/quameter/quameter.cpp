@@ -816,8 +816,9 @@ namespace quameter
 
             if (g_numWorkers == 1) cout << endl;
 
-            if (missingPrecursorIntensities)
-                cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;
+            // This warning is unnecessary as long as none of the idfree metrics use the precursor trigger intensity.
+            //if (missingPrecursorIntensities)
+            //    cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;
 
             vector<UnidentifiedPrecursorInfo> unidentifiedPrecursors;
             unidentifiedPrecursors.reserve(ms2ScanMap.size());
@@ -995,7 +996,7 @@ namespace quameter
                     //double peakTime = startTime + (endTime-startTime)/2;
 
                     // skip degenerate peaks
-                    if (crawPeak->getFwhm() == 0 || startTime == peakTime || peakTime == endTime)
+                    if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
                         continue;
 
                     // skip peaks which don't follow the raw data
@@ -1054,35 +1055,36 @@ namespace quameter
             size_t cumulativeTIC_Q1_Index = cumulativeTIC_Q1 - cumulativeTIC.begin();
             size_t cumulativeTIC_Q2_Index = cumulativeTIC_Q2 - cumulativeTIC.begin();
             size_t cumulativeTIC_Q3_Index = cumulativeTIC_Q3 - cumulativeTIC.begin();
-            double minScanTime = accs::min(scanTimes);
-            double maxScanTime = accs::max(scanTimes);
-            double scanTimeDuration = maxScanTime - minScanTime;
+            double ms1MinScanTime = accs::min(ms1ScanTimes);
+            double ms1MaxScanTime = accs::max(ms1ScanTimes);
+            double ms1ScanTimeDuration = ms1MaxScanTime - ms1MinScanTime;
             double durationOfCumulativeTIC_Q1 = ms1ScanMap[cumulativeTIC_Q1_Index].scanStartTime;
             double durationOfCumulativeTIC_Q2 = ms1ScanMap[cumulativeTIC_Q2_Index].scanStartTime;
             double durationOfCumulativeTIC_Q3 = ms1ScanMap[cumulativeTIC_Q3_Index].scanStartTime;
-            double durationOfCumulativeTIC_Q1_interval = (durationOfCumulativeTIC_Q1 - minScanTime) / scanTimeDuration;
-            double durationOfCumulativeTIC_Q2_interval = (durationOfCumulativeTIC_Q2 - durationOfCumulativeTIC_Q1) / scanTimeDuration;
-            double durationOfCumulativeTIC_Q3_interval = (durationOfCumulativeTIC_Q3 - durationOfCumulativeTIC_Q2) / scanTimeDuration;
-            double durationOfCumulativeTIC_Q4_interval = (maxScanTime - durationOfCumulativeTIC_Q3) / scanTimeDuration;
+            double durationOfCumulativeTIC_Q1_interval = (durationOfCumulativeTIC_Q1 - ms1MinScanTime) / ms1ScanTimeDuration;
+            double durationOfCumulativeTIC_Q2_interval = (durationOfCumulativeTIC_Q2 - durationOfCumulativeTIC_Q1) / ms1ScanTimeDuration;
+            double durationOfCumulativeTIC_Q3_interval = (durationOfCumulativeTIC_Q3 - durationOfCumulativeTIC_Q2) / ms1ScanTimeDuration;
+            double durationOfCumulativeTIC_Q4_interval = (ms1MaxScanTime - durationOfCumulativeTIC_Q3) / ms1ScanTimeDuration;
 
             double ms1ScanTimes_Q1 = accs::percentile(ms1ScanTimes, accs::percentile_number = 25);
             double ms1ScanTimes_Q2 = accs::percentile(ms1ScanTimes, accs::percentile_number = 50);
             double ms1ScanTimes_Q3 = accs::percentile(ms1ScanTimes, accs::percentile_number = 75);
-            double ms1ScanTimes_Q1_interval = (ms1ScanTimes_Q1 - accs::min(ms1ScanTimes)) / scanTimeDuration;
-            double ms1ScanTimes_Q2_interval = (ms1ScanTimes_Q2 - ms1ScanTimes_Q1) / scanTimeDuration;
-            double ms1ScanTimes_Q3_interval = (ms1ScanTimes_Q3 - ms1ScanTimes_Q2) / scanTimeDuration;
-            double ms1ScanTimes_Q4_interval = (accs::max(ms1ScanTimes) - ms1ScanTimes_Q3) / scanTimeDuration;
+            double ms1ScanTimes_Q1_interval = (ms1ScanTimes_Q1 - accs::min(ms1ScanTimes)) / ms1ScanTimeDuration;
+            double ms1ScanTimes_Q2_interval = (ms1ScanTimes_Q2 - ms1ScanTimes_Q1) / ms1ScanTimeDuration;
+            double ms1ScanTimes_Q3_interval = (ms1ScanTimes_Q3 - ms1ScanTimes_Q2) / ms1ScanTimeDuration;
+            double ms1ScanTimes_Q4_interval = (accs::max(ms1ScanTimes) - ms1ScanTimes_Q3) / ms1ScanTimeDuration;
 
+            double ms2ScanTimeDuration = accs::max(ms2ScanTimes) - accs::min(ms2ScanTimes);
             double ms2ScanTimes_Q1 = accs::percentile(ms2ScanTimes, accs::percentile_number = 25);
             double ms2ScanTimes_Q2 = accs::percentile(ms2ScanTimes, accs::percentile_number = 50);
             double ms2ScanTimes_Q3 = accs::percentile(ms2ScanTimes, accs::percentile_number = 75);
-            double ms2ScanTimes_Q1_interval = (ms2ScanTimes_Q1 - accs::min(ms2ScanTimes)) / scanTimeDuration;
-            double ms2ScanTimes_Q2_interval = (ms2ScanTimes_Q2 - ms2ScanTimes_Q1) / scanTimeDuration;
-            double ms2ScanTimes_Q3_interval = (ms2ScanTimes_Q3 - ms2ScanTimes_Q2) / scanTimeDuration;
-            double ms2ScanTimes_Q4_interval = (accs::max(ms2ScanTimes) - ms2ScanTimes_Q3) / scanTimeDuration;
+            double ms2ScanTimes_Q1_interval = (ms2ScanTimes_Q1 - accs::min(ms2ScanTimes)) / ms2ScanTimeDuration;
+            double ms2ScanTimes_Q2_interval = (ms2ScanTimes_Q2 - ms2ScanTimes_Q1) / ms2ScanTimeDuration;
+            double ms2ScanTimes_Q3_interval = (ms2ScanTimes_Q3 - ms2ScanTimes_Q2) / ms2ScanTimeDuration;
+            double ms2ScanTimes_Q4_interval = (accs::max(ms2ScanTimes) - ms2ScanTimes_Q3) / ms2ScanTimeDuration;
 
             // calculate maximum scan frequency over any minute for MS1
-            double ms1MaxFrequency = ms1ScanMap.size() / scanTimeDuration;
+            double ms1MaxFrequency = ms1ScanMap.size() / ms1ScanTimeDuration;
             {
                 int scanCount = 0;
                 MS1ScanMap::index<time>::type::const_iterator itr = ms1ScanMap.get<time>().begin(), end = ms1ScanMap.get<time>().end(), itr2;
@@ -1100,7 +1102,7 @@ namespace quameter
             }
 
             // calculate maximum scan frequency over any minute for MS2
-            double ms2MaxFrequency = ms2ScanMap.size() / scanTimeDuration;
+            double ms2MaxFrequency = ms2ScanMap.size() / ms2ScanTimeDuration;
             {
                 int scanCount = 0;
                 MS2ScanMap::index<time>::type::const_iterator itr = ms2ScanMap.get<time>().begin(), end = ms2ScanMap.get<time>().end(), itr2;
@@ -1127,6 +1129,7 @@ namespace quameter
                 // determine the set of peaks that account for 50% of the total peak width;
                 // summarize the widths and heights of those peaks
                 double peakWidthFraction = 0;
+                //cout << endl << "Total peak width: " << peakWidthTotal << endl;
                 for (size_t i=0; i < unidentifiedPrecursors.size(); ++i)
                 {
                     const UnidentifiedPrecursorInfo& info = unidentifiedPrecursors[i];
@@ -1136,7 +1139,7 @@ namespace quameter
                         peakWidths(info.chromatogram.bestPeak->fwhm);
                         peakWidthFraction += info.chromatogram.bestPeak->fwhm / peakWidthTotal;
                         peakWidths(info.chromatogram.bestPeak->fwhm);
-                        
+                        //cout << "; " << info.chromatogram.bestPeak->fwhm << " (" << peakWidthFraction << ")";
                         if (peakWidthFraction > 0.5)
                         {
                             halfOfTotalPeakWidthFraction = (double) i / unidentifiedPrecursors.size();
@@ -1216,7 +1219,7 @@ namespace quameter
             qout << "\t" << log(accs::percentile(peakHeights, accs::percentile_number = 50) / accs::percentile(peakHeights, accs::percentile_number = 25));
             qout << "\t" << log(accs::percentile(peakHeights, accs::percentile_number = 75) / accs::percentile(peakHeights, accs::percentile_number = 50));
             qout << "\t" << log(accs::max(peakHeights) / accs::percentile(peakHeights, accs::percentile_number = 75));
-            qout << "\t" << scanTimeDuration;
+            qout << "\t" << accs::max(scanTimes) - accs::min(scanTimes);
             qout << "\t" << durationOfCumulativeTIC_Q1_interval;
             qout << "\t" << durationOfCumulativeTIC_Q2_interval;
             qout << "\t" << durationOfCumulativeTIC_Q3_interval;
@@ -1792,7 +1795,7 @@ namespace quameter
                         //double peakTime = startTime + (endTime-startTime)/2;
 
                         // skip degenerate peaks
-                        if (crawPeak->getFwhm() == 0 || startTime == peakTime || peakTime == endTime)
+                        if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
                             continue;
 
                         // skip peaks which don't follow the raw data
@@ -1888,7 +1891,7 @@ namespace quameter
                         //double peakTime = startTime + (endTime-startTime)/2;
 
                         // skip degenerate peaks
-                        if (crawPeak->getFwhm() == 0 || startTime == peakTime || peakTime == endTime)
+                        if (crawPeak->getFwhm() == 0 || boost::math::isnan(crawPeak->getFwhm()) || startTime == peakTime || peakTime == endTime)
                             continue;
 
                         // skip peaks which don't follow the raw data
