@@ -170,6 +170,7 @@ namespace IDPicker.Forms
         }
 
         public event EventHandler<DataFilter> AnalysisViewFilter;
+        public event EventHandler FinishedSetData;
 
         private NHibernate.ISession session;
 
@@ -294,6 +295,9 @@ namespace IDPicker.Forms
                     rows = AnalysisRow.GetRows(session, dataFilter);
 
                 applySort();
+
+                if (FinishedSetData != null)
+                    FinishedSetData(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -304,7 +308,10 @@ namespace IDPicker.Forms
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Result is Exception)
+            {
                 Program.HandleException(e.Result as Exception);
+                return;
+            }
 
             treeDataGridView.RootRowCount = rows.Count();
 

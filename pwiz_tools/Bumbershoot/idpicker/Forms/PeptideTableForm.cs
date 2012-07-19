@@ -941,6 +941,8 @@ namespace IDPicker.Forms
 
                 createPivotColumns();
                 applySort();
+
+                OnFinishedSetData();
             }
             catch (Exception ex)
             {
@@ -951,7 +953,10 @@ namespace IDPicker.Forms
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Result is Exception)
+            {
                 Program.HandleException(e.Result as Exception);
+                return;
+            }
 
             treeDataGridView.RootRowCount = rows.Count();
 

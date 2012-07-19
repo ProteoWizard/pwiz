@@ -164,11 +164,16 @@ namespace IDPicker
 
             spectrumTableForm.SpectrumViewFilter += handleViewFilter;
             spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
+            spectrumTableForm.FinishedSetData += handleFinishedSetData;
             proteinTableForm.ProteinViewFilter += handleViewFilter;
             proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
+            proteinTableForm.FinishedSetData += handleFinishedSetData;
             peptideTableForm.PeptideViewFilter += handleViewFilter;
+            peptideTableForm.FinishedSetData += handleFinishedSetData;
             modificationTableForm.ModificationViewFilter += handleViewFilter;
+            modificationTableForm.FinishedSetData += handleFinishedSetData;
             analysisTableForm.AnalysisViewFilter += handleViewFilter;
+            analysisTableForm.FinishedSetData += handleFinishedSetData;
 
             // hide DockPanel before initializing layout manager
             dockPanel.Visible = false;
@@ -536,6 +541,10 @@ namespace IDPicker
 
         void handleViewFilter(object sender, DataFilter newViewFilter)
         {
+            lock (this)
+                if (mainViewsLoaded < 5)
+                    return;
+
             if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter)o.Tag == newViewFilter) > 0)
                 return;
 
@@ -548,6 +557,10 @@ namespace IDPicker
 
         void breadCrumbControl_BreadCrumbClicked (object sender, BreadCrumbClickedEventArgs e)
         {
+            lock (this)
+                if (mainViewsLoaded < 5)
+                    return;
+
             breadCrumbControl.BreadCrumbs.Remove(e.BreadCrumb);
 
             // start with the basic filter
@@ -562,6 +575,7 @@ namespace IDPicker
         public void ApplyBasicFilter ()
         {
             clearData();
+            dataFiltersToolStripMenuRoot.Enabled = false;
 
             toolStripStatusLabel.Text = "Applying basic filters...";
             basicFilter.FilteringProgress += progressMonitor.UpdateProgress;
@@ -577,7 +591,11 @@ namespace IDPicker
             workerThread.RunWorkerCompleted += (s, e) =>
             {
                 if (e.Result is Exception)
+                {
                     Program.HandleException(e.Result as Exception);
+                    dataFiltersToolStripMenuRoot.Enabled = true;
+                    return;
+                }
 
                 basicFilter.FilteringProgress -= progressMonitor.UpdateProgress;
 
@@ -623,18 +641,47 @@ namespace IDPicker
             if (reassignPSMsForm != null) reassignPSMsForm.ClearData(true);
         }
 
+        int mainViewsLoaded;
         void setData ()
         {
+            mainViewsLoaded = 0;
+            dataFiltersToolStripMenuRoot.Enabled = false;
+            progressMonitor_ProgressUpdate(this, new ProgressUpdateEventArgs()
+            {
+                Current = 0,
+                Total = 5,
+                Message = "Loading main views (0/5)..."
+            });
+
             proteinTableForm.SetData(session, viewFilter);
             peptideTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             spectrumTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             modificationTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             analysisTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
+
             fragmentationStatisticsForm.SetData(session, viewFilter);
             peakStatisticsForm.SetData(session, viewFilter);
             distributionStatisticsForm.SetData(session, viewFilter);
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
             reassignPSMsForm.SetData(session, basicFilter);
+        }
+
+        void handleFinishedSetData(object sender, EventArgs e)
+        {
+            BeginInvoke(new MethodInvoker(() =>
+            {
+                lock (this)
+                {
+                    ++mainViewsLoaded;
+
+                    progressMonitor_ProgressUpdate(this, new ProgressUpdateEventArgs()
+                    {
+                        Current = mainViewsLoaded,
+                        Total = 5,
+                        Message = String.Format("Loading main views ({0}/{1})...", mainViewsLoaded, 5)
+                    });
+                }
+            }));
         }
 
         void clearSession()

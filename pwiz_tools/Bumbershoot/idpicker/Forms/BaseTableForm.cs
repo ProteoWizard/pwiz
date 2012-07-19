@@ -104,6 +104,8 @@ namespace IDPicker.Forms
         protected DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
         protected DataFilter basicDataFilter; // the basic filter without the user filtering on rows
 
+        public event EventHandler FinishedSetData;
+
         protected Color filteredOutColor, filteredPartialColor;
 
         protected class SortColumn
@@ -181,6 +183,12 @@ namespace IDPicker.Forms
             base.OnLoad(e);
 
             treeDataGridView.ClearSelection();
+        }
+        
+        protected virtual void OnFinishedSetData()
+        {
+            if (FinishedSetData != null)
+                FinishedSetData(this, EventArgs.Empty);
         }
 
         private void treeDataGridView_DefaultCellStyleChanged(object sender, EventArgs e)

@@ -362,6 +362,7 @@ namespace IDPicker.Forms
         }
 
         public event ModificationViewFilterEventHandler ModificationViewFilter;
+        public event EventHandler FinishedSetData;
 
         private NHibernate.ISession session;
         private BackgroundWorker workerThread;
@@ -610,6 +611,9 @@ namespace IDPicker.Forms
                     SetUnimodDefaults(queryRows);
                     PopulateModificationDetailView(queryRows);
                 }
+
+                if (FinishedSetData != null)
+                    FinishedSetData(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
@@ -773,7 +777,10 @@ namespace IDPicker.Forms
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
             if (e.Result is Exception)
+            {
                 Program.HandleException(e.Result as Exception);
+                return;
+            }
 
             Text = TabText = String.Format("Modification View: {0} modified {1}", totalModifications, PivotMode.ToLower());
 
