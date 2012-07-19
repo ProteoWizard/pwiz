@@ -19,8 +19,8 @@ export TMPDIR=`mktemp -d`
 if [ $# -eq 0 ] ; then
 echo "running clean.sh"
 ./clean.sh
-echo "running ./quickbuild.sh --without-binary-msdata -d+2 > $TMPDIR/build.log"
-./quickbuild.sh --without-binary-msdata -d+2 > $TMPDIR/build.log
+echo "running ./quickbuild.sh --teamcity-test-decoration --without-binary-msdata -d+2 | tee $TMPDIR/build.log"
+./quickbuild.sh --teamcity-test-decoration --without-binary-msdata -d+2 | tee $TMPDIR/build.log
 else
 echo "using existing logfile $1"
 pushd $HERE
