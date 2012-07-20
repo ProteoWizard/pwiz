@@ -16,11 +16,12 @@ export HERE=`pwd`
 pushd $HERE/../..
 export PWIZROOT=`pwd`
 export TMPDIR=`mktemp -d`
-if [ $# -eq 0 ] ; then
+if [ $# -ne 1 ] ; then
+# 0 or many args, assume we're under development (0) or in teamcity (many)
 echo "running clean.sh"
 ./clean.sh
-echo "running ./quickbuild.sh --teamcity-test-decoration --without-binary-msdata -d+2 | tee $TMPDIR/build.log"
-./quickbuild.sh --teamcity-test-decoration --without-binary-msdata -d+2 | tee $TMPDIR/build.log
+echo "running ./quickbuild.sh  --without-binary-msdata -d+2 "$@" | tee $TMPDIR/build.log"
+./quickbuild.sh --without-binary-msdata -d+2 "$@" | tee $TMPDIR/build.log
 else
 echo "using existing logfile $1"
 pushd $HERE
