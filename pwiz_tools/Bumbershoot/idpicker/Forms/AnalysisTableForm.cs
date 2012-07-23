@@ -171,6 +171,7 @@ namespace IDPicker.Forms
 
         public event EventHandler<DataFilter> AnalysisViewFilter;
         public event EventHandler FinishedSetData;
+        public event EventHandler StartingSetData;
 
         private NHibernate.ISession session;
 
@@ -238,6 +239,14 @@ namespace IDPicker.Forms
 
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
+            if (session == null)
+                return;
+
+            if (StartingSetData != null)
+                StartingSetData(this, EventArgs.Empty);
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+
             this.session = session;
             viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) { Analysis = null };
@@ -265,6 +274,8 @@ namespace IDPicker.Forms
         public void ClearData ()
         {
             Text = TabText = "Analysis View";
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
 
             treeDataGridView.RootRowCount = 0;
             Refresh();

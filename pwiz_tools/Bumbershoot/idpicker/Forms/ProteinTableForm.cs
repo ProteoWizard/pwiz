@@ -778,11 +778,16 @@ namespace IDPicker.Forms
                 ProteinViewFilter(this, newDataFilter);
         }
 
-        public override void SetData(NHibernate.ISession session, DataFilter viewFilter)
+        public override void SetData(NHibernate.ISession session, DataFilter dataFilter)
         {
+            base.SetData(session, dataFilter);
+
+            if (session == null)
+                return;
+
             this.session = session;
-            this.viewFilter = viewFilter;
-            this.dataFilter = new DataFilter(viewFilter) { Protein = null, Cluster = null, ProteinGroup = null };
+            viewFilter = dataFilter;
+            this.dataFilter = new DataFilter(dataFilter) { Protein = null, Cluster = null, ProteinGroup = null };
 
             // remember the first selected row
             saveSelectionPath();
@@ -815,6 +820,8 @@ namespace IDPicker.Forms
         public override void ClearData ()
         {
             Text = TabText = "Protein View";
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
 
             treeDataGridView.RootRowCount = 0;
             Refresh();
@@ -901,6 +908,8 @@ namespace IDPicker.Forms
                 Program.HandleException(e.Result as Exception);
                 return;
             }
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
 
             treeDataGridView.RootRowCount = rows.Count();
 

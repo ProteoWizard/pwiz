@@ -711,6 +711,11 @@ namespace IDPicker.Forms
 
         public override void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
+            base.SetData(session, dataFilter);
+
+            if (session == null)
+                return;
+
             this.session = session;
             viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) {Peptide = null, DistinctMatchKey = null};
@@ -872,6 +877,8 @@ namespace IDPicker.Forms
         {
             Text = TabText = "Peptide View";
 
+            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+
             treeDataGridView.RootRowCount = 0;
             Refresh();
         }
@@ -957,6 +964,8 @@ namespace IDPicker.Forms
                 Program.HandleException(e.Result as Exception);
                 return;
             }
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
 
             treeDataGridView.RootRowCount = rows.Count();
 

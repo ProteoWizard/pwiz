@@ -74,7 +74,12 @@ namespace IDPicker.Forms
             get { return pivotSetupControl; }
         }
 
-        public virtual void SetData(NHibernate.ISession session, DataFilter viewFilter) { throw new NotImplementedException(); }
+        public virtual void SetData(NHibernate.ISession session, DataFilter viewFilter)
+        {
+            if (session != null && StartingSetData != null)
+                StartingSetData(this, EventArgs.Empty);
+        }
+
         public virtual void ClearData() { throw new NotImplementedException(); }
         public virtual void ClearData(bool clearBasicFilter) { throw new NotImplementedException(); }
 
@@ -105,6 +110,7 @@ namespace IDPicker.Forms
         protected DataFilter basicDataFilter; // the basic filter without the user filtering on rows
 
         public event EventHandler FinishedSetData;
+        public event EventHandler StartingSetData;
 
         protected Color filteredOutColor, filteredPartialColor;
 

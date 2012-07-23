@@ -1189,6 +1189,8 @@ namespace IDPicker.Forms
         {
             Text = TabText = "Spectrum View";
 
+            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+
             treeDataGridView.RootRowCount = 0;
             Refresh();
         }
@@ -1202,6 +1204,8 @@ namespace IDPicker.Forms
 
         public override void SetData(NHibernate.ISession session, DataFilter dataFilter)
         {
+            base.SetData(session, dataFilter);
+
             if (session == null)
                 return;
 
@@ -1280,6 +1284,8 @@ namespace IDPicker.Forms
                 Program.HandleException(e.Result as Exception);
                 return;
             }
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
 
             treeDataGridView.RootRowCount = rows.Count();
 

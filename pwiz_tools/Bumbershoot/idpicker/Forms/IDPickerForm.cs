@@ -165,15 +165,20 @@ namespace IDPicker
             spectrumTableForm.SpectrumViewFilter += handleViewFilter;
             spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
             spectrumTableForm.FinishedSetData += handleFinishedSetData;
+            spectrumTableForm.StartingSetData += handleStartingSetData;
             proteinTableForm.ProteinViewFilter += handleViewFilter;
             proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
             proteinTableForm.FinishedSetData += handleFinishedSetData;
+            proteinTableForm.StartingSetData += handleStartingSetData;
             peptideTableForm.PeptideViewFilter += handleViewFilter;
             peptideTableForm.FinishedSetData += handleFinishedSetData;
+            peptideTableForm.StartingSetData += handleStartingSetData;
             modificationTableForm.ModificationViewFilter += handleViewFilter;
             modificationTableForm.FinishedSetData += handleFinishedSetData;
+            modificationTableForm.StartingSetData += handleStartingSetData;
             analysisTableForm.AnalysisViewFilter += handleViewFilter;
             analysisTableForm.FinishedSetData += handleFinishedSetData;
+            analysisTableForm.StartingSetData += handleStartingSetData;
 
             // hide DockPanel before initializing layout manager
             dockPanel.Visible = false;
@@ -649,15 +654,7 @@ namespace IDPicker
         int mainViewsLoaded;
         void setData ()
         {
-            mainViewsLoaded = 0;
-            dataFiltersToolStripMenuRoot.Enabled = false;
-            progressMonitor_ProgressUpdate(this, new ProgressUpdateEventArgs()
-            {
-                Current = 0,
-                Total = 5,
-                Message = "Loading main views (0/5)..."
-            });
-
+            mainViewsLoaded = 5;
             proteinTableForm.SetData(session, viewFilter);
             peptideTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             spectrumTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
@@ -669,6 +666,25 @@ namespace IDPicker
             distributionStatisticsForm.SetData(session, viewFilter);
             dockPanel.Contents.OfType<SequenceCoverageForm>().ForEach(o => o.SetData(session, viewFilter));
             reassignPSMsForm.SetData(session, basicFilter);
+        }
+
+        void handleStartingSetData(object sender, EventArgs e)
+        {
+            BeginInvoke(new MethodInvoker(() =>
+            {
+                lock (this)
+                {
+                    --mainViewsLoaded;
+
+                    breadCrumbControl.Enabled = dataFiltersToolStripMenuRoot.Enabled = false;
+                    progressMonitor_ProgressUpdate(this, new ProgressUpdateEventArgs()
+                    {
+                        Current = mainViewsLoaded,
+                        Total = 5,
+                        Message = String.Format("Loading main views ({0}/{1})...", mainViewsLoaded, 5)
+                    });
+                }
+            }));
         }
 
         void handleFinishedSetData(object sender, EventArgs e)
@@ -685,6 +701,9 @@ namespace IDPicker
                         Total = 5,
                         Message = String.Format("Loading main views ({0}/{1})...", mainViewsLoaded, 5)
                     });
+
+                    if (mainViewsLoaded == 5)
+                        breadCrumbControl.Enabled = dataFiltersToolStripMenuRoot.Enabled = true;
                 }
             }));
         }

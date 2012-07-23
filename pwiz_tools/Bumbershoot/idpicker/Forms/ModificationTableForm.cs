@@ -33,6 +33,7 @@ using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using DigitalRune.Windows.Docking;
+using NHibernate.Linq;
 using IDPicker.DataModel;
 using IDPicker.Controls;
 using PopupControl;
@@ -84,24 +85,6 @@ namespace IDPicker.Forms
 
             pivotModeComboBox.SelectedIndex = 0;
             DistinctModificationFormat = new DistinctMatchFormat() { ModificationMassRoundToNearest = roundToNearestUpDown.Value };
-
-            workerThread = new BackgroundWorker()
-            {
-                WorkerReportsProgress = true,
-                WorkerSupportsCancellation = true
-            };
-
-            workerThread.DoWork += (sender, e) =>
-                                       {
-                                           if (detailDataGridView.InvokeRequired)
-                                           {
-                                               Action<object, DoWorkEventArgs> invokedSetData = setData;
-                                               detailDataGridView.Invoke(invokedSetData, sender, e);
-                                           }
-                                           else
-                                               setData(sender, e);
-                                       };
-            workerThread.RunWorkerCompleted += renderData;
         }
 
         const string deltaMassColumnName = "ΔMass";
@@ -363,9 +346,9 @@ namespace IDPicker.Forms
 
         public event ModificationViewFilterEventHandler ModificationViewFilter;
         public event EventHandler FinishedSetData;
+        public event EventHandler StartingSetData;
 
         private NHibernate.ISession session;
-        private BackgroundWorker workerThread;
 
         private DataFilter viewFilter; // what the user has filtered on
         private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
@@ -516,6 +499,14 @@ namespace IDPicker.Forms
 
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
+            if (session == null)
+                return;
+
+            if (StartingSetData != null)
+                StartingSetData(this, EventArgs.Empty);
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+
             this.session = session;
             viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) { Modifications = null, ModifiedSite = null };
@@ -531,20 +522,13 @@ namespace IDPicker.Forms
 
             Text = TabText = "Loading modification view...";
 
-            if (workerThread.IsBusy)
+            var workerThread = new BackgroundWorker()
             {
-                workerThread.RunWorkerCompleted -= renderData;
-                workerThread.RunWorkerCompleted -= rerunSet;
-                workerThread.RunWorkerCompleted += rerunSet;
-            }
-            else
-                workerThread.RunWorkerAsync();
-        }
+                WorkerReportsProgress = true,
+                WorkerSupportsCancellation = true
+            };
 
-        private void rerunSet(object sender, RunWorkerCompletedEventArgs e)
-        {
-            workerThread.RunWorkerCompleted -= renderData;
-            workerThread.RunWorkerCompleted -= rerunSet;
+            workerThread.DoWork += setData;
             workerThread.RunWorkerCompleted += renderData;
             workerThread.RunWorkerAsync();
         }
@@ -552,6 +536,8 @@ namespace IDPicker.Forms
         public void ClearData ()
         {
             Text = TabText = "Modification View";
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
 
             dataGridView.DataSource = null;
             dataGridView.Columns.Clear();
@@ -781,6 +767,8 @@ namespace IDPicker.Forms
                 Program.HandleException(e.Result as Exception);
                 return;
             }
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
 
             Text = TabText = String.Format("Modification View: {0} modified {1}", totalModifications, PivotMode.ToLower());
 
@@ -1123,9 +1111,6 @@ namespace IDPicker.Forms
 
         private void ModFilter_Leave(object sender, EventArgs e)
         {
-            if (workerThread.IsBusy)
-                return;
-
             var textbox = sender as TextBox;
             if (textbox != null)
             {
@@ -1160,9 +1145,6 @@ namespace IDPicker.Forms
 
         private void unimodPopup_Closed (object sender, EventArgs e)
         {
-            if (workerThread.IsBusy)
-                return;
-
             try
             {
                 if (!_unimodControl.ChangesMade(true))
@@ -1183,7 +1165,7 @@ namespace IDPicker.Forms
         private void roundToNearestUpDown_ValueChanged (object sender, EventArgs e)
         {
             var currentControl = (NumericUpDown)sender;
-            if (roundToNearestUpDownChanging || workerThread.IsBusy)
+            if (roundToNearestUpDownChanging)
             {
                 if (!System.Text.RegularExpressions.Regex.IsMatch(currentControl.Value.ToString(), @"^10*\.?0*$") &&
                 !System.Text.RegularExpressions.Regex.IsMatch(currentControl.Value.ToString(), @"^0?\.0*10*$"))
