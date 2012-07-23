@@ -561,7 +561,12 @@ namespace IDPicker
                 if (mainViewsLoaded < 5)
                     return;
 
-            breadCrumbControl.BreadCrumbs.Remove(e.BreadCrumb);
+			if (e.BreadCrumb == null && e.BreadCrumbList != null)
+				foreach (var crumb in e.BreadCrumbList)
+					breadCrumbControl.BreadCrumbs.Remove(crumb);
+			else
+				breadCrumbControl.BreadCrumbs.Remove(e.BreadCrumb);
+        	
 
             // start with the basic filter
             viewFilter = basicFilter;

@@ -59,7 +59,9 @@ namespace IDPicker.Controls
     public class BreadCrumbClickedEventArgs : EventArgs
     {
         internal BreadCrumbClickedEventArgs (BreadCrumb breadCrumb) { BreadCrumb = breadCrumb; }
-        public BreadCrumb BreadCrumb { get; private set; }
+
+    	public BreadCrumb BreadCrumb { get; private set; }
+		public List<BreadCrumb> BreadCrumbList { get; set; }
     }
 
     public class BreadCrumbControl : UserControl
@@ -181,8 +183,12 @@ namespace IDPicker.Controls
             if (((ToolStripLabel)sender).LinkColor == Color.OrangeRed)
             {
                 int deletedIndex = breadCrumbToolStrip.Items.IndexOf(sender as ToolStripLabel);
-                for (int x = breadCrumbToolStrip.Items.Count - 1; x > deletedIndex; x -= 3)
-                    OnLinkClicked(breadCrumbToolStrip.Items[x].Tag as BreadCrumb);
+            	var crumbsToRemove = new List<BreadCrumb>();
+            	for (int x = breadCrumbToolStrip.Items.Count - 1; x > deletedIndex; x -= 3)
+            		crumbsToRemove.Add(breadCrumbToolStrip.Items[x].Tag as BreadCrumb);
+            	var newBreadCrumbEvent = new BreadCrumbClickedEventArgs(null);
+            	newBreadCrumbEvent.BreadCrumbList = crumbsToRemove;
+				BreadCrumbClicked(sender, newBreadCrumbEvent);
             }
 
             //Indicate that separator has been clicked once

@@ -145,7 +145,12 @@ namespace IDPicker
                         if (column >= table[row].Count)
                             genericList[row, column] = string.Empty;
                         else
-                            genericList[row, column] = table[row][column];
+                        {
+							var nextCell = table[row][column];
+							if (System.Text.RegularExpressions.Regex.IsMatch(nextCell, @"[\d,]+,+[\d,]+"))
+								nextCell = "'" + nextCell;
+							genericList[row, column] = nextCell;
+                        }
                     }
 
                 if (!firstSheet)
