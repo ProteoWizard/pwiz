@@ -96,6 +96,15 @@ namespace myrimatch
 			return tmp;
 		}
 
+		void reset()
+		{
+			numProteinsDigested = 0;
+			numPeptidesGenerated = 0;
+			numVariantsGenerated = 0;
+			numComparisonsDone = 0;
+			numPeptidesSkipped = 0;
+		}
+
 		operator string()
 		{
 			stringstream s;

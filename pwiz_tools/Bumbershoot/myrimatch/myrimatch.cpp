@@ -1081,7 +1081,7 @@ namespace myrimatch
                         cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
                         //PRINT_PROFILERS(cout,"old");
                     }
-
+					searchStatistics.reset();
 				}
                 
                 // Tell the child nodes that we are all done if there are 
