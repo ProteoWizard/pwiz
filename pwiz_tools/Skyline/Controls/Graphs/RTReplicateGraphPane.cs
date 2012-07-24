@@ -171,12 +171,12 @@ namespace pwiz.Skyline.Controls.Graphs
                                      });
             }
             // Reset the scale when the parent node changes
-            if (_parentNode != parentNode)
+            if (_parentNode == null || !ReferenceEquals(_parentNode.Id, parentNode.Id))
             {
-                _parentNode = parentNode;
                 XAxis.Scale.MaxAuto = XAxis.Scale.MinAuto = true;
                 YAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = true;
             }
+            _parentNode = parentNode;
             Legend.IsVisible = Settings.Default.ShowRetentionTimesLegend;
             AxisChange();
         }

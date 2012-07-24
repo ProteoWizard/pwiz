@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     var nodeTran = (TransitionDocNode)_docNode;
                     ReplicateIndices = GetReplicateIndices(nodeTran).ToArray();
                     docNodes.Add(nodeTran);
-                    pointPairLists.Add(GetPointPairLists(nodeTran, _displayType));
+                    pointPairLists.Add(GetPointPairLists(null, nodeTran, _displayType));
                     docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                 }
                 else if (_docNode is TransitionGroupDocNode)
@@ -178,7 +178,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         foreach (TransitionDocNode nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, _displayType))
                         {
                             docNodes.Add(nodeTran);
-                            pointPairLists.Add(GetPointPairLists(nodeTran, _displayType));
+                            pointPairLists.Add(GetPointPairLists(nodeGroup, nodeTran, _displayType));
                             docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                         }
                     }
@@ -265,8 +265,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public abstract PointPair PointPairMissing(int xValue);
 
-            private List<PointPairList> GetPointPairLists(TransitionDocNode nodeTran,
-                                                                 DisplayTypeChrom displayType)
+            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
+                                                          TransitionDocNode nodeTran,
+                                                          DisplayTypeChrom displayType)
             {
                 var pointPairLists = new List<PointPairList>();
                 if (!nodeTran.HasResults)
@@ -285,7 +286,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     pointPairLists.Add(new PointPairList());
 
                 int numSteps = maxSteps/2;
-                foreach (int iResult in GetReplicateIndices(nodeTran))
+                foreach (int iResult in nodeGroup != null
+                                            ? GetReplicateIndices(nodeGroup)
+                                            : GetReplicateIndices(nodeTran))
                 {
                     // Fill everything with missing data until filled for real
                     foreach (PointPairList pairList in pointPairLists)
