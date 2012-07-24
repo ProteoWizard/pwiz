@@ -61,8 +61,8 @@ namespace pwiz.MSGraph
             if( _fullPointList.Count == 0 )
                 return;
 
-            min = Math.Max( min - 1, _fullPointList[0].X );
-            max = Math.Min( max + 1, _fullPointList[_fullPointList.Count - 1].X );
+            min = Math.Max( min, _fullPointList[0].X );
+            max = Math.Min( max, _fullPointList[_fullPointList.Count - 1].X );
 
             if( _scaledWidth == width && _scaledMin == min && _scaledMax == max )
                 return;
