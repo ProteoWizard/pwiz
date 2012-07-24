@@ -146,7 +146,8 @@ PWIZ_API_DECL
 void Reader_ABI_T2D::read(const string& filename,
                           const string& head,
                           MSData& result,
-                          int runIndex) const
+                          int runIndex,
+                          const Config& config) const
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_ABI_T2D::read] multiple runs not supported");
@@ -178,7 +179,7 @@ void Reader_ABI_T2D::read(const string& filename,
 namespace pwiz {
 namespace msdata {
 
-PWIZ_API_DECL void Reader_ABI_T2D::read(const string& filename, const string& head, MSData& result, int runIndex) const
+PWIZ_API_DECL void Reader_ABI_T2D::read(const string& filename, const string& head, MSData& result, int runIndex, const Config& config) const
 {
     throw ReaderFail("[Reader_ABI_T2D::read()] ABSciex T2D reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it

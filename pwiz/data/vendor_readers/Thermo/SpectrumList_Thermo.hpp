@@ -31,6 +31,7 @@
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 
 
 #ifdef PWIZ_READER_THERMO
@@ -58,7 +59,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
 #ifdef PWIZ_READER_THERMO
-    SpectrumList_Thermo(const MSData& msd, pwiz::vendor_api::Thermo::RawFilePtr rawfile);
+    SpectrumList_Thermo(const MSData& msd, pwiz::vendor_api::Thermo::RawFilePtr rawfile, const Reader::Config& config);
 
     int numSpectraOfScanType(pwiz::vendor_api::Thermo::ScanType scanType) const;
     int numSpectraOfMSOrder(pwiz::vendor_api::Thermo::MSOrder msOrder) const;
@@ -67,6 +68,7 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
 
     const MSData& msd_;
     pwiz::vendor_api::Thermo::RawFilePtr rawfile_;
+    const Reader::Config config_;
     size_t size_;
     vector<int> spectraByScanType;
     vector<int> spectraByMSOrder;

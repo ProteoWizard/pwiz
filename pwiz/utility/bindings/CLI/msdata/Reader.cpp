@@ -65,6 +65,27 @@ void Reader::read(System::String^ filename, System::String^ head, MSDataList^ re
     try {base_->read(ToStdString(filename), ToStdString(head), *results->base_);} CATCH_AND_FORWARD
 }
 
+void Reader::read(System::String^ filename, System::String^ head, MSData^ result, ReaderConfig^ config)
+{
+    read(filename, head, result, 0, config);
+}
+
+void Reader::read(System::String^ filename, System::String^ head, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)
+{
+    pwiz::msdata::Reader::Config config;
+    config.simAsSpectra = readerConfig->simAsSpectra;
+    config.srmAsSpectra = readerConfig->srmAsSpectra;
+    try {base_->read(ToStdString(filename), ToStdString(head), **result->base_, sampleIndex, config);} CATCH_AND_FORWARD
+}
+
+void Reader::read(System::String^ filename, System::String^ head, MSDataList^ results, ReaderConfig^ readerConfig)
+{
+    pwiz::msdata::Reader::Config config;
+    config.simAsSpectra = readerConfig->simAsSpectra;
+    config.srmAsSpectra = readerConfig->srmAsSpectra;
+    try {base_->read(ToStdString(filename), ToStdString(head), *results->base_, config);} CATCH_AND_FORWARD
+}
+
 array<System::String^>^ Reader::readIds(System::String^ filename, System::String^ head)
 {
     try
@@ -122,9 +143,25 @@ void ReaderList::read(System::String^ filename, MSData^ result, int sampleIndex)
     try {base_->read(ToStdString(filename), **result->base_, sampleIndex);} CATCH_AND_FORWARD
 }
 
+void ReaderList::read(System::String^ filename, MSData^ result, int sampleIndex, ReaderConfig^ readerConfig)
+{    
+    pwiz::msdata::Reader::Config config;
+    config.simAsSpectra = readerConfig->simAsSpectra;
+    config.srmAsSpectra = readerConfig->srmAsSpectra;
+    try {base_->read(ToStdString(filename), **result->base_, sampleIndex, config);} CATCH_AND_FORWARD
+}
+
 void ReaderList::read(System::String^ filename, MSDataList^ results)
 {    
     try {base_->read(ToStdString(filename), *results->base_);} CATCH_AND_FORWARD
+}
+
+void ReaderList::read(System::String^ filename, MSDataList^ results, ReaderConfig^ readerConfig)
+{    
+    pwiz::msdata::Reader::Config config;
+    config.simAsSpectra = readerConfig->simAsSpectra;
+    config.srmAsSpectra = readerConfig->srmAsSpectra;
+    try {base_->read(ToStdString(filename), *results->base_, config);} CATCH_AND_FORWARD
 }
 
 array<System::String^>^ ReaderList::readIds(System::String^ filename)

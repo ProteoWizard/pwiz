@@ -234,7 +234,8 @@ PWIZ_API_DECL
 void Reader_Thermo::read(const string& filename,
                          const string& head,
                          MSData& result,
-                         int sampleIndex /* = 0 */) const
+                         int sampleIndex /* = 0 */,
+                         const Config& config) const
 {
     if (sampleIndex != 0)
         throw ReaderFail("[Reader_Thermo::read] multiple samples not supported");
@@ -244,8 +245,8 @@ void Reader_Thermo::read(const string& filename,
     RawFilePtr rawfile = RawFile::create(filename);
     rawfile->setCurrentController(Controller_MS, 1);
 
-    shared_ptr<SpectrumList_Thermo> sl(new SpectrumList_Thermo(result, rawfile));
-    shared_ptr<ChromatogramList_Thermo> cl(new ChromatogramList_Thermo(result, rawfile));
+    shared_ptr<SpectrumList_Thermo> sl(new SpectrumList_Thermo(result, rawfile, config));
+    shared_ptr<ChromatogramList_Thermo> cl(new ChromatogramList_Thermo(result, rawfile, config));
     result.run.spectrumListPtr = sl;
     result.run.chromatogramListPtr = cl;
 
@@ -275,7 +276,7 @@ PWIZ_API_DECL std::string Reader_Thermo::identify(const string& filename, const 
 	return std::string(hasRAWHeader(head)?getType():"");
 }
 
-PWIZ_API_DECL void Reader_Thermo::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
+PWIZ_API_DECL void Reader_Thermo::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */, const Config& config) const
 {
 	throw ReaderFail("[Reader_Thermo::read()] Thermo RAW reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it

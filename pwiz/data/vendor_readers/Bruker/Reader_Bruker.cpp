@@ -148,7 +148,8 @@ PWIZ_API_DECL
 void Reader_Bruker::read(const string& filename,
                          const string& head,
                          MSData& result,
-                         int runIndex) const
+                         int runIndex,
+                         const Config& config) const
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_Bruker::read] multiple runs not supported");
@@ -187,7 +188,7 @@ void Reader_Bruker::read(const string& filename,
 namespace pwiz {
 namespace msdata {
 
-PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
+PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */, const Config& config) const
 {
     throw ReaderFail("[Reader_Bruker::read()] Bruker Analysis reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
@@ -197,7 +198,7 @@ PWIZ_API_DECL void Reader_Bruker::read(const string& filename, const string& hea
 #else // wrong platform
         "requires CompassXtract which only works on Windows"
 #endif
-		);
+        );
 }
 
 } // namespace msdata

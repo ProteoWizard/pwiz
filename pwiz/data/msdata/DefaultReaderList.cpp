@@ -128,7 +128,8 @@ PWIZ_API_DECL std::string Reader_mzML::identify(const std::string& filename, con
 PWIZ_API_DECL void Reader_mzML::read(const std::string& filename,
                                      const std::string& head,
                                      MSData& result,
-                                     int runIndex) const
+                                     int runIndex,
+                                     const Config& config) const
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_mzML::read] multiple runs not supported");
@@ -165,10 +166,11 @@ PWIZ_API_DECL void Reader_mzML::read(const std::string& filename,
 
 PWIZ_API_DECL void Reader_mzML::read(const std::string& filename,
                                      const std::string& head,
-                                     std::vector<MSDataPtr>& results) const
+                                     std::vector<MSDataPtr>& results,
+                                     const Config& config) const
 {
     results.push_back(MSDataPtr(new MSData));
-    read(filename, head, *results.back());
+    read(filename, head, *results.back(), 0, config);
 }
 
 Reader_mzML::Type Reader_mzML::type(istream& is) const
@@ -209,7 +211,8 @@ PWIZ_API_DECL std::string Reader_mzXML::identify(const std::string& filename, co
 PWIZ_API_DECL void Reader_mzXML::read(const std::string& filename,
                                       const std::string& head,
                                       MSData& result,
-                                      int runsIndex) const
+                                      int runsIndex,
+                                      const Config& config) const
 {
     if (runsIndex != 0)
         throw ReaderFail("[Reader_mzXML::read] multiple runs not supported");
@@ -233,9 +236,9 @@ PWIZ_API_DECL void Reader_mzXML::read(const std::string& filename,
 
     // error looking for index -- try again, but generate index
     is->seekg(0);
-    Serializer_mzXML::Config config;
-    config.indexed = false;
-    Serializer_mzXML serializer(config);
+    Serializer_mzXML::Config serializerConfig;
+    serializerConfig.indexed = false;
+    Serializer_mzXML serializer(serializerConfig);
     serializer.read(is, result);
     fillInCommonMetadata(filename, result);
     result.fileDescription.sourceFilePtrs.back()->set(MS_scan_number_only_nativeID_format);
@@ -245,10 +248,11 @@ PWIZ_API_DECL void Reader_mzXML::read(const std::string& filename,
 
 PWIZ_API_DECL void Reader_mzXML::read(const std::string& filename,
                                       const std::string& head,
-                                      std::vector<MSDataPtr>& results) const
+                                      std::vector<MSDataPtr>& results,
+                                      const Config& config) const
 {
     results.push_back(MSDataPtr(new MSData));
-    read(filename, head, *results.back());
+    read(filename, head, *results.back(), 0, config);
 }
 
 
@@ -264,7 +268,8 @@ PWIZ_API_DECL std::string Reader_MGF::identify(const string& filename, const str
 PWIZ_API_DECL void Reader_MGF::read(const string& filename,
                                     const string& head,
                                     MSData& result,
-                                    int runIndex) const
+                                    int runIndex,
+                                    const Config& config) const
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_MGF::read] multiple runs not supported");
@@ -283,7 +288,8 @@ PWIZ_API_DECL void Reader_MGF::read(const string& filename,
 
 PWIZ_API_DECL void Reader_MGF::read(const std::string& filename,
                                     const std::string& head,
-                                    std::vector<MSDataPtr>& results) const
+                                    std::vector<MSDataPtr>& results,
+                                    const Config& config) const
 {
     results.push_back(MSDataPtr(new MSData));
     read(filename, head, *results.back());
@@ -306,7 +312,8 @@ PWIZ_API_DECL std::string Reader_MSn::identify(const string& filename, const str
 PWIZ_API_DECL void Reader_MSn::read(const string& filename,
                                     const string& head,
                                     MSData& result,
-                                    int runIndex) const
+                                    int runIndex,
+                                    const Config& config) const
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_MSn::read] multiple runs not supported");
@@ -332,7 +339,8 @@ PWIZ_API_DECL void Reader_MSn::read(const string& filename,
 
 PWIZ_API_DECL void Reader_MSn::read(const std::string& filename,
                                     const std::string& head,
-                                    std::vector<MSDataPtr>& results) const
+                                    std::vector<MSDataPtr>& results,
+                                    const Config& config) const
 {
     results.push_back(MSDataPtr(new MSData));
     read(filename, head, *results.back());
@@ -361,7 +369,8 @@ PWIZ_API_DECL std::string Reader_BTDX::identify(const string& filename, const st
 PWIZ_API_DECL void Reader_BTDX::read(const string& filename,
                                      const string& head,
                                      MSData& result,
-                                     int runIndex) const
+                                     int runIndex,
+                                     const Config& config) const
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_BTDX::read] multiple runs not supported");
@@ -387,7 +396,8 @@ PWIZ_API_DECL void Reader_BTDX::read(const string& filename,
 
 PWIZ_API_DECL void Reader_BTDX::read(const std::string& filename,
                                      const std::string& head,
-                                     std::vector<MSDataPtr>& results) const
+                                     std::vector<MSDataPtr>& results,
+                                     const Config& config) const
 {
     results.push_back(MSDataPtr(new MSData));
     read(filename, head, *results.back());
@@ -433,7 +443,8 @@ PWIZ_API_DECL std::string Reader_mz5::identify(const string& filename, const str
 PWIZ_API_DECL void Reader_mz5::read(const string& filename,
                                     const string& head,
                                     MSData& result,
-                                    int runIndex) const
+                                    int runIndex,
+                                    const Config& config) const
 {
 #ifdef WITHOUT_MZ5
     throw ReaderFail("[Reader_mz5::read] library was not built with mz5 support.");
@@ -454,7 +465,8 @@ PWIZ_API_DECL void Reader_mz5::read(const string& filename,
 
 PWIZ_API_DECL void Reader_mz5::read(const std::string& filename,
                                     const std::string& head,
-                                    std::vector<MSDataPtr>& results) const
+                                    std::vector<MSDataPtr>& results,
+                                    const Config& config) const
 {
     // TODO multiple read mz5
     results.push_back(MSDataPtr(new MSData));

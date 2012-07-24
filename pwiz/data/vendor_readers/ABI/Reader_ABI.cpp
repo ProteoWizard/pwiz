@@ -262,7 +262,8 @@ PWIZ_API_DECL
 void Reader_ABI::read(const string& filename,
                       const string& head,
                       MSData& result,
-                      int runIndex) const
+                      int runIndex,
+                      const Config& config) const
 {
 //    copyProteinPilotDLLs();
 
@@ -294,7 +295,8 @@ void Reader_ABI::read(const string& filename,
 PWIZ_API_DECL
 void Reader_ABI::read(const string& filename,
                       const string& head,
-                      vector<MSDataPtr>& results) const
+                      vector<MSDataPtr>& results,
+                      const Config& config) const
 {
 //    copyProteinPilotDLLs();
 
@@ -342,7 +344,8 @@ void Reader_ABI::read(const string& filename,
 PWIZ_API_DECL
 void Reader_ABI::readIds(const string& filename,
                       const string& head,
-                      vector<string>& results) const
+                      vector<string>& results,
+                      const Config& config) const
 {
 //    copyProteinPilotDLLs();
 
@@ -379,7 +382,7 @@ void Reader_ABI::readIds(const string& filename,
 namespace pwiz {
 namespace msdata {
 
-PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, MSData& result, int runIndex) const
+PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, MSData& result, int runIndex, const Config& config) const
 {
     throw ReaderFail("[Reader_ABI::read()] ABSciex WIFF reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
@@ -392,7 +395,7 @@ PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, 
     );
 }
 
-PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, vector<MSDataPtr>& results, const Config& config) const
 {
     throw ReaderFail("[Reader_ABI::read()] ABSciex WIFF reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
@@ -405,7 +408,7 @@ PWIZ_API_DECL void Reader_ABI::read(const string& filename, const string& head, 
     );
 }
 
-PWIZ_API_DECL void Reader_ABI::readIds(const std::string& filename, const std::string& head, std::vector<std::string>& results) const
+PWIZ_API_DECL void Reader_ABI::readIds(const std::string& filename, const std::string& head, std::vector<std::string>& results, const Config& config) const
 {
     throw ReaderFail("[Reader_ABI::readIds()] ABSciex WIFF reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it

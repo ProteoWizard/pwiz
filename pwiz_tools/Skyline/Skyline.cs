@@ -2774,9 +2774,26 @@ namespace pwiz.Skyline
             else
             {
                 // If an error, show the message before removing status
-                // TODO: Get topmost window
                 if (status.IsError)
-                    MessageDlg.Show(this, status.ErrorException.Message);
+                {
+                    var message = status.ErrorException.Message;
+
+                    // Drill down to see if the innermost exception was an out-of-memory exception.
+                    var innerException = status.ErrorException;
+                    while (innerException.InnerException != null)
+                        innerException = innerException.InnerException;
+                    if (innerException is OutOfMemoryException)
+                    {
+                        message += string.Format("\n\n{0} ran out of memory.", Program.Name);
+                        if (!Install.Is64Bit && Environment.Is64BitOperatingSystem)
+                        {
+                            message += string.Format("\n\nYou may be able to avoid this problem by installing a 64-bit version of {0}.", Program.Name);
+                        }
+                    }
+
+                    // TODO: Get topmost window
+                    MessageDlg.Show(this, message);
+                }
 
                 // Update the progress UI immediately
                 UpdateProgressUI(this, new EventArgs());

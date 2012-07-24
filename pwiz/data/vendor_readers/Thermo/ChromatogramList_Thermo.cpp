@@ -42,8 +42,8 @@ namespace msdata {
 namespace detail {
 
 
-ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile)
-:   msd_(msd), rawfile_(rawfile), indexInitialized_(util::init_once_flag_proxy)
+ChromatogramList_Thermo::ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile, const Reader::Config& config)
+:   msd_(msd), rawfile_(rawfile), indexInitialized_(util::init_once_flag_proxy), config_(config)
 {
 }
 
@@ -268,6 +268,10 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                         {
                             case ScanType_SRM:
                             {
+                                // produce spectra rather than a chromatogram
+                                if (config_.srmAsSpectra)
+                                    break;
+
                                 string precursorMZ = (format("%.10g") % filterParser.precursorMZs_[0]).str();
                                 /*index_.push_back(IndexEntry());
                                 IndexEntry& ci = index_.back();
@@ -302,6 +306,10 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
 
                             case ScanType_SIM:
                             {
+                                // produce spectra rather than a chromatogram
+                                if (config_.simAsSpectra)
+                                    break;
+
                                 for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
                                 {
                                     index_.push_back(IndexEntry());

@@ -539,9 +539,14 @@ namespace seems
                 try
                 {
                     ReaderList readerList = ReaderList.FullReaderList;
+                    var readerConfig = new ReaderConfig
+                        {
+                            simAsSpectra = Program.SimAsSpectra,
+                            srmAsSpectra = Program.SrmAsSpectra
+                        };
 
                     MSDataList msInfo = new MSDataList();
-                    readerList.read( fileInfo.FullName, msInfo );
+                    readerList.read( fileInfo.FullName, msInfo, readerConfig );
 
                     foreach( MSData msData in msInfo )
                     {

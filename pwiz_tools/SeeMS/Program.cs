@@ -39,6 +39,9 @@ namespace seems
         static System.Threading.Mutex ipcMutex;
         static BackgroundWorker ipcWorker;
 
+	    public const bool SimAsSpectra = false; // Read SIM scans as spectra.
+	    public const bool SrmAsSpectra = false; // Read SRM scans as spectra.
+
 		/// <summary>
 		/// The main entry point for the application.
 		/// </summary>

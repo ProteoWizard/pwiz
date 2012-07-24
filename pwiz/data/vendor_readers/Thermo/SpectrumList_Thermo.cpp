@@ -42,8 +42,8 @@ namespace msdata {
 namespace detail {
 
 
-SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile)
-:   msd_(msd), rawfile_(rawfile),
+SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile, const Reader::Config& config)
+:   msd_(msd), rawfile_(rawfile), config_(config),
     size_(0)
 {
     createIndex();
@@ -615,7 +615,12 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
                         {
                             // skip chromatogram-centric scan types
                             case ScanType_SIM:
+                                if (config_.simAsSpectra)
+                                    break;  // break out of switch (scanType)
+                                continue;
                             case ScanType_SRM:
+                                if (config_.srmAsSpectra)
+                                    break;  // break out of switch (scanType)
                                 continue;
                         }
 

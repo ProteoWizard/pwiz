@@ -49,15 +49,18 @@ class PWIZ_API_DECL Reader_ABI : public Reader
     virtual void read(const std::string& filename,
                       const std::string& head,
                       MSData& result,
-                      int sampleIndex = 0) const;
+                      int sampleIndex = 0,
+                      const Config& config = Config()) const;
 
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MSDataPtr>& results) const;
+                      std::vector<MSDataPtr>& results,
+                      const Config& config = Config()) const;
 
     virtual void readIds(const std::string& filename,
                       const std::string& head,
-                      std::vector<std::string>& results) const;
+                      std::vector<std::string>& results,
+                      const Config& config = Config()) const;
 
     virtual const char * getType() const {return "ABSciex WIFF";}
 };

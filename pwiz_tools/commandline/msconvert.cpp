@@ -67,9 +67,11 @@ struct Config
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
     bool merge;
+    bool simAsSpectra;
+    bool srmAsSpectra;
 
     Config()
-    :   outputPath("."), verbose(false), merge(false)
+    :   outputPath("."), verbose(false), merge(false), simAsSpectra(false), srmAsSpectra(false)
     {}
 
     string outputFilename(const string& inputFilename, const MSData& inputMSData) const;
@@ -255,6 +257,12 @@ Config parseCommandLine(int argc, const char* argv[])
         ("merge",
             po::value<bool>(&config.merge)->zero_tokens(),
             ": create a single output file from multiple input files by merging file-level metadata and concatenating spectrum lists")
+        ("simAsSpectra",
+            po::value<bool>(&config.simAsSpectra)->zero_tokens(),
+            ": write selected ion monitoring as spectra, not chromatograms")
+        ("srmAsSpectra",
+            po::value<bool>(&config.srmAsSpectra)->zero_tokens(),
+            ": write selected reaction monitoring as spectra, not chromatograms")
         ;
 
     // append options description to usage string
@@ -559,13 +567,17 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     vector<MSDataPtr> msdList;
     int failedFileCount = 0;
 
+    ReaderList::Config readerConfig;
+    readerConfig.simAsSpectra = config.simAsSpectra;
+    readerConfig.srmAsSpectra = config.srmAsSpectra;
+
     // Each file is read in separately in MSData objects in the msdList list.
     BOOST_FOREACH(const string& filename, filenames)
     {
         try
         {
             *os_ << "processing file: " << filename << endl;
-            readers.read(filename, msdList);
+            readers.read(filename, msdList, readerConfig);
         }
         catch (exception& e)
         {
@@ -620,8 +632,12 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     *os_ << "processing file: " << filename << endl;
 
+    ReaderList::Config readerConfig;
+    readerConfig.simAsSpectra = config.simAsSpectra;
+    readerConfig.srmAsSpectra = config.srmAsSpectra;
+
     vector<MSDataPtr> msdList;
-    readers.read(filename, msdList);
+    readers.read(filename, msdList, readerConfig);
 
     for (size_t i=0; i < msdList.size(); ++i)
     {

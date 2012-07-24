@@ -32,6 +32,7 @@ namespace pwiz.ProteowizardWrapper
 
         // Cached disposable objects
         private MSData _msDataFile;
+        private ReaderConfig _config;
         private SpectrumList _spectrumList;
         private SpectrumList _spectrumListCentroided;
         private ChromatogramList _chromatogramList;
@@ -75,19 +76,22 @@ namespace pwiz.ProteowizardWrapper
         private MsDataFileImpl(MSData msDataFile)
         {
             _msDataFile = msDataFile;
+            _config = new ReaderConfig();
             _isMsx = CheckMsx();
         }
 
         public MsDataFileImpl(string path)
         {
             _msDataFile = new MSDataFile(path);
+            _config = new ReaderConfig();
             _isMsx = CheckMsx();
         }
 
-        public MsDataFileImpl(string path, int sampleIndex)
+        public MsDataFileImpl(string path, int sampleIndex, bool simAsSpectra = false, bool srmAsSpectra = false)
         {
             _msDataFile = new MSData();
-            FULL_READER_LIST.read(path, _msDataFile, sampleIndex);
+            _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra};
+            FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
             _isMsx = CheckMsx();
         }
 
@@ -518,13 +522,13 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private static MsDataSpectrum GetSpectrum(Spectrum spectrum)
+        private MsDataSpectrum GetSpectrum(Spectrum spectrum)
         {
             if (spectrum != null && spectrum.binaryDataArrays.Count > 1)
             {
                 try
                 {
-                    return new MsDataSpectrum
+                    var msDataSpectrum = new MsDataSpectrum
                                {
                                    Level = GetMsLevel(spectrum) ?? 0,
                                    RetentionTime = GetStartTime(spectrum),
@@ -533,6 +537,28 @@ namespace pwiz.ProteowizardWrapper
                                    Mzs = ToArray(spectrum.getMZArray()),
                                    Intensities = ToArray(spectrum.getIntensityArray())
                                };
+
+                    if (msDataSpectrum.Level == 1 && _config.simAsSpectra)
+                    {
+                        var scanWindow = spectrum.scanList.scans[0].scanWindows.FirstOrDefault();
+                        if (scanWindow != null)
+                        {
+                            double windowStart = scanWindow.cvParam(CVID.MS_scan_window_lower_limit).value;
+                            double windowEnd = scanWindow.cvParam(CVID.MS_scan_window_upper_limit).value;
+                            double isolationWidth = (windowEnd - windowStart) / 2;
+                            msDataSpectrum.Precursors = new[]
+                                                        {
+                                                            new MsPrecursor
+                                                                {
+                                                                    IsolationWindowTargetMz = windowStart + isolationWidth,
+                                                                    IsolationWindowLower = isolationWidth,
+                                                                    IsolationWindowUpper = isolationWidth
+                                                                }
+                                                        };
+                        }
+                    }
+
+                    return msDataSpectrum;
                 }
                 catch (NullReferenceException)
                 {
@@ -719,8 +745,7 @@ namespace pwiz.ProteowizardWrapper
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, false))
             {
-                MsPrecursor[] precursors = GetPrecursors(spectrum);
-                return precursors.Length > 0 ? precursors : GetPrecursors(scanIndex);
+                return GetPrecursors(spectrum);
             }
         }
 
@@ -741,7 +766,9 @@ namespace pwiz.ProteowizardWrapper
         {
             // CONSIDER: Only the first selected ion m/z is considered for the precursor m/z
             var selectedIon = precursor.selectedIons.FirstOrDefault();
-            return (selectedIon != null ? selectedIon.cvParam(CVID.MS_selected_ion_m_z).value : null);
+            if (selectedIon == null)
+                return null;
+            return selectedIon.cvParam(CVID.MS_selected_ion_m_z).value;
         }
 
         private static double? GetIsolationWindowValue(Precursor precursor, CVID cvid)

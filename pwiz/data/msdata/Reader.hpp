@@ -39,6 +39,18 @@ class PWIZ_API_DECL Reader
     public:
 
 
+    /// Reader configuration
+    struct PWIZ_API_DECL Config
+    {
+        /// when true, sets certain vendor readers to produce SIM/SRM transitions as spectra instead of chromatograms
+        bool simAsSpectra;
+        bool srmAsSpectra;
+
+        Config();
+        Config(const Config& rhs);
+    };
+
+
     /// return true iff Reader recognizes the file as one it should handle
 	/// that's not to say one it CAN handle, necessarily, as in Thermo on linux,
 	/// see comment for identify() below
@@ -60,17 +72,20 @@ class PWIZ_API_DECL Reader
     virtual void read(const std::string& filename,
                       const std::string& head,
                       MSData& result,
-                      int runIndex = 0) const = 0;
+                      int runIndex = 0,
+                      const Config& config = Config()) const = 0;
 
     /// fill in a vector of MSData structures; provides support for multi-run input files
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MSDataPtr>& results) const = 0;
+                      std::vector<MSDataPtr>& results,
+                      const Config& config = Config()) const = 0;
 
     /// fill in a vector of MSData.Id values; provides support for multi-run input files
     virtual void readIds(const std::string& filename,
                          const std::string& head,
-                         std::vector<std::string>& dataIds) const;
+                         std::vector<std::string>& dataIds,
+                         const Config& config = Config()) const;
 
     /// returns a unique string identifying the reader type
 	virtual const char* getType() const = 0;
@@ -118,35 +133,41 @@ class PWIZ_API_DECL ReaderList : public Reader,
     /// delegates to first child that identifies
     virtual void read(const std::string& filename,
                       MSData& result,
-                      int runIndex = 0) const;
+                      int runIndex = 0,
+                      const Config& config = Config()) const;
 
     /// delegates to first child that identifies
     virtual void read(const std::string& filename,
                       const std::string& head,
                       MSData& result,
-                      int runIndex = 0) const;
+                      int runIndex = 0,
+                      const Config& config = Config()) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
     virtual void read(const std::string& filename,
-                      std::vector<MSDataPtr>& results) const;
+                      std::vector<MSDataPtr>& results,
+                      const Config& config = Config()) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MSDataPtr>& results) const;
+                      std::vector<MSDataPtr>& results,
+                      const Config& config = Config()) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
     virtual void readIds(const std::string& filename,
-                         std::vector<std::string>& results) const;
+                         std::vector<std::string>& results,
+                         const Config& config = Config()) const;
 
     /// delegates to first child that identifies;
     /// provides support for multi-run input files
     virtual void readIds(const std::string& filename,
                          const std::string& head,
-                         std::vector<std::string>& results) const;
+                         std::vector<std::string>& results,
+                         const Config& config = Config()) const;
 
     /// appends all of the rhs operand's Readers to the list
     ReaderList& operator +=(const ReaderList& rhs);

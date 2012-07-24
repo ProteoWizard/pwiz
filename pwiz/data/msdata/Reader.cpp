@@ -35,8 +35,22 @@ namespace msdata {
 using namespace pwiz::util;
 
 
+
+Reader::Config::Config()
+    : simAsSpectra(false)
+    , srmAsSpectra(false)
+{
+}
+
+/// copy constructor
+Reader::Config::Config(const Config& rhs)
+{
+    simAsSpectra = rhs.simAsSpectra;
+    srmAsSpectra = rhs.srmAsSpectra;
+}
+
 // default implementation; most Readers don't need to worry about multi-run input files
-PWIZ_API_DECL void Reader::readIds(const string& filename, const string& head, vector<string>& results) const
+PWIZ_API_DECL void Reader::readIds(const string& filename, const string& head, vector<string>& results, const Config& config) const
 {
     MSData data;
     read(filename, head, data);
@@ -65,18 +79,18 @@ PWIZ_API_DECL std::string ReaderList::identify(const string& filename, const str
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, MSData& result, int sampleIndex /* = 0 */) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, MSData& result, int sampleIndex /* = 0 */, const Config& config) const
 {
-    read(filename, read_file_header(filename, 512), result, sampleIndex);
+    read(filename, read_file_header(filename, 512), result, sampleIndex, config);
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, MSData& result, int sampleIndex /* = 0 */, const Config& config) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
-            (*it)->read(filename, head, result, sampleIndex);
+            (*it)->read(filename, head, result, sampleIndex, config);
             return;
         }
     throw ReaderFail((" don't know how to read " +
@@ -84,18 +98,18 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, 
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, vector<MSDataPtr>& results, const Config& config) const
 {
-    read(filename, read_file_header(filename, 512), results);
+    read(filename, read_file_header(filename, 512), results, config);
 }
 
 
-PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, vector<MSDataPtr>& results) const
+PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, vector<MSDataPtr>& results, const Config& config) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
-            (*it)->read(filename, head, results);
+            (*it)->read(filename, head, results, config);
             return;
         }
     throw ReaderFail((" don't know how to read " +
@@ -103,18 +117,18 @@ PWIZ_API_DECL void ReaderList::read(const string& filename, const string& head, 
 }
 
 
-PWIZ_API_DECL void ReaderList::readIds(const string& filename, vector<string>& results) const
+PWIZ_API_DECL void ReaderList::readIds(const string& filename, vector<string>& results, const Config& config) const
 {
-    readIds(filename, read_file_header(filename, 512), results);
+    readIds(filename, read_file_header(filename, 512), results, config);
 }
 
 
-PWIZ_API_DECL void ReaderList::readIds(const string& filename, const string& head, vector<string>& results) const
+PWIZ_API_DECL void ReaderList::readIds(const string& filename, const string& head, vector<string>& results, const Config& config) const
 {
     for (const_iterator it=begin(); it!=end(); ++it)
         if ((*it)->accept(filename, head))
         {
-            (*it)->readIds(filename, head, results);
+            (*it)->readIds(filename, head, results, config);
             return;
         }
     throw ReaderFail((" don't know how to read " +

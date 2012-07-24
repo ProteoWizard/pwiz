@@ -30,6 +30,7 @@
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/data/msdata/Reader.hpp"
 
 
 #ifdef PWIZ_READER_THERMO
@@ -56,12 +57,13 @@ public:
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     
 #ifdef PWIZ_READER_THERMO
-    ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile);
+    ChromatogramList_Thermo(const MSData& msd, RawFilePtr rawfile, const Reader::Config& config);
 
     private:
 
     const MSData& msd_;
     shared_ptr<RawFile> rawfile_;
+    const Reader::Config config_;
 
     mutable util::once_flag_proxy indexInitialized_;
 

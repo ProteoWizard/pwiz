@@ -37,8 +37,8 @@ class PWIZ_API_DECL Reader_mzML : public Reader
 {
     public:
     virtual std::string identify(const std::string& filename, const std::string& head) const;
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0) const;
-    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results) const;
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
+    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
     virtual const char* getType() const {return "mzML";}
 
     private:
@@ -51,8 +51,8 @@ class PWIZ_API_DECL Reader_mzXML : public Reader
 {
     public:
     virtual std::string identify(const std::string& filename, const std::string& head) const;
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0) const;
-    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results) const;
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
+    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
     virtual const char* getType() const {return "mzXML";}
 };
 
@@ -61,8 +61,8 @@ class PWIZ_API_DECL Reader_MGF : public Reader
 {
     public:
     virtual std::string identify(const std::string& filename, const std::string& head) const;
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0) const;
-    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results) const;
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
+    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
     virtual const char* getType() const {return "Mascot Generic";}
 };
 
@@ -71,8 +71,8 @@ class PWIZ_API_DECL Reader_MSn : public Reader
 {
     public:
     virtual std::string identify(const std::string& filename, const std::string& head) const;
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0) const;
-    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results) const;
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
+    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
     virtual const char* getType() const {return "MSn";}
 };
 
@@ -81,8 +81,8 @@ class PWIZ_API_DECL Reader_BTDX : public Reader
 {
     public:
     virtual std::string identify(const std::string& filename, const std::string& head) const;
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0) const;
-    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results) const;
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
+    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
     virtual const char* getType() const {return "Bruker Data Exchange";}
 };
 
@@ -91,8 +91,8 @@ class PWIZ_API_DECL Reader_mz5 : public Reader
 {
     public:
     virtual std::string identify(const std::string& filename, const std::string& head) const;
-    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0) const;
-    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results) const;
+    virtual void read(const std::string& filename, const std::string& head, MSData& result, int runIndex = 0, const Config& config = Config()) const;
+    virtual void read(const std::string& filename, const std::string& head, std::vector<MSDataPtr>& results, const Config& config = Config()) const;
     virtual const char* getType() const {return "MZ5";}
 };
 

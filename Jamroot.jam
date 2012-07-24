@@ -238,8 +238,7 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
         <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
-        <toolset>msvc:<linkflags>/OPT:REF,ICF
-        <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
+        <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF        <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
         
         <conditional>@secure-scl-throws
 

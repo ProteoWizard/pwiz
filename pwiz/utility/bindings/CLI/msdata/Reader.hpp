@@ -40,6 +40,25 @@ namespace msdata {
 
 public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(MSDataList, pwiz::msdata::MSDataPtr, MSData, NATIVE_SHARED_PTR_TO_CLI, CLI_TO_NATIVE_SHARED_PTR);
 
+/// <summary>
+/// configuration struct for readers
+/// </summary>
+public ref class ReaderConfig 
+{
+    public:
+
+    /// return Selected Ion Monitoring as spectra
+    bool simAsSpectra;
+
+    /// return Selected Reaction Monitoring as spectra
+    bool srmAsSpectra;
+
+    ReaderConfig()
+    :   simAsSpectra(false)
+    ,   srmAsSpectra(false)
+    {
+    }
+};
 
 /// interface for file readers
 public ref class Reader
@@ -68,6 +87,25 @@ public ref class Reader
     virtual void read(System::String^ filename,
                       System::String^ head,
                       MSDataList^ results);
+
+    /// fill in the MSData structure
+    virtual void read(System::String^ filename,
+                      System::String^ head,
+                      MSData^ result,
+                      ReaderConfig^ config);
+
+    /// fill in the MSData structure
+    virtual void read(System::String^ filename,
+                      System::String^ head,
+                      MSData^ result,
+                      int runIndex,
+                      ReaderConfig^ config);
+
+    /// fill in the MSData structure
+    virtual void read(System::String^ filename,
+                      System::String^ head,
+                      MSDataList^ results,
+                      ReaderConfig^ config);
 
     /// fill in the MSData structure
     virtual array<System::String^>^ readIds(System::String^ filename,
@@ -102,6 +140,11 @@ public ref class ReaderList : public Reader
                       MSData^ result,
                       int runIndex);
 
+    virtual void read(System::String^ filename,
+                      MSData^ result,
+                      int runIndex,
+                      ReaderConfig^ config);
+
     /// delegates to first child that accepts
     virtual void read(System::String^ filename,
                       System::String^ head,
@@ -116,6 +159,10 @@ public ref class ReaderList : public Reader
     /// fill in the MSDataList with MSData for all samples
     virtual void read(System::String^ filename,
                       MSDataList^ results);
+
+    virtual void read(System::String^ filename,
+                      MSDataList^ results,
+                      ReaderConfig^ config);
 
     /// fill in the MSDataList with MSData for all samples
     virtual void read(System::String^ filename,

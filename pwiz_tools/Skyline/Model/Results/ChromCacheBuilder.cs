@@ -199,7 +199,8 @@ namespace pwiz.Skyline.Model.Results
                 ChromDataProvider provider = null;
                 try
                 {
-                    inFile = new MsDataFileImpl(dataFilePathPart, sampleIndex);
+                    var enableSimSpectrum = _document.Settings.TransitionSettings.FullScan.IsEnabledMs;
+                    inFile = new MsDataFileImpl(dataFilePathPart, sampleIndex, enableSimSpectrum);
 
                     // Check for cancelation);
                     if (_loader.IsCanceled)

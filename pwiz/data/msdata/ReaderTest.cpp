@@ -43,14 +43,14 @@ class Reader1 : public Reader
 {
     public:
 
-    struct Config
+    struct ReaderConfig
     {
         string name;
         mutable bool done;
-        Config() : name("default"), done(false) {}
+        ReaderConfig() : name("default"), done(false) {}
     };
 
-    Config config;
+    ReaderConfig readerConfig;
 
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
@@ -62,18 +62,20 @@ class Reader1 : public Reader
     virtual void read(const std::string& filename, 
                       const std::string& head,
                       MSData& result,
-                      int runIndex = 0) const 
+                      int runIndex = 0,
+                      const Config& config = Config()) const 
     {
         if (os_) *os_ << "Reader1::read()\n";
-        config.done = true;
+        readerConfig.done = true;
     }
 
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MSDataPtr>& results) const
+                      std::vector<MSDataPtr>& results,
+                      const Config& config = Config()) const
     {
         results.push_back(MSDataPtr(new MSData));
-        read(filename, head, *results.back());
+        read(filename, head, *results.back(), 0, config);
     }
 
     virtual const char *getType() const {return "Reader1";} // satisfy inheritance
@@ -84,14 +86,14 @@ class Reader2 : public Reader
 {
     public:
 
-    struct Config
+    struct ReaderConfig
     {
         string color;
         mutable bool done;
-        Config() : color("orange"), done(false) {}
+        ReaderConfig() : color("orange"), done(false) {}
     };
 
-    Config config;
+    ReaderConfig readerConfig;
 
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
@@ -103,18 +105,20 @@ class Reader2 : public Reader
     virtual void read(const std::string& filename, 
                       const std::string& head,
                       MSData& result,
-                      int runIndex = 0) const
+                      int runIndex = 0,
+                      const Config& config = Config()) const
     {
         if (os_) *os_ << "Reader2::read()\n";
-        config.done = true;
+        readerConfig.done = true;
     }
 
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MSDataPtr>& results) const
+                      std::vector<MSDataPtr>& results,
+                      const Config& config = Config()) const
     {
         results.push_back(MSDataPtr(new MSData));
-        read(filename, head, *results.back());
+        read(filename, head, *results.back(), 0, config);
     }
 
     const char *getType() const {return "Reader2";} // satisfy inheritance
@@ -133,24 +137,24 @@ void testGet()
 
     Reader1* reader1 = readers.get<Reader1>();
     unit_assert(reader1);
-    if (os_) *os_ << "reader1 config: " << reader1->config.name << endl; 
-    unit_assert(reader1->config.name == "default");
-    reader1->config.name = "raw";
-    if (os_) *os_ << "reader1 config: " << reader1->config.name << endl; 
-    unit_assert(reader1->config.name == "raw");
+    if (os_) *os_ << "reader1 config: " << reader1->readerConfig.name << endl; 
+    unit_assert(reader1->readerConfig.name == "default");
+    reader1->readerConfig.name = "raw";
+    if (os_) *os_ << "reader1 config: " << reader1->readerConfig.name << endl; 
+    unit_assert(reader1->readerConfig.name == "raw");
 
     Reader2* reader2 = readers.get<Reader2>();
     unit_assert(reader2);
-    if (os_) *os_ << "reader2 config: " << reader2->config.color << endl; 
-    unit_assert(reader2->config.color == "orange");
-    reader2->config.color = "purple";
-    if (os_) *os_ << "reader2 config: " << reader2->config.color << endl; 
-    unit_assert(reader2->config.color == "purple");
+    if (os_) *os_ << "reader2 config: " << reader2->readerConfig.color << endl; 
+    unit_assert(reader2->readerConfig.color == "orange");
+    reader2->readerConfig.color = "purple";
+    if (os_) *os_ << "reader2 config: " << reader2->readerConfig.color << endl; 
+    unit_assert(reader2->readerConfig.color == "purple");
 
     const ReaderList& const_readers = readers;
     const Reader2* constReader2 = const_readers.get<Reader2>();
     unit_assert(constReader2);
-    if (os_) *os_ << "constReader2 config: " << constReader2->config.color << endl; 
+    if (os_) *os_ << "constReader2 config: " << constReader2->readerConfig.color << endl; 
 
     if (os_) *os_ << endl;
 }
@@ -189,17 +193,17 @@ void testRead()
     // to accept(); the alternative is to maintain state between accept()
     // and read(), which opens possibility for misuse. 
 
-    unit_assert(readers.get<Reader1>()->config.done == false);
+    unit_assert(readers.get<Reader1>()->readerConfig.done == false);
     if (readers.accept("1", "head"))
         readers.read("1", "head", msd);
-    unit_assert(readers.get<Reader1>()->config.done == true);
+    unit_assert(readers.get<Reader1>()->readerConfig.done == true);
 
-    readers.get<Reader1>()->config.done = false;
-    unit_assert(readers.get<Reader2>()->config.done == false);
+    readers.get<Reader1>()->readerConfig.done = false;
+    unit_assert(readers.get<Reader2>()->readerConfig.done == false);
     if (readers.accept("2", "head"))
         readers.read("2", "head", msd);
-    unit_assert(readers.get<Reader1>()->config.done == false);
-    unit_assert(readers.get<Reader2>()->config.done == true);
+    unit_assert(readers.get<Reader1>()->readerConfig.done == false);
+    unit_assert(readers.get<Reader2>()->readerConfig.done == true);
 
     if (os_) *os_ << endl;
 }

@@ -327,7 +327,7 @@ namespace pwiz.Skyline.Model.Results
                                     continue;
                                 insertIndex = AddTime((float)rt.Value, chromMapMs1.Times);
                             }
-                            foreach (var spectrum in filter.SrmSpectraFromMs1Scan(rt,
+                            foreach (var spectrum in filter.SrmSpectraFromMs1Scan(rt, dataSpectrum.Precursors,
                                 dataSpectrum.Mzs, dataSpectrum.Intensities))
                             {
                                 ProcessSrmSpectrum(rt.Value, spectrum.PrecursorMz,
@@ -688,7 +688,9 @@ namespace pwiz.Skyline.Model.Results
                 {
                     canSchedule = false;
                 }
-                _isSharedTime = !canSchedule;
+                // TODO: Figure out a way to turn off time sharing on first SIM scan so that
+                //       times can be shared for MS1 without SIM scans
+                _isSharedTime = false; // !canSchedule;
                 int? replicateNum = null;
                 if (document.Settings.HasResults)
                     replicateNum = document.Settings.MeasuredResults.Chromatograms.Count - 1;
@@ -838,13 +840,14 @@ namespace pwiz.Skyline.Model.Results
         }
 
         public IEnumerable<FilteredSrmSpectrum> SrmSpectraFromMs1Scan(double? time,
-            double[] mzArray, double[] intensityArray)
+            IEnumerable<MsPrecursor> precursors, double[] mzArray, double[] intensityArray)
         {
             if (!EnabledMs || !time.HasValue || mzArray == null || intensityArray == null)
                 yield break;
 
             // All filter pairs have a shot at filtering the MS1 scans
-            foreach (var filterPair in _filterMzValues)
+            var isoWin = GetIsolationWindows(precursors).FirstOrDefault();
+            foreach (var filterPair in FindMs1FilterPairs(isoWin.IsolationMz, isoWin.IsolationWidth))
             {
                 if (!filterPair.ContainsTime(time.Value))
                     continue;
@@ -906,7 +909,7 @@ namespace pwiz.Skyline.Model.Results
             new Dictionary<double, IList<SpectrumFilterPair>>();
 
         private IEnumerable<SpectrumFilterPair> FindFilterPairs(double? isolationMz, double? isolationWidth,
-            FullScanAcquisitionMethod acquisitionMethod)
+            FullScanAcquisitionMethod acquisitionMethod, bool ignoreIsolationScheme = false)
         {
             List<SpectrumFilterPair> filterPairs = new List<SpectrumFilterPair>();
             if (!isolationMz.HasValue)
@@ -922,91 +925,22 @@ namespace pwiz.Skyline.Model.Results
 
             if (acquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
-                double isolationWidthValue;
-
-                // Use instrument setting if no isolation scheme.
-                var isolationScheme = _fullScan.IsolationScheme;
-                if (isolationScheme == null)
+                if (!ignoreIsolationScheme)
                 {
-                    isolationWidthValue = _instrument.MzMatchTolerance*2;
+                    CalcDiaIsolationValues(ref isolationTargetMz, ref isolationWidth);
                 }
-
-                // Calculate window for a simple isolation scheme.
-                else if (isolationScheme.PrecursorFilter.HasValue)
+                if (!isolationWidth.HasValue)
                 {
-                    // Use the user specified isolation width, unless it is larger than
-                    // the acquisition isolation width.  In this case the chromatograms
-                    // may be very confusing (spikey), because of incorrectly included
-                    // data points.
-                    isolationWidthValue = isolationScheme.PrecursorFilter.Value + (isolationScheme.PrecursorRightFilter ?? 0);
-                    if (isolationWidth.HasValue && isolationWidth.Value < isolationWidthValue)
-                        isolationWidthValue = isolationWidth.Value;
-
-                    // Make sure the isolation target is centered in the desired window, even
-                    // if the window was specified as being asymetric
-                    if (isolationScheme.PrecursorRightFilter.HasValue)
-                        isolationTargetMz += isolationScheme.PrecursorRightFilter.Value - isolationWidthValue / 2;
-                }
-
-                // Find isolation window.
-                else if (isolationScheme.PrespecifiedIsolationWindows.Count > 0)
-                {
-                    IsolationWindow isolationWindow = null;
-
-                    // Match pre-specified targets.
-                    if (isolationScheme.PrespecifiedIsolationWindows[0].Target.HasValue)
-                    {
-                        foreach (var window in isolationScheme.PrespecifiedIsolationWindows)
-                        {
-                            if (!window.TargetMatches(isolationTargetMz, _instrument.MzMatchTolerance)) continue;
-                            if (isolationWindow != null)
-                                throw new InvalidDataException(string.Format("Two isolation windows contain targets which match the isolation target {0}.", isolationTargetMz));
-                            isolationWindow = window;
-                        }
-                    }
-
-                    // Find containing window.
-                    else
-                    {
-                        foreach (var window in isolationScheme.PrespecifiedIsolationWindows)
-                        {
-                            if (!window.Contains(isolationTargetMz)) continue;
-                            if (isolationWindow != null)
-                                throw new InvalidDataException(string.Format("Two isolation windows contain the isolation target {0}.", isolationTargetMz));
-                            isolationWindow = window;
-                        }
-                    }
-
-                    if (isolationWindow == null)
-                    {
-                        _filterPairDictionary[isolationMz.Value] = filterPairs;
-                        return filterPairs; // empty
-                    }
-
-                    isolationWidthValue = isolationWindow.End - isolationWindow.Start;
-                    isolationTargetMz = isolationWindow.Start + isolationWidthValue/2;
-                }
-
-                // MSe just uses the instrument isolation window
-                else if (isolationWidth.HasValue && 
-                        Equals(isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MS_E))
-                {
-                    isolationWidthValue = isolationWidth.Value;
-                }
-
-                // No defined isolation scheme?
-                else
-                {
-                    throw new InvalidDataException("Isolation scheme does not contain any isolation windows");
+                    return filterPairs; // empty
                 }
 
                 // For multiple case, find the first possible value, and iterate until
                 // no longer matching or the end of the array is encountered
-                int iFilter = IndexOfFilter(isolationTargetMz, isolationWidthValue);
+                int iFilter = IndexOfFilter(isolationTargetMz, isolationWidth.Value);
                 if (iFilter != -1)
                 {
                     while (iFilter < _filterMzValues.Length && CompareMz(isolationTargetMz,
-                            _filterMzValues[iFilter].Q1, isolationWidthValue) == 0)
+                            _filterMzValues[iFilter].Q1, isolationWidth.Value) == 0)
                         filterPairs.Add(_filterMzValues[iFilter++]);
                 }
             }
@@ -1017,8 +951,11 @@ namespace pwiz.Skyline.Model.Results
                 SpectrumFilterPair filterPairBest = null;
                 double minMzDelta = double.MaxValue;
 
+                // Isolation width for single is based on the instrumet m/z match tolerance
+                isolationWidth = _instrument.MzMatchTolerance*2;
+
                 foreach (var filterPair in FindFilterPairs(isolationTargetMz, isolationWidth,
-                                                           FullScanAcquisitionMethod.DIA))
+                                                           FullScanAcquisitionMethod.DIA, true))
                 {
                     double mzDelta = Math.Abs(isolationTargetMz - filterPair.Q1);
                     if (mzDelta < minMzDelta)
@@ -1034,6 +971,96 @@ namespace pwiz.Skyline.Model.Results
 
             _filterPairDictionary[isolationMz.Value] = filterPairs;
             return filterPairs;
+        }
+
+        private void CalcDiaIsolationValues(ref double isolationTargetMz,
+                                            ref double? isolationWidth)
+        {
+            double isolationWidthValue;
+            var isolationScheme = _fullScan.IsolationScheme;
+            if (isolationScheme == null)
+            {                
+                throw new InvalidOperationException("Unexpected attempt to calculate DIA isolation window without an isolation scheme");
+            }
+
+            // Calculate window for a simple isolation scheme.
+            else if (isolationScheme.PrecursorFilter.HasValue)
+            {
+                // Use the user specified isolation width, unless it is larger than
+                // the acquisition isolation width.  In this case the chromatograms
+                // may be very confusing (spikey), because of incorrectly included
+                // data points.
+                isolationWidthValue = isolationScheme.PrecursorFilter.Value +
+                                      (isolationScheme.PrecursorRightFilter ?? 0);
+                if (isolationWidth.HasValue && isolationWidth.Value < isolationWidthValue)
+                    isolationWidthValue = isolationWidth.Value;
+
+                // Make sure the isolation target is centered in the desired window, even
+                // if the window was specified as being asymetric
+                if (isolationScheme.PrecursorRightFilter.HasValue)
+                    isolationTargetMz += isolationScheme.PrecursorRightFilter.Value - isolationWidthValue/2;
+            }
+
+            // Find isolation window.
+            else if (isolationScheme.PrespecifiedIsolationWindows.Count > 0)
+            {
+                IsolationWindow isolationWindow = null;
+
+                // Match pre-specified targets.
+                if (isolationScheme.PrespecifiedIsolationWindows[0].Target.HasValue)
+                {
+                    foreach (var window in isolationScheme.PrespecifiedIsolationWindows)
+                    {
+                        if (!window.TargetMatches(isolationTargetMz, _instrument.MzMatchTolerance)) continue;
+                        if (isolationWindow != null)
+                            throw new InvalidDataException(string.Format("Two isolation windows contain targets which match the isolation target {0}.", isolationTargetMz));
+                        isolationWindow = window;
+                    }
+                }
+
+                // Find containing window.
+                else
+                {
+                    foreach (var window in isolationScheme.PrespecifiedIsolationWindows)
+                    {
+                        if (!window.Contains(isolationTargetMz)) continue;
+                        if (isolationWindow != null)
+                            throw new InvalidDataException(string.Format("Two isolation windows contain the isolation target {0}.", isolationTargetMz));
+                        isolationWindow = window;
+                    }
+                }
+
+                if (isolationWindow == null)
+                {
+                    _filterPairDictionary[isolationTargetMz] = new List<SpectrumFilterPair>();
+                    isolationWidth = null;
+                    return;
+                }
+
+                isolationWidthValue = isolationWindow.End - isolationWindow.Start;
+                isolationTargetMz = isolationWindow.Start + isolationWidthValue/2;
+            }
+
+            // MSe just uses the instrument isolation window
+            else if (isolationWidth.HasValue &&
+                     Equals(isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MS_E))
+            {
+                isolationWidthValue = isolationWidth.Value;
+            }
+
+            // No defined isolation scheme?
+            else
+            {
+                throw new InvalidDataException("Isolation scheme does not contain any isolation windows");
+            }
+            isolationWidth = isolationWidthValue;
+        }
+
+        private IEnumerable<SpectrumFilterPair> FindMs1FilterPairs(double? isolationMz, double? isolationWidth)
+        {
+            if (!isolationMz.HasValue)
+                return _filterMzValues; // survey scan
+            return FindFilterPairs(isolationMz, isolationWidth, FullScanAcquisitionMethod.DIA, true);  // SIM scan
         }
 
         private int IndexOfFilter(double precursorMz, double window)

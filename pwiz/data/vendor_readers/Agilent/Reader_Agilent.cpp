@@ -205,7 +205,8 @@ PWIZ_API_DECL
 void Reader_Agilent::read(const string& filename,
                          const string& head,
                          MSData& result,
-                         int runIndex /* = 0 */) const
+                         int runIndex /* = 0 */,
+                         const Config& config) const
 {
     if (runIndex != 0)
         throw ReaderFail("[Reader_Agilent::read] multiple runs not supported");
@@ -239,7 +240,7 @@ namespace pwiz {
 namespace msdata {
 
 
-PWIZ_API_DECL void Reader_Agilent::read(const string& filename, const string& head, MSData& result,	int sampleIndex /* = 0 */) const
+PWIZ_API_DECL void Reader_Agilent::read(const string& filename, const string& head, MSData& result,	int sampleIndex /* = 0 */, const Config& config) const
 {
 	throw ReaderFail("[Reader_Agilent::read()] Agilent MassHunter reader not implemented: "
 #ifdef _MSC_VER // should be possible, apparently somebody decided to skip it
