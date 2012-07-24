@@ -135,6 +135,9 @@
     <Compile Include="ForeBackColorControl.Designer.cs">
       <DependentUpon>ForeBackColorControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="SilentTextBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="TreeDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>

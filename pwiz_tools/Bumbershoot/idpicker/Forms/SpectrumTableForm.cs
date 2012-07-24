@@ -465,20 +465,23 @@ namespace IDPicker.Forms
                     rowsBySource[nonGroupParentFilterKey] = groups.Cast<Row>().Concat(sources.Cast<Row>()).ToList();
                 }
 
-            var ssgRows = rowsBySource[nonGroupParentFilterKey].Where(o => o is SpectrumSourceGroupRow).Select(o => o as SpectrumSourceGroupRow);
-            var ssRows = rowsBySource[nonGroupParentFilterKey].Where(o => o is SpectrumSourceRow).Select(o => o as SpectrumSourceRow);
+            var ssgRows = rowsBySource[nonGroupParentFilterKey].OfType<SpectrumSourceGroupRow>();
+            var ssRows = rowsBySource[nonGroupParentFilterKey].OfType<SpectrumSourceRow>();
             var result = Enumerable.Empty<Row>();
 
             if (parentFilter != null && parentFilter.SpectrumSourceGroup != null)
                 foreach (var item in parentFilter.SpectrumSourceGroup)
-                    result = result.Concat(ssgRows.Where(o => o.SpectrumSourceGroup.IsImmediateChildOf(item)).Cast<Row>());
+                    result = result.Concat(ssgRows.Where(o => o.SpectrumSourceGroup.IsImmediateChildOf(item) /*&&
+                                                              (findTextBox.Text == "Find..." || o.SpectrumSourceGroup.Name.Contains(findTextBox.Text))*/).Cast<Row>());
             else
                 result = ssgRows.Where(o => o.SpectrumSourceGroup.Name == "/").Cast<Row>();
 
             if (parentFilter != null && parentFilter.SpectrumSourceGroup != null)
             {
                 foreach (var item in parentFilter.SpectrumSourceGroup)
-                    result = result.Concat(ssRows.Where(o => o.SpectrumSource.Group != null && o.SpectrumSource.Group.Id == item.Id).Cast<Row>());
+                    result = result.Concat(ssRows.Where(o => o.SpectrumSource.Group != null &&
+                                                             o.SpectrumSource.Group.Id == item.Id /*&&
+                                                             (findTextBox.Text == "Find..." || o.SpectrumSource.Name.Contains(findTextBox.Text))*/).Cast<Row>());
             }
 
             return result.ToList();
@@ -816,14 +819,15 @@ namespace IDPicker.Forms
                 var nonGroupParentFilterKey = new DataFilterKey(new DataFilter(row.DataFilter) { SpectrumSourceGroup = null });
 
                 var cachedRowsBySource = rowsBySource[nonGroupParentFilterKey];
-                e.ChildRowCount = cachedRowsBySource.Where(o => o is SpectrumSourceGroupRow)
-                                                    .Select(o => o as SpectrumSourceGroupRow)
-                                                    .Count(o => o.SpectrumSourceGroup.IsImmediateChildOf(row.SpectrumSourceGroup));
-                e.ChildRowCount += cachedRowsBySource.Where(o => o is SpectrumSourceRow)
-                                                     .Select(o => o as SpectrumSourceRow)
-                                                     .Count(o => o.SpectrumSource.Group != null && o.SpectrumSource.Group.Id == row.SpectrumSourceGroup.Id);
+                e.ChildRowCount = cachedRowsBySource.OfType<SpectrumSourceGroupRow>()
+                                                    .Count(o => o.SpectrumSourceGroup.IsImmediateChildOf(row.SpectrumSourceGroup) /*&&
+                                                                (findTextBox.Text == "Find..." || o.SpectrumSourceGroup.Name.Contains(findTextBox.Text))*/);
+                e.ChildRowCount += cachedRowsBySource.OfType<SpectrumSourceRow>()
+                                                     .Count(o => o.SpectrumSource.Group != null &&
+                                                                 o.SpectrumSource.Group.Id == row.SpectrumSourceGroup.Id /*&&
+                                                                 (findTextBox.Text == "Find..." || o.SpectrumSource.Name.Contains(findTextBox.Text))*/);
 
-                if (e.ChildRowCount == 0)
+                if (e.ChildRowCount == 0 && findTextBox.Text == "Find...")
                     throw new InvalidDataException("no child rows for source group");
             }
             else if (baseRow is SpectrumSourceRow)
@@ -1259,14 +1263,17 @@ namespace IDPicker.Forms
                         totalCounts = new TotalCounts(session, viewFilter);
                     rowsBySource = basicRowsBySource;
                     rows = basicRows;
+                    unfilteredRows = null;
                 }
                 else
                 {
                     totalCounts = new TotalCounts(session, viewFilter);
                     rowsBySource = new Dictionary<DataFilterKey, List<Row>>();
                     rows = getChildren(rootGrouping, dataFilter);
+                    unfilteredRows = null;
                 }
 
+                applyFindFilter();
                 applySort();
 
                 OnFinishedSetData();
@@ -1410,6 +1417,7 @@ namespace IDPicker.Forms
 
         protected override void OnGroupingChanged (object sender, EventArgs e)
         {
+            unfilteredRows = null;
             setColumnVisibility();
             base.OnGroupingChanged(sender, e);
         }
@@ -1614,6 +1622,32 @@ namespace IDPicker.Forms
                 groupNodes.Add(newNode);
             }
             return groupNodes;
+        }
+
+        protected override bool filterRowsOnText(string text)
+        {
+            if (rows.First() is PeptideSpectrumMatchRow)
+                rows = rows.OfType<PeptideSpectrumMatchRow>()
+                           .Where(o => o.Key.Contains(text) ||
+                                       (sequenceColumn.Visible && o.ModifiedSequence.Contains(text)) ||
+                                       o.Spectrum.NativeID.Contains(text))
+                           .Select(o => o as Row).ToList();
+            // filtering the hierarchy is problematic due to caching, not to mention
+            // filtering on groups vs. sources vs. both
+            //else if (rows.First() is SpectrumSourceGroupRow)
+            //    rows = getSpectrumSourceRows(dataFilter);
+            else if (rows.First() is SpectrumRow)
+                rows = rows.OfType<SpectrumRow>()
+                           .Where(o => o.Key.Contains(text) ||
+                                       o.Spectrum.NativeID.Contains(text))
+                           .Select(o => o as Row).ToList();
+            else if (rows.First() is PeptideRow)
+                rows = rows.OfType<PeptideRow>()
+                           .Where(o => o.Peptide.Sequence.Contains(text))
+                           .Select(o => o as Row).ToList();
+            else
+                return false;
+            return true;
         }
     }
 

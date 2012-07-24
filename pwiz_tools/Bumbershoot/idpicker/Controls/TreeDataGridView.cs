@@ -72,6 +72,7 @@ namespace IDPicker.Controls
 
                 //Discard old list and repopulate with new values
                 expandedRowList = null;
+                base.RowCount = 0;
                 if (value > 0)
                 {
                     expandedRowList = new List<ExpandedRowList>(value);

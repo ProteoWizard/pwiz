@@ -52,6 +52,8 @@ namespace IDPicker.Forms
 
             treeDataGridView.DefaultCellStyleChanged += treeDataGridView_DefaultCellStyleChanged;
             treeDataGridView.DataError +=treeDataGridView_DataError;
+
+            findTextBox.Tag = findTextBox.Text = "Find...";
         }
 
         public TreeDataGridView TreeDataGridView
@@ -165,6 +167,9 @@ namespace IDPicker.Forms
         }
 
         protected IList<Row> rows, basicRows;
+
+        /// <summary>The row list before the find filter is applied.</summary>
+        protected IList<Row> unfilteredRows;
 
         protected virtual RowFilterState getRowFilterState(Row parentRow) { throw new NotImplementedException(); }
         protected virtual IList<Row> getChildren (Row parentRow) { throw new NotImplementedException(); }
@@ -310,6 +315,28 @@ namespace IDPicker.Forms
             var sortColumn = sortColumns.Last();
             rows = rows.OrderBy(o => getCellValue(sortColumn.Index, o), sortColumn.Order).ToList();
         }
+
+        protected void applyFindFilter()
+        {
+            if (findTextBox.Text.IsNullOrEmpty() || findTextBox.Text == "Find...")
+            {
+                if (unfilteredRows != null)
+                    rows = unfilteredRows;
+                return;
+            }
+
+            string filterText = findTextBox.Text;
+
+            if (unfilteredRows != null)
+                rows = unfilteredRows;
+            else
+                unfilteredRows = rows;
+
+            if (!filterRowsOnText(findTextBox.Text))
+                unfilteredRows = null;
+        }
+
+        protected virtual bool filterRowsOnText(string text) { throw new NotImplementedException(); }
 
         protected virtual bool updatePivots (FormProperty formProperty)
         {
@@ -686,6 +713,54 @@ namespace IDPicker.Forms
                 session.Dispose();
                 session = null;
             }
+        }
+
+        private void findTextBox_Leave(object sender, EventArgs e)
+        {
+            // add a "Find..." placeholder and make the text gray
+            if (findTextBox.Text.IsNullOrEmpty())
+            {
+                findTextBox.Text = "Find...";
+                findTextBox.ForeColor = SystemColors.GrayText;
+                if (findTextBox.Tag.ToString().IsNullOrEmpty())
+                    return;
+            }
+
+            if (findTextBox.Text.ToString() == findTextBox.Tag.ToString())
+                return;
+
+            findTextBox.Tag = findTextBox.Text;
+
+            saveSelectionPath();
+            applyFindFilter();
+            treeDataGridView.RootRowCount = rows.Count();
+            treeDataGridView.Refresh();
+            restoreSelectionPath();
+        }
+
+        private void findTextBox_Enter(object sender, EventArgs e)
+        {
+            // delete the "Find..." placeholder and make the text color normal
+            if (findTextBox.Text == "Find...")
+            {
+                findTextBox.Text = String.Empty;
+                findTextBox.ForeColor = SystemColors.WindowText;
+            }
+        }
+
+        private void findTextBox_EnterPressed(object sender, EventArgs e)
+        {
+            if (findTextBox.Text.IsNullOrEmpty() && findTextBox.Tag.ToString() == "Find..." ||
+                findTextBox.Text.ToString() == findTextBox.Tag.ToString())
+                return;
+
+            findTextBox.Tag = findTextBox.Text;
+
+            saveSelectionPath();
+            applyFindFilter();
+            treeDataGridView.RootRowCount = rows.Count();
+            treeDataGridView.Refresh();
+            restoreSelectionPath();
         }
     }
 }

@@ -871,6 +871,7 @@ namespace IDPicker.Forms
                     else
                         totalCounts = new TotalCounts(session, viewFilter);
                     rows = basicRows;
+                    unfilteredRows = null;
                     statsBySpectrumSource = basicStatsBySpectrumSource;
                     statsBySpectrumSourceGroup = basicStatsBySpectrumSourceGroup;
                 }
@@ -878,6 +879,7 @@ namespace IDPicker.Forms
                 {
                     totalCounts = new TotalCounts(session, viewFilter);
                     rows = getChildren(rootGrouping, dataFilter);
+                    unfilteredRows = null;
 
                     statsBySpectrumSource = null;
                     Pivot<PivotBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
@@ -891,6 +893,7 @@ namespace IDPicker.Forms
                 }
 
                 createPivotColumns();
+                applyFindFilter();
                 applySort();
 
                 OnFinishedSetData();
@@ -1143,6 +1146,7 @@ namespace IDPicker.Forms
 
         protected override void OnGroupingChanged (object sender, EventArgs e)
         {
+            unfilteredRows = null;
             setColumnVisibility();
             base.OnGroupingChanged(sender, e);
         }
@@ -1157,6 +1161,25 @@ namespace IDPicker.Forms
                 foreach (var pivot in conflictingPivots)
                     pivotSetupControl.SetPivot(pivot.Mode, false);
             }
+        }
+
+        protected override bool filterRowsOnText(string text)
+        {
+            if (rows.First() is ProteinRow)
+                rows = rows.OfType<ProteinRow>()
+                           .Where(o => o.Protein.Accession.Contains(text) ||
+                                       (descriptionColumn.Visible && (o.Protein.Description ?? String.Empty).Contains(text)) ||
+                                       (peptideSequencesColumn.Visible && o.PeptideSequences.Contains(text)))
+                           .Select(o => o as Row).ToList();
+            else if (rows.First() is ProteinGroupRow)
+                rows = rows.OfType<ProteinGroupRow>()
+                           .Where(o => o.FirstProtein.Accession.Contains(text) ||
+                                       (descriptionColumn.Visible && (o.FirstProtein.Description ?? String.Empty).Contains(text)) ||
+                                       (peptideSequencesColumn.Visible && o.PeptideSequences.Contains(text)))
+                           .Select(o => o as Row).ToList();
+            else
+                return false;
+            return true;
         }
     }
 

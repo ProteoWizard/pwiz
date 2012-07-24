@@ -210,9 +210,6 @@ namespace IDPicker.Forms
 
         private IList<Row> rows, basicRows;
 
-        // TODO: support multiple selected objects
-        string[] oldSelectionPath = new string[] { };
-
         private void SetDefaults ()
         {
             _columnSettings = new Dictionary<DataGridViewColumn, ColumnProperty>()
@@ -245,16 +242,9 @@ namespace IDPicker.Forms
             if (StartingSetData != null)
                 StartingSetData(this, EventArgs.Empty);
 
-            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
-
             this.session = session;
             viewFilter = dataFilter;
             this.dataFilter = new DataFilter(dataFilter) { Analysis = null };
-
-            /*if (treeListView.SelectedObject is PeptideRow)
-                oldSelectionPath = new string[] { treeListView.SelectedItem.Text };
-            else if (treeListView.SelectedObject is PeptideSpectrumMatchRow)
-                oldSelectionPath = new string[] { (treeListView.SelectedObject as PeptideSpectrumMatchRow).PeptideSpectrumMatch.Peptide.Sequence, treeListView.SelectedItem.Text };*/
 
             ClearData();
 
@@ -324,12 +314,11 @@ namespace IDPicker.Forms
                 return;
             }
 
+            Controls.OfType<Control>().ForEach(o => o.Enabled = true);
+
             treeDataGridView.RootRowCount = rows.Count();
 
             Text = TabText = "Analysis View";
-
-            // try to (re)set selected item
-            //expandSelectionPath(oldSelectionPath);
 
             treeDataGridView.Refresh();
         }

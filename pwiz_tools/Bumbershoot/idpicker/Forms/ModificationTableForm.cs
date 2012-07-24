@@ -408,12 +408,15 @@ namespace IDPicker.Forms
             totalRow[deltaMassColumnName] = Double.PositiveInfinity;
             deltaMassTable.Rows.Add(totalRow);
 
+            string pivotMode = null;
+            Invoke(new MethodInvoker(() => pivotMode = pivotModeComboBox.Text));
+
             int cellValueIndexInQueryRow;
-            if (pivotModeComboBox.Text == "Spectra")
+            if (pivotMode == "Spectra")
                 cellValueIndexInQueryRow = 2;
-            else if (pivotModeComboBox.Text == "Distinct Matches")
+            else if (pivotMode == "Distinct Matches")
                 cellValueIndexInQueryRow = 3;
-            else if (pivotModeComboBox.Text == "Distinct Peptides")
+            else if (pivotMode == "Distinct Peptides")
                 cellValueIndexInQueryRow = 4;
             else
                 throw new InvalidDataException("unknown modification view pivot type");

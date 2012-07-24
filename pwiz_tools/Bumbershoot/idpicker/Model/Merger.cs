@@ -207,15 +207,22 @@ namespace IDPicker.DataModel
                     else
                         tempMergeSourceFilepath = mergeSourceFilepath;
 
-                    // if the database can fit in the available RAM, populate the disk cache
-                    long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
-                    if (ramBytesAvailable > new FileInfo(tempMergeSourceFilepath).Length)
+                    try
                     {
-                        using (var fs = new FileStream(tempMergeSourceFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
+                        // if the database can fit in the available RAM, populate the disk cache
+                        long ramBytesAvailable = (long)new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
+                        if (ramBytesAvailable > new FileInfo(tempMergeSourceFilepath).Length)
                         {
-                            var buffer = new byte[UInt16.MaxValue];
-                            while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
+                            using (var fs = new FileStream(tempMergeSourceFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, UInt16.MaxValue, FileOptions.SequentialScan))
+                            {
+                                var buffer = new byte[UInt16.MaxValue];
+                                while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
+                            }
                         }
+                    }
+                    catch (Exception)
+                    {
+                        // ignore precaching errors; could be due to user privileges and it's an optional step
                     }
 
                     // update source database schema

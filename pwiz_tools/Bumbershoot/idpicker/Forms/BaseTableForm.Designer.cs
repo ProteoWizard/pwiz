@@ -65,21 +65,23 @@ namespace IDPicker.Forms
             this.exportSelectedCellsToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelSelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStrip = new System.Windows.Forms.ToolStrip();
+            this.findTextBox = new IDPicker.SilentToolStripTextBox();
+            this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.exportButton = new System.Windows.Forms.ToolStripButton();
             this.displayOptionsButton = new System.Windows.Forms.ToolStripButton();
             this.pivotSetupButton = new System.Windows.Forms.ToolStripButton();
             this.groupingSetupButton = new System.Windows.Forms.ToolStripButton();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize) (this.treeDataGridView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeDataGridView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.treeDataGridView);
             this.panel1.Location = new System.Drawing.Point(0, 25);
             this.panel1.Name = "panel1";
@@ -112,52 +114,52 @@ namespace IDPicker.Forms
             this.exportSelectedCellsToFileToolStripMenuItem,
             this.showInExcelSelectToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
-            this.exportMenu.Size = new System.Drawing.Size(172, 70);
+            this.exportMenu.Size = new System.Drawing.Size(247, 142);
             // 
             // clipboardToolStripMenuItem
             // 
             this.clipboardToolStripMenuItem.Name = "clipboardToolStripMenuItem";
-            this.clipboardToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.clipboardToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.clipboardToolStripMenuItem.Text = "Copy to Clipboard";
             this.clipboardToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.fileToolStripMenuItem.Text = "Export to File";
             this.fileToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // showInExcelToolStripMenuItem
             // 
             this.showInExcelToolStripMenuItem.Name = "showInExcelToolStripMenuItem";
-            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.showInExcelToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(237, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(243, 6);
             // 
             // copyToClipboardSelectedToolStripMenuItem
             // 
             this.copyToClipboardSelectedToolStripMenuItem.Name = "copyToClipboardSelectedToolStripMenuItem";
-            this.copyToClipboardSelectedToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.copyToClipboardSelectedToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.copyToClipboardSelectedToolStripMenuItem.Text = "Copy Selected Cells to Clipboard";
             this.copyToClipboardSelectedToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // exportSelectedCellsToFileToolStripMenuItem
             // 
             this.exportSelectedCellsToFileToolStripMenuItem.Name = "exportSelectedCellsToFileToolStripMenuItem";
-            this.exportSelectedCellsToFileToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.exportSelectedCellsToFileToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.exportSelectedCellsToFileToolStripMenuItem.Text = "Export Selected Cells to File";
             this.exportSelectedCellsToFileToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
             // showInExcelSelectToolStripMenuItem
             // 
             this.showInExcelSelectToolStripMenuItem.Name = "showInExcelSelectToolStripMenuItem";
-            this.showInExcelSelectToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.showInExcelSelectToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
             this.showInExcelSelectToolStripMenuItem.Text = "Show Selected Cells in Excel";
             this.showInExcelSelectToolStripMenuItem.Click += new System.EventHandler(this.ExportTable);
             // 
@@ -165,6 +167,8 @@ namespace IDPicker.Forms
             // 
             this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.findTextBox,
+            this.toolStripSeparator2,
             this.exportButton,
             this.displayOptionsButton,
             this.pivotSetupButton,
@@ -175,6 +179,24 @@ namespace IDPicker.Forms
             this.toolStrip.Size = new System.Drawing.Size(1064, 25);
             this.toolStrip.TabIndex = 15;
             this.toolStrip.Text = "Tools";
+            // 
+            // findTextBox
+            // 
+            this.findTextBox.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.findTextBox.ForeColor = System.Drawing.SystemColors.GrayText;
+            this.findTextBox.Name = "findTextBox";
+            this.findTextBox.Size = new System.Drawing.Size(200, 25);
+            this.findTextBox.Text = "Find...";
+            this.findTextBox.ToolTipText = "Enter text to filter out rows that do not have the text.";
+            this.findTextBox.EnterPressed += new System.EventHandler(this.findTextBox_EnterPressed);
+            this.findTextBox.Enter += new System.EventHandler(this.findTextBox_Enter);
+            this.findTextBox.Leave += new System.EventHandler(this.findTextBox_Leave);
+            // 
+            // toolStripSeparator2
+            // 
+            this.toolStripSeparator2.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.toolStripSeparator2.Name = "toolStripSeparator2";
+            this.toolStripSeparator2.Size = new System.Drawing.Size(6, 25);
             // 
             // exportButton
             // 
@@ -191,7 +213,7 @@ namespace IDPicker.Forms
             // 
             this.displayOptionsButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.displayOptionsButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.displayOptionsButton.Image = ((System.Drawing.Image) (resources.GetObject("displayOptionsButton.Image")));
+            this.displayOptionsButton.Image = ((System.Drawing.Image)(resources.GetObject("displayOptionsButton.Image")));
             this.displayOptionsButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.displayOptionsButton.Name = "displayOptionsButton";
             this.displayOptionsButton.Size = new System.Drawing.Size(94, 22);
@@ -202,7 +224,7 @@ namespace IDPicker.Forms
             // 
             this.pivotSetupButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.pivotSetupButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.pivotSetupButton.Image = ((System.Drawing.Image) (resources.GetObject("pivotSetupButton.Image")));
+            this.pivotSetupButton.Image = ((System.Drawing.Image)(resources.GetObject("pivotSetupButton.Image")));
             this.pivotSetupButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.pivotSetupButton.Name = "pivotSetupButton";
             this.pivotSetupButton.Size = new System.Drawing.Size(83, 22);
@@ -213,7 +235,7 @@ namespace IDPicker.Forms
             // 
             this.groupingSetupButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
             this.groupingSetupButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.groupingSetupButton.Image = ((System.Drawing.Image) (resources.GetObject("groupingSetupButton.Image")));
+            this.groupingSetupButton.Image = ((System.Drawing.Image)(resources.GetObject("groupingSetupButton.Image")));
             this.groupingSetupButton.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.groupingSetupButton.Name = "groupingSetupButton";
             this.groupingSetupButton.Size = new System.Drawing.Size(87, 22);
@@ -231,7 +253,7 @@ namespace IDPicker.Forms
             this.TabText = "BaseTableForm";
             this.Text = "BaseTableForm";
             this.panel1.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize) (this.treeDataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeDataGridView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.toolStrip.ResumeLayout(false);
             this.toolStrip.PerformLayout();
@@ -258,5 +280,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem copyToClipboardSelectedToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportSelectedCellsToFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
+        protected IDPicker.SilentToolStripTextBox findTextBox;
     }
 }

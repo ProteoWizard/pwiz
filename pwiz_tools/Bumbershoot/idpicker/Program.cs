@@ -279,21 +279,24 @@ namespace IDPicker
                     changeLog = String.Join("\r\n\r\n", logEntries.ToArray());
                 }
 
-                var form = new NewVersionForm(Application.ProductName,
-                                              currentVersion.ToString(),
-                                              latestVersion.ToString(),
-                                              changeLog)
-                                              {
-                                                  Owner = MainWindow,
-                                                  StartPosition = FormStartPosition.CenterParent
-                                              };
-
-                if (form.ShowDialog() == DialogResult.Yes)
+                MainWindow.Invoke(new MethodInvoker(() =>
                 {
-                    string archSuffix = Environment.Is64BitProcess ? "x86_64" : "x86";
-                    string installerURL = String.Format("{0}/IDPicker-{1}-{2}.msi?guest=1", latestArtifactURL, latestVersion, archSuffix);
-                    System.Diagnostics.Process.Start(installerURL);
-                }
+                    var form = new NewVersionForm(Application.ProductName,
+                                                  currentVersion.ToString(),
+                                                  latestVersion.ToString(),
+                                                  changeLog)
+                                                  {
+                                                      Owner = MainWindow,
+                                                      StartPosition = FormStartPosition.CenterParent
+                                                  };
+
+                    if (form.ShowDialog() == DialogResult.Yes)
+                    {
+                        string archSuffix = Environment.Is64BitProcess ? "x86_64" : "x86";
+                        string installerURL = String.Format("{0}/IDPicker-{1}-{2}.msi?guest=1", latestArtifactURL, latestVersion, archSuffix);
+                        System.Diagnostics.Process.Start(installerURL);
+                    }
+                }));
                 return true;
             }
             return false;
