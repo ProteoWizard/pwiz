@@ -22,12 +22,12 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Schema;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using System.Xml.Serialization;
@@ -452,15 +452,15 @@ namespace pwiz.Skyline.Model.Lib
         public abstract IEnumerable<LibKey> Keys { get; }
 
         /// <summary>
-        /// Asynchronously reads all of the retention times from the library.
+        /// Returns a list of <see cref="RetentionTimeSource"/> objects representing
+        /// the data files that this Library can provide peptide retention time
+        /// values for.
         /// </summary>
-        public virtual Task<IDictionary<string, LibraryRetentionTimes>> StartGetAllRetentionTimes()
+        public virtual IList<RetentionTimeSource> ListRetentionTimeSources()
         {
-            var taskCompletionSource = new TaskCompletionSource<IDictionary<string, LibraryRetentionTimes>>();
-            taskCompletionSource.SetResult(new Dictionary<string, LibraryRetentionTimes>());
-            return taskCompletionSource.Task;
+            return new RetentionTimeSource[0];
         }
-
+        
         #region File reading utility functions
 
         protected static int GetInt32(byte[] bytes, int index)
@@ -779,6 +779,20 @@ namespace pwiz.Skyline.Model.Lib
                        where time.HasValue
                        select new MeasuredRetentionTime(sequence, time.Value);
             }
+        }
+
+        public IDictionary<string, double> GetFirstRetentionTimes()
+        {
+            var dict = new Dictionary<string, double>();
+            foreach (var entry in _dictPeptideRetentionTimes)
+            {
+                if (entry.Value.Length == 0)
+                {
+                    continue;
+                }
+                dict.Add(entry.Key, entry.Value.Min());
+            }
+            return dict;
         }
     }
 

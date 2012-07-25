@@ -19,232 +19,35 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Threading;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Results;
 
 namespace pwiz.Skyline.Model.Lib
 {
     /// <summary>
-    /// Holds all of the retention times for all peptides loaded from multiple spectral libraries.
-    /// </summary>
-    public class LoadedRetentionTimes
-    {
-        private readonly IDictionary<LibraryRetentionTimes, RetentionTimesAlignedToFile> _retentionTimesAlignedToFilesDict = new Dictionary<LibraryRetentionTimes, RetentionTimesAlignedToFile>();
-        public const double REFINEMENT_THRESHHOLD = 0.99;
-        /// <summary>
-        /// Reads the retention times from all of the libraries used by an SrmDocument.
-        /// </summary>
-        public static Task<LoadedRetentionTimes> StartLoadFromAllLibraries(SrmDocument document)
-        {
-            var libraries = document.Settings.PeptideSettings.Libraries.Libraries;
-            var tasks =
-                libraries.Select(
-                    library =>
-                    library.StartGetAllRetentionTimes().ContinueWith(
-                        task =>
-                        new KeyValuePair<Library, IDictionary<string, LibraryRetentionTimes>>(library, task.Result))).
-                    ToArray();
-            if (tasks.Length == 0)
-            {
-                var taskCompletionSource = new TaskCompletionSource<LoadedRetentionTimes>();
-                taskCompletionSource.SetResult(new LoadedRetentionTimes(new KeyValuePair<Library, IDictionary<string, LibraryRetentionTimes>>[0]));
-                return taskCompletionSource.Task;
-            }
-            return Task.Factory.ContinueWhenAll(tasks, completedTasks => new LoadedRetentionTimes(completedTasks.Select(task => task.Result).ToArray()));
-        }
-
-        
-        /// <summary>
-        /// Constructs a LoadedRetentionTimes from a dictionary of data file path (i.e. whatever the Library
-        /// says the data file path is, which for BiblioSpecLiteLibraries has the path and extension stripped off)
-        /// to LibraryRetentionTimes.
-        /// </summary>
-        public LoadedRetentionTimes(IEnumerable<KeyValuePair<Library, IDictionary<string, LibraryRetentionTimes>>> libraryRetentionTimesByPath)
-        {
-            LibraryRetentionTimesByPath = Array.AsReadOnly(libraryRetentionTimesByPath.ToArray());
-        }
-
-        public IList<KeyValuePair<Library, IDictionary<string, LibraryRetentionTimes>>> LibraryRetentionTimesByPath { get; private set; }
-        public bool IsValidFor(SrmDocument document)
-        {
-            var librarySet = new HashSet<Library>(document.Settings.PeptideSettings.Libraries.Libraries.Where(library=>library != null && library.IsLoaded)).ToArray();
-            return librarySet.SequenceEqual(LibraryRetentionTimesByPath.Select(entry=>entry.Key));
-        }
-
-        /// <summary>
-        /// Creates a <see cref="RetentionTimesAlignedToFile"/> where the retention times for all
-        /// of the other data files are aligned to the specified file.
-        /// Returns null if the file to be aligned against was not found in any library.
-        /// </summary>
-        public RetentionTimesAlignedToFile GetRetentionTimesAlignedToFile(string filePath)
-        {
-            LibraryRetentionTimes targetTimes = FindRetentionTimes(filePath);
-            if (targetTimes == null)
-            {
-                return null;
-            }
-            return GetRetentionTimesAlignedToFile(targetTimes);
-        }
-
-        public RetentionTimesAlignedToFile GetRetentionTimesAlignedToFile(LibraryRetentionTimes targetTimes)
-        {
-            RetentionTimesAlignedToFile result;
-            lock (_retentionTimesAlignedToFilesDict)
-            {
-                if (_retentionTimesAlignedToFilesDict.TryGetValue(targetTimes, out result))
-                {
-                    return result;
-                }
-            }
-            result = new RetentionTimesAlignedToFile(targetTimes);
-            foreach (var libraryEntry in LibraryRetentionTimesByPath)
-            {
-                foreach (var entry in libraryEntry.Value)
-                {
-                    if (ReferenceEquals(targetTimes, entry.Value))
-                    {
-                        continue;
-                    }
-                    result.AddFile(libraryEntry.Key, entry.Value);
-                }
-            }
-            lock (_retentionTimesAlignedToFilesDict)
-            {
-                _retentionTimesAlignedToFilesDict[targetTimes] = result;
-            }
-            return result;
-        }
-
-
-        public LibraryRetentionTimes FindRetentionTimes(string filePath)
-        {
-            return FindRetentionTimes(filePath, false);
-        }
-        /// <summary>
-        /// Returns the <see cref="LibraryRetentionTimes"/> that matches the specified filename,
-        /// or null if none could be found.
-        /// </summary>
-        public LibraryRetentionTimes FindRetentionTimes(string filePath, bool exact)
-        {
-            LibraryRetentionTimes libraryRetentionTimes;
-            if (!exact)
-            {
-                libraryRetentionTimes = FindRetentionTimes(filePath, true);
-                if (libraryRetentionTimes != null)
-                {
-                    return libraryRetentionTimes;
-                }
-            }
-            foreach (var entry in LibraryRetentionTimesByPath)
-            {
-                if (exact)
-                {
-                    if (entry.Value.TryGetValue(filePath, out libraryRetentionTimes))
-                    {
-                        return libraryRetentionTimes;
-                    }
-                }
-                else
-                {
-                    string baseName = Path.GetFileNameWithoutExtension(filePath);
-                    foreach (var libEntry in entry.Value)
-                    {
-                        var libraryBaseName = Path.GetFileNameWithoutExtension(libEntry.Key);
-                        if (MeasuredResults.IsBaseNameMatch(baseName, libraryBaseName))
-                        {
-                            return libEntry.Value;
-                        }
-                    }
-                }
-            }
-            return null;
-        }
-
-//    public class RetentionTimeLoader : IDisposable
-//    {
-//        private IDocumentUIContainer _documentUIContainer;
-//        private Task<LoadedRetentionTimes> _loadRetentionTimesTask;
-//        public RetentionTimeLoader(IDocumentUIContainer documentUIContainer)
-//        {
-//            DocumentUIContainer = documentUIContainer;
-//        }
-//
-//        public IDocumentUIContainer DocumentUIContainer
-//        {
-//            get { return _documentUIContainer; }
-//            set
-//            {
-//                if (ReferenceEquals(DocumentUIContainer, value))
-//                {
-//                    return;
-//                }
-//                if (DocumentUIContainer != null)
-//                {
-//                    DocumentUIContainer.UnlistenUI(OnDocumentUIChanged);
-//                }
-//                _documentUIContainer = value;
-//                if (DocumentUIContainer != null)
-//                {
-//                    DocumentUIContainer.ListenUI(OnDocumentUIChanged);
-//                }
-//            }
-//        }
-//
-//        private void OnDocumentUIChanged(object sender, DocumentChangedEventArgs documentChangedEventArgs)
-//        {
-//            
-//        }
-//
-//        public Task<LoadedRetentionTimes> StartLoadRetentionTimes()
-//        {
-//            if (_loadRetentionTimesTask != null)
-//            {
-//                return _loadRetentionTimesTask;
-//            }
-//            _loadRetentionTimesTask = Task.Factory.StartNew()
-//        }
-    }
-
-    /// <summary>
     /// Contains the results of aligning a set of MS2 Id's from one file to
     /// another.
     /// </summary>
-    public class AlignedFile
+    public class AlignedRetentionTimes
     {
-        private AlignedFile(Library originalLibrary, LibraryRetentionTimes originalTimes)
-        {
-            OriginalLibrary = originalLibrary;
-            OriginalTimes = originalTimes;
-        }
-
-        public Library OriginalLibrary { get; private set; }
-
+        public IDictionary<string, double> TargetTimes { get; private set; }
         /// <summary>
         /// The original times that were read out of the spectral library.
         /// </summary>
-        public LibraryRetentionTimes OriginalTimes { get; private set; }
+        public IDictionary<string, double> OriginalTimes { get; private set; }
 
         public RetentionTimeRegression Regression { get; private set; }
-        public RetentionTimeRegression RegressionRefined { get;private set; }
+        public RetentionTimeStatistics RegressionStatistics { get; private set; }
+        public RetentionTimeRegression RegressionRefined { get; private set; }
+        public RetentionTimeStatistics RegressionRefinedStatistics { get; private set; }
         public HashSet<int> OutlierIndexes { get; private set; }
-        /// <summary>
-        /// The slope and intercept for the alignment.
-        /// </summary>
-        public RegressionLineElement RegressionLine { get { return (RegressionRefined ?? Regression).Conversion; } }
 
         /// <summary>
         /// The number of points that were used to do the alignment.  (i.e. the number of peptide sequences which were in
         /// common between the two data files)
         /// </summary>
         public int RegressionPointCount { get { return Regression.PeptideTimes.Count; } }
-
-        public double[] GetRetentionTimes(string peptideSequence)
-        {
-            return OriginalTimes.GetRetentionTimes(peptideSequence).Select(time => RegressionLine.GetY(time)).ToArray();
-        }
 
         public IList<double> YValues { get { return Array.AsReadOnly(Regression.PeptideTimes.Select(measuredRetentionTime => measuredRetentionTime.RetentionTime).ToArray()); } }
         public IList<double> XValues { get
@@ -263,111 +66,72 @@ namespace pwiz.Skyline.Model.Lib
         /// In cases where there is more than one MS2 id in either file, only the earliest MS2 id from
         /// each file is used.
         /// </summary>
-        public static AlignedFile AlignLibraryRetentionTimes(RetentionTimesAlignedToFile target,
-                                                             Library library,
-                                                             LibraryRetentionTimes timesToAlign)
+        public static AlignedRetentionTimes AlignLibraryRetentionTimes(IDictionary<string, double> target, IDictionary<string, double> originalTimes, double refinementThreshhold, Func<bool> isCanceled)
         {
-            var calculator = new RetentionTimeProviderScoreCalculator(timesToAlign.Name, timesToAlign);
-            var alignFromTimes = timesToAlign.PeptideRetentionTimes.ToLookup(
-                measuredRetentionTime => measuredRetentionTime.PeptideSequence,
-                measuredRetentionTime => measuredRetentionTime.RetentionTime);
+            var calculator = new DictionaryRetentionScoreCalculator("alignment", originalTimes);
             var xValues = new List<double>();
             var yValues = new List<double>();
-            var targetTimes = new List<MeasuredRetentionTime>();
-            foreach (var grouping in alignFromTimes)
+            var targetTimesList = new List<MeasuredRetentionTime>();
+            foreach (var entry in calculator.RetentionTimes)
             {
-                var toTimes = target.TargetTimes.GetRetentionTimes(grouping.Key);
-                if (toTimes.Length == 0)
+                double targetTime;
+                if (!target.TryGetValue(entry.Key, out targetTime))
                 {
                     continue;
                 }
-                xValues.Add(grouping.Min());
-                double targetTime = toTimes.Min();
+                xValues.Add(entry.Value);
                 yValues.Add(targetTime);
-                targetTimes.Add(new MeasuredRetentionTime(grouping.Key, targetTime));
+                targetTimesList.Add(new MeasuredRetentionTime(entry.Key, targetTime));
             }
-            RetentionTimeStatistics stats;
-            var regression = RetentionTimeRegression.CalcRegression(timesToAlign.Name + ":" + target.Name,
-                                                                    new[] {calculator}, targetTimes, out stats);
-            RetentionTimeRegression regressionRefined = null;
+            RetentionTimeStatistics regressionStatistics;
+            var regression = RetentionTimeRegression.CalcRegression("alignLibraryRetentionTimes", new[] {calculator}, targetTimesList, out regressionStatistics);
+            RetentionTimeRegression regressionRefined;
+            RetentionTimeStatistics regressionRefinedStatistics = regressionStatistics;
             HashSet<int> outIndexes = new HashSet<int>();
-            if (stats.R < LoadedRetentionTimes.REFINEMENT_THRESHHOLD)
+            if (regressionStatistics.R >= refinementThreshhold)
+            {
+                regressionRefined = regression;
+            }
+            else
             {
                 var cache = new RetentionTimeScoreCache(new[] {calculator}, new MeasuredRetentionTime[0], null);
-                RetentionTimeStatistics statsRefined = stats;
-                regressionRefined = regression.FindThreshold(LoadedRetentionTimes.REFINEMENT_THRESHHOLD, 2, 0,
-                                                             targetTimes.Count, new MeasuredRetentionTime[0], targetTimes, stats,
-                                                             calculator, cache, () => false, ref statsRefined,
-                                                             ref outIndexes);
-
+                regressionRefined = regression.FindThreshold(refinementThreshhold, null, 0,
+                                                                targetTimesList.Count, new MeasuredRetentionTime[0], targetTimesList, regressionStatistics,
+                                                                calculator, cache, isCanceled, ref regressionRefinedStatistics,
+                                                                ref outIndexes);
             }
                 
-                
-//               RetentionTimeRegression.FindThreshold(LoadedRetentionTimes.REFINEMENT_THRESHHOLD, 2,
-//                                                               targetTimes, targetTimes, targetTimes, calculator,
-//                                                               () => false);
-            
-            return new AlignedFile(library, timesToAlign)
+            return new AlignedRetentionTimes
                        {
-                            Regression = regression,
-                            RegressionRefined = regressionRefined,
-                            OutlierIndexes = outIndexes,
+                           TargetTimes = target,
+                           OriginalTimes = originalTimes,
+                           Regression = regression,
+                           RegressionStatistics = regressionStatistics,
+                           RegressionRefined = regressionRefined,
+                           RegressionRefinedStatistics = regressionRefinedStatistics,
+                           OutlierIndexes = outIndexes,
                        };
         }
 
     }
 
-    /// <summary>
-    /// Holds a set of alignments which are all aligned against the same file.
-    /// </summary>
-    public class RetentionTimesAlignedToFile
+    internal class DictionaryRetentionScoreCalculator : RetentionScoreCalculatorSpec
     {
-        private readonly List<AlignedFile> _files = new List<AlignedFile>();
-
-        public RetentionTimesAlignedToFile(LibraryRetentionTimes targetTimes)
-        {
-            TargetTimes = targetTimes;
-            MaxResidual = double.PositiveInfinity;
-        }
-
-        public LibraryRetentionTimes TargetTimes { get; private set; }
-
-        public string Name
-        {
-            get { return TargetTimes.Name; }
-        }
-
-        public IEnumerable<AlignedFile> AlignedFiles
-        {
-            get { return _files.AsReadOnly(); }
-        }
-
-        public double MaxResidual { get; set; }
-
-        public void AddFile(Library library, LibraryRetentionTimes libraryRetentionTimes)
-        {
-            _files.Add(AlignedFile.AlignLibraryRetentionTimes(this, library, libraryRetentionTimes));
-        }
-
-        public double[] GetAlignedRetentionTimes(string modifiedSequence)
-        {
-            return AlignedFiles
-                .SelectMany(alignedLibrary => alignedLibrary.GetRetentionTimes(modifiedSequence))
-                .ToArray();
-        }
-    }
-    internal class RetentionTimeProviderScoreCalculator : RetentionScoreCalculatorSpec
-    {
-        public RetentionTimeProviderScoreCalculator(string name, IRetentionTimeProvider retentionTimeProvider)
+        public DictionaryRetentionScoreCalculator(string name, IDictionary<string, double> retentionTimes)
             : base(name)
         {
-            RetentionTimeProvider = retentionTimeProvider;
+            RetentionTimes = retentionTimes;
         }
 
-        public IRetentionTimeProvider RetentionTimeProvider { get; private set; }
+        public IDictionary<string, double> RetentionTimes { get; private set; }
         public override double? ScoreSequence(string modifiedSequence)
         {
-            return RetentionTimeProvider.GetRetentionTime(modifiedSequence);
+            double result;
+            if (RetentionTimes.TryGetValue(modifiedSequence, out result))
+            {
+                return result;
+            }
+            return null;
         }
 
         public override double UnknownScore

@@ -125,7 +125,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.AreEqual(MassType.Monoisotopic, transitionSettingsUI.PrecursorMassType);
                 transitionSettingsUI.OkDialog();
             });
-            WaitForDocumentChange(doc);
+            WaitForDocumentChangeLoaded(doc);
 
             // Populating the Skyline peptide tree.
             doc = SkylineWindow.Document;

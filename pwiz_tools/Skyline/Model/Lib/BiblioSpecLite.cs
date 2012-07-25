@@ -26,12 +26,13 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -87,7 +88,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 2;
+        private const int FORMAT_VERSION_CACHE = 3;
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
 
@@ -98,7 +99,6 @@ namespace pwiz.Skyline.Model.Lib
         private IStreamManager _streamManager;
 
         private BiblioLiteSourceInfo[] _librarySourceFiles;
-        private Task<IDictionary<string, LibraryRetentionTimes>> _getAllRetentionTimesTask;
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
@@ -142,6 +142,17 @@ namespace pwiz.Skyline.Model.Lib
         public override LibrarySpec CreateSpec(string path)
         {
             return new BiblioSpecLiteSpec(Name, path);
+        }
+
+        public override IList<RetentionTimeSource> ListRetentionTimeSources()
+        {
+            if (SchemaVersion < 1)
+            {
+                return base.ListRetentionTimeSources();
+            }
+            return _librarySourceFiles.Select(
+                        biblioListSourceInfo => new RetentionTimeSource(biblioListSourceInfo.BaseName, Name)
+                    ).ToArray();
         }
 
         public string Lsid { get; private set; }
@@ -390,6 +401,23 @@ namespace pwiz.Skyline.Model.Lib
                     }
                 }
 
+                ILookup<int, KeyValuePair<int, double>> retentionTimesBySpectraIdAndFileId = null;
+                if (schemaVer >= 1)
+                {
+                    select.CommandText = "SELECT RefSpectraId, SpectrumSourceId, retentionTime FROM [RetentionTimes]";
+                    var spectraIdFileIdTimes = new List<KeyValuePair<int, KeyValuePair<int, double>>>();
+                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            spectraIdFileIdTimes.Add(new KeyValuePair<int, KeyValuePair<int, double>>(
+                                reader.GetInt32(0), 
+                                new KeyValuePair<int, double>(reader.GetInt32(1), reader.GetDouble(2)))
+                            );
+                        }
+                    }
+                    retentionTimesBySpectraIdAndFileId = spectraIdFileIdTimes.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+                }
                 var setLibKeys = new Dictionary<LibKey, bool>(rows);
                 var setSequences = new Dictionary<LibSeqKey, bool>(rows);
                 var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
@@ -437,14 +465,18 @@ namespace pwiz.Skyline.Model.Lib
                         // Older versions of BlibBuild used to create matches with charge 0.
                         if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                             continue;
-
+                        var retentionTimesByFileId = default(IndexedRetentionTimes);
+                        if (retentionTimesBySpectraIdAndFileId != null)
+                        {
+                            retentionTimesByFileId = new IndexedRetentionTimes(retentionTimesBySpectraIdAndFileId[id]);
+                        }
                         // These libraries should not have duplicates, but just in case.
                         // CONSIDER: Emit error about redundancy?
                         LibKey key = new LibKey(sequence, charge);
                         if (!setLibKeys.ContainsKey(key))
                         {
                             setLibKeys.Add(key, true);
-                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id));
+                            libraryEntries.Add(new BiblioLiteSpectrumInfo(key, copies, numPeaks, id, retentionTimesByFileId));
                         }
                     }
                 }
@@ -492,6 +524,7 @@ namespace pwiz.Skyline.Model.Lib
                         outStream.Write(BitConverter.GetBytes((int)info.NumPeaks), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
                         info.Key.WriteSequence(outStream);
+                        info.RetentionTimesByFileId.Write(outStream);
                     }
 
                     long sourcePosition = 0;
@@ -671,13 +704,14 @@ namespace pwiz.Skyline.Model.Lib
                         // Read sequence information
                         ReadComplete(stream, specSequence, seqLength);
 
-                        // These libraries should not have duplicates, but just in case.
-                        // CONSIDER: Emit error about redundancy?
+                        var retentionTimesByFileId = IndexedRetentionTimes.Read(stream);
                         LibKey key = new LibKey(specSequence, 0, seqLength, charge);
-                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, (short)copies, (ushort)numPeaks, id);
+                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, (short)copies, (ushort)numPeaks, id, retentionTimesByFileId);
                         if (seqKeyLength > 0)
                         {
                             LibSeqKey seqKey = new LibSeqKey(key, seqKeyHash, seqKeyLength);
+                            // These libraries should not have duplicates, but just in case.
+                            // CONSIDER: Emit error about redundancy?
                             if (!setSequences.ContainsKey(seqKey))
                                 setSequences.Add(seqKey, true);
                         }
@@ -823,15 +857,8 @@ namespace pwiz.Skyline.Model.Lib
             int j = FindSource(filePath);
             if (i != -1 && j != -1)
             {
-                try
-                {
-                    retentionTimes = ReadRetentionTimes(_libraryEntries[i], _librarySourceFiles[j]);
-                    return true;
-                }
-                catch (SQLiteException)
-                {
-                    // In case of missing RetentionTimes table
-                }
+                retentionTimes = _libraryEntries[i].RetentionTimesByFileId.GetTimes(_librarySourceFiles[j].Id);
+                return true;
             }
 
             return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
@@ -866,15 +893,23 @@ namespace pwiz.Skyline.Model.Lib
             int j = FindSource(filePath);
             if (j != -1)
             {
-                try
-                {
-                    retentionTimes = new LibraryRetentionTimes(filePath, ReadRetentionTimes(_sqliteConnection.Connection, _librarySourceFiles[j]));
-                    return true;
-                }
-                catch (SQLiteException)
-                {
-                    // In case of missing RetentionTimes table
-                }
+                var source = _librarySourceFiles[j];
+                ILookup<string, double[]> timesLookup = _libraryEntries.ToLookup(
+                    entry => entry.Key.Sequence, 
+                    entry=>entry.RetentionTimesByFileId.GetTimes(source.Id));
+                var timesDict = timesLookup.ToDictionary(
+                    grouping => grouping.Key,
+                    grouping =>
+                        {
+                            var array = grouping.SelectMany(values => values).ToArray();
+                            Array.Sort(array);
+                            return array;
+                        });
+                var nonEmptyTimesDict = timesDict
+                    .Where(kvp => kvp.Value.Length > 0)
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+                retentionTimes = new LibraryRetentionTimes(filePath, nonEmptyTimesDict);
+                return true;
             }
 
             return base.TryGetRetentionTimes(filePath, out retentionTimes);
@@ -1055,33 +1090,6 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        public override Task<IDictionary<string, LibraryRetentionTimes>> StartGetAllRetentionTimes()
-        {
-            lock (this)
-            {
-                if (_getAllRetentionTimesTask == null)
-                {
-                    _getAllRetentionTimesTask = Task.Factory.StartNew<IDictionary<string, LibraryRetentionTimes>>(GetAllRetentionTimes);
-                }
-            }
-            return _getAllRetentionTimesTask;
-        }
-
-        private IDictionary<string, LibraryRetentionTimes> GetAllRetentionTimes()
-        {
-            var result = new Dictionary<string, LibraryRetentionTimes>();
-            var connectionStringBuilder = new SQLiteConnectionStringBuilder { DataSource = FilePath };
-            using (var connection = new SQLiteConnection(connectionStringBuilder.ConnectionString))
-            {
-                connection.Open();
-                foreach (var source in _librarySourceFiles)
-                {
-                    result.Add(source.FilePath, new LibraryRetentionTimes(source.FilePath, ReadRetentionTimes(connection, source)));
-                }
-            }
-            return result;
-        }
-
         #region Implementation of IXmlSerializable
         
         /// <summary>
@@ -1256,24 +1264,96 @@ namespace pwiz.Skyline.Model.Lib
         public int RedundantId { get; private set; }
     }
 
+    public struct IndexedRetentionTimes
+    {
+        private readonly ImmutableSortedList<int, float[]> _timesById;
+        public IndexedRetentionTimes(IEnumerable<KeyValuePair<int, double>> times)
+        {
+            var timesLookup = times.ToLookup(kvp => kvp.Key, kvp => kvp.Value);
+            var floatArrayPairs = timesLookup.Select(grouping => new KeyValuePair<int, float[]>(
+                    grouping.Key, grouping.Select(time => (float) time).ToArray()));
+            var timesById = ImmutableSortedList.FromValues(floatArrayPairs);
+            if (timesById.Count > 0)
+            {
+                _timesById = timesById;
+            }
+            else
+            {
+                _timesById = null;
+            }
+        }
+
+        private IndexedRetentionTimes(IEnumerable<KeyValuePair<int, float[]>> timesById)
+        {
+            _timesById = ImmutableSortedList.FromValues(timesById);
+        }
+
+        public double[] GetTimes(int id)
+        {
+            float[] times;
+            if (null == _timesById || !_timesById.TryGetValue(id, out times))
+            {
+                return new double[0];
+            }
+            return times.Select(time => (double) time).ToArray();
+        }
+      
+        public void Write(Stream stream)
+        {
+            if (_timesById == null)
+            {
+                PrimitiveArrays.WriteOneValue(stream, 0);
+                return;
+            }
+            PrimitiveArrays.WriteOneValue(stream, _timesById.Count);
+            foreach (KeyValuePair<int, float[]> idTimesPair in _timesById)
+            {
+                PrimitiveArrays.WriteOneValue(stream, idTimesPair.Key);
+                PrimitiveArrays.WriteOneValue(stream, idTimesPair.Value.Length);
+                PrimitiveArrays.Write(stream, idTimesPair.Value);
+            }
+        }
+
+        public static IndexedRetentionTimes Read(Stream stream)
+        {
+            int entryCount = PrimitiveArrays.ReadOneValue<int>(stream);
+            if (0 == entryCount)
+            {
+                return default(IndexedRetentionTimes);
+            }
+            var keyValuePairs = new KeyValuePair<int, float[]>[entryCount];
+            for (int i = 0; i < keyValuePairs.Length; i++)
+            {
+                int id = PrimitiveArrays.ReadOneValue<int>(stream);
+                int timeCount = PrimitiveArrays.ReadOneValue<int>(stream);
+                var times = PrimitiveArrays.Read<float>(stream, timeCount);
+                keyValuePairs[i] = new KeyValuePair<int, float[]>(id, times);
+            }
+            return new IndexedRetentionTimes(keyValuePairs);
+        }
+    }
+
     public struct BiblioLiteSpectrumInfo : ICachedSpectrumInfo
     {
         private readonly LibKey _key;
         private readonly short _copies;
         private readonly ushort _numPeaks;
         private readonly int _id;
+        private readonly IndexedRetentionTimes _retentionTimesByFileId;
 
-        public BiblioLiteSpectrumInfo(LibKey key, short copies, ushort numPeaks, int id)
+        public BiblioLiteSpectrumInfo(LibKey key, short copies, ushort numPeaks, int id, IndexedRetentionTimes retentionTimesByFileId)
         {
             _key = key;
             _copies = copies;
             _numPeaks = numPeaks;
             _id = id;
+            _retentionTimesByFileId = retentionTimesByFileId;
         }
 
         public LibKey Key { get { return _key;  } }
         public short Copies { get { return _copies; } }
         public ushort NumPeaks { get { return _numPeaks; } }
         public int Id { get { return _id; } }
+        public IndexedRetentionTimes RetentionTimesByFileId { get { return _retentionTimesByFileId; } }
     }
 }

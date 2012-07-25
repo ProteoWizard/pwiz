@@ -64,6 +64,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             int SelectedResultsIndex { get; set; }
 
+            int AlignToReplicate { get; set; }
+
             void ActivateSpectrum();
 
             void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousPt, IController controller);
@@ -76,6 +78,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt, IController controller) { }
             public int SelectedResultsIndex { get; set; }
             public void ActivateSpectrum() {}
+            public int AlignToReplicate { get; set; }
         }
 
         private readonly IDocumentUIContainer _documentContainer;

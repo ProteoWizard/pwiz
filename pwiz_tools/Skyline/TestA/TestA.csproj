@@ -136,7 +136,9 @@
     <Compile Include="Results\ImportSimTest.cs" />
     <Compile Include="Results\MsxTest.cs" />
     <Compile Include="Results\NumericsLsSolverTest.cs" />
+    <Compile Include="Results\RestultNameMapTest.cs" />
     <Compile Include="Results\ResultsUtilTest.cs" />
+    <Compile Include="Results\DocumentRetentionTimesTest.cs" />
     <Compile Include="StringHelpersTest.cs" />
     <Compile Include="TestSerializeIsolationScheme.cs" />
     <Compile Include="TransitionSettings07Test.cs" />

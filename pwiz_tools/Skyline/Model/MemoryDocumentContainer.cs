@@ -22,6 +22,7 @@ using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -134,11 +135,17 @@ namespace pwiz.Skyline.Model
             LibraryManager = new LibraryManager();
             LibraryManager.Register(this);
             Register(LibraryManager);
+
+            RetentionTimeManager = new RetentionTimeManager();
+            RetentionTimeManager.Register(this);
+            Register(RetentionTimeManager);
         }
 
         public ChromatogramManager ChromatogramManager { get; private set; }
 
         public LibraryManager LibraryManager { get; private set; }
+
+        public RetentionTimeManager RetentionTimeManager { get; private set; }
 
         protected override bool IsComplete(SrmDocument docNew)
         {

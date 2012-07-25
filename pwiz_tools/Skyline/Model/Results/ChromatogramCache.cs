@@ -606,16 +606,15 @@ namespace pwiz.Skyline.Model.Results
         {
             times = new float[numPoints];
             intensities = new float[numTrans][];
-            for (int i = 0; i < numTrans; i++)
-                intensities[i] = new float[numPoints];
 
-            for (int i = 0, offset = 0; i < numPoints; i++, offset += sizeof(float))
-                times[i] = BitConverter.ToSingle(peaks, offset);
-            int sizeArray = sizeof(float) * numPoints;
+            int sizeArray = sizeof(float)*numPoints;
+            Debug.Assert(sizeArray == Buffer.ByteLength(times));
+            Buffer.BlockCopy(peaks, 0, times, 0, sizeArray);
             for (int i = 0, offsetTran = sizeArray; i < numTrans; i++, offsetTran += sizeArray)
             {
-                for (int j = 0, offset = 0; j < numPoints; j++, offset += sizeof(float))
-                    intensities[i][j] = BitConverter.ToSingle(peaks, offset + offsetTran);
+                intensities[i] = new float[numPoints];
+                Debug.Assert(sizeArray == Buffer.ByteLength(intensities[i]));
+                Buffer.BlockCopy(peaks, offsetTran, intensities[i], 0, sizeArray);
             }
         }
 
@@ -623,17 +622,15 @@ namespace pwiz.Skyline.Model.Results
         {
             int len = times.Length;
             int countChroms = intensities.Length;
-            int timeBytes = len * sizeof(float);
-            byte[] points = new byte[timeBytes * (countChroms + 1)];
-            for (int i = 0, offset = 0; i < len; i++, offset += sizeof(float))
-                Array.Copy(BitConverter.GetBytes(times[i]), 0, points, offset, sizeof(float));
-            for (int i = 0, offsetTran = timeBytes; i < countChroms; i++, offsetTran += timeBytes)
+            int sizeArray = len * sizeof(float);
+            byte[] points = new byte[sizeArray * (countChroms + 1)];
+
+            Debug.Assert(sizeArray == Buffer.ByteLength(times));
+            Buffer.BlockCopy(times, 0, points, 0, sizeArray);
+            for (int i = 0, offsetTran = sizeArray; i < countChroms; i++, offsetTran += sizeArray)
             {
-                for (int j = 0, offset = 0; j < len; j++, offset += sizeof(float))
-                {
-                    Array.Copy(BitConverter.GetBytes(intensities[i][j]), 0,
-                               points, offsetTran + offset, sizeof(float));
-                }
+                Debug.Assert(sizeArray == Buffer.ByteLength(intensities[i]));
+                Buffer.BlockCopy(intensities[i], 0, points, offsetTran, sizeArray);
             }
             return points;
         }

@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -99,6 +101,10 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="reader">The XML reader from which the element is being read</param>
         public virtual void ReadXml(XmlReader reader)
         {
+            if (null != Name)
+            {
+                throw new InvalidOperationException();
+            }
             Name = reader.GetAttribute(ATTR.name);
 
             Validate();

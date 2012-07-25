@@ -129,6 +129,7 @@ namespace pwiz.Skyline
             this.fwbRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showRTLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.alignRTToSelectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.predictionRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.replicatesRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1042,6 +1043,7 @@ namespace pwiz.Skyline
             this.peptideRTValueMenuItem,
             this.showRTLegendContextMenuItem,
             this.selectionContextMenuItem,
+            this.alignRTToSelectionContextMenuItem,
             this.refineRTContextMenuItem,
             this.predictionRTContextMenuItem,
             this.replicatesRTContextMenuItem,
@@ -1058,7 +1060,7 @@ namespace pwiz.Skyline
             this.zoomOutRTContextMenuItem,
             this.toolStripSeparator25});
             this.contextMenuRetentionTimes.Name = "contextMenuRetentionTimes";
-            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 342);
+            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 364);
             // 
             // timeGraphContextMenuItem
             // 
@@ -1156,6 +1158,14 @@ namespace pwiz.Skyline
             this.selectionContextMenuItem.Size = new System.Drawing.Size(177, 22);
             this.selectionContextMenuItem.Text = "Selection";
             this.selectionContextMenuItem.Click += new System.EventHandler(this.selectionContextMenuItem_Click);
+            // 
+            // alignRTToSelectionContextMenuItem
+            // 
+            this.alignRTToSelectionContextMenuItem.CheckOnClick = true;
+            this.alignRTToSelectionContextMenuItem.Name = "alignRTToSelectionContextMenuItem";
+            this.alignRTToSelectionContextMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.alignRTToSelectionContextMenuItem.Text = "Align Times To {0}";
+            this.alignRTToSelectionContextMenuItem.Click += new System.EventHandler(this.alignRTToSelectionContextMenuItem_Click);
             // 
             // refineRTContextMenuItem
             // 
@@ -3429,6 +3439,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem alignedPeptideIDTimesToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem retentionTimeAlignmentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem exportIsolationListMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem alignRTToSelectionContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem toolsMenu;
         private System.Windows.Forms.ToolStripMenuItem placeholderToolsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem configureToolsMenuItem;

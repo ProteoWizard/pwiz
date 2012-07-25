@@ -26,6 +26,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Model.Results
         private ReadOnlyCollection<ChromatogramCache> _listPartialCaches;
         private ReadOnlyCollection<string> _listSharedCachePaths;
         private ProgressStatus _statusLoading;
-
+        
         public MeasuredResults(IList<ChromatogramSet> chromatograms)
         {
             Chromatograms = chromatograms;
@@ -62,7 +63,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 // All the chromatogram sets are loaded, and the cache has not been modified
                 return !Chromatograms.Contains(c => !c.IsLoaded) &&
-                    _cacheFinal != null && !_cacheFinal.ReadStream.IsModified;
+                       _cacheFinal != null && !_cacheFinal.ReadStream.IsModified;
             }
         }
 
@@ -201,9 +202,14 @@ namespace pwiz.Skyline.Model.Results
                 return true;
             // Check for Waters MSe
             string suffix = name.Substring(prefix.Length);
-            if (suffix[0] == '_' && suffix.EndsWith("_final_fragment"))
+            if (suffix[0] == '_' && IsUnderscoreSuffix(suffix))
                 return true;
             return false;
+        }
+
+        public static bool IsUnderscoreSuffix(string name)
+        {
+            return name.EndsWith("_final_fragment");
         }
 
 // ReSharper disable MemberCanBeMadeStatic.Local
@@ -650,7 +656,6 @@ namespace pwiz.Skyline.Model.Results
                 chromatogramSet = (ChromatogramSet) chromatogramSet.ChangeName(replicateName);
             return chromatogramSet;
         }
-
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1080,6 +1085,28 @@ namespace pwiz.Skyline.Model.Results
 
                 Complete(true);
             }
+        }
+
+        public ChromFileInfo GetChromFileInfo<TChromInfo>(Results<TChromInfo> results, int replicateIndex) where TChromInfo:ChromInfo
+        {
+            OneOrManyList<TChromInfo> replicateChromInfos = null;
+            if (results != null && replicateIndex >= 0 && replicateIndex < results.Count)
+            {
+                replicateChromInfos = results[replicateIndex];
+            }
+            if (replicateChromInfos != null)
+            {
+                var chromatograms = Chromatograms[replicateIndex];
+                foreach (var replicateChromInfo in replicateChromInfos)
+                {
+                    ChromFileInfo chromFileInfo = chromatograms.GetFileInfo(replicateChromInfo.FileId);
+                    if (chromFileInfo != null)
+                    {
+                        return chromFileInfo;
+                    }
+                }
+            }
+            return null;
         }
     }
 

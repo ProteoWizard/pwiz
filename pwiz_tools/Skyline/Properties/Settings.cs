@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
@@ -1510,7 +1511,8 @@ namespace pwiz.Skyline.Properties
                     ),
                     new TransitionFullScan()
                 ),
-                new DataSettings(new AnnotationDef[0])
+                new DataSettings(new AnnotationDef[0]),
+                DocumentRetentionTimes.EMPTY
             );
 
         public static string DefaultName

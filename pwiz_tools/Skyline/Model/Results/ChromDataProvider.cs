@@ -237,7 +237,6 @@ namespace pwiz.Skyline.Model.Results
 
         public SpectraChromDataProvider(MsDataFileImpl dataFile,
                                         SrmDocument document,
-                                        RetentionTimesAlignedToFile retentionTimesAlignedToFile,
                                         ProgressStatus status,
                                         int startPercent,
                                         int endPercent,
@@ -256,7 +255,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Create a spectrum filter data structure, in case it is needed
                 // This could be done lazily, but does not seem worth it, given the file reading
-                var filter = new SpectrumFilter(document, retentionTimesAlignedToFile);
+                var filter = new SpectrumFilter(document, dataFile);
 
                 // First read all of the spectra, building chromatogram time, intensity lists
                 bool isSrm = dataFile.HasSrmSpectra;
@@ -645,7 +644,7 @@ namespace pwiz.Skyline.Model.Results
 
         public SpectrumFilterPair[] FilterPairs { get { return _filterMzValues; } }
 
-        public SpectrumFilter(SrmDocument document, RetentionTimesAlignedToFile retentionTimesAlignedToFile)
+        public SpectrumFilter(SrmDocument document, MsDataFileImpl dataFile)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
             _instrument = document.Settings.TransitionSettings.Instrument;
@@ -682,7 +681,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
                 {
-                    canSchedule = retentionTimesAlignedToFile != null;
+                    canSchedule = true;
                 }
                 else
                 {
@@ -722,16 +721,19 @@ namespace pwiz.Skyline.Model.Results
                             }
                             else if (RetentionTimeFilterType.ms2_ids == _fullScan.RetentionTimeFilterType)
                             {
-                                var allTimes =
-                                    document.Settings.GetRetentionTimes(retentionTimesAlignedToFile.TargetTimes,
-                                                                        nodePep.Peptide.Sequence, nodePep.ExplicitMods)
-                                        .Concat(document.Settings.GetAlignedRetentionTimes(
-                                            retentionTimesAlignedToFile, nodePep.Peptide.Sequence, nodePep.ExplicitMods))
-                                        .ToArray();
-                                if (allTimes.Length > 0)
+                                var times = document.Settings.GetRetentionTimes(dataFile.FilePath,
+                                                                                nodePep.Peptide.Sequence,
+                                                                                nodePep.ExplicitMods);
+                                if (times.Length == 0)
                                 {
-                                    minTime = Math.Max(minTime ?? 0, allTimes.Min() - _fullScan.RetentionTimeFilterLength);
-                                    maxTime = Math.Min(maxTime ?? double.MaxValue, allTimes.Max() + _fullScan.RetentionTimeFilterLength);
+                                    times = document.Settings.GetAllRetentionTimes(dataFile.FilePath,
+                                                                                   nodePep.Peptide.Sequence,
+                                                                                   nodePep.ExplicitMods);
+                                }
+                                if (times.Length > 0)
+                                {
+                                    minTime = Math.Max(minTime ?? 0, times.Min() - _fullScan.RetentionTimeFilterLength);
+                                    maxTime = Math.Min(maxTime ?? double.MaxValue, times.Max() + _fullScan.RetentionTimeFilterLength);
                                 }
                             }
                         }

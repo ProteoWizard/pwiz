@@ -706,7 +706,7 @@ namespace pwiz.Skyline.Model.DocSettings
             var listTimes = statistics.ListRetentionTimes;
             var listPredictions = statistics.ListPredictions;
             var listHydroScores = statistics.ListHydroScores;
-            var listDeltas = new List<KeyValuePair<int, double>>();
+            var listDeltas = new List<DeltaIndex>();
             int iNextStat = 0;
             double unknownScore = Calculator.UnknownScore;
             for (int i = 0; i < variablePeptides.Count; i++)
@@ -735,18 +735,18 @@ namespace pwiz.Skyline.Model.DocSettings
                             delta = Math.Abs(predictedTime.Value - peptideTime.RetentionTime);
                     }
                 }
-                listDeltas.Add(new KeyValuePair<int, double>(i, delta));
+                listDeltas.Add(new DeltaIndex(delta, i));
             }
 
             // Sort descending
-            listDeltas.Sort((v1, v2) => Comparer<double>.Default.Compare(v2.Value, v1.Value));
+            listDeltas.Sort();
 
             // Remove points with the highest deltas above mid
             outIndexes = new HashSet<int>();
             int countOut = variablePeptides.Count - mid - 1;
             for (int i = 0; i < countOut; i++)
             {
-                outIndexes.Add(listDeltas[i].Key);
+                outIndexes.Add(listDeltas[i].Index);
             }
             var peptidesTimesTry = new List<MeasuredRetentionTime>(variablePeptides.Count);
             for (int i = 0; i < variablePeptides.Count; i++)
@@ -807,6 +807,30 @@ namespace pwiz.Skyline.Model.DocSettings
                     return false;
             }
             return true;
+        }
+
+        private sealed class DeltaIndex : IComparable<DeltaIndex>
+        {
+            public DeltaIndex(double delta, int index)
+            {
+                Delta = delta;
+                Index = index;
+            }
+
+            public double Delta { get; private set; }
+            public int Index { get; private set; }
+            public int CompareTo(DeltaIndex other)
+            {
+                if (Delta > other.Delta)
+                {
+                    return -1;
+                }
+                if (Delta == other.Delta)
+                {
+                    return 0;
+                }
+                return 1;
+            }
         }
     }
 

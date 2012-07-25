@@ -643,7 +643,12 @@
     <Compile Include="Model\Results\MsxDemultiplexer.cs" />
     <Compile Include="Model\Results\NumericsLsSolver.cs" />
     <Compile Include="Model\Results\PeptideChromData.cs" />
+    <Compile Include="Model\Results\ResultNameMap.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
+    <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
+    <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeManager.cs" />
+    <Compile Include="Model\RetentionTimes\RetentionTimeSource.cs" />
     <Compile Include="Model\SrmDocument.cs" />
     <Compile Include="Model\SrmDocumentExtensions.cs" />
     <Compile Include="Model\SrmDocumentSharing.cs" />
@@ -891,6 +896,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\AlignmentForm.resx">
       <DependentUpon>AlignmentForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\PopupPickList.resx">
       <DependentUpon>PopupPickList.cs</DependentUpon>

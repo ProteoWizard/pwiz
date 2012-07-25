@@ -240,7 +240,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                     dictLibrary.Add(libKey,
                                                     new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
                                                                                refSpectra.NumPeaks,
-                                                                               (int) (refSpectra.Id ?? 0)));
+                                                                               (int) (refSpectra.Id ?? 0), default(IndexedRetentionTimes)));
                                 }
 
                                 session.Flush();
@@ -273,10 +273,13 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                                 session.Flush();
                                 session.Clear();
 
+                                // TODO(nicksh): preserve retention time information.
+                                var retentionTimesByFileId = default(IndexedRetentionTimes);
                                 dictLibrary.Add(libKey,
                                                 new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
                                                                            refSpectra.NumPeaks,
-                                                                           (int) (refSpectra.Id ?? 0)));
+                                                                           (int) (refSpectra.Id ?? 0), 
+                                                                           retentionTimesByFileId));
 
                                 // Save entries in the redundant library.
                                 if (saveRedundantLib && redundantSpectraKeys.Count > 0)

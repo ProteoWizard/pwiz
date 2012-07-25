@@ -53,6 +53,7 @@ namespace pwiz.Skyline
         private ResultsGridForm _resultsGridForm;
         private readonly List<GraphChromatogram> _listGraphChrom = new List<GraphChromatogram>();
         private bool _inGraphUpdate;
+        private int _alignToReplicate = -1;
 
         public RTGraphController RTGraphController
         {
@@ -164,7 +165,6 @@ namespace pwiz.Skyline
                 }
                 return;                
             }
-
             var listUpdateGraphs = new List<IUpdatable>();
             var filterNew = settingsNew.TransitionSettings.Filter;
             var filterOld = settingsOld.TransitionSettings.Filter;
@@ -580,6 +580,20 @@ namespace pwiz.Skyline
                     return true;
                 }
                 return false;
+            }
+        }
+
+        public int AlignToReplicate
+        {
+            get { return _alignToReplicate; }
+            set 
+            { 
+                if (value == AlignToReplicate)
+                {
+                    return;
+                }
+                _alignToReplicate = value;
+                UpdateGraphPanes();
             }
         }
 
@@ -2136,6 +2150,16 @@ namespace pwiz.Skyline
                         showRTLegendContextMenuItem.Checked = set.ShowRetentionTimesLegend;
                         menuStrip.Items.Insert(iInsert++, showRTLegendContextMenuItem);
                     }
+                    if (rtReplicateGraphPane != null)
+                    {
+                        if (DocumentUI.Settings.HasResults && !Document.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+                        {
+                            var alignToSelectionItem = alignRTToSelectionContextMenuItem;
+                            alignToSelectionItem.Text = string.Format("Align Times To {0}", ComboResults.SelectedItem);
+                            alignToSelectionItem.Checked = AlignToReplicate == SelectedResultsIndex;
+                            menuStrip.Items.Insert(iInsert++, alignToSelectionItem);
+                        }
+                    }
                 }
                 else if (graphType == GraphTypeRT.peptide)
                 {
@@ -2472,6 +2496,27 @@ namespace pwiz.Skyline
             timeRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.Retention);
             fwhmRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWHM);
             fwbRTValueContextMenuItem.Checked = (rtValue == RTPeptideValue.FWB);
+        }
+
+        private void alignRTToSelectionContextMenuItem_Click(object sender, EventArgs e)
+        {
+            if (_graphRetentionTime == null)
+            {
+                return;
+            }
+            var menuItem = (ToolStripMenuItem) sender;
+            var rtReplicateGraphPane = _graphRetentionTime.GraphPane as RTReplicateGraphPane;
+            if (rtReplicateGraphPane != null)
+            {
+                if (menuItem.Checked)
+                {
+                    AlignToReplicate = SelectedResultsIndex;    
+                }
+                else
+                {
+                    AlignToReplicate = -1;
+                }
+            }
         }
 
         private void allRTValueContextMenuItem_Click(object sender, EventArgs e)

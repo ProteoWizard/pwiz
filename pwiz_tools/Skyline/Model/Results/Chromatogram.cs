@@ -26,6 +26,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -39,11 +40,9 @@ namespace pwiz.Skyline.Model.Results
             // If using full-scan filtering, then completion of library load
             // is a state change event, since peak picking cannot occur until
             // libraries are loaded.
-            if (document.Settings.TransitionSettings.FullScan.IsEnabled)
+            if (!IsReadyToLoad(previous) && IsReadyToLoad(document))
             {
-                if (!previous.Settings.PeptideSettings.Libraries.IsLoaded &&
-                        document.Settings.PeptideSettings.Libraries.IsLoaded)
-                    return true;
+                return true;
             }
             return !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
@@ -54,10 +53,15 @@ namespace pwiz.Skyline.Model.Results
             
             // If using full-scan filtering, then the chromatograms may not be loaded
             // until the libraries are loaded, since they are used for peak picking.
-            if (settings.TransitionSettings.FullScan.IsEnabled && !settings.PeptideSettings.Libraries.IsLoaded)
+            if (!IsReadyToLoad(document))
+            {
                 return true;
-
-            return !settings.HasResults || settings.MeasuredResults.IsLoaded;
+            } 
+            if (!settings.HasResults)
+            {
+                return true;
+            } 
+            return settings.MeasuredResults.IsLoaded;
         }
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
@@ -74,6 +78,26 @@ namespace pwiz.Skyline.Model.Results
             // measured results for the document are completely loaded.
             // TODO: Allow a single file loading to be canceled by removing it
             return !settings.HasResults || settings.MeasuredResults.IsLoaded;
+        }
+
+        private bool IsReadyToLoad(SrmDocument document)
+        {
+            if (null == document)
+            {
+                return false;
+            }
+            if (document.Settings.TransitionSettings.FullScan.IsEnabled)
+            {
+                if (!document.Settings.PeptideSettings.Libraries.IsLoaded)
+                {
+                    return false;
+                }
+                if (!DocumentRetentionTimes.IsLoaded(document))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         protected override bool LoadBackground(IDocumentContainer container, SrmDocument document, SrmDocument docCurrent)
@@ -376,7 +400,8 @@ namespace pwiz.Skyline.Model.Results
             model,
             ionsource,
             analyzer,
-            detector
+            detector,
+            alignment,
         }
 
         public enum ATTR
@@ -579,6 +604,8 @@ namespace pwiz.Skyline.Model.Results
             get { return AnnotationDef.AnnotationTarget.result_file; }
         }
 
+        public IList<KeyValuePair<ChromFileInfoId, RegressionLineElement>> RetentionTimeAlignments { get; private set; }
+
         #region Property change methods
 
         public ChromFileInfo ChangeFilePath(string prop)
@@ -597,6 +624,15 @@ namespace pwiz.Skyline.Model.Results
                                                  });
         }
 
+        public ChromFileInfo ChangeRetentionTimeAlignments(IEnumerable<KeyValuePair<ChromFileInfoId, RegressionLineElement>> retentionTimeAlignments)
+        {
+            return ChangeProp(ImClone(this),
+                              im =>
+                                  {
+                                      im.RetentionTimeAlignments = Array.AsReadOnly(retentionTimeAlignments.ToArray());
+                                  });
+        }
+
         #endregion
 
         #region object overrides
@@ -606,10 +642,11 @@ namespace pwiz.Skyline.Model.Results
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.Id, Id) &&
-                Equals(other.FilePath, FilePath) &&
-                other.FileWriteTime.Equals(FileWriteTime) &&
-                other.RunStartTime.Equals(RunStartTime) &&
-                ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList);
+                   Equals(other.FilePath, FilePath) &&
+                   other.FileWriteTime.Equals(FileWriteTime) &&
+                   other.RunStartTime.Equals(RunStartTime) &&
+                   ArrayUtil.EqualsDeep(other.InstrumentInfoList, InstrumentInfoList) &&
+                   ArrayUtil.EqualsDeep(other.RetentionTimeAlignments, RetentionTimeAlignments);
         }
 
         public override bool Equals(object obj)
@@ -630,6 +667,8 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (RunStartTime.HasValue ? RunStartTime.Value.GetHashCode() : 0);
                 result = (result*397) ^
                          (InstrumentInfoList != null ? InstrumentInfoList.GetHashCodeDeep() : 0);
+                result = (result*397) ^
+                         (RetentionTimeAlignments == null ? 0 : RetentionTimeAlignments.GetHashCodeDeep());
                 return result;
             }
         }

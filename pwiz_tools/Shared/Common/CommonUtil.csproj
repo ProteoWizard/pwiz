@@ -104,6 +104,7 @@
     <Compile Include="Chemistry\IsotopeAbundances.cs" />
     <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Chemistry\Molecule.cs" />
+    <Compile Include="Collections\PrimitiveArrays.cs" />
     <Compile Include="Collections\BoundList.cs" />
     <Compile Include="Collections\CollectionUtil.cs" />
     <Compile Include="Collections\ConvertedList.cs" />

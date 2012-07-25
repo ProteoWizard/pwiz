@@ -82,6 +82,7 @@ namespace pwiz.ProteowizardWrapper
 
         public MsDataFileImpl(string path)
         {
+            FilePath = path;
             _msDataFile = new MSDataFile(path);
             _config = new ReaderConfig();
             _isMsx = CheckMsx();
@@ -89,6 +90,7 @@ namespace pwiz.ProteowizardWrapper
 
         public MsDataFileImpl(string path, int sampleIndex, bool simAsSpectra = false, bool srmAsSpectra = false)
         {
+            FilePath = path;
             _msDataFile = new MSData();
             _config = new ReaderConfig {simAsSpectra = simAsSpectra, srmAsSpectra = srmAsSpectra};
             FULL_READER_LIST.read(path, _msDataFile, sampleIndex, _config);
@@ -799,6 +801,8 @@ namespace pwiz.ProteowizardWrapper
                 _msDataFile.Dispose();
             _msDataFile = null;
         }
+
+        public string FilePath { get; private set; }
     }
 
     public sealed class MsDataConfigInfo

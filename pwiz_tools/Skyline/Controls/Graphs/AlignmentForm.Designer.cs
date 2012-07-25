@@ -33,13 +33,10 @@ namespace pwiz.Skyline.Controls.Graphs
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AlignmentForm));
             this.panel1 = new System.Windows.Forms.Panel();
+            this.lblFormDescription = new System.Windows.Forms.Label();
             this.comboAlignAgainst = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.colLibrary = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDataFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colSlope = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colIntercept = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.bindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.bindingNavigator1 = new System.Windows.Forms.BindingNavigator(this.components);
@@ -55,6 +52,16 @@ namespace pwiz.Skyline.Controls.Graphs
             this.bindingNavigatorMoveLastItem = new System.Windows.Forms.ToolStripButton();
             this.bindingNavigatorSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.zedGraphControl = new ZedGraph.ZedGraphControl();
+            this.colLibrary = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colDataFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colSlope = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colIntercept = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colCorrelationCoefficient = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colOutlierCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colUnrefinedSlope = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colUnrefinedIntercept = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colUnrefinedCorrelationCoefficient = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTotalPoints = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource)).BeginInit();
@@ -68,19 +75,31 @@ namespace pwiz.Skyline.Controls.Graphs
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.lblFormDescription);
             this.panel1.Controls.Add(this.comboAlignAgainst);
             this.panel1.Controls.Add(this.label1);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(709, 31);
+            this.panel1.Size = new System.Drawing.Size(1080, 102);
             this.panel1.TabIndex = 0;
+            // 
+            // lblFormDescription
+            // 
+            this.lblFormDescription.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.lblFormDescription.AutoEllipsis = true;
+            this.lblFormDescription.Location = new System.Drawing.Point(12, 9);
+            this.lblFormDescription.Name = "lblFormDescription";
+            this.lblFormDescription.Size = new System.Drawing.Size(1056, 58);
+            this.lblFormDescription.TabIndex = 2;
+            this.lblFormDescription.Text = resources.GetString("lblFormDescription.Text");
             // 
             // comboAlignAgainst
             // 
             this.comboAlignAgainst.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboAlignAgainst.FormattingEnabled = true;
-            this.comboAlignAgainst.Location = new System.Drawing.Point(133, 3);
+            this.comboAlignAgainst.Location = new System.Drawing.Point(136, 70);
             this.comboAlignAgainst.Name = "comboAlignAgainst";
             this.comboAlignAgainst.Size = new System.Drawing.Size(307, 21);
             this.comboAlignAgainst.TabIndex = 1;
@@ -89,7 +108,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 9);
+            this.label1.Location = new System.Drawing.Point(6, 76);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(124, 13);
             this.label1.TabIndex = 0;
@@ -106,51 +125,29 @@ namespace pwiz.Skyline.Controls.Graphs
             this.colLibrary,
             this.colDataFile,
             this.colSlope,
-            this.colIntercept});
+            this.colIntercept,
+            this.colCorrelationCoefficient,
+            this.colOutlierCount,
+            this.colUnrefinedSlope,
+            this.colUnrefinedIntercept,
+            this.colUnrefinedCorrelationCoefficient,
+            this.colTotalPoints});
             this.dataGridView1.DataSource = this.bindingSource;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.Location = new System.Drawing.Point(0, 25);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(709, 199);
+            this.dataGridView1.Size = new System.Drawing.Size(1080, 163);
             this.dataGridView1.TabIndex = 1;
-            // 
-            // colLibrary
-            // 
-            this.colLibrary.DataPropertyName = "Library";
-            this.colLibrary.HeaderText = "Library";
-            this.colLibrary.Name = "colLibrary";
-            this.colLibrary.ReadOnly = true;
-            // 
-            // colDataFile
-            // 
-            this.colDataFile.DataPropertyName = "DataFile";
-            this.colDataFile.HeaderText = "DataFile";
-            this.colDataFile.Name = "colDataFile";
-            this.colDataFile.ReadOnly = true;
-            // 
-            // colSlope
-            // 
-            this.colSlope.DataPropertyName = "Slope";
-            this.colSlope.HeaderText = "Slope";
-            this.colSlope.Name = "colSlope";
-            this.colSlope.ReadOnly = true;
-            // 
-            // colIntercept
-            // 
-            this.colIntercept.DataPropertyName = "Intercept";
-            this.colIntercept.HeaderText = "Intercept";
-            this.colIntercept.Name = "colIntercept";
-            this.colIntercept.ReadOnly = true;
             // 
             // bindingSource
             // 
-            this.bindingSource.CurrentChanged += new System.EventHandler(this.bindingSource_CurrentChanged);
+            this.bindingSource.CurrentItemChanged += new System.EventHandler(this.bindingSource_CurrentItemChanged);
             // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 31);
+            this.splitContainer1.Location = new System.Drawing.Point(0, 102);
             this.splitContainer1.Name = "splitContainer1";
             this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
@@ -162,8 +159,8 @@ namespace pwiz.Skyline.Controls.Graphs
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.zedGraphControl);
-            this.splitContainer1.Size = new System.Drawing.Size(709, 449);
-            this.splitContainer1.SplitterDistance = 224;
+            this.splitContainer1.Size = new System.Drawing.Size(1080, 378);
+            this.splitContainer1.SplitterDistance = 188;
             this.splitContainer1.TabIndex = 2;
             // 
             // bindingNavigator1
@@ -191,7 +188,7 @@ namespace pwiz.Skyline.Controls.Graphs
             this.bindingNavigator1.MovePreviousItem = this.bindingNavigatorMovePreviousItem;
             this.bindingNavigator1.Name = "bindingNavigator1";
             this.bindingNavigator1.PositionItem = this.bindingNavigatorPositionItem;
-            this.bindingNavigator1.Size = new System.Drawing.Size(709, 25);
+            this.bindingNavigator1.Size = new System.Drawing.Size(1080, 25);
             this.bindingNavigator1.TabIndex = 2;
             this.bindingNavigator1.Text = "bindingNavigator1";
             // 
@@ -297,15 +294,91 @@ namespace pwiz.Skyline.Controls.Graphs
             this.zedGraphControl.ScrollMinX = 0D;
             this.zedGraphControl.ScrollMinY = 0D;
             this.zedGraphControl.ScrollMinY2 = 0D;
-            this.zedGraphControl.Size = new System.Drawing.Size(709, 221);
+            this.zedGraphControl.Size = new System.Drawing.Size(1080, 186);
             this.zedGraphControl.TabIndex = 0;
             this.zedGraphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.zedGraphControl_ContextMenuBuilder);
+            // 
+            // colLibrary
+            // 
+            this.colLibrary.DataPropertyName = "Library";
+            this.colLibrary.HeaderText = "Library";
+            this.colLibrary.Name = "colLibrary";
+            this.colLibrary.ReadOnly = true;
+            // 
+            // colDataFile
+            // 
+            this.colDataFile.DataPropertyName = "DataFile";
+            this.colDataFile.HeaderText = "DataFile";
+            this.colDataFile.Name = "colDataFile";
+            this.colDataFile.ReadOnly = true;
+            // 
+            // colSlope
+            // 
+            this.colSlope.DataPropertyName = "Slope";
+            this.colSlope.HeaderText = "Slope";
+            this.colSlope.Name = "colSlope";
+            this.colSlope.ReadOnly = true;
+            // 
+            // colIntercept
+            // 
+            this.colIntercept.DataPropertyName = "Intercept";
+            this.colIntercept.HeaderText = "Intercept";
+            this.colIntercept.Name = "colIntercept";
+            this.colIntercept.ReadOnly = true;
+            // 
+            // colCorrelationCoefficient
+            // 
+            this.colCorrelationCoefficient.DataPropertyName = "CorrelationCoefficient";
+            this.colCorrelationCoefficient.HeaderText = "R";
+            this.colCorrelationCoefficient.Name = "colCorrelationCoefficient";
+            this.colCorrelationCoefficient.ReadOnly = true;
+            // 
+            // colOutlierCount
+            // 
+            this.colOutlierCount.DataPropertyName = "OutlierCount";
+            this.colOutlierCount.HeaderText = "# Outliers";
+            this.colOutlierCount.Name = "colOutlierCount";
+            this.colOutlierCount.ReadOnly = true;
+            // 
+            // colUnrefinedSlope
+            // 
+            this.colUnrefinedSlope.DataPropertyName = "UnrefinedSlope";
+            this.colUnrefinedSlope.HeaderText = "Unrefined Slope";
+            this.colUnrefinedSlope.Name = "colUnrefinedSlope";
+            this.colUnrefinedSlope.ReadOnly = true;
+            this.colUnrefinedSlope.Visible = false;
+            this.colUnrefinedSlope.Width = 120;
+            // 
+            // colUnrefinedIntercept
+            // 
+            this.colUnrefinedIntercept.DataPropertyName = "UnrefinedIntercept";
+            this.colUnrefinedIntercept.HeaderText = "Unrefined Intercept";
+            this.colUnrefinedIntercept.Name = "colUnrefinedIntercept";
+            this.colUnrefinedIntercept.ReadOnly = true;
+            this.colUnrefinedIntercept.Visible = false;
+            this.colUnrefinedIntercept.Width = 125;
+            // 
+            // colUnrefinedCorrelationCoefficient
+            // 
+            this.colUnrefinedCorrelationCoefficient.DataPropertyName = "UnrefinedCorrelationCoefficient";
+            this.colUnrefinedCorrelationCoefficient.HeaderText = "Unrefined R";
+            this.colUnrefinedCorrelationCoefficient.Name = "colUnrefinedCorrelationCoefficient";
+            this.colUnrefinedCorrelationCoefficient.ReadOnly = true;
+            this.colUnrefinedCorrelationCoefficient.Visible = false;
+            // 
+            // colTotalPoints
+            // 
+            this.colTotalPoints.DataPropertyName = "PointCount";
+            this.colTotalPoints.HeaderText = "# Points";
+            this.colTotalPoints.Name = "colTotalPoints";
+            this.colTotalPoints.ReadOnly = true;
             // 
             // AlignmentForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(709, 480);
+            this.AutoScroll = true;
+            this.ClientSize = new System.Drawing.Size(1080, 480);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panel1);
             this.Name = "AlignmentForm";
@@ -348,9 +421,16 @@ namespace pwiz.Skyline.Controls.Graphs
         private System.Windows.Forms.ToolStripButton bindingNavigatorMoveNextItem;
         private System.Windows.Forms.ToolStripButton bindingNavigatorMoveLastItem;
         private System.Windows.Forms.ToolStripSeparator bindingNavigatorSeparator2;
+        private System.Windows.Forms.Label lblFormDescription;
         private System.Windows.Forms.DataGridViewTextBoxColumn colLibrary;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDataFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSlope;
         private System.Windows.Forms.DataGridViewTextBoxColumn colIntercept;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colCorrelationCoefficient;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colOutlierCount;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colUnrefinedSlope;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colUnrefinedIntercept;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colUnrefinedCorrelationCoefficient;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTotalPoints;
     }
 }

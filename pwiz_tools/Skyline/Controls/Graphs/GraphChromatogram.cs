@@ -19,18 +19,15 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using pwiz.MSGraph;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -117,6 +114,7 @@ namespace pwiz.Skyline.Controls.Graphs
             TreeNodeMS SelectedNode { get; }
 
             SpectrumDisplayInfo SelectedSpectrum { get; }
+            int AlignToReplicate { get; }
 
             void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
         }
@@ -126,6 +124,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public TreeNodeMS SelectedNode { get { return null; } }
             public SpectrumDisplayInfo SelectedSpectrum { get { return null; } }
             public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip) { }
+            public int AlignToReplicate { get { return -1; } }
         }
 
         private string _nameChromatogramSet;
@@ -142,7 +141,6 @@ namespace pwiz.Skyline.Controls.Graphs
         private bool _peakRelativeTime;
         private double _maxIntensity;
         private bool _zoomLocked;
-        private LoadedRetentionTimes _loadedRetentionTimes;
 
         public GraphChromatogram(string name, IDocumentUIContainer documentUIContainer)
         {
@@ -313,10 +311,6 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
-            if (_loadedRetentionTimes != null && !_loadedRetentionTimes.IsValidFor(DocumentUI))
-            {
-                _loadedRetentionTimes = null;
-            }
             // Changes to the settings are handled elsewhere
             if (e.DocumentPrevious != null &&
                 ReferenceEquals(_documentContainer.DocumentUI.Settings.MeasuredResults,
@@ -1284,20 +1278,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 if (Settings.Default.ShowAlignedPeptideIdTimes)
                 {
-                    RetentionTimesAlignedToFile retentionTimesAlignedToFile = GetRetentionTimesAlignedToFile(FilePath);
-                    if (retentionTimesAlignedToFile != null)
+                    var listTimes = new List<double>();
+                    foreach (var group in transitionGroups)
                     {
-                        var listTimes = new List<double>();
-                        foreach (var group in transitionGroups)
-                        {
-                            listTimes.AddRange(settings.GetAlignedRetentionTimes(retentionTimesAlignedToFile, group.Peptide.Sequence, mods));
-                        }
-                        if (listTimes.Count > 0)
-                        {
-                            var sortedTimes = new HashSet<double>(listTimes).ToArray();
-                            Array.Sort(sortedTimes);
-                            chromGraphPrimary.AlignedRetentionMsMs = sortedTimes;
-                        }
+                        listTimes.AddRange(settings.GetAlignedRetentionTimes(FilePath, group.Peptide.Sequence, mods));
+                    }
+                    if (listTimes.Count > 0)
+                    {
+                        var sortedTimes = new HashSet<double>(listTimes).ToArray();
+                        Array.Sort(sortedTimes);
+                        chromGraphPrimary.AlignedRetentionMsMs = sortedTimes;
                     }
                 }
             }
@@ -2126,42 +2116,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 iCharge++;
             }
             return iCharge * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
-        }
-
-        private RetentionTimesAlignedToFile GetRetentionTimesAlignedToFile(string filePath)
-        {
-            var loadedRetentionTimes = UpdateRetentionTimes(_loadedRetentionTimes);
-            if (loadedRetentionTimes == null)
-            {
-                return null;
-            }
-            return loadedRetentionTimes.GetRetentionTimesAlignedToFile(filePath);
-        }
-
-        private LoadedRetentionTimes UpdateRetentionTimes(LoadedRetentionTimes loadedRetentionTimes)
-        {
-            if (_loadedRetentionTimes != null)
-            {
-                Debug.Assert(_loadedRetentionTimes.IsValidFor(DocumentUI));
-                return _loadedRetentionTimes;
-            }
-            if (loadedRetentionTimes != null && loadedRetentionTimes.IsValidFor(DocumentUI))
-            {
-                _loadedRetentionTimes = loadedRetentionTimes;
-                return _loadedRetentionTimes;
-            }
-            LoadedRetentionTimes.StartLoadFromAllLibraries(DocumentUI).ContinueWith(task =>
-                                                                                        {
-                                                                                            if (_loadedRetentionTimes == null)
-                                                                                            {
-                                                                                                UpdateRetentionTimes(task.Result);
-                                                                                                if (_loadedRetentionTimes != null)
-                                                                                                {
-                                                                                                    UpdateUI();
-                                                                                                }
-                                                                                            }
-                                                                                        }, TaskScheduler.FromCurrentSynchronizationContext());
-            return null;
         }
     }
 

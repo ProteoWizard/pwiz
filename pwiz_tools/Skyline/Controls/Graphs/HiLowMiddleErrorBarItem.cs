@@ -20,6 +20,7 @@ using System;
 using System.Drawing;
 using ZedGraph;
 using pwiz.Common.Graph;
+using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -50,6 +51,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 pointPairList[i].Tag = new MiddleErrorTag(middleValues[i], errorValues[i]);
             }
             return pointPairList;
+        }
+
+        public static PointPair StretchPointPair(PointPair pointPair, IRegressionFunction regressionLine)
+        {
+            var tag = pointPair.Tag as MiddleErrorTag;
+            if (tag == null)
+            {
+                return pointPair;
+            }
+            return MakePointPair(pointPair.X, regressionLine.GetY(pointPair.Y),
+                                 regressionLine.GetY(pointPair.Z), regressionLine.GetY(tag.Middle),
+                                 regressionLine.GetY(tag.Error) - regressionLine.GetY(0));
         }
 
         public HiLowMiddleErrorBarItem(String label, 

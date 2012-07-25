@@ -330,10 +330,10 @@ namespace pwiz.Skyline.Util
             foreach (double value in _list)
             {
                 double diff = value - mean;
-                s += Math.Pow(diff, 2);
+                s += diff*diff;
                 sc += diff;
             }
-            return (s - Math.Pow(sc, 2)/_list.Length);
+            return (s - (sc*sc)/_list.Length);
         }
 
         /// <summary>

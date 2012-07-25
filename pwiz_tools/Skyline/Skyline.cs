@@ -46,6 +46,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.SettingsUI;
@@ -82,6 +83,7 @@ namespace pwiz.Skyline
         private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ChromatogramManager _chromatogramManager;
         private readonly IrtDbManager _irtDbManager;
+        private readonly RetentionTimeManager _retentionTimeManager;
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
@@ -124,6 +126,9 @@ namespace pwiz.Skyline
             _irtDbManager = new IrtDbManager();
             _irtDbManager.ProgressUpdateEvent += UpdateProgress;
             _irtDbManager.Register(this);
+            _retentionTimeManager = new RetentionTimeManager();
+            _retentionTimeManager.ProgressUpdateEvent += UpdateProgress;
+            _retentionTimeManager.Register(this);
 
             // Get placement values before changing anything.
             Point location = Settings.Default.MainWindowLocation;
@@ -377,6 +382,13 @@ namespace pwiz.Skyline
                 docIdChanged = !ReferenceEquals(DocumentUI.Id, documentPrevious.Id);
             }
 
+            if (_alignToReplicate >= 0)
+            {
+                if (!settingsNew.HasResults || _alignToReplicate >= settingsNew.MeasuredResults.Chromatograms.Count)
+                {
+                    _alignToReplicate = -1;
+                }
+            }
             // Update results combo UI
             if (_sequenceTreeForm != null)
                 _sequenceTreeForm.UpdateResultsUI(settingsNew, settingsOld);

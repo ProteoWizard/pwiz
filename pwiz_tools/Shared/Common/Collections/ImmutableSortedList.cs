@@ -18,8 +18,6 @@ namespace pwiz.Common.Collections
     }
     public class ImmutableSortedList<TKey, TValue> : IList<KeyValuePair<TKey, TValue>>
     {
-        private TKey[] _keys;
-
         public static ImmutableSortedList<TKey, TValue> FromValues(IEnumerable<KeyValuePair<TKey, TValue>> keyValuePairs, IComparer<TKey> keyComparer)
         {
             var array = keyValuePairs.ToArray();
@@ -27,7 +25,7 @@ namespace pwiz.Common.Collections
             return new ImmutableSortedList<TKey, TValue>
                        {
                            KeyComparer = keyComparer,
-                           _keys = array.Select(kvp=>kvp.Key).ToArray(), 
+                           Keys = ImmutableList.ValueOf(array.Select(kvp=>kvp.Key)), 
                            Values = ImmutableList.ValueOf(array.Select(kvp=>kvp.Value))
                        };
         }
@@ -47,15 +45,12 @@ namespace pwiz.Common.Collections
 
         public IList<TKey> Keys
         {
-            get
-            {
-                return Array.AsReadOnly(_keys);
-            }
+            get; private set;
         }
 
         public IList<TValue> Values
         {
-            get;private set;
+            get; private set;
         }
 
         public int BinarySearch(TKey key, bool firstIndex)
@@ -124,7 +119,7 @@ namespace pwiz.Common.Collections
 
         public int Count
         {
-            get { return _keys.Length; }
+            get { return Keys.Count; }
         }
 
         public bool IsReadOnly
@@ -169,6 +164,46 @@ namespace pwiz.Common.Collections
             set { throw new NotSupportedException(); }
         }
 
+        public bool TryGetValue(TKey key, out TValue value)
+        {
+            int index = BinarySearch(key, true);
+            if (index >= 0)
+            {
+                value = Values[index];
+                return true;
+            }
+            value = default(TValue);
+            return false;
+        }
+
         public IComparer<TKey> KeyComparer { get; private set; }
+
+        #region object overrides
+		public bool Equals(ImmutableSortedList<TKey, TValue> other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(Keys, other.Keys) && Equals(other.KeyComparer, KeyComparer) && Equals(other.Values, Values);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (ImmutableSortedList<TKey, TValue>)) return false;
+            return Equals((ImmutableSortedList<TKey, TValue>) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = Keys.GetHashCode();
+                result = (result*397) ^ KeyComparer.GetHashCode();
+                result = (result*397) ^ Values.GetHashCode();
+                return result;
+            }
+        }
+        #endregion    
     }
 }

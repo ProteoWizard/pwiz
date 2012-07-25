@@ -22,6 +22,7 @@ using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
@@ -36,10 +37,14 @@ namespace pwiz.Skyline.Controls.Graphs
         public RTReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            YAxis.Title.Text = "Measured Time";
         }
 
         public bool CanShowRTLegend { get; private set; }
+
+        public int AlignToReplicate
+        {
+            get { return GraphSummary.StateProvider.AlignToReplicate; }
+        }
 
         public override void UpdateGraph(bool checkData)
         {
@@ -47,13 +52,26 @@ namespace pwiz.Skyline.Controls.Graphs
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
             Clear();
-
             if (!resultsAvailable)
             {
                 Title.Text = "No results available";
                 EmptyGraph(document);
                 return;
             }
+            ChromatogramSet alignToChromatogramSet = null;
+            if (AlignToReplicate >= 0)
+            {
+                alignToChromatogramSet = document.Settings.MeasuredResults.Chromatograms[AlignToReplicate];
+            }
+            if (alignToChromatogramSet != null)
+            {
+                YAxis.Title.Text = string.Format("Time aligned to {0}", alignToChromatogramSet.Name);
+            }
+            else
+            {
+                YAxis.Title.Text = "Measured Time";
+            }
+
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
@@ -102,7 +120,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!results.Chromatograms.Contains(chrom => chrom.OptimizationFunction != null))
                     displayType = DisplayTypeChrom.all;
             }
-
+            FileRetentionTimeAlignments fileRetentionTimeAlignments = null;
+            if (AlignToReplicate >= 0)
+            {
+                ChromFileInfo chromFileInfo = ReplicateIndexToChromFileInfo(results, parentNode, AlignToReplicate);
+                if (chromFileInfo != null)
+                {
+                    fileRetentionTimeAlignments = document.Settings.DocumentRetentionTimes.FileAlignments.Find(chromFileInfo);
+                }
+            }
+            if (alignToChromatogramSet != null && fileRetentionTimeAlignments == null)
+            {
+                Title.Text = "Unable to align retention times";
+                EmptyGraph(document);
+                return;
+            }
             GraphData graphData = new RTGraphData(document, parentNode, displayType);
             CanShowRTLegend = graphData.DocNodes.Count != 0;
             InitFromData(graphData);
@@ -121,6 +153,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     int step = iStep - numSteps;
                     var pointPairList = pointPairLists[iStep];
+                    pointPairList = AlignPointPairList(fileRetentionTimeAlignments, results, parentNode, graphData, pointPairList);
                     Color color;
                     var nodeGroup = docNode as TransitionGroupDocNode;
                     if (parentNode is PeptideDocNode)
@@ -179,6 +212,65 @@ namespace pwiz.Skyline.Controls.Graphs
             _parentNode = parentNode;
             Legend.IsVisible = Settings.Default.ShowRetentionTimesLegend;
             AxisChange();
+        }
+
+        private ChromFileInfo ReplicateIndexToChromFileInfo(MeasuredResults measuredResults, DocNode docNode, int replicateIndex)
+        {
+            var peptideDocNode = docNode as PeptideDocNode;
+            if (peptideDocNode != null)
+            {
+                docNode = peptideDocNode.TransitionGroups.FirstOrDefault();
+            }
+            var transitionGroupDocNode = docNode as TransitionGroupDocNode;
+            if (transitionGroupDocNode != null)
+            {
+                return measuredResults.GetChromFileInfo(transitionGroupDocNode.Results, replicateIndex);
+            }
+            var transitionDocNode = docNode as TransitionDocNode;
+            if (transitionDocNode != null)
+            {
+                return measuredResults.GetChromFileInfo(transitionDocNode.Results, replicateIndex);
+            }
+            return null;
+        }
+
+        private PointPairList AlignPointPairList(FileRetentionTimeAlignments fileRetentionTimeAlignments, MeasuredResults measuredResults, DocNode docNode, GraphData graphData, PointPairList pointPairList)
+        {
+            if (fileRetentionTimeAlignments == null)
+            {
+                return pointPairList;
+            }
+            var result = new PointPairList();
+            for (int iPoint = 0; iPoint < pointPairList.Count; iPoint++)
+            {
+                int replicateIndex = graphData.ReplicateIndices[iPoint];
+                var pointPair = pointPairList[iPoint];
+                if (replicateIndex == AlignToReplicate || pointPair.IsInvalid)
+                {
+                    result.Add(pointPair);
+                    continue;
+                }
+                var chromFileInfo = ReplicateIndexToChromFileInfo(measuredResults, docNode, replicateIndex);
+                RetentionTimeAlignment retentionTimeAlignment = null;
+                if (chromFileInfo != null)
+                {
+                    retentionTimeAlignment = fileRetentionTimeAlignments.RetentionTimeAlignments.Find(chromFileInfo);
+                }
+                PointPair newPoint = null;
+                if (retentionTimeAlignment != null)
+                {
+                    newPoint = HiLowMiddleErrorBarItem.StretchPointPair(pointPair, retentionTimeAlignment.RegressionLine);
+                }
+                if (newPoint == null)
+                {
+                    result.Add(RTGraphData.RTPointPairMissing((int) pointPair.X));
+                }
+                else
+                {
+                    result.Add(newPoint);
+                }
+            }
+            return result;
         }
 
         private void EmptyGraph(SrmDocument document)

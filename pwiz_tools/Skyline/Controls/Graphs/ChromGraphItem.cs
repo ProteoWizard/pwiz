@@ -258,6 +258,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         var line = new LineObj(COLOR_ALIGNED_MSMSID_TIME, time, yMax, time, 0)
                         {
                             ZOrder = ZOrder.E_BehindCurves,
+                            IsClippedToChartRect = true,
                         };
                         annotations.Add(line);
                     }

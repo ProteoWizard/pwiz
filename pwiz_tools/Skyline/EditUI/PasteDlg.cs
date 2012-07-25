@@ -51,7 +51,7 @@ namespace pwiz.Skyline.EditUI
 
             DocumentUiContainer = documentUiContainer;
 
-            _statementCompletionEditBox = new StatementCompletionTextBox(documentUiContainer)
+            _statementCompletionEditBox = new StatementCompletionTextBox(DocumentUiContainer)
                                               {
                                                   MatchTypes = ProteinMatchType.name | ProteinMatchType.description
                                               };
@@ -200,34 +200,27 @@ namespace pwiz.Skyline.EditUI
 
         public void ValidateCells()
         {
-            var origPath = SelectedPath;
-            try
-            {
-                var document = GetNewDocument(DocumentUiContainer.Document, true);
-                if (document != null)
-                    ShowNoErrors();
-            }
-            finally
-            {
-                SelectedPath = origPath;
-            }
+            IdentityPath selectedPath = null;
+            var document = GetNewDocument(DocumentUiContainer.Document, true, ref selectedPath);
+            if (document != null)
+                ShowNoErrors();
         }
 
-        private SrmDocument GetNewDocument(SrmDocument document, bool validating)
+        private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath)
         {
-            if ((document = AddFasta(document)) == null)
+            if ((document = AddFasta(document, ref selectedPath)) == null)
             {
                 return null;
             }
-            if ((document = AddProteins(document)) == null)
+            if ((document = AddProteins(document, ref selectedPath)) == null)
             {
                 return null;
             }
-            if ((document = AddPeptides(document, validating)) == null)
+            if ((document = AddPeptides(document, validating, ref selectedPath)) == null)
             {
                 return null;
             }
-            if ((document = AddTransitionList(document)) == null)
+            if ((document = AddTransitionList(document, ref selectedPath)) == null)
             {
                 return null;
             }
@@ -255,7 +248,7 @@ namespace pwiz.Skyline.EditUI
             gridViewTransitionList.CurrentCell = gridViewTransitionList.Rows[pasteError.Line].Cells[pasteError.Column];
         }
 
-        private SrmDocument AddPeptides(SrmDocument document, bool validating)
+        private SrmDocument AddPeptides(SrmDocument document, bool validating, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPagePeptideList)
                 return document;
@@ -301,7 +294,7 @@ namespace pwiz.Skyline.EditUI
                     continue;
                 if (string.IsNullOrEmpty(proteinName))
                 {
-                    peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document);
+                    peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document, selectedPath);
                     if (!IsPeptideListDocNode(peptideGroupDocNode))
                     {
                         peptideGroupDocNode = null;
@@ -325,15 +318,15 @@ namespace pwiz.Skyline.EditUI
                         peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName, peptideGroup.Description, new PeptideDocNode[0]);
                     }
                     // Add to the end, if no insert node
-                    var to = SelectedPath;
+                    var to = selectedPath;
                     if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
                         document = (SrmDocument)document.Add(peptideGroupDocNode);
                     else
                     {
-                        Identity toId = SelectedPath.GetIdentity((int) SrmDocument.Level.PeptideGroups);
+                        Identity toId = selectedPath.GetIdentity((int) SrmDocument.Level.PeptideGroups);
                         document = (SrmDocument) document.Insert(toId, peptideGroupDocNode);
                     }
-                    SelectedPath = new IdentityPath(peptideGroupDocNode.Id);
+                    selectedPath = new IdentityPath(peptideGroupDocNode.Id);
                 }
                 var peptides = new List<PeptideDocNode>();
                 foreach (PeptideDocNode peptideDocNode in peptideGroupDocNode.Children)
@@ -423,7 +416,7 @@ namespace pwiz.Skyline.EditUI
             return peptideGroupDocNode != null && peptideGroupDocNode.IsPeptideList;
         }
 
-        private SrmDocument AddProteins(SrmDocument document)
+        private SrmDocument AddProteins(SrmDocument document, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPageProteinList)
                 return document;
@@ -489,20 +482,20 @@ namespace pwiz.Skyline.EditUI
                 var nodeGroupPep = new PeptideGroupDocNode(fastaSequence, fastaSequence.Name,
                     fastaSequence.Description, new PeptideDocNode[0]);
                 nodeGroupPep = nodeGroupPep.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
-                var to = SelectedPath;
+                var to = selectedPath;
                 if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
                     document = (SrmDocument)document.Add(nodeGroupPep);
                 else
                 {
-                    Identity toId = SelectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups);
+                    Identity toId = selectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups);
                     document = (SrmDocument)document.Insert(toId, nodeGroupPep);
                 }
-                SelectedPath = new IdentityPath(nodeGroupPep.Id);
+                selectedPath = new IdentityPath(nodeGroupPep.Id);
             }
             return document;
         }
 
-        private SrmDocument AddFasta(SrmDocument document)
+        private SrmDocument AddFasta(SrmDocument document, ref IdentityPath selectedPath)
         {
             var text = tbxFasta.Text;
             if (text.Length == 0)
@@ -573,12 +566,12 @@ namespace pwiz.Skyline.EditUI
             try
             {
                 var reader = new StringReader(tbxFasta.Text);
-                IdentityPath to = SelectedPath;
+                IdentityPath to = selectedPath;
                 IdentityPath firstAdded, nextAdd;
                 // TODO: support long-wait broker
                 document = document.AddPeptideGroups(importer.Import(reader, null, -1), false,
                     to, out firstAdded, out nextAdd);
-                SelectedPath = firstAdded;
+                selectedPath = firstAdded;
             }
             catch (Exception exception)
             {
@@ -612,7 +605,7 @@ namespace pwiz.Skyline.EditUI
         private static readonly ColumnIndices TRANSITION_LIST_COL_INDICES = new ColumnIndices(
             0, 1, 2, 3);
 
-        private SrmDocument AddTransitionList(SrmDocument document)
+        private SrmDocument AddTransitionList(SrmDocument document, ref IdentityPath selectedPath)
         {
             if (tabControl1.SelectedTab != tabPageTransitionList)
                 return document;
@@ -757,15 +750,15 @@ namespace pwiz.Skyline.EditUI
                 else
                 {
                     // Add to the end, if no insert node
-                    var to = SelectedPath;
+                    var to = selectedPath;
                     if (to == null || to.Depth < (int)SrmDocument.Level.PeptideGroups)
                         document = (SrmDocument)document.Add(nodePepGroup);
                     else
                     {
-                        Identity toId = SelectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups);
+                        Identity toId = selectedPath.GetIdentity((int)SrmDocument.Level.PeptideGroups);
                         document = (SrmDocument)document.Insert(toId, nodePepGroup, after);
                     }
-                    SelectedPath = new IdentityPath(nodePepGroup.Id);
+                    selectedPath = new IdentityPath(nodePepGroup.Id);
                     // All future insertions should be after, to avoid reversing the list
                     after = true;
                 }
@@ -787,9 +780,9 @@ namespace pwiz.Skyline.EditUI
             return document.PeptideGroups.FirstOrDefault(n => Equals(name, n.Name));
         }
 
-        private PeptideGroupDocNode GetSelectedPeptideGroupDocNode(SrmDocument document)
+        private PeptideGroupDocNode GetSelectedPeptideGroupDocNode(SrmDocument document, IdentityPath selectedPath)
         {
-            var to = SelectedPath;
+            var to = selectedPath;
             if (to != null && to.Depth >= (int)SrmDocument.Level.PeptideGroups)
                 return (PeptideGroupDocNode) document.FindNode(to.GetIdentity((int) SrmDocument.Level.PeptideGroups));
 
@@ -1117,11 +1110,12 @@ namespace pwiz.Skyline.EditUI
         public void OkDialog()
         {
             bool error = false;
-            var origPath = SelectedPath;
+            IdentityPath newSelectedPath = SelectedPath;
             Program.MainWindow.ModifyDocument(Description, 
                                               document =>
                                                   {
-                                                      var newDocument = GetNewDocument(document, false);
+                                                      newSelectedPath = SelectedPath;
+                                                      var newDocument = GetNewDocument(document, false, ref newSelectedPath);
                                                       if (newDocument == null)
                                                       {
                                                           error = true;
@@ -1131,9 +1125,9 @@ namespace pwiz.Skyline.EditUI
                                                   });
             if (error)
             {
-                SelectedPath = origPath;
                 return;
             }
+            SelectedPath = newSelectedPath;
             DialogResult = DialogResult.OK;
         }
 
