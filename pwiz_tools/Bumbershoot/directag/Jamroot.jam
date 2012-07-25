@@ -301,16 +301,8 @@ rule static-with-fpic ( properties * )
 # any source tree can build binary tarballs
 
 import modules os ;
-
-if [ os.on-windows ]
-{
-    using tar : bsdtar.exe ;
-}
-else
-{
-    using tar ;
-}
 import tar sequence property-set ;
+using tar ;
 
 bin-tarball-basename = "$(application-name:L)-bin" ;
 
@@ -330,7 +322,12 @@ rule binary-tarball-requirements ( properties * )
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
     local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
-    if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
+    if ! <architecture> in $(properties:G)
+    {
+        if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
+        else if $(.platform:L) = "x86" && <address-model>64 in $(properties) { properties += <architecture>x86_64 ; } 
+        else { properties += <architecture>$(.platform:L) ; }
+    }
     local linkage ;
     if <link>shared in $(properties) { linkage = "-shared" ; }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
