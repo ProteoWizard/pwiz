@@ -24,7 +24,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Drawing.Imaging;
 using System.Text;
 using System.IO;
 using System.Windows.Forms;
@@ -107,17 +106,6 @@ namespace IDPicker
         {
             if (SequenceCoverageFilter != null)
                 SequenceCoverageFilter(control, sequenceCoverageFilter);
-        }
-
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (ModifierKeys.HasFlag(Keys.Control) && e.KeyCode == Keys.C)
-            {
-                var emf = new System.Drawing.Imaging.Metafile(CreateGraphics().GetHdc(), EmfType.EmfPlusDual);
-                Clipboard.SetData(DataFormats.EnhancedMetafile, emf);
-            }
-
-            base.OnKeyDown(e);
         }
     }
 
@@ -354,17 +342,6 @@ namespace IDPicker
             if (SequenceCoverageFilter != null)
                 SequenceCoverageFilter(this, sequenceCoverageFilter);
         }
-
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (ModifierKeys.HasFlag(Keys.Control) && e.KeyCode == Keys.C)
-            {
-                var emf = new System.Drawing.Imaging.Metafile(CreateGraphics().GetHdc(), EmfType.EmfPlusDual);
-                Clipboard.SetData(DataFormats.EnhancedMetafile, emf);
-            }
-
-            base.OnKeyDown(e);
-        }
     }
 
     class SequenceCoverageSurface : UserControl
@@ -381,38 +358,6 @@ namespace IDPicker
 
         //ToolTip toolTip;
 
-
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (ModifierKeys.HasFlag(Keys.Control) && e.KeyCode == Keys.C)
-            {
-                lock(this)
-                //using (var g = CreateGraphics())
-                {
-                    var g = CreateGraphics();
-                    //{
-                        var sfg = new SaveFileDialog { AddExtension = true, FileName = owner.Protein.Accession + ".emf" };
-                        var sb = new StringBuilder(sfg.FileName);
-                        foreach (char c in Path.GetInvalidFileNameChars()) sb.Replace(c, '_');
-                        sfg.FileName = sb.ToString();
-                        if (sfg.ShowDialog() == DialogResult.Cancel)
-                            return;
-                    //}
-                    var hdc = g.GetHdc();
-                    var emf = new System.Drawing.Imaging.Metafile(hdc, EmfType.EmfPlusDual);
-                    g.ReleaseHdc(hdc);
-                    g.Dispose();
-                    g = Graphics.FromImage(emf);
-                    drawSurface(g, ClientRectangle);
-                    g.Dispose();
-                    //emf.Save(sfg.FileName);
-                    ClipboardMetafileHelper.SaveEnhMetafileToFile(emf, sfg.FileName);
-                    //Clipboard.SetData(DataFormats.EnhancedMetafile, emf);
-                }
-            }
-
-            base.OnKeyDown(e);
-        }
         public SequenceCoverageSurface (SequenceCoverageControl owner)
         {
             this.owner = owner;
@@ -601,12 +546,10 @@ namespace IDPicker
 
         #endregion
 
-        protected override void OnPaint(PaintEventArgs e) { lock(this) drawSurface(e.Graphics, e.ClipRectangle); }
-
-        private void drawSurface(Graphics g, Rectangle clipRectangle)
+        protected override void OnPaint (PaintEventArgs e)
         {
-            g.FillRectangle(new SolidBrush(owner.BackColor), clipRectangle);
-            g.DrawString(header, owner.HeaderFont, new SolidBrush(owner.HeaderColor), PointF.Empty);
+            e.Graphics.FillRectangle(new SolidBrush(owner.BackColor), e.ClipRectangle);
+            e.Graphics.DrawString(header, owner.HeaderFont, new SolidBrush(owner.HeaderColor), PointF.Empty);
 
             var mouseLocation = PointToClient(MousePosition);
             int lineNumberUnderMouse = getLineNumberAtPoint(mouseLocation);
@@ -625,20 +568,20 @@ namespace IDPicker
                     bool currentResidueIsInFilter = isProteinInFilter && viewFilter.AminoAcidOffset != null &&
                                                     viewFilter.AminoAcidOffset.Contains(pair.Key);
                     if (currentResidueIsUnderMouse || currentResidueIsInFilter)
-                        g.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.HoverFont, hoverBrush, pair.Value);
+                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.HoverFont, hoverBrush, pair.Value);
                     else if (owner.Modifications.Contains(pair.Key))
-                        g.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, modifiedBrush, pair.Value);
+                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, modifiedBrush, pair.Value);
                     else
-                        g.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, coveredBrush, pair.Value);
+                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, coveredBrush, pair.Value);
                 }
                 else
-                    g.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, uncoveredBrush, pair.Value);
+                    e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, uncoveredBrush, pair.Value);
 
             for (int i = 0; i < lineCount; ++i)
             {
                 int lastResidue = i + 1 == lineCount ? owner.Protein.Length : (i + 1) * residuesPerLine;
                 string lineHeader = String.Format("{0}-{1}", i * residuesPerLine + 1, lastResidue);
-                g.DrawString(lineHeader,
+                e.Graphics.DrawString(lineHeader,
                                       owner.OffsetFont,
                                       new SolidBrush(owner.OffsetColor),
                                       0,
@@ -662,7 +605,7 @@ namespace IDPicker
                         default: c = '≡'; f = boldSequenceFont; break;
                     }
 
-                    g.DrawString(c.ToString(),
+                    e.Graphics.DrawString(c.ToString(),
                                           f,
                                           coveredBrush,
                                           pair.Value.X,
@@ -671,6 +614,8 @@ namespace IDPicker
 
                 ++coverageMaskOffset;
             }
+
+            //base.OnPaint(e);
         }
 
         int getLineNumberAtPoint (Point pt)
