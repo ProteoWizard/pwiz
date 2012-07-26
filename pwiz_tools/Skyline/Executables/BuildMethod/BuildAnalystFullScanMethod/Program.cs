@@ -404,7 +404,9 @@ namespace BuildAnalystFullScanMethod
                         continue;
 
                     var scheduledIndex = massRtList.FindIndex(m => Math.Abs(m.Key - assignedCandidateMass) < 0.001);
-                    transition.ExperimentIndex = (scheduledIndex % maxConcurrentCount) + 1;
+                    transition.ExperimentIndex = IsPrecursorTypeTransition(transition)
+                                                     ? 0
+                                                     : (scheduledIndex%maxConcurrentCount) + 1;
                 }
             }
         }
@@ -538,13 +540,15 @@ namespace BuildAnalystFullScanMethod
             {
                 if (precursorsToExperimentIndex.ContainsKey(transition.PrecursorMz))
                 {
-                    transition.ExperimentIndex = precursorsToExperimentIndex[transition.PrecursorMz];
+                    transition.ExperimentIndex = IsPrecursorTypeTransition(transition)
+                                                     ? 0
+                                                     : precursorsToExperimentIndex[transition.PrecursorMz];
                     continue;
                 }
 
                 var experiment = (Experiment) period.CreateExperiment(out j);
                 precursorsToExperimentIndex.Add(transition.PrecursorMz, j);
-                transition.ExperimentIndex = j;
+                transition.ExperimentIndex = IsPrecursorTypeTransition(transition) ? 0 : j;
                 experiment.InitExperiment();
 
                 // Setting ScanType to 6 for QSTAR causes method export to fail. Setting it to 9 works for both AB 5600 and QSTAR
@@ -671,7 +675,15 @@ namespace BuildAnalystFullScanMethod
 
 
         }
-        
+
+        private static bool IsPrecursorTypeTransition(MethodTransition transition)
+        {
+            if (transition.ProductMz < 5)
+                return true;
+
+            return Math.Abs(transition.PrecursorMz - transition.ProductMz) < 0.01;
+        }
+
         public void WriteToTemplate(String templateMethodFile, MethodTransitions transitions)
         {
             MassSpecMethod templateMsMethod;
@@ -724,12 +736,12 @@ namespace BuildAnalystFullScanMethod
 
             foreach (var transition in transitions.Transitions)
             {
-                var extarctionStart = transition.ProductMz > 5
-                                             ? transition.ProductMz - transition.ProductWindow/2
-                                             : transition.PrecursorMz - transition.PrecursorWindow/2;
-                var extractionEnd = transition.ProductMz > 5
-                             ? transition.ProductMz + transition.ProductWindow / 2
-                             : transition.PrecursorMz + transition.PrecursorWindow / 2;
+                var extarctionStart = IsPrecursorTypeTransition(transition)
+                                          ? transition.PrecursorMz - transition.PrecursorWindow/2
+                                          : transition.ProductMz - transition.ProductWindow/2;
+                var extractionEnd = IsPrecursorTypeTransition(transition)
+                                        ? transition.PrecursorMz + transition.PrecursorWindow/2
+                                        : transition.ProductMz + transition.ProductWindow/2;
 
                 var nameParts = transition.Label.Split(new[] {'.'}, StringSplitOptions.RemoveEmptyEntries);
                 var groupName = nameParts.Length >= 2

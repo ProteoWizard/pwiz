@@ -158,6 +158,8 @@ namespace pwiz.Skyline.FileUI
             if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
                 comboOptimizing.Items.Add(ExportOptimize.DP);
             comboOptimizing.SelectedIndex = 0;
+
+            cbExportMultiQuant.Checked = Settings.Default.ExportMultiQuant;
         }
 
         protected override void OnHandleCreated(EventArgs e)
