@@ -27,7 +27,8 @@
 namespace pwiz {
 namespace SimpleCrawdad {
 
-using namespace std;
+using std::vector;
+using std::max;
 using namespace crawpeaks;
 
 struct CrawdadPeak

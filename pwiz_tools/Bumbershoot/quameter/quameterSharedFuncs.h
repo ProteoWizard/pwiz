@@ -26,8 +26,6 @@
 
 #include <vector>
 
-using namespace std;
-
 namespace freicore
 {
 namespace quameter

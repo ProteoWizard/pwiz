@@ -57,7 +57,6 @@ using namespace pwiz::SimpleCrawdad;
 using namespace crawpeaks;
 
 using namespace boost::icl;
-using namespace std;
 namespace accs = boost::accumulators;
 namespace bmi = boost::multi_index;
 
