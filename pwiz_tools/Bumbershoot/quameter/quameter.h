@@ -47,8 +47,6 @@
 
 #define QUAMETER_LICENSE			COMMON_LICENSE
 
-using boost::shared_ptr;
-
 using namespace freicore;
 using namespace pwiz::cv;
 using namespace pwiz::msdata;
