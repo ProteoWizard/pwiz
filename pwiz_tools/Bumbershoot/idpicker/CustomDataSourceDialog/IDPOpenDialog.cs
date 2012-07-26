@@ -34,6 +34,7 @@ using System.Windows.Forms;
 using IDPicker;
 using IDPicker.DataModel;
 using Microsoft.Win32;
+using NHibernate;
 
 namespace CustomDataSourceDialog
 {
@@ -267,7 +268,111 @@ namespace CustomDataSourceDialog
             return TrimmedTree(FileTreeView.Nodes[0]);
         }
 
-        private TreeNode TrimmedTree(TreeNode currentNode)
+		public TreeNode GetTreeStructure(ISession session)
+		{
+			//merge tree with tree in session
+			var sessionTree = CreateTreeFromSession(session);
+			var currentTree = TrimmedTree(FileTreeView.Nodes[0]);
+
+			var duplicateSources = GetSourcesFromTree(sessionTree);
+			RemoveSourcesFromTree(ref currentTree, duplicateSources);
+
+			return MergeTrees(sessionTree, currentTree);
+		}
+
+		private TreeNode CreateTreeFromSession(ISession session)
+		{
+			var allGroups = session.CreateSQLQuery("Select name, id from SpectrumSourceGroup").List<object[]>();
+			var unorderedGroupNodes = new List<TreeNode>();
+			foreach (var group in allGroups)
+			{
+				var groupNode = new TreeNode
+				                	{
+				                		Text = group[0].ToString(),
+										ToolTipText = group[0].ToString(),
+				                		Tag = "Folder"
+				                	};
+				var sources = session.CreateSQLQuery("select name from SpectrumSource where Group_=" + group[1]).List<object>();
+				foreach (var source in sources)
+				{
+					var sourceNode = new TreeNode()
+					                 	{
+											Text = source.ToString(),
+											ToolTipText = source.ToString(),
+					                 		Tag = "Source"
+					                 	};
+					groupNode.Nodes.Add(sourceNode);
+				}
+				unorderedGroupNodes.Add(groupNode);
+			}
+			var rootNode = (from node in unorderedGroupNodes
+			                where node.Text == "/"
+			                select node).SingleOrDefault();
+			unorderedGroupNodes.Remove(rootNode);
+			return FillNode(rootNode, ref unorderedGroupNodes);
+		}
+
+    	private TreeNode FillNode(TreeNode rootNode, ref List<TreeNode> unorderedGroupNodes)
+    	{
+    		var children = (from node in unorderedGroupNodes
+    		                where node.Text == rootNode.Text
+    		                      + (rootNode.Text == "/" ? string.Empty : "/")
+    		                      + Path.GetFileName(node.Text)
+    		                select node).ToList();
+			foreach (var child in children)
+			{
+				unorderedGroupNodes.Remove(child);
+				rootNode.Nodes.Add(FillNode(child, ref unorderedGroupNodes));
+			}
+    		return rootNode;
+    	}
+
+    	private IEnumerable<string> GetSourcesFromTree(TreeNode currentNode)
+		{
+			var sourceList = new List<string>();
+    		foreach (TreeNode node in currentNode.Nodes)
+    		{
+    			if ((string)node.Tag == "Folder")
+					sourceList.AddRange(GetSourcesFromTree(node));
+				else if ((string)node.Tag == "Source")
+					sourceList.Add(node.Text);
+    		}
+
+			return sourceList;
+		}
+
+    	private void RemoveSourcesFromTree(ref TreeNode currentNode, IEnumerable<string> duplicateSources)
+    	{
+			foreach (var source in duplicateSources)
+			{
+				var target = GetSpecificNodeByPath(currentNode, source);
+				if (target == null) continue;
+				target.Parent.Nodes.Remove(target);
+			}
+    	}
+
+    	private TreeNode MergeTrees(TreeNode mainNode, TreeNode secondaryNode)
+    	{
+    		var secondaryIndex = secondaryNode.Nodes.Cast<TreeNode>().ToDictionary(child => child.Text);
+    		for (var x = 0; x < mainNode.Nodes.Count; x++ )
+			{
+				var currentNode = mainNode.Nodes[x];
+				if ((string)currentNode.Tag == "Folder" && secondaryIndex.ContainsKey(currentNode.Text))
+				{
+					var duplicateNode = secondaryIndex[currentNode.Text];
+					secondaryIndex.Remove(currentNode.Text);
+					var replacementNode = MergeTrees(currentNode, duplicateNode);
+					mainNode.Nodes.RemoveAt(x);
+					mainNode.Nodes.Insert(x, replacementNode);
+				}
+			}
+			foreach (var kvp in secondaryIndex)
+				mainNode.Nodes.Add(kvp.Value);
+
+    		return mainNode;
+    	}
+
+    	private TreeNode TrimmedTree(TreeNode currentNode)
         {
             var newNode = new TreeNode
                               {
@@ -298,14 +403,14 @@ namespace CustomDataSourceDialog
             return newNode.Nodes.Count > 0 ? newNode : null;
         }
 
-        private TreeNode GetSpecificNode(TreeNode parent, string target)
+        private TreeNode GetSpecificNodeByPath(TreeNode parent, string target)
         {
             foreach (TreeNode child in parent.Nodes)
             {
                 if (child.ToolTipText.ToLower() == target.ToLower())
                     return child;
                 if ((string)child.Tag == "File") continue;
-                var result = GetSpecificNode(child, target);
+                var result = GetSpecificNodeByPath(child, target);
                 if (result != null)
                     return result;
             }
@@ -1137,7 +1242,7 @@ namespace CustomDataSourceDialog
 
             foreach (var item in sourceList)
             {
-                var target = GetSpecificNode(rootNode, item);
+                var target = GetSpecificNodeByPath(rootNode, item);
                 var subNode = new TreeNode
                 {
                     Text = file.FullName,
@@ -1278,7 +1383,7 @@ namespace CustomDataSourceDialog
             else
             {
                 var path = FileTreeView.SelectedNode.ToolTipText;
-                var nodeToRemove = GetSpecificNode(_unfilteredNode, path);
+                var nodeToRemove = GetSpecificNodeByPath(_unfilteredNode, path);
                 nodeToRemove.Remove();
                 if (Directory.Exists(path))
                     NavigateToFolder(path, null);

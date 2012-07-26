@@ -322,7 +322,10 @@ namespace IDPicker
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
                     fileNames = openFileDialog.GetFileNames().Distinct().ToList();
-                    treeStructure = openFileDialog.GetTreeStructure();
+					if (session != null && sender == importToolStripMenuItem)
+						treeStructure = openFileDialog.GetTreeStructure(session);
+					else
+						treeStructure = openFileDialog.GetTreeStructure();
                     if (!fileNames.Any())
                         return;
                 }
