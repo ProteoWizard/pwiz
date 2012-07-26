@@ -247,12 +247,16 @@ namespace pwiz.Skyline.Model.Results
                    other.StartRetentionTime.Equals(StartRetentionTime) &&
                    other.EndRetentionTime.Equals(EndRetentionTime) &&
                    other.Fwhm.Equals(Fwhm) &&
+                   other.Area.Equals(Area) &&
+                   other.BackgroundArea.Equals(BackgroundArea) &&
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    ArrayUtil.EqualsDeep(other.RatioStdevs, RatioStdevs) &&
                    other.Truncated.Equals(Truncated) &&
                    other.Identified.Equals(Identified) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.IsotopeDotProduct.Equals(IsotopeDotProduct) &&
+                   other.Annotations.Equals(Annotations) &&
+                   other.OptimizationStep.Equals(OptimizationStep) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
         }
@@ -274,12 +278,16 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (StartRetentionTime.HasValue ? StartRetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (EndRetentionTime.HasValue ? EndRetentionTime.Value.GetHashCode() : 0);
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
+                result = (result*397) ^ (Area.HasValue ? Area.Value.GetHashCode() : 0);
+                result = (result*397) ^ (BackgroundArea.HasValue ? BackgroundArea.Value.GetHashCode() : 0);
                 result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ RatioStdevs.GetHashCodeDeep();
                 result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
                 result = (result*397) ^ Identified.GetHashCode();
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
+                result = (result*397) ^ OptimizationStep;
+                result = (result*397) ^ Annotations.GetHashCode();
                 result = (result*397) ^ UserSet.GetHashCode();
                 return result;
             }
@@ -440,7 +448,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Fwhm == Fwhm &&
                    other.IsFwhmDegenerate.Equals(IsFwhmDegenerate) &&
                    Equals(other.IsTruncated, IsTruncated) &&
-                   other.IsIdentified.Equals(IsIdentified) &&
+                   Equals(other.IsIdentified, IsIdentified) &&
                    other.Rank == Rank &&
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
