@@ -17,11 +17,14 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -30,6 +33,9 @@ namespace pwiz.Skyline.Model.Results
     {
         private const string EXE_MZ_WIFF = "mzWiff";
         private const string EXT_WIFF_SCAN = ".scan";
+
+        private const string EXE_GROUP2_XML = "group2xml";
+        private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
 
         public static string CreateTempFileSubstitute(string filePath, int sampleIndex,
             LoadingTooSlowlyException slowlyException, ILoadMonitor loader, ref ProgressStatus status)
@@ -60,6 +66,102 @@ namespace pwiz.Skyline.Model.Results
                 FileEx.DeleteIfPossible(tempFileSubsitute);
                 throw;
             }
+        }
+
+        public static List<string> ConvertPilotFiles(IList<string> inputFiles, IProgressMonitor progress, ProgressStatus status)
+        {
+            string group2XmlPath = null;
+            var inputFilesPilotConverted = new List<string>();
+
+            for (int index = 0; index < inputFiles.Count; index++)
+            {
+                string inputFile = inputFiles[index];
+                if (!inputFile.EndsWith(BiblioSpecLiteBuilder.EXT_PILOT))
+                {
+                    inputFilesPilotConverted.Add(inputFile);
+                    continue;
+                }
+                string outputFile = Path.ChangeExtension(inputFile, BiblioSpecLiteBuilder.EXT_PILOT_XML);
+                // Avoid re-converting files that have already been converted
+                if (File.Exists(outputFile))
+                {
+                    // Avoid duplication, in case the user accidentally adds both .group and .group.xml files
+                    // for the same results
+                    if (!inputFiles.Contains(outputFile))
+                        inputFilesPilotConverted.Add(outputFile);
+                    continue;
+                }
+
+                string message = string.Format("Converting {0} to xml", Path.GetFileName(inputFile));
+                int percent = index * 100 / inputFiles.Count;
+                progress.UpdateProgress(status = status.ChangeMessage(message).ChangePercentComplete(percent));
+
+                if (group2XmlPath == null)
+                {
+                    var key = Registry.LocalMachine.OpenSubKey(KEY_PROTEIN_PILOT, false);
+                    if (key != null)
+                    {
+                        string proteinPilotCommandWithArgs = (string)key.GetValue(string.Empty);
+
+                        var proteinPilotCommandWithArgsSplit =
+                            proteinPilotCommandWithArgs.Split(new[] { "\" \"" }, StringSplitOptions.RemoveEmptyEntries);     // Remove " "%1"
+                        string path = Path.GetDirectoryName(proteinPilotCommandWithArgsSplit[0].Trim(new[] { '\\', '\"' })); // Remove preceding "
+                        if (path != null)
+                            group2XmlPath = Path.Combine(path, EXE_GROUP2_XML);
+                    }
+
+                    if (group2XmlPath == null)
+                    {
+                        throw new IOException("ProteinPilot software (trial or full version) must be installed to convert '.group' files to compatible '.group.xml' files.");
+                    }                    
+                }
+
+                // run group2xml
+                var argv = new[]
+                               {
+                                   "XML",
+                                   "\"" + inputFile + "\"",
+                                   "\"" + outputFile + "\""
+                               };
+
+                var psi = new ProcessStartInfo(group2XmlPath)
+                              {
+                                  CreateNoWindow = true,
+                                  UseShellExecute = false,
+                                  // Common directory includes the directory separator
+                                  WorkingDirectory = Path.GetDirectoryName(group2XmlPath) ?? string.Empty,
+                                  Arguments = string.Join(" ", argv.ToArray()),
+                                  RedirectStandardError = true,
+                                  RedirectStandardOutput = true,
+                              };
+
+                var sbOut = new StringBuilder();
+                var proc = Process.Start(psi);
+
+                var reader = new ProcessStreamReader(proc);
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    sbOut.AppendLine(line);
+
+                while (!proc.WaitForExit(200))
+                {
+                    if (progress.IsCanceled)
+                    {
+                        proc.Kill();
+                        return inputFilesPilotConverted;
+                    }
+                }
+
+                if (proc == null || (proc.ExitCode != 0))
+                {
+                    throw new IOException(string.Format("Failure attempting to convert file {0} to .group.xml.\n\n{1}",
+                                                        inputFile, sbOut));
+                }
+
+                inputFilesPilotConverted.Add(outputFile);
+            }
+            progress.UpdateProgress(status.ChangePercentComplete(100));
+            return inputFilesPilotConverted;
         }
 
         private static void ConvertWiffToMzxml(string filePathWiff, int sampleIndex,

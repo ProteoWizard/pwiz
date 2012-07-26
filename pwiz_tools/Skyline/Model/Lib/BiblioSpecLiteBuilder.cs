@@ -20,8 +20,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib
@@ -36,6 +38,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_DAT = ".dat";
         public const string EXT_SSL = ".ssl";
         public const string EXT_XTAN_XML = ".xtan.xml";
+        public const string EXT_PILOT = ".group";
         public const string EXT_PILOT_XML = ".group.xml";
         public const string EXT_PERCOLATOR = ".perc.xml";
         public const string EXT_PERCOLATOR_XML = "results.xml";
@@ -67,10 +70,25 @@ namespace pwiz.Skyline.Model.Lib
 
         public bool BuildLibrary(IProgressMonitor progress)
         {
-            string message = string.Format("Building {0} library", Path.GetFileName(OutputPath));
-            ProgressStatus status = new ProgressStatus(message);
-
+            ProgressStatus status = new ProgressStatus("Preparing to build library");
             progress.UpdateProgress(status);
+            if (InputFiles.Any(f => f.EndsWith(EXT_PILOT)))
+            {
+                try
+                {
+                    InputFiles = VendorIssueHelper.ConvertPilotFiles(InputFiles, progress, status);
+                    if (progress.IsCanceled)
+                        return false;
+                }
+                catch (IOException x)
+                {
+                    progress.UpdateProgress(status.ChangeErrorException(x));
+                    return false;
+                }
+            }
+
+            string message = string.Format("Building {0} library", Path.GetFileName(OutputPath));
+            progress.UpdateProgress(status = status.ChangeMessage(message));
             string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
             var blibBuilder = new BlibBuild(redundantLibrary, InputFiles)
             {
