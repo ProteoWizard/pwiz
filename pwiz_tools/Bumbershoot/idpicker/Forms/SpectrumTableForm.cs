@@ -162,6 +162,7 @@ namespace IDPicker.Forms
             public DataModel.SpectrumSource Source { get; private set; }
             public DataModel.SpectrumSourceGroup Group { get; private set; }
             public string Key { get; private set; }
+            public double BestQValue { get; private set; }
 
             #region Constructor
             public SpectrumRow(object[] queryRow, DataFilter dataFilter, IList<Grouping<GroupBy>> checkedGroupings)
@@ -171,6 +172,7 @@ namespace IDPicker.Forms
                 Spectrum = (DataModel.Spectrum) queryRow[++column];
                 Source = (DataModel.SpectrumSource) queryRow[++column];
                 Group = (DataModel.SpectrumSourceGroup) queryRow[++column];
+                BestQValue = Convert.ToDouble(queryRow[++column]);
 
                 Key = Spectrum.NativeID;
 
@@ -526,7 +528,7 @@ namespace IDPicker.Forms
         IList<Row> getSpectrumRows (DataFilter parentFilter)
         {
             lock (session)
-            return session.CreateQuery(AggregateRow.Selection + ", s, ss, ssg " +
+            return session.CreateQuery(AggregateRow.Selection + ", s, ss, ssg, MIN(psm.QValue) " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                            DataFilter.PeptideSpectrumMatchToProtein,
                                                                            DataFilter.PeptideSpectrumMatchToSpectrumSourceGroup) +
@@ -867,6 +869,7 @@ namespace IDPicker.Forms
                 if (columnIndex == keyColumn.Index) return row.Key;
                 else if (columnIndex == precursorMzColumn.Index) return row.Spectrum.PrecursorMZ;
                 else if (columnIndex == scanTimeColumn.Index) return row.Spectrum.ScanTimeInSeconds / 60.0;
+                else if (columnIndex == qvalueColumn.Index) return row.BestQValue > 1 ? Double.PositiveInfinity : row.BestQValue;
             }
             else if (baseRow is AnalysisRow)
             {

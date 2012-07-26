@@ -298,11 +298,14 @@ namespace IDPicker.Forms
                 {
                     scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Clear();
                     var scanTimeValues = precursorMassErrors.Select(o => o.ScanTime).ToList();
-                    var densityCurve = new LineItem("", getDensityCurve(scanTimeValues, 0), Color.Red, SymbolType.None);
-                    var grassPlot = new LineItem("", scanTimeValues.ToArray(), Enumerable.Repeat(0.0, scanTimeValues.Count).ToArray(), Color.Gray, SymbolType.VDash);
-                    densityCurve.Line.IsAntiAlias = true;
-                    scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
-                    scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                    if (scanTimeValues.Max() > 0)
+                    {
+                        var densityCurve = new LineItem("", getDensityCurve(scanTimeValues, 0), Color.Red, SymbolType.None);
+                        var grassPlot = new LineItem("", scanTimeValues.ToArray(), Enumerable.Repeat(0.0, scanTimeValues.Count).ToArray(), Color.Gray, SymbolType.VDash);
+                        densityCurve.Line.IsAntiAlias = true;
+                        scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
+                        scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                    }
                 }
 
                 var colorRotator = new ColorSymbolRotator();
