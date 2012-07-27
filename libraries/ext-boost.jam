@@ -39,6 +39,8 @@ import errors ;
 
 extension.declare boost ;
 
+echo SEARCHPATH [ modules.peek : search-path ] ;
+
 path-constant THIS_PATH : [ path.join [ modules.peek : search-path ] .. ] ;
 
 .boost-version = ;
