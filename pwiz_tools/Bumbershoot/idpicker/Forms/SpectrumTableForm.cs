@@ -874,7 +874,7 @@ namespace IDPicker.Forms
             else if (baseRow is AnalysisRow)
             {
                 var row = baseRow as AnalysisRow;
-                if (columnIndex == keyColumn.Index) return String.Format("{0} {1}", row.Analysis.Id, row.Analysis.Name);
+                if (columnIndex == keyColumn.Index) return row.Analysis.Name;
             }
             else if (baseRow is PeptideRow)
             {

@@ -113,7 +113,7 @@
       <Value Profile="(Default)">1</Value>
     </Setting>
     <Setting Name="DefaultMaxProteinGroupsPerPeptide" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">5</Value>
+      <Value Profile="(Default)">10</Value>
     </Setting>
     <Setting Name="DefaultDecoyPrefix" Type="System.String" Scope="User">
       <Value Profile="(Default)">r-</Value>

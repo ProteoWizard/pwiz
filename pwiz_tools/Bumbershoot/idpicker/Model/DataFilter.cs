@@ -582,6 +582,15 @@ namespace IDPicker.DataModel
                                          ").ExecuteUpdate();
                 --stepsCompleted;
                 session.CreateSQLQuery("DROP INDEX Protein_ProteinGroup").ExecuteUpdate();
+
+                // reapply protein-level filters after filtering out ambiguous PSMs
+                session.CreateSQLQuery("ALTER TABLE Protein RENAME TO TempProtein").ExecuteUpdate();
+                filterProteinsSql = filterProteinsSql.Replace("Filtered", "").Replace("JOIN Protein", "JOIN TempProtein");
+                session.CreateSQLQuery(String.Format(filterProteinsSql,
+                                                     MinimumDistinctPeptidesPerProtein,
+                                                     MinimumSpectraPerProtein)).ExecuteUpdate();
+                session.CreateSQLQuery("DROP TABLE TempProtein").ExecuteUpdate();
+
                 if (AssembleProteinGroups(session, ref stepsCompleted)) return;
             }
 

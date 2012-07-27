@@ -207,7 +207,7 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             for (size_t i=0; i < distinctAnalyses.size(); ++i)
             {
                 const Parser::Analysis& analysis = *distinctAnalyses[i];
-                error << "Analysis " << analysis.name << " (" << analysis.softwareName << " " << analysis.softwareVersion << ")" << endl;
+                error << "Analysis " << analysis.name << endl;
                 error << "\tstartTime: " << analysis.startTime << endl;
                 if (analysis.filepaths.size() > 1)
                 {
@@ -234,6 +234,7 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
                 cerr << "Warning: ProteinDatabase " << bfs::path(g_rtConfig->ProteinDatabase).filename()
                      << " does not match " << bfs::path(analysis.importSettings.proteinDatabaseFilepath).filename();
 
+            analysis.importSettings.analysisName = analysis.name;
             analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
             analysis.importSettings.maxQValue = g_rtConfig->MaxImportFDR;
             analysis.importSettings.maxResultRank = g_rtConfig->MaxResultRank;
