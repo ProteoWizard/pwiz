@@ -39,9 +39,9 @@ import errors ;
 
 extension.declare boost ;
 
-echo SEARCHPATH [ modules.peek : search-path ] ;
-
-path-constant THIS_PATH : [ path.join [ modules.peek : search-path ] .. ] ;
+local boost_build_path = [ modules.peek : search-path ] ;
+boost_build_path = $(boost_build_path[1]) ;
+path-constant THIS_PATH : [ path.join $(boost_build_path) .. ] ;
 
 .boost-version = ;
 .boost-src-location = ;
