@@ -98,7 +98,6 @@ namespace pwiz.Skyline.Controls
         public void InitializeTree(IDocumentUIContainer documentUIContainer)
         {            
             DocumentContainer = documentUIContainer;
-            DocumentContainer.ListenUI(OnDocumentChanged);
 
             // Activate double buffering (unsuccessful attempts to reduce flicker)
             DoubleBuffered = true;
@@ -149,8 +148,6 @@ namespace pwiz.Skyline.Controls
         {
             if (_pickTimer != null)
                 _pickTimer.Tick -= tick_ShowPickList;
-            if (DocumentContainer != null)
-                DocumentContainer.UnlistenUI(OnDocumentChanged);
             base.Dispose(disposing);
         }
 
@@ -248,9 +245,7 @@ namespace pwiz.Skyline.Controls
         /// Handler for a document changed event raised on the main document
         /// window.  Tip and capture are removed, and all nodes in the tree updated.
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
+        public void OnDocumentChanged(object sender, DocumentChangedEventArgs e)
         {
             if (_updateLockCountDoc > 0)
                 return;

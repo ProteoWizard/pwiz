@@ -389,15 +389,19 @@ namespace pwiz.Skyline
                     _alignToReplicate = -1;
                 }
             }
-            // Update results combo UI
+            // Update results combo UI and sequence tree
+            var e = new DocumentChangedEventArgs(documentPrevious);
             if (_sequenceTreeForm != null)
+            {
+                // This has to be done before the graph UI updates, since it updates
+                // the tree, and the graph UI depends on the tree being up to date.
                 _sequenceTreeForm.UpdateResultsUI(settingsNew, settingsOld);
+                _sequenceTreeForm.SequenceTree.OnDocumentChanged(this, e);
+            }
 
             // Fire event to allow listeners to update.
-            // This has to be done before the graph UI updates, since it updates
-            // the tree, and the graph UI depends on the tree being up to date.
             if (DocumentUIChangedEvent != null)
-                DocumentUIChangedEvent(this, new DocumentChangedEventArgs(documentPrevious));
+                DocumentUIChangedEvent(this, e);
 
             // Update graph pane UI
             UpdateGraphUI(settingsOld, docIdChanged);
