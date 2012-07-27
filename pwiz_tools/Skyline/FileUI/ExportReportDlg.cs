@@ -107,7 +107,8 @@ namespace pwiz.Skyline.FileUI
                                         PercentOfWait = percentOfWait
                                     };
             database.AddSrmDocument(document);
-            _database = database;
+            if (!longWaitBroker.IsCanceled)
+                _database = database;
             return _database;
         }
 
@@ -277,8 +278,13 @@ namespace pwiz.Skyline.FileUI
         {
             try
             {
+                var database = GetDatabase(this);
+                // If database is null, than loading must have been cancelled.
+                if (database == null)
+                    return;
+
                 PreviewReportDlg previewReportDlg = new PreviewReportDlg();
-                previewReportDlg.SetResults(GetReport().Execute(GetDatabase(this)));
+                previewReportDlg.SetResults(GetReport().Execute(database));
                 previewReportDlg.Show(Owner);
             }
             catch (Exception x)

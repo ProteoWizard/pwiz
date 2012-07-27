@@ -229,6 +229,12 @@ namespace pwiz.Skyline.FileUI
 
         public void ShowPreview()
         {
+            if (_columns.Count == 0)
+            {
+                MessageBox.Show(this, "A report must have at least one column.", Program.Name);
+                return;
+            }
+
             Report report = GetReport();
             ResultSet resultSet = report.Execute(_database);
             PreviewReportDlg previewReportDlg = new PreviewReportDlg();
