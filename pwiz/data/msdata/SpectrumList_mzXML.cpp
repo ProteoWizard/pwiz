@@ -850,7 +850,7 @@ string SpectrumList_mzXMLImpl::getPrecursorID(int precursorMsLevel, size_t index
         if (index && (cachedMsLevel == 0))
         {
             // populate the missing MS level
-            SpectrumPtr s = spectrum(index-1, false);
+            SpectrumPtr s = spectrum(index, false);
             cachedMsLevel = s->cvParam(MS_ms_level).valueAs<int>();
         }
         if (cachedMsLevel == precursorMsLevel) 

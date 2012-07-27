@@ -271,6 +271,7 @@ void BuildParser::buildTables(PSM_SCORE_TYPE scoreType, string specFilename) {
 
     // for reading spectrum file
     if( specReader_ ) {
+        Verbosity::status("Loading %s.", curSpecFileName_.c_str());
         specReader_->openFile(curSpecFileName_.c_str());
         Verbosity::status("Reading spectra from %s.", curSpecFileName_.c_str());
     } else {
