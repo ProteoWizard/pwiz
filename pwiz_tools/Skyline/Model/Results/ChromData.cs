@@ -299,7 +299,12 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsIdentified { get; set; }
 
-        private int PeakCount { get; set; }
+        public int PeakCount { get; set; }
+        /// <summary>
+        /// Use proportion of total peaks found to avoid picking super small peaks
+        /// in unrefined data
+        /// </summary>
+        public double PeakCountScore { get { return GetPeakCountScore(PeakCount, Count); } }
         public double TotalArea { get; private set; }
         public double ProductArea { get; private set; }
         public double MaxHeight { get; private set; }
@@ -472,16 +477,21 @@ namespace pwiz.Skyline.Model.Results
 
         private void UpdateProductArea()
         {
-            ProductArea = ScorePeak(TotalArea, PeakCount, Count);
+            ProductArea = ScorePeak(TotalArea, PeakCountScore);
         }
 
-        public static double ScorePeak(double totalArea, double peakCount, double totalCount)
+        private static readonly double LOG10 = Math.Log(10);
+
+        public static double ScorePeak(double totalArea, double peakCount)
         {
-            // Use proportion of total peaks found to avoid picking super small peaks
-            // in unrefined data
-            if (totalCount > 4)
-                return totalArea * Math.Pow(10.0, 4.0 * peakCount / totalCount);
-            return totalArea * Math.Pow(10.0, peakCount);
+            return Math.Log(totalArea) + LOG10*peakCount;
+        }
+
+        public static double GetPeakCountScore(double peakCount, double totalCount)
+        {
+            return totalCount > 4
+                       ? 4.0*peakCount/totalCount
+                       : peakCount;
         }
 
         protected override void ClearItems()

@@ -532,8 +532,10 @@ namespace pwiz.Skyline.Model.Results
             Add(peak);
         }
 
-        private int PeakCount { get; set; }
+        private double PeakCount { get; set; }
         private double TotalArea { get; set; }
+        private double PeakCountStandard { get; set; }
+        private double TotalAreaStandard { get; set; }
         private int IdentifiedCount { get; set; }
 
         public double ProductArea { get; private set; }
@@ -565,15 +567,29 @@ namespace pwiz.Skyline.Model.Results
         {
             if (dataPeak.PeakGroup != null)
             {
-                PeakCount++;
+                if (dataPeak.Data.IsStandardType)
+                {
+                    PeakCountStandard += dataPeak.PeakGroup.PeakCountScore;
+                    TotalAreaStandard += dataPeak.PeakGroup.TotalArea;
+                }
+                else
+                {
+                    PeakCount += dataPeak.PeakGroup.PeakCountScore;
+                    TotalArea += dataPeak.PeakGroup.TotalArea;
+                }
 
-                TotalArea += dataPeak.PeakGroup.ProductArea;
-
-                ProductArea = TotalArea * Math.Pow(10.0, PeakCount);
+                ProductArea = ScorePeak(TotalArea, PeakCount, TotalAreaStandard, PeakCountStandard);
 
                 if (dataPeak.PeakGroup.IsIdentified)
                     IdentifiedCount++;
             }
+        }
+
+        private static readonly double LOG10 = Math.Log(10);
+
+        private static double ScorePeak(double totalArea, double peakCount, double totalAreaStandard, double peakCountStandard)
+        {
+            return Math.Log(totalArea + totalAreaStandard) + LOG10*(peakCount + peakCountStandard);
         }
 
         private void SubtractPeak(PeptideChromDataPeak dataPeak)

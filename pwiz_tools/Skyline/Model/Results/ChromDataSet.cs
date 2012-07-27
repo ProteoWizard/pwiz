@@ -57,6 +57,8 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionGroupDocNode DocNode { get; set; }
 
+        public bool IsStandardType { get; set; }
+
         public float PrecursorMz
         {
             get { return _listChromData.Count > 0 ? _listChromData[0].Key.Precursor : 0; }

@@ -301,14 +301,21 @@ namespace pwiz.Skyline.Model.Results
             listMzPrecursors.Sort((p1, p2) => p1.PrecursorMz.CompareTo(p2.PrecursorMz));
 
             bool singleMatch = provider.IsSingleMzMatch;
+            var setInternalStandards = new HashSet<IsotopeLabelType>(
+                _document.Settings.PeptideSettings.Modifications.InternalStandardTypes);
 
             foreach (var chromDataSet in GetChromDataSets(provider))
             {
                 foreach (var matchingGroup in GetMatchingGroups(chromDataSet, listMzPrecursors, singleMatch))
                 {
+                    var peptidePercursor = matchingGroup.Key;
+                    bool isStandard = peptidePercursor != null &&
+                        setInternalStandards.Contains(peptidePercursor.NodeGroup.TransitionGroup.LabelType);
+
                     AddChromDataSet(provider.IsProcessedScans,
                                     matchingGroup.Value,
-                                    matchingGroup.Key,
+                                    peptidePercursor,
+                                    isStandard,
                                     dictPeptideChromData,
                                     listChromData);
                 }
@@ -392,6 +399,7 @@ namespace pwiz.Skyline.Model.Results
         private void AddChromDataSet(bool isProcessedScans,
                                             ChromDataSet chromDataSet,
                                             PeptidePrecursorMz peptidePrecursorMz,
+                                            bool isStandardType,
                                             IDictionary<int, PeptideChromDataSets> dictPeptideChromData,
                                             ICollection<PeptideChromDataSets> listChromData)
         {
@@ -416,6 +424,7 @@ namespace pwiz.Skyline.Model.Results
                 dictPeptideChromData.Add(id, pepDataSets);
             }
             chromDataSet.DocNode = peptidePrecursorMz.NodeGroup;
+            chromDataSet.IsStandardType = isStandardType;
             pepDataSets.DataSets.Add(chromDataSet);
         }
 

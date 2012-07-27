@@ -326,8 +326,8 @@ namespace pwiz.Skyline.Model
                         groupArea += tranArea/result.Count;
                         groupTranMeasured += tranMeasured/result.Count;
                     }
-                    productArea += ChromDataPeakList.ScorePeak(groupArea, groupTranMeasured,
-                        nodeGroup.Children.Count);
+                    productArea += ChromDataPeakList.ScorePeak(groupArea,
+                        ChromDataPeakList.GetPeakCountScore(groupTranMeasured, nodeGroup.Children.Count));
                 }
                 if (productArea > bestArea)
                 {
