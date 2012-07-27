@@ -485,11 +485,11 @@ namespace IDPicker.DataModel
                   WHERE psm.Rank = 1
                   GROUP BY pi.Protein
                   HAVING {0} <= COUNT(DISTINCT psm.Peptide) AND
-                         {1} <= COUNT(DISTINCT psm.Spectrum);
-                  CREATE UNIQUE INDEX FilteredProtein_Accession ON FilteredProtein (Accession);";
+                         {1} <= COUNT(DISTINCT psm.Spectrum);";
             session.CreateSQLQuery(String.Format(filterProteinsSql,
                                                  MinimumDistinctPeptidesPerProtein,
                                                  MinimumSpectraPerProtein)).ExecuteUpdate();
+            session.CreateSQLQuery("CREATE UNIQUE INDEX FilteredProtein_Accession ON FilteredProtein (Accession);").ExecuteUpdate();
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide spectrum matches...", ++stepsCompleted, null)))
                 return;
@@ -584,12 +584,14 @@ namespace IDPicker.DataModel
                 session.CreateSQLQuery("DROP INDEX Protein_ProteinGroup").ExecuteUpdate();
 
                 // reapply protein-level filters after filtering out ambiguous PSMs
-                session.CreateSQLQuery("ALTER TABLE Protein RENAME TO TempProtein").ExecuteUpdate();
+                session.CreateSQLQuery(@"DROP INDEX FilteredProtein_Accession;
+                                         ALTER TABLE Protein RENAME TO TempProtein").ExecuteUpdate();
                 filterProteinsSql = filterProteinsSql.Replace("Filtered", "").Replace("JOIN Protein", "JOIN TempProtein");
                 session.CreateSQLQuery(String.Format(filterProteinsSql,
                                                      MinimumDistinctPeptidesPerProtein,
                                                      MinimumSpectraPerProtein)).ExecuteUpdate();
-                session.CreateSQLQuery("DROP TABLE TempProtein").ExecuteUpdate();
+                session.CreateSQLQuery(@"CREATE UNIQUE INDEX FilteredProtein_Accession ON Protein (Accession);
+                                         DROP TABLE TempProtein").ExecuteUpdate();
 
                 if (AssembleProteinGroups(session, ref stepsCompleted)) return;
             }
