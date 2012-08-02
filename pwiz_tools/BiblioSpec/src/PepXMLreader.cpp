@@ -32,6 +32,7 @@ namespace bal = boost::algorithm;
 
 namespace BiblioSpec {
 
+static const int STATE_INIT = -1;
 static const int STATE_ROOT = 0;
 static const int STATE_PROPHET_SUMMARY = 1;
 static const int STATE_SEARCH_HIT_BEST = 5;
@@ -44,7 +45,7 @@ PepXMLreader::PepXMLreader(BlibBuilder& maker,
   analysisType_(UNKNOWN_ANALYSIS),
   scoreType_(PEPTIDE_PROPHET_SOMETHING),
   lastFilePosition_(0),
-  state(STATE_ROOT)
+  state(STATE_INIT)
 {
     this->setFileName(xmlfilename); // this is for the saxhandler
     numFiles = 0;
@@ -61,7 +62,15 @@ PepXMLreader::~PepXMLreader() {
 
 void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
 {
-   if(isElement("peptideprophet_summary",name)) {
+   // Make sure this is actually a pepXML file and not some other XML format
+   // to a pepXML extension (.pep.xml or .pepXML).
+   if(state == STATE_INIT) {
+       if (!isElement("msms_pipeline_analysis", name)) {
+           throw BlibException(false, "Invalid pepXML root tag '%s' must be 'msms_pipeline_analysis'.",
+                               name);
+       }
+       state = STATE_ROOT;
+   } else if(isElement("peptideprophet_summary",name)) {
        analysisType_ = PEPTIDE_PROPHET_ANALYSIS;
        state = STATE_PROPHET_SUMMARY;
    } else if(isElement("analysis_summary", name)) {
@@ -93,7 +102,7 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
    }
 
    //get massType and search engine
-   if(isElement("search_summary",name)) {
+   else if(isElement("search_summary",name)) {
        if (analysisType_ == UNKNOWN_ANALYSIS ) {
            const char* search_engine = getAttrValue("search_engine",attr);
            if(strncmp("Spectrum Mill", search_engine,
