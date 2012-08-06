@@ -238,7 +238,8 @@ project pwiz
         <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
         <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
-        <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF        <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
+        <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
+        <toolset>msvc,<toolset-msvc:version>11.0:<define>_HAS_TR1
         
         <conditional>@secure-scl-throws
 
@@ -367,6 +368,7 @@ generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/proteome/Version.cpp : pwiz pro
 
 # TODO: collecting global revision info should use revision info that's already been collected;
 # TODO: especially for things like SeeMS which have some MSVC-generated files that aren't versioned
+echo PWIZ_ROOT_PATH $(PWIZ_ROOT_PATH) ;
 local revision-info =
     [ generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : pwiz : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
             $(PWIZ_ROOT_PATH)/Jamroot.jam
