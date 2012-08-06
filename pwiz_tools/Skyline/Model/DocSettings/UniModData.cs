@@ -16,15 +16,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using pwiz.Skyline.Properties;
+
 namespace pwiz.Skyline.Model.DocSettings
 {
     public static class UniModData
     {
         public static readonly UniModModificationData[] UNI_MOD_DATA = new[]
         {
+
+            // Not L10N for entire file.
             new UniModModificationData
             {
-                 Name = "Acetyl (K)", 
+                 Name = "Acetyl (K)",  
                  AAs = "K", LabelAtoms = LabelAtoms.None, Formula = "H2C2O", ID = 1, 
                  Structural = true, Hidden = false, 
             },

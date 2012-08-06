@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.SettingsUI
                 _regression = value;
                 if (_regression == null)
                 {
-                    textName.Text = "";
+                    textName.Text = string.Empty;
                     gridRegression.Rows.Clear();
                     textStepSize.Text = CollisionEnergyRegression.DEFAULT_STEP_SIZE.ToString(CultureInfo.CurrentCulture);
                     textStepCount.Text = CollisionEnergyRegression.DEFAULT_STEP_COUNT.ToString(CultureInfo.CurrentCulture);
@@ -97,7 +98,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, "The collision energy regression '{0}' already exists.", name);
+                helper.ShowTextBoxError(textName, Resources.EditCEDlg_OkDialog_The_collision_energy_regression__0__already_exists, name);
                 return;
             }
 
@@ -126,7 +127,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (conversions.Count == 0)
             {
-                MessageDlg.Show(this, "Collision energy regressions require at least one regression function.");
+                MessageDlg.Show(this, Resources.EditCEDlg_OkDialog_Collision_energy_regressions_require_at_least_one_regression_function);
                 return;
             }
 
@@ -157,9 +158,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (0 >= charge || charge > 5)
             {
-                InvalidCell(e, cell,
-                    "The entry '{0}' is not a valid charge. Precursor charges must be between 1 and 5.",
-                    charge);
+                InvalidCell(e, cell, Resources.EditCEDlg_ValidateCharge_The_entry__0__is_not_a_valid_charge_Precursor_charges_must_be_between_1_and_5, charge);
                 return false;
             }
 
@@ -197,7 +196,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                InvalidCell(e, cell, "The entry {0} is not valid.", value);
+                InvalidCell(e, cell, Resources.EditCEDlg_ValidateCell_The_entry__0__is_not_valid, value);
                 return false;
             }
 
@@ -242,21 +241,20 @@ namespace pwiz.Skyline.SettingsUI
 
             // Parse charge
             if (!int.TryParse(values[0].Trim(), out tempInt))
-                message = string.Format("the value {0} is not a valid charge.  " +
-                    "Charges must be integer values between 1 and 5.", values[0]);
+                message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_charge_Charges_must_be_integer_values_between_1_and_5, values[0]);
 
             // Parse slope
             else if (!double.TryParse(values[1].Trim(), out tempDouble))
-                message = string.Format("the value {0} is not a valid slope.", values[1]);
+                message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_slope, values[1]);
 
             // Parse intercept
             else if (!double.TryParse(values[2].Trim(), out tempDouble))
-                message = string.Format("the value {0} is not a valid intercept.", values[2]);
+                message = string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_the_value__0__is_not_a_valid_intercept, values[2]);
 
             else
                 return true;
 
-            MessageDlg.Show(this, string.Format("On line {0}, {1}", lineNumber, message));
+            MessageDlg.Show(this, string.Format(Resources.EditCEDlg_ValidateRegressionCellValues_On_line__0__1__, lineNumber, message));
             return false;
         }
 
@@ -284,7 +282,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (!hasRegressionLines)
             {
-                MessageDlg.Show(this, "Insufficient data found to calculate a new regression.");
+                MessageDlg.Show(this, Resources.EditCEDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression);
                 return;
             }
 
@@ -297,8 +295,8 @@ namespace pwiz.Skyline.SettingsUI
                 gridRegression.Rows.Add(new object[]
                                             {
                                                 i.ToString(CultureInfo.CurrentCulture),
-                                                string.Format("{0:F04}", regressionLine.Slope),
-                                                string.Format("{0:F04}", regressionLine.Intercept)
+                                                string.Format("{0:F04}", regressionLine.Slope), // Not L10N
+                                                string.Format("{0:F04}", regressionLine.Intercept) // Not L10N
                                             });
             }
         }
@@ -323,9 +321,9 @@ namespace pwiz.Skyline.SettingsUI
                     continue;
                 listGraphData.Add(new RegressionGraphData
                                       {
-                                          Title = string.Format("Collision Energy Regression Charge {0}", charge),
-                                          LabelX = "Precursor m/z",
-                                          LabelY = "Collision Energy",
+                                          Title = string.Format(Resources.EditCEDlg_ShowGraph_Collision_Energy_Regression_Charge__0__, charge),
+                                          LabelX = Resources.EditCEDlg_ShowGraph_Precursor_m_z,
+                                          LabelY = Resources.EditCEDlg_ShowGraph_Collision_Energy,
                                           XValues = regressionData.PrecursorMzValues,
                                           YValues = regressionData.BestValues,
                                           RegressionLine = regressionData.RegressionLine,
@@ -346,7 +344,8 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a collision energy regression.", Program.Name);
+                MessageBox.Show(this, Resources.EditCEDlg_GetRegressionDatas_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_collision_energy_regression,
+                                Program.Name);
                 return null;
             }
 

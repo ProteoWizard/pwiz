@@ -48,9 +48,9 @@ namespace pwiz.Skyline.Controls
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FindResultsForm));
             this.listView = new pwiz.Common.Controls.DoubleBufferedListView();
-            this.colHdrLocation = new System.Windows.Forms.ColumnHeader();
-            this.colHdrType = new System.Windows.Forms.ColumnHeader();
-            this.colHdrDisplayText = new System.Windows.Forms.ColumnHeader();
+            this.colHdrLocation = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colHdrType = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.colHdrDisplayText = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // listView
@@ -61,47 +61,37 @@ namespace pwiz.Skyline.Controls
             this.colHdrLocation,
             this.colHdrType,
             this.colHdrDisplayText});
-            this.listView.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.listView, "listView");
             this.listView.FullRowSelect = true;
-            this.listView.Location = new System.Drawing.Point(0, 0);
             this.listView.Name = "listView";
             this.listView.OwnerDraw = true;
-            this.listView.Size = new System.Drawing.Size(718, 262);
-            this.listView.TabIndex = 0;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
             this.listView.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.listView_DrawColumnHeader);
+            this.listView.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listView_DrawSubItem);
             this.listView.ItemActivate += new System.EventHandler(this.listView_ItemActivate);
             this.listView.Resize += new System.EventHandler(this.listView_Resize);
-            this.listView.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listView_DrawSubItem);
             // 
             // colHdrLocation
             // 
-            this.colHdrLocation.Text = "Location";
-            this.colHdrLocation.Width = 242;
+            resources.ApplyResources(this.colHdrLocation, "colHdrLocation");
             // 
             // colHdrType
             // 
-            this.colHdrType.Text = "Type";
-            this.colHdrType.Width = 117;
+            resources.ApplyResources(this.colHdrType, "colHdrType");
             // 
             // colHdrDisplayText
             // 
-            this.colHdrDisplayText.Text = "Text";
-            this.colHdrDisplayText.Width = 498;
+            resources.ApplyResources(this.colHdrDisplayText, "colHdrDisplayText");
             // 
             // FindResultsForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(718, 262);
             this.Controls.Add(this.listView);
             this.HideOnClose = true;
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.Name = "FindResultsForm";
-            this.TabText = "Find Results";
-            this.Text = "Find Results";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.FindResultsForm_KeyDown);
             this.ResumeLayout(false);
 

@@ -23,6 +23,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -57,9 +58,9 @@ namespace pwiz.Skyline.Controls.Graphs
         protected override void UpdateAxes()
         {
             if (RTValue != RTPeptideValue.All)
-                YAxis.Title.Text = RTValue + " Time";
+                YAxis.Title.Text = TextUtil.SpaceSeparate(RTValue.ToString(), Resources.RTPeptideGraphPane_UpdateAxes_Time);
             else
-                YAxis.Title.Text = "Retention Time";
+                YAxis.Title.Text = Resources.RTPeptideGraphPane_UpdateAxes_Retention_Time;
 
             UpdateAxes(false);
         }

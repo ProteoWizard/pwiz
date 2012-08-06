@@ -26,6 +26,7 @@ using System.Threading;
 using NHibernate;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.ProteomeDatabase.Util;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -34,7 +35,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
     public class BlibDb : IDisposable
     {
         private static readonly Regex REGEX_LSID =
-            new Regex("urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)");
+            new Regex("urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)"); // Not L10N
 
         private ILongWaitBroker WaitBroker { get; set; }
 
@@ -108,7 +109,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             {
                 return
                     Convert.ToInt32(
-                        session.CreateQuery("SELECT Count(P.Id) From " + typeof(DbRefSpectra) + " P").UniqueResult());
+                        session.CreateQuery("SELECT Count(P.Id) From " + typeof(DbRefSpectra) + " P").UniqueResult()); // Not L10N
             }
         }
 
@@ -122,9 +123,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public BiblioSpecLiteLibrary MinimizeLibrary(BiblioSpecLiteSpec librarySpec,
             Library library, SrmDocument document)
         {
-            UpdateProgressMessage(string.Format("Minimizing library {0}", library.Name));
+            UpdateProgressMessage(string.Format(Resources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name));
 
-            string libAuthority = "unknown.org";
+            string libAuthority = "unknown.org"; // Not L10N
             string libId = library.Name;
             // CONSIDER: Use version numbers of the original library?
             int majorVer = 1;
@@ -176,7 +177,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 libId = ((NistLibrary)library).Id ?? libId;
             }
             // Use a very specific LSID, since it really only matches this document.
-            string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:minimal:{1}:{2}:{3}.{4}",
+            string libLsid = string.Format("urn:lsid:{0}:spectral_libary:bibliospec:minimal:{1}:{2}:{3}.{4}", // Not L10N
                 libAuthority, libId, Guid.NewGuid(), majorVer, minorVer);
 
             var dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>();
@@ -431,9 +432,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     if(foundBestSpectrum)
                     {
                         throw new InvalidDataException(
-                                string.Format("Multiple reference spectra found for peptide {0} in the library {1}.", 
-                                              refSpectra.PeptideModSeq, 
-                                              FilePath));
+                            string.Format(Resources.BlibDb_BuildRefSpectra_Multiple_reference_spectra_found_for_peptide__0__in_the_library__1__,
+                                          refSpectra.PeptideModSeq, FilePath));
                     }
                     
                     foundBestSpectrum = true;
@@ -460,7 +460,9 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     spectrumSourceId = SaveSourceFile(session, spectrum.FilePath);
                     if (spectrumSourceId == 0)
                     {
-                        throw new SQLiteException(String.Format("Error getting database Id for file {0}.", spectrum.FilePath));
+                        throw new SQLiteException(
+                            String.Format(Resources.BlibDb_BuildRefSpectra_Error_getting_database_Id_for_file__0__,
+                                          spectrum.FilePath));
                     }
 
                     dictFiles.Add(spectrum.FilePath, spectrumSourceId);
@@ -546,11 +548,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             for (int i = 0, iAa = 0; i < modSeq.Length; i++)
             {
                 char c = modSeq[i];
-                if (c != '[')
+                if (c != '[') // Not L10N
                     iAa++;
                 else
                 {
-                    int iEnd = modSeq.IndexOf(']', ++i);
+                    int iEnd = modSeq.IndexOf(']', ++i); // Not L10N
                     double modMass;
                     if (double.TryParse(modSeq.Substring(i, iEnd - i), out modMass))
                     {
@@ -613,7 +615,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             if (!pepLibraries.HasLibraries)
                 return document;
             if (!pepLibraries.IsLoaded)
-                throw new InvalidOperationException("Libraries must be fully loaded before they can be minimzed.");
+                throw new InvalidOperationException(Resources.BlibDb_MinimizeLibraries_Libraries_must_be_fully_loaded_before_they_can_be_minimzed);
 
             // Separate group nodes by the libraries to which they refer
             var setUsedLibrarySpecs = new HashSet<LibrarySpec>();
@@ -649,8 +651,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         string nameMin = librarySpec.Name;
                         // Avoid adding the modifier a second time, if it has
                         // already been done once.
-                        if (!nameMin.EndsWith(nameModifier + ")"))
-                            nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier);
+                        if (!nameMin.EndsWith(nameModifier + ")")) // Not L10N
+                            nameMin = string.Format("{0} ({1})", librarySpec.Name, nameModifier); // Not L10N
                         var librarySpecMin = new BiblioSpecLiteSpec(nameMin, blibDb.FilePath);
 
                         listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,

@@ -25,6 +25,7 @@ using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -36,6 +37,7 @@ namespace pwiz.Skyline.Model
     {
         public static bool IsAA(char c)
         {
+            // Not L10N
             switch (c)
             {
                 case 'A':
@@ -74,6 +76,7 @@ namespace pwiz.Skyline.Model
             // Indeterminate symbols
             switch (c)
             {
+                // Not L10N
                 case 'B':   // Aspartic acid or Asparagine
                 // TODO: Should J be allowed?
                 case 'J':
@@ -91,16 +94,16 @@ namespace pwiz.Skyline.Model
             foreach (char c in seq)
             {
                 if (!IsAA(c))
-                    throw new InvalidDataException(string.Format("Invalid amino acid '{0}' found in the value '{1}'.", c, seq));
+                    throw new InvalidDataException(string.Format(Resources.AminoAcid_ValidateAAList_Invalid_amino_acid__0__found_in_the_value__1__, c, seq));
                 if (seen.Contains(c))
-                    throw new InvalidDataException(string.Format("The amino acid '{0}' is repeated in the value '{1}'.", c, seq));
+                    throw new InvalidDataException(string.Format(Resources.AminoAcid_ValidateAAList_The_amino_acid__0__is_repeated_in_the_value__1__, c, seq));
                 seen.Add(c);
             }
         }
 
         public static int ToIndex(char c)
         {
-            return c - 'A';
+            return c - 'A'; // Not L10N
         }
 
         public static int Count(string seq, params char[] aas)
@@ -171,14 +174,14 @@ namespace pwiz.Skyline.Model
         {
             string parse = desc;
             double totalMass = calc.ParseMass(ref parse);
-            if (parse.Length > 0 && parse[0] == '-')
+            if (parse.Length > 0 && parse[0] == '-') // Not L10N
             {
                 parse = parse.Substring(1);
                 totalMass -= calc.ParseMass(ref parse);
             }
 
             if (totalMass == 0.0 || parse.Length > 0)
-                throw new ArgumentException(string.Format("The expression '{0}' is not a valid chemical formula.", desc));
+                throw new ArgumentException(string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula, desc));
 
             return Math.Round(totalMass, MassPrecision);
         }
@@ -191,7 +194,7 @@ namespace pwiz.Skyline.Model
             string part1 = desc.Substring(0, desc.Length - parse.Length).Trim();
             string part2 = string.Empty;
 
-            if (parse.Length > 0 && parse[0] == '-')
+            if (parse.Length > 0 && parse[0] == '-') // Not L10N
             {
                 parse = parse.Substring(1);
                 part2 = parse.Trim();
@@ -200,7 +203,7 @@ namespace pwiz.Skyline.Model
             }
 
             if ((part1.Length == 0 && part2.Length == 0) || parse.Length > 0)
-                throw new ArgumentException(string.Format("The expression '{0}' is not a valid chemical formula.", desc));
+                throw new ArgumentException(string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula, desc));
 
             return new[] { part1, part2 };
         }
@@ -214,14 +217,14 @@ namespace pwiz.Skyline.Model
         {
             string parse = desc;
             calc.ParseCounts(ref parse, dictAtomCounts, false);
-            if (parse.Length > 0 && parse[0] == '-')
+            if (parse.Length > 0 && parse[0] == '-') // Not L10N
             {
                 parse = parse.Substring(1);
                 calc.ParseCounts(ref parse, dictAtomCounts, true);
             }
 
             if (parse.Length > 0)
-                throw new ArgumentException(string.Format("The expression '{0}' is not a valid chemical formula.", desc));
+                throw new ArgumentException(string.Format(Resources.SequenceMassCalc_ParseModMass_The_expression__0__is_not_a_valid_chemical_formula, desc));
         }
 
         public static string GetModDiffDescription(double massDiff)
@@ -235,15 +238,15 @@ namespace pwiz.Skyline.Model
                 // Narrow format allows for removal of .0 when decimal is not present
                 // One of the more important cases is 15N labeling which produces a lot of
                 // [+1] and [+2] values.  Also assumed to be for UI, so use local format.
-                return string.Format("[{0}{1}]", (massDiff > 0 ? "+" : ""), Math.Round(massDiff, 1));
+                return string.Format("[{0}{1}]", (massDiff > 0 ? "+" : string.Empty), Math.Round(massDiff, 1)); // Not L10N
             else
                 // Non-narrow format is used for library look-up and must be consistent with LibKey format
-                return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F01}]", (massDiff > 0 ? "+" : ""), massDiff);
+                return string.Format(CultureInfo.InvariantCulture, "[{0}{1:F01}]", (massDiff > 0 ? "+" : string.Empty), massDiff); // Not L10N
         }
 
         public static string GetMassIDescripion(int massIndex)
         {
-            return string.Format("[M{0}{1}]", massIndex > 0 ? "+" : "", massIndex);            
+            return string.Format("[M{0}{1}]", massIndex > 0 ? "+" : string.Empty, massIndex); // Not L10N 
         }
 
         private readonly BioMassCalc _massCalc;
@@ -300,6 +303,8 @@ namespace pwiz.Skyline.Model
         public SequenceMassCalc(MassType type)
         {
             _massCalc = new BioMassCalc(type);
+
+            // Not L10N
 
             // Mass of a proton, i.e. +1 positive charge, hydrogen atom without its electron.
             // See http://antoine.frostburg.edu/chem/senese/101/atoms/index.shtml
@@ -391,9 +396,9 @@ namespace pwiz.Skyline.Model
                 {
                     if (mod.Terminus != null)
                     {
-                        double mass = GetModMass('\0', mod);
+                        double mass = GetModMass('\0', mod); // Not L10N
                         double unexplainedMass;
-                        string formula = GetModFormula('\0', mod, out unexplainedMass);
+                        string formula = GetModFormula('\0', mod, out unexplainedMass); // Not L10N
                         if (mod.Terminus == ModTerminus.C)
                         {
                             modMasses._massModCleaveC += mass;
@@ -410,7 +415,7 @@ namespace pwiz.Skyline.Model
                     else
                     {
                         // Label all amino acids with this label
-                        for (char aa = 'A'; aa <= 'Z'; aa++)
+                        for (char aa = 'A'; aa <= 'Z'; aa++) // Not L10N
                         {
                             if (AMINO_FORMULAS[aa] != null)
                                 AddMod(aa, mod, modMasses._aminoModMasses, modMasses._aminoModMassesExtra, modMasses._aminoModFormulas);
@@ -772,8 +777,10 @@ namespace pwiz.Skyline.Model
                     int i = isotopeDists.MassIndexToPeakIndex(massIndex);
                     if (0 > i || i >= isotopeDists.CountPeaks)
                     {
-                        throw new IndexOutOfRangeException(string.Format("Precursor isotope {0} is outside the isotope distribution {1} to {2}.",
-                                GetMassIDescripion(massIndex), isotopeDists.PeakIndexToMassIndex(0), isotopeDists.PeakIndexToMassIndex(isotopeDists.CountPeaks - 1)));
+                        throw new IndexOutOfRangeException(
+                            string.Format(Resources.SequenceMassCalc_GetFragmentMass_Precursor_isotope__0__is_outside_the_isotope_distribution__1__to__2__,
+                                          GetMassIDescripion(massIndex), isotopeDists.PeakIndexToMassIndex(0),
+                                          isotopeDists.PeakIndexToMassIndex(isotopeDists.CountPeaks - 1)));
                     }
                     return isotopeDists.GetMassI(massIndex);
                 }
@@ -815,7 +822,7 @@ namespace pwiz.Skyline.Model
                 case IonType.y: return _massDiffY + modMasses._massModCleaveC;
                 case IonType.z: return _massDiffZ + modMasses._massModCleaveC;
                 default:
-                    throw new ArgumentException("Invalid ion type");
+                    throw new ArgumentException(Resources.SequenceMassCalc_GetTermMass_Invalid_ion_type);
             }
         }
 
@@ -835,6 +842,8 @@ namespace pwiz.Skyline.Model
                     _aminoMasses[i] = _massCalc.CalculateMass(formula);
             }
 
+            // Not L10N
+
             // ReSharper disable CharImplicitlyConvertedToNumeric
             // Handle values for non-amino acids
             // Wikipedia says Aspartic acid or Asparagine
@@ -852,6 +861,8 @@ namespace pwiz.Skyline.Model
 
         static SequenceMassCalc()
         {
+            // Not L10N
+
             // ReSharper disable CharImplicitlyConvertedToNumeric
             AMINO_FORMULAS['a'] = AMINO_FORMULAS['A'] = "C3H5ON";
             AMINO_FORMULAS['c'] = AMINO_FORMULAS['C'] = "C3H5ONS";

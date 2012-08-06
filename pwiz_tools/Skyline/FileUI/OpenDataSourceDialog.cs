@@ -23,7 +23,9 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -42,7 +44,7 @@ namespace pwiz.Skyline.FileUI
 
             string[] sourceTypes = new[]
             {
-                "Any spectra format",
+                Resources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,
 				DataSourceUtil.TYPE_WIFF,
                 DataSourceUtil.TYPE_AGILENT,
 				DataSourceUtil.TYPE_THERMO_RAW,
@@ -62,9 +64,9 @@ namespace pwiz.Skyline.FileUI
             sourceTypeComboBox.SelectedIndex = 0;
 
             ImageList imageList = new ImageList {ColorDepth = ColorDepth.Depth32Bit};
-            imageList.Images.Add(Properties.Resources.Folder);
-            imageList.Images.Add(Properties.Resources.File);
-            imageList.Images.Add(Properties.Resources.DataProcessing);
+            imageList.Images.Add(Resources.Folder);
+            imageList.Images.Add(Resources.File);
+            imageList.Images.Add(Resources.DataProcessing);
             imageList.Images.Add(lookInImageList.Images[5]);
             imageList.Images.Add(lookInImageList.Images[6]);
             imageList.Images.Add(lookInImageList.Images[7]);
@@ -72,16 +74,20 @@ namespace pwiz.Skyline.FileUI
             listView.LargeImageList = imageList;
 
             TreeView tv = new TreeView {Indent = 8};
-            TreeNode lookInNode = tv.Nodes.Add( "My Recent Documents", "My Recent Documents", 0, 0 );
+            TreeNode lookInNode = tv.Nodes.Add( "My Recent Documents", // Not L10N
+                Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Recent_Documents, 0, 0 );
             lookInNode.Tag = lookInNode.Text;
             lookInComboBox.Items.Add( lookInNode );
-            TreeNode desktopNode = tv.Nodes.Add( "Desktop", "Desktop", 1, 1 );
+            TreeNode desktopNode = tv.Nodes.Add("Desktop",  // Not L10N
+                Resources.OpenDataSourceDialog_OpenDataSourceDialog_Desktop, 1, 1 );
             desktopNode.Tag = desktopNode.Text;
             lookInComboBox.Items.Add( desktopNode );
-            lookInNode = desktopNode.Nodes.Add( "My Documents", "My Documents", 2, 2 );
+            lookInNode = desktopNode.Nodes.Add("My Documents", // Not L10N
+                Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Documents, 2, 2 );
             lookInNode.Tag = lookInNode.Text;
             lookInComboBox.Items.Add( lookInNode );
-            TreeNode myComputerNode = desktopNode.Nodes.Add( "My Computer", "My Computer", 3, 3 );
+            TreeNode myComputerNode = desktopNode.Nodes.Add("My Computer", // Not L10N
+                Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Computer, 3, 3 );
             myComputerNode.Tag = myComputerNode.Text;
             lookInComboBox.Items.Add( myComputerNode );
             lookInComboBox.SelectedIndex = 1;
@@ -107,7 +113,7 @@ namespace pwiz.Skyline.FileUI
             get { return _currentDirectory; }
             set
             {
-                if (value != null && (value == "" || Directory.Exists(value)))
+                if (value != null && (value == string.Empty || Directory.Exists(value)))
                 {
                     _currentDirectory = value;
                     populateListViewFromDirectory(_currentDirectory);
@@ -191,9 +197,9 @@ namespace pwiz.Skyline.FileUI
                 get
                 {
                     return dateModified.HasValue
-                               ? String.Format("{0} {1}", dateModified.Value.ToShortDateString(),
+                               ? TextUtil.SpaceSeparate(dateModified.Value.ToShortDateString(),
                                                           dateModified.Value.ToShortTimeString())
-                               : "";
+                               : string.Empty;
                 }
             }
 
@@ -202,8 +208,8 @@ namespace pwiz.Skyline.FileUI
                 get
                 {
                     return type != DataSourceUtil.FOLDER_TYPE
-                        ? string.Format(new FileSizeFormatProvider(), "{0:fs}", size)
-                        : "";
+                        ? string.Format(new FileSizeFormatProvider(), "{0:fs}", size) // Not L10N
+                        : string.Empty;
                 }
             }
         }
@@ -271,7 +277,7 @@ namespace pwiz.Skyline.FileUI
             {
                 foreach (DriveInfo driveInfo in DriveInfo.GetDrives())
                 {
-                    string label = "";
+                    string label = string.Empty;
                     string sublabel = driveInfo.Name;
                     int imageIndex = 0;
                     _driveReadiness[sublabel] = false;
@@ -281,37 +287,36 @@ namespace pwiz.Skyline.FileUI
                         {
                             case DriveType.Fixed:
                                 imageIndex = 3;
-                                label = "Local Drive";
+                                label = Resources.OpenDataSourceDialog_populateListViewFromDirectory_Local_Drive;
                                 if (driveInfo.VolumeLabel.Length > 0)
                                     label = driveInfo.VolumeLabel;
                                 break;
                             case DriveType.CDRom:
                                 imageIndex = 4;
-                                label = "Optical Drive";
+                                label = Resources.OpenDataSourceDialog_populateListViewFromDirectory_Optical_Drive;
                                 if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
                                     label = driveInfo.VolumeLabel;
                                 break;
                             case DriveType.Removable:
                                 imageIndex = 4;
-                                label = "Removable Drive";
+                                label = Resources.OpenDataSourceDialog_populateListViewFromDirectory_Removable_Drive;
                                 if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
                                     label = driveInfo.VolumeLabel;
                                 break;
                             case DriveType.Network:
-                                imageIndex = 5;
-                                label = "Network Share";
+                                label = Resources.OpenDataSourceDialog_populateListViewFromDirectory_Network_Share;
                                 break;
                         }
                         _driveReadiness[sublabel] = driveInfo.IsReady;
                     }
                     catch (Exception)
                     {
-                        label += " (access failure)";
+                        label += string.Format(" ({0})", Resources.OpenDataSourceDialog_populateListViewFromDirectory_access_failure);
                     }
 
                     string name = driveInfo.Name;
-                    if (label != "")
-                        name = string.Format("{0} ({1})", label, name);
+                    if (label != string.Empty)
+                        name = string.Format("{0} ({1})", label, name); // Not L10N
 
                     listSourceInfo.Add(new SourceInfo
                     {
@@ -338,8 +343,11 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception x)
                 {
+                    var message = TextUtil.LineSeparate(
+                        Resources.OpenDataSourceDialog_populateListViewFromDirectory_An_error_occurred_attempting_to_retrieve_the_contents_of_this_directory,
+                        x.Message);
                     // Might throw access violation.
-                    MessageBox.Show(this, string.Format("An error occurred attempting to retrieve the contents of this directory.\n{0}", x.Message), Program.Name);
+                    MessageBox.Show(this, message, Program.Name);
                     return;
                 }
 
@@ -425,7 +433,7 @@ namespace pwiz.Skyline.FileUI
             int driveCount = 0;
             foreach( DriveInfo driveInfo in DriveInfo.GetDrives() )
             {
-                string label = "";
+                string label = string.Empty;
                 string sublabel = driveInfo.Name;
                 int imageIndex = 8;
                 ++driveCount;
@@ -436,36 +444,35 @@ namespace pwiz.Skyline.FileUI
                     {
                         case DriveType.Fixed:
                             imageIndex = 5;
-                            label = "Local Drive";
+                            label = Resources.OpenDataSourceDialog_populateComboBoxFromDirectory_Local_Drive;
                             if (driveInfo.VolumeLabel.Length > 0)
                                 label = driveInfo.VolumeLabel;
                             break;
                         case DriveType.CDRom:
                             imageIndex = 6;
-                            label = "Optical Drive";
+                            label = Resources.OpenDataSourceDialog_populateComboBoxFromDirectory_Optical_Drive;
                             if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
                                 label = driveInfo.VolumeLabel;
                             break;
                         case DriveType.Removable:
                             imageIndex = 6;
-                            label = "Removable Drive";
+                            label = Resources.OpenDataSourceDialog_populateComboBoxFromDirectory_Removable_Drive;
                             if (driveInfo.IsReady && driveInfo.VolumeLabel.Length > 0)
                                 label = driveInfo.VolumeLabel;
                             break;
                         case DriveType.Network:
-                            imageIndex = 7;
-                            label = "Network Share";
+                            label = Resources.OpenDataSourceDialog_populateComboBoxFromDirectory_Network_Share;
                             break;
                     }
                     _driveReadiness[sublabel] = driveInfo.IsReady;
                 }
                 catch (Exception)
                 {
-                    label += " (access failure)";
+                    label += string.Format(" ({0})", Resources.OpenDataSourceDialog_populateComboBoxFromDirectory_access_failure); // Not L10N
                 }
                 TreeNode driveNode = myComputerNode.Nodes.Add(sublabel,
                                                               label.Length > 0
-                                                                  ? String.Format("{0} ({1})", label, sublabel)
+                                                                  ? String.Format("{0} ({1})", label, sublabel) // Not L10N
                                                                   : sublabel,
                                                               imageIndex,
                                                               imageIndex);
@@ -509,7 +516,7 @@ namespace pwiz.Skyline.FileUI
                     else
                     {
                         // check that all manually-entered paths are valid
-                        string[] sourcePaths = sourcePathTextBox.Text.Split( " ".ToCharArray() );
+                        string[] sourcePaths = sourcePathTextBox.Text.Split(" ".ToCharArray()); // Not L10N
                         List<string> invalidPaths = new List<string>();
                         foreach( string path in sourcePaths )
                             if( !File.Exists( path ) && !File.Exists( Path.Combine( CurrentDirectory, path ) ) )
@@ -520,8 +527,12 @@ namespace pwiz.Skyline.FileUI
                             DataSources = sourcePaths;
                             DialogResult = DialogResult.OK;
                             Close();
-                        } else
-                            MessageBox.Show(this, String.Join( "\r\n", invalidPaths.ToArray() ), "Some source paths are invalid" );
+                    }
+                        else
+                        {
+                            MessageBox.Show(this, TextUtil.LineSeparate(invalidPaths),
+                                Resources.OpenDataSourceDialog_sourcePathTextBox_KeyUp_Some_source_paths_are_invalid);
+                        }
                     }
                     break;
                 case Keys.F5:
@@ -537,7 +548,7 @@ namespace pwiz.Skyline.FileUI
                 return;
 
             ListViewItem item = listView.SelectedItems[0];
-            if( item.SubItems[1].Text == "File Folder" )
+            if( item.SubItems[1].Text == Resources.OpenDataSourceDialog_listView_ItemActivate_File_Folder )
             {
                 if( _currentDirectory != null )
                     _previousDirectories.Push( _currentDirectory ); 
@@ -584,7 +595,7 @@ namespace pwiz.Skyline.FileUI
                 List<string> dataSourceList = new List<string>();
                 foreach (ListViewItem item in listView.SelectedItems)
                 {
-                    if (item.SubItems[1].Text != "File Folder")
+                    if (item.SubItems[1].Text != Resources.OpenDataSourceDialog_Open_File_Folder)
                         dataSourceList.Add(Path.Combine(CurrentDirectory, item.SubItems[0].Text));
                 }
                 DataSources = dataSourceList.ToArray();
@@ -592,7 +603,8 @@ namespace pwiz.Skyline.FileUI
                 DialogResult = DialogResult.OK;
             }
             else
-                MessageBox.Show("Please select one or more data sources.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show(Resources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources, 
+                    Resources.OpenDataSourceDialog_Open_Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
 
         private void cancelButton_Click( object sender, EventArgs e )
@@ -641,7 +653,7 @@ namespace pwiz.Skyline.FileUI
                 return;
 
             DirectoryInfo parentDirectory = Directory.GetParent(_currentDirectory);
-            string parentDirectoryName = (parentDirectory != null ? parentDirectory.FullName : "");
+            string parentDirectoryName = (parentDirectory != null ? parentDirectory.FullName : string.Empty);
 
             if( parentDirectoryName != _currentDirectory )
             {
@@ -663,10 +675,10 @@ namespace pwiz.Skyline.FileUI
                 List<string> dataSourceList = new List<string>();
                 foreach( ListViewItem item in listView.SelectedItems )
                 {
-                    if( item.SubItems[1].Text != "File Folder" )
-                        dataSourceList.Add( String.Format( "\"{0}\"", GetItemPath(item) ) );
+                    if( item.SubItems[1].Text != Resources.OpenDataSourceDialog_listView_ItemSelectionChanged_File_Folder )
+                        dataSourceList.Add(string.Format("\"{0}\"", GetItemPath(item))); // Not L10N
                 }
-                sourcePathTextBox.Text = String.Join( " ", dataSourceList.ToArray() );
+                sourcePathTextBox.Text = string.Join(" ", dataSourceList.ToArray()); // Not L10N
             }
             else if (listView.SelectedItems.Count > 0)
             {
@@ -674,11 +686,11 @@ namespace pwiz.Skyline.FileUI
             }
             else
             {
-                sourcePathTextBox.Text = "";
+                sourcePathTextBox.Text = string.Empty;
             }
         }
 
-        private static readonly Regex REGEX_DRIVE = new Regex("\\(([A-Z]:\\\\)\\)");
+        private static readonly Regex REGEX_DRIVE = new Regex("\\(([A-Z]:\\\\)\\)"); // Not L10N
 
         private static string GetItemPath(ListViewItem item)
         {
@@ -787,23 +799,15 @@ namespace pwiz.Skyline.FileUI
             var selectedItem = (TreeNode) lookInComboBox.SelectedItem;
             string location = selectedItem.Tag as string;
             var prevDirectory = CurrentDirectory;
-            switch (location)
-            {
-                case "My Recent Documents":
+            if (string.Equals(location, Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Recent_Documents))
                     CurrentDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Recent);
-                    break;
-                case "Desktop":
+            else if (string.Equals(location, Resources.OpenDataSourceDialog_OpenDataSourceDialog_Desktop))
                     CurrentDirectory = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                    break;
-                case "My Documents":
+            else if (string.Equals(location, Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Documents))
                     CurrentDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Personal);
-                    break;
-                case "My Computer":
+            else if (string.Equals(location, Resources.OpenDataSourceDialog_OpenDataSourceDialog_My_Computer))
                     CurrentDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyComputer);
-                    break;
-                case "My Network Places":
-                    break;
-                default:
+            else if (!string.Equals(location, Resources.OpenDataSourceDialog_lookInComboBox_SelectionChangeCommitted_My_Network_Place)) {
                     if (location != null)
                     {
                         // Look for the drive containing this location
@@ -822,7 +826,6 @@ namespace pwiz.Skyline.FileUI
                     }
                     // If location for this drive is not ready, stick with the current directory.
                     CurrentDirectory = _currentDirectory;
-                    break;
             }
             if(!Equals(prevDirectory, CurrentDirectory))
                 _previousDirectories.Push(prevDirectory);

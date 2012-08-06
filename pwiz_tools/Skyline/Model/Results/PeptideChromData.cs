@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Crawdad;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -484,7 +485,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var dataPeakList = listEnumerators[i].Current;
                     if (dataPeakList == null)
-                        throw new InvalidOperationException("Unexptected null peak list");
+                        throw new InvalidOperationException(Resources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
                     double intensity = dataPeakList.ProductArea;
                     if (intensity > maxIntensity)
                     {

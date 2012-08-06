@@ -28,6 +28,8 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Irt
 {
@@ -41,7 +43,12 @@ namespace pwiz.Skyline.Model.Irt
 
     public class IrtDb : Immutable, IValidating
     {
-        public const string EXT = ".irtdb";
+        public const string EXT = ".irtdb"; // Not L10N
+
+        public static string FILTER_IRTDB
+        {
+            get { return TextUtil.FileDialogFilter(Resources.IrtDb_FILTER_IRTDB_iRT_Database_Files, EXT); }
+        }
 
         public const int SCHEMA_VERSION_CURRENT = 1;
 
@@ -303,17 +310,17 @@ namespace pwiz.Skyline.Model.Irt
         //Throws DatabaseOpeningException
         public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor)
         {
-            var status = new ProgressStatus(string.Format("Loading iRT database {0}", path));
+            var status = new ProgressStatus(string.Format(Resources.IrtDb_GetIrtDb_Loading_iRT_database__0_, path));
             if (loadMonitor != null)
                 loadMonitor.UpdateProgress(status);
 
             try
             {
                 if (path == null)
-                    throw new DatabaseOpeningException("Database path cannot be null");
+                    throw new DatabaseOpeningException(Resources.IrtDb_GetIrtDb_Database_path_cannot_be_null);
 
                 if (!File.Exists(path))
-                    throw new DatabaseOpeningException(String.Format("The file {0} does not exist.", path));
+                    throw new DatabaseOpeningException(String.Format(Resources.IrtDb_GetIrtDb_The_file__0__does_not_exist_, path));
 
                 string message;
                 try
@@ -328,25 +335,23 @@ namespace pwiz.Skyline.Model.Irt
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    message = String.Format("You do not have privileges to access the file {0}", path);
+                    message = string.Format(Resources.IrtDb_GetIrtDb_You_do_not_have_privileges_to_access_the_file__0_, path);
                 }
                 catch (DirectoryNotFoundException)
                 {
-                    message = String.Format("The path containing {0} does not exist", path);
+                    message = string.Format(Resources.IrtDb_GetIrtDb_The_path_containing__0__does_not_exist, path);
                 }
                 catch (FileNotFoundException)
                 {
-                    message =
-                        String.Format("The file {0} could not be created. Perhaps you do not have sufficient privileges.",
-                                      path);
+                    message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__could_not_be_created_Perhaps_you_do_not_have_sufficient_privileges, path);
                 }
                 catch (SQLiteException)
                 {
-                    message = String.Format("The file {0} is not a valid iRT database file.", path);
+                    message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__is_not_a_valid_iRT_database_file, path);
                 }
                 catch (Exception)
                 {
-                    message = String.Format("The file {0} could not be opened.", path);
+                    message = string.Format(Resources.IrtDb_GetIrtDb_The_file__0__could_not_be_opened, path);
                 }
 
                 throw new DatabaseOpeningException(message);

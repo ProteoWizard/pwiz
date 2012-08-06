@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Threading;
@@ -30,7 +31,7 @@ namespace pwiz.Skyline.Controls
 {
     public partial class LongWaitDlg : FormEx, ILongWaitBroker
     {
-        private const string CANCEL_MESSAGE = " (canceled)";
+        private readonly string _cancelMessage = string.Format(" ({0})", Resources.LongWaitDlg_PerformWork_canceled); // Not L10N
 
         private Control _parentForm;
         private Exception _exception;
@@ -131,7 +132,7 @@ namespace pwiz.Skyline.Controls
                     progress = (progress + 10) % 110;
                     progressBar.Value = (_progressValue != -1 ? _progressValue : progress);
                     if (_message != null && !Equals(_message, labelMessage.Text))
-                        labelMessage.Text = _message + (_clickedCancel ? CANCEL_MESSAGE : "");
+                        labelMessage.Text = _message + (_clickedCancel ? _cancelMessage : string.Empty);
 
                     result.AsyncWaitHandle.WaitOne(700);
                 }
@@ -177,6 +178,8 @@ namespace pwiz.Skyline.Controls
         {
             try
             {
+                // Called in a UI thread
+                Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
                 performWork(this);
             }
             catch (Exception x)
@@ -192,7 +195,7 @@ namespace pwiz.Skyline.Controls
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
-            labelMessage.Text += CANCEL_MESSAGE;
+            labelMessage.Text += _cancelMessage;
             _clickedCancel = true;
         }
 

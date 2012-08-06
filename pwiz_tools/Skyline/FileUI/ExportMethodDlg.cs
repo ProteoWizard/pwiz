@@ -33,19 +33,20 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
     public sealed partial class ExportMethodDlg : FormEx
     {
-        public const string TRANS_PER_SAMPLE_INJ_TXT = "Ma&x transitions per sample injection:";
-        public const string CONCUR_TRANS_TXT = "Ma&x concurrent transitions:";
-        public const string PREC_PER_SAMPLE_INJ_TXT = "Ma&x precursors per sample injection:";
-        public const string CONCUR_PREC_TXT = "Ma&x concurrent precursors:";
-        public const string RUN_DURATION_TXT = "Run &duration (min):";
-        public const string DWELL_TIME_TXT = "&Dwell time (ms):";
+        public static string TRANS_PER_SAMPLE_INJ_TXT { get { return Resources.ExportMethodDlg_TRANS_PER_SAMPLE_INJ_TXT; } }
+        public static string CONCUR_TRANS_TXT { get { return Resources.ExportMethodDlg_CONCUR_TRANS_TXT; } }
+        public static string PREC_PER_SAMPLE_INJ_TXT { get { return Resources.ExportMethodDlg_PREC_PER_SAMPLE_INJ_TXT; } }
+        public static string CONCUR_PREC_TXT { get { return Resources.ExportMethodDlg_CONCUR_PREC_TXT; } }
+        public static string RUN_DURATION_TXT { get { return Resources.ExportMethodDlg_RUN_DURATION_TXT; } }
+        public static string DWELL_TIME_TXT { get { return Resources.ExportMethodDlg_DWELL_TIME_TXT; } }
 
-        public const string SCHED_NOT_SUPPORTED_ERR_TXT = "Scheduled methods are not supported for the selected instrument.";
+        public static string SCHED_NOT_SUPPORTED_ERR_TXT { get { return Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Sched_Not_Supported_Err_Text; } }
 
         private readonly SrmDocument _document;
         private readonly ExportFileType _fileType;
@@ -69,12 +70,12 @@ namespace pwiz.Skyline.FileUI
             {
                 if (_fileType == ExportFileType.List)
                 {
-                    Text = "Export Transition List";
+                    Text = Resources.ExportMethodDlg_ExportMethodDlg_Export_Transition_List;
                     listTypes = ExportInstrumentType.TRANSITION_LIST_TYPES;
                 }
                 else
                 {
-                    Text = "Export Isolation List";
+                    Text = Resources.ExportMethodDlg_ExportMethodDlg_Export_Isolation_List;
                     listTypes = ExportInstrumentType.ISOLATION_LIST_TYPES;
                     _exportProperties.MultiplexIsolationListCalculationTime = 20;   // Default 20 seconds to search for good multiplexed window ordering.
                 }
@@ -90,15 +91,7 @@ namespace pwiz.Skyline.FileUI
                 comboInstrument.Items.Add(typeName);
 
             // Init dialog values from settings.
-            try
-            {
-                ExportStrategy = (ExportStrategy)
-                    Enum.Parse(typeof(ExportStrategy), Settings.Default.ExportMethodStrategy);
-            }
-            catch (ArgumentException)
-            {
-                ExportStrategy = ExportStrategy.Single;
-            }
+            ExportStrategy = ExportStrategyExtension.GetEnum(Settings.Default.ExportMethodStrategy, ExportStrategy.Single);
 
             IgnoreProteins = Settings.Default.ExportIgnoreProteins;
 
@@ -178,7 +171,7 @@ namespace pwiz.Skyline.FileUI
                 _instrumentType = value;
 
                 // If scheduled method selected
-                if (Equals(ExportMethodType.Scheduled.ToString().ToLower(),
+                if (Equals(ExportMethodType.Scheduled.GetLocalizedString().ToLower(),
                         comboTargetType.SelectedItem.ToString().ToLower()))
                 {
                     // If single window state changing, and it is no longer possible to
@@ -392,7 +385,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 _exportProperties.MethodType = value;
-                comboTargetType.SelectedItem = _exportProperties.MethodType.ToString();
+                 comboTargetType.SelectedItem = _exportProperties.MethodType.GetLocalizedString();
             }
         }
 
@@ -427,7 +420,7 @@ namespace pwiz.Skyline.FileUI
                 _exportProperties.MaxTransitions = value;
                 textMaxTransitions.Text = (_exportProperties.MaxTransitions.HasValue
                     ? _exportProperties.MaxTransitions.Value.ToString(CultureInfo.CurrentCulture)
-                    : "");
+                    : string.Empty);
             }
         }
 
@@ -457,7 +450,7 @@ namespace pwiz.Skyline.FileUI
                         Equals(InstrumentType, ExportInstrumentType.ABI_TOF) ||
                         Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
                     {
-                        helper.ShowTextBoxError(textTemplateFile, "Export of DIA method is not supported for {0}.", InstrumentType);
+                        helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_Export_of_DIA_method_is_not_supported_for__0__, InstrumentType);
                         return;
                     }
                 }
@@ -465,19 +458,21 @@ namespace pwiz.Skyline.FileUI
                 templateName = textTemplateFile.Text;
                 if (string.IsNullOrEmpty(templateName))
                 {
-                    helper.ShowTextBoxError(textTemplateFile, "A template file is required to export a method.");
+                    helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_A_template_file_is_required_to_export_a_method);
                     return;
                 }
                 if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) ?
                                                                                  !Directory.Exists(templateName) : !File.Exists(templateName))
                 {
-                    helper.ShowTextBoxError(textTemplateFile, "The template file {0} does not exist.", templateName);
+                    helper.ShowTextBoxError(textTemplateFile, Resources.ExportMethodDlg_OkDialog_The_template_file__0__does_not_exist, templateName);
                     return;
                 }
                 if (Equals(InstrumentType, ExportInstrumentType.AGILENT6400) &&
                     !AgilentMethodExporter.IsAgilentMethodPath(templateName))
                 {
-                    helper.ShowTextBoxError(textTemplateFile, "The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.", templateName);
+                    helper.ShowTextBoxError(textTemplateFile,
+                                            Resources.ExportMethodDlg_OkDialog_The_folder__0__does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd,
+                                            templateName);
                     return;
                 }
             }
@@ -489,15 +484,13 @@ namespace pwiz.Skyline.FileUI
                 if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs && 
                     documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.tof)
                 {
-                    MessageDlg.Show(this,
-                        "The precursor mass analyzer type is not set to TOF in Transition Settings (under the Full Scan tab).");
+                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_TOF));
                     return;
                 }
                 if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
                     documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer != FullScanMassAnalyzerType.tof)
                 {
-                    MessageDlg.Show(this,
-                        "The product mass analyzer type is not set to TOF in Transition Settings (under the Full Scan tab).");
+                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_TOF));
                     return;
                 }                    
             }
@@ -508,22 +501,24 @@ namespace pwiz.Skyline.FileUI
                 if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMs &&
                     documentExport.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.orbitrap)
                 {
-                    MessageDlg.Show(this,
-                        "The precursor mass analyzer type is not set to Orbitrap in Transition Settings (under the Full Scan tab).");
+                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_Orbitrap));
                     return;
                 }
                 if (documentExport.Settings.TransitionSettings.FullScan.IsEnabledMsMs &&
                     documentExport.Settings.TransitionSettings.FullScan.ProductMassAnalyzer != FullScanMassAnalyzerType.orbitrap)
                 {
-                    MessageDlg.Show(this,
-                        "The product mass analyzer type is not set to Orbitrap in Transition Settings (under the Full Scan tab).");
+                    MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_OkDialog_The_product_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, Resources.ExportMethodDlg_OkDialog_Orbitrap));
                     return;
                 }                    
             }
 
             if (!documentExport.HasAllRetentionTimeStandards())
             {
-                using (var messageDlg = new MultiButtonMsgDlg("The document does not contain all of the retention time standard peptides.\nYou will not be able to use retention time prediction with acquired results.\nAre you sure you want to continue?", "OK"))
+                using (var messageDlg = new MultiButtonMsgDlg(
+                            TextUtil.LineSeparate(
+                                          Resources.ExportMethodDlg_OkDialog_The_document_does_not_contain_all_of_the_retention_time_standard_peptides,
+                                          Resources.ExportMethodDlg_OkDialog_You_will_not_be_able_to_use_retention_time_prediction_with_acquired_results,
+                                          Resources.ExportMethodDlg_OkDialog_Are_you_sure_you_want_to_continue), Resources.ExportMethodDlg_OkDialog_OK))
                 {
                     if (messageDlg.ShowDialog(this) == DialogResult.Cancel)
                         return;
@@ -557,14 +552,17 @@ namespace pwiz.Skyline.FileUI
                 if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault)) ||
                     (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault)))))
                 {
-                    var sb =
-                        new StringBuilder("The settings for this document do not match the instrument type ").Append(
-                            _instrumentType).Append(":\n\n");
+                    var sb = new StringBuilder(string.Format(Resources.ExportMethodDlg_OkDialog_The_settings_for_this_document_do_not_match_the_instrument_type__0__,
+                                                             _instrumentType));
+                    sb.AppendLine().AppendLine();
                     if (!ceInSynch)
-                        sb.Append("Collision Energy: ").Append(ceName).Append("\n");
+                        sb.Append(Resources.ExportMethodDlg_OkDialog_Collision_Energy).Append(TextUtil.SEPARATOR_SPACE).AppendLine(ceName);
                     if (!dpInSynch)
-                        sb.Append("Declustering Potential: ").Append(dpName ?? "None").Append("\n");
-                    sb.Append("\nWould you like to use the defaults instead?");
+                    {
+                        sb.Append(Resources.ExportMethodDlg_OkDialog_Declustering_Potential).Append(TextUtil.SEPARATOR_SPACE)
+                          .AppendLine(dpName ?? Resources.ExportMethodDlg_OkDialog_None);
+                    }
+                    sb.AppendLine().Append(Resources.ExportMethodDlg_OkDialog_Would_you_like_to_use_the_defaults_instead);
                     var result = MessageBox.Show(this, sb.ToString(), Program.Name, MessageBoxButtons.YesNoCancel);
                     if (result == DialogResult.Yes)
                     {
@@ -588,21 +586,21 @@ namespace pwiz.Skyline.FileUI
             if (outputPath == null)
             {
                 string title = Text;
-                string ext = "csv";
-                string filter = "Method File";
+                string ext = TextUtil.EXT_CSV;
+                string filter = Resources.ExportMethodDlg_OkDialog_Method_File;
 
                 switch (_fileType)
                 {
                     case ExportFileType.List:
-                        filter = "Transition List";
+                        filter = Resources.ExportMethodDlg_OkDialog_Transition_List;
                         break;
 
                     case ExportFileType.IsolationList:
-                        filter = "Isolation List";
+                        filter = Resources.ExportMethodDlg_OkDialog_Isolation_List;
                         break;
 
                     case ExportFileType.Method:
-                        title = string.Format("Export {0} Method", _instrumentType);
+                        title = string.Format(Resources.ExportMethodDlg_OkDialog_Export__0__Method, _instrumentType);
                         ext = ExportInstrumentType.MethodExtension(_instrumentType);
                         break;
                 }
@@ -613,11 +611,7 @@ namespace pwiz.Skyline.FileUI
                     InitialDirectory = Settings.Default.ExportDirectory,
                     OverwritePrompt = true,
                     DefaultExt = ext,
-                    Filter = string.Join("|", new[]
-                    {
-                        string.Format("{0} (*.{1})|*.{1}", filter, ext),
-                        "All Files (*.*)|*.*"
-                    })
+                    Filter = TextUtil.FileDialogFilterAll(filter, ext)
                 };
 
                 if (dlg.ShowDialog(this) == DialogResult.Cancel)
@@ -744,7 +738,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (_exportProperties.ExportStrategy == ExportStrategy.Buckets)
                 {
-                    helper.ShowTextBoxError(textMaxTransitions, "{0} must contain a value.");
+                    helper.ShowTextBoxError(textMaxTransitions, Resources.ExportMethodDlg_ValidateSettings__0__must_contain_a_value);
                     return false;
                 }
                 _exportProperties.MaxTransitions = null;
@@ -770,8 +764,7 @@ namespace pwiz.Skyline.FileUI
                 return false;
             _exportProperties.MaxTransitions = maxVal;
 
-            _exportProperties.MethodType = (ExportMethodType)Enum.Parse(typeof(ExportMethodType),
-                                                        comboTargetType.SelectedItem.ToString());
+            _exportProperties.MethodType = ExportMethodTypeExtension.GetEnum(comboTargetType.SelectedItem.ToString());
 
             if (textDwellTime.Visible)
             {
@@ -843,8 +836,8 @@ namespace pwiz.Skyline.FileUI
         private bool ValidatePrecursorFit(SrmDocument document, int maxTransitions, bool showMessages)
         {
             string messageFormat = (OptimizeType == null ?
-                "The precursor {0} for the peptide {1} has {2} transitions, which exceeds the current maximum {3}." :
-                "The precursor {0} for the peptide {1} requires {2} transitions to optimize, which exceeds the current maximum {3}.");
+                Resources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__has__2__transitions_which_exceeds_the_current_maximum__3__ :
+                Resources.ExportMethodDlg_ValidatePrecursorFit_The_precursor__0__for_the_peptide__1__requires__2__transitions_to_optimize_which_exceeds_the_current_maximum__3__);
             foreach (var nodeGroup in document.TransitionGroups)
             {
                 int tranRequired = nodeGroup.Children.Count;
@@ -940,7 +933,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (IsDia && !radioSingle.Checked)
             {
-                MessageDlg.Show(this, "Only one method can be exported in DIA mode.");
+                MessageDlg.Show(this, Resources.ExportMethodDlg_StrategyCheckChanged_Only_one_method_can_be_exported_in_DIA_mode);
                 radioSingle.Checked = true;
             }
 
@@ -951,7 +944,7 @@ namespace pwiz.Skyline.FileUI
 
             if (radioSingle.Checked)
             {
-                labelMethodNum.Text = "1";
+                labelMethodNum.Text = "1"; // Not L10N
             }
             else
             {
@@ -968,15 +961,16 @@ namespace pwiz.Skyline.FileUI
             // Temporary code until we support Agilent export of DIA isolation lists.
             if (Equals(_instrumentType, ExportInstrumentType.AGILENT_TOF) && IsDia)
             {
-                MessageDlg.Show(this, string.Format("Export of DIA isolation lists is not yet supported for {0}.", _instrumentType));
+                MessageDlg.Show(this, string.Format(Resources.ExportMethodDlg_comboInstrument_SelectedIndexChanged_Export_of_DIA_isolation_lists_is_not_yet_supported_for__0__,
+                                                    _instrumentType));
                 comboInstrument.SelectedItem = ExportInstrumentType.THERMO_Q_EXACTIVE;
                 return;
             }
 
-            bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.ToString());
+            bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.GetLocalizedString());
             if (!standard && !CanSchedule)
             {
-                comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
+                comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
                 return;
             }                
 
@@ -996,18 +990,18 @@ namespace pwiz.Skyline.FileUI
             MethodTemplateFile templateFile;
             textTemplateFile.Text = Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile)
                 ? templateFile.FilePath
-                : "";
+                : string.Empty;
 
             CalcMethodCount();
         }
 
         private void comboTargetType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.ToString());
+            bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.GetLocalizedString());
             if (!standard && IsDia)
             {
-                MessageDlg.Show(this, "Scheduled methods are not yet supported for DIA acquisition.");
-                comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
+                MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Scheduled_methods_are_not_yet_supported_for_DIA_acquisition);
+                comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
                 return;
             }
             if (!standard && !CanSchedule)
@@ -1025,29 +1019,27 @@ namespace pwiz.Skyline.FileUI
                 else if (prediction.RetentionTime == null)
                 {
                     if (prediction.UseMeasuredRTs)
-                        MessageDlg.Show(this, "To export a scheduled list, you must first choose " +
-                                        "a retention time predictor in Peptide Settings / Prediction, or " +
-                                        "import results for all peptides in the document.");
+                        MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction_or_import_results_for_all_peptides_in_the_document);
                     else
-                        MessageDlg.Show(this, "To export a scheduled list, you must first choose " +
-                                        "a retention time predictor in Peptide Settings / Prediction.");                    
+                        MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_choose_a_retention_time_predictor_in_Peptide_Settings_Prediction);                    
                 }
                 else if (!prediction.RetentionTime.Calculator.IsUsable)
                 {
-                    MessageDlg.Show(this, "Retention time prediction calculator is unable to score.\n" +
-                        "Check the calculator settings.");
+                    MessageDlg.Show(this, TextUtil.LineSeparate(
+                        Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_prediction_calculator_is_unable_to_score,
+                        Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_the_calculator_settings));
                 }
                 else if (!prediction.RetentionTime.IsUsable)
                 {
-                    MessageDlg.Show(this, "Retention time predictor is unable to auto-calculate a regression.\n" +
-                        "Check to make sure the document contains times for all of the required standard peptides.");
+                    MessageDlg.Show(this, TextUtil.LineSeparate(
+                        Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Retention_time_predictor_is_unable_to_auto_calculate_a_regression,
+                        Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_Check_to_make_sure_the_document_contains_times_for_all_of_the_required_standard_peptides));
                 }
                 else
                 {
-                    MessageDlg.Show(this, "To export a scheduled list, you must first " +
-                                    "import results for all peptides in the document.");
+                    MessageDlg.Show(this, Resources.ExportMethodDlg_comboTargetType_SelectedIndexChanged_To_export_a_scheduled_list_you_must_first_import_results_for_all_peptides_in_the_document);
                 }
-                comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
+                comboTargetType.SelectedItem = ExportMethodType.Standard.GetLocalizedString();
                 return;
             }
 
@@ -1084,7 +1076,7 @@ namespace pwiz.Skyline.FileUI
 
             if (IsDia)
             {
-                labelMethodNum.Text = "1";
+                labelMethodNum.Text = "1"; // Not L10N
                 return;
             }
 
@@ -1099,11 +1091,11 @@ namespace pwiz.Skyline.FileUI
 
             if (!ValidateSettings(e, helper) || comboInstrument.SelectedItem == null)
             {
-                labelMethodNum.Text = "";
+                labelMethodNum.Text = string.Empty;
                 return;
             }
 
-            labelMethodNum.Text = "...";
+            labelMethodNum.Text = "..."; // Not L10N
 
             _recalcMethodCountStatus = RecalcMethodCountStatus.running;
 
@@ -1150,7 +1142,7 @@ namespace pwiz.Skyline.FileUI
         {
             labelMethodNum.Text = methodCount.HasValue
                 ? methodCount.Value.ToString(CultureInfo.CurrentCulture)
-                : "";
+                : string.Empty;
 
             var recalcMethodCountStatus = _recalcMethodCountStatus;
             _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
@@ -1187,7 +1179,7 @@ namespace pwiz.Skyline.FileUI
             {
                 var chooseDirDialog = new FolderBrowserDialog
                                           {
-                                              Description = "Method Template",
+                                              Description = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
                                           };
 
                 if (!string.IsNullOrEmpty(templateName))
@@ -1200,7 +1192,7 @@ namespace pwiz.Skyline.FileUI
                     templateName = chooseDirDialog.SelectedPath;
                     if (!AgilentMethodExporter.IsAgilentMethodPath(templateName))
                     {
-                        MessageDlg.Show(this, "The chosen folder does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.");
+                        MessageDlg.Show(this, Resources.ExportMethodDlg_btnBrowseTemplate_Click_The_chosen_folder_does_not_appear_to_contain_an_Agilent_QQQ_method_template_The_folder_is_expected_to_have_a_m_extension_and_contain_the_file_qqqacqmethod_xsd);
                         return;
                     }
                     textTemplateFile.Text = templateName;
@@ -1211,7 +1203,7 @@ namespace pwiz.Skyline.FileUI
 
             var openFileDialog = new OpenFileDialog
                                      {
-                                         Title = "Method Template",
+                                         Title = Resources.ExportMethodDlg_btnBrowseTemplate_Click_Method_Template,
                                          // Extension based on currently selecte type
                                          CheckPathExists = true
                                      };
@@ -1234,23 +1226,19 @@ namespace pwiz.Skyline.FileUI
             var listFileTypes = new List<string>();
             if (Equals(InstrumentType, ExportInstrumentType.ABI_QTRAP))
             {
-                listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
-                                                InstrumentType, ExportInstrumentType.EXT_AB_SCIEX));
+                listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_AB_SCIEX));
             }
             else if (Equals(InstrumentType, ExportInstrumentType.THERMO_TSQ) ||
                      Equals(InstrumentType, ExportInstrumentType.THERMO_LTQ))
             {
-                listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
-                                                InstrumentType, ExportInstrumentType.EXT_THERMO));
+                listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_THERMO));
             }
             else if (Equals(InstrumentType, ExportInstrumentType.WATERS_XEVO) ||
                      Equals(InstrumentType, ExportInstrumentType.WATERS_QUATTRO_PREMIER))
             {
-                listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
-                                                InstrumentType, ExportInstrumentType.EXT_WATERS));
+                listFileTypes.Add(MethodFilter(ExportInstrumentType.EXT_WATERS));
             }
-            listFileTypes.Add("All Files (*.*)|*.*");
-            openFileDialog.Filter = string.Join("|", listFileTypes.ToArray());
+            openFileDialog.Filter = TextUtil.FileDialogFiltersAll(listFileTypes.ToArray());
 
             if (openFileDialog.ShowDialog(this) == DialogResult.OK)
             {
@@ -1258,12 +1246,17 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private string MethodFilter(string ext)
+        {
+            return TextUtil.FileDialogFilter(string.Format(Resources.ExportMethodDlg_btnBrowseTemplate_Click__0__Method, InstrumentType), ext);
+        }
+
         private void textMaxTransitions_TextChanged(object sender, EventArgs e)
         {
             int maxTrans;
             if(!int.TryParse(textMaxTransitions.Text, out maxTrans) || maxTrans < 1)
             {
-                labelMethodNum.Text = "";
+                labelMethodNum.Text = string.Empty;
                 return;
             }
 
@@ -1287,7 +1280,9 @@ namespace pwiz.Skyline.FileUI
 
         public void SetMethodType(ExportMethodType type)
         {
-            comboTargetType.SelectedItem = type == ExportMethodType.Standard ? "Standard" : "Scheduled";
+            comboTargetType.SelectedItem = type == ExportMethodType.Standard
+                                               ? Resources.ExportMethodDlg_SetMethodType_Standard
+                                               : Resources.ExportMethodDlg_SetMethodType_Scheduled;
         }
 
         public bool IsTargetTypeEnabled
@@ -1359,7 +1354,7 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            var longWait = new LongWaitDlg { Text = "Exporting Methods" };
+            var longWait = new LongWaitDlg { Text = Resources.ExportDlgProperties_PerformLongExport_Exporting_Methods };
             try
             {
                 var status = longWait.PerformWork(_dialog, 800, performExport);
@@ -1368,7 +1363,8 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageDlg.Show(_dialog, string.Format("An error occurred attempting to export.\n{0}", x.Message));
+                MessageDlg.Show(_dialog, TextUtil.LineSeparate(Resources.ExportDlgProperties_PerformLongExport_An_error_occurred_attempting_to_export,
+                                                               x.Message));
             }
         }
 

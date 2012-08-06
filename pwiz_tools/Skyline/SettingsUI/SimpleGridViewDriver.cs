@@ -55,7 +55,7 @@ namespace pwiz.Skyline.SettingsUI
             // Handle delete keys for single cell
             if (_gridView.SelectedRows.Count == 0 && (keys == Keys.Delete || keys == Keys.Back))
             {
-                SetCellValue("");
+                SetCellValue(string.Empty);
                 return true;
             }
 

@@ -25,8 +25,10 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -112,10 +114,10 @@ namespace pwiz.Skyline.Model
 
     public class FastaSequence : PeptideGroup
     {
-        public const string PEPTIDE_SEQUENCE_SEPARATOR = "::";
-        private static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\})");
-        public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]");
-        public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}");
+        public const string PEPTIDE_SEQUENCE_SEPARATOR = "::"; // Not L10N
+        private static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\})"); // Not L10N
+        public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]"); // Not L10N
+        public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}"); // Not L10N
 
         public static bool IsSequence(string seq)
         {
@@ -151,7 +153,7 @@ namespace pwiz.Skyline.Model
             // it is not a valid modified sequence.
             if(seq.Length == 0 || !AminoAcid.IsExAA(seq[0]))
                 return seq;
-            return rgx.Replace(seq, "");
+            return rgx.Replace(seq, string.Empty);
         }
 
         private readonly string _name;
@@ -185,7 +187,7 @@ namespace pwiz.Skyline.Model
         public IList<AlternativeProtein> Alternatives { get; private set; }
         public IEnumerable<string> AlternativesText
         {
-            get { return Alternatives.Select(alt => string.Format("{0} {1}", alt.Name, alt.Description)); }
+            get { return Alternatives.Select(alt => TextUtil.SpaceSeparate(alt.Name, alt.Description)); }
         }
 
         public string FastaFileText
@@ -193,9 +195,9 @@ namespace pwiz.Skyline.Model
             get
             {
                 StringBuilder sb = new StringBuilder();
-                sb.Append(">").Append(Name).Append(" ").Append(Description);
+                sb.Append(">").Append(Name).Append(" ").Append(Description); // Not L10N
                 foreach (var alt in Alternatives)
-                    sb.Append((char)1).Append(alt.Name).Append(" ").Append(alt.Description);
+                    sb.Append((char)1).Append(alt.Name).Append(" ").Append(alt.Description); // Not L10N
 
                 for (int i = 0; i < Sequence.Length; i++)
                 {
@@ -203,7 +205,7 @@ namespace pwiz.Skyline.Model
                         sb.AppendLine();
                     sb.Append(Sequence[i]);
                 }
-                sb.Append("*");
+                sb.Append("*"); // Not L10N
                 return sb.ToString();
             }
         }
@@ -263,12 +265,12 @@ namespace pwiz.Skyline.Model
         public static void ValidateSequence(string seq)
         {
             if (string.IsNullOrEmpty(seq))
-                throw new InvalidDataException("A protein sequence may not be empty.");
+                throw new InvalidDataException(Resources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty);
             for (int i = 0; i < seq.Length; i++)
             {
                 char c = seq[i];
-                if (!AminoAcid.IsExAA(c) && c != '*' && c != '-')
-                    throw new InvalidDataException(string.Format("A protein sequence may not contain the character '{0}' at {1}.", seq[i], i));
+                if (!AminoAcid.IsExAA(c) && c != '*' && c != '-') // Not L10N
+                    throw new InvalidDataException(string.Format(Resources.FastaSequence_ValidateSequence_A_protein_sequence_may_not_contain_the_character__0__at__1__, seq[i], i));
             }            
         }
 
@@ -326,9 +328,9 @@ namespace pwiz.Skyline.Model
         public static int ComparePeptides(Peptide pep1, Peptide pep2)
         {
             if (pep1.FastaSequence == null || pep2.FastaSequence == null)
-                throw new InvalidOperationException("Peptides without FASTA sequence information may not be compared.");
+                throw new InvalidOperationException(Resources.FastaSequence_ComparePeptides_Peptides_without_FASTA_sequence_information_may_not_be_compared);
             if (pep1.FastaSequence != pep2.FastaSequence)
-                throw new InvalidOperationException("Peptides in different FASTA sequences may not be compared.");
+                throw new InvalidOperationException(Resources.FastaSequence_ComparePeptides_Peptides_in_different_FASTA_sequences_may_not_be_compared);
 
             return Comparer<int>.Default.Compare(pep1.Order, pep2.Order);
         }

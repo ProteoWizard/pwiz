@@ -21,6 +21,7 @@ using System;
 using System.Collections.Generic;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Find
@@ -78,8 +79,8 @@ namespace pwiz.Skyline.Model.Find
             foreach (var keyValuePair in annotations.ListAnnotations())
             {
                 string annotationText = keyValuePair.Key == keyValuePair.Value
-                                  ? keyValuePair.Value
-                                  : keyValuePair.Key + "=" + keyValuePair.Value;
+                                            ? keyValuePair.Value
+                                            : keyValuePair.Key + "=" + keyValuePair.Value; // Not L10N
                 match = MatchText(annotationText);
                 if (match != null)
                 {
@@ -159,13 +160,13 @@ namespace pwiz.Skyline.Model.Find
 
         public IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, SrmDocument document)
         {
-            longWaitBroker.Message = "Found 0 matches";
+            longWaitBroker.Message = Resources.FindPredicate_FindAll_Found_0_matches;
             var customMatches = new HashSet<Bookmark>[FindOptions.CustomFinders.Count];
             for (int iFinder = 0; iFinder < FindOptions.CustomFinders.Count; iFinder++)
             {
                 var customFinder = FindOptions.CustomFinders[iFinder];
                 var bookmarkSet = new HashSet<Bookmark>();
-                longWaitBroker.Message = "Searching for {0}" + customFinder.DisplayName;
+                longWaitBroker.Message = string.Format(Resources.FindPredicate_FindAll_Searching_for__0__, customFinder.DisplayName);
                 foreach (var bookmark in customFinder.FindAll(document))
                 {
                     if (longWaitBroker.IsCanceled)
@@ -198,8 +199,8 @@ namespace pwiz.Skyline.Model.Find
                 {
                     matchCount++;
                     longWaitBroker.Message = matchCount == 1
-                                                 ? "Found 1 match"
-                                                 : string.Format("Found {0} matches", matchCount);
+                                                 ? Resources.FindPredicate_FindAll_Found_1_match
+                                                 : string.Format(Resources.FindPredicate_FindAll_Found__0__matches, matchCount);
                     yield return new FindResult(this, bookmarkEnumerator, findMatch);
                 }
             } while (!bookmarkEnumerator.AtStart);

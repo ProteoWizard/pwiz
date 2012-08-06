@@ -44,9 +44,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
             RunsFailedCount = runsFailedCount;
 
             if (peptideCount == 0)
-                labelPeptidesAdded.Text = "No new peptides will be added to the iRT database.";
+                labelPeptidesAdded.Text = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_No_new_peptides_will_be_added_to_the_iRT_database;
             else if (peptideCount == 1)
-                labelPeptidesAdded.Text = "1 new peptide will be added to the iRT database.";
+                labelPeptidesAdded.Text = Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_new_peptide_will_be_added_to_the_iRT_database;
             else
                 labelPeptidesAdded.Text = string.Format(labelPeptidesAdded.Text, peptideCount);
 
@@ -56,7 +56,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 labelRunsConverted.Text = runsConvertedCount > 1
                                               ? string.Format(labelRunsConverted.Text, runsConvertedCount)
-                                              : "1 run was successfully converted.";
+                                              : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_successfully_converted;
             }
 
             if (runsFailedCount == 0)
@@ -65,7 +65,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 labelRunsFailed.Text = runsFailedCount > 1
                                            ? string.Format(labelRunsFailed.Text, runsFailedCount)
-                                           : "1 run was not converted due to insufficient correlation.";
+                                           : Resources.AddIrtPeptidesDlg_AddIrtPeptidesDlg_1_run_was_not_converted_due_to_insufficient_correlation;
             }
                 
             listExisting.Items.AddRange(existingPeptides.Cast<object>().ToArray());

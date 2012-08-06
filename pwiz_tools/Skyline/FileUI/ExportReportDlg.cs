@@ -76,7 +76,11 @@ namespace pwiz.Skyline.FileUI
         {
             if (_database == null)
             {
-                var longWait = new LongWaitDlg { Text = "Generating Report Data", Message = "Analyzing document..." };
+                var longWait = new LongWaitDlg
+                                   {
+                                       Text = Resources.ExportReportDlg_GetDatabase_Generating_Report_Data,
+                                       Message = Resources.ExportReportDlg_GetDatabase_Analyzing_document
+                                   };
                 longWait.PerformWork(owner, 1500, broker => EnsureDatabase(broker, 100));
             }
 
@@ -123,21 +127,16 @@ namespace pwiz.Skyline.FileUI
         {
             SaveFileDialog dlg = new SaveFileDialog
             {
-                Title = "Export Report",
+                Title = Resources.ExportReportDlg_OkDialog_Export_Report,
                 InitialDirectory = Settings.Default.ExportDirectory,
                 OverwritePrompt = true,
-                DefaultExt = "csv",
-                Filter = string.Join("|", new[]
-                {
-                    "CSV (Comma delimited) (*.csv)|*.csv",
-                    "TSV (Tab delimited) (*.tsv)|*.tsv",
-                    "All Files (*.*)|*.*"
-                })
+                DefaultExt = TextUtil.EXT_CSV,
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FILTER_CSV, TextUtil.FILTER_TSV)
             };
             if (!string.IsNullOrEmpty(_documentUiContainer.DocumentFilePath))
             {
                 dlg.InitialDirectory = Path.GetDirectoryName(_documentUiContainer.DocumentFilePath);
-                dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + ".csv";                
+                dlg.FileName = Path.GetFileNameWithoutExtension(_documentUiContainer.DocumentFilePath) + TextUtil.EXT_CSV;
             }
 
             if (dlg.ShowDialog(this) == DialogResult.Cancel)
@@ -150,7 +149,7 @@ namespace pwiz.Skyline.FileUI
             {
                 // TSV
                 case 2:
-                    separator = '\t';
+                    separator = TextUtil.SEPARATOR_TSV;
                     break;
                 // CSV
                 default:
@@ -187,20 +186,20 @@ namespace pwiz.Skyline.FileUI
                         Report report = GetReport();
                         bool success = false;
 
-                        var longWait = new LongWaitDlg { Text = "Generating Report" };
+                        var longWait = new LongWaitDlg { Text = Resources.ExportReportDlg_ExportReport_Generating_Report };
                         longWait.PerformWork(this, 1500, broker =>
                         {
-                            broker.Message = "Analyzing document...";
+                            broker.Message = Resources.ExportReportDlg_GetDatabase_Analyzing_document;
                             broker.ProgressValue = 0;
                             Database database = EnsureDatabase(broker, 80);
                             if (broker.IsCanceled)
                                 return;
-                            broker.Message = "Building report...";
+                            broker.Message = Resources.ExportReportDlg_ExportReport_Building_report;
                             ResultSet resultSet = report.Execute(database);
                             if (broker.IsCanceled)
                                 return;
                             broker.ProgressValue = 95;
-                            broker.Message = "Writing report...";
+                            broker.Message = Resources.ExportReportDlg_ExportReport_Writing_report;
                             
                             ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo);
 
@@ -221,7 +220,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, string.Format("Failed exporting to {0}.\n{1}", fileName, GetExceptionDisplayMessage(x)));
+                MessageDlg.Show(this, string.Format(Resources.ExportReportDlg_ExportReport_Failed_exporting_to, fileName, GetExceptionDisplayMessage(x)));
                 return false;
             }
         }
@@ -290,12 +289,15 @@ namespace pwiz.Skyline.FileUI
             catch (Exception x)
             {
                 string message = GetExceptionDisplayMessage(x);
-                MessageBox.Show(this, string.Format("An unexpected error occurred attempting to display the report '{0}'.\n{1}", listboxReports.SelectedItem, message), Program.Name);
+                string errorMessage = TextUtil.LineSeparate(
+                    string.Format(Resources.ExportReportDlg_ShowPreview_An_unexpected_error_occurred_attempting_to_display_the_report___0___,listboxReports.SelectedItem),
+                    message);
+                MessageBox.Show(this, errorMessage, Program.Name);
             }
         }
 
         private static readonly Regex REGEX_MISSING_COLUMN =
-            new Regex("^could not resolve property: (.*) of: (.*)$");
+            new Regex("^could not resolve property: (.*) of: (.*)$"); // Not L10N
 
         private static string GetExceptionDisplayMessage(Exception x)
         {
@@ -309,7 +311,7 @@ namespace pwiz.Skyline.FileUI
                         columnName = AnnotationDef.GetColumnDisplayName(columnName);
                     else if (RatioPropertyAccessor.IsRatioProperty(columnName))
                         columnName = RatioPropertyAccessor.GetDisplayName(columnName);
-                    return string.Format("The field {0} does not exist in this document.", columnName);
+                    return string.Format(Resources.ExportReportDlg_GetExceptionDisplayMessage_The_field__0__does_not_exist_in_this_document, columnName);
                 }
 // ReSharper disable EmptyGeneralCatchClause
                 catch
@@ -322,8 +324,6 @@ namespace pwiz.Skyline.FileUI
             return x.Message;
         }
 
-        private const string REPORT_DEFINITION_FILTER = "Skyline Reports (*.skyr)|*.skyr|All Files|*.*";
-
         private void btnShare_Click(object sender, EventArgs e)
         {
             ShowShare();
@@ -334,8 +334,8 @@ namespace pwiz.Skyline.FileUI
             CheckDisposed();
             using (var dlg = new ShareListDlg<ReportSpecList, ReportSpec>(Settings.Default.ReportSpecList)
                           {
-                              Label = "Report Definitions",
-                              Filter = REPORT_DEFINITION_FILTER
+                              Label = Resources.ExportReportDlg_ShowShare_Report_Definitions,
+                              Filter = TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS)
                           })
             {
                 dlg.ShowDialog(this);
@@ -345,7 +345,7 @@ namespace pwiz.Skyline.FileUI
         private void btnImport_Click(object sender, EventArgs e)
         {
             Import(ShareListDlg<ReportSpecList, ReportSpec>.GetImportFileName(this,
-                REPORT_DEFINITION_FILTER));
+                TextUtil.FileDialogFilterAll(Resources.ExportReportDlg_ShowShare_Skyline_Reports, ReportSpecList.EXT_REPORTS)));
         }
 
         public void Import(string fileName)

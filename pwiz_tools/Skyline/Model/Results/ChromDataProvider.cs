@@ -25,6 +25,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -283,9 +284,17 @@ namespace pwiz.Skyline.Model.Results
                             continue;
 
                         if (!dataSpectrum.RetentionTime.HasValue)
-                            throw new InvalidDataException(String.Format("Scan {0} found without scan time.", dataFile.GetSpectrumId(i)));
+                        {
+                            throw new InvalidDataException(
+                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_scan_time,
+                                              dataFile.GetSpectrumId(i)));
+                        }
                         if (dataSpectrum.Precursors.Length < 1 || !dataSpectrum.Precursors[0].PrecursorMz.HasValue)
-                            throw new InvalidDataException(String.Format("Scan {0} found without precursor m/z.", dataFile.GetSpectrumId(i)));
+                        {
+                            throw new InvalidDataException(
+                                string.Format(Resources.SpectraChromDataProvider_SpectraChromDataProvider_Scan__0__found_without_precursor_mz,
+                                              dataFile.GetSpectrumId(i)));
+                        }
 
                         // Process the one SRM spectrum
                         ProcessSrmSpectrum(dataSpectrum.RetentionTime.Value,
@@ -617,7 +626,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (times.Length != intensities.Length)
             {
-                throw new InvalidDataException(string.Format("Times ({0}) and intensities ({1}) disagree in point count.",
+                throw new InvalidDataException(string.Format(Resources.ChromCollected_ChromCollected_Times__0__and_intensities__1__disagree_in_point_count,
                     times.Length, intensities.Length));
             }
             Times = times;
@@ -1015,7 +1024,11 @@ namespace pwiz.Skyline.Model.Results
                     {
                         if (!window.TargetMatches(isolationTargetMz, _instrument.MzMatchTolerance)) continue;
                         if (isolationWindow != null)
-                            throw new InvalidDataException(string.Format("Two isolation windows contain targets which match the isolation target {0}.", isolationTargetMz));
+                            {
+                                throw new InvalidDataException(
+                                    string.Format(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__,
+                                                  isolationTargetMz));
+                            }
                         isolationWindow = window;
                     }
                 }
@@ -1027,7 +1040,11 @@ namespace pwiz.Skyline.Model.Results
                     {
                         if (!window.Contains(isolationTargetMz)) continue;
                         if (isolationWindow != null)
-                            throw new InvalidDataException(string.Format("Two isolation windows contain the isolation target {0}.", isolationTargetMz));
+                            {
+                                throw new InvalidDataException(
+                                    string.Format(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_the_isolation_target__0__,
+                                                  isolationTargetMz));
+                            }
                         isolationWindow = window;
                     }
                 }
@@ -1053,7 +1070,7 @@ namespace pwiz.Skyline.Model.Results
             // No defined isolation scheme?
             else
             {
-                throw new InvalidDataException("Isolation scheme does not contain any isolation windows");
+                    throw new InvalidDataException(Resources.SpectrumFilter_FindFilterPairs_Isolation_scheme_does_not_contain_any_isolation_windows);
             }
             isolationWidth = isolationWidthValue;
         }

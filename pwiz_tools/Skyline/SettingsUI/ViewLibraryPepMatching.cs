@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 
@@ -100,7 +101,7 @@ namespace pwiz.Skyline.SettingsUI
             IdentityPath selectedPath;
             IdentityPath toPath = AddAllPeptidesSelectedPath;
 
-            DocAllPeptides = AddPeptides(_document, broker, toPath, out selectedPath);
+             DocAllPeptides = AddPeptides(_document, broker, toPath, out selectedPath);
             AddAllPeptidesSelectedPath = selectedPath;
         }
 
@@ -592,7 +593,7 @@ namespace pwiz.Skyline.SettingsUI
                     // ignore it.
                     if (peptideGroupDocNode.Children.Contains(nodePep => Equals(((PeptideDocNode) nodePep).Key, newNodePep.Key)))
                     {
-                        Console.WriteLine("Skipping {0} already present", newNodePep.Peptide.Sequence);
+                        Console.WriteLine(Resources.ViewLibraryPepMatching_AddProteomePeptides_Skipping__0__already_present, newNodePep.Peptide.Sequence);
                         continue;
                     }
                     // Otherwise, add it to the list of children for the PeptideGroupNode.
@@ -687,7 +688,7 @@ namespace pwiz.Skyline.SettingsUI
                 listPeptides.Contains(nodePep => nodePep.HasExplicitMods && nodePep.ExplicitMods.IsVariableStaticMods);
 
             // Use existing group by this name, if present.
-            var nodePepGroupNew = FindPeptideGroupDocNode(document, "Library Peptides");
+            var nodePepGroupNew = FindPeptideGroupDocNode(document, Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides);
             if(nodePepGroupNew != null)
             {
                 var newChildren = nodePepGroupNew.Children.ToList();
@@ -700,7 +701,9 @@ namespace pwiz.Skyline.SettingsUI
             }  
             else
             {
-                nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(), "Library Peptides", "", listPeptides.ToArray());
+                nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(),
+                                                          Resources.ViewLibraryPepMatching_AddPeptidesToLibraryGroup_Library_Peptides,
+                                                          "", listPeptides.ToArray());
                 if (hasVariable)
                     nodePepGroupNew = (PeptideGroupDocNode) nodePepGroupNew.ChangeAutoManageChildren(false);
                 IdentityPath nextAdd;

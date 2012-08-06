@@ -20,6 +20,8 @@ namespace pwiz.Skyline.Model.Esp
 
         static GasPhaseBasicityCalc()
         {
+
+            // Not L10N: Amino acids
             Init('A', 881.82, 0);
             Init('R', 882.98, 6.28);
             Init('N', 881.18, 1.56);

@@ -26,6 +26,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA.Results
@@ -186,7 +187,7 @@ namespace pwiz.SkylineTestA.Results
                 }
                 catch (Exception x)
                 {
-                    Assert.IsTrue(x.Message.Contains("Two isolation windows contain targets which match the isolation target"));
+                    AssertEx.AreComparableStrings(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_targets_which_match_the_isolation_target__0__, x.Message, 1);
                 }
 
                 // Revert to original document, and get rid of results cache
@@ -213,7 +214,7 @@ namespace pwiz.SkylineTestA.Results
                 }
                 catch (Exception x)
                 {
-                    Assert.IsTrue(x.Message.Contains("Two isolation windows contain the isolation target"));
+                    AssertEx.AreComparableStrings(Resources.SpectrumFilter_FindFilterPairs_Two_isolation_windows_contain_the_isolation_target__0__, x.Message, 1);
                 }
 
                 // Revert to original document, and get rid of results cache

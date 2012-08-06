@@ -27,14 +27,21 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Proteome;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
     internal class SrmDocumentSharing
     {
-        public const string EXT = "zip";
+        public const string EXT = ".zip";
+
+        public static string FILTER_SHARING
+        {
+            get { return TextUtil.FileDialogFilter(Resources.SrmDocumentSharing_FILTER_SHARING_Shared_Files, EXT); }
+        }
 
         public SrmDocumentSharing(string sharedPath)
         {
@@ -64,8 +71,8 @@ namespace pwiz.Skyline.Model
             get
             {
                 return string.Format(Document != null
-                                         ? "Compressing files for sharing archive {0}"
-                                         : "Extracting files from sharing archive {0}",
+                                         ? Resources.SrmDocumentSharing_DefaultMessage_Compressing_files_for_sharing_archive__0__
+                                         : Resources.SrmDocumentSharing_DefaultMessage_Extracting_files_from_sharing_archive__0__,
                                      Path.GetFileName(SharedPath));
             }
         }
@@ -76,7 +83,7 @@ namespace pwiz.Skyline.Model
             WaitBroker.ProgressValue = 0;
             WaitBroker.Message = DefaultMessage;
 
-            string extractDir = Path.GetFileNameWithoutExtension(SharedPath) ?? "";
+            string extractDir = Path.GetFileNameWithoutExtension(SharedPath) ?? string.Empty;
 
             using (ZipFile zip = ZipFile.Read(SharedPath))
             {
@@ -127,7 +134,7 @@ namespace pwiz.Skyline.Model
             {
                 // If a directory with the given name already exists, add
                 // a suffix to create a unique folder name.
-                dirResult = dirPath + "(" + count + ")";
+                dirResult = dirPath + "(" + count + ")"; // Not L10N
                 count++;
             }
             return dirResult;
@@ -143,20 +150,20 @@ namespace pwiz.Skyline.Model
 
                 // Shared files should not have subfolders.
                 if (Path.GetFileName(file) != file)
-                    throw new IOException("The zip file is not a shared file.");
+                    throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file);
 
                 // Shared files must have exactly one Skyline Document(.sky).
                 if (!file.EndsWith(SrmDocument.EXT)) continue;
 
                 if (!string.IsNullOrEmpty(skylineFile))
-                    throw new IOException("The zip file is not a shared file. The file contains multiple Skyline documents.");
+                    throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_contains_multiple_Skyline_documents);
 
                 skylineFile = file;
             }
 
             if (string.IsNullOrEmpty(skylineFile))
             {
-                throw new IOException("The zip file is not a shared file. The file does not contain any Skyline documents.");
+                throw new IOException(Resources.SrmDocumentSharing_FindSharedSkylineFile_The_zip_file_is_not_a_shared_file_The_file_does_not_contain_any_Skyline_documents);
             }
             return skylineFile;
         }
@@ -184,12 +191,12 @@ namespace pwiz.Skyline.Model
             // If complete sharing, just zip up existing files
             var pepSettings = Document.Settings.PeptideSettings;
             if (Document.Settings.HasBackgroundProteome)
-                zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath, "");
+                zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath, string.Empty);
             if (Document.Settings.HasRTCalcPersisted)
-                zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath, "");
+                zip.AddFile(pepSettings.Prediction.RetentionTime.Calculator.PersistencePath, string.Empty);
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
             {
-                zip.AddFile(librarySpec.FilePath, "");
+                zip.AddFile(librarySpec.FilePath, string.Empty);
 
                 if (Document.Settings.TransitionSettings.FullScan.IsEnabledMs)
                 {
@@ -200,7 +207,7 @@ namespace pwiz.Skyline.Model
             }
 
             ShareDataAndView(zip);
-            zip.AddFile(DocumentPath, "");
+            zip.AddFile(DocumentPath, string.Empty);
             Save(zip);
         }
 
@@ -224,7 +231,7 @@ namespace pwiz.Skyline.Model
                     string tempDbPath = Document.Settings.PeptideSettings.Prediction.RetentionTime
                         .Calculator.PersistMinimized(tempDir.DirPath, Document);
                     if (tempDbPath != null)
-                        zip.AddFile(tempDbPath, "");
+                        zip.AddFile(tempDbPath, string.Empty);
                 }
                 if (Document.Settings.HasLibraries)
                 {
@@ -236,8 +243,8 @@ namespace pwiz.Skyline.Model
                                                         WaitBroker);
                     foreach (var librarySpec in Document.Settings.PeptideSettings.Libraries.LibrarySpecs)
                     {
-                        var tempLibPath = Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath) ?? "");
-                        zip.AddFile(tempLibPath, "");
+                        var tempLibPath = Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath) ?? string.Empty);
+                        zip.AddFile(tempLibPath, string.Empty);
 
                         // If there is a .redundant.blib file that corresponds to a .blib file
                         // in the temp temporary directory, add that as well
@@ -247,7 +254,7 @@ namespace pwiz.Skyline.Model
 
                 ShareDataAndView(zip);
                 if (ReferenceEquals(docOriginal, Document))
-                    zip.AddFile(DocumentPath, "");
+                    zip.AddFile(DocumentPath, string.Empty);
                 else
                 {
                     // If minimizing changed the document, then serialize and archive the new document
@@ -256,7 +263,7 @@ namespace pwiz.Skyline.Model
                     {
                         XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                         ser.Serialize(writer, Document);
-                        zip.AddEntry(Path.GetFileName(DocumentPath), "", stringWriter.ToString(), Encoding.UTF8);
+                        zip.AddEntry(Path.GetFileName(DocumentPath), string.Empty, stringWriter.ToString(), Encoding.UTF8);
                     }
                 }
                 Save(zip);
@@ -271,7 +278,10 @@ namespace pwiz.Skyline.Model
                     }
                     catch (IOException x)
                     {
-                        throw new IOException(string.Format("Failure removing temporary directory {0}.\n{1}", tempDir.DirPath, x.Message));
+                        var message = TextUtil.LineSeparate(string.Format(Resources.SrmDocumentSharing_ShareMinimal_Failure_removing_temporary_directory__0__,
+                                                                          tempDir.DirPath),
+                                                            x.Message);
+                        throw new IOException(message);
                     }
                 }
             }
@@ -284,7 +294,7 @@ namespace pwiz.Skyline.Model
                 var redundantBlibPath = BiblioSpecLiteSpec.GetRedundantName(blibPath);
                 if (File.Exists(redundantBlibPath))
                 {
-                    zip.AddFile(redundantBlibPath, "");
+                    zip.AddFile(redundantBlibPath, string.Empty);
                 }
             }
         }
@@ -293,10 +303,10 @@ namespace pwiz.Skyline.Model
         {
             string pathCache = ChromatogramCache.FinalPathForName(DocumentPath, null);
             if (File.Exists(pathCache))
-                zip.AddFile(pathCache, "");
+                zip.AddFile(pathCache, string.Empty);
             string viewPath = SkylineWindow.GetViewFile(DocumentPath);
             if (File.Exists(viewPath))
-                zip.AddFile(viewPath, "");
+                zip.AddFile(viewPath, string.Empty);
         }
 
         private void Save(ZipFile zip)
@@ -327,8 +337,10 @@ namespace pwiz.Skyline.Model
                 if (progressValue != WaitBroker.ProgressValue)
                 {
                     WaitBroker.ProgressValue = progressValue;
-                    WaitBroker.Message = (e.CurrentEntry != null ?
-                        string.Format("Extracting {0}", e.CurrentEntry.FileName) : DefaultMessage);
+                    WaitBroker.Message = (e.CurrentEntry != null
+                                              ? string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_ExtractProgress_Extracting__0__,
+                                                              e.CurrentEntry.FileName)
+                                              : DefaultMessage);
                 }
             }
         }
@@ -351,8 +363,10 @@ namespace pwiz.Skyline.Model
                 if (progressValue != WaitBroker.ProgressValue)
                 {
                     WaitBroker.ProgressValue = progressValue;
-                    WaitBroker.Message = (e.CurrentEntry != null ?
-                        string.Format("Compressing {0}", e.CurrentEntry.FileName) : DefaultMessage);
+                    WaitBroker.Message = (e.CurrentEntry != null
+                                              ? string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
+                                                              e.CurrentEntry.FileName)
+                                              : DefaultMessage);
                 }
             }
         }

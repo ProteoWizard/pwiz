@@ -24,7 +24,8 @@ namespace pwiz.Skyline.Model
 {
     public sealed class IsotopeLabelType : IComparable
     {
-        // ReSharper disable InconsistentNaming
+        // TODO: L1ON?
+        // ReSharper disable InconsistentNaming 
         public const string LIGHT_NAME = "light";
         public const string HEAVY_NAME = "heavy";
 
@@ -61,7 +62,7 @@ namespace pwiz.Skyline.Model
                     return Name;
 
                 return Name[0].ToString(CultureInfo.InvariantCulture).ToUpper() +
-                    (Name.Length > 1 ? Name.Substring(1) : "");
+                    (Name.Length > 1 ? Name.Substring(1) : string.Empty);
             }
         }
 

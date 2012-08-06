@@ -21,6 +21,8 @@ using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using ZedGraph;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -31,6 +33,7 @@ namespace pwiz.Skyline.EditUI
     /// </summary>
     public class CopyEmfToolStripMenuItem : ToolStripMenuItem
     {
+        // Not L10N
         [DllImport("user32.dll")]
         static extern bool OpenClipboard(IntPtr hWndNewOwner);
         [DllImport("user32.dll")]
@@ -43,7 +46,7 @@ namespace pwiz.Skyline.EditUI
         public CopyEmfToolStripMenuItem(ZedGraphControl zedGraphControl)
         {
             ZedGraphControl = zedGraphControl;
-            Text = "Copy Metafile";
+            Text = Resources.CopyEmfToolStripMenuItem_CopyEmfToolStripMenuItem_Copy_Metafile;
             Click += CopyEmfToolStripMenuItem_Click;
         }
 
@@ -70,9 +73,10 @@ namespace pwiz.Skyline.EditUI
             }
             if (zedGraphControl.IsShowCopyMessage)
             {
-                MessageBox.Show(zedGraphControl, success
-                                    ? "Metafile image copied to clipboard"
-                                    : "Unable to copy metafile image to the clipboard.");
+                MessageDlg.Show(zedGraphControl,
+                                success
+                                    ? Resources.CopyEmfToolStripMenuItem_CopyEmf_Metafile_image_copied_to_clipboard
+                                    : Resources.CopyEmfToolStripMenuItem_CopyEmf_Unable_to_copy_metafile_image_to_the_clipboard);
             }
         }
 
@@ -86,7 +90,7 @@ namespace pwiz.Skyline.EditUI
             for (int i = 0; i < contextMenuStrip.Items.Count; i++)
             {
                 var item = contextMenuStrip.Items[i];
-                if (item.Text == "Copy")
+                if (item.Text == Resources.CopyEmfToolStripMenuItem_AddToContextMenu_Copy)
                 {
                     index = i + 1;
                     break;

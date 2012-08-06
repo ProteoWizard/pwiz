@@ -26,6 +26,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
@@ -60,7 +61,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (Source == SpectralLibrarySource.settings)
                     return (LibrarySpec)comboLibrary.SelectedItem;
-                return new BiblioSpecLiteSpec("__internal__", textFilePath.Text);
+                return new BiblioSpecLiteSpec("__internal__", textFilePath.Text); // Not L10N
             }
         }
 
@@ -77,13 +78,22 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 string path = textFilePath.Text;
                 string message = null;
                 if (string.IsNullOrEmpty(path))
-                    message = "Please specify a path to an existing spectral library.";
+                    message = Resources.AddIrtSpectralLibrary_OkDialog_Please_specify_a_path_to_an_existing_spectral_library;
                 else if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
-                    message = string.Format("The file {0} appears to be a redundant library.\nPlease choose a  non-redundant library.", path);
+                {
+                    message = TextUtil.LineSeparate(string.Format(Resources.AddIrtSpectralLibrary_OkDialog_The_file__0__appears_to_be_a_redundant_library, path),
+                                                    Resources.AddIrtSpectralLibrary_OkDialog_Please_choose_a_non_redundant_library);
+                }
                 else if (!path.EndsWith(BiblioSpecLiteSpec.EXT))
-                    message = string.Format("The file {0} is not a BiblioSpec library.\nOnly BiblioSpec libraries contain enough retention time information to support this operation.", path);
+                {
+                    message = TextUtil.LineSeparate(string.Format(Resources.AddIrtSpectralLibrary_OkDialog_The_file__0__is_not_a_BiblioSpec_library, path),
+                                                    Resources.AddIrtSpectralLibrary_OkDialog_Only_BiblioSpec_libraries_contain_enough_retention_time_information_to_support_this_operation);
+                }
                 else if (!File.Exists(path))
-                    message = string.Format("The file {0} does not exist.\nPlease specify a path to an existing spectral library.", path);
+                {
+                    message = TextUtil.LineSeparate(string.Format(Resources.AddIrtSpectralLibrary_OkDialog_The_file__0__does_not_exist, path),
+                                                    Resources.AddIrtSpectralLibrary_OkDialog_Please_specify_a_path_to_an_existing_spectral_library); 
+                }
                 if (message != null)
                 {
                     MessageDlg.Show(this, message);
@@ -94,7 +104,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var librarySpec = Library;
             if (librarySpec == null)
             {
-                MessageDlg.Show(this, "Please choose the library you would like to add.");
+                MessageDlg.Show(this, Resources.AddIrtSpectralLibrary_OkDialog_Please_choose_the_library_you_would_like_to_add);
                 return;
             }
 
@@ -122,7 +132,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 comboLibrary.Enabled = true;
                 textFilePath.Enabled = false;
-                textFilePath.Text = "";
+                textFilePath.Text = string.Empty;
                 btnBrowseFile.Enabled = false;
             }
             else
@@ -140,12 +150,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 InitialDirectory = Settings.Default.LibraryDirectory,
                 CheckPathExists = true,
-                DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = string.Join("|", new[]
-                    {
-                        "BiblioSpec Libraries (*" + BiblioSpecLiteSpec.EXT + ")|*" + BiblioSpecLiteSpec.EXT,
-                        "All Files (*.*)|*.*"
-                    })
+                DefaultExt = BiblioSpecLiteSpec.EXT,
+                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
             })
             {
                 if (dlg.ShowDialog(this) != DialogResult.OK)

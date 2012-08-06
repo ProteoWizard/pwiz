@@ -67,7 +67,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             RunUI(() => Assert.AreEqual(ionCount + 1, SkylineWindow.GraphSpectrum.PeaksMatchedCount));
 
-            string precursorPrefix = IonType.precursor.ToString();
+            string precursorPrefix = IonType.precursor.GetLocalizedString();
             string precursorLabel = precursorPrefix + Transition.GetChargeIndicator(2);
 
             SrmDocument docCurrent = SkylineWindow.Document;
@@ -146,8 +146,8 @@ namespace pwiz.SkylineTestFunctional
                       {
                           // Unfortunately, label hiding may mean the precursor label is not present
                           string ionSelected = SkylineWindow.GraphSpectrum.SelectedIonLabel;
-                          if ((ionSelected != null && ionSelected.Contains("precursor")) ||
-                                SkylineWindow.GraphSpectrum.IonLabels.Contains("precursor"))
+                          if ((ionSelected != null && ionSelected.Contains(IonType.precursor.GetLocalizedString())) ||
+                                SkylineWindow.GraphSpectrum.IonLabels.Contains(IonType.precursor.GetLocalizedString()))
                           {
                               Assert.AreEqual(ionName, ionSelected);
                           }

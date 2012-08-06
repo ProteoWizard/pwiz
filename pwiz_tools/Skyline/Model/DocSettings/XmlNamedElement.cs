@@ -23,6 +23,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -40,7 +41,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// A dummy name for instances which will only be used internally
         /// </summary>
-        public const string NAME_INTERNAL = "__internal__";
+        public const string NAME_INTERNAL = "__internal__"; // Not L10N
 
         /// <summary>
         /// Parameterless constructor for serialization use only.
@@ -84,7 +85,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (string.IsNullOrEmpty(Name))
-                throw new InvalidDataException("Name property may not be missing or empty.");
+                throw new InvalidDataException(Resources.XmlNamedElement_Validate_Name_property_may_not_be_missing_or_empty);
         }
 
         public XmlSchema GetSchema()

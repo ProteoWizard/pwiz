@@ -108,7 +108,8 @@ namespace pwiz.Skyline.Model.Lib
             // Get potential losses to all fragments in this peptide
             rp.massType = predict.FragmentMassType;
             rp.potentialLosses = TransitionGroup.CalcPotentialLosses(rp.sequence,
-                                                                     settings.PeptideSettings.Modifications, mods, rp.massType);
+                                                                     settings.PeptideSettings.Modifications, mods,
+                                                                     rp.massType);
 
             // Create arrays because ReadOnlyCollection enumerators are too slow
             // In some cases these collections must be enumerated for every ion
@@ -152,7 +153,7 @@ namespace pwiz.Skyline.Model.Lib
                 foreach (float intensity in info.Intensities)
                     totalIntensity += intensity;
 
-                FindIntensityCutoff(listMI, 0, (float) (totalIntensity/len) * 2, minPeaks, 1, ref intensityCutoff, ref len);
+                FindIntensityCutoff(listMI, 0, (float) (totalIntensity/len)*2, minPeaks, 1, ref intensityCutoff, ref len);
             }
 
             // Create filtered peak array storing original index for m/z ordering

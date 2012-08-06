@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -441,6 +442,18 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan, SrmSettingsList.GetDefault().TransitionSettings.FullScan);
             Cloned(target.TransitionSettings, copy.TransitionSettings);
             Cloned(target, copy);
+        }
+
+        public static void AreComparableStrings(string expected, string actual, int replacements)
+        {
+            // Split strings on placeholders
+            string[] expectedParts = Regex.Split(expected,@"{\d}");
+            Assert.AreEqual(replacements,expectedParts.Length - 1);
+
+            foreach (var expectedPart in expectedParts)
+            {
+                Assert.IsTrue(actual.Contains(expectedPart));
+            }
         }
     }
 }

@@ -37,8 +37,8 @@ namespace pwiz.Skyline.SettingsUI
             for (int i = 0; i < statistics.Peptides.Count; i++)
             {
                 gridStatistics.Rows.Add(statistics.Peptides[i],
-                                        string.Format("{0:F02}", statistics.ListHydroScores[i]),
-                                        string.Format("{0}", statistics.ListPredictions[i]),
+                                        string.Format("{0:F02}", statistics.ListHydroScores[i]), // Not L10N
+                                        string.Format("{0}", statistics.ListPredictions[i]), // Not L10N
                                         statistics.ListRetentionTimes[i]);
             }
         }
@@ -56,11 +56,11 @@ namespace pwiz.Skyline.SettingsUI
                     
                     foreach (DataGridViewCell cell in row.Cells)
                     {
-                        if (sb[sb.Length - 1] != '\n')
-                            sb.Append('\t');
+                        if (sb[sb.Length - 1] != '\n') // Not L10N
+                            sb.Append('\t'); // Not L10N
                         sb.Append(cell.Value);
                     }
-                    sb.Append('\n');
+                    sb.Append('\n'); // Not L10N
                 }
                 try
                 {
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (ExternalException)
                 {
-                    MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage("Failed setting data to clipboard."));
+                    MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage(Resources.RTDetails_gridStatistics_KeyDown_Failed_setting_data_to_clipboard));
                 }
             }
         }

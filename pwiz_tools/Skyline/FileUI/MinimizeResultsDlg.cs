@@ -30,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -155,8 +156,8 @@ namespace pwiz.Skyline.FileUI
                 else
                 {
                     btnMinimize.Enabled = btnMinimizeAs.Enabled = false;
-                    lblCurrentCacheFileSize.Text = "The cache file has not been loaded yet.";
-                    lblSpaceSavings.Text = "";
+                    lblCurrentCacheFileSize.Text = Resources.MinimizeResultsDlg_ChromCacheMinimizer_The_cache_file_has_not_been_loaded_yet;
+                    lblSpaceSavings.Text = string.Empty;
                 }
             }
         }
@@ -196,9 +197,9 @@ namespace pwiz.Skyline.FileUI
             double noiseTime;
             string errorMessage = null;
             if (!double.TryParse(tbxNoiseTimeRange.Text, out noiseTime))
-                errorMessage = "The noise time limit must be a valid decimal number.";
+                errorMessage = Resources.MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_valid_decimal_number;
             if (noiseTime < 0)
-                errorMessage = "The noise time limit must be a positive decimal number.";
+                errorMessage = Resources.MinimizeResultsDlg_tbxNoiseTimeRange_Leave_The_noise_time_limit_must_be_a_positive_decimal_number;
             if (errorMessage != null)
             {
                 MessageDlg.Show(this, errorMessage);
@@ -232,12 +233,13 @@ namespace pwiz.Skyline.FileUI
             var document = DocumentUIContainer.DocumentUI;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, "All results must be completely imported before any can be minimized.");
+                MessageDlg.Show(this, Resources.MinimizeResultsDlg_Minimize_All_results_must_be_completely_imported_before_any_can_be_minimized);
                 return;
             }
             if (!Settings.DiscardUnmatchedChromatograms && !Settings.NoiseTimeRange.HasValue)
             {
-                if (MessageBox.Show(this, "You have not chosen any options to minimize your cache file.  Are you sure you want to continue?", 
+                if (MessageBox.Show(this, 
+                    Resources.MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue, 
                     Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
                 {
                     return;
@@ -253,11 +255,7 @@ namespace pwiz.Skyline.FileUI
                         InitialDirectory = Properties.Settings.Default.ActiveDirectory,
                         OverwritePrompt = true,
                         DefaultExt = SrmDocument.EXT,
-                        Filter = string.Join("|", new[]
-                        {
-                            "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
-                            "All Files (*.*)|*.*"
-                        }),
+                        Filter = TextUtil.FileDialogFilterAll(Resources.MinimizeResultsDlg_Minimize_Skyline_Documents, SrmDocument.EXT),
                         FileName = Path.GetFileName(targetFile),
                     })
                 {
@@ -282,7 +280,7 @@ namespace pwiz.Skyline.FileUI
                     longWaitDlg.PerformWork(this, 1000,
                                             longWaitBroker =>
                                                 {
-                                                    longWaitBroker.Message = "Saving new cache file";
+                                                    longWaitBroker.Message = Resources.MinimizeResultsDlg_MinimizeToFile_Saving_new_cache_file;
                                                     try
                                                     {
                                                         using (var backgroundWorker =
@@ -323,9 +321,11 @@ namespace pwiz.Skyline.FileUI
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(this,
-                                    string.Format("An unexpected error occurred while saving the data cache file {0}.\n{1}",
-                                                  targetFile, x.Message));
+                    var message = TextUtil.LineSeparate(
+                        string.Format(Resources.MinimizeResultsDlg_MinimizeToFile_An_unexpected_error_occurred_while_saving_the_data_cache_file__0__,
+                                                targetFile),
+                        x.Message);
+                    MessageDlg.Show(this, message);
                     return;
                 }
                 skylineWindow.InvalidateChromatogramGraphs();
@@ -430,18 +430,17 @@ namespace pwiz.Skyline.FileUI
                     Debug.Assert(!_dlg.InvokeRequired);
                     statistics = _statistics;
                 }
-                _dlg.lblCurrentCacheFileSize.Text = string.Format(
-                    FileSize.FormatProvider,
-                    "The current size of the cache file is {0:fs}", statistics.OriginalFileSize);
+                _dlg.lblCurrentCacheFileSize.Text = string.Format(FileSize.FormatProvider,
+                    Resources.BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs, statistics.OriginalFileSize);
                 if (statistics.PercentComplete == 100)
                 {
-                    _dlg.lblSpaceSavings.Text =
-                        string.Format("After minimizing, the cache file will be reduced to {0:0%} its current size",
-                                      statistics.MinimizedRatio);
+                    _dlg.lblSpaceSavings.Text = string.Format(Resources.BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size,
+                                                              statistics.MinimizedRatio);
                 }
                 else
                 {
-                    _dlg.lblSpaceSavings.Text = string.Format("Computing space savings ({0}% complete)", statistics.PercentComplete);
+                    _dlg.lblSpaceSavings.Text = string.Format(Resources.BackgroundWorker_UpdateStatistics_Computing_space_savings__0__complete, 
+                                                              statistics.PercentComplete);
                 }
                 var newGridRowItems = statistics.Replicates.Select(r => new GridRowItem(r)).ToArray();
                 if (_dlg._rowItems.Count != newGridRowItems.Length)

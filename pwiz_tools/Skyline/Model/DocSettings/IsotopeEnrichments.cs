@@ -25,6 +25,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("isotope_enrichments")]
     public sealed class IsotopeEnrichments : XmlNamedElement, IValidating
     {
-        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments("Default",
+        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments(Resources.IsotopeEnrichments_DEFAULT_Default,
             BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
 
         private ReadOnlyCollection<IsotopeEnrichmentItem> _isotopeEnrichments;
@@ -210,11 +211,11 @@ namespace pwiz.Skyline.Model.DocSettings
         private void DoValidate()
         {
             if (Equals(Symbol, IsotopeSymbol))
-                throw new InvalidDataException(string.Format("Isotope enrichment is not supported for the symbol {0}", IsotopeSymbol));
+                throw new InvalidDataException(string.Format(Resources.IsotopeEnrichmentItem_DoValidate_Isotope_enrichment_is_not_supported_for_the_symbol__0__, IsotopeSymbol));
             if (MIN_ATOM_PERCENT_ENRICHMENT > AtomPercentEnrichment ||
                     AtomPercentEnrichment > MAX_ATOM_PERCENT_ENRICHMENT)
             {
-                throw new InvalidDataException(string.Format("Atom percent enrichment {0} must be between {1} and {2}",
+                throw new InvalidDataException(string.Format(Resources.IsotopeEnrichmentItem_DoValidate_Atom_percent_enrichment__0__must_be_between__1__and__2__,
                     AtomPercentEnrichment, MIN_ATOM_PERCENT_ENRICHMENT, MAX_ATOM_PERCENT_ENRICHMENT));
             }
         }
@@ -280,7 +281,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString()
         {
-            return string.Format("{0} = {1}%", IsotopeSymbol, AtomPercentEnrichment*100);
+            return string.Format(Resources.IsotopeEnrichmentItem_ToString__0__1__Percent, IsotopeSymbol, AtomPercentEnrichment*100);
         }
 
         #endregion

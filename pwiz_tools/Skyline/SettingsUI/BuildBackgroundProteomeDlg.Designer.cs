@@ -28,6 +28,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BuildBackgroundProteomeDlg));
             this.btnBrowse = new System.Windows.Forms.Button();
             this.labelFile = new System.Windows.Forms.Label();
             this.textPath = new System.Windows.Forms.TextBox();
@@ -45,143 +46,89 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // btnBrowse
             // 
-            this.btnBrowse.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBrowse.Location = new System.Drawing.Point(263, 73);
+            resources.ApplyResources(this.btnBrowse, "btnBrowse");
             this.btnBrowse.Name = "btnBrowse";
-            this.btnBrowse.Size = new System.Drawing.Size(75, 23);
-            this.btnBrowse.TabIndex = 5;
-            this.btnBrowse.Text = "&Browse...";
             this.btnBrowse.UseVisualStyleBackColor = true;
             this.btnBrowse.Click += new System.EventHandler(this.btnBrowse_Click);
             // 
             // labelFile
             // 
-            this.labelFile.AutoSize = true;
-            this.labelFile.Location = new System.Drawing.Point(7, 60);
+            resources.ApplyResources(this.labelFile, "labelFile");
             this.labelFile.Name = "labelFile";
-            this.labelFile.Size = new System.Drawing.Size(71, 13);
-            this.labelFile.TabIndex = 2;
-            this.labelFile.Text = "&Proteome file:";
             // 
             // textPath
             // 
-            this.textPath.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.textPath.Location = new System.Drawing.Point(10, 76);
+            resources.ApplyResources(this.textPath, "textPath");
             this.textPath.Name = "textPath";
-            this.textPath.Size = new System.Drawing.Size(247, 20);
-            this.textPath.TabIndex = 4;
             this.textPath.TextChanged += new System.EventHandler(this.textPath_TextChanged);
             // 
             // textName
             // 
-            this.textName.Location = new System.Drawing.Point(10, 28);
+            resources.ApplyResources(this.textName, "textName");
             this.textName.Name = "textName";
-            this.textName.Size = new System.Drawing.Size(158, 20);
-            this.textName.TabIndex = 1;
             this.textName.TextChanged += new System.EventHandler(this.textName_TextChanged);
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(7, 12);
+            resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(38, 13);
-            this.label4.TabIndex = 0;
-            this.label4.Text = "&Name:";
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(356, 41);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 12;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(356, 12);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 11;
-            this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnAddFastaFile
             // 
-            this.btnAddFastaFile.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAddFastaFile.Location = new System.Drawing.Point(356, 174);
+            resources.ApplyResources(this.btnAddFastaFile, "btnAddFastaFile");
             this.btnAddFastaFile.Name = "btnAddFastaFile";
-            this.btnAddFastaFile.Size = new System.Drawing.Size(75, 24);
-            this.btnAddFastaFile.TabIndex = 10;
-            this.btnAddFastaFile.Text = "&Add File...";
             this.btnAddFastaFile.UseVisualStyleBackColor = true;
             this.btnAddFastaFile.Click += new System.EventHandler(this.btnAddFastaFile_Click);
             // 
             // tbxStatus
             // 
-            this.tbxStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxStatus.Location = new System.Drawing.Point(10, 102);
-            this.tbxStatus.Multiline = true;
+            resources.ApplyResources(this.tbxStatus, "tbxStatus");
             this.tbxStatus.Name = "tbxStatus";
             this.tbxStatus.ReadOnly = true;
-            this.tbxStatus.Size = new System.Drawing.Size(328, 38);
-            this.tbxStatus.TabIndex = 6;
             // 
             // btnBuild
             // 
-            this.btnBuild.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnBuild.Location = new System.Drawing.Point(356, 117);
+            resources.ApplyResources(this.btnBuild, "btnBuild");
             this.btnBuild.Name = "btnBuild";
-            this.btnBuild.Size = new System.Drawing.Size(75, 23);
-            this.btnBuild.TabIndex = 7;
-            this.btnBuild.Text = "B&uild <<";
             this.btnBuild.UseVisualStyleBackColor = true;
             this.btnBuild.Click += new System.EventHandler(this.btnBuild_Click);
             // 
             // labelFasta
             // 
-            this.labelFasta.AutoSize = true;
-            this.labelFasta.Location = new System.Drawing.Point(7, 157);
+            resources.ApplyResources(this.labelFasta, "labelFasta");
             this.labelFasta.Name = "labelFasta";
-            this.labelFasta.Size = new System.Drawing.Size(65, 13);
-            this.labelFasta.TabIndex = 8;
-            this.labelFasta.Text = "&FASTA files:";
             // 
             // listboxFasta
             // 
-            this.listboxFasta.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.listboxFasta, "listboxFasta");
             this.listboxFasta.FormattingEnabled = true;
-            this.listboxFasta.Location = new System.Drawing.Point(10, 174);
             this.listboxFasta.Name = "listboxFasta";
-            this.listboxFasta.Size = new System.Drawing.Size(328, 95);
-            this.listboxFasta.TabIndex = 9;
             // 
             // labelFileNew
             // 
-            this.labelFileNew.AutoSize = true;
-            this.labelFileNew.Location = new System.Drawing.Point(152, 60);
+            resources.ApplyResources(this.labelFileNew, "labelFileNew");
             this.labelFileNew.Name = "labelFileNew";
-            this.labelFileNew.Size = new System.Drawing.Size(105, 13);
-            this.labelFileNew.TabIndex = 3;
-            this.labelFileNew.Text = "&Output proteome file:";
-            this.labelFileNew.Visible = false;
             // 
             // BuildBackgroundProteomeDlg
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(443, 289);
             this.Controls.Add(this.labelFileNew);
             this.Controls.Add(this.listboxFasta);
             this.Controls.Add(this.labelFasta);
@@ -199,8 +146,6 @@ namespace pwiz.Skyline.SettingsUI
             this.MinimizeBox = false;
             this.Name = "BuildBackgroundProteomeDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Background Proteome";
             this.ResumeLayout(false);
             this.PerformLayout();
 

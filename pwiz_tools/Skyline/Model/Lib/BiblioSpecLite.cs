@@ -33,6 +33,7 @@ using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -41,14 +42,20 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_spec")]
     public sealed class BiblioSpecLiteSpec : LibrarySpec
     {
-        public const string EXT = ".blib";
-        public const string EXT_REDUNDANT = ".redundant.blib";
+        public const string EXT = ".blib"; // Not L10N
+
+        public static string FILTER_BLIB
+        {
+            get { return TextUtil.FileDialogFilter(Resources.BiblioSpecLiteSpec_FILTER_BLIB_BiblioSpec_Library, EXT); }
+        }
+
+        public const string EXT_REDUNDANT = ".redundant.blib"; // Not L10N
 
         public static string GetRedundantName(string libraryPath)
         {
             string libraryDir = Path.GetDirectoryName(libraryPath);
             string libraryBasename = Path.GetFileNameWithoutExtension(libraryPath);
-            return Path.Combine(libraryDir ?? "", libraryBasename + EXT_REDUNDANT);            
+            return Path.Combine(libraryDir ?? string.Empty, libraryBasename + EXT_REDUNDANT);            
         }
 
         private static readonly PeptideRankId[] RANK_IDS = new[] { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
@@ -90,9 +97,9 @@ namespace pwiz.Skyline.Model.Lib
     {
         private const int FORMAT_VERSION_CACHE = 3;
 
-        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
+        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
-        public const string EXT_CACHE = ".slc";
+        public const string EXT_CACHE = ".slc"; // Not L10N
 
         private PooledSqliteConnection _sqliteConnection;
         private PooledSqliteConnection _sqliteConnectionRedundant;
@@ -118,7 +125,7 @@ namespace pwiz.Skyline.Model.Lib
             FilePath = spec.FilePath;
 
             string baseName = Path.GetFileNameWithoutExtension(FilePath);
-            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? "", baseName + EXT_CACHE);
+            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? string.Empty, baseName + EXT_CACHE);
         }
 
         /// <summary>
@@ -194,7 +201,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 LibraryDetails details = new LibraryDetails
                                              {
-                                                 Format = "BiblioSpec",
+                                                 Format = "BiblioSpec", // Not L10N
                                                  Revision = Revision.ToString(CultureInfo.CurrentCulture),
                                                  Version = SchemaVersion.ToString(CultureInfo.CurrentCulture),
                                                  PeptideCount = SpectrumCount,
@@ -370,11 +377,11 @@ namespace pwiz.Skyline.Model.Lib
                 int dataRev, schemaVer;
 
                 // First get header information
-                select.CommandText = "SELECT * FROM [LibInfo]";
+                select.CommandText = "SELECT * FROM [LibInfo]"; // Not L10N
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     if (!reader.Read())
-                        throw new IOException(string.Format("Failed reading library header for {0}.", FilePath));
+                        throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Failed_reading_library_header_for__0__, FilePath));
 
                     rows = reader.GetInt32(LibInfo.numSpecs);
 
@@ -388,16 +395,14 @@ namespace pwiz.Skyline.Model.Lib
                 // by using count(*)
                 if (rows == 0)
                 {
-                    select.CommandText = "SELECT count(*) FROM [RefSpectra]";
+                    select.CommandText = "SELECT count(*) FROM [RefSpectra]"; // Not L10N
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         if (!reader.Read())
-                            throw new InvalidDataException(
-                                string.Format("Unable to get a valid count of spectra in the library {0}", FilePath));
+                            throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_Unable_to_get_a_valid_count_of_spectra_in_the_library__0__, FilePath));
                         rows = reader.GetInt32(0);
                         if (rows == 0)
-                            throw new InvalidDataException(string.Format("No spectra were found in the library {0}",
-                                                                         FilePath));
+                            throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_CreateCache_No_spectra_were_found_in_the_library__0__, FilePath));
                     }
                 }
 
@@ -423,7 +428,7 @@ namespace pwiz.Skyline.Model.Lib
                 var libraryEntries = new List<BiblioLiteSpectrumInfo>(rows);
                 var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
-                select.CommandText = "SELECT * FROM [RefSpectra]";
+                select.CommandText = "SELECT * FROM [RefSpectra]"; // Not L10N
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     int iId = reader.GetOrdinal(RefSpectra.id);
@@ -485,7 +490,7 @@ namespace pwiz.Skyline.Model.Lib
 
                 if (schemaVer > 0)
                 {
-                    select.CommandText = "SELECT * FROM [SpectrumSourceFiles]";
+                    select.CommandText = "SELECT * FROM [SpectrumSourceFiles]"; // Not L10N
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
@@ -567,7 +572,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool Load(ILoadMonitor loader)
         {
-            ProgressStatus status = new ProgressStatus("");
+            ProgressStatus status = new ProgressStatus(string.Empty);
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
@@ -598,8 +603,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Building the cache will take 95% of the load time.
                     loadPercent = 5;
 
-                    status =
-                        status.ChangeMessage(string.Format("Building binary cache for {0} library",
+                    status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibrary_Load_Building_binary_cache_for__0__library,
                                                            Path.GetFileName(FilePath)));
                     status = status.ChangePercentComplete(0);
 
@@ -609,7 +613,8 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                 }
 
-                status = status.ChangeMessage(string.Format("Loading {0} library,", Path.GetFileName(FilePath)));
+                status = status.ChangeMessage(string.Format(Resources.BiblioSpecLiteLibraryLoadLoading__0__library,
+                                                            Path.GetFileName(FilePath)));
                 loader.UpdateProgress(status);
 
                 var sm = loader.StreamManager;
@@ -695,7 +700,7 @@ namespace pwiz.Skyline.Model.Lib
                         int seqKeyLength = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_length));
                         int charge = GetInt32(specHeader, ((int) SpectrumCacheHeader.charge));
                         if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                            throw new InvalidDataException(string.Format("Invalid precursor charge {0} found. File may be corrupted.", charge));
+                            throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Invalid_precursor_charge__0__found__File_may_be_corrupted, charge));
                         int copies = GetInt32(specHeader, ((int) SpectrumCacheHeader.copies));
                         int numPeaks = GetInt32(specHeader, ((int) SpectrumCacheHeader.num_peaks));
                         int id = GetInt32(specHeader, ((int) SpectrumCacheHeader.id));
@@ -745,7 +750,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (!cached)
                 {
-                    x = new Exception(string.Format("Failed loading library '{0}'.", FilePath), x);
+                    x = new Exception(string.Format(Resources.BiblioSpecLiteLibrary_Load_Failed_loading_library__0__, FilePath), x);
                     loader.UpdateProgress(status.ChangeErrorException(x));
                 }
                 return false;
@@ -772,7 +777,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
                 {
-                    select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?";
+                    select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?"; // Not L10N
                     select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
 
                     using (SQLiteDataReader reader = select.ExecuteReader())
@@ -787,7 +792,8 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (SQLiteException x)
             {                
-                throw new IOException(string.Format("Unexpected SQLite failure reading {0}.", FilePath), x);
+                throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadSpectrum_Unexpected_SQLite_failure_reading__0__,
+                                                    FilePath), x);
             }
 
             return null;
@@ -796,16 +802,16 @@ namespace pwiz.Skyline.Model.Lib
         private SpectrumPeaksInfo.MI[] ReadRedundantSpectrum(int spectrumId)
         {
             if (_sqliteConnectionRedundant == null)
-                throw new IOException(string.Format("The redundant library {0} does not exist.", FilePathRedundant));
+                throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadRedundantSpectrum_The_redundant_library__0__does_not_exist, FilePathRedundant));
 
             try
             {
                 using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
                 {
                     select.CommandText =
-                        "SELECT * FROM " +
-                        "[RefSpectra] as s INNER JOIN [RefSpectraPeaks] as p ON s.[id] = p.[RefSpectraID] " +
-                        "WHERE s.[id] = ?";
+                        "SELECT * FROM " + // Not L10N
+                        "[RefSpectra] as s INNER JOIN [RefSpectraPeaks] as p ON s.[id] = p.[RefSpectraID] " + // Not L10N
+                        "WHERE s.[id] = ?"; // Not L10N
                     select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)spectrumId));
 
                     using (SQLiteDataReader reader = select.ExecuteReader())
@@ -814,7 +820,7 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             int numPeaks = reader.GetInt32(RefSpectra.numPeaks);
                             if (numPeaks > ushort.MaxValue)
-                                throw new IOException(string.Format("Spectrum peaks {0} excede the maximum allowed {1}.", numPeaks, ushort.MaxValue));
+                                throw new IOException(string.Format(Resources.BiblioSpecLiteLibrary_ReadRedundantSpectrum_Spectrum_peaks__0__excede_the_maximum_allowed__1__, numPeaks, ushort.MaxValue));
                             return ReadPeaks(reader, (ushort) numPeaks);
                         }
                     }
@@ -822,7 +828,9 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (SQLiteException x)
             {
-                throw new IOException(string.Format("Unexpected SQLite failure reading {0}.", FilePathRedundant), x);
+                throw new IOException(
+                    string.Format(Resources.BiblioSpecLiteLibrary_ReadSpectrum_Unexpected_SQLite_failure_reading__0__,
+                                  FilePathRedundant), x);
             }
 
             return null;
@@ -868,8 +876,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
-                select.CommandText = "SELECT retentionTime FROM [RetentionTimes] " +
-                    "WHERE [RefSpectraID] = ? AND [SpectrumSourceId] = ?";
+                select.CommandText = "SELECT retentionTime FROM [RetentionTimes] " + // Not L10N
+                    "WHERE [RefSpectraID] = ? AND [SpectrumSourceId] = ?"; // Not L10N
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
 
@@ -923,10 +931,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             using (SQLiteCommand select = new SQLiteCommand(connection))
             {
-                select.CommandText = "SELECT peptideModSeq, t.retentionTime " +
-                    "FROM [RefSpectra] as s INNER JOIN [RetentionTimes] as t ON s.[id] = t.[RefSpectraID] " +
-                    "WHERE t.[SpectrumSourceId] = ? " +
-                    "ORDER BY peptideModSeq, t.retentionTime";
+                select.CommandText = "SELECT peptideModSeq, t.retentionTime " + // Not L10N
+                    "FROM [RefSpectra] as s INNER JOIN [RetentionTimes] as t ON s.[id] = t.[RefSpectraID] " + // Not L10N
+                    "WHERE t.[SpectrumSourceId] = ? " + // Not L10N
+                    "ORDER BY peptideModSeq, t.retentionTime"; // Not L10N
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
 
                 using (SQLiteDataReader reader = select.ExecuteReader())
@@ -1009,11 +1017,11 @@ namespace pwiz.Skyline.Model.Lib
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 select.CommandText =
-                    "SELECT * " +
-                    "FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " +
-                    "WHERE t.[RefSpectraID] = ?";
+                    "SELECT * " + // Not L10N
+                    "FROM [RetentionTimes] as t INNER JOIN [SpectrumSourceFiles] as s ON t.[SpectrumSourceID] = s.[id] " + // Not L10N
+                    "WHERE t.[RefSpectraID] = ?"; // Not L10N
                 if (!getAll)
-                    select.CommandText += " AND t.[bestSpectrum] = 1";
+                    select.CommandText += " AND t.[bestSpectrum] = 1"; // Not L10N
 
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
 
@@ -1068,7 +1076,7 @@ namespace pwiz.Skyline.Model.Lib
 
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
-                select.CommandText = "SELECT count(*) FROM [RetentionTimes]";
+                select.CommandText = "SELECT count(*) FROM [RetentionTimes]"; // Not L10N
 
                 // SchemaVersion 1 does not have RetentionTimes table for redundant libraries. 
                 // Querying a non-existent RetentionTimes table will throw an exception. 
@@ -1077,8 +1085,7 @@ namespace pwiz.Skyline.Model.Lib
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         if (!reader.Read())
-                            throw new InvalidDataException(
-                                string.Format("Unable to get a valid count of all spectra in the library {0}", FilePath));
+                            throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_RetentionTimesPsmCount_Unable_to_get_a_valid_count_of_all_spectra_in_the_library__0__, FilePath));
                         int rows = reader.GetInt32(0);
                         return rows;
                     }
@@ -1180,7 +1187,7 @@ namespace pwiz.Skyline.Model.Lib
                 SQLiteConnection conn = (SQLiteConnection) fact.CreateConnection();
                 if (conn != null)
                 {
-                    conn.ConnectionString = string.Format("Data Source={0};Version=3", FilePath);
+                    conn.ConnectionString = string.Format("Data Source={0};Version=3", FilePath); // Not L10N
                     conn.Open();
                 }
                 return conn;

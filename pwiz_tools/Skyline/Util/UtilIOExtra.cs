@@ -20,6 +20,7 @@ using System;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -88,7 +89,7 @@ namespace pwiz.Skyline.Util
         {
             var inst = new AdlerChecksum();
             if (!inst.TryMakeForBuff(bytesBuff))
-                throw new InvalidOperationException("Invalid byte buffer for checksum.");
+                throw new InvalidOperationException(Resources.AdlerChecksum_MakeForBuff_Invalid_byte_buffer_for_checksum);
             return inst.ChecksumValue;
         }
 
@@ -96,7 +97,7 @@ namespace pwiz.Skyline.Util
         {
             var inst = new AdlerChecksum();
             if (!inst.TryMakeForString(s))
-                throw new InvalidOperationException("Invalid string for checksum.");
+                throw new InvalidOperationException(Resources.AdlerChecksum_MakeForString_Invalid_string_for_checksum);
             return inst.ChecksumValue;
         }
 
@@ -104,7 +105,10 @@ namespace pwiz.Skyline.Util
         {
             var inst = new AdlerChecksum();
             if (!inst.TryMakeForFile(sPath))
-                throw new IOException(string.Format("Failure attempting to calculate a checksum for the file {0}", sPath));
+                throw new IOException(
+                    string.Format(
+                        Resources.AdlerChecksum_MakeForFile_Failure_attempting_to_calculate_a_checksum_for_the_file__0__,
+                        sPath));
             return inst.ChecksumValue;
         }
 
@@ -262,7 +266,7 @@ namespace pwiz.Skyline.Util
         {
             if (ChecksumValue != 0)
                 return ChecksumValue.ToString(CultureInfo.InvariantCulture);
-            return "Unknown";
+            return Resources.AdlerChecksum_ToString_Unknown;
         }
 
         #endregion

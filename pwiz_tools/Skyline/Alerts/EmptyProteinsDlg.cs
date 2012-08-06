@@ -18,6 +18,7 @@
  */
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -32,10 +33,11 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            string message = string.Format(labelMessage.Text, countEmpty == 1 ?
-                "1 new protein" : string.Format("{0} new proteins", countEmpty));
+            string message = string.Format(labelMessage.Text, countEmpty == 1
+                ? Resources.EmptyProteinsDlg_EmptyProteinsDlg_1_new_protein 
+                : string.Format(Resources.EmptyProteinsDlg_EmptyProteinsDlg__0__new_proteins, countEmpty));
             if (countEmpty < 500)
-                message = message.Substring(0, message.LastIndexOf('\r'));
+                message = message.Substring(0, message.LastIndexOf('\r')); // Not L10N
             labelMessage.Text = message;
         }
 

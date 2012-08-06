@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Util
         public static bool Is64Bit
         {
             // CONSIDER: a better way to determine whether this is a 64-bit build
-            get { return File.Exists("fileio_x64.dll"); }
+            get { return File.Exists("fileio_x64.dll"); } // Not L10N
         }
 
         public static int MajorVersion
@@ -82,9 +82,9 @@ namespace pwiz.Skyline.Util
             {
                 return
                     (Type == InstallType.release)
-                        ? string.Format("http://proteome.gs.washington.edu/software/Skyline/install.html?majorVer={0}&minorVer={1}", MajorVersion, MinorVersion)
+                        ? string.Format("http://proteome.gs.washington.edu/software/Skyline/install.html?majorVer={0}&minorVer={1}", MajorVersion, MinorVersion) // Not L10N
                         : (Type == InstallType.daily)
-                              ? "http://proteome.gs.washington.edu/software/Skyline/install-daily.html"
+                              ? "http://proteome.gs.washington.edu/software/Skyline/install-daily.html" // Not L10N
                               : "";
             }
         }

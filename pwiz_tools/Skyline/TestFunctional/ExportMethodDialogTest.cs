@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
@@ -340,7 +341,8 @@ namespace pwiz.SkylineTestFunctional
                 const string ssrCalc = "SSRCalc 3.0 (300A)";
                 editRTDlg.ChooseCalculator(ssrCalc);
                 editRTDlg.SetRegressionName("EditMethodDialogTest");
-                editRTDlg.SetSlope("1.0");
+                const double slope = 1.0;
+                editRTDlg.SetSlope(slope.ToString(CultureInfo.CurrentCulture));
                 editRTDlg.SetIntercept("0");
                 editRTDlg.SetTimeWindow(10);
 

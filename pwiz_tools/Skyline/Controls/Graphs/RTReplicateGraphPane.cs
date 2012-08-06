@@ -37,6 +37,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public RTReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
+            YAxis.Title.Text = Resources.RTReplicateGraphPane_RTReplicateGraphPane_Measured_Time;
         }
 
         public bool CanShowRTLegend { get; private set; }
@@ -54,7 +55,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Clear();
             if (!resultsAvailable)
             {
-                Title.Text = "No results available";
+                Title.Text = Resources.RTReplicateGraphPane_UpdateGraph_No_results_available;
                 EmptyGraph(document);
                 return;
             }
@@ -108,7 +109,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is TransitionGroupTreeNode))
             {
-                Title.Text = "Select a peptide to see the retention time graph";
+                Title.Text = Resources.RTReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_retention_time_graph;
                 CanShowRTLegend = false;
                 return;
             }
@@ -177,7 +178,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
-                        label = string.Format("Step {0}", step);
+                        label = string.Format(Resources.RTReplicateGraphPane_UpdateGraph_Step__0__, step);
                     var curveItem = new HiLowMiddleErrorBarItem(label, pointPairList, color, Color.Black);
                     if (selectedReplicateIndex != -1 && selectedReplicateIndex < pointPairList.Count)
                     {

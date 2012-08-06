@@ -25,7 +25,9 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -56,11 +58,17 @@ namespace pwiz.Skyline.SettingsUI
             if (countDuplicates > 0)
             {
                 if (countDuplicates == 1)
-                    return string.Format("The peptide '{0}' appears multiple times in the added list.", multiplePeptides.First());
+                {
+                    return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list,
+                                         multiplePeptides.First());
+                }
                 if (countDuplicates < 15)
-                    return string.Format("The following peptides appear multipe times in the added list:\n\n{0}",
-                                         string.Join("\n", multiplePeptides.ToArray()));
-                return string.Format("The added lists contains {0} peptides which appear multiple times.",
+                {
+                    return TextUtil.LineSeparate(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_lis_,
+                                                 string.Empty,
+                                                 TextUtil.LineSeparate(multiplePeptides));
+                }
+                return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_appear_multiple_times,
                                      countDuplicates);
             }
             if (existing != null)
@@ -68,11 +76,18 @@ namespace pwiz.Skyline.SettingsUI
                 var intersectingPeptides = peptidesArray.Intersect(existing).ToArray();
                 countDuplicates = intersectingPeptides.Length;
                 if (countDuplicates == 1)
-                    return string.Format("The peptide '{0}' already appears in the {1} list.", intersectingPeptides.First(), existingName);
+                {
+                    return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__already_appears_in_the__1__list,
+                                         intersectingPeptides.First(), existingName);
+                }
                 if (countDuplicates < 15)
-                    return string.Format("The following peptides already appear in the {1} list:\n\n{0}",
-                                         string.Join("\n", multiplePeptides.ToArray()), existingName);
-                return string.Format("The added lists contains {0} peptides which already appear in the {1} list.",
+                {
+                    return TextUtil.LineSeparate(string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_already_appear_in_the__0__list,
+                                                               existingName),
+                                                 string.Empty,
+                                                 TextUtil.LineSeparate(multiplePeptides));
+                }
+                return string.Format(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_already_appear_in_the__1__list,
                                      countDuplicates, existingName);
             }
             return null;
@@ -108,7 +123,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     int iExist = Items.ToArray().IndexOf(pep => Equals(pep.Sequence, sequence));
                     if (iExist != -1 && iExist != rowIndex)
-                        errorText = string.Format("The sequence '{0}' is already present in the list.", sequence);
+                        errorText = string.Format(Resources.PeptideGridViewDriver_DoCellValidating_The_sequence__0__is_already_present_in_the_list, sequence);
                 }
             }
             else if (columnIndex == COLUMN_TIME && GridView.IsCurrentCellInEditMode)

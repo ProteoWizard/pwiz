@@ -63,7 +63,7 @@ namespace pwiz.Skyline.FileUI
                                                        };
                 if (columnInfo.IsNumeric)
                 {
-                    column.DefaultCellStyle.NullValue = "#N/A";
+                    column.DefaultCellStyle.NullValue = "#N/A"; // Not L10N - TODO: Check Excel to see if this changes, CONSIDER: Constant somewhere?
                 }
                 dataGridView.Columns.Add(column);
             }

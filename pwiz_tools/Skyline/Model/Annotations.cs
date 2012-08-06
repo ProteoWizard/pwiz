@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
 {
@@ -51,7 +52,7 @@ namespace pwiz.Skyline.Model
         public Annotations(String note, IEnumerable<KeyValuePair<string, string>> annotations, int colorIndex)
         {
             ColorIndex = colorIndex;
-            Note = note == "" ? null : note;
+            Note = note == string.Empty ? null : note;
             if (annotations != null)
             {
                 var annotationsDict = new Dictionary<string, string>();
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.Model
         }
         public Annotations ChangeNote(String note)
         {
-            if (note == "")
+            if (note == string.Empty)
             {
                 note = null;
             }
@@ -204,7 +205,8 @@ namespace pwiz.Skyline.Model
                     {
                         if (Equals(annotation.Value, annotationsNew[annotation.Key]))
                             continue;
-                        throw new InvalidDataException(string.Format("Annotation conflict for '{0}' found attempting to merge annotations.", annotation.Key));
+                        throw new InvalidDataException(string.Format(Resources.Annotations_Merge_Annotation_conflict_for__0__found_attempting_to_merge_annotations,
+                                                                     annotation.Key));
                     }
                     annotationsNew.Add(annotation);
                 }
@@ -220,7 +222,7 @@ namespace pwiz.Skyline.Model
 
         private static IEnumerable<string> SplitNotes(string note)
         {
-            return note.Split(new[] {"\r\n\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            return note.Split(new[] {"\r\n\r\n"}, StringSplitOptions.RemoveEmptyEntries); // Not L10N
         }
 
         public bool Equals(Annotations other)

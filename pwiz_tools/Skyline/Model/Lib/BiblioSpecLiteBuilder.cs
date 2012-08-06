@@ -24,12 +24,14 @@ using System.Linq;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib
 {
     public sealed class BiblioSpecLiteBuilder : ILibraryBuilder
     {
+        // Not L10N
         public const string EXT_PEP_XML = ".pep.xml";
         public const string EXT_PEP_XML_ONE_DOT = ".pepXML";
         public const string EXI_MZID = ".mzid";
@@ -87,8 +89,8 @@ namespace pwiz.Skyline.Model.Lib
                 }
             }
 
-            string message = string.Format("Building {0} library", Path.GetFileName(OutputPath));
-            progress.UpdateProgress(status = status.ChangeMessage(message));
+            string message = string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Building__0__library,
+                                           Path.GetFileName(OutputPath));            progress.UpdateProgress(status = status.ChangeMessage(message));
             string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
             var blibBuilder = new BlibBuild(redundantLibrary, InputFiles)
             {
@@ -112,7 +114,9 @@ namespace pwiz.Skyline.Model.Lib
             catch (Exception x)
             {
                 Console.WriteLine(x.Message);
-                progress.UpdateProgress(status.ChangeErrorException(new Exception(string.Format("Failed trying to build the redundant library {0}.", redundantLibrary))));
+                progress.UpdateProgress(status.ChangeErrorException(
+                    new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_redundant_library__0__,
+                                                redundantLibrary))));
                 return false;
             }
             var blibFilter = new BlibFilter();
@@ -137,7 +141,9 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch
             {
-                progress.UpdateProgress(status.ChangeErrorException(new Exception(string.Format("Failed trying to build the library {0}.", OutputPath))));
+                progress.UpdateProgress(status.ChangeErrorException(
+                    new Exception(string.Format(Resources.BiblioSpecLiteBuilder_BuildLibrary_Failed_trying_to_build_the_library__0__,
+                                                OutputPath))));
                 return false;
             }
             finally

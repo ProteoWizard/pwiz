@@ -25,7 +25,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("spectrast_lib_spec")]
     public sealed class SpectrastSpec : NistLibSpecBase
     {
-        public const string EXT = ".sptxt";
+        public const string EXT = ".sptxt"; // Not L10N
 
         public SpectrastSpec(string name, string path)
             : base(name, path)
@@ -103,7 +103,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("spectrast_library")]
     public sealed class SpectrastLibrary : NistLibraryBase
     {
-        public const string EXT_CACHE = ".splc";
+        public const string EXT_CACHE = ".splc"; // Not L10N
 
         public static SpectrastLibrary Load(LibrarySpec spec, ILoadMonitor loader)
         {
@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "SpectraST", PeptideCount = SpectrumCount };
+                LibraryDetails details = new LibraryDetails { Format = "SpectraST", PeptideCount = SpectrumCount }; // Not L10N
 
                 if (!string.IsNullOrEmpty(Id))
                 {

@@ -17,10 +17,13 @@
  * limitations under the License.
  */
 using System;
+using System.Globalization;
 using System.Windows.Forms;
 using System.ComponentModel;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
 {
@@ -48,7 +51,7 @@ namespace pwiz.Skyline.Controls
             val = control.Text.Trim();
             if (val.Length == 0)
             {
-                ShowTextBoxError(control, "{0} cannot be empty.");
+                ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty);
             }
             else
             {
@@ -64,12 +67,12 @@ namespace pwiz.Skyline.Controls
             val = default(double);
             try
             {
-                val = double.Parse(control.Text);
+                val = double.Parse(control.Text, CultureInfo.CurrentCulture);
                 valid = true;
             }
             catch (FormatException)
             {
-                ShowTextBoxError(control, "{0} must contain a decimal value.");
+                ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value);
             }
             e.Cancel = !valid;
             return valid;
@@ -83,9 +86,9 @@ namespace pwiz.Skyline.Controls
 
             bool valid = false;
             if (min.HasValue && val < min.Value)
-                ShowTextBoxError(control, "{0} must be greater than or equal to {1}.", null, min);
+                ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, null, min);
             else if (max.HasValue && val > max.Value)
-                ShowTextBoxError(control, "{0} must be less than or equal to {1}.", null, max);
+                ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, null, max);
             else
                 valid = true;
             e.Cancel = !valid;
@@ -123,8 +126,7 @@ namespace pwiz.Skyline.Controls
             if (val.Length > 0 && !val.Contains(i => (min.HasValue && min.Value > i) || (max.HasValue && i > max.Value)))
                 return true;
 
-            ShowTextBoxError(control,
-                             "{0} must contain a comma separated list of decimal values from {1} to {2}.",
+            ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalListTextBox__0__must_contain_a_comma_separated_list_of_decimal_values_from__1__to__2__,
                              null, min, max);
             e.Cancel = true;
             return false;
@@ -153,9 +155,9 @@ namespace pwiz.Skyline.Controls
             {
                 int n = int.Parse(control.Text);
                 if (min.HasValue && n < min.Value)
-                    ShowTextBoxError(control, "{0} must be greater than or equal to {1}.", null, min);
+                    ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, null, min);
                 else if (max.HasValue && n > max.Value)
-                    ShowTextBoxError(control, "{0} must be less than or equal to {1}.", null, max);
+                    ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, null, max);
                 else
                 {
                     val = n;
@@ -164,7 +166,7 @@ namespace pwiz.Skyline.Controls
             }
             catch (FormatException)
             {
-                ShowTextBoxError(control, "{0} must contain an integer.");
+                ShowTextBoxError(control, Resources.MessageBoxHelper_ValidateNumberTextBox__0__must_contain_an_integer);
             }
             e.Cancel = !valid;
             return valid;
@@ -197,13 +199,13 @@ namespace pwiz.Skyline.Controls
         public bool ValidateNumberListTextBox(CancelEventArgs e, TextBox control,
                                               int min, int max, out int[] val)
         {
-            val = ArrayUtil.Parse(control.Text, Convert.ToInt32, ',', new int[0]);
+            val = ArrayUtil.Parse(control.Text, Convert.ToInt32, TextUtil.SEPARATOR_CSV, new int[0]);
             if (val.Length > 0 && !val.Contains(i => min > i || i > max))
                 return true;
 
-            ShowTextBoxError(control,
-                             "{0} must contain a comma separated list of integers from {1} to {2}.",
+            ShowTextBoxError(control, Resources. MessageBoxHelper_ValidateNumberListTextBox__0__must_contain_a_comma_separated_list_of_integers_from__1__to__2__,
                              null, min, max);
+
             e.Cancel = true;
             return false;
         }
@@ -259,8 +261,9 @@ namespace pwiz.Skyline.Controls
             Control label = control;
             while(label != null && !(label is Label))
                 label = _parent.GetNextControl(label, false);
-            string message = (label == null ? "Field" : label.Text);
-            message = message.Replace("&", "");
+            string message = (label == null ? Resources.MessageBoxHelper_GetControlMessage_Field : label.Text);
+            // TODO(L10N): The processing below may need to change for certain locales
+            message = message.Replace("&", string.Empty); // Not L10N
             if (message.Length > 0 && message[message.Length - 1] == ':')
                 message = message.Substring(0, message.Length - 1);
             return message;
@@ -282,7 +285,7 @@ namespace pwiz.Skyline.Controls
             if(!_showMessages)
                 return;
             string messageException = XmlUtil.GetInvalidDataMessage(path, x);
-            MessageBox.Show(_parent, firstLine + "\n" + messageException, Program.Name);
+            MessageBox.Show(_parent, TextUtil.LineSeparate(firstLine, messageException), Program.Name);
         }
 
     }

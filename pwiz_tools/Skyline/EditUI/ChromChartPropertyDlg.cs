@@ -96,7 +96,9 @@ namespace pwiz.Skyline.EditUI
 
         private void cbRelative_CheckedChanged(object sender, EventArgs e)
         {
-            labelTimeUnits.Text = (cbRelative.Checked ? "widths" : "minutes");
+            labelTimeUnits.Text = (cbRelative.Checked ? 
+                Resources.ChromChartPropertyDlg_cbRelative_CheckedChanged_widths : 
+                Resources.ChromChartPropertyDlg_cbRelative_CheckedChanged_minutes);
         }
     }
 }

@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Xml;
 using System.Xml.Schema;
@@ -28,6 +29,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -121,13 +123,15 @@ namespace pwiz.Skyline.Model.DocSettings
             if (FullScan != null && FullScan.IsHighResPrecursor &&
                     Prediction != null && Prediction.PrecursorMassType != MassType.Monoisotopic)
             {
-                throw new InvalidDataException("High resolution MS1 filtering requires use of monoisotopic precursor masses.");
+                throw new InvalidDataException(
+                    Resources.TransitionSettings_DoValidate_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses);
             }
 
             if (FullScan != null && FullScan.IsolationScheme != null && FullScan.IsolationScheme.WindowsPerScan.HasValue &&
                 (Instrument == null || !Instrument.MaxInclusions.HasValue))
             {
-                throw new InvalidDataException("The instrument's firmware inclusion limit must be specified before doing a multiplexed DIA scan.");
+                throw new InvalidDataException(
+                    Resources.TransitionSettings_DoValidate_The_instrument_s_firmware_inclusion_limit_must_be_specified_before_doing_a_multiplexed_DIA_scan);
             }
         }
 
@@ -161,7 +165,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (FullScan == null && Instrument != null && Instrument.PrecursorAcquisitionMethod != FullScanAcquisitionMethod.None)
                 {
                     FullScan = new TransitionFullScan(Instrument.PrecursorAcquisitionMethod,
-                                                      TransitionFullScan.CreateIsolationSchemeForFilter(Instrument.PrecursorAcquisitionMethod, Instrument.PrecursorFilter, null),
+                                                      TransitionFullScan.CreateIsolationSchemeForFilter(
+                                                          Instrument.PrecursorAcquisitionMethod,
+                                                          Instrument.PrecursorFilter, null),
                                                       FullScanMassAnalyzerType.qit,
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
@@ -234,6 +240,43 @@ namespace pwiz.Skyline.Model.DocSettings
 // ReSharper disable InconsistentNaming
     public enum OptimizedMethodType { None, Precursor, Transition }
 // ReSharper restore InconsistentNaming
+    public static class OptimizedMethodTypeExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new[]
+                                                                {
+                                                                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_None,
+                                                                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Precursor,
+                                                                    Resources.OptimizedMethodTypeExtension_LOCALIZED_VALUES_Transition
+                                                                };
+        public static string GetLocalizedString(this OptimizedMethodType val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static OptimizedMethodType GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (OptimizedMethodType)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static OptimizedMethodType GetEnum(string enumValue, OptimizedMethodType defaultValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (OptimizedMethodType)i;
+                }
+            }
+            return defaultValue;
+        }  
+    }
 
     [XmlRoot("transition_prediction")]
     public class TransitionPrediction : Immutable, IValidating, IXmlSerializable
@@ -322,7 +365,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        private enum ATTR
+        private enum ATTR // Not L10N
         {
             precursor_mass_type,
             fragment_mass_type,
@@ -337,7 +380,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void DoValidate()
         {
             if (CollisionEnergy == null)
-                throw new InvalidDataException("Transition prediction requires a collision energy regression function.");
+                throw new InvalidDataException(Resources.TransitionPrediction_DoValidate_Transition_prediction_requires_a_collision_energy_regression_function);
         }
 
         public static TransitionPrediction Deserialize(XmlReader reader)
@@ -465,7 +508,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _precursorCharges; }
             private set
             {
-                ValidateCharges("Precursor charges", value,
+                ValidateCharges(Resources.TransitionFilter_PrecursorCharges_Precursor_charges, value,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
                 _precursorCharges = MakeChargeCollection(value);
             }
@@ -476,7 +519,7 @@ namespace pwiz.Skyline.Model.DocSettings
             get { return _productCharges; }
             private set
             {
-                ValidateCharges("Product ion charges", value,
+                ValidateCharges(Resources.TransitionFilter_ProductCharges_Product_ion_charges, value,
                     Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
                 _productCharges = MakeChargeCollection(value);
             }
@@ -495,7 +538,7 @@ namespace pwiz.Skyline.Model.DocSettings
             private set
             {
                 if (value.Count == 0)
-                    throw new InvalidDataException("At least one ion type is required.");
+                    throw new InvalidDataException(Resources.TransitionFilter_IonTypes_At_least_one_ion_type_is_required);
                 _ionTypes = MakeReadOnly(value);
             }
         }
@@ -509,7 +552,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 _fragmentRangeFirst = (StartFragmentFinder)GetStartFragmentFinder(value);
                 if (_fragmentRangeFirst == null)
-                    throw new InvalidDataException(string.Format("Unsupported first fragment name {0}.", FragmentRangeFirst));                
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.TransitionFilter_FragmentRangeFirstName_Unsupported_first_fragment_name__0__,
+                                      FragmentRangeFirst));
+                }
             }
         }
 
@@ -522,7 +569,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 _fragmentRangeLast = (EndFragmentFinder)GetEndFragmentFinder(value);
                 if (_fragmentRangeLast == null)
-                    throw new InvalidDataException(string.Format("Unsupported last fragment name {0}.", FragmentRangeLast));                
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.TransitionFilter_FragmentRangeLastName_Unsupported_last_fragment_name__0__,
+                                      FragmentRangeLast));
+                }
             }
         }
 
@@ -615,7 +666,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        private enum ATTR
+        private enum ATTR // Not L10N
         {
             precursor_charges,
             product_charges,
@@ -633,14 +684,14 @@ namespace pwiz.Skyline.Model.DocSettings
         private static void ValidateCharges(string label, ICollection<int> charges, int min, int max)
         {
             if (charges == null || charges.Count == 0)
-                throw new InvalidDataException(string.Format("{0} cannot be empty.", label));
+                throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges__0__cannot_be_empty, label));
             HashSet<int> seen = new HashSet<int>();
             foreach (int charge in charges)
             {
                 if (seen.Contains(charge))
-                    throw new InvalidDataException(string.Format("Precursor charges specified charge {0} more than once.", charge));
+                    throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges_Precursor_charges_specified_charge__0__more_than_once, charge));
                 if (min > charge || charge > max)
-                    throw new InvalidDataException(string.Format("Invalid charge {1} found.  {0} must be between {2} and {3}.", label, charge, min, max));
+                    throw new InvalidDataException(string.Format(Resources.TransitionFilter_ValidateCharges_Invalid_charge__1__found__0__must_be_between__2__and__3__, label, charge, min, max));
                 seen.Add(charge);
             }            
         }
@@ -650,7 +701,11 @@ namespace pwiz.Skyline.Model.DocSettings
             if (PrecursorMzWindow != 0)
             {
                 if (MIN_EXCLUSION_WINDOW > PrecursorMzWindow || PrecursorMzWindow > MAX_EXCLUSION_WINDOW)
-                    throw new InvalidDataException(string.Format("A precursor exclusion window must be between {0} and {1}.", MIN_EXCLUSION_WINDOW, MAX_EXCLUSION_WINDOW));
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.TransitionFilter_Validate_A_precursor_exclusion_window_must_be_between__0__and__1__,
+                                      MIN_EXCLUSION_WINDOW, MAX_EXCLUSION_WINDOW));
+                }
             }
         }
 
@@ -703,30 +758,35 @@ namespace pwiz.Skyline.Model.DocSettings
         public void WriteXml(XmlWriter writer)
         {
             // Write attributes
-            writer.WriteAttributeString(ATTR.precursor_charges, PrecursorCharges.ToString(","));
-            writer.WriteAttributeString(ATTR.product_charges, ProductCharges.ToString(","));
+            writer.WriteAttributeString(ATTR.precursor_charges, PrecursorCharges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
+            writer.WriteAttributeString(ATTR.product_charges, ProductCharges.ToString(TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture)));
             writer.WriteAttributeString(ATTR.fragment_types, ToStringIonTypes(false));
-            writer.WriteAttributeString(ATTR.fragment_range_first, FragmentRangeFirstName);
-            writer.WriteAttributeString(ATTR.fragment_range_last, FragmentRangeLastName);
+            writer.WriteAttributeString(ATTR.fragment_range_first, GetStartFragmentIndex(FragmentRangeFirstName));
+            writer.WriteAttributeString(ATTR.fragment_range_last, GetEndFragmentIndex(FragmentRangeLastName));
             writer.WriteAttribute(ATTR.precursor_mz_window, PrecursorMzWindow);
             writer.WriteAttribute(ATTR.auto_select, AutoSelect);
             writer.WriteElements(MeasuredIons);
         }
 
+        private const string PRECURSOR_ION_CHAR = "p"; // Not L10N
+
         public string ToStringIonTypes(bool spaces)
         {
-            return IonTypes.ToString(spaces ? ", " : ",").Replace(IonType.precursor.ToString(), "p");
+            string sep = TextUtil.SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture);
+            if (spaces)
+                sep += TextUtil.SEPARATOR_SPACE;
+            return IonTypes.ToString(sep).Replace(IonType.precursor.ToString(), PRECURSOR_ION_CHAR);
         }
 
         private static int[] ParseInts(string s)
         {
-            return ArrayUtil.Parse(s, Convert.ToInt32, ',', new int[0]);
+            return ArrayUtil.Parse(s, Convert.ToInt32, TextUtil.SEPARATOR_CSV, new int[0]);
         }
 
         public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
         {
-            return ArrayUtil.Parse(s, v => (IonType)Enum.Parse(typeof(IonType), v.ToLower().Replace("p", IonType.precursor.ToString())), ',',
-                defaultTypes);
+            return ArrayUtil.Parse(s, v => (IonType) Enum.Parse(typeof (IonType), v.ToLower().Replace(PRECURSOR_ION_CHAR, IonType.precursor.ToString())),
+                                   TextUtil.SEPARATOR_CSV, defaultTypes);
         }
 
         #endregion
@@ -783,17 +843,33 @@ namespace pwiz.Skyline.Model.DocSettings
             return FragmentStartFinders.Keys;
         }
 
+        public static string GetStartFragmentIndex(string name)
+        {
+            for (int i = 0; i < FragmentStartFinders.SafeLength(); i++)
+            {
+                if (string.Equals(FragmentStartFinders[i].Name, name))
+                {
+                    return i.ToString(CultureInfo.InvariantCulture);
+                }
+            }
+            return null;
+        }
+
         public static IStartFragmentFinder GetStartFragmentFinder(string finderName)
         {
             if (!string.IsNullOrEmpty(finderName))
             {
                 StartFragmentFinder result;
+                string name;
+                int index;
                 if (FragmentStartFinders.TryGetValue(finderName, out result))
                     return result;
-                if (_mapLegacyStartNames.TryGetValue(finderName, out finderName))
-                    return FragmentStartFinders[finderName];
+                if (_mapLegacyStartNames.TryGetValue(finderName, out name))
+                    return FragmentStartFinders[name];
+                if (int.TryParse(finderName, out index))
+                    return FragmentStartFinders[index];
             }
-            return null;
+            throw new InvalidDataException(string.Format(Resources.TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__, finderName));
         }
 
         private static MappedList<string, StartFragmentFinder> FragmentStartFinders
@@ -802,29 +878,91 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (_fragmentStartFinders == null)
                 {
+                    // TODO:  Need to separate display names from names stored in documents
+                    //        The former should be localized, but the latter should not
                     _fragmentStartFinders = new MappedList<string, StartFragmentFinder>
                     {
-                        new OrdinalFragmentFinder("ion 1", 1),
-                        new OrdinalFragmentFinder("ion 2", 2),
-                        new OrdinalFragmentFinder("ion 3", 3),
-                        new OrdinalFragmentFinder("ion 4", 4),
-                        new MzFragmentFinder("m/z > precursor", 0),
-                        new MzFragmentFinder("(m/z > precursor) - 1", -1),
-                        new MzFragmentFinder("(m/z > precursor) - 2", -2),
-                        new MzFragmentFinder("(m/z > precursor) + 1", 1),
-                        new MzFragmentFinder("(m/z > precursor) + 2", 2)
+                        new OrdinalFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_ion_1, 1),
+                        new OrdinalFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_ion_2, 2),
+                        new OrdinalFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_ion_3, 3),
+                        new OrdinalFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_ion_4, 4),
+                        new MzFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_m_z_precursor, 0),
+                        new MzFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1, -1),
+                        new MzFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_minus_2, -2),
+                        new MzFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_plus_1, 1),
+                        new MzFragmentFinder(Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2, 2)
                     };
 
                     _mapLegacyStartNames = new Dictionary<string, string>
                                                {
-                                                   {"y1", "ion 1"},
-                                                   {"y2", "ion 2"},
-                                                   {"y3", "ion 3"},
-                                                   {"y4", "ion 4"},
+                                                   {
+                                                       "y1", // Not L10N: For previous versions of Skyline that didn't support L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_ion_1
+                                                   },
+                                                   {
+                                                       "ion 1", // TODO: Probably a better solution. For old Skyline files opened in other languages.
+                                                       Resources.TransitionFilter_FragmentStartFinders_ion_2
+                                                   },
+                                                   {
+                                                       "y2", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_ion_2
+                                                   },
+                                                   {
+                                                       "ion 2", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_ion_2
+                                                   },
+                                                   {
+                                                       "y3", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_ion_3
+                                                   },
+                                                   {
+                                                       "ion 3", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_ion_3
+                                                   },
+                                                   {
+                                                       "y4", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_ion_4
+                                                   },
+                                                   {
+                                                       "ion 4", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_ion_4
+                                                   },
+                                                   {
+                                                       "m/z > precursor", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_m_z_precursor
+                                                   },
+                                                   {
+                                                       "(m/z > precursor) - 1", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_minus_1
+                                                   },
+                                                   {
+                                                       "(m/z > precursor) - 2", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_minus_2
+                                                   },
+                                                   {
+                                                       "(m/z > precursor) + 1", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_plus_1
+                                                   },
+                                                   {
+                                                       "(m/z > precursor) + 2", // Not L10N
+                                                       Resources.TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2
+                                                   },
                                                };
                 }
                 return _fragmentStartFinders;
             }
+        }
+
+        public static string GetEndFragmentIndex(string name)
+        {
+            for (int i = 0; i < FragmentEndFinders.SafeLength(); i++)
+            {
+                if (string.Equals(FragmentEndFinders[i].Name, name))
+                {
+                    return i.ToString(CultureInfo.InvariantCulture);
+                }
+            }
+            return null;
         }
 
         public static IEnumerable<string> GetEndFragmentFinderNames()
@@ -837,13 +975,17 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!string.IsNullOrEmpty(finderName))
             {
                 EndFragmentFinder result;
+                string name;
+                int index;
                 if (FragmentEndFinders.TryGetValue(finderName, out result))
                     return result;
-                if (_mapLegacyEndNames.TryGetValue(finderName, out finderName))
-                    return FragmentEndFinders[finderName];
+                if (_mapLegacyEndNames.TryGetValue(finderName, out name))
+                    return FragmentEndFinders[name];
+                if (int.TryParse(finderName, out index))
+                    return FragmentEndFinders[index];
             }
-            return null;
-        }
+            throw new InvalidDataException(string.Format(Resources.TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__, finderName));
+        } 
 
         private static MappedList<string, EndFragmentFinder> FragmentEndFinders
         {
@@ -851,31 +993,93 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (_fragmentEndFinders == null)
                 {
+                    // TODO:  Need to separate display names from names stored in documents
+                    //        The former should be localized, but the latter should not
                     _fragmentEndFinders = new MappedList<string, EndFragmentFinder>
-                    {
-                        new LastFragmentFinder("last ion", 0),
-                        new LastFragmentFinder("last ion - 1", 1),
-                        new LastFragmentFinder("last ion - 2", 2),
-                        new LastFragmentFinder("last ion - 3", 3),
-                        new DeltaFragmentFinder("1 ion", 1),
-                        new DeltaFragmentFinder("2 ions", 2),
-                        new DeltaFragmentFinder("3 ions", 3),
-                        new DeltaFragmentFinder("4 ions", 4),
-                        new DeltaFragmentFinder("5 ions", 5),
-                        new DeltaFragmentFinder("6 ions", 6)
-                    };
+                                              {
+                                                  new LastFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_last_ion, 0),
+                                                  new LastFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1, 1),
+                                                  new LastFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_2, 2),
+                                                  new LastFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_3, 3),
+                                                  new DeltaFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_1_ion, 1),
+                                                  new DeltaFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_2_ions, 2),
+                                                  new DeltaFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_3_ions, 3),
+                                                  new DeltaFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_4_ions, 4),
+                                                  new DeltaFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_5_ions, 5),
+                                                  new DeltaFragmentFinder(Resources.TransitionFilter_FragmentEndFinders_6_ions, 6)
+                                              };
 
                     _mapLegacyEndNames = new Dictionary<string, string>
-                                               {
-                                                   {"last y-ion", "last ion"},
-                                                   {"last y-ion - 1", "last ion - 1"},
-                                                   {"last y-ion - 2", "last ion - 2"},
-                                                   {"last y-ion - 3", "last ion - 3"},
-                                                   {"start + 3", "3 ions"},
-                                                   {"start + 4", "4 ions"},
-                                                   {"start + 5", "5 ions"},
-                                                   {"start + 6", "6 ions"},
-                                               };
+                                             {
+                                                 {
+                                                     "last y-ion", // Not L10N
+                                                     "last ion"
+                                                 },
+                                                 {
+                                                     "last ion", // Not L10N: For previous versions of Skyline that didn't support L10N
+                                                     "last ion"
+                                                 },
+                                                 {
+                                                     "last y-ion - 1", // Not L10N
+                                                     "last ion - 1"
+                                                 },
+                                                 {
+                                                     "last ion - 1", // Not L10N
+                                                     "last ion - 1"
+                                                 },
+                                                 {
+                                                     "last y-ion - 2", // Not L10N
+                                                     "last ion - 2"
+                                                 },
+                                                 {
+                                                     "last ion - 2", // Not L10N
+                                                     "last ion - 2"
+                                                     },
+                                                 {
+                                                     "last y-ion - 3", // Not L10N
+                                                     "last ion - 3"
+                                                 },
+                                                 {
+                                                     "last ion - 3", // Not L10N
+                                                     "last ion - 3"
+                                                 },
+                                                 {
+                                                     "2 ions", // Not L10N
+                                                      Resources.TransitionFilter_FragmentEndFinders_2_ions
+                                                 },
+                                                 {
+                                                     "start + 3", // Not L10N
+                                                     Resources.TransitionFilter_FragmentEndFinders_3_ions 
+                                                 },
+                                                 {
+                                                     "3 ions", // Not L10N
+                                                     Resources.TransitionFilter_FragmentEndFinders_3_ions 
+                                                 },
+                                                 {
+                                                     "start + 4", // Not L10N
+                                                     Resources.TransitionFilter_FragmentEndFinders_4_ions
+                                                 },
+                                                 {
+                                                     "4 ions", // Not L10N
+                                                     Resources.TransitionFilter_FragmentEndFinders_4_ions 
+                                                 },
+                                                 {
+                                                     "start + 5", // Not L10N
+                                                     Resources.TransitionFilter_FragmentEndFinders_5_ions
+                                                 },
+                                                 {
+                                                     "5 ions", // Not L10N
+                                                     Resources.TransitionFilter_FragmentEndFinders_5_ions
+                                                 },
+                                                 {
+                                                     "start + 6", // Not L10N
+                                                     Resources.TransitionFilter_FragmentEndFinders_6_ions
+                                                 },
+                                                 {
+                                                     "6 ions", // Not L10N
+                                                     Resources.TransitionFilter_FragmentEndFinders_6_ions
+                                                 },
+                                             };
                 }
                 return _fragmentEndFinders;
             }
@@ -950,10 +1154,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 int offset = _offset;
                 int length = masses.GetLength(1);
                 if (length == 0)
-                    throw new ArgumentException("Invalid attempt to find a fragment in a peptide without fragment ions.");
+                    throw new ArgumentException(Resources.MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions);
                 int typeIndex = (int) type;
                 if (0 > typeIndex || typeIndex >= masses.Length)
-                    throw new IndexOutOfRangeException(string.Format("Ion type {0} not found in masses array", type));
+                    throw new IndexOutOfRangeException(string.Format(Resources.MzFragmentFinder_FindStartFragment_Ion_type__0__not_found_in_masses_array, type));
 
                 // Make sure to start outside the precursor m/z window
                 double thresholdMz = precursorMz + precursorMzWindow / 2;
@@ -1083,7 +1287,7 @@ namespace pwiz.Skyline.Model.DocSettings
         int Count { get; }
     }
 
-    public enum TransitionLibraryPick { none, all, filter, all_plus }
+    public enum TransitionLibraryPick { none, all, filter, all_plus } // Not L10N
 
     [XmlRoot("transition_libraries")]
     public class TransitionLibraries : Immutable, IValidating, IXmlSerializable
@@ -1136,7 +1340,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        private enum ATTR
+        private enum ATTR // Not L10N
         {
             ion_match_tolerance,
             ion_count,
@@ -1152,12 +1356,12 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (MIN_MATCH_TOLERANCE > IonMatchTolerance || IonMatchTolerance > MAX_MATCH_TOLERANCE)
             {
-                throw new InvalidDataException(string.Format("Library ion match tolerance value {0} must be between {1} and {2}.",
+                throw new InvalidDataException(string.Format(Resources.TransitionLibraries_DoValidate_Library_ion_match_tolerance_value__0__must_be_between__1__and__2__,
                                                              IonMatchTolerance, MIN_MATCH_TOLERANCE, MAX_MATCH_TOLERANCE));                
             }
             if (MIN_ION_COUNT > IonCount || IonCount > MAX_ION_COUNT)
             {
-                throw new InvalidDataException(string.Format("Library ion count value {0} must be between {1} and {2}.",
+                throw new InvalidDataException(string.Format(Resources.TransitionLibraries_DoValidate_Library_ion_count_value__0__must_be_between__1__and__2__,
                                                              IonCount, MIN_ION_COUNT, MAX_ION_COUNT));
             }
         }
@@ -1227,9 +1431,83 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
 // ReSharper disable InconsistentNaming
-    public enum LegacyAcquisitionMethod   { None, Single, Multiple }    // Skyline 1.2 and earlier
-    public enum FullScanAcquisitionMethod { None, Targeted, DIA }
+    public enum LegacyAcquisitionMethod   { None, Single, Multiple }    // Skyline 1.2 and earlier // Not L10N
+    public enum FullScanAcquisitionMethod { None, Targeted, DIA } // Not L10N: Not used for combo boxes.
+    public static class FullScanAcquisitionExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new[]
+                                                                {
+                                                                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_None,
+                                                                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_Targeted,
+                                                                    Resources.FullScanAcquisitionExtension_LOCALIZED_VALUES_DIA
+                                                                };
+        public static string GetLocalizedString(this FullScanAcquisitionMethod val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static FullScanAcquisitionMethod GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (FullScanAcquisitionMethod)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static FullScanAcquisitionMethod GetEnum(string enumValue, FullScanAcquisitionMethod defaultEnum)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (FullScanAcquisitionMethod)i;
+                }
+            }
+            return defaultEnum;
+        }
+    }
     public enum FullScanPrecursorIsotopes { None, Count, Percent }
+    public static class FullScanPrecursorIsotopesExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new[]
+                                                                {
+                                                                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_None,
+                                                                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Count,
+                                                                    Resources.FullScanPrecursorIsotopesExtension_LOCALIZED_VALUES_Percent
+                                                                };
+        public static string GetLocalizedString(this FullScanPrecursorIsotopes val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static FullScanPrecursorIsotopes GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (FullScanPrecursorIsotopes)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static FullScanPrecursorIsotopes GetEnum(string enumValue, FullScanPrecursorIsotopes defaultEnum)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (FullScanPrecursorIsotopes)i;
+                }
+            }
+            return defaultEnum;
+        }
+    }
 // ReSharper restore InconsistentNaming
 
     [XmlRoot("transition_instrument")]
@@ -1392,7 +1670,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        private enum ATTR
+        private enum ATTR // Not L10N
         {
             min_mz,
             max_mz,
@@ -1418,61 +1696,76 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (MIN_MEASUREABLE_MZ > MinMz || MinMz > MAX_MEASURABLE_MZ - MIN_MZ_RANGE)
             {
-                throw new InvalidDataException(string.Format("Instrument minimum m/z value {0} must be between {1} and {2}.",
-                                                             MinMz, MIN_MEASUREABLE_MZ, MAX_MEASURABLE_MZ - MIN_MZ_RANGE));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_Instrument_minimum_mz_value__0__must_be_between__1__and__2__,
+                                  MinMz, MIN_MEASUREABLE_MZ, MAX_MEASURABLE_MZ - MIN_MZ_RANGE));
             }
             if (MinMz + MIN_MZ_RANGE > MaxMz)
             {
-                throw new InvalidDataException(string.Format("Instrument maximum m/z value {0} is less than {1} from minimum {2}.",
-                                                             MaxMz, MIN_MZ_RANGE, MinMz));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_Instrument_maximum_m_z_value__0__is_less_than__1__from_minimum__2__,
+                                  MaxMz, MIN_MZ_RANGE, MinMz));
             }
             if (MaxMz > MAX_MEASURABLE_MZ)
             {
-                throw new InvalidDataException(string.Format("Instrument maximum m/z exceeds allowable maximum {0}.",
-                                                             MAX_MEASURABLE_MZ));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_Instrument_maximum_mz_exceeds_allowable_maximum__0__,
+                                  MAX_MEASURABLE_MZ));
             }
             if (MIN_MZ_MATCH_TOLERANCE > MzMatchTolerance || MzMatchTolerance > MAX_MZ_MATCH_TOLERANCE)
             {
-                throw new InvalidDataException(string.Format("The m/z match tolerance {0} must be between {1} and {2}.",
-                    MzMatchTolerance, MIN_MZ_MATCH_TOLERANCE, MAX_MZ_MATCH_TOLERANCE));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_The_mz_match_tolerance__0__must_be_between__1__and__2__,
+                                  MzMatchTolerance, MIN_MZ_MATCH_TOLERANCE, MAX_MZ_MATCH_TOLERANCE));
             }
             if (MIN_TRANSITION_MAX_ORIGINAL > MaxTransitions || MaxTransitions > MAX_TRANSITION_MAX)
             {
-                throw new InvalidDataException(string.Format("The maximum number of transitions {0} must be between {1} and {2}.",
-                    MaxTransitions, MIN_TRANSITION_MAX_ORIGINAL, MAX_TRANSITION_MAX));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_The_maximum_number_of_transitions__0__must_be_between__1__and__2__,
+                                  MaxTransitions, MIN_TRANSITION_MAX_ORIGINAL, MAX_TRANSITION_MAX));
             }
             if (MIN_INCLUSION_MAX > MaxInclusions || MaxInclusions > MAX_INCLUSION_MAX)
             {
-                throw new InvalidDataException(string.Format("The maximum number of inclusions {0} must be between {1} and {2}.",
-                    MaxInclusions, MIN_INCLUSION_MAX, MAX_INCLUSION_MAX));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_The_maximum_number_of_inclusions__0__must_be_between__1__and__2__,
+                                  MaxInclusions, MIN_INCLUSION_MAX, MAX_INCLUSION_MAX));
             }
             if (MinTime.HasValue && (MIN_TIME > MinTime || MinTime > MAX_TIME))
             {
-                throw new InvalidDataException(string.Format("The minimum retention time {0} must be between {1} and {2}.",
-                    MinTime, MIN_TIME, MAX_TIME));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_The_minimum_retention_time__0__must_be_between__1__and__2__,
+                                  MinTime, MIN_TIME, MAX_TIME));
             }
             if (MaxTime.HasValue && (MIN_TIME > MaxTime || MaxTime > MAX_TIME))
             {
-                throw new InvalidDataException(string.Format("The maximum retention time {0} must be between {1} and {2}.",
-                    MaxTime, MIN_TIME, MAX_TIME));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_The_maximum_retention_time__0__must_be_between__1__and__2__,
+                                  MaxTime, MIN_TIME, MAX_TIME));
             }
             if (MinTime.HasValue && MaxTime.HasValue && MaxTime.Value - MinTime.Value < MIN_TIME_RANGE)
             {
-                throw new InvalidDataException(string.Format("The allowable retention time range {0} to {1} must be at least {2} minutes apart.",
-                    MinTime, MaxTime, MIN_TIME_RANGE));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionInstrument_DoValidate_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart_,
+                                  MinTime, MaxTime, MIN_TIME_RANGE));
             }
             if (PrecursorAcquisitionMethod == FullScanAcquisitionMethod.None)
             {
                 if (ProductFilterType != null || PrecursorFilter.HasValue || ProductFilter.HasValue)
-                    throw new InvalidDataException(string.Format("No other full-scan MS/MS filter settings are allowed when precursor filter is none."));
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.TransitionInstrument_DoValidate_No_other_full_scan_MS_MS_filter_settings_are_allowed_when_precursor_filter_is_none));
+                }
             }
             else if (PrecursorAcquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
                 const double minFilter = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
                 const double maxFilter = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
                 if (!PrecursorFilter.HasValue || minFilter > PrecursorFilter || PrecursorFilter > maxFilter)
-                    throw new InvalidDataException(string.Format("The precursor m/z filter must be between {0} and {1}",
-                        minFilter, maxFilter));
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.TransitionInstrument_DoValidate_The_precursor_mz_filter_must_be_between__0__and__1__,
+                                      minFilter, maxFilter));
+                }
             }
         }
 
@@ -1585,8 +1878,8 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
     }
 
-    public enum FullScanMassAnalyzerType { none = -1, qit, tof, orbitrap, ft_icr }
-    public enum RetentionTimeFilterType {none, scheduling_windows, ms2_ids}
+    public enum FullScanMassAnalyzerType { none = -1, qit, tof, orbitrap, ft_icr } // Not L10N
+    public enum RetentionTimeFilterType {none, scheduling_windows, ms2_ids} // Not L10N
 
     [XmlRoot("transition_full_scan")]
     public sealed class TransitionFullScan : Immutable, IValidating, IXmlSerializable
@@ -1613,10 +1906,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double ISOTOPE_PEAK_CENTERING_RES = 0.1;
         public const double MIN_ISOTOPE_PEAK_ABUNDANCE = 0.01;
 
-        public const string QIT = "QIT";
-        public const string ORBITRAP = "Orbitrap";
-        public const string TOF = "TOF";
-        public const string FT_ICR = "FT-ICR";
+        public const string QIT = "QIT"; //L10N
+        public const string ORBITRAP = "Orbitrap"; //L10N
+        public const string TOF = "TOF"; //L10N
+        public const string FT_ICR = "FT-ICR"; //L10N
 
         public static readonly string[] MASS_ANALYZERS = new[] {QIT, TOF, ORBITRAP, FT_ICR};
         public static readonly double[] DEFAULT_RES_VALUES = new[] {0.7, 10*1000, 60*1000, 100*1000};
@@ -1686,19 +1979,20 @@ namespace pwiz.Skyline.Model.DocSettings
             switch (acquisitionMethod)
             {
                 case FullScanAcquisitionMethod.None:
-                    throw new InvalidDataException("Tried to create an isolation scheme for non-DIA mode");
+                    throw new InvalidDataException(Resources.TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_for_non_DIA_mode);
                 
                 case FullScanAcquisitionMethod.DIA:
                     if (!precursorFilter.HasValue)
                     {
-                        throw new InvalidDataException("Tried to create an isolation scheme without precursor filter");
+                        throw new InvalidDataException(Resources.TransitionFullScan_CreateIsolationSchemeForFilter_Tried_to_create_an_isolation_scheme_without_precursor_filter);
                     }
                     else
                     {
                         string name = precursorRightFilter.HasValue
-                            ? string.Format("Results {0:0.##},{1:0.##} Th", precursorFilter.Value,
-                                precursorRightFilter.Value)
-                            : string.Format("Results {0:0.##} Th", precursorFilter.Value);
+                                          ? string.Format(Resources.TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__1_0__Th,
+                                                          precursorFilter.Value, precursorRightFilter.Value)
+                                          : string.Format(Resources.TransitionFullScanCreateIsolationSchemeForFilterResults__0__0__Th,
+                                                          precursorFilter.Value);
                         return new IsolationScheme(name, precursorFilter, precursorRightFilter);
                     }
             }
@@ -1943,7 +2237,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Implementation of IXmlSerializable
 
-        private enum ATTR
+        private enum ATTR // Not L10N
         {
             acquisition_method,
             precursor_filter_type,  // Skyline 1.2 and earlier
@@ -1973,7 +2267,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (PrecursorIsotopes == FullScanPrecursorIsotopes.None)
             {
                 if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorIsotopeFilter.HasValue || PrecursorRes.HasValue || PrecursorResMz.HasValue)
-                    throw new InvalidDataException("No other full-scan MS1 filter settings are allowed when no precursor isotopes are included.");
+                    throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_No_other_full_scan_MS1_filter_settings_are_allowed_when_no_precursor_isotopes_are_included);
             }
             else
             {
@@ -1981,7 +2275,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     if (PrecursorIsotopes != FullScanPrecursorIsotopes.Count || PrecursorIsotopeFilter != 1)
                     {
-                        throw new InvalidDataException("For MS1 filtering with a QIT mass analyzer only 1 isotope peak is supported.");
+                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported);
                     }
                 }
                 else
@@ -1991,12 +2285,12 @@ namespace pwiz.Skyline.Model.DocSettings
                     if (PrecursorIsotopes == FullScanPrecursorIsotopes.Count)
                     {
                         ValidateRange(PrecursorIsotopeFilter, MIN_ISOTOPE_COUNT, MAX_ISOTOPE_COUNT,
-                                      "The precursor isotope count for MS1 filtering must be between {0} and {1} peaks.");
+                                      Resources.TransitionFullScan_DoValidate_The_precursor_isotope_count_for_MS1_filtering_must_be_between__0__and__1__peaks);
                     }
                     else
                     {
                         ValidateRange(PrecursorIsotopeFilter, MIN_ISOTOPE_PERCENT, MAX_ISOTOPE_PERCENT,
-                                      "The precursor isotope percent for MS1 filtering must be between {0}% and {1}% of the base peak.");
+                                      Resources.TransitionFullScan_DoValidate_The_precursor_isotope_percent_for_MS1_filtering_must_be_between__0___and__1___of_the_base_peak);
                     }
                 }
                 _cachedPrecursorRes = ValidateRes(PrecursorMassAnalyzer, PrecursorRes, PrecursorResMz);
@@ -2005,19 +2299,19 @@ namespace pwiz.Skyline.Model.DocSettings
             if (AcquisitionMethod == FullScanAcquisitionMethod.None)
             {
                 if (ProductMassAnalyzer != FullScanMassAnalyzerType.none || IsolationScheme != null || ProductRes.HasValue || ProductResMz.HasValue)
-                    throw new InvalidDataException("No other full-scan MS/MS filter settings are allowed when precursor filter is none.");
+                    throw new InvalidDataException(Resources.TransitionInstrument_DoValidate_No_other_full_scan_MS_MS_filter_settings_are_allowed_when_precursor_filter_is_none);
             }
             else
             {
                 if (AcquisitionMethod == FullScanAcquisitionMethod.Targeted)
                 {
                     if (IsolationScheme != null)
-                        throw new InvalidDataException("An isolation window width value is not allowed in Targeted mode.");
+                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_not_allowed_in_Targeted_mode);
                 }
                 else
                 {
                     if (IsolationScheme == null)
-                        throw new InvalidDataException("An isolation window width value is required in DIA mode.");
+                        throw new InvalidDataException(Resources.TransitionFullScan_DoValidate_An_isolation_window_width_value_is_required_in_DIA_mode);
                 }
 
                 _cachedProductRes = ValidateRes(ProductMassAnalyzer, ProductRes, ProductResMz);
@@ -2036,26 +2330,36 @@ namespace pwiz.Skyline.Model.DocSettings
             if (analyzerType == FullScanMassAnalyzerType.qit)
             {
                 if (!res.HasValue || MIN_LO_RES > res.Value || res.Value > MAX_LO_RES)
-                    throw new InvalidDataException(string.Format("The precursor resolution must be between {0} and {1} for QIT.",
-                                                                 MIN_LO_RES, MAX_LO_RES));
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.TransitionFullScan_ValidateRes_The_precursor_resolution_must_be_between__0__and__1__for_QIT,
+                                      MIN_LO_RES, MAX_LO_RES));
+                }
             }
             else
             {
                 if (!res.HasValue || MIN_HI_RES > res.Value || res.Value > MAX_HI_RES)
-                    throw new InvalidDataException(string.Format("The precursor resolving power must be between {0} and {1} for {2}.",
-                                                                 MIN_HI_RES, MAX_HI_RES, MassAnalyzerToString(analyzerType)));
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.TransitionFullScan_ValidateRes_The_precursor_resolving_power_must_be_between__0__and__1__for__2__,
+                                      MIN_HI_RES, MAX_HI_RES, MassAnalyzerToString(analyzerType)));
+                }
                 expectMz = (analyzerType != FullScanMassAnalyzerType.tof);
             }
             if (expectMz)
             {
                 if (!resMz.HasValue || MIN_RES_MZ > resMz.Value || resMz.Value > MAX_RES_MZ)
-                    throw new InvalidDataException(string.Format("The m/z value at which the resolving power is calibrated is required for {0}.",
-                        MassAnalyzerToString(analyzerType)));
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.TransitionFullScan_ValidateRes_The_mz_value_at_which_the_resolving_power_is_calibrated_is_required_for__0__,
+                                      MassAnalyzerToString(analyzerType)));
+                }
             }
             else if (resMz.HasValue)
             {
-                throw new InvalidDataException(string.Format("Unexpected resolving power m/z value for {0}",
-                    MassAnalyzerToString(analyzerType)));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionFullScan_ValidateRes_Unexpected_resolving_power_mz_value_for__0__,
+                                  MassAnalyzerToString(analyzerType)));
             }
 
             return GetDenominator(analyzerType, res.Value, resMz ?? 0);
@@ -2286,7 +2590,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Implementation of IXmlSerializable
 
-        private enum ATTR
+        private enum ATTR // Not L10N
         {
             integrate_all,
         }

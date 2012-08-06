@@ -149,12 +149,12 @@ namespace pwiz.Skyline.EditUI
                 if (_advancedVisible)
                 {
                     Height = _fullHeight;
-                    btnShowHideAdvanced.Text = "<< Hide Ad&vanced";
+                    btnShowHideAdvanced.Text = Resources.FindNodeDlg_AdvancedVisible_Hide_Advanced;
                 }
                 else
                 {
                     Height = COLLAPSED_HEIGHT;
-                    btnShowHideAdvanced.Text = "Show Ad&vanced >>";
+                    btnShowHideAdvanced.Text = Resources.FindNodeDlg_AdvancedVisible_Show_Advanced;
                 }
             }
         }

@@ -37,7 +37,7 @@ namespace pwiz.Skyline.Util
         {
             if (IsDisposed)
             {
-                throw new ObjectDisposedException("Form disposed");
+                throw new ObjectDisposedException("Form disposed"); // Not L10N
             }
         }
 
@@ -79,6 +79,19 @@ namespace pwiz.Skyline.Util
         {
             CancelButton.PerformClick();
         }
+
+        private void InitializeComponent()
+        {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FormEx));
+            this.SuspendLayout();
+            // 
+            // FormEx
+            // 
+            resources.ApplyResources(this, "$this"); // Not L10N
+            this.Name = "FormEx"; // Not L10N
+            this.ResumeLayout(false);
+
+        }
     }
 
     public class DockableFormEx : DockableForm
@@ -96,7 +109,7 @@ namespace pwiz.Skyline.Util
         {
             if (IsDisposed)
             {
-                throw new ObjectDisposedException("Form disposed");
+                throw new ObjectDisposedException("Form disposed"); // Not L10N
             }
         }
     }

@@ -22,11 +22,14 @@ using System.IO;
 using System.Xml;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
     public static class DataSourceUtil
     {
+        // Not L10N
         public const string EXT_THERMO_RAW = ".raw";
         public const string EXT_WIFF = ".wiff";
         public const string EXT_MZXML =  ".mzxml";
@@ -54,6 +57,7 @@ namespace pwiz.Skyline.Util
         {
             try
             {
+                // Not L10N
                 if (dirInfo.Name.EndsWith(".raw") &&
                         dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
                     return TYPE_WATERS_RAW;
@@ -129,6 +133,7 @@ namespace pwiz.Skyline.Util
                         {
                             switch (reader.Name.ToLower())
                             {
+                                // Not L10N
                                 case "mzml":
                                 case "indexmzml":
                                     return "mzML";
@@ -257,7 +262,11 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception x)
             {
-                throw new IOException(string.Format("An error occurred attempting to read sample information from the file {0}.\nThe file may be corrupted, missing, or the correct libraries may not be installed.\n{1}", filePath, x.Message));
+                var message = TextUtil.LineSeparate(
+                    string.Format(Resources.DataSourceUtil_GetWiffSubPaths_An_error_occurred_attempting_to_read_sample_information_from_the_file__0__,filePath),
+                                    Resources.DataSourceUtil_GetWiffSubPaths_The_file_may_be_corrupted_missing_or_the_correct_libraries_may_not_be_installed,
+                                    x.Message);
+                throw new IOException(message);
             }
 
             return GetWiffSubPaths(filePath, dataIds, null);

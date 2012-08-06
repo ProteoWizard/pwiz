@@ -29,6 +29,7 @@ using System.Threading;
 using pwiz.Crawdad;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
@@ -570,6 +571,7 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public sealed class InstrumentInfoUtil
     {
+        // Not L10N: Used for cache and testing
         public const string MODEL = "MODEL:";
         public const string ANALYZER = "ANALYZER:";
         public const string DETECTOR = "DETECTOR:";
@@ -609,7 +611,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 readLine = true;
 
-                if (Equals("", line.Trim())) // We have come too far
+                if (Equals(string.Empty, line.Trim())) // We have come too far
                     break;
 
                 if (line.StartsWith(MODEL))
@@ -630,7 +632,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    throw new IOException(string.Format("Unexpected line in instrument config: {0}", line));
+                    throw new IOException(string.Format(Resources.InstrumentInfoUtil_ReadInstrumentConfig_Unexpected_line_in_instrument_config__0__, line));
                 }
             }
 
@@ -646,7 +648,7 @@ namespace pwiz.Skyline.Model.Results
         public static string GetInstrumentInfoString(IEnumerable<MsInstrumentConfigInfo> instrumentConfigList)
         {
             if (instrumentConfigList == null)
-                return "";
+                return string.Empty;
 
             StringBuilder infoString = new StringBuilder();
 
@@ -656,30 +658,30 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
 				if (infoString.Length > 0)
-	                infoString.Append('\n');
+	                infoString.Append('\n'); // Not L10N
 
                 // instrument model
                 if(!string.IsNullOrWhiteSpace(configInfo.Model))
                 {
-                    infoString.Append(MODEL).Append(configInfo.Model).Append('\n');
+                    infoString.Append(MODEL).Append(configInfo.Model).Append('\n'); // Not L10N
                 }
 
                 // ionization type
                 if(!string.IsNullOrWhiteSpace(configInfo.Ionization))
                 {
-                    infoString.Append(IONIZATION).Append(configInfo.Ionization).Append('\n'); 
+                    infoString.Append(IONIZATION).Append(configInfo.Ionization).Append('\n'); // Not L10N
                 }
 
                 // analyzer
                 if (!string.IsNullOrWhiteSpace(configInfo.Analyzer))
                 {
-                    infoString.Append(ANALYZER).Append(configInfo.Analyzer).Append('\n');  
+                    infoString.Append(ANALYZER).Append(configInfo.Analyzer).Append('\n'); // Not L10N
                 }
 
                 // detector
                 if(!string.IsNullOrWhiteSpace(configInfo.Detector))
                 {
-                    infoString.Append(DETECTOR).Append(configInfo.Detector).Append('\n');
+                    infoString.Append(DETECTOR).Append(configInfo.Detector).Append('\n'); // Not L10N
                 }
             }
             
@@ -725,7 +727,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("{0:F04}, {1:F04}", Precursor, Product);
+            return string.Format("{0:F04}, {1:F04}", Precursor, Product); // Not L10N
         }
 
         public int CompareTo(ChromKey key)
@@ -751,11 +753,12 @@ namespace pwiz.Skyline.Model.Results
             return (f1 > f2 ? 1 : -1);
         }
 
+        // Not LS0N
         private const string PREFIX_TOTAL = "SRM TIC ";
         private const string PREFIX_SINGLE = "SRM SIC ";
         private const string PREFIX_PRECURSOR = "SIM SIC ";
 
-        private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) ");
+        private static readonly Regex REGEX_ABI = new Regex(@"Q1=([^ ]+) Q3=([^ ]+) "); // Not L10N
 
         public static bool IsKeyId(string id)
         {
@@ -792,12 +795,13 @@ namespace pwiz.Skyline.Model.Results
                     // Try simpler comma separated format (Thermo)
                     else
                     {
-                        mzs = mzPart.Split(new[] { ',' });
+                        mzs = mzPart.Split(new[] { ',' }); // Not L10N
                         if (mzs.Length != 2)
+                        {
                             throw new InvalidDataException(
-                                string.Format(
-                                    "Invalid chromatogram ID {0} found.  The ID must include both precursor and product m/z values.",
-                                    id));                        
+                                string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_The_ID_must_include_both_precursor_and_product_mz_values,
+                                              id));
+                        }
                     }
 
                     precursor = (float)double.Parse(mzs[0], CultureInfo.InvariantCulture);
@@ -805,14 +809,13 @@ namespace pwiz.Skyline.Model.Results
                 }
                 else
                 {
-                    throw new ArgumentException(string.Format("The value '{0}' is not a valid chromatogram ID.", id));
+                    throw new ArgumentException(string.Format(Resources.ChromKey_FromId_The_value__0__is_not_a_valid_chromatogram_ID, id));
                 }
                 return new ChromKey(precursor, product);
             }
             catch (FormatException)
             {
-                throw new InvalidDataException(
-                    string.Format("Invalid chromatogram ID {0} found.  Failure parsing m/z values.", id));
+                throw new InvalidDataException(string.Format(Resources.ChromKey_FromId_Invalid_chromatogram_ID__0__found_Failure_parsing_mz_values, id));
             }
         }
     }
@@ -973,7 +976,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // Single read to get all the points
                 if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
-                    throw new IOException("Failure trying to read points");
+                    throw new IOException(Resources.ChromatogramGroupInfo_ReadChromatogram_Failure_trying_to_read_points);
             }
 
             int numPoints = _groupHeaderInfo.NumPoints;
@@ -1037,7 +1040,11 @@ namespace pwiz.Skyline.Model.Results
             : base(groupHeaderInfo, allFiles, allTransitions, allPeaks)
         {
             if (transitionIndex >= _groupHeaderInfo.NumTransitions)
-                throw new IndexOutOfRangeException(string.Format("The index {0} must be between 0 and {1}", transitionIndex, _groupHeaderInfo.NumTransitions));
+            {
+                throw new IndexOutOfRangeException(
+                    string.Format(Resources.ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__,
+                                  transitionIndex, _groupHeaderInfo.NumTransitions));
+            }
             _transitionIndex = transitionIndex;
 
             Times = times;
@@ -1070,7 +1077,11 @@ namespace pwiz.Skyline.Model.Results
         public ChromPeak GetPeak(int peakIndex)
         {
             if (0 > peakIndex || peakIndex > _groupHeaderInfo.NumPeaks)
-                throw new IndexOutOfRangeException(string.Format("The index {0} must be between 0 and {1}", peakIndex, _groupHeaderInfo.NumPeaks));
+            {
+                throw new IndexOutOfRangeException(
+                    string.Format(Resources.ChromatogramInfo_ChromatogramInfo_The_index__0__must_be_between_0_and__1__,
+                                  peakIndex, _groupHeaderInfo.NumPeaks));
+            }
             return _allPeaks[_groupHeaderInfo.StartPeakIndex + peakIndex + (_transitionIndex * _groupHeaderInfo.NumPeaks)];
         }
 
@@ -1218,7 +1229,7 @@ namespace pwiz.Skyline.Model.Results
     public class BulkReadException : IOException
     {
         public BulkReadException()
-            : base("Failed reading block from file.")
+            : base(Resources.BulkReadException_BulkReadException_Failed_reading_block_from_file)
         {
         }
     }

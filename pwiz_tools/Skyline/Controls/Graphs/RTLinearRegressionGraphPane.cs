@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -55,8 +56,8 @@ namespace pwiz.Skyline.Controls.Graphs
         public RTLinearRegressionGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            XAxis.Title.Text = "Score";
-            YAxis.Title.Text = "Measured Time";
+            XAxis.Title.Text = Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Score;
+            YAxis.Title.Text = Resources.RTLinearRegressionGraphPane_RTLinearRegressionGraphPane_Measured_Time;
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
 
@@ -342,6 +343,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         private void RefineData()
         {
+            // Called on a new thread
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
             try
             {
                 if (Refine(() => !IsValidFor(GraphSummary.DocumentUIContainer.Document)))
@@ -714,21 +717,21 @@ namespace pwiz.Skyline.Controls.Graphs
                     curveOut.Symbol.Size = 8f;
                 }
 
-                string labelPoints = "Peptides";
+                string labelPoints = Resources.GraphData_Graph_Peptides;
                 if (!_refine)
                 {
-                    GraphRegression(graphPane, _statisticsAll, "Regression", COLOR_LINE_REFINED);
+                    GraphRegression(graphPane, _statisticsAll, Resources.GraphData_Graph_Regression, COLOR_LINE_REFINED);
                 }
                 else
                 {
-                    labelPoints = "Peptides Refined";
-                    GraphRegression(graphPane, _statisticsRefined, "Regression Refined", COLOR_LINE_REFINED);
-                    GraphRegression(graphPane, _statisticsAll, "Regression", COLOR_LINE_ALL);
+                    labelPoints = Resources.GraphData_Graph_Peptides_Refined;
+                    GraphRegression(graphPane, _statisticsRefined, Resources.GraphData_Graph_Regression_Refined, COLOR_LINE_REFINED);
+                    GraphRegression(graphPane, _statisticsAll, Resources.GraphData_Graph_Regression, COLOR_LINE_ALL);
                 }
 
                 if (_regressionPredict != null && Settings.Default.RTPredictorVisible)
                 {
-                    GraphRegression(graphPane, _statisticsPredict, "Predictor", COLOR_LINE_PREDICT);
+                    GraphRegression(graphPane, _statisticsPredict, Resources.GraphData_Graph_Predictor, COLOR_LINE_PREDICT);
                 }
 
                 var curve = graphPane.AddCurve(labelPoints, _scoresRefined, _timesRefined,
@@ -739,7 +742,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 if (_scoresOutliers != null)
                 {
-                    var curveOut = graphPane.AddCurve("Outliers", _scoresOutliers, _timesOutliers,
+                    var curveOut = graphPane.AddCurve(Resources.GraphData_Graph_Outliers, _scoresOutliers, _timesOutliers,
                                                       Color.Black, SymbolType.Diamond);
                     curveOut.Line.IsVisible = false;
                     curveOut.Symbol.Border.IsVisible = false;
@@ -828,17 +831,19 @@ namespace pwiz.Skyline.Controls.Graphs
                 string label;
                 if (regression == null || regression.Conversion == null || statistics == null)
                 {
-                    label = "slope = ?, intercept = ?\n" +
-                            "window = ?\n" +
-                            "r = ?";
+                    label = String.Format("{0} = ?, {1} = ?\n" + "{2} = ?\n" + "r = ?", // Not L10N
+                                          Resources.Regression_slope,
+                                          Resources.Regression_intercept,
+                                          Resources.GraphData_AddRegressionLabel_window);
                 }
                 else
                 {
-                    label = String.Format("slope = {0:F02}, intercept = {1:F02}\n" +
-                                          "window = {2:F01}\n" +
-                                          "r = {3}",
+                    label = String.Format("{0} = {1:F02}, {2} = {3:F02}\n" + "{4} = {5:F01}\n" + "r = {6}",   // Not L10N
+                                          Resources.Regression_slope,
                                           regression.Conversion.Slope,
+                                          Resources.Regression_intercept, 
                                           regression.Conversion.Intercept,
+                                          Resources.GraphData_AddRegressionLabel_window,
                                           regression.TimeWindow,
                                           Math.Round(statistics.R, RetentionTimeRegression.ThresholdPrecision));
                 }

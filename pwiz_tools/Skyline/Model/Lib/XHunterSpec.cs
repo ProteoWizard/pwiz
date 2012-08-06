@@ -28,6 +28,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 
@@ -36,10 +37,13 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("hunter_lib_spec")]
     public sealed class XHunterLibSpec : LibrarySpec
     {
-        public const string EXT = ".hlf";
+        public const string EXT = ".hlf"; // Not L10N
 
-        public static readonly PeptideRankId PEP_RANK_EXPECT = new PeptideRankId("Expect");
-        public static readonly PeptideRankId PEP_RANK_PROCESSED_INTENSITY = new PeptideRankId("Processed intensity");
+        public static readonly PeptideRankId PEP_RANK_EXPECT =
+            new PeptideRankId(Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect);
+
+        public static readonly PeptideRankId PEP_RANK_PROCESSED_INTENSITY =
+            new PeptideRankId(Resources.XHunterLibSpec_PEP_RANK_PROCESSED_INTENSITY_Processed_intensity);
 
         private static readonly PeptideRankId[] RANK_IDS = new[] { PEP_RANK_EXPECT, PEP_RANK_PROCESSED_INTENSITY };
 
@@ -183,11 +187,11 @@ namespace pwiz.Skyline.Model.Lib
     {
         private const int FORMAT_VERSION_CACHE = 2;
 
-        public const string DEFAULT_AUTHORITY = "thegpm.org";
+        public const string DEFAULT_AUTHORITY = "thegpm.org"; // Not L10N
 
-        public const string EXT_CACHE = ".slc";
+        public const string EXT_CACHE = ".slc"; // Not L10N 
 
-        private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(.*\d\d\d\d\.\d\d.\d\d)");
+        private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(.*\d\d\d\d\.\d\d.\d\d)"); // Not L10N
         private IPooledStream _readStream;
 
         public static XHunterLibrary Load(XHunterLibSpec spec, ILoadMonitor loader)
@@ -207,8 +211,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             FilePath = spec.FilePath;
             
-            string baseName = Path.GetFileNameWithoutExtension(FilePath) ?? ""; // ReSharper
-            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? "", baseName + EXT_CACHE);
+            string baseName = Path.GetFileNameWithoutExtension(FilePath) ?? string.Empty; // ReSharper
+            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? string.Empty, baseName + EXT_CACHE);
 
         }
 
@@ -231,7 +235,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-                LibraryDetails details = new LibraryDetails { Format = "X!Hunter", PeptideCount = SpectrumCount };
+                LibraryDetails details = new LibraryDetails { Format = "X!Hunter", PeptideCount = SpectrumCount }; // Not L10N
 
                 if (!string.IsNullOrEmpty(Id))
                 {
@@ -339,7 +343,7 @@ namespace pwiz.Skyline.Model.Lib
             BufferedStream stream = new BufferedStream(CreateStream(loader), 32*1024);
 
             int version = 1;
-            string id = "", revision = "";
+            string id = string.Empty, revision = string.Empty;
             int size = ReadSize(stream);
             int i;
             if (size == 0)
@@ -350,7 +354,7 @@ namespace pwiz.Skyline.Model.Lib
                 const int countLibHeader = 256 - 8;
                 byte[] libHeader = new byte[countLibHeader];
                 if (stream.Read(libHeader, 0, libHeader.Length) != libHeader.Length)
-                    throw new InvalidDataException("Data truncation in library header. File may be corrupted.");
+                    throw new InvalidDataException(Resources.XHunterLibrary_CreateCache_Data_truncation_in_library_header_File_may_be_corrupted);
 
                 for (i = 0; i < libHeader.Length; i++)
                 {
@@ -527,7 +531,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool Load(ILoadMonitor loader)
         {
-            ProgressStatus status = new ProgressStatus("");
+            ProgressStatus status = new ProgressStatus(string.Empty);
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
@@ -557,8 +561,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Building the cache will take 95% of the load time.
                     loadPercent = 5;
 
-                    status = status.ChangeMessage(string.Format("Building binary cache for {0} library",
-                                                           Path.GetFileName(FilePath)));
+                    status = status.ChangeMessage(string.Format(Resources.XHunterLibrary_Load_Building_binary_cache_for__0__library, Path.GetFileName(FilePath)));
                     status = status.ChangePercentComplete(0);
 
                     loader.UpdateProgress(status);
@@ -567,7 +570,7 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                 }
 
-                status = status.ChangeMessage(string.Format("Loading {0} library", Path.GetFileName(FilePath)));
+                status = status.ChangeMessage(string.Format(Resources.XHunterLibrary_Load_Loading__0__library, Path.GetFileName(FilePath)));
                 loader.UpdateProgress(status);
 
                 var sm = loader.StreamManager;
@@ -628,7 +631,7 @@ namespace pwiz.Skyline.Model.Lib
                         int seqKeyLength = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_length));
                         int charge = GetInt32(specHeader, ((int)SpectrumCacheHeader.charge));
                         if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                            throw new InvalidDataException("Invalid precursor charge found. File may be corrupted.");
+                            throw new InvalidDataException(Resources.XHunterLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
                         float i2 = BitConverter.ToSingle(specHeader, ((int) SpectrumCacheHeader.i2)*4);
                         long location = BitConverter.ToInt64(specHeader, ((int) SpectrumCacheHeader.location_lo)*4);
                         int numPeaks = GetInt32(specHeader, ((int) SpectrumCacheHeader.num_peaks));
@@ -676,7 +679,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (!cached)
                 {
-                    x = new Exception(string.Format("Failed loading library '{0}'.", FilePath), x);
+                    x = new Exception(string.Format(Resources.XHunterLibrary_Load_Failed_loading_library__0__, FilePath), x);
                     loader.UpdateProgress(status.ChangeErrorException(x));
                 }
                 return false;
@@ -710,7 +713,7 @@ namespace pwiz.Skyline.Model.Lib
             const int lenPair = sizeof(byte) + sizeof(float);
             byte[] peaks = new byte[info.NumPeaks * lenPair];
             if (fs.Read(peaks, 0, peaks.Length) < peaks.Length)
-                throw new IOException("Failure trying to read peaks");
+                throw new IOException(Resources.XHunterLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
 
             // Build the list
             var arrayMI = new SpectrumPeaksInfo.MI[info.NumPeaks];
@@ -744,7 +747,7 @@ namespace pwiz.Skyline.Model.Lib
                 outStream.Write(BitConverter.GetBytes(library.SpectrumCount), 0, sizeof(int));
                 
                 byte[] header = new byte[256 - 8];
-                const string headerText = @"HLF v=2 s=test.hlf d=2009.02.04";
+                const string headerText = @"HLF v=2 s=test.hlf d=2009.02.04"; // Not L10N
                 Encoding.Default.GetBytes(headerText, 0, headerText.Length, header, 0);
 
                 outStream.Write(header, 0, header.Length);

@@ -19,12 +19,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -265,14 +267,18 @@ namespace pwiz.Skyline.FileUI
             CheckDisposed();
             if (!DocumentUIContainer.DocumentUI.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, "All results must be completely imported before any can be re-imported.");
+                MessageDlg.Show(this, Resources.ManageResultsDlg_ReimportResults_All_results_must_be_completely_imported_before_any_can_be_re_imported);
                 return;
             }
 
             var missingFiles = FindMissingFiles(SelectedChromatograms);
             if (missingFiles.Length > 0)
             {
-                MessageDlg.Show(this, string.Format("Unable to find the following files, either in their original locations or in the folder of the current document:\n\n{0}", string.Join("\n", missingFiles)));
+                var sb = new StringBuilder();
+                sb.AppendLine(Resources.ManageResultsDlg_ReimportResults_Unable_to_find_the_following_files_either_in_their_original_locations_or_in_the_folder_of_the_current_document)
+                    .AppendLine()
+                    .Append(TextUtil.LineSeparate(missingFiles));
+                MessageDlg.Show(this, sb.ToString());
                 return;
             }
 
@@ -383,8 +389,8 @@ namespace pwiz.Skyline.FileUI
             public override string ToString()
             {
                 if (Chromatograms == null)
-                    return "";
-                return (IsReimport ? "*" : "") + Chromatograms.Name;
+                    return string.Empty;
+                return (IsReimport ? "*" : string.Empty) + Chromatograms.Name; // Not L10N
             }
         }
     }

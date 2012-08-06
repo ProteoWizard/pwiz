@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Find
@@ -204,7 +205,8 @@ namespace pwiz.Skyline.Model.Find
                     int index = docNodeParent.FindNodeIndex(value.IdentityPath.GetIdentity(i));
                     if (index < 0)
                     {
-                        throw new InvalidBookmarkLocation("No such node:" + value.IdentityPath.GetPathTo(i));
+                        throw new InvalidBookmarkLocation(string.Format(Resources.BookmarkEnumerator_Current_No_such_node__0__,
+                                                                        value.IdentityPath.GetPathTo(i)));
                     }
                     _nodeIndexPath.Add(index);
                     docNode = docNodeParent.Children[index];
@@ -216,7 +218,8 @@ namespace pwiz.Skyline.Model.Find
                                                                 value.OptStep == GetOptStep(ci));
                     if (_chromInfoIndex < 0)
                     {
-                        throw new InvalidBookmarkLocation("No such chrominfo:" + value.ChromFileInfoId);
+                        throw new InvalidBookmarkLocation(string.Format(Resources.BookmarkEnumerator_Current_No_such_chrominfo__0__,
+                                                                        value.ChromFileInfoId));
                     }
                 }
             }
@@ -382,17 +385,17 @@ namespace pwiz.Skyline.Model.Find
                 var peptideDocNode = NodePath.FirstOrDefault(docNode => docNode is PeptideDocNode) as PeptideDocNode;
                 if (resultsIndex < 0)
                 {
-                    return "<UnknownFile>";
+                    return Resources.BookmarkEnumerator_GetLocationName_UnknownFile;
                 }
                 if (peptideDocNode == null)
                 {
-                    return "<NoPeptide>";
+                    return Resources.BookmarkEnumerator_GetLocationName_NoPeptide;
                 }
                 var chromatogramSets = Document.Settings.MeasuredResults.Chromatograms;
                 var chromatogramSet = chromatogramSets[resultsIndex];
                 var resultDisplaySettings = new DisplaySettings(
                     peptideDocNode, false, resultsIndex, displaySettings.RatioIndex);
-                return CurrentDocNode.GetDisplayText(resultDisplaySettings) + " (" + chromatogramSet.Name + ")";
+                return CurrentDocNode.GetDisplayText(resultDisplaySettings) + " (" + chromatogramSet.Name + ")"; // Not L10N
             }
             return CurrentDocNode.GetDisplayText(displaySettings);
         }
@@ -402,7 +405,7 @@ namespace pwiz.Skyline.Model.Find
             string nodeType = GetNodeTypeName(CurrentDocNode);
             if (_chromInfoIndex >= 0)
             {
-                return nodeType + " Results";
+                return nodeType + " " + Resources.BookmarkEnumerator_GetLocationType_Results; // Not L10N
             }
             return nodeType;
         }
@@ -411,21 +414,21 @@ namespace pwiz.Skyline.Model.Find
         {
             if (docNode is TransitionDocNode)
             {
-                return "Transition";
+                return TransitionTreeNode.TITLE;
             }
             if (docNode is TransitionGroupDocNode)
             {
-                return "Precursor";
+                return TransitionGroupTreeNode.TITLE;
             }
             if (docNode is PeptideDocNode)
             {
-                return "Peptide";
+                return PeptideTreeNode.TITLE;
             }
             if (docNode is PeptideGroupDocNode)
             {
-                return "Protein";
+                return Resources.BookmarkEnumerator_GetNodeTypeName_Protein;
             }
-            return "Unknown";
+            return Resources.BookmarkEnumerator_GetNodeTypeName_Unknown;
         }
 
         public static BookmarkEnumerator TryGet(SrmDocument document, Bookmark bookmark)

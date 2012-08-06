@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
             for (int index = 1; index < sequence.Length; index++)
             {
                 byte b = sequence[index];
-                if (b != (byte)'[')
+                if (b != (byte)'[') // L10N
                 {
                     if (isSpecificHeavy)
                     {
@@ -181,8 +181,8 @@ namespace pwiz.Skyline.Model
                 // Check each amino acid character to make sure it is followed by an opening bracket
                 // The vast majority of sequences will fail this test on the second character
                 byte b = sequence[i];
-                if (((byte)'A' <= b || b <= (byte)'Z')
-                        && (i == sequence.Length - 1 || sequence[i] != (byte)'['))
+                if (((byte)'A' <= b || b <= (byte)'Z') // L10N
+                        && (i == sequence.Length - 1 || sequence[i] != (byte)'[')) // L10N
                     return false;
             }
             return true;

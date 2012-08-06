@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -39,7 +40,7 @@ namespace pwiz.Skyline.Util
         public long ByteCount { get; private set; }
         public override string ToString()
         {
-            return String.Format(FORMAT_PROVIDER, "{0:fs}", ByteCount);
+            return String.Format(FORMAT_PROVIDER, "{0:fs}", ByteCount); // Not L10N
         }
 
         public int CompareTo(object obj)
@@ -50,7 +51,7 @@ namespace pwiz.Skyline.Util
             }
             if (!(obj is FileSize))
             {
-                throw new ArgumentException("Must be FileSize");
+                throw new ArgumentException(Resources.FileSize_CompareTo_Must_be_FileSize);
             }
             return ByteCount.CompareTo(((FileSize) obj).ByteCount);
         }

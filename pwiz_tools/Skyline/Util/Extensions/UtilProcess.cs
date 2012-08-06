@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Util.Extensions
 
         public static void RunProcess(this ProcessStartInfo psi, string stdin)
         {
-            var statusTemp = new ProgressStatus("");
+            var statusTemp = new ProgressStatus(string.Empty);
             psi.RunProcess(stdin, null, null, ref statusTemp);
         }
 

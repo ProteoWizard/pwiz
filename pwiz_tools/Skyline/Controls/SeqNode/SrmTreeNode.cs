@@ -27,6 +27,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
@@ -216,7 +217,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 var annotations = Model.Annotations;
                 if (!String.IsNullOrEmpty(annotations.Note))
                 {
-                    lastMultiLine = table.AddDetailRowLineWrap(g, "Note", annotations.Note, rt);
+                    lastMultiLine = table.AddDetailRowLineWrap(g, Resources.SrmTreeNode_RenderTip_Note, annotations.Note, rt); 
+                    // L10N: I'm not completely sure if the user will see this, but in AddDetailRowLineWrap it seems like
+                        // the function displays the values.
                 }
                 foreach (var annotation in annotations.ListAnnotations())
                 {
@@ -230,15 +233,21 @@ namespace pwiz.Skyline.Controls.SeqNode
                         // exception, just guess that anything where the annotation name and value are equal
                         // is a True/False type set to True, and display everything else as usual.
                         if (Equals(annotationName, annotationValue))
-                            annotationValue = "True";
+                            annotationValue = Resources.SrmTreeNode_RenderTip_True;
+                        // L10N: I'm not completely sure if the user will see this, but in AddDetailRowLineWrap it seems like
+                        // the function displays the values.
                     }
                     else if (def.Type == AnnotationDef.AnnotationType.true_false)
                     {
-                        annotationValue = annotationValue != null ? "True" : "False";
+                        annotationValue = annotationValue != null
+                                              ? Resources.SrmTreeNode_RenderTip_True
+                                              : Resources.SrmTreeNode_RenderTip_False;
+                        // L10N: I'm not completely sure if the user will see this, but in AddDetailRowLineWrap it seems like
+                        // the function displays the values.
                     }
                     // If the last row was multi-line, add a spacer line.
                     if (lastMultiLine)
-                        table.AddDetailRow(" ", " ", rt);
+                        table.AddDetailRow(" ", " ", rt); // Not L10N
                     lastMultiLine = table.AddDetailRowLineWrap(g, annotationName, annotationValue, rt);
                 }
                 SizeF size = table.CalcDimensions(g);
@@ -897,7 +906,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
     public class NodeTip : CustomTip
     {
-        public static string FontFace { get { return "Arial"; } }
+        public static string FontFace { get { return "Arial"; } } // Not L10N
         public static float FontSize { get { return 8f; } }
 
         private ITipProvider _tipProvider;
@@ -1052,7 +1061,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         private const string X80 =
-        "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+        "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Not L10N
 
         /// <summary>
         /// Adds a text column a with potential line wrap.
@@ -1066,8 +1075,8 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             SizeF sizeX80 = g.MeasureString(X80, rt.FontNormal);
             float widthLine = sizeX80.Width;
-            var words = value.Split(' ');
-            string line = "";
+            var words = value.Split(TextUtil.SEPARATOR_SPACE);
+            string line = string.Empty;
             bool firstRow = true;
             // This is a little bit strange, but it works.  Because the split call
             // splits only on spaces, newlines are preserved, and MeasureString will
@@ -1076,18 +1085,18 @@ namespace pwiz.Skyline.Controls.SeqNode
             // a valid indicator on its own of whether the text is multi-line.
             foreach (string word in words)
             {
-                if (g.MeasureString(line + word + " ", rt.FontNormal).Width > widthLine)
+                if (g.MeasureString(TextUtil.SpaceSeparate(line + word,string.Empty), rt.FontNormal).Width > widthLine)
                 {
-                    AddDetailRow(firstRow ? name : "", line, rt);
-                    line = "";
+                    AddDetailRow(firstRow ? name : string.Empty, line, rt);
+                    line = string.Empty;
                     firstRow = false;
                 }
-                line += word + " ";
+                line += word + TextUtil.SEPARATOR_SPACE;
             }
-            AddDetailRow(firstRow ? name : "", line, rt);
+            AddDetailRow(firstRow ? name : string.Empty, line, rt);
             // The text is multi-line if either it required wrapping to multiple rows,
             // or it contains new-line characters.
-            return !firstRow || value.Contains('\n');
+            return !firstRow || value.Contains('\n'); // Not L10N
         }
 
         public SizeF CalcDimensions(Graphics g)

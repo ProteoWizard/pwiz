@@ -41,76 +41,59 @@
             // 
             // gridStatistics
             // 
-            this.gridStatistics.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.gridStatistics, "gridStatistics");
             this.gridStatistics.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridStatistics.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.Peptide,
             this.Hydrophobicity,
             this.Predicted,
             this.RetentionTime});
-            this.gridStatistics.Location = new System.Drawing.Point(13, 35);
             this.gridStatistics.Name = "gridStatistics";
-            this.gridStatistics.Size = new System.Drawing.Size(448, 253);
-            this.gridStatistics.TabIndex = 1;
             this.gridStatistics.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridStatistics_KeyDown);
             // 
             // Peptide
             // 
             this.Peptide.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.Peptide.HeaderText = "Peptide";
+            resources.ApplyResources(this.Peptide, "Peptide");
             this.Peptide.Name = "Peptide";
             this.Peptide.ReadOnly = true;
             // 
             // Hydrophobicity
             // 
-            this.Hydrophobicity.HeaderText = "Hydrophobicity";
+            resources.ApplyResources(this.Hydrophobicity, "Hydrophobicity");
             this.Hydrophobicity.Name = "Hydrophobicity";
             this.Hydrophobicity.ReadOnly = true;
-            this.Hydrophobicity.Width = 80;
             // 
             // Predicted
             // 
-            this.Predicted.HeaderText = "Predicted";
+            resources.ApplyResources(this.Predicted, "Predicted");
             this.Predicted.Name = "Predicted";
             this.Predicted.ReadOnly = true;
-            this.Predicted.Width = 80;
             // 
             // RetentionTime
             // 
-            this.RetentionTime.HeaderText = "Retention Time";
+            resources.ApplyResources(this.RetentionTime, "RetentionTime");
             this.RetentionTime.Name = "RetentionTime";
             this.RetentionTime.ReadOnly = true;
-            this.RetentionTime.Width = 80;
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnOk.Location = new System.Drawing.Point(386, 300);
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 2;
-            this.btnOk.Text = "Close";
             this.btnOk.UseVisualStyleBackColor = true;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 13);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(42, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Details:";
             // 
             // RTDetails
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnOk;
-            this.ClientSize = new System.Drawing.Size(473, 335);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.gridStatistics);
@@ -118,8 +101,6 @@
             this.MinimizeBox = false;
             this.Name = "RTDetails";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Retention Time Details";
             ((System.ComponentModel.ISupportInitialize)(this.gridStatistics)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

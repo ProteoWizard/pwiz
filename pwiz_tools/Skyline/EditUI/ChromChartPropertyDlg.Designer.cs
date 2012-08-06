@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ChromChartPropertyDlg));
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
@@ -46,135 +47,88 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(250, 39);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 6;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(250, 9);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 5;
-            this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(12, 9);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(58, 13);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "&Line width:";
             // 
             // textLineWidth
             // 
-            this.textLineWidth.Location = new System.Drawing.Point(15, 25);
+            resources.ApplyResources(this.textLineWidth, "textLineWidth");
             this.textLineWidth.Name = "textLineWidth";
-            this.textLineWidth.Size = new System.Drawing.Size(83, 20);
-            this.textLineWidth.TabIndex = 1;
             // 
             // textFontSize
             // 
-            this.textFontSize.Location = new System.Drawing.Point(147, 25);
+            resources.ApplyResources(this.textFontSize, "textFontSize");
             this.textFontSize.Name = "textFontSize";
-            this.textFontSize.Size = new System.Drawing.Size(83, 20);
-            this.textFontSize.TabIndex = 3;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(144, 9);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(52, 13);
-            this.label1.TabIndex = 2;
-            this.label1.Text = "&Font size:";
             // 
             // textTimeRange
             // 
-            this.textTimeRange.Location = new System.Drawing.Point(26, 49);
+            resources.ApplyResources(this.textTimeRange, "textTimeRange");
             this.textTimeRange.Name = "textTimeRange";
-            this.textTimeRange.Size = new System.Drawing.Size(116, 20);
-            this.textTimeRange.TabIndex = 1;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(23, 33);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(110, 13);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "&Best peak time range:";
             // 
             // labelTimeUnits
             // 
-            this.labelTimeUnits.AutoSize = true;
-            this.labelTimeUnits.Location = new System.Drawing.Point(148, 52);
+            resources.ApplyResources(this.labelTimeUnits, "labelTimeUnits");
             this.labelTimeUnits.Name = "labelTimeUnits";
-            this.labelTimeUnits.Size = new System.Drawing.Size(43, 13);
-            this.labelTimeUnits.TabIndex = 2;
-            this.labelTimeUnits.Text = "minutes";
             // 
             // groupBox1
             // 
-            this.groupBox1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Controls.Add(this.cbRelative);
             this.groupBox1.Controls.Add(this.textMaxIntensity);
             this.groupBox1.Controls.Add(this.label5);
             this.groupBox1.Controls.Add(this.textTimeRange);
             this.groupBox1.Controls.Add(this.labelTimeUnits);
             this.groupBox1.Controls.Add(this.label2);
-            this.groupBox1.Location = new System.Drawing.Point(15, 75);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(215, 187);
-            this.groupBox1.TabIndex = 4;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "&Graph area dimensions:";
             // 
             // cbRelative
             // 
-            this.cbRelative.AutoSize = true;
-            this.cbRelative.Location = new System.Drawing.Point(26, 72);
+            resources.ApplyResources(this.cbRelative, "cbRelative");
             this.cbRelative.Name = "cbRelative";
-            this.cbRelative.Size = new System.Drawing.Size(116, 17);
-            this.cbRelative.TabIndex = 5;
-            this.cbRelative.Text = "&Peak width relative";
             this.cbRelative.UseVisualStyleBackColor = true;
             this.cbRelative.CheckedChanged += new System.EventHandler(this.cbRelative_CheckedChanged);
             // 
             // textMaxIntensity
             // 
-            this.textMaxIntensity.Location = new System.Drawing.Point(26, 143);
+            resources.ApplyResources(this.textMaxIntensity, "textMaxIntensity");
             this.textMaxIntensity.Name = "textMaxIntensity";
-            this.textMaxIntensity.Size = new System.Drawing.Size(116, 20);
-            this.textMaxIntensity.TabIndex = 4;
             // 
             // label5
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(23, 127);
+            resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(96, 13);
-            this.label5.TabIndex = 3;
-            this.label5.Text = "&Maximum Intensity:";
             // 
             // ChromChartPropertyDlg
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(337, 287);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.textFontSize);
             this.Controls.Add(this.label1);
@@ -187,8 +141,6 @@
             this.MinimizeBox = false;
             this.Name = "ChromChartPropertyDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Chromatogram Graph Properties";
             this.groupBox1.ResumeLayout(false);
             this.groupBox1.PerformLayout();
             this.ResumeLayout(false);

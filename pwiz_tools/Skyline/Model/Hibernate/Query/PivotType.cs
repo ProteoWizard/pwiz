@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
@@ -29,8 +30,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
     /// </summary>
     public abstract class PivotType
     {
-        public static readonly Identifier REPLICATE_NAME_ID 
-            = new Identifier("ResultFile", "Replicate", "Replicate");
+        public static readonly Identifier REPLICATE_NAME_ID
+            = new Identifier("ResultFile", // Not L10N
+                             "Replicate",
+                             "Replicate");
 
         public static readonly PivotType REPLICATE = new ReplicatePivotType();
         public static readonly PivotType ISOTOPE_LABEL = new IsotopeLabelPivotType();

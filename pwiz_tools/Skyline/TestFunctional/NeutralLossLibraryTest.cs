@@ -198,8 +198,8 @@ namespace pwiz.SkylineTestFunctional
                                   Assert.IsTrue(1 <= rankTran && rankTran <= countIons);
                                   // Make sure there is a matching label in the spectrum graph
                                   var regexRank = nodeTran.HasLoss ? 
-                                      new Regex(string.Format(@"(\w)(\d+) -([^ +]+).* \(rank {0}\)", rankTran)) :
-                                      new Regex(string.Format(@"(\w)(\d+).* \(rank {0}\)", rankTran));
+                                      new Regex(string.Format(@"(\w)(\d+) -([^ +]+).* \({0}\)", string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rankTran))) :
+                                      new Regex(string.Format(@"(\w)(\d+).* \({0}\)", string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rankTran)));
                                   int iLabel = ionLabels.IndexOf(regexRank.IsMatch);
                                   Assert.IsTrue(iLabel != -1);
                                   var match = regexRank.Match(ionLabels[iLabel]);

@@ -77,13 +77,15 @@ namespace pwiz.Skyline.Model.Find
         {
             if (CustomFinders.Count == 0)
             {
-                return string.Format("The text '{0}' could not be found.", Text);
+                return string.Format(Resources.FindOptions_GetNotFoundMessage_The_text__0__could_not_be_found, Text);
             }
             if (CustomFinders.Count == 1)
             {
-                return string.Format("Could not find {0}.", CustomFinders[0].DisplayName);
+                return string.Format(Resources.FindOptions_GetNotFoundMessage_Could_not_find__0__,
+                                     CustomFinders[0].DisplayName);
             }
-            return string.Format("Could not find any of {0} items.", CustomFinders.Count);
+            return string.Format(Resources.FindOptions_GetNotFoundMessage_Could_not_find_any_of__0__items,
+                                 CustomFinders.Count);
         }
 
         public IList<IFinder> CustomFinders

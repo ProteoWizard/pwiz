@@ -66,17 +66,17 @@ namespace pwiz.SkylineTestFunctional
             PivotReport = ShowDialog<PivotReportDlg>(EditReportList.AddItem);
 
             // Simple protein name report
-            AddColumns(new Identifier("ProteinName"));
+            AddColumns(new Identifier("ProteinName")); // Not L10N
             CheckPreview((preview, document) =>
                              {
                                  Assert.AreEqual(document.PeptideGroupCount, preview.RowCount);
                                  var columnHeaderNames = new List<string>(preview.ColumnHeaderNames);
                                  Assert.AreEqual(1, columnHeaderNames.Count);
-                                 Assert.AreEqual("ProteinName", columnHeaderNames[0]);
+                                 Assert.AreEqual("ProteinName", columnHeaderNames[0]); // Not L10N
                              });
 
             // Add precursor information
-            AddColumns(new Identifier("Peptides", "Sequence"),
+            AddColumns(new Identifier("Peptides", "Sequence"), // Not L10N
                        new Identifier("Peptides", "Precursors", "Charge"));
             CheckPreview((preview, document) =>
                              {
@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestFunctional
                              });
 
             // Add precursor results and results summary information
-            AddColumns(new Identifier("Peptides", "Precursors", "PrecursorResultsSummary", "MeanBestRetentionTime"),
+            AddColumns(new Identifier("Peptides", "Precursors", "PrecursorResultsSummary", "MeanBestRetentionTime"), // Not L10N
                        new Identifier("Peptides", "Precursors", "PrecursorResultsSummary", "CvBestRetentionTime"),
                        new Identifier("Peptides", "Precursors", "PrecursorResults", "BestRetentionTime"));
             CheckPreview((preview, document) =>
@@ -102,7 +102,7 @@ namespace pwiz.SkylineTestFunctional
                 CheckPreview((preview, document) =>
                              {
                                  Assert.AreEqual(document.TransitionGroupCount, preview.RowCount);
-                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, "BestRetentionTime");
+                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, "BestRetentionTime"); // Not L10N
                              });
 
             const string precursorReportName = "Precursor RT Summary";
@@ -112,19 +112,19 @@ namespace pwiz.SkylineTestFunctional
             PivotReport = ShowDialog<PivotReportDlg>(EditReportList.CopyItem);
 
             // Add transition results summary column
-            AddColumns(new Identifier("Peptides", "Precursors", "Transitions", "TransitionResultsSummary", "CvArea"));
+            AddColumns(new Identifier("Peptides", "Precursors", "Transitions", "TransitionResultsSummary", "CvArea")); // Not L10N
             CheckPreview((preview, document) =>
                              {
                                  Assert.AreEqual(document.TransitionCount, preview.RowCount);
-                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, "BestRetentionTime");
+                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, "BestRetentionTime"); // Not L10N
                              });
 
             // Add transition results column
-            AddColumns(new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Area"));
+            AddColumns(new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Area")); // Not L10N
             CheckPreview((preview, document) =>
                              {
                                  Assert.AreEqual(document.TransitionCount, preview.RowCount);
-                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, "BestRetentionTime", "Area");
+                                 VerifyPivotedColumns(document, preview.ColumnHeaderNames, "BestRetentionTime", "Area"); // Not L10N
                              });
 
             // Turn off pivot

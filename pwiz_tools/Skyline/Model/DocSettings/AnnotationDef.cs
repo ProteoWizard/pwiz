@@ -41,7 +41,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// A prefix that is often prepended to annotation names when annotations coexist 
         /// with other built in columns or attributes.
         /// </summary>
-        public const string ANNOTATION_PREFIX = "annotation_";
+        public const string ANNOTATION_PREFIX = "annotation_"; // Not L10N
 
         public AnnotationDef(String name, AnnotationTarget annotationTargets, AnnotationType type, IList<String> items) : base(name)
         {
@@ -190,12 +190,12 @@ namespace pwiz.Skyline.Model.DocSettings
             StringBuilder result = new StringBuilder();
             foreach (char c in annotationName)
             {
-                if (c == '_')
-                    result.Append("__");
+                if (c == '_') // Not L10N
+                    result.Append("__"); // Not L10N
                 else if (Char.IsLetterOrDigit(c))
                     result.Append(c);
                 else
-                    result.Append('_').Append(((int) c).ToString("X2")).Append('_');
+                    result.Append('_').Append(((int)c).ToString("X2")).Append('_'); // Not L10N
             }
             return result.ToString();
         }
@@ -207,20 +207,20 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             // All escaping is based on the underscore character.  If it
             // is not present, then this key doesn't require unescaping.
-            if (!key.Contains("_"))
+            if (!key.Contains("_")) // Not L10N
                 return key;
 
             StringBuilder result = new StringBuilder();
             for (int i = 0; i < key.Length; i++)
             {
                 char c = key[i];
-                if (c != '_')
+                if (c != '_') // Not L10N
                     result.Append(c);
                 else
                 {
                     int start = i + 1;
                     // find the matching underscore character
-                    int end = key.IndexOf('_', start);
+                    int end = key.IndexOf('_', start); // Not L10N
                     // if none found, to be safe, append the rest of the string and quit
                     if (end == -1)
                     {
@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     int charVal;
                     // double underscore gets converted to underscore
                     if (end == start)
-                        result.Append('_');
+                        result.Append('_'); // Not L10N
                         // _XX_ gets converted to the corresponding character code for XX
                     else if (Int32.TryParse(key.Substring(start, end - start),
                                           NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out charVal))

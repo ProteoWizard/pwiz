@@ -83,7 +83,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if(iFixed1 == -1 || iFixed2 == -1)
             {
-                MessageDlg.Show(this, "The standard must have two fixed points.");
+                MessageDlg.Show(this, Resources.CalibrateIrtDlg_OkDialog_The_standard_must_have_two_fixed_points);
                 return;
             }
 
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if(!document.Settings.HasResults)
             {
-                MessageDlg.Show(this, "The document must contain results to calibrate a standard.");
+                MessageDlg.Show(this, Resources.CalibrateIrtDlg_UseResults_The_document_must_contain_results_to_calibrate_a_standard);
                 return;
             }
 

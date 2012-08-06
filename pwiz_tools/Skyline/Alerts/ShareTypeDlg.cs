@@ -21,7 +21,9 @@ using System.Text;
 using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -31,32 +33,36 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class ShareTypeDlg : FormEx
     {
+        private const string BULLET = "\u2022 "; // Not L10N
+
         public ShareTypeDlg(SrmDocument document)
         {
             InitializeComponent();
 
             int lineHeight = labelMessage.Height;
 
-            var sbLabel = new StringBuilder("The document can be shared either in its complete form, or in a minimal form intended for read-only use with ");
+            StringBuilder sbLabel = new StringBuilder();
+            sbLabel.AppendLine(Resources.ShareTypeDlg_ShareTypeDlg_The_document_can_be_shared_either_in_its_complete_form_or_in_a_minimal_form_intended_for_read_only_use_with);
             var listMinimizations = new List<string>();
             if (document.Settings.HasBackgroundProteome)
-                listMinimizations.Add("its background proteome disconnected");
+                listMinimizations.Add(BULLET + Resources.ShareTypeDlg_ShareTypeDlg_its_background_proteome_disconnected);
             if (document.Settings.HasRTCalcPersisted)
-                listMinimizations.Add("its retention time calculator minimized to contain only standard peptides and library peptides used in the document");
+                listMinimizations.Add(BULLET + Resources.ShareTypeDlg_ShareTypeDlg_its_retention_time_calculator_minimized_to_contain_only_standard_peptides_and_library_peptides_used_in_the_document);
             if (document.Settings.HasLibraries)
-                listMinimizations.Add("all libraries minimized to contain only precursors used in the document");
+                listMinimizations.Add(BULLET + Resources.ShareTypeDlg_ShareTypeDlg_all_libraries_minimized_to_contain_only_precursors_used_in_the_document);
             int lastIndex = listMinimizations.Count - 1;
             if (lastIndex < 0)
-                throw new InvalidOperationException(string.Format("Invalide use of {0} for document without background proteome, retention time calculator or libraries.", typeof(ShareTypeDlg).Name));
-            string lastMin = listMinimizations[lastIndex];
+            {
+                throw new InvalidOperationException(
+                    string.Format(Resources.ShareTypeDlg_ShareTypeDlg_Invalid_use_of__0__for_document_without_background_proteome_retention_time_calculator_or_libraries,
+                        typeof(ShareTypeDlg).Name));
+            }
+ 			string lastMin = listMinimizations[lastIndex];
             listMinimizations.RemoveAt(lastIndex);
             if (listMinimizations.Count > 0)
-            {
-                sbLabel.Append(string.Join(", ", listMinimizations.ToArray()));
-                sbLabel.Append(", and ");
-            }
-            sbLabel.Append(lastMin).Append(".");
-            sbLabel.Append("\nChoose the appropriate sharing option below.");
+                sbLabel.Append(TextUtil.LineSeparate(listMinimizations));
+
+            sbLabel.AppendLine().AppendLine().Append(Resources.ShareTypeDlg_ShareTypeDlg_Choose_the_appropriate_sharing_option_below);
             labelMessage.Text = sbLabel.ToString();
             Height += Math.Max(0, labelMessage.Height - lineHeight * 3);
         }

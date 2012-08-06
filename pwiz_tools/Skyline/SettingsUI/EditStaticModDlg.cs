@@ -30,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -69,10 +70,10 @@ namespace pwiz.Skyline.SettingsUI
             {                
                 labelRelativeRT.Left = labelAA.Left;
                 comboRelativeRT.Left = comboAA.Left;
-                comboRelativeRT.Items.Add(RelativeRT.Matching.ToString());
-                comboRelativeRT.Items.Add(RelativeRT.Overlapping.ToString());
-                comboRelativeRT.Items.Add(RelativeRT.Preceding.ToString());
-                comboRelativeRT.Items.Add(RelativeRT.Unknown.ToString());
+                comboRelativeRT.Items.Add(RelativeRT.Matching.GetLocalizedString());
+                comboRelativeRT.Items.Add(RelativeRT.Overlapping.GetLocalizedString());
+                comboRelativeRT.Items.Add(RelativeRT.Preceding.GetLocalizedString());
+                comboRelativeRT.Items.Add(RelativeRT.Unknown.GetLocalizedString());
                 comboRelativeRT.SelectedIndex = 0;
             }
             else
@@ -100,15 +101,15 @@ namespace pwiz.Skyline.SettingsUI
                 if (_modification == null)
                 {
                     if (_editing) 
-                        textName.Text = "";
+                        textName.Text = string.Empty;
                     else
-                        comboMod.Text = "";
-                    comboAA.Text = "";
+                        comboMod.Text = string.Empty;
+                    comboAA.Text = string.Empty;
                     comboTerm.SelectedIndex = 0;
                     cbVariableMod.Checked = false;
-                    Formula = "";
-                    textMonoMass.Text = "";
-                    textAverageMass.Text = "";
+                    Formula = string.Empty;
+                    textMonoMass.Text = string.Empty;
+                    textAverageMass.Text = string.Empty;
                     cb13C.Checked = false;
                     cb15N.Checked = false;
                     cb18O.Checked = false;
@@ -123,7 +124,7 @@ namespace pwiz.Skyline.SettingsUI
                         textName.Text = _modification.Name;
                     else
                         comboMod.Text = _modification.Name;
-                    comboAA.Text = _modification.AAs ?? "";
+                    comboAA.Text = _modification.AAs ?? string.Empty;
                     if (_modification.Terminus == null)
                         comboTerm.SelectedIndex = 0;
                     else
@@ -137,11 +138,11 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else
                     {
-                        Formula = "";
+                        Formula = string.Empty;
                         textMonoMass.Text = (_modification.MonoisotopicMass.HasValue ?
-                            _modification.MonoisotopicMass.Value.ToString(CultureInfo.CurrentCulture) : "");
+                            _modification.MonoisotopicMass.Value.ToString(CultureInfo.CurrentCulture) : string.Empty);
                         textAverageMass.Text = (_modification.AverageMass.HasValue ?
-                            _modification.AverageMass.Value.ToString(CultureInfo.CurrentCulture) : "");
+                            _modification.AverageMass.Value.ToString(CultureInfo.CurrentCulture) : string.Empty);
                         // Force the label atom check boxes to show, if any are checked
                         if (_modification.LabelAtoms != LabelAtoms.None)
                             cbChemicalFormula.Checked = false;
@@ -221,7 +222,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 string btnText = btnLoss.Text;
                 btnLoss.Text = btnText.Substring(0, btnText.Length - 2) +
-                    (_showLoss ? "<<" : ">>");
+                    (_showLoss ? "<<" : ">>"); // Not L10N
 
                 ResizeForLoss();
             }
@@ -256,7 +257,7 @@ namespace pwiz.Skyline.SettingsUI
                 if(!ModNameAvailable(name))
                 {
                     helper.ShowTextBoxError(e, _editing ? (Control)textName : comboMod, 
-                        "The modification '{0}' already exists.", name);
+                        Resources.EditStaticModDlg_OkDialog_The_modification__0__already_exists, name);
                     return;
                 }
             }
@@ -274,7 +275,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (aa.Length == 0)
                         continue;
                     if (sb.Length > 0)
-                        sb.Append(", ");
+                        sb.Append(", "); // Not L10N
                     sb.Append(aa);
                 }
             }
@@ -286,7 +287,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (cbVariableMod.Checked && aas == null && term == null)
             {
-                MessageBox.Show("Variable modifications must specify amino acid or terminus.", Program.Name);
+                MessageDlg.Show(this, Resources.EditStaticModDlg_OkDialog_Variable_modifications_must_specify_amino_acid_or_terminus);
                 comboAA.Focus();
                 return;
             }
@@ -338,14 +339,14 @@ namespace pwiz.Skyline.SettingsUI
                 // Loss-only modifications may not be variable
                 else if (cbVariableMod.Checked)
                 {
-                    MessageDlg.Show(this, "The variable checkbox only applies to precursor modification.  Product ion losses are inherently variable.");
+                    MessageDlg.Show(this, Resources.EditStaticModDlg_OkDialog_The_variable_checkbox_only_applies_to_precursor_modification_Product_ion_losses_are_inherently_variable);
                     cbVariableMod.Focus();
                     return;
                 }
             }
             else if (aas == null && term.HasValue)
             {
-                MessageBox.Show(this, "Labeled atoms on terminal modification are not valid.", Program.Name);
+                MessageDlg.Show(this, Resources.EditStaticModDlg_OkDialog_Labeled_atoms_on_terminal_modification_are_not_valid);
                 e.Cancel = true;
                 return;
             }
@@ -353,8 +354,7 @@ namespace pwiz.Skyline.SettingsUI
             RelativeRT relativeRT = RelativeRT.Matching;
             if (comboRelativeRT.Visible && comboRelativeRT.SelectedItem != null)
             {
-                relativeRT = (RelativeRT)Enum.Parse(typeof(RelativeRT),
-                    comboRelativeRT.SelectedItem.ToString());
+                relativeRT = RelativeRTExtension.GetEnum(comboRelativeRT.SelectedItem.ToString());
             }
             
             // Store state of the chemical formula checkbox for next use.
@@ -374,11 +374,14 @@ namespace pwiz.Skyline.SettingsUI
 
             foreach (StaticMod mod in _existing)
             {
-                if(newMod.Equivalent(mod) && !(_editing && mod.Equals(_originalModification)))
+                if (newMod.Equivalent(mod) && !(_editing && mod.Equals(_originalModification)))
                 {
                     using (MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
-                        string.Format("There is an existing modification with the same settings:\n'{0}'."
-                        + "\n\nContinue?", mod.Name), "OK"))
+                        TextUtil.LineSeparate(Resources.EditStaticModDlg_OkDialog_There_is_an_existing_modification_with_the_same_settings,
+                                              string.Format("'{0}'.", mod.Name), // Not L10N
+                                              string.Empty,
+                                              Resources.EditStaticModDlg_OkDialog_Continue),
+                        MultiButtonMsgDlg.BUTTON_OK))
                     {
                         var result = dlg.ShowDialog(this);
                         if (result == DialogResult.OK)
@@ -388,7 +391,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                         return;
                     }
-                    
+
                 }
             }
             
@@ -400,14 +403,14 @@ namespace pwiz.Skyline.SettingsUI
                 var matchingMod = UniMod.FindMatchingStaticMod(newMod, IsStructural);
                 if (matchingMod != null && ModNameAvailable(matchingMod.Name))
                 {
-                    using (MultiButtonMsgDlg dlg =
-                        new MultiButtonMsgDlg(
-                            string.Format(
-                                "There is a Unimod modification with the same settings."
-                                + "\n\nClick 'Unimod' to use the name '{0}'."
-                                + "\nClick 'Custom' to use the name '{1}'.",
-                                matchingMod.Name, name),
-                            "Unimod", "Custom", true))
+                    using (MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
+                            TextUtil.LineSeparate(Resources.EditStaticModDlg_OkDialog_There_is_a_Unimod_modification_with_the_same_settings,
+                                                  string.Empty,
+                                                  string.Format(Resources.EditStaticModDlg_OkDialog_Click__Unimod__to_use_the_name___0___, matchingMod.Name),
+                                                  string.Format(Resources.EditStaticModDlg_OkDialog_Click__Custom__to_use_the_name___0___, name)),
+                            Resources.EditStaticModDlg_OkDialog_Unimod,
+                            Resources.EditStaticModDlg_OkDialog_Custom,
+                            true))
                     {
                         var result = dlg.ShowDialog(this);
                         if (result == DialogResult.Yes)
@@ -427,11 +430,11 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Finally, if the modification name is found in Unimod, but the modification in Unimod does not 
                     // match the dialog modification, prompt the user to use the Unimod modification definition instead.
-                    using (MultiButtonMsgDlg dlg =
-                        new MultiButtonMsgDlg(
-                            string.Format("This modification does not match the Unimod specifications for\n'{0}'."
-                            + "\n\nUse non-standard settings for this name?", name),
-                            "OK"))
+                    using (MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
+                            TextUtil.LineSeparate(string.Format(Resources.EditStaticModDlg_OkDialog_This_modification_does_not_match_the_Unimod_specifications_for___0___, name),
+                                                  string.Empty,
+                                                  Resources.EditStaticModDlg_OkDialog_Use_non_standard_settings_for_this_name),
+                            MultiButtonMsgDlg.BUTTON_OK))
                     {
                         var result = dlg.ShowDialog(this);
                         if (result != DialogResult.OK)
@@ -520,9 +523,9 @@ namespace pwiz.Skyline.SettingsUI
                 // If the mass edit boxes are already enabled, don't clear what a user
                 // may have typed in them.
                 if (!textMonoMass.Enabled)
-                    textMonoMass.Text = "";
+                    textMonoMass.Text = string.Empty;
                 if (!textAverageMass.Enabled)
-                    textAverageMass.Text = "";
+                    textAverageMass.Text = string.Empty;
                 textMonoMass.Enabled = textAverageMass.Enabled = (labelAtoms == LabelAtoms.None);
             }
             else
@@ -539,7 +542,7 @@ namespace pwiz.Skyline.SettingsUI
                 catch (ArgumentException)
                 {
                     textFormula.ForeColor = Color.Red;
-                    textMonoMass.Text = textAverageMass.Text = "";
+                    textMonoMass.Text = textAverageMass.Text = string.Empty;
                 }
             }
         }
@@ -624,7 +627,7 @@ namespace pwiz.Skyline.SettingsUI
             AddFormulaSymbol(BioMassCalc.S);
         }
 
-        private const char SEPARATOR_AA = ',';
+        private const char SEPARATOR_AA = ','; // Not L10N
 
 // ReSharper disable MemberCanBeMadeStatic.Local
         private void comboAA_KeyPress(object sender, KeyPressEventArgs e)
@@ -632,7 +635,7 @@ namespace pwiz.Skyline.SettingsUI
             // Force uppercase in this control.
             e.KeyChar = char.ToUpper(e.KeyChar);
             // Only allow amino acid characters space, comma and backspace
-            if (!AminoAcid.IsAA(e.KeyChar) && " ,\b".IndexOf(e.KeyChar) == -1)
+            if (!AminoAcid.IsAA(e.KeyChar) && " ,\b".IndexOf(e.KeyChar) == -1) // Not L10N
                 e.Handled = true;
         }
 // ReSharper restore MemberCanBeMadeStatic.Local
@@ -656,7 +659,7 @@ namespace pwiz.Skyline.SettingsUI
                     continue;
 
                 if (sb.Length > 0)
-                    sb.Append(SEPARATOR_AA).Append(' ');
+                    sb.Append(SEPARATOR_AA).Append(TextUtil.SEPARATOR_SPACE);
 
                 sb.Append(c);
 
@@ -743,7 +746,9 @@ namespace pwiz.Skyline.SettingsUI
         private void UpdateListAvailableMods()
         {
             comboMod.Items.Clear();
-            comboMod.Items.Add(Settings.Default.StaticModsShowMore ? "<Show common...>" : "<Show all...>");
+            comboMod.Items.Add(Settings.Default.StaticModsShowMore
+                                   ? Resources.EditStaticModDlg_UpdateListAvailableMods_Show_common
+                                   : Resources.EditStaticModDlg_UpdateListAvailableMods_Show_all);
             comboMod.Items.AddRange(ListAvailableMods().Cast<object>().ToArray());
         }
 

@@ -35,7 +35,7 @@ namespace pwiz.Skyline.Model.Hibernate
             Configuration configuration = GetConfiguration(path, null);
             if (createSchema)
             {
-                configuration.SetProperty("hbm2ddl.auto", "create-drop");
+                configuration.SetProperty("hbm2ddl.auto", "create-drop"); // Not L10N
             }
             ISessionFactory sessionFactory = configuration.BuildSessionFactory();
             return sessionFactory;
@@ -44,15 +44,15 @@ namespace pwiz.Skyline.Model.Hibernate
         public static Configuration GetConfiguration(String path, SrmSettings settings)
         {
             Configuration configuration = new Configuration()
-                .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
-                .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
+                .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName) // Not L10N
+                .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder // Not L10N
                 {
                     DataSource = path
                 }.ToString())
-                .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
+                .SetProperty("connection.driver_class", typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName); // Not L10N
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
-            configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
-            configuration.AddInputStream(assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml"));
+            configuration.SetProperty("connection.provider", typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName); // Not L10N
+            configuration.AddInputStream(assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml")); // Not L10N
             if (settings != null)
                 AddRatioColumns(configuration, settings);
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.protein, typeof(DbProtein));
@@ -64,9 +64,9 @@ namespace pwiz.Skyline.Model.Hibernate
             return configuration;
         }
 
-        private const string STRING_TYPE_NAME = "string";
-        private const string BOOL_TYPE_NAME = "bool";
-        private const string NDOUBLE_TYPE_NAME = "double?";
+        private const string STRING_TYPE_NAME = "string"; // Not L10N
+        private const string BOOL_TYPE_NAME = "bool"; // Not L10N
+        private const string NDOUBLE_TYPE_NAME = "double?"; // Not L10N
 
         private static readonly Dictionary<Type, string> DICT_TYPE_TO_NAME =
             new Dictionary<Type, string>

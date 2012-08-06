@@ -29,7 +29,7 @@ namespace pwiz.Skyline.SettingsUI
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            this.splitMain = new System.Windows.Forms.SplitContainer();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ViewLibraryDlg));
             this.splitPeptideList = new System.Windows.Forms.SplitContainer();
             this.PeptideListPanel = new System.Windows.Forms.Panel();
             this.listPeptide = new System.Windows.Forms.ListBox();
@@ -38,6 +38,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideCount = new System.Windows.Forms.Label();
             this.NextLink = new System.Windows.Forms.LinkLabel();
             this.PreviousLink = new System.Windows.Forms.LinkLabel();
+            this.splitMain = new System.Windows.Forms.SplitContainer();
             this.PeptideEditPanel = new System.Windows.Forms.Panel();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.comboLibrary = new System.Windows.Forms.ComboBox();
@@ -96,13 +97,15 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
-            this.splitMain.Panel1.SuspendLayout();
-            this.splitMain.Panel2.SuspendLayout();
-            this.splitMain.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitPeptideList)).BeginInit();
             this.splitPeptideList.Panel1.SuspendLayout();
             this.splitPeptideList.Panel2.SuspendLayout();
             this.splitPeptideList.SuspendLayout();
             this.PeptideListPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitMain)).BeginInit();
+            this.splitMain.Panel1.SuspendLayout();
+            this.splitMain.Panel2.SuspendLayout();
+            this.splitMain.SuspendLayout();
             this.PeptideEditPanel.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.GraphPanel.SuspendLayout();
@@ -112,10 +115,76 @@ namespace pwiz.Skyline.SettingsUI
             this.contextMenuSpectrum.SuspendLayout();
             this.SuspendLayout();
             // 
+            // splitPeptideList
+            // 
+            resources.ApplyResources(this.splitPeptideList, "splitPeptideList");
+            this.splitPeptideList.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
+            this.splitPeptideList.Name = "splitPeptideList";
+            // 
+            // splitPeptideList.Panel1
+            // 
+            this.splitPeptideList.Panel1.Controls.Add(this.PeptideListPanel);
+            resources.ApplyResources(this.splitPeptideList.Panel1, "splitPeptideList.Panel1");
+            // 
+            // splitPeptideList.Panel2
+            // 
+            this.splitPeptideList.Panel2.Controls.Add(this.PageCount);
+            this.splitPeptideList.Panel2.Controls.Add(this.PeptideCount);
+            this.splitPeptideList.Panel2.Controls.Add(this.NextLink);
+            this.splitPeptideList.Panel2.Controls.Add(this.PreviousLink);
+            // 
+            // PeptideListPanel
+            // 
+            this.PeptideListPanel.Controls.Add(this.listPeptide);
+            this.PeptideListPanel.Controls.Add(this.cbShowModMasses);
+            resources.ApplyResources(this.PeptideListPanel, "PeptideListPanel");
+            this.PeptideListPanel.Name = "PeptideListPanel";
+            // 
+            // listPeptide
+            // 
+            resources.ApplyResources(this.listPeptide, "listPeptide");
+            this.listPeptide.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.listPeptide.FormattingEnabled = true;
+            this.listPeptide.Name = "listPeptide";
+            this.listPeptide.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listPeptide_DrawItem);
+            this.listPeptide.SelectedIndexChanged += new System.EventHandler(this.listPeptide_SelectedIndexChanged);
+            this.listPeptide.MouseLeave += new System.EventHandler(this.listPeptide_MouseLeave);
+            this.listPeptide.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listPeptide_MouseMove);
+            // 
+            // cbShowModMasses
+            // 
+            resources.ApplyResources(this.cbShowModMasses, "cbShowModMasses");
+            this.cbShowModMasses.Name = "cbShowModMasses";
+            this.cbShowModMasses.UseVisualStyleBackColor = true;
+            this.cbShowModMasses.CheckedChanged += new System.EventHandler(this.cbShowModMasses_CheckedChanged);
+            // 
+            // PageCount
+            // 
+            resources.ApplyResources(this.PageCount, "PageCount");
+            this.PageCount.Name = "PageCount";
+            // 
+            // PeptideCount
+            // 
+            resources.ApplyResources(this.PeptideCount, "PeptideCount");
+            this.PeptideCount.Name = "PeptideCount";
+            // 
+            // NextLink
+            // 
+            resources.ApplyResources(this.NextLink, "NextLink");
+            this.NextLink.Name = "NextLink";
+            this.NextLink.TabStop = true;
+            this.NextLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.NextLink_LinkClicked);
+            // 
+            // PreviousLink
+            // 
+            resources.ApplyResources(this.PreviousLink, "PreviousLink");
+            this.PreviousLink.Name = "PreviousLink";
+            this.PreviousLink.TabStop = true;
+            this.PreviousLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.PreviousLink_LinkClicked);
+            // 
             // splitMain
             // 
-            this.splitMain.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitMain.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.splitMain, "splitMain");
             this.splitMain.Name = "splitMain";
             // 
             // splitMain.Panel1
@@ -127,189 +196,51 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.splitMain.Panel2.Controls.Add(this.GraphPanel);
             this.splitMain.Panel2.Controls.Add(this.panel2);
-            this.splitMain.Size = new System.Drawing.Size(739, 389);
-            this.splitMain.SplitterDistance = 258;
-            this.splitMain.TabIndex = 0;
             this.splitMain.TabStop = false;
             this.splitMain.MouseDown += new System.Windows.Forms.MouseEventHandler(this.splitMain_MouseDown);
             this.splitMain.MouseUp += new System.Windows.Forms.MouseEventHandler(this.splitMain_MouseUp);
-            // 
-            // splitPeptideList
-            // 
-            this.splitPeptideList.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitPeptideList.FixedPanel = System.Windows.Forms.FixedPanel.Panel2;
-            this.splitPeptideList.IsSplitterFixed = true;
-            this.splitPeptideList.Location = new System.Drawing.Point(0, 63);
-            this.splitPeptideList.Name = "splitPeptideList";
-            this.splitPeptideList.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitPeptideList.Panel1
-            // 
-            this.splitPeptideList.Panel1.Controls.Add(this.PeptideListPanel);
-            this.splitPeptideList.Panel1.Padding = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            // 
-            // splitPeptideList.Panel2
-            // 
-            this.splitPeptideList.Panel2.Controls.Add(this.PageCount);
-            this.splitPeptideList.Panel2.Controls.Add(this.PeptideCount);
-            this.splitPeptideList.Panel2.Controls.Add(this.NextLink);
-            this.splitPeptideList.Panel2.Controls.Add(this.PreviousLink);
-            this.splitPeptideList.Panel2MinSize = 50;
-            this.splitPeptideList.Size = new System.Drawing.Size(258, 326);
-            this.splitPeptideList.SplitterDistance = 251;
-            this.splitPeptideList.TabIndex = 2;
-            // 
-            // PeptideListPanel
-            // 
-            this.PeptideListPanel.Controls.Add(this.listPeptide);
-            this.PeptideListPanel.Controls.Add(this.cbShowModMasses);
-            this.PeptideListPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PeptideListPanel.Location = new System.Drawing.Point(0, 3);
-            this.PeptideListPanel.Name = "PeptideListPanel";
-            this.PeptideListPanel.Size = new System.Drawing.Size(258, 248);
-            this.PeptideListPanel.TabIndex = 3;
-            // 
-            // listPeptide
-            // 
-            this.listPeptide.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listPeptide.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.listPeptide.FormattingEnabled = true;
-            this.listPeptide.ItemHeight = 16;
-            this.listPeptide.Location = new System.Drawing.Point(0, 0);
-            this.listPeptide.Name = "listPeptide";
-            this.listPeptide.Size = new System.Drawing.Size(258, 228);
-            this.listPeptide.TabIndex = 0;
-            this.listPeptide.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listPeptide_DrawItem);
-            this.listPeptide.SelectedIndexChanged += new System.EventHandler(this.listPeptide_SelectedIndexChanged);
-            this.listPeptide.MouseMove += new System.Windows.Forms.MouseEventHandler(this.listPeptide_MouseMove);
-            this.listPeptide.MouseLeave += new System.EventHandler(this.listPeptide_MouseLeave);
-            // 
-            // cbShowModMasses
-            // 
-            this.cbShowModMasses.AutoSize = true;
-            this.cbShowModMasses.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.cbShowModMasses.Location = new System.Drawing.Point(0, 231);
-            this.cbShowModMasses.Name = "cbShowModMasses";
-            this.cbShowModMasses.Size = new System.Drawing.Size(258, 17);
-            this.cbShowModMasses.TabIndex = 1;
-            this.cbShowModMasses.Text = "&Show modification masses";
-            this.cbShowModMasses.UseVisualStyleBackColor = true;
-            this.cbShowModMasses.Visible = false;
-            this.cbShowModMasses.CheckedChanged += new System.EventHandler(this.cbShowModMasses_CheckedChanged);
-            // 
-            // PageCount
-            // 
-            this.PageCount.Anchor = System.Windows.Forms.AnchorStyles.Top;
-            this.PageCount.AutoSize = true;
-            this.PageCount.Location = new System.Drawing.Point(108, 0);
-            this.PageCount.Margin = new System.Windows.Forms.Padding(3, 0, 0, 0);
-            this.PageCount.Name = "PageCount";
-            this.PageCount.Size = new System.Drawing.Size(35, 13);
-            this.PageCount.TabIndex = 2;
-            this.PageCount.Text = "label1";
-            // 
-            // PeptideCount
-            // 
-            this.PeptideCount.AutoSize = true;
-            this.PeptideCount.Location = new System.Drawing.Point(0, 23);
-            this.PeptideCount.Margin = new System.Windows.Forms.Padding(0);
-            this.PeptideCount.Name = "PeptideCount";
-            this.PeptideCount.Size = new System.Drawing.Size(71, 13);
-            this.PeptideCount.TabIndex = 0;
-            this.PeptideCount.Text = "PeptideCount";
-            // 
-            // NextLink
-            // 
-            this.NextLink.AutoSize = true;
-            this.NextLink.Dock = System.Windows.Forms.DockStyle.Right;
-            this.NextLink.Location = new System.Drawing.Point(214, 0);
-            this.NextLink.Name = "NextLink";
-            this.NextLink.Size = new System.Drawing.Size(44, 13);
-            this.NextLink.TabIndex = 1;
-            this.NextLink.TabStop = true;
-            this.NextLink.Text = "Next >>";
-            this.NextLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.NextLink_LinkClicked);
-            // 
-            // PreviousLink
-            // 
-            this.PreviousLink.AutoSize = true;
-            this.PreviousLink.Dock = System.Windows.Forms.DockStyle.Left;
-            this.PreviousLink.Location = new System.Drawing.Point(0, 0);
-            this.PreviousLink.Name = "PreviousLink";
-            this.PreviousLink.Size = new System.Drawing.Size(63, 13);
-            this.PreviousLink.TabIndex = 0;
-            this.PreviousLink.TabStop = true;
-            this.PreviousLink.Text = "<< Previous";
-            this.PreviousLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.PreviousLink_LinkClicked);
             // 
             // PeptideEditPanel
             // 
             this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
             this.PeptideEditPanel.Controls.Add(this.PeptideLabel);
             this.PeptideEditPanel.Controls.Add(this.textPeptide);
-            this.PeptideEditPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.PeptideEditPanel.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.PeptideEditPanel, "PeptideEditPanel");
             this.PeptideEditPanel.Name = "PeptideEditPanel";
-            this.PeptideEditPanel.Size = new System.Drawing.Size(258, 63);
-            this.PeptideEditPanel.TabIndex = 0;
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 90.31007F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 9.689922F));
+            resources.ApplyResources(this.tableLayoutPanel1, "tableLayoutPanel1");
             this.tableLayoutPanel1.Controls.Add(this.comboLibrary, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnLibDetails, 1, 0);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 1;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(258, 24);
-            this.tableLayoutPanel1.TabIndex = 3;
             // 
             // comboLibrary
             // 
-            this.comboLibrary.Dock = System.Windows.Forms.DockStyle.Top;
+            resources.ApplyResources(this.comboLibrary, "comboLibrary");
             this.comboLibrary.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboLibrary.FormattingEnabled = true;
-            this.comboLibrary.Location = new System.Drawing.Point(0, 0);
-            this.comboLibrary.Margin = new System.Windows.Forms.Padding(0);
             this.comboLibrary.Name = "comboLibrary";
-            this.comboLibrary.Size = new System.Drawing.Size(233, 21);
-            this.comboLibrary.TabIndex = 0;
             this.comboLibrary.SelectedIndexChanged += new System.EventHandler(this.LibraryComboBox_SelectedIndexChanged);
             // 
             // btnLibDetails
             // 
             this.btnLibDetails.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnLibDetails.Location = new System.Drawing.Point(233, 0);
-            this.btnLibDetails.Margin = new System.Windows.Forms.Padding(0);
+            resources.ApplyResources(this.btnLibDetails, "btnLibDetails");
             this.btnLibDetails.Name = "btnLibDetails";
-            this.btnLibDetails.Size = new System.Drawing.Size(24, 21);
-            this.btnLibDetails.TabIndex = 5;
-            this.btnLibDetails.Text = "...";
             this.btnLibDetails.UseVisualStyleBackColor = true;
             this.btnLibDetails.Click += new System.EventHandler(this.btnLibDetails_Click);
             // 
             // PeptideLabel
             // 
-            this.PeptideLabel.AutoSize = true;
-            this.PeptideLabel.Location = new System.Drawing.Point(0, 27);
+            resources.ApplyResources(this.PeptideLabel, "PeptideLabel");
             this.PeptideLabel.Name = "PeptideLabel";
-            this.PeptideLabel.Size = new System.Drawing.Size(46, 13);
-            this.PeptideLabel.TabIndex = 1;
-            this.PeptideLabel.Text = "&Peptide:";
             // 
             // textPeptide
             // 
             this.textPeptide.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.textPeptide.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.textPeptide.Location = new System.Drawing.Point(0, 43);
+            resources.ApplyResources(this.textPeptide, "textPeptide");
             this.textPeptide.Name = "textPeptide";
-            this.textPeptide.Size = new System.Drawing.Size(258, 20);
-            this.textPeptide.TabIndex = 2;
             this.textPeptide.TextChanged += new System.EventHandler(this.textPeptide_TextChanged);
             this.textPeptide.KeyDown += new System.Windows.Forms.KeyEventHandler(this.PeptideTextBox_KeyDown);
             // 
@@ -318,36 +249,30 @@ namespace pwiz.Skyline.SettingsUI
             this.GraphPanel.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
             this.GraphPanel.Controls.Add(this.graphControl);
             this.GraphPanel.Controls.Add(this.toolStrip1);
-            this.GraphPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GraphPanel.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.GraphPanel, "GraphPanel");
             this.GraphPanel.Name = "GraphPanel";
-            this.GraphPanel.Size = new System.Drawing.Size(477, 333);
-            this.GraphPanel.TabIndex = 0;
             // 
             // graphControl
             // 
-            this.graphControl.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.graphControl, "graphControl");
             this.graphControl.EditButtons = System.Windows.Forms.MouseButtons.Left;
             this.graphControl.EditModifierKeys = System.Windows.Forms.Keys.None;
             this.graphControl.IsEnableVPan = false;
             this.graphControl.IsEnableVZoom = false;
             this.graphControl.IsShowCopyMessage = false;
-            this.graphControl.Location = new System.Drawing.Point(0, 0);
             this.graphControl.Name = "graphControl";
-            this.graphControl.ScrollGrace = 0;
-            this.graphControl.ScrollMaxX = 0;
-            this.graphControl.ScrollMaxY = 0;
-            this.graphControl.ScrollMaxY2 = 0;
-            this.graphControl.ScrollMinX = 0;
-            this.graphControl.ScrollMinY = 0;
-            this.graphControl.ScrollMinY2 = 0;
-            this.graphControl.Size = new System.Drawing.Size(449, 329);
-            this.graphControl.TabIndex = 3;
+            this.graphControl.ScrollGrace = 0D;
+            this.graphControl.ScrollMaxX = 0D;
+            this.graphControl.ScrollMaxY = 0D;
+            this.graphControl.ScrollMaxY2 = 0D;
+            this.graphControl.ScrollMinX = 0D;
+            this.graphControl.ScrollMinY = 0D;
+            this.graphControl.ScrollMinY2 = 0D;
             this.graphControl.ContextMenuBuilder += new ZedGraph.ZedGraphControl.ContextMenuBuilderEventHandler(this.graphControl_ContextMenuBuilder);
             // 
             // toolStrip1
             // 
-            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Right;
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnAIons,
@@ -364,152 +289,112 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCopy,
             this.btnSave,
             this.btnPrint});
-            this.toolStrip1.Location = new System.Drawing.Point(449, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(24, 329);
-            this.toolStrip1.TabIndex = 4;
-            this.toolStrip1.Text = "toolStrip1";
             // 
             // btnAIons
             // 
             this.btnAIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnAIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_A;
-            this.btnAIons.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnAIons, "btnAIons");
             this.btnAIons.Name = "btnAIons";
-            this.btnAIons.Size = new System.Drawing.Size(21, 20);
-            this.btnAIons.Text = "toolStripButton1";
-            this.btnAIons.ToolTipText = "A-ions";
             this.btnAIons.Click += new System.EventHandler(this.aionsContextMenuItem_Click);
             // 
             // btnBIons
             // 
             this.btnBIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnBIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_B;
-            this.btnBIons.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnBIons, "btnBIons");
             this.btnBIons.Name = "btnBIons";
-            this.btnBIons.Size = new System.Drawing.Size(21, 20);
-            this.btnBIons.Text = "toolStripButton2";
-            this.btnBIons.ToolTipText = "B-ions";
             this.btnBIons.Click += new System.EventHandler(this.bionsContextMenuItem_Click);
             // 
             // btnCIons
             // 
             this.btnCIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnCIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_C;
-            this.btnCIons.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnCIons, "btnCIons");
             this.btnCIons.Name = "btnCIons";
-            this.btnCIons.Size = new System.Drawing.Size(21, 20);
-            this.btnCIons.Text = "toolStripButton3";
-            this.btnCIons.ToolTipText = "C-ions";
             this.btnCIons.Click += new System.EventHandler(this.cionsContextMenuItem_Click);
             // 
             // btnXIons
             // 
             this.btnXIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnXIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_X;
-            this.btnXIons.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnXIons, "btnXIons");
             this.btnXIons.Name = "btnXIons";
-            this.btnXIons.Size = new System.Drawing.Size(21, 20);
-            this.btnXIons.Text = "toolStripButton4";
-            this.btnXIons.ToolTipText = "X-ions";
             this.btnXIons.Click += new System.EventHandler(this.xionsContextMenuItem_Click);
             // 
             // btnYIons
             // 
             this.btnYIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnYIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Y;
-            this.btnYIons.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnYIons, "btnYIons");
             this.btnYIons.Name = "btnYIons";
-            this.btnYIons.Size = new System.Drawing.Size(21, 20);
-            this.btnYIons.Text = "toolStripButton5";
-            this.btnYIons.ToolTipText = "Y-ions";
             this.btnYIons.Click += new System.EventHandler(this.yionsContextMenuItem_Click);
             // 
             // btnZIons
             // 
             this.btnZIons.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnZIons.Image = global::pwiz.Skyline.Properties.Resources.Ions_Z;
-            this.btnZIons.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnZIons, "btnZIons");
             this.btnZIons.Name = "btnZIons";
-            this.btnZIons.Size = new System.Drawing.Size(21, 20);
-            this.btnZIons.Text = "toolStripButton6";
-            this.btnZIons.ToolTipText = "Z-ions";
             this.btnZIons.Click += new System.EventHandler(this.zionsContextMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(21, 6);
+            resources.ApplyResources(this.toolStripSeparator1, "toolStripSeparator1");
             // 
             // charge1Button
             // 
             this.charge1Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.charge1Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_1;
-            this.charge1Button.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.charge1Button, "charge1Button");
             this.charge1Button.Name = "charge1Button";
-            this.charge1Button.Size = new System.Drawing.Size(21, 20);
-            this.charge1Button.Text = "toolStripButton7";
-            this.charge1Button.ToolTipText = "Charge 1 ions";
             this.charge1Button.Click += new System.EventHandler(this.charge1ContextMenuItem_Click);
             // 
             // charge2Button
             // 
             this.charge2Button.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.charge2Button.Image = global::pwiz.Skyline.Properties.Resources.Ions_2;
-            this.charge2Button.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.charge2Button, "charge2Button");
             this.charge2Button.Name = "charge2Button";
-            this.charge2Button.Size = new System.Drawing.Size(21, 20);
-            this.charge2Button.Text = "toolStripButton8";
-            this.charge2Button.ToolTipText = "Charge 2 ions";
             this.charge2Button.Click += new System.EventHandler(this.charge2ContextMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
-            this.toolStripSeparator2.Size = new System.Drawing.Size(21, 6);
+            resources.ApplyResources(this.toolStripSeparator2, "toolStripSeparator2");
             // 
             // copyMetafileButton
             // 
             this.copyMetafileButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.copyMetafileButton.Image = global::pwiz.Skyline.Properties.Resources.Copy;
-            this.copyMetafileButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.copyMetafileButton, "copyMetafileButton");
             this.copyMetafileButton.Name = "copyMetafileButton";
-            this.copyMetafileButton.Size = new System.Drawing.Size(21, 20);
-            this.copyMetafileButton.Text = "toolStripButton9";
-            this.copyMetafileButton.ToolTipText = "Copy Metafile";
             this.copyMetafileButton.Click += new System.EventHandler(this.copyMetafileButton_Click);
             // 
             // btnCopy
             // 
             this.btnCopy.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnCopy.Image = global::pwiz.Skyline.Properties.Resources.Copy_Bitmap;
-            this.btnCopy.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnCopy, "btnCopy");
             this.btnCopy.Name = "btnCopy";
-            this.btnCopy.Size = new System.Drawing.Size(21, 20);
-            this.btnCopy.Text = "toolStripButton10";
-            this.btnCopy.ToolTipText = "Copy Bitmap";
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
             // btnSave
             // 
             this.btnSave.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnSave.Image = global::pwiz.Skyline.Properties.Resources.Save;
-            this.btnSave.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnSave, "btnSave");
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(21, 20);
-            this.btnSave.Text = "toolStripButton11";
-            this.btnSave.ToolTipText = "Save";
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // btnPrint
             // 
             this.btnPrint.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
             this.btnPrint.Image = global::pwiz.Skyline.Properties.Resources.Print;
-            this.btnPrint.ImageTransparentColor = System.Drawing.Color.Magenta;
+            resources.ApplyResources(this.btnPrint, "btnPrint");
             this.btnPrint.Name = "btnPrint";
-            this.btnPrint.Size = new System.Drawing.Size(21, 20);
-            this.btnPrint.Text = "toolStripButton12";
-            this.btnPrint.ToolTipText = "Print";
             this.btnPrint.Click += new System.EventHandler(this.btnPrint_Click);
             // 
             // panel2
@@ -520,92 +405,57 @@ namespace pwiz.Skyline.SettingsUI
             this.panel2.Controls.Add(this.btnAddAll);
             this.panel2.Controls.Add(this.btnCancel);
             this.panel2.Controls.Add(this.labelRT);
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel2.Location = new System.Drawing.Point(0, 333);
+            resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(477, 56);
-            this.panel2.TabIndex = 1;
             // 
             // cbAssociateProteins
             // 
-            this.cbAssociateProteins.AutoSize = true;
-            this.cbAssociateProteins.Location = new System.Drawing.Point(163, 36);
+            resources.ApplyResources(this.cbAssociateProteins, "cbAssociateProteins");
             this.cbAssociateProteins.Name = "cbAssociateProteins";
-            this.cbAssociateProteins.Size = new System.Drawing.Size(112, 17);
-            this.cbAssociateProteins.TabIndex = 3;
-            this.cbAssociateProteins.Text = "Asso&ciate proteins";
             this.cbAssociateProteins.UseVisualStyleBackColor = true;
             // 
             // labelFilename
             // 
-            this.labelFilename.AutoSize = true;
-            this.labelFilename.Location = new System.Drawing.Point(3, 6);
+            resources.ApplyResources(this.labelFilename, "labelFilename");
             this.labelFilename.Name = "labelFilename";
-            this.labelFilename.Size = new System.Drawing.Size(23, 13);
-            this.labelFilename.TabIndex = 3;
-            this.labelFilename.Text = "File";
             // 
             // btnAdd
             // 
-            this.btnAdd.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnAdd.Location = new System.Drawing.Point(0, 33);
+            resources.ApplyResources(this.btnAdd, "btnAdd");
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(75, 23);
-            this.btnAdd.TabIndex = 2;
-            this.btnAdd.Text = "&Add";
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // btnAddAll
             // 
-            this.btnAddAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnAddAll.Location = new System.Drawing.Point(81, 33);
+            resources.ApplyResources(this.btnAddAll, "btnAddAll");
             this.btnAddAll.Name = "btnAddAll";
-            this.btnAddAll.Size = new System.Drawing.Size(75, 23);
-            this.btnAddAll.TabIndex = 1;
-            this.btnAddAll.Text = "A&dd All...";
             this.btnAddAll.UseVisualStyleBackColor = true;
             this.btnAddAll.Click += new System.EventHandler(this.btnAddAll_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(402, 33);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 0;
-            this.btnCancel.Text = "Close";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
             // labelRT
             // 
-            this.labelRT.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.labelRT.Location = new System.Drawing.Point(72, 3);
+            resources.ApplyResources(this.labelRT, "labelRT");
             this.labelRT.Name = "labelRT";
-            this.labelRT.Size = new System.Drawing.Size(403, 16);
-            this.labelRT.TabIndex = 4;
-            this.labelRT.Text = "RT";
-            this.labelRT.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // ViewLibraryPanel
             // 
             this.ViewLibraryPanel.Controls.Add(this.splitMain);
-            this.ViewLibraryPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.ViewLibraryPanel.Location = new System.Drawing.Point(10, 25);
+            resources.ApplyResources(this.ViewLibraryPanel, "ViewLibraryPanel");
             this.ViewLibraryPanel.Name = "ViewLibraryPanel";
-            this.ViewLibraryPanel.Size = new System.Drawing.Size(739, 389);
-            this.ViewLibraryPanel.TabIndex = 2;
             // 
             // LibraryLabel
             // 
-            this.LibraryLabel.AutoSize = true;
-            this.LibraryLabel.Location = new System.Drawing.Point(10, 9);
+            resources.ApplyResources(this.LibraryLabel, "LibraryLabel");
             this.LibraryLabel.Name = "LibraryLabel";
-            this.LibraryLabel.Size = new System.Drawing.Size(41, 13);
-            this.LibraryLabel.TabIndex = 0;
-            this.LibraryLabel.Text = "&Library:";
             // 
             // contextMenuSpectrum
             // 
@@ -632,67 +482,60 @@ namespace pwiz.Skyline.SettingsUI
             this.zoomSpectrumContextMenuItem,
             this.toolStripSeparator27});
             this.contextMenuSpectrum.Name = "contextMenuSpectrum";
-            this.contextMenuSpectrum.Size = new System.Drawing.Size(186, 370);
+            resources.ApplyResources(this.contextMenuSpectrum, "contextMenuSpectrum");
             // 
             // aionsContextMenuItem
             // 
             this.aionsContextMenuItem.CheckOnClick = true;
             this.aionsContextMenuItem.Name = "aionsContextMenuItem";
-            this.aionsContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.aionsContextMenuItem.Text = "A-ions";
+            resources.ApplyResources(this.aionsContextMenuItem, "aionsContextMenuItem");
             this.aionsContextMenuItem.Click += new System.EventHandler(this.aionsContextMenuItem_Click);
             // 
             // bionsContextMenuItem
             // 
             this.bionsContextMenuItem.CheckOnClick = true;
             this.bionsContextMenuItem.Name = "bionsContextMenuItem";
-            this.bionsContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.bionsContextMenuItem.Text = "B-ions";
+            resources.ApplyResources(this.bionsContextMenuItem, "bionsContextMenuItem");
             this.bionsContextMenuItem.Click += new System.EventHandler(this.bionsContextMenuItem_Click);
             // 
             // cionsContextMenuItem
             // 
             this.cionsContextMenuItem.CheckOnClick = true;
             this.cionsContextMenuItem.Name = "cionsContextMenuItem";
-            this.cionsContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.cionsContextMenuItem.Text = "C-ions";
+            resources.ApplyResources(this.cionsContextMenuItem, "cionsContextMenuItem");
             this.cionsContextMenuItem.Click += new System.EventHandler(this.cionsContextMenuItem_Click);
             // 
             // xionsContextMenuItem
             // 
             this.xionsContextMenuItem.CheckOnClick = true;
             this.xionsContextMenuItem.Name = "xionsContextMenuItem";
-            this.xionsContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.xionsContextMenuItem.Text = "X-ions";
+            resources.ApplyResources(this.xionsContextMenuItem, "xionsContextMenuItem");
             this.xionsContextMenuItem.Click += new System.EventHandler(this.xionsContextMenuItem_Click);
             // 
             // yionsContextMenuItem
             // 
             this.yionsContextMenuItem.CheckOnClick = true;
             this.yionsContextMenuItem.Name = "yionsContextMenuItem";
-            this.yionsContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.yionsContextMenuItem.Text = "Y-ions";
+            resources.ApplyResources(this.yionsContextMenuItem, "yionsContextMenuItem");
             this.yionsContextMenuItem.Click += new System.EventHandler(this.yionsContextMenuItem_Click);
             // 
             // zionsContextMenuItem
             // 
             this.zionsContextMenuItem.CheckOnClick = true;
             this.zionsContextMenuItem.Name = "zionsContextMenuItem";
-            this.zionsContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.zionsContextMenuItem.Text = "Z-ions";
+            resources.ApplyResources(this.zionsContextMenuItem, "zionsContextMenuItem");
             this.zionsContextMenuItem.Click += new System.EventHandler(this.zionsContextMenuItem_Click);
             // 
             // precursorIonContextMenuItem
             // 
             this.precursorIonContextMenuItem.Name = "precursorIonContextMenuItem";
-            this.precursorIonContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.precursorIonContextMenuItem.Text = "Precursor";
+            resources.ApplyResources(this.precursorIonContextMenuItem, "precursorIonContextMenuItem");
             this.precursorIonContextMenuItem.Click += new System.EventHandler(this.precursorIonContextMenuItem_Click);
             // 
             // toolStripSeparator11
             // 
             this.toolStripSeparator11.Name = "toolStripSeparator11";
-            this.toolStripSeparator11.Size = new System.Drawing.Size(182, 6);
+            resources.ApplyResources(this.toolStripSeparator11, "toolStripSeparator11");
             // 
             // chargesContextMenuItem
             // 
@@ -702,148 +545,135 @@ namespace pwiz.Skyline.SettingsUI
             this.charge3ContextMenuItem,
             this.charge4ContextMenuItem});
             this.chargesContextMenuItem.Name = "chargesContextMenuItem";
-            this.chargesContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.chargesContextMenuItem.Text = "Charges";
+            resources.ApplyResources(this.chargesContextMenuItem, "chargesContextMenuItem");
             this.chargesContextMenuItem.DropDownOpening += new System.EventHandler(this.chargesMenuItem_DropDownOpening);
             // 
             // charge1ContextMenuItem
             // 
             this.charge1ContextMenuItem.Name = "charge1ContextMenuItem";
-            this.charge1ContextMenuItem.Size = new System.Drawing.Size(80, 22);
-            this.charge1ContextMenuItem.Text = "1";
+            resources.ApplyResources(this.charge1ContextMenuItem, "charge1ContextMenuItem");
             this.charge1ContextMenuItem.Click += new System.EventHandler(this.charge1ContextMenuItem_Click);
             // 
             // charge2ContextMenuItem
             // 
             this.charge2ContextMenuItem.Name = "charge2ContextMenuItem";
-            this.charge2ContextMenuItem.Size = new System.Drawing.Size(80, 22);
-            this.charge2ContextMenuItem.Text = "2";
+            resources.ApplyResources(this.charge2ContextMenuItem, "charge2ContextMenuItem");
             this.charge2ContextMenuItem.Click += new System.EventHandler(this.charge2ContextMenuItem_Click);
             // 
             // charge3ContextMenuItem
             // 
             this.charge3ContextMenuItem.Name = "charge3ContextMenuItem";
-            this.charge3ContextMenuItem.Size = new System.Drawing.Size(80, 22);
-            this.charge3ContextMenuItem.Text = "3";
+            resources.ApplyResources(this.charge3ContextMenuItem, "charge3ContextMenuItem");
             this.charge3ContextMenuItem.Click += new System.EventHandler(this.charge3ContextMenuItem_Click);
             // 
             // charge4ContextMenuItem
             // 
             this.charge4ContextMenuItem.Name = "charge4ContextMenuItem";
-            this.charge4ContextMenuItem.Size = new System.Drawing.Size(80, 22);
-            this.charge4ContextMenuItem.Text = "4";
+            resources.ApplyResources(this.charge4ContextMenuItem, "charge4ContextMenuItem");
             this.charge4ContextMenuItem.Click += new System.EventHandler(this.charge4ContextMenuItem_Click);
             // 
             // toolStripSeparator12
             // 
             this.toolStripSeparator12.Name = "toolStripSeparator12";
-            this.toolStripSeparator12.Size = new System.Drawing.Size(182, 6);
+            resources.ApplyResources(this.toolStripSeparator12, "toolStripSeparator12");
             // 
             // ranksContextMenuItem
             // 
             this.ranksContextMenuItem.CheckOnClick = true;
             this.ranksContextMenuItem.Name = "ranksContextMenuItem";
-            this.ranksContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.ranksContextMenuItem.Text = "Ranks";
+            resources.ApplyResources(this.ranksContextMenuItem, "ranksContextMenuItem");
             this.ranksContextMenuItem.Click += new System.EventHandler(this.ranksContextMenuItem_Click);
             // 
             // ionMzValuesContextMenuItem
             // 
             this.ionMzValuesContextMenuItem.CheckOnClick = true;
             this.ionMzValuesContextMenuItem.Name = "ionMzValuesContextMenuItem";
-            this.ionMzValuesContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.ionMzValuesContextMenuItem.Text = "Ion m/z Values";
+            resources.ApplyResources(this.ionMzValuesContextMenuItem, "ionMzValuesContextMenuItem");
             this.ionMzValuesContextMenuItem.Click += new System.EventHandler(this.ionMzValuesContextMenuItem_Click);
             // 
             // observedMzValuesContextMenuItem
             // 
             this.observedMzValuesContextMenuItem.CheckOnClick = true;
             this.observedMzValuesContextMenuItem.Name = "observedMzValuesContextMenuItem";
-            this.observedMzValuesContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.observedMzValuesContextMenuItem.Text = "Observed m/z Values";
+            resources.ApplyResources(this.observedMzValuesContextMenuItem, "observedMzValuesContextMenuItem");
             this.observedMzValuesContextMenuItem.Click += new System.EventHandler(this.observedMzValuesContextMenuItem_Click);
             // 
             // duplicatesContextMenuItem
             // 
             this.duplicatesContextMenuItem.CheckOnClick = true;
             this.duplicatesContextMenuItem.Name = "duplicatesContextMenuItem";
-            this.duplicatesContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.duplicatesContextMenuItem.Text = "Duplicate Ions";
+            resources.ApplyResources(this.duplicatesContextMenuItem, "duplicatesContextMenuItem");
             this.duplicatesContextMenuItem.Click += new System.EventHandler(this.duplicatesContextMenuItem_Click);
             // 
             // toolStripSeparator13
             // 
             this.toolStripSeparator13.Name = "toolStripSeparator13";
-            this.toolStripSeparator13.Size = new System.Drawing.Size(182, 6);
+            resources.ApplyResources(this.toolStripSeparator13, "toolStripSeparator13");
             // 
             // lockYaxisContextMenuItem
             // 
             this.lockYaxisContextMenuItem.CheckOnClick = true;
             this.lockYaxisContextMenuItem.Name = "lockYaxisContextMenuItem";
-            this.lockYaxisContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.lockYaxisContextMenuItem.Text = "Auto-scale Y-axis";
+            resources.ApplyResources(this.lockYaxisContextMenuItem, "lockYaxisContextMenuItem");
             this.lockYaxisContextMenuItem.Click += new System.EventHandler(this.lockYaxisContextMenuItem_Click);
             // 
             // toolStripSeparator14
             // 
             this.toolStripSeparator14.Name = "toolStripSeparator14";
-            this.toolStripSeparator14.Size = new System.Drawing.Size(182, 6);
+            resources.ApplyResources(this.toolStripSeparator14, "toolStripSeparator14");
             // 
             // spectrumPropsContextMenuItem
             // 
             this.spectrumPropsContextMenuItem.Name = "spectrumPropsContextMenuItem";
-            this.spectrumPropsContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.spectrumPropsContextMenuItem.Text = "Properties...";
+            resources.ApplyResources(this.spectrumPropsContextMenuItem, "spectrumPropsContextMenuItem");
             this.spectrumPropsContextMenuItem.Click += new System.EventHandler(this.spectrumPropsContextMenuItem_Click);
             // 
             // toolStripSeparator15
             // 
             this.toolStripSeparator15.Name = "toolStripSeparator15";
-            this.toolStripSeparator15.Size = new System.Drawing.Size(182, 6);
+            resources.ApplyResources(this.toolStripSeparator15, "toolStripSeparator15");
             // 
             // zoomSpectrumContextMenuItem
             // 
             this.zoomSpectrumContextMenuItem.Name = "zoomSpectrumContextMenuItem";
-            this.zoomSpectrumContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.zoomSpectrumContextMenuItem.Text = "Zoom Out";
+            resources.ApplyResources(this.zoomSpectrumContextMenuItem, "zoomSpectrumContextMenuItem");
             this.zoomSpectrumContextMenuItem.Click += new System.EventHandler(this.zoomSpectrumContextMenuItem_Click);
             // 
             // toolStripSeparator27
             // 
             this.toolStripSeparator27.Name = "toolStripSeparator27";
-            this.toolStripSeparator27.Size = new System.Drawing.Size(182, 6);
+            resources.ApplyResources(this.toolStripSeparator27, "toolStripSeparator27");
             // 
             // ViewLibraryDlg
             // 
             this.AcceptButton = this.btnCancel;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(759, 424);
             this.Controls.Add(this.LibraryLabel);
             this.Controls.Add(this.ViewLibraryPanel);
             this.KeyPreview = true;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ViewLibraryDlg";
-            this.Padding = new System.Windows.Forms.Padding(10, 25, 10, 10);
             this.ShowInTaskbar = false;
-            this.Text = "Spectral Library Explorer";
+            this.Activated += new System.EventHandler(this.ViewLibraryDlg_Activated);
             this.Deactivate += new System.EventHandler(this.ViewLibraryDlg_Deactivate);
             this.Load += new System.EventHandler(this.ViewLibraryDlg_Load);
             this.Shown += new System.EventHandler(this.ViewLibraryDlg_Shown);
-            this.Activated += new System.EventHandler(this.ViewLibraryDlg_Activated);
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ViewLibraryDlg_KeyDown);
-            this.splitMain.Panel1.ResumeLayout(false);
-            this.splitMain.Panel2.ResumeLayout(false);
-            this.splitMain.ResumeLayout(false);
             this.splitPeptideList.Panel1.ResumeLayout(false);
             this.splitPeptideList.Panel2.ResumeLayout(false);
             this.splitPeptideList.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitPeptideList)).EndInit();
             this.splitPeptideList.ResumeLayout(false);
             this.PeptideListPanel.ResumeLayout(false);
             this.PeptideListPanel.PerformLayout();
+            this.splitMain.Panel1.ResumeLayout(false);
+            this.splitMain.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitMain)).EndInit();
+            this.splitMain.ResumeLayout(false);
             this.PeptideEditPanel.ResumeLayout(false);
             this.PeptideEditPanel.PerformLayout();
             this.tableLayoutPanel1.ResumeLayout(false);

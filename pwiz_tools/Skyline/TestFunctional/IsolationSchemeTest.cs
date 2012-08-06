@@ -54,19 +54,19 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty name.
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Name cannot be empty");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateNameTextBox__0__cannot_be_empty, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
                 // Create a scheme with default values.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, string.Empty);
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
                         Assert.AreEqual(editDlg.PrecursorFilter, 2);
                         Assert.AreEqual(editDlg.PrecursorRightFilter, null);
-                        editDlg.IsolationSchemeName = "test1";
+                        editDlg.IsolationSchemeName = "test1"; // Not L10N
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
@@ -86,45 +86,44 @@ namespace pwiz.SkylineTestFunctional
                         Assert.IsFalse(editDlg.AsymmetricFilter);
                         Assert.AreEqual(editDlg.PrecursorFilter, 2);
                         Assert.AreEqual(editDlg.PrecursorRightFilter, null);
-                        editDlg.IsolationSchemeName = "test1";
+                        editDlg.IsolationSchemeName = "test1"; // Not L10N
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "The isolation scheme named 'test1' already exists.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_The_isolation_scheme_named__0__already_exists, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
                 RunUI(() => editDlg.CancelButton.PerformClick());
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test1"));
+            RunUI(() => editList.SelectItem("test1")); // Not L10N
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Edit scheme, change name and isolation width.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test1");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test1"); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
                         Assert.AreEqual(editDlg.PrecursorFilter, 2);
                         Assert.AreEqual(editDlg.PrecursorRightFilter, null);
-                        editDlg.IsolationSchemeName = "test2";
+                        editDlg.IsolationSchemeName = "test2"; // Not L10N
                         editDlg.PrecursorFilter = 50;
                         editDlg.OkDialog();
                     });
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2"));
+            RunUI(() => editList.SelectItem("test2")); // Not L10N
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Test asymmetric isolation width (automatic split).
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
                         Assert.AreEqual(editDlg.PrecursorFilter, 50);
@@ -137,14 +136,14 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2"));
+            RunUI(() => editList.SelectItem("test2")); // Not L10N
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Test asymmetric isolation width (manually set).
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsTrue(editDlg.AsymmetricFilter);
                         Assert.AreEqual(editDlg.PrecursorFilter, 25);
@@ -156,14 +155,14 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2"));
+            RunUI(() => editList.SelectItem("test2")); // Not L10N
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Test return to symmetric isolation width.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsTrue(editDlg.AsymmetricFilter);
                         Assert.AreEqual(editDlg.PrecursorFilter, 1);
@@ -176,14 +175,14 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2"));
+            RunUI(() => editList.SelectItem("test2")); // Not L10N
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Test return to symmetric isolation width with only left width specified.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
                         Assert.AreEqual(editDlg.PrecursorFilter, 3);
@@ -199,14 +198,14 @@ namespace pwiz.SkylineTestFunctional
                 WaitForClosedForm(editDlg);
             }
 
-            RunUI(() => editList.SelectItem("test2"));
+            RunUI(() => editList.SelectItem("test2")); // Not L10N
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Test non-numeric isolation width.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsTrue(editDlg.UseResults);
                         Assert.IsFalse(editDlg.AsymmetricFilter);
                         Assert.AreEqual(editDlg.PrecursorFilter, 3);
@@ -215,7 +214,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Isolation width must contain a decimal value.");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -223,8 +222,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editDlg.PrecursorFilter = 0);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "Isolation width must be greater than or equal to");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -232,8 +230,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editDlg.PrecursorFilter = 10001);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "Isolation width must be less than or equal to 10000.");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -242,8 +239,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editDlg.PrecursorFilter = 1);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "Isolation widths must be less than or equal to 5000.");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -251,8 +247,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editDlg.PrecursorRightFilter = 0);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "Isolation widths must be greater than or equal to");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -260,7 +255,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editDlg.PrecursorRightFilter = null);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Isolation widths must contain a decimal value.");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -268,8 +263,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editDlg.UseResults = false);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "Specify Start and End values for at least one isolation window.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_Specify_Start_and_End_values_for_at_least_one_isolation_window, messageDlg.Message, 0);
                         messageDlg.OkDialog();
                     });
 
@@ -283,7 +277,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Isolation window Start must be between");
+                        AssertEx.AreComparableStrings(Resources.IsolationWindow_DoValidate_Isolation_window_Start_must_be_between__0__and__1__,messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -297,7 +291,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Isolation window Start must be between");
+                        AssertEx.AreComparableStrings(Resources.IsolationWindow_DoValidate_Isolation_window_Start_must_be_between__0__and__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -311,7 +305,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Specify Start for isolation window.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -325,7 +319,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Isolation window End must be between");
+                        AssertEx.AreComparableStrings(Resources.IsolationWindow_DoValidate_Isolation_window_End_must_be_between__0__and__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -337,7 +331,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Isolation window End must be between");
+                        AssertEx.AreComparableStrings(Resources.IsolationWindow_DoValidate_Isolation_window_End_must_be_between__0__and__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -351,7 +345,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Specify Start for isolation window.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -365,7 +359,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Specify End for isolation window.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -388,7 +382,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify simple isolation window, test windows per scan.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -406,7 +400,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -426,8 +420,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "Windows per scan must be greater than or equal to");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -435,8 +428,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editDlg.WindowsPerScan = IsolationScheme.MAX_MULTIPLEXED_ISOLATION_WINDOWS + 1); // Above maximum value
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "Windows per scan must be less than or equal to");
+                        AssertEx.AreComparableStrings(Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
 
@@ -451,8 +443,8 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
-                        Assert.IsFalse(editDlg.UseResults);
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
+                        Assert.IsFalse(editDlg.UseResults); 
                         VerifyCellValues(editDlg, new[]
                             {
                                 new double?[] {100.0, 500.0},
@@ -479,7 +471,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty target.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -493,7 +485,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Specify Target for isolation window.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -517,7 +509,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify windows per scan, test minimum value.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -534,8 +526,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            "Target value is not within the range of the isolation window.");
+                        AssertEx.AreComparableStrings(Resources.IsolationWindow_DoValidate_Target_value_is_not_within_the_range_of_the_isolation_window, messageDlg.Message, 0);
                         messageDlg.OkDialog();
                     });
 
@@ -548,7 +539,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Specify Margin for isolation window.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -556,7 +547,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() => editDlg.SpecifyTarget = false);
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Specify Margin for isolation window.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -568,7 +559,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Isolation window margin must be non-negative.");
+                        AssertEx.AreComparableStrings(Resources.IsolationWindow_DoValidate_Isolation_window_margin_must_be_non_negative, messageDlg.Message, 0);
                         messageDlg.OkDialog();
                     });
 
@@ -580,7 +571,7 @@ namespace pwiz.SkylineTestFunctional
                     },
                     messageDlg =>
                         {
-                            AssertEx.Contains(messageDlg.Message, "Margin must be a valid number.");
+                            AssertEx.AreComparableStrings(Resources.GridViewDriver_GridView_DataError__0__must_be_a_valid_number, messageDlg.Message, 1);
                             messageDlg.OkDialog();
                         });
 
@@ -604,7 +595,7 @@ namespace pwiz.SkylineTestFunctional
                 // Verify margin.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -627,7 +618,7 @@ namespace pwiz.SkylineTestFunctional
                 // Test empty end margin.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -643,7 +634,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Specify End margin for isolation window.");
+                        AssertEx.AreComparableStrings(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window, messageDlg.Message, 1);
                         messageDlg.OkDialog();
                     });
 
@@ -655,7 +646,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(editDlg.OkDialog, messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message, "Isolation window margin must be non-negative.");
+                        AssertEx.AreComparableStrings(Resources.IsolationWindow_DoValidate_Isolation_window_margin_must_be_non_negative, messageDlg.Message, 0);
                         messageDlg.OkDialog();
                     });
 
@@ -667,7 +658,7 @@ namespace pwiz.SkylineTestFunctional
                     },
                     messageDlg =>
                         {
-                            AssertEx.Contains(messageDlg.Message, "End margin must be a valid number.");
+                            AssertEx.AreComparableStrings(Resources.GridViewDriver_GridView_DataError__0__must_be_a_valid_number, messageDlg.Message, 1);
                             messageDlg.OkDialog();
                         });
 
@@ -684,14 +675,14 @@ namespace pwiz.SkylineTestFunctional
                 OkDialog(editDlg, editDlg.OkDialog);
             }
 
-            RunUI(() => editList.SelectItem("test2"));
+            RunUI(() => editList.SelectItem("test2")); // Not L10N
             {
                 var editDlg = ShowDialog<EditIsolationSchemeDlg>(editList.EditItem);
 
                 // Verify margin.
                 RunUI(() =>
                     {
-                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2");
+                        Assert.AreEqual(editDlg.IsolationSchemeName, "test2"); // Not L10N
                         Assert.IsFalse(editDlg.UseResults);
                         VerifyCellValues(editDlg, new[]
                             {
@@ -736,7 +727,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Paste unsorted list, start, end, start margin and end margin.
-                ClipboardEx.SetText("100\t200\t1\t1\n50\t100\t1\t2\n");
+                ClipboardEx.SetText("100\t200\t1\t1\n50\t100\t1\t2\n"); // Not L10N
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 0);
@@ -749,7 +740,7 @@ namespace pwiz.SkylineTestFunctional
                     });
 
                 // Paste list, calculate missing ends and targets.
-                ClipboardEx.SetText("100\t110\t105\n  111\t\t\n  115\t\t116\n  117\t118\t\n  200\t\t\n  300\t\t\n");
+                ClipboardEx.SetText("100\t110\t105\n  111\t\t\n  115\t\t116\n  117\t118\t\n  200\t\t\n  300\t\t\n"); // Not L10N
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 1);
@@ -766,8 +757,8 @@ namespace pwiz.SkylineTestFunctional
                             });
                     });
 
-                // Paste with non-numeric data.
-                ClipboardEx.SetText("100\n110\n200x\n");
+                // Paste with non-numeric data. 
+                ClipboardEx.SetText("100\n110\n200x\n"); // Not L10N
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 1);
@@ -776,8 +767,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(() => editDlg.IsolationWindowGrid.OnPaste(), messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            @"An invalid number (""200x"") was specified for Start on line 3.");
+                        AssertEx.AreComparableStrings(Resources.GridViewDriver_GetValue_An_invalid_number__0__was_specified_for__1__2__, messageDlg.Message, 3);
                         messageDlg.OkDialog();
                     });
                 RunUI(() => VerifyCellValues(editDlg, new[]
@@ -790,7 +780,7 @@ namespace pwiz.SkylineTestFunctional
                     }));
 
                 // Paste below minimum start value.
-                ClipboardEx.SetText("0\n100\n200\n");
+                ClipboardEx.SetText("0\n100\n200\n"); // Not L10N
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 1);
@@ -799,8 +789,7 @@ namespace pwiz.SkylineTestFunctional
                     });
                 RunDlg<MessageDlg>(() => editDlg.IsolationWindowGrid.OnPaste(), messageDlg =>
                     {
-                        AssertEx.Contains(messageDlg.Message,
-                            @"On line 1, Isolation window Start must be between");
+                        AssertEx.AreComparableStrings(Resources.GridViewDriver_ValidateRow_On_line__0__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
                 RunUI(() => VerifyCellValues(editDlg, new[]
@@ -813,7 +802,7 @@ namespace pwiz.SkylineTestFunctional
                     }));
 
                 // Paste above maximum end value.
-                ClipboardEx.SetText("100\n110\n10001\n");
+                ClipboardEx.SetText("100\n110\n10001\n"); // Not L10N
                 RunUI(() =>
                     {
                         editDlg.IsolationWindowGrid.SelectCell((int) EditIsolationSchemeDlg.GridColumns.end, 1);
@@ -825,8 +814,7 @@ namespace pwiz.SkylineTestFunctional
                         // NOTE: Because of the order of processing, the out of range value at the end
                         // of the list is flagged as being a Start value, when it is really only used
                         // as the end of the previous interval.  Fixing that would require some work.
-                        AssertEx.Contains(messageDlg.Message,
-                            @"On line 3, Isolation window Start must be between");
+                        AssertEx.AreComparableStrings(Resources.GridViewDriver_ValidateRow_On_line__0__1__, messageDlg.Message, 2);
                         messageDlg.OkDialog();
                     });
                 RunUI(() => VerifyCellValues(editDlg, new[]

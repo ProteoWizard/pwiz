@@ -146,7 +146,7 @@ namespace pwiz.ProteowizardWrapper
                     GetInstrumentConfig(ic, out instrumentIonSource, out instrumentAnalyzer, out instrumentDetector);
 
                     if (ionSource.Length > 0)
-                        ionSource += ", ";
+                        ionSource += ", "; // TODO: Not L10N?
                     ionSource += instrumentIonSource;
 
                     if (analyzer.Length > 0)
@@ -194,7 +194,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the ion source in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msIonisation");
+                            UserParam uParam = c.userParam("msIonisation"); // Not L10N
                             if (HasInfo(uParam))
                             {
                                 ionSources.Add(c.order, uParam.value);
@@ -208,7 +208,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the analyzer in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msMassAnalyzer");
+                            UserParam uParam = c.userParam("msMassAnalyzer"); // Not L10N
                             if (HasInfo(uParam))
                             {
                                 analyzers.Add(c.order, uParam.value);
@@ -222,7 +222,7 @@ namespace pwiz.ProteowizardWrapper
                         else
                         {
                             // If we did not find the detector in a CVParam it may be in a UserParam
-                            UserParam uParam = c.userParam("msDetector");
+                            UserParam uParam = c.userParam("msDetector"); // Not L10N
                             if (HasInfo(uParam))
                             {
                                 detectors.Add(c.order, uParam.value);
@@ -232,11 +232,11 @@ namespace pwiz.ProteowizardWrapper
                 }
             }
 
-            ionSource = String.Join("/", new List<string>(ionSources.Values).ToArray());
+            ionSource = String.Join("/", new List<string>(ionSources.Values).ToArray()); // Not L10N
 
-            analyzer = String.Join("/", new List<string>(analyzers.Values).ToArray());
+            analyzer = String.Join("/", new List<string>(analyzers.Values).ToArray()); // Not L10N
 
-            detector = String.Join("/", new List<string>(detectors.Values).ToArray());
+            detector = String.Join("/", new List<string>(detectors.Values).ToArray()); // Not L10N
         }
 
         public bool IsProcessedBy(string softwareName)
@@ -268,7 +268,7 @@ namespace pwiz.ProteowizardWrapper
                 if(instrumentModel == null)
                 {
                     // If we did not find the instrument model in a CVParam it may be in a UserParam
-                    UserParam uParam = ic.userParam("msModel");
+                    UserParam uParam = ic.userParam("msModel"); // Not L10N
                     if (HasInfo(uParam))
                     {
                         instrumentModel = uParam.value;
@@ -299,7 +299,7 @@ namespace pwiz.ProteowizardWrapper
 
         public bool IsMzWiffXml
         {
-            get { return IsProcessedBy("mzWiff"); }
+            get { return IsProcessedBy("mzWiff"); } // Not L10N
         }
 
         public bool IsAgilentFile
@@ -869,9 +869,9 @@ namespace pwiz.ProteowizardWrapper
                                       string analyzer, string detector)
         {
             Model = model != null ? model.Trim() : null;
-            Ionization = ionization != null ? ionization.Replace('\n',' ').Trim() : null;
-            Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : null;
-            Detector = detector != null ? detector.Replace('\n', ' ').Trim() : null;
+            Ionization = ionization != null ? ionization.Replace('\n',' ').Trim() : null; // Not L10N
+            Analyzer = analyzer != null ? analyzer.Replace('\n', ' ').Trim() : null; // Not L10N
+            Detector = detector != null ? detector.Replace('\n', ' ').Trim() : null; // Not L10N
         }
 
         public bool IsEmpty

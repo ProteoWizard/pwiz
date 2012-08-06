@@ -22,12 +22,12 @@ namespace pwiz.Skyline.Model.Hibernate
 {
     public static class Formats
     {
-        public const String RETENTION_TIME = "0.##";
-        public const String PEAK_FOUND_RATIO = "0.##";
-        public const String STANDARD_RATIO = "0.####";
-        public const String PEAK_AREA = "0";
-        public const String PEAK_AREA_NORMALIZED = "0.####%";
-        public const String OPT_PARAMETER = "0.#";
-        public const String CV = "0.#%";
+        public const String RETENTION_TIME = "0.##"; // Not L10N
+        public const String PEAK_FOUND_RATIO = "0.##"; // Not L10N
+        public const String STANDARD_RATIO = "0.####"; // Not L10N
+        public const String PEAK_AREA = "0"; // Not L10N
+        public const String PEAK_AREA_NORMALIZED = "0.####%"; // Not L10N
+        public const String OPT_PARAMETER = "0.#"; // Not L10N
+        public const String CV = "0.#%"; // Not L10N
     }
 }

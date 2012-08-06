@@ -25,6 +25,7 @@ using NHibernate;
 using NHibernate.Metadata;
 using NHibernate.Type;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
 {
@@ -83,45 +84,45 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             Table protein = new Table
                                 {
-                                    Name = "Protein",
+                                    Name = "Protein", // Not L10N
                                     PersistentClass = typeof(DbProtein),
                                     ResultsClass = typeof(DbProteinResult)
                                 };
             Table peptide = new Table
                                 {
-                                    Name = "Peptide",
+                                    Name = "Peptide", // Not L10N
                                     PersistentClass = typeof (DbPeptide),
                                     ResultsClass = typeof (DbPeptideResult),
                                     Parent = new ParentRelationship
                                                  {
-                                                     ChildrenName = "Peptides",
-                                                     ParentName = "Protein",
+                                                     ChildrenName = "Peptides", // Not L10N
+                                                     ParentName = "Protein", // Not L10N
                                                      ParentTable = protein
                                                  }
                                 };
             Table precursor = new Table
                                   {
-                                      Name = "Precursor",
+                                      Name = "Precursor", // Not L10N
                                       PersistentClass = typeof (DbPrecursor),
                                       ResultsClass = typeof (DbPrecursorResult),
                                       ResultsSummaryClass = typeof (DbPrecursorResultSummary),
                                       Parent = new ParentRelationship
                                                    {
-                                                       ChildrenName = "Precursors",
-                                                       ParentName = "Peptide",
+                                                       ChildrenName = "Precursors", // Not L10N
+                                                       ParentName = "Peptide", // Not L10N
                                                        ParentTable = peptide
                                                    }
                                   };
             Table transition = new Table
                                    {
-                                       Name = "Transition",
+                                       Name = "Transition", // Not L10N
                                        PersistentClass = typeof (DbTransition),
                                        ResultsClass = typeof (DbTransitionResult),
                                        ResultsSummaryClass = typeof (DbTransitionResultSummary),
                                        Parent = new ParentRelationship
                                                     {
-                                                        ChildrenName = "Transitions",
-                                                        ParentName = "Precursor",
+                                                        ChildrenName = "Transitions", // Not L10N
+                                                        ParentName = "Precursor", // Not L10N
                                                         ParentTable = precursor
                                                     }
                                    };
@@ -169,7 +170,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             IClassMetadata classMetadata = Schema.GetClassMetadata(table.PersistentClass);
             if (table.ResultsClass != null)
             {
-                TreeNode resultsNode = new TreeNode {Name = "Results", Text = ResultText(table, "Results")};
+                TreeNode resultsNode = new TreeNode { Name = "Results", Text = ResultText(table, "Results") }; // Not L10N
                 foreach (TreeNode treeNode in GetTreeNodes(Schema.GetClassMetadata(table.ResultsClass), identifier))
                 {
                     ((NodeData) treeNode.Tag).Results = true;
@@ -179,7 +180,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             }
             if (table.ResultsSummaryClass != null)
             {
-                TreeNode resultsSummaryNode = new TreeNode { Name = "ResultsSummary", Text = ResultText(table, "ResultsSummary") };
+                TreeNode resultsSummaryNode = new TreeNode
+                                                  {
+                                                      Name = "ResultsSummary", // Not L10N
+                                                      Text = ResultText(table, "ResultsSummary") // Not L10N
+                                                  }; 
                 foreach (TreeNode treeNode in GetTreeNodes(Schema.GetClassMetadata(table.ResultsSummaryClass), identifier))
                 {
                     ((NodeData)treeNode.Tag).ResultsSummary = true;
@@ -216,7 +221,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     label = RatioPropertyAccessor.GetDisplayName(label);
                 else if (AnnotationDef.IsAnnotationProperty(label))
                     label = AnnotationDef.GetColumnDisplayName(label);
-                else if (label.IndexOf("Ratio", StringComparison.Ordinal) != -1)
+                else if (label.IndexOf("Ratio", StringComparison.Ordinal) != -1) // Not L10N: Label is only used in this file. Never displayed.
                     lastRatioIndex = result.Count;
                 var columnInfo = CreateColumnInfo(identifier, classMetadata, propertyName);
                 if (columnInfo.IsHidden)
@@ -301,12 +306,12 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         /// </summary>
         public static Identifier ToResultsIdentifier(Identifier identifier)
         {
-            return ToResultsIdentifier(identifier, "Result");
+            return ToResultsIdentifier(identifier, "Result"); // Not L10N
         }
 
         public static Identifier ToResultsSummaryIdentifier(Identifier identifier)
         {
-            return ToResultsIdentifier(identifier, "ResultSummary");
+            return ToResultsIdentifier(identifier, "ResultSummary"); // Not L10N
         }
 
         private static Identifier ToResultsIdentifier(Identifier identifier, string suffix)
@@ -380,7 +385,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             // CONSIDER: Why have the base class?
             if (!(report is SimpleReport))
             {
-                throw new InvalidOperationException("Must be a SimpleReport");
+                throw new InvalidOperationException(Resources.ColumnSet_GetColumnInfos_Must_be_a_SimpleReport);
             }
             SimpleReport simpleReport = (SimpleReport) report;
             columnInfos = new List<NodeData>();
@@ -409,9 +414,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 }
                 if (table.Parent == null)
                 {
-                    string tableNames = string.Join(", ", (from reportTable in allTables
+                    string tableNames = string.Join(", ", (from reportTable in allTables // Not L10N
                                                            select reportTable.ToString()).ToArray());
-                    throw new InvalidDataException(string.Format("Unable to find table for {0}", tableNames));
+                    throw new InvalidDataException(string.Format(Resources.ColumnSet_GetColumnInfos_Unable_to_find_table_for__0_, tableNames));
                 }
                 table = table.Parent.ParentTable;
                 prefix = new Identifier(prefix, table.Name);

@@ -20,6 +20,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -62,9 +64,9 @@ namespace pwiz.Skyline.Model
             get
             {
                 if (!Begin.HasValue)
-                    return 'X';
+                    return 'X'; // Not L10N
                 int begin = Begin.Value;
-                return (begin == 0 ? '-' : _fastaSequence.Sequence[begin - 1]);
+                return (begin == 0 ? '-' : _fastaSequence.Sequence[begin - 1]); // Not L10N
             }
         }
 
@@ -75,7 +77,7 @@ namespace pwiz.Skyline.Model
                 if (!End.HasValue)
                     return 'X';
                 int end = End.Value;
-                return (end == _fastaSequence.Sequence.Length ? '-' : _fastaSequence.Sequence[end]);
+                return (end == _fastaSequence.Sequence.Length ? '-' : _fastaSequence.Sequence[end]); // Not L10N
             }
         }
 
@@ -257,7 +259,7 @@ namespace pwiz.Skyline.Model
             if (_fastaSequence == null)
             {
                 if (Begin.HasValue || End.HasValue)
-                    throw new InvalidDataException("Peptides without a protein sequence do not support the start and end properties.");
+                    throw new InvalidDataException(Resources.Peptide_Validate_Peptides_without_a_protein_sequence_do_not_support_the_start_and_end_properties);
 
                 // No FastaSequence checked the sequence, so check it hear.
                 FastaSequence.ValidateSequence(Sequence);
@@ -266,15 +268,16 @@ namespace pwiz.Skyline.Model
             {
                 // Otherwise, validate the peptide sequence against the group sequence
                 if (!Begin.HasValue || !End.HasValue)
-                    throw new InvalidDataException("Peptides from protein sequences must have start end end values.");
+                    throw new InvalidDataException(Resources.Peptide_Validate_Peptides_from_protein_sequences_must_have_start_and_end_values);
                 if (0 > Begin.Value || End.Value > _fastaSequence.Sequence.Length)
-                    throw new InvalidDataException("Peptide sequence exceeds the bounds of the protein sequence.");
+                    throw new InvalidDataException(Resources.Peptide_Validate_Peptide_sequence_exceeds_the_bounds_of_the_protein_sequence);
 
                 string sequenceCheck = _fastaSequence.Sequence.Substring(Begin.Value, End.Value - Begin.Value);
                 if (!Equals(Sequence, sequenceCheck))
                 {
-                    throw new InvalidDataException(string.Format("The peptide sequence {0} does not agree with the protein sequence {1} at ({2}:{3}).",
-                        Sequence, sequenceCheck, Begin.Value, End.Value));
+                    throw new InvalidDataException(
+                        string.Format(Resources.Peptide_Validate_The_peptide_sequence__0__does_not_agree_with_the_protein_sequence__1__at__2__3__,
+                                      Sequence, sequenceCheck, Begin.Value, End.Value));
                 }
             }
             // CONSIDER: Validate missed cleavages some day?
@@ -323,15 +326,14 @@ namespace pwiz.Skyline.Model
                 if (MissedCleavages == 0)
                     return Sequence;
                 else
-                    return string.Format("{0} (missed {1})", Sequence, MissedCleavages);
+                    return string.Format(TextUtil.SpaceSeparate(Sequence, Resources.Peptide_ToString_missed__0__), MissedCleavages);
             }
             else
             {
-                string format = "{0}.{1}.{2} [{3}, {4}]";
+                string format = "{0}.{1}.{2} [{3}, {4}]"; // Not L10N
                 if (MissedCleavages > 0)
-                    format = "{0}.{1}.{2} [{3}, {4}] (missed {5})";
-                return string.Format(format, PrevAA, Sequence, NextAA,
-                                     Begin.Value, End.Value - 1, MissedCleavages);
+                    format = TextUtil.SpaceSeparate(format, Resources.Peptide_ToString__missed__5__);
+                return string.Format(format, PrevAA, Sequence, NextAA, Begin.Value, End.Value - 1, MissedCleavages);
             }
         }
 

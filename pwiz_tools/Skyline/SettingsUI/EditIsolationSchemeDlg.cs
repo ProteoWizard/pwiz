@@ -26,7 +26,9 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -49,9 +51,11 @@ namespace pwiz.Skyline.SettingsUI
 
         public static class WindowMargin
         {
-            public const string NONE = "None";
-            public const string SYMMETRIC = "Symmetric";
-            public const string ASYMMETRIC = "Asymmetric";
+            public static string NONE { get { return Resources.WindowMargin_NONE_None; } }
+
+            public static string SYMMETRIC { get { return Resources.WindowMargin_SYMMETRIC_Symmetric; } } 
+
+            public static string ASYMMETRIC { get { return Resources.WindowMargin_ASYMMETRIC_Asymmetric; } }
         };
 
         public EditIsolationSchemeDlg(IEnumerable<IsolationScheme> existing)
@@ -151,7 +155,7 @@ namespace pwiz.Skyline.SettingsUI
                                                    IsolationScheme.SpecialHandlingType.MULTIPLEXED);
                     textWindowsPerScan.Text = _isolationScheme.WindowsPerScan.HasValue
                                                   ? _isolationScheme.WindowsPerScan.Value.ToString(CultureInfo.CurrentCulture)
-                                                  : "";
+                                                  : string.Empty;
                 }
             }
         }
@@ -192,18 +196,18 @@ namespace pwiz.Skyline.SettingsUI
             textRightPrecursorFilterMz.Visible = cbAsymIsolation.Checked;
             if (cbAsymIsolation.Checked)
             {
-                labelIsolationWidth.Text = "Isolation &widths:";
+                labelIsolationWidth.Text = Resources.EditIsolationSchemeDlg_UpdateIsolationWidths_Isolation_widths;
                 textPrecursorFilterMz.Width = textRightPrecursorFilterMz.Width;
                 double totalWidth;
                 double? halfWidth = null;
                 if (double.TryParse(textPrecursorFilterMz.Text, out totalWidth))
                     halfWidth = totalWidth/2;
                 textPrecursorFilterMz.Text = textRightPrecursorFilterMz.Text = 
-                    halfWidth.HasValue ? halfWidth.Value.ToString(CultureInfo.CurrentCulture) : "";
+                    halfWidth.HasValue ? halfWidth.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
             }
             else
             {
-                labelIsolationWidth.Text = "Isolation &width:";
+                labelIsolationWidth.Text = Resources.EditIsolationSchemeDlg_UpdateIsolationWidths_Isolation_width;
                 textPrecursorFilterMz.Width = textRightPrecursorFilterMz.Right - textPrecursorFilterMz.Left;
                 double leftWidth;
                 double? totalWidth = null;
@@ -216,7 +220,7 @@ namespace pwiz.Skyline.SettingsUI
                         totalWidth = leftWidth*2;
                 }
                 textPrecursorFilterMz.Text = 
-                    totalWidth.HasValue ? totalWidth.Value.ToString(CultureInfo.CurrentCulture) : "";
+                    totalWidth.HasValue ? totalWidth.Value.ToString(CultureInfo.CurrentCulture) : string.Empty;
             }
         }
 
@@ -232,7 +236,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(en => !ReferenceEquals(_isolationScheme, en) && Equals(name, en.Name)))
             {
-                helper.ShowTextBoxError(textName, "The isolation scheme named '{0}' already exists.", name);
+                helper.ShowTextBoxError(textName, Resources.EditIsolationSchemeDlg_OkDialog_The_isolation_scheme_named__0__already_exists, name);
                 return;
             }
 
@@ -270,7 +274,8 @@ namespace pwiz.Skyline.SettingsUI
                     if (errorCell != GridColumns.none)
                     {
                         _gridViewDriver.SelectCell((int) errorCell, row);
-                        MessageDlg.Show(this, string.Format("Specify {0} for isolation window.", _gridViewDriver.GetHeaderText((int) errorCell)));
+                        MessageDlg.Show(this, string.Format(Resources.EditIsolationSchemeDlg_OkDialog_Specify__0__for_isolation_window,
+                                                            _gridViewDriver.GetHeaderText((int) errorCell)));
                         _gridViewDriver.EditCell();
                         return;
                     }
@@ -300,7 +305,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (windowList.Count == 0)
                 {
                     _gridViewDriver.SelectCell((int)GridColumns.start, 0);
-                    MessageDlg.Show(this, "Specify Start and End values for at least one isolation window.");
+                    MessageDlg.Show(this, Resources.EditIsolationSchemeDlg_OkDialog_Specify_Start_and_End_values_for_at_least_one_isolation_window);
                     gridIsolationWindows.Focus();
                     _gridViewDriver.EditCell();
                     return;
@@ -326,7 +331,7 @@ namespace pwiz.Skyline.SettingsUI
                                 _gridViewDriver.Items.Add(new EditIsolationWindow(isolationWindow));
                             }
                             _gridViewDriver.SelectCell((int)GridColumns.target, row);
-                            MessageDlg.Show(this, "The selected target is not unique.");
+                            MessageDlg.Show(this, Resources.EditIsolationSchemeDlg_OkDialog_The_selected_target_is_not_unique);
                             gridIsolationWindows.Focus();
                             _gridViewDriver.EditCell();
                             return;
@@ -344,10 +349,10 @@ namespace pwiz.Skyline.SettingsUI
                         // If the previous window's end is >= to this window's end, it entirely contains this window.
                         string errorText = null;
                         if (windowList[row - 1].End >= windowList[row].End)
-                            errorText = "The selected isolation window is contained by the previous window.";
+                            errorText = Resources.EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_contained_by_the_previous_window;
                         // If the following window's start is <= the previous window's end, the current window is redundant.
                         else if (row < windowList.Count - 1 && windowList[row - 1].End >= windowList[row + 1].Start)
-                            errorText = "The selected isolation window is covered by windows before and after it.";
+                            errorText = Resources.EditIsolationSchemeDlg_OkDialog_The_selected_isolation_window_is_covered_by_windows_before_and_after_it;
                         if (errorText != null)
                         {
                             _gridViewDriver.Sort((int)GridColumns.start);
@@ -421,13 +426,15 @@ namespace pwiz.Skyline.SettingsUI
             {
                 gridIsolationWindows.Columns[(int) GridColumns.start_margin].Visible = true;
                 gridIsolationWindows.Columns[(int) GridColumns.end_margin].Visible = false;
-                gridIsolationWindows.Columns[(int) GridColumns.start_margin].HeaderText = "Margin";
+                gridIsolationWindows.Columns[(int) GridColumns.start_margin].HeaderText =
+                    Resources.EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Margin;
             }
             else
             {
                 gridIsolationWindows.Columns[(int) GridColumns.start_margin].Visible = true;
                 gridIsolationWindows.Columns[(int) GridColumns.end_margin].Visible = true;
-                gridIsolationWindows.Columns[(int) GridColumns.start_margin].HeaderText = "Start margin";
+                gridIsolationWindows.Columns[(int) GridColumns.start_margin].HeaderText =
+                    Resources.EditIsolationSchemeDlg_comboMargins_SelectedIndexChanged_Start_margin;
             }
         }
 
@@ -526,8 +533,7 @@ namespace pwiz.Skyline.SettingsUI
             private void GridView_DataError(object sender, DataGridViewDataErrorEventArgs e)
             {
                 SelectCell(e.ColumnIndex, e.RowIndex);
-                MessageDlg.Show(MessageParent,
-                                string.Format("{0} must be a valid number.", GetHeaderText(e.ColumnIndex)));
+                MessageDlg.Show(MessageParent, string.Format(Resources.GridViewDriver_GridView_DataError__0__must_be_a_valid_number, GetHeaderText(e.ColumnIndex)));
                 EditCell();     // Edit bad data
             }
 
@@ -557,9 +563,9 @@ namespace pwiz.Skyline.SettingsUI
 
                 // Paste multiple items.
                 Items.Clear();
+                windowList.Sort((a, b) => a.Start < b.Start ? -1 : 1);
                 foreach (var window in windowList)
-                    Items.Add(window);
-                Items.Sort(GridView.Columns[(int)GridColumns.start].HeaderText);
+                    Items.Add(window); 
 
                 // Set each empty End to the Start of the next window.
                 for (int i = 0; i < Items.Count - 1; i++)
@@ -653,12 +659,15 @@ namespace pwiz.Skyline.SettingsUI
                 if (!expectValue || listIndex >= values.Count || ((string)values[listIndex]).Trim().Length == 0)
                     return null;
                 double value;
-                if (!double.TryParse((string) values[listIndex], out value))
+                if (!double.TryParse((string)values[listIndex], out value))
+                {
                     throw new InvalidDataException(
-                        string.Format(@"An invalid number (""{0}"") was specified for {1}{2}.",
+                        string.Format(Resources.GridViewDriver_GetValue_An_invalid_number__0__was_specified_for__1__2__,
                                       Helpers.TruncateString((string) values[listIndex], 20),
                                       GridView.Columns[columnIndex].HeaderText,
-                                      lineNumber > 0 ? " on line " + lineNumber : ""));
+                                      lineNumber > 0 ? TextUtil.SpaceSeparate(string.Empty,string.Format(Resources.GridViewDriver_GetValue_on_line__0__,lineNumber))
+                                                    : string.Empty));
+                }
                 return value;
             }
 
@@ -671,7 +680,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(MessageParent, string.Format("On line {0}, {1}", lineNumber, x.Message));
+                    MessageDlg.Show(MessageParent, string.Format(Resources.GridViewDriver_ValidateRow_On_line__0__1__, lineNumber, x.Message));
                     return false;
                 }
                 return true;

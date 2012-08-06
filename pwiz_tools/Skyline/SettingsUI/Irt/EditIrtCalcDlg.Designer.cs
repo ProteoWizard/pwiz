@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditIrtCalcDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
@@ -68,6 +69,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).BeginInit();
             this.contextMenuAdd.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -77,127 +79,78 @@
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(9, 13);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(38, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Name:";
             // 
             // textCalculatorName
             // 
-            this.textCalculatorName.Location = new System.Drawing.Point(12, 29);
+            resources.ApplyResources(this.textCalculatorName, "textCalculatorName");
             this.textCalculatorName.Name = "textCalculatorName";
-            this.textCalculatorName.Size = new System.Drawing.Size(176, 20);
-            this.textCalculatorName.TabIndex = 1;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(9, 71);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(74, 13);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "iRT &database:";
             // 
             // textDatabase
             // 
-            this.textDatabase.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.textDatabase.Location = new System.Drawing.Point(12, 87);
+            resources.ApplyResources(this.textDatabase, "textDatabase");
             this.textDatabase.Name = "textDatabase";
-            this.textDatabase.Size = new System.Drawing.Size(254, 20);
-            this.textDatabase.TabIndex = 3;
             // 
             // btnBrowseDb
             // 
-            this.btnBrowseDb.Location = new System.Drawing.Point(12, 113);
+            resources.ApplyResources(this.btnBrowseDb, "btnBrowseDb");
             this.btnBrowseDb.Name = "btnBrowseDb";
-            this.btnBrowseDb.Size = new System.Drawing.Size(75, 23);
-            this.btnBrowseDb.TabIndex = 4;
-            this.btnBrowseDb.Text = "&Open...";
             this.btnBrowseDb.UseVisualStyleBackColor = true;
             this.btnBrowseDb.Click += new System.EventHandler(this.btnBrowseDb_Click);
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(9, 163);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(96, 13);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "&Standard peptides:";
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(297, 13);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 10;
-            this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(297, 43);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 11;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnCalibrate
             // 
-            this.btnCalibrate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCalibrate.Location = new System.Drawing.Point(285, 2);
+            resources.ApplyResources(this.btnCalibrate, "btnCalibrate");
             this.btnCalibrate.Name = "btnCalibrate";
-            this.btnCalibrate.Size = new System.Drawing.Size(75, 23);
-            this.btnCalibrate.TabIndex = 1;
-            this.btnCalibrate.Text = "Cali&brate...";
             this.btnCalibrate.UseVisualStyleBackColor = true;
             this.btnCalibrate.Click += new System.EventHandler(this.btnCalibrate_Click);
             // 
             // btnAddResults
             // 
-            this.btnAddResults.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnAddResults.Location = new System.Drawing.Point(297, 518);
+            resources.ApplyResources(this.btnAddResults, "btnAddResults");
             this.btnAddResults.Name = "btnAddResults";
-            this.btnAddResults.Size = new System.Drawing.Size(75, 23);
-            this.btnAddResults.TabIndex = 9;
-            this.btnAddResults.Text = "&Add...";
             this.btnAddResults.UseVisualStyleBackColor = true;
             this.btnAddResults.Click += new System.EventHandler(this.btnAddResults_Click);
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(-3, 15);
+            resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(100, 13);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "&Measured peptides:";
             // 
             // labelNumPeptides
             // 
-            this.labelNumPeptides.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.labelNumPeptides.AutoSize = true;
-            this.labelNumPeptides.Location = new System.Drawing.Point(9, 523);
+            resources.ApplyResources(this.labelNumPeptides, "labelNumPeptides");
             this.labelNumPeptides.Name = "labelNumPeptides";
-            this.labelNumPeptides.Size = new System.Drawing.Size(56, 13);
-            this.labelNumPeptides.TabIndex = 8;
-            this.labelNumPeptides.Text = "0 peptides";
             // 
             // btnCreateDb
             // 
-            this.btnCreateDb.Location = new System.Drawing.Point(93, 113);
+            resources.ApplyResources(this.btnCreateDb, "btnCreateDb");
             this.btnCreateDb.Name = "btnCreateDb";
-            this.btnCreateDb.Size = new System.Drawing.Size(75, 23);
-            this.btnCreateDb.TabIndex = 5;
-            this.btnCreateDb.Text = "&Create...";
             this.btnCreateDb.UseVisualStyleBackColor = true;
             this.btnCreateDb.Click += new System.EventHandler(this.btnCreateDb_Click);
             // 
@@ -208,49 +161,37 @@
             this.addSpectralLibraryContextMenuItem,
             this.addIRTDatabaseContextMenuItem});
             this.contextMenuAdd.Name = "contextMenuAdd";
-            this.contextMenuAdd.Size = new System.Drawing.Size(190, 70);
+            resources.ApplyResources(this.contextMenuAdd, "contextMenuAdd");
             // 
             // addResultsContextMenuItem
             // 
             this.addResultsContextMenuItem.Name = "addResultsContextMenuItem";
-            this.addResultsContextMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.addResultsContextMenuItem.Text = "Add &Results...";
+            resources.ApplyResources(this.addResultsContextMenuItem, "addResultsContextMenuItem");
             this.addResultsContextMenuItem.Click += new System.EventHandler(this.addResultsContextMenuItem_Click);
             // 
             // addSpectralLibraryContextMenuItem
             // 
             this.addSpectralLibraryContextMenuItem.Name = "addSpectralLibraryContextMenuItem";
-            this.addSpectralLibraryContextMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.addSpectralLibraryContextMenuItem.Text = "Add Spectral &Library...";
+            resources.ApplyResources(this.addSpectralLibraryContextMenuItem, "addSpectralLibraryContextMenuItem");
             this.addSpectralLibraryContextMenuItem.Click += new System.EventHandler(this.addSpectralLibraryContextMenuItem_Click);
             // 
             // addIRTDatabaseContextMenuItem
             // 
             this.addIRTDatabaseContextMenuItem.Name = "addIRTDatabaseContextMenuItem";
-            this.addIRTDatabaseContextMenuItem.Size = new System.Drawing.Size(189, 22);
-            this.addIRTDatabaseContextMenuItem.Text = "Add iRT &Database...";
+            resources.ApplyResources(this.addIRTDatabaseContextMenuItem, "addIRTDatabaseContextMenuItem");
             this.addIRTDatabaseContextMenuItem.Click += new System.EventHandler(this.addIRTDatabaseContextMenuItem_Click);
             // 
             // btnPeptides
             // 
-            this.btnPeptides.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnPeptides.Location = new System.Drawing.Point(204, 2);
+            resources.ApplyResources(this.btnPeptides, "btnPeptides");
             this.btnPeptides.Name = "btnPeptides";
-            this.btnPeptides.Size = new System.Drawing.Size(75, 23);
-            this.btnPeptides.TabIndex = 0;
-            this.btnPeptides.Text = "Peptides...";
             this.btnPeptides.UseVisualStyleBackColor = true;
-            this.btnPeptides.Visible = false;
             this.btnPeptides.Click += new System.EventHandler(this.btnPeptides_Click);
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.Location = new System.Drawing.Point(12, 179);
+            resources.ApplyResources(this.splitContainer1, "splitContainer1");
             this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
             // 
             // splitContainer1.Panel1
             // 
@@ -262,16 +203,11 @@
             this.splitContainer1.Panel2.Controls.Add(this.btnPeptides);
             this.splitContainer1.Panel2.Controls.Add(this.label4);
             this.splitContainer1.Panel2.Controls.Add(this.btnCalibrate);
-            this.splitContainer1.Size = new System.Drawing.Size(360, 333);
-            this.splitContainer1.SplitterDistance = 148;
-            this.splitContainer1.TabIndex = 7;
             this.splitContainer1.TabStop = false;
             // 
             // gridViewStandard
             // 
-            this.gridViewStandard.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.gridViewStandard, "gridViewStandard");
             this.gridViewStandard.AutoGenerateColumns = false;
             this.gridViewStandard.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -295,7 +231,6 @@
             dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.gridViewStandard.DefaultCellStyle = dataGridViewCellStyle4;
-            this.gridViewStandard.Location = new System.Drawing.Point(0, 0);
             this.gridViewStandard.Name = "gridViewStandard";
             dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
@@ -305,15 +240,13 @@
             dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridViewStandard.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
-            this.gridViewStandard.Size = new System.Drawing.Size(360, 148);
-            this.gridViewStandard.TabIndex = 0;
             // 
             // columnStandardSequence
             // 
             this.columnStandardSequence.DataPropertyName = "PeptideModSeq";
             dataGridViewCellStyle2.NullValue = null;
             this.columnStandardSequence.DefaultCellStyle = dataGridViewCellStyle2;
-            this.columnStandardSequence.HeaderText = "Modified Sequence";
+            resources.ApplyResources(this.columnStandardSequence, "columnStandardSequence");
             this.columnStandardSequence.Name = "columnStandardSequence";
             // 
             // columnStandardIrt
@@ -323,14 +256,12 @@
             dataGridViewCellStyle3.Format = "N2";
             dataGridViewCellStyle3.NullValue = null;
             this.columnStandardIrt.DefaultCellStyle = dataGridViewCellStyle3;
-            this.columnStandardIrt.HeaderText = "iRT Value";
+            resources.ApplyResources(this.columnStandardIrt, "columnStandardIrt");
             this.columnStandardIrt.Name = "columnStandardIrt";
             // 
             // gridViewLibrary
             // 
-            this.gridViewLibrary.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.gridViewLibrary, "gridViewLibrary");
             this.gridViewLibrary.AutoGenerateColumns = false;
             this.gridViewLibrary.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -354,10 +285,7 @@
             dataGridViewCellStyle9.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle9.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.gridViewLibrary.DefaultCellStyle = dataGridViewCellStyle9;
-            this.gridViewLibrary.Location = new System.Drawing.Point(0, 31);
             this.gridViewLibrary.Name = "gridViewLibrary";
-            this.gridViewLibrary.Size = new System.Drawing.Size(360, 150);
-            this.gridViewLibrary.TabIndex = 3;
             this.gridViewLibrary.RowsAdded += new System.Windows.Forms.DataGridViewRowsAddedEventHandler(this.gridViewLibrary_RowsAdded);
             this.gridViewLibrary.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridViewLibrary_RowsRemoved);
             // 
@@ -366,7 +294,7 @@
             this.columnLibrarySequence.DataPropertyName = "PeptideModSeq";
             dataGridViewCellStyle7.NullValue = null;
             this.columnLibrarySequence.DefaultCellStyle = dataGridViewCellStyle7;
-            this.columnLibrarySequence.HeaderText = "Modified Sequence";
+            resources.ApplyResources(this.columnLibrarySequence, "columnLibrarySequence");
             this.columnLibrarySequence.Name = "columnLibrarySequence";
             // 
             // columnLibraryIrt
@@ -376,16 +304,15 @@
             dataGridViewCellStyle8.Format = "N2";
             dataGridViewCellStyle8.NullValue = null;
             this.columnLibraryIrt.DefaultCellStyle = dataGridViewCellStyle8;
-            this.columnLibraryIrt.HeaderText = "iRT Value";
+            resources.ApplyResources(this.columnLibraryIrt, "columnLibraryIrt");
             this.columnLibraryIrt.Name = "columnLibraryIrt";
             // 
             // EditIrtCalcDlg
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(384, 554);
             this.Controls.Add(this.btnCreateDb);
             this.Controls.Add(this.labelNumPeptides);
             this.Controls.Add(this.btnAddResults);
@@ -400,17 +327,15 @@
             this.Controls.Add(this.splitContainer1);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(370, 500);
             this.Name = "EditIrtCalcDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit iRT Calculator";
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceLibrary)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSourceStandard)).EndInit();
             this.contextMenuAdd.ResumeLayout(false);
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridViewStandard)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridViewLibrary)).EndInit();

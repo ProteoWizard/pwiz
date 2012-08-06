@@ -20,8 +20,11 @@ using System;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Common.Graph;
+using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -33,7 +36,7 @@ namespace pwiz.Skyline.EditUI
         public CopyGraphDataToolStripMenuItem(ZedGraphControl zedGraphControl)
         {
             ZedGraphControl = zedGraphControl;
-            Text = "Copy Data";
+            Text = Resources.CopyGraphDataToolStripMenuItem_CopyGraphDataToolStripMenuItem_Copy_Data;
             Click += CopyGraphDataToolStripMenuItem_Click;
         }
         
@@ -61,7 +64,7 @@ namespace pwiz.Skyline.EditUI
             }
             catch (ExternalException)
             {
-                MessageBox.Show(ClipboardHelper.GetOpenClipboardMessage("Failed setting data to clipboard."), Program.Name);
+                MessageBox.Show(ClipboardHelper.GetOpenClipboardMessage(Resources.CopyGraphDataToolStripMenuItem_CopyGraphData_Failed_setting_data_to_clipboard), Program.Name);
             }
         }
     }

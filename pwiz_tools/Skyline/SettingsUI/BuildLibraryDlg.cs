@@ -29,6 +29,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -54,7 +55,7 @@ namespace pwiz.Skyline.SettingsUI
         private BiblioSpecLiteBuilder _builder;
 
         private string[] _inputFileNames = new string[0];
-        private string _dirInputRoot = "";
+        private string _dirInputRoot = string.Empty;
 
         private readonly MessageBoxHelper _helper;
 
@@ -68,7 +69,7 @@ namespace pwiz.Skyline.SettingsUI
 
             textName.Focus();
             textPath.Text = Settings.Default.LibraryDirectory;
-            comboAction.SelectedItem = LibraryBuildAction.Create.ToString();
+            comboAction.SelectedItem = LibraryBuildAction.Create.GetLocalizedString();
             textCutoff.Text = Settings.Default.LibraryResultCutOff.ToString(CultureInfo.CurrentCulture);
             textAuthority.Text = Settings.Default.LibraryAuthority;
 
@@ -121,18 +122,18 @@ namespace pwiz.Skyline.SettingsUI
             string outputPath = textPath.Text;
             if (string.IsNullOrEmpty(outputPath))
             {
-                _helper.ShowTextBoxError(textPath, "You must specify an output file path.", outputPath);
+                _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_You_must_specify_an_output_file_path, outputPath);
                 return false;                
             }
             if (Directory.Exists(outputPath))
             {
-                _helper.ShowTextBoxError(textPath, "The output path {0} is a directory.  You must specify a file path.", outputPath);
+                _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_The_output_path__0__is_a_directory_You_must_specify_a_file_path, outputPath);
                 return false;                
             }
             string outputDir = Path.GetDirectoryName(outputPath);
             if (string.IsNullOrEmpty(outputDir) || !Directory.Exists(outputDir))
             {
-                _helper.ShowTextBoxError(textPath, "The directory {0} does not exist.", outputDir);
+                _helper.ShowTextBoxError(textPath, Resources.BuildLibraryDlg_ValidateBuilder_The_directory__0__does_not_exist, outputDir);
                 return false;
             }
             if (!outputPath.EndsWith(BiblioSpecLiteSpec.EXT))
@@ -151,17 +152,16 @@ namespace pwiz.Skyline.SettingsUI
                 authority = LibraryAuthority;
                 if (Uri.CheckHostName(authority) != UriHostNameType.Dns)
                 {
-                    _helper.ShowTextBoxError(e, textAuthority,
-                                             "The lab authority name {0} is not valid.  This should look like an internet server address (e.g. mylab.myu.edu), and be unlikely to be used by any other lab, but need not refer to an actual server.",
+                    _helper.ShowTextBoxError(e, textAuthority, Resources.BuildLibraryDlg_ValidateBuilder_The_lab_authority_name__0__is_not_valid_This_should_look_like_an_internet_server_address_e_g_mylab_myu_edu_and_be_unlikely_to_be_used_by_any_other_lab_but_need_not_refer_to_an_actual_server,
                                              authority);
                     return false;
                 }
                 Settings.Default.LibraryAuthority = authority;
 
                 id = textID.Text;
-                if (!Regex.IsMatch(id, @"\w[0-9A-Za-z_\-]*"))
+                if (!Regex.IsMatch(id, @"\w[0-9A-Za-z_\-]*")) // Not L10N: Easier to keep IDs restricted to these values.
                 {
-                    _helper.ShowTextBoxError(e, textID, "The library identifier {0} is not valid.  Identifiers start with a letter, number or underscore, and contain only letters, numbers, underscores and dashes.", id);
+                    _helper.ShowTextBoxError(e, textID, Resources.BuildLibraryDlg_ValidateBuilder_The_library_identifier__0__is_not_valid_Identifiers_start_with_a_letter_number_or_underscore_and_contain_only_letters_numbers_underscores_and_dashes, id);
                     return false;
                 }
             }
@@ -194,18 +194,18 @@ namespace pwiz.Skyline.SettingsUI
             {
                 try
                 {
-                    outputPath = Path.GetDirectoryName(outputPath) ?? "";                
+                    outputPath = Path.GetDirectoryName(outputPath) ?? string.Empty;                
                 }
                 catch (Exception)
                 {
-                    outputPath = "";
+                    outputPath = string.Empty;
                 }
             }
-            string id = (name.Length == 0 ? "" : Helpers.MakeId(textName.Text));
+            string id = (name.Length == 0 ? string.Empty : Helpers.MakeId(textName.Text));
             textID.Text = id;
             textPath.Text = id.Length == 0
                                 ? outputPath
-                                : Path.Combine(outputPath, id + ".blib");
+                                : Path.Combine(outputPath, id + BiblioSpecLiteSpec.EXT);
         }
 
         private void btnBrowse_Click(object sender, EventArgs e)
@@ -217,7 +217,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                fileName = "";
+                fileName = string.Empty;
             }
 
             SaveFileDialog dlg = new SaveFileDialog
@@ -226,11 +226,7 @@ namespace pwiz.Skyline.SettingsUI
                 FileName = fileName,                
                 OverwritePrompt = true,
                 DefaultExt = BiblioSpecLiteSpec.EXT,
-                Filter = string.Join("|", new []
-                    {
-                        "BiblioSpec Library (*" + BiblioSpecLiteSpec.EXT + ")|*" + BiblioSpecLiteSpec.EXT,
-                        "All Files (*.*)|*.*"
-                    })
+                Filter = TextUtil.FileDialogFiltersAll(BiblioSpecLiteSpec.FILTER_BLIB)
             };
 
             if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -265,7 +261,7 @@ namespace pwiz.Skyline.SettingsUI
                 panelProperties.Visible = false;
                 panelFiles.Visible = true;
                 btnPrevious.Enabled = true;
-                btnNext.Text = "Finish";
+                btnNext.Text = Resources.BuildLibraryDlg_OkWizardPage_Finish;
                 AcceptButton = btnNext;
                 btnNext.Enabled = (listInputFiles.CheckedItems.Count > 0);
             }            
@@ -277,7 +273,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 panelFiles.Visible = false;
                 panelProperties.Visible = true;
-                btnNext.Text = "Next >";
+                btnNext.Text = Resources.BuildLibraryDlg_btnPrevious_Click__Next__;
                 btnNext.Enabled = true;
                 btnNext.DialogResult = DialogResult.None;
                 AcceptButton = null;
@@ -289,22 +285,19 @@ namespace pwiz.Skyline.SettingsUI
         {
             var wildExts = new string[RESULTS_EXTS.Length];
             for (int i = 0; i < wildExts.Length; i++)
-                wildExts[i] = "*" + RESULTS_EXTS[i];
+                wildExts[i] = "*" + RESULTS_EXTS[i]; // Not L10N
 
             OpenFileDialog dlg = new OpenFileDialog
             {
-                Title = "Add Input Files",
+                Title = Resources.BuildLibraryDlg_btnAddFile_Click_Add_Input_Files,
                 InitialDirectory = Settings.Default.LibraryResultsDirectory,
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
                 Multiselect = true,
                 DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = string.Join("|", new[]
-                    {
-                        "Matched Peptides (" + string.Join(",", wildExts) + ")|" + string.Join(";", wildExts),
-                        "Spectral Libraries (*" + BiblioSpecLiteSpec.EXT + ")|*" + BiblioSpecLiteSpec.EXT,
-                        "All Files (*.*)|*.*"
-                    })
+                Filter = TextUtil.FileDialogFiltersAll(
+                    Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(",", wildExts) + ")|" + string.Join(";", wildExts), // Not L10N
+                    BiblioSpecLiteSpec.FILTER_BLIB)
             };
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
@@ -318,7 +311,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             FolderBrowserDialog dlg = new FolderBrowserDialog
             {
-                Description = "Add Input Directory",
+                Description = Resources.BuildLibraryDlg_btnAddDirectory_Click_Add_Input_Directory, 
                 ShowNewFolderButton = false,
                 SelectedPath = Settings.Default.LibraryResultsDirectory
             };
@@ -334,7 +327,7 @@ namespace pwiz.Skyline.SettingsUI
         {
             var longWaitDlg = new LongWaitDlg
             {
-                Text = "Find Input Files",
+                Text = Resources.BuildLibraryDlg_AddDirectory_Find_Input_Files,
             };
 
             try
@@ -345,7 +338,10 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception x)
             {
-                MessageBox.Show(this, string.Format("An error occurred reading files in the directory {0}.\n{1}", dirPath, x.Message), Program.Name);
+                var message = TextUtil.LineSeparate(string.Format(Resources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__,
+                                                                  dirPath),
+                                                    x.Message);
+                MessageBox.Show(this, message, Program.Name);
             }            
         }
 
@@ -358,7 +354,8 @@ namespace pwiz.Skyline.SettingsUI
         private static void FindInputFiles(string dir, ICollection<string> inputFiles,
             ILongWaitBroker broker, double start, double stop)
         {
-            broker.Message = string.Format("Finding library input files in\n{0}", PathEx.ShortenPathForDisplay(dir));
+            broker.Message = TextUtil.LineSeparate(Resources.BuildLibraryDlg_FindInputFiles_Finding_library_input_files_in,
+                                                   PathEx.ShortenPathForDisplay(dir));
 
             string[] fileNames = Directory.GetFiles(dir);
             Array.Sort(fileNames);
@@ -418,9 +415,15 @@ namespace pwiz.Skyline.SettingsUI
             if (filesError.Count > 0)
             {
                 if (filesError.Count == 1)
-                    MessageBox.Show(this, string.Format("The file {0} is not a valid library input file.", filesError[0]), Program.Name);
+                    MessageBox.Show(this, string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]), Program.Name);
                 else
-                    MessageBox.Show(this, string.Format("The following files are not valid library input files:\n\n\t{0}", string.Join("\n\t", filesError.ToArray())));
+                {
+                    var message = TextUtil.SpaceSeparate(Resources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
+                                  string.Empty,
+                                  "\t" + string.Join("\n\t", filesError.ToArray())); // Not L10N
+                    
+                    MessageBox.Show(this,message);
+                }
             }
         }
 
@@ -451,7 +454,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     string baseName = Path.GetFileNameWithoutExtension(textPath.Text);
                     string redundantName = baseName + BiblioSpecLiteSpec.EXT_REDUNDANT;
-                    existsRedundant = File.Exists(Path.Combine(Path.GetDirectoryName(textPath.Text) ?? "", redundantName));
+                    existsRedundant = File.Exists(Path.Combine(Path.GetDirectoryName(textPath.Text) ?? string.Empty, redundantName));
                 }
                 catch (IOException)
                 {
@@ -468,7 +471,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (comboAction.Enabled)
                 {
-                    comboAction.SelectedItem = LibraryBuildAction.Create.ToString();
+                    comboAction.SelectedItem = LibraryBuildAction.Create.GetLocalizedString();
                     comboAction.Enabled = false;
                 }
             }
@@ -476,13 +479,13 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboAction_SelectedIndexChanged(object sender, EventArgs e)
         {
-            bool append = Equals(comboAction.SelectedItem, LibraryBuildAction.Append.ToString());
+            bool append = Equals(comboAction.SelectedItem, LibraryBuildAction.Append.GetLocalizedString());
             textAuthority.Enabled = !append;
             textID.Enabled = !append;
             if (append)
             {
-                textAuthority.Text = "";
-                textID.Text = "";
+                textAuthority.Text = string.Empty;
+                textID.Text = string.Empty;
                 cbKeepRedundant.Checked = true;
             }
             else

@@ -35,9 +35,6 @@ namespace pwiz.Skyline.SettingsUI
     public class SettingsListComboDriver<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
-        private const string ADD_ITEM = "<Add...>";
-        private const string EDIT_LIST_ITEM = "<Edit list...>";
-
         private int _selectedIndexLast;
 
         public SettingsListComboDriver(ComboBox combo, SettingsList<TItem> list)
@@ -71,11 +68,11 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 // If nothing was added, add a blank to avoid starting with "Add..." selected.
                 if (Combo.Items.Count == 0)
-                    Combo.Items.Add("");
+                    Combo.Items.Add(string.Empty);
                 if (IsVisibleEditting)
                 {
-                    Combo.Items.Add(ADD_ITEM);
-                    Combo.Items.Add(EDIT_LIST_ITEM);
+                    Combo.Items.Add(Resources.SettingsListComboDriver_Add);
+                    Combo.Items.Add(Resources.SettingsListComboDriver_Edit_list);
                 }
                 if (Combo.SelectedIndex < 0)
                     Combo.SelectedIndex = 0;
@@ -106,12 +103,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public bool AddItemSelected()
         {
-            return Equals(ADD_ITEM, SelectedString);
+            return Equals(Resources.SettingsListComboDriver_Add, SelectedString);
         }
 
         public bool EditListSelected()
         {
-            return Equals(EDIT_LIST_ITEM, SelectedString);
+            return Equals(Resources.SettingsListComboDriver_Edit_list, SelectedString);
         }
 
         public bool SelectedIndexChangedEvent(object sender, EventArgs e)

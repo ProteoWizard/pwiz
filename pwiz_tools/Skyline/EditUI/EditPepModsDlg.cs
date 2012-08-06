@@ -35,15 +35,14 @@ namespace pwiz.Skyline.EditUI
     {
         private const int VSPACE = 3;
         private const int HSPACE = 10;
-        public const string ADD_ITEM = "<Add...>";
-        public const string EDIT_LIST_ITEM = "<Edit list...>";
 
+        //TODO: Not L10N?
         private const string PREFIX_STATIC_NAME = "comboStatic";
         private const string PREFIX_HEAVY_NAME = "comboHeavy";
 
         private const string PREFIX_LABEL_NAME = "labelHeavy1";
 
-        private static readonly Regex REGEX_HEAVY_NAME = new Regex(PREFIX_HEAVY_NAME + @"(\d+)_(\d+)");
+        private static readonly Regex REGEX_HEAVY_NAME = new Regex(PREFIX_HEAVY_NAME + @"(\d+)_(\d+)"); // Not L10N
 
         private readonly List<ComboBox> _listComboStatic = new List<ComboBox>();
         private readonly List<int> _listSelectedIndexStatic = new List<int>();
@@ -54,22 +53,22 @@ namespace pwiz.Skyline.EditUI
 
         public static string GetStaticName(int row)
         {
-            return string.Format("{0}{1}", PREFIX_STATIC_NAME, row);
+            return string.Format("{0}{1}", PREFIX_STATIC_NAME, row); // Not L10N
         }
 
         public static string GetHeavyName(int row, int col)
         {
-            return string.Format("{0}{1}_{2}", PREFIX_HEAVY_NAME, row, col);
+            return string.Format("{0}{1}_{2}", PREFIX_HEAVY_NAME, row, col); // Not L10N
         }
 
         private static string GetIsotopeLabelName(int col)
         {
-            return string.Format("{0}{1}", PREFIX_LABEL_NAME, col);
+            return string.Format("{0}{1}", PREFIX_LABEL_NAME, col); // Not L10N
         }
 
         private static string GetIsotopeLabelText(IsotopeLabelType labelType)
         {
-            return string.Format("Isotope {0}:", labelType);
+            return string.Format(Resources.EditPepModsDlg_GetIsotopeLabelText_Isotope__0__, labelType);
         }
 
         public EditPepModsDlg(SrmSettings settings, PeptideDocNode nodePeptide)
@@ -141,7 +140,7 @@ namespace pwiz.Skyline.EditUI
                     int top = Top = comboStaticLast.Bottom + VSPACE;
                     panelMain.Controls.Add(labelAALast = new Label
                     {
-                        Name = ("labelAA" + row),
+                        Name = ("labelAA" + row), // Not L10N
                         AutoSize = true,
                         Font = labelAA1.Font,
                         Left = labelAA1.Left,
@@ -262,7 +261,7 @@ namespace pwiz.Skyline.EditUI
                 int indexHeavyList = _listLabelTypeHeavy.IndexOf(type);
                 combo = _listListComboHeavy[indexHeavyList][indexAA];
             }
-            combo.SelectedItem = ADD_ITEM;
+            combo.SelectedItem = Resources.SettingsListComboDriver_Add;
         }
         
         private static StaticModList StaticList { get { return Settings.Default.StaticModList; } }
@@ -314,7 +313,7 @@ namespace pwiz.Skyline.EditUI
                     explicitName = listExplicitMods[indexMod].Modification.Name;
             }
 
-            List<string> listItems = new List<string> {""};
+            List<string> listItems = new List<string> {string.Empty};
             foreach (StaticMod mod in listSettingsMods)
             {
                 if (!mod.IsMod(aa, indexAA, seq.Length))
@@ -340,8 +339,8 @@ namespace pwiz.Skyline.EditUI
                         iSelected = listItems.Count - 1;
                 }
             }
-            listItems.Add(ADD_ITEM);
-            listItems.Add(EDIT_LIST_ITEM);
+            listItems.Add(Resources.SettingsListComboDriver_Add);
+            listItems.Add(Resources.SettingsListComboDriver_Edit_list);
             if (!EqualsItems(combo, listItems))
             {
                 combo.Items.Clear();
@@ -371,13 +370,13 @@ namespace pwiz.Skyline.EditUI
         private static bool AddItemSelected(ComboBox combo)
         {
             var selectedItem = combo.SelectedItem;
-            return (selectedItem != null && ADD_ITEM == selectedItem.ToString());
+            return (selectedItem != null && Resources.SettingsListComboDriver_Add == selectedItem.ToString());
         }
 
         private static bool EditListSelected(ComboBox combo)
         {
             var selectedItem = combo.SelectedItem;
-            return (selectedItem != null && EDIT_LIST_ITEM == combo.SelectedItem.ToString());
+            return (selectedItem != null && Resources.SettingsListComboDriver_Edit_list == combo.SelectedItem.ToString());
         }
 
         public void SelectModification(IsotopeLabelType labelType, int indexAA, string modName)

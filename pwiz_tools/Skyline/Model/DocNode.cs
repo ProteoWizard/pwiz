@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -110,7 +111,7 @@ namespace pwiz.Skyline.Model
 
         public virtual string GetDisplayText(DisplaySettings settings)
         {
-            return "";
+            return string.Empty;
         }
 
         /// <summary>
@@ -450,7 +451,7 @@ namespace pwiz.Skyline.Model
             // Make sure the index does not exceed the expected count at the desired level
             int expected = GetCount(depth);
             if (expected <= index)
-                throw new IndexOutOfRangeException(string.Format("Index {0} exceeds length {1}", index, expected));
+                throw new IndexOutOfRangeException(string.Format(Resources.DocNodeParent_GetPathTo_Index__0__exceeds_length__1__, index, expected));
 
             // Descend into the child containing the desired node.
             depth--;
@@ -468,8 +469,8 @@ namespace pwiz.Skyline.Model
 
             // This means the node count stack at this level is inconsistent with
             // its children.
-            throw new IndexOutOfRangeException(string.Format("Node reported {0} descendants at depth {1}, but found only {2}.",
-                expected, depth, count));
+            throw new IndexOutOfRangeException(string.Format(Resources.DocNodeParent_GetPathTo_Node_reported__0__descendants_at_depth__1__but_found_only__2__,
+                                                             expected, depth, count));
         }
 
         /// <summary>
@@ -574,7 +575,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent InsertAll(Identity idBefore, IEnumerable<DocNode> childrenAdd, bool after)
         {
             if (Children == null)
-                throw new InvalidOperationException("Invalid operation InsertAll before children set.");
+                throw new InvalidOperationException(Resources.DocNodeParent_InsertAll_Invalid_operation_InsertAll_before_children_set);
 
             List<DocNode> childrenNew = new List<DocNode>(Children);
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
@@ -744,7 +745,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent ReplaceChild(DocNode childReplace)
         {
             if (Children == null)
-                throw new InvalidOperationException("Invalid operation ReplaceChild before children set.");
+                throw new InvalidOperationException(Resources.DocNodeParent_ReplaceChild_Invalid_operation_ReplaceChild_before_children_set);
 
             DocNode[] childrenNew = new DocNode[Children.Count];
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
@@ -788,7 +789,7 @@ namespace pwiz.Skyline.Model
         public DocNodeParent RemoveChild(DocNode childRemove)
         {
             if (Children == null)
-                throw new InvalidOperationException("Invalid operation RemoveChild before children set.");
+                throw new InvalidOperationException(Resources.DocNodeParent_RemoveChild_Invalid_operation_RemoveChild_before_children_set);
 
             List<DocNode> childrenNew = new List<DocNode>();
             List<int> nodeCountStack = new List<int>(_nodeCountStack);

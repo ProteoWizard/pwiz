@@ -39,19 +39,13 @@
             // 
             // NotificationCloseButton
             // 
-            this.NotificationCloseButton.BackgroundImage = ((System.Drawing.Image)(resources.GetObject("NotificationCloseButton.BackgroundImage")));
-            this.NotificationCloseButton.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
+            resources.ApplyResources(this.NotificationCloseButton, "NotificationCloseButton");
             this.NotificationCloseButton.FlatAppearance.BorderColor = System.Drawing.Color.Lavender;
             this.NotificationCloseButton.FlatAppearance.BorderSize = 0;
             this.NotificationCloseButton.FlatAppearance.MouseDownBackColor = System.Drawing.Color.CornflowerBlue;
             this.NotificationCloseButton.FlatAppearance.MouseOverBackColor = System.Drawing.Color.LightSteelBlue;
-            this.NotificationCloseButton.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.NotificationCloseButton.ForeColor = System.Drawing.Color.Transparent;
-            this.NotificationCloseButton.Location = new System.Drawing.Point(137, 3);
-            this.NotificationCloseButton.Margin = new System.Windows.Forms.Padding(0);
             this.NotificationCloseButton.Name = "NotificationCloseButton";
-            this.NotificationCloseButton.Size = new System.Drawing.Size(16, 16);
-            this.NotificationCloseButton.TabIndex = 2;
             this.NotificationCloseButton.UseVisualStyleBackColor = false;
             this.NotificationCloseButton.Click += new System.EventHandler(this.NotificationCloseButton_Click);
             // 
@@ -60,53 +54,36 @@
             this.TextPanel.Controls.Add(this.NotificationMessage);
             this.TextPanel.Controls.Add(this.LibraryNameLabel);
             this.TextPanel.Controls.Add(this.ViewLibraryLink);
-            this.TextPanel.Location = new System.Drawing.Point(24, 32);
+            resources.ApplyResources(this.TextPanel, "TextPanel");
             this.TextPanel.Name = "TextPanel";
-            this.TextPanel.Size = new System.Drawing.Size(119, 53);
-            this.TextPanel.TabIndex = 3;
             // 
             // NotificationMessage
             // 
-            this.NotificationMessage.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
-            this.NotificationMessage.AutoSize = true;
+            resources.ApplyResources(this.NotificationMessage, "NotificationMessage");
             this.NotificationMessage.ForeColor = System.Drawing.Color.Navy;
-            this.NotificationMessage.Location = new System.Drawing.Point(0, 16);
             this.NotificationMessage.Name = "NotificationMessage";
-            this.NotificationMessage.Size = new System.Drawing.Size(84, 13);
-            this.NotificationMessage.TabIndex = 7;
-            this.NotificationMessage.Text = "build completed.";
             // 
             // LibraryNameLabel
             // 
-            this.LibraryNameLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.LibraryNameLabel, "LibraryNameLabel");
             this.LibraryNameLabel.AutoEllipsis = true;
             this.LibraryNameLabel.ForeColor = System.Drawing.Color.Navy;
-            this.LibraryNameLabel.Location = new System.Drawing.Point(0, 0);
             this.LibraryNameLabel.Name = "LibraryNameLabel";
-            this.LibraryNameLabel.Size = new System.Drawing.Size(118, 16);
-            this.LibraryNameLabel.TabIndex = 6;
-            this.LibraryNameLabel.Text = "label1";
             // 
             // ViewLibraryLink
             // 
-            this.ViewLibraryLink.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.ViewLibraryLink, "ViewLibraryLink");
             this.ViewLibraryLink.AutoEllipsis = true;
-            this.ViewLibraryLink.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.ViewLibraryLink.Location = new System.Drawing.Point(0, 38);
             this.ViewLibraryLink.Name = "ViewLibraryLink";
-            this.ViewLibraryLink.Size = new System.Drawing.Size(118, 16);
-            this.ViewLibraryLink.TabIndex = 5;
             this.ViewLibraryLink.TabStop = true;
-            this.ViewLibraryLink.Text = "Explore library...";
             this.ViewLibraryLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.ViewLibraryLink_LinkClicked);
             // 
             // BuildLibraryNotification
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.AutoValidate = System.Windows.Forms.AutoValidate.Disable;
             this.BackColor = System.Drawing.Color.Lavender;
-            this.ClientSize = new System.Drawing.Size(158, 106);
             this.ControlBox = false;
             this.Controls.Add(this.NotificationCloseButton);
             this.Controls.Add(this.TextPanel);
@@ -116,7 +93,6 @@
             this.Name = "BuildLibraryNotification";
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.TopMost = true;
             this.TextPanel.ResumeLayout(false);
             this.TextPanel.PerformLayout();

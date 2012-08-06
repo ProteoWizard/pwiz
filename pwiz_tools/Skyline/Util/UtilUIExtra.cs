@@ -5,6 +5,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -52,7 +53,7 @@ namespace pwiz.Skyline.Util
 
             int startFragment = 0;
 
-            Regex r = new Regex("([a-zA-Z]+):(.+?)[\r\n]",
+            Regex r = new Regex("([a-zA-Z]+):(.+?)[\r\n]", // Not L10N
                                 RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
             for (Match m = r.Match(rawClipboardText); m.Success; m = m.NextMatch())
@@ -63,43 +64,43 @@ namespace pwiz.Skyline.Util
                 switch (key)
                 {
                     // Version number of the clipboard. Starting version is 0.9. 
-                    case "version":
+                    case "version": // Not L10N
                         _version = val;
                         break;
 
                     // Byte count from the beginning of the clipboard to the start of the context, or -1 if no context
-                    case "starthtml":
+                    case "starthtml": // Not L10N
                         if (startHmtl != 0)
-                            throw new FormatException("StartHtml is already declared");
+                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHtml_is_already_declared);
                         startHmtl = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the context, or -1 if no context.
-                    case "endhtml":
+                    case "endhtml": // Not L10N
                         if (startHmtl == 0)
-                            throw new FormatException("StartHTML must be declared before endHTML");
+                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartHTML_must_be_declared_before_endHTML);
                         int endHtml = int.Parse(val);
 
                         _fullText = rawClipboardText.Substring(startHmtl, endHtml - startHmtl);
                         break;
 
                     //  Byte count from the beginning of the clipboard to the start of the fragment.
-                    case "startfragment":
+                    case "startfragment": // Not L10N
                         if (startFragment != 0)
-                            throw new FormatException("StartFragment is already declared");
+                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_is_already_declared);
                         startFragment = int.Parse(val);
                         break;
 
                     // Byte count from the beginning of the clipboard to the end of the fragment.
-                    case "endfragment":
+                    case "endfragment": // Not L10N
                         if (startFragment == 0)
-                            throw new FormatException("StartFragment must be declared before EndFragment");
+                            throw new FormatException(Resources.HtmlFragment_HtmlFragment_StartFragment_must_be_declared_before_EndFragment);
                         int endFragment = int.Parse(val);
                         _fragment = rawClipboardText.Substring(startFragment, endFragment - startFragment);
                         break;
 
                     // Optional Source URL, used for resolving relative links.
-                    case "sourceurl":
+                    case "sourceurl": // Not L10N
                         _source = new Uri(val);
                         break;
                 }
@@ -107,7 +108,7 @@ namespace pwiz.Skyline.Util
 
             if (_fullText == null && _fragment == null)
             {
-                throw new FormatException("No data specified");
+                throw new FormatException(Resources.HtmlFragment_HtmlFragment_No_data_specified);
             }
         }
 
@@ -161,7 +162,7 @@ namespace pwiz.Skyline.Util
         // String must be 8 characters, because it will be used to replace an 8 character string within a larger string.    
         static string To8DigitString(int x)
         {
-            return String.Format("{0,8}", x);
+            return String.Format("{0,8}", x); // Not L10N
         }
 
         /// <summary>
@@ -197,7 +198,7 @@ namespace pwiz.Skyline.Util
         public static string ClipBoardText(string htmlFragment, string title, Uri sourceUrl)
         {
             if (title == null)
-                title = "From Clipboard";
+                title = "From Clipboard"; // TODO: L10N? This is a title for an HTML page. I think the encodings different.
 
             StringBuilder sb = new StringBuilder();
 
@@ -208,7 +209,7 @@ namespace pwiz.Skyline.Util
             // The <<<<<<<_ strings are just placeholders. We'll backpatch them actual values afterwards.
             // The string layout (<<<) also ensures that it can't appear in the body of the html because the <
             // character must be escaped.
-            const string header =
+            const string header = // Not L10N
 @"Format:HTML Format
 Version:1.0
 StartHTML:<<<<<<<1
@@ -219,7 +220,7 @@ StartSelection:<<<<<<<3
 EndSelection:<<<<<<<3
 ";
 
-            string pre =
+            string pre = // Not L10N
 @"<!DOCTYPE HTML PUBLIC ""-//W3C//DTD HTML 4.0 Transitional//EN"">
 <HTML><HEAD><TITLE>" + title + @"</TITLE></HEAD><BODY><!--StartFragment-->";
 
@@ -228,7 +229,7 @@ EndSelection:<<<<<<<3
             sb.Append(header);
             if (sourceUrl != null)
             {
-                sb.AppendFormat("SourceURL:{0}", sourceUrl);
+                sb.AppendFormat("SourceURL:{0}", sourceUrl); // Not L10N
             }
             int startHtml = sb.Length;
 
@@ -242,10 +243,10 @@ EndSelection:<<<<<<<3
             int endHtml = sb.Length;
 
             // Backpatch offsets
-            sb.Replace("<<<<<<<1", To8DigitString(startHtml));
-            sb.Replace("<<<<<<<2", To8DigitString(endHtml));
-            sb.Replace("<<<<<<<3", To8DigitString(fragmentStart));
-            sb.Replace("<<<<<<<4", To8DigitString(fragmentEnd));
+            sb.Replace("<<<<<<<1", To8DigitString(startHtml)); // Not L10N
+            sb.Replace("<<<<<<<2", To8DigitString(endHtml)); // Not L10N
+            sb.Replace("<<<<<<<3", To8DigitString(fragmentStart)); // Not L10N
+            sb.Replace("<<<<<<<4", To8DigitString(fragmentEnd)); // Not L10N
 
             return sb.ToString();
         }
@@ -266,7 +267,7 @@ EndSelection:<<<<<<<3
             return null;
         }
 
-        private const string FILE_SIZE_FORMAT = "fs";
+        private const string FILE_SIZE_FORMAT = "fs"; // Not L10N
         private const Decimal ONE_KILO_BYTE = 1024M;
         private const Decimal ONE_MEGA_BYTE = ONE_KILO_BYTE * 1024M;
         private const Decimal ONE_GIGA_BYTE = ONE_MEGA_BYTE * 1024M;
@@ -299,27 +300,27 @@ EndSelection:<<<<<<<3
             if (size > ONE_GIGA_BYTE)
             {
                 size /= ONE_GIGA_BYTE;
-                suffix = " GB";
+                suffix = " GB"; // Not L10N
             }
             else if (size > ONE_MEGA_BYTE)
             {
                 size /= ONE_MEGA_BYTE;
-                suffix = " MB";
+                suffix = " MB"; // Not L10N
             }
             else if (size > ONE_KILO_BYTE)
             {
                 size /= ONE_KILO_BYTE;
-                suffix = " KB";
+                suffix = " KB"; // Not L10N
             }
             else
             {
-                suffix = " B";
+                suffix = " B"; // Not L10N
             }
 
             string precision = format.Substring(2);
             if (String.IsNullOrEmpty(precision))
-                precision = "2";
-            string formatString = "{0:N" + precision + "}{1}";  // Avoid ReSharper analysis
+                precision = "2"; // Not L10N
+            string formatString = "{0:N" + precision + "}{1}";  // Avoid ReSharper analysis // Not L10N
             return String.Format(formatString, size, suffix);
         }
 
@@ -379,8 +380,10 @@ EndSelection:<<<<<<<3
                     uint processId;
                     GetWindowThreadProcessId(hwnd, out processId);
                     var process = Process.GetProcessById((int)processId);
-                    return string.Format("{0}\nThe the process '{1}' (ID = {2}) has the clipboard open.",
-                        prefix, process.ProcessName, processId);
+                    var message = prefix + Environment.NewLine;
+                    message += string.Format(Resources.ClipboardHelper_GetOpenClipboardMessage_The_process__0__ID__1__has_the_clipboard_open,
+                            process.ProcessName, processId);
+                    return message;
                 }
             }
             catch (Exception)

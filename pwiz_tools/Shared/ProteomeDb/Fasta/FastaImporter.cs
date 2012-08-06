@@ -111,7 +111,7 @@ namespace pwiz.ProteomeDatabase.Fasta
         private static String ParseSequenceLine(String line)
         {
             line = line.Replace(" ", "").Trim();
-            if (line.EndsWith("*"))
+            if (line.EndsWith("*")) // Not L10N
             {
                 line = line.Substring(0, line.Length - 1);
             }

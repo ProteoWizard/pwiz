@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public partial class GraphSummary : DockableFormEx, IUpdatable
     {
-        private const string FONT_FACE = "Arial";
+        private const string FONT_FACE = "Arial"; // Not L10N
         private const int FONT_SIZE = 10;
 
         public static Color ColorSelected { get { return Color.Red; } }

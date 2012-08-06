@@ -19,12 +19,17 @@
 
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
 {
     public sealed partial class MultiButtonMsgDlg : FormEx
     {
+        public static string BUTTON_OK { get { return Resources.MultiButtonMsgDlg_BUTTON_OK_OK; } }
+        public static string BUTTON_YES { get { return Resources.MultiButtonMsgDlg_BUTTON_YES__Yes; } }
+        public static string BUTTON_NO { get { return Resources.MultiButtonMsgDlg_BUTTON_NO__No; } }
+
         private const int MAX_HEIGHT = 500;
 
         /// <summary>

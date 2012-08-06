@@ -26,6 +26,8 @@ using System.Windows.Forms;
 using NHibernate;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
@@ -355,7 +357,7 @@ namespace pwiz.Skyline.Util
             // Check to see if the file was modified, during the time
             // it was closed.
             if (IsModified)
-                throw new FileModifiedException(string.Format("The file {0} has been modified, since it was first opened.", FilePath));
+                throw new FileModifiedException(string.Format(Resources.PooledFileStream_Connect_The_file__0__has_been_modified_since_it_was_first_opened, FilePath));
             // Create the stream
             return StreamManager.CreateStream(FilePath, FileMode.Open, Buffered);
         }
@@ -473,7 +475,7 @@ namespace pwiz.Skyline.Util
             {
                 // Make sure exceptions thrown from this method are only IOExceptions
                 if (!(x is IOException))
-                    throw new IOException(string.Format("Unexpected error opening {0}", path), x);
+                    throw new IOException(string.Format(Resources.FileStreamManager_CreateStream_Unexpected_error_opening__0__, path), x);
                 throw;
             }
 
@@ -513,7 +515,7 @@ namespace pwiz.Skyline.Util
             {
                 // Make sure exceptions thrown from this method are only IOExceptions
                 if ((x is IOException))
-                    throw new IOException(string.Format("Unexpected error opening {0}", path), x);
+                    throw new IOException(string.Format(Resources.FileStreamManager_CreateStream_Unexpected_error_opening__0__, path), x);
                 throw;
             }
         }
@@ -608,7 +610,7 @@ namespace pwiz.Skyline.Util
 
         private static string GetBackupFileName(string pathDestination)
         {
-            string backupFile = FileSaver.TEMP_PREFIX + Path.GetFileName(pathDestination) + ".bak";
+            string backupFile = FileSaver.TEMP_PREFIX + Path.GetFileName(pathDestination) + ".bak"; // Not L10N
             string dirName = Path.GetDirectoryName(pathDestination);
             if (!string.IsNullOrEmpty(dirName))
                 backupFile = Path.Combine(dirName, backupFile);
@@ -667,7 +669,7 @@ namespace pwiz.Skyline.Util
             uint result = GetTempFileName(basePath, prefix, unique, sb);
             if (result == 0)
             {
-                throw new IOException("Win32 Error: " + Marshal.GetLastWin32Error());
+                throw new IOException(string.Format(Resources.FileStreamManager_GetTempFileName_Win32_Error__0__, Marshal.GetLastWin32Error()));
             }
 
             return sb.ToString();
@@ -726,7 +728,7 @@ namespace pwiz.Skyline.Util
 
     public sealed class FileSaver : IDisposable
     {
-        public const string TEMP_PREFIX = "~SK";
+        public const string TEMP_PREFIX = "~SK"; // Not L10N
 
         private readonly IStreamManager _streamManager;
 
@@ -766,7 +768,11 @@ namespace pwiz.Skyline.Util
             if (SafeName == null)
             {
                 if (showMessage)
-                    MessageBox.Show(string.Format("Cannot save to {0}.  Check the path to make sure the directory exists.", RealName), Program.Name);
+                    MessageBox.Show(
+                        string.Format(
+                            Resources.
+                                FileSaver_CanSave_Cannot_save_to__0__Check_the_path_to_make_sure_the_directory_exists,
+                            RealName), Program.Name);
                 return false;
             }
             if (!_streamManager.Exists(RealName))
@@ -777,7 +783,9 @@ namespace pwiz.Skyline.Util
                 if ((_streamManager.GetAttributes(RealName) & FileAttributes.ReadOnly) == FileAttributes.ReadOnly)
                 {
                     if (showMessage)
-                        MessageBox.Show(string.Format("Cannot save to {0}.  The file is read-only.", RealName), Program.Name);
+                        MessageBox.Show(
+                            string.Format(Resources.FileSaver_CanSave_Cannot_save_to__0__The_file_is_read_only, RealName),
+                            Program.Name);
                     return false;
                 }
                 return true;
@@ -828,7 +836,7 @@ namespace pwiz.Skyline.Util
 
     public class TemporaryDirectory : IDisposable
     {
-        public const string TEMP_PREFIX = "~SK";
+        public const string TEMP_PREFIX = "~SK"; // Not L10N
 
         public TemporaryDirectory()
         {

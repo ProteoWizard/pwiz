@@ -191,7 +191,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
                       {
                           transitionSettingsUI2.UseOptimized = true;
-                          transitionSettingsUI2.OptimizeType = OptimizedMethodType.Precursor.ToString();
+                          transitionSettingsUI2.OptimizeType = OptimizedMethodType.Precursor.GetLocalizedString();
                       });
             OkDialog(transitionSettingsUI2, transitionSettingsUI2.OkDialog);
             string precursorPath = TestFilesDir.GetTestPath("PrecursorCE.csv");
@@ -201,7 +201,7 @@ namespace pwiz.SkylineTestFunctional
             var transitionSettingsUI3 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             RunUI(() =>
                       {
-                          transitionSettingsUI3.OptimizeType = OptimizedMethodType.Transition.ToString();
+                          transitionSettingsUI3.OptimizeType = OptimizedMethodType.Transition.GetLocalizedString();
                       });
             OkDialog(transitionSettingsUI3, transitionSettingsUI3.OkDialog);
             string transitionPath = TestFilesDir.GetTestPath("TransitionCE.csv");
@@ -226,7 +226,7 @@ namespace pwiz.SkylineTestFunctional
             RunUI(() =>
             {
                 transitionSettingsUI4.RegressionCEName = reoptimizeCEName;
-                transitionSettingsUI4.OptimizeType = OptimizedMethodType.None.ToString();
+                transitionSettingsUI4.OptimizeType = OptimizedMethodType.None.GetLocalizedString();
             });
             OkDialog(transitionSettingsUI4, transitionSettingsUI4.OkDialog);
             WaitForDocumentChange(docCurrent);

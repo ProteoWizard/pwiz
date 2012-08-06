@@ -19,6 +19,7 @@
 using System;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Alerts
@@ -67,7 +68,7 @@ namespace pwiz.Skyline.Alerts
                         radioAdd.Checked = true;
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException("value");
+                        throw new ArgumentOutOfRangeException("value"); // Not L10N
                 }
             }
         }
@@ -82,7 +83,7 @@ namespace pwiz.Skyline.Alerts
         {
             if (!CanImportResults && Action != MeasuredResults.MergeAction.remove)
             {
-                MessageDlg.Show(this, "The document must be saved before results may be imported.");
+                MessageDlg.Show(this, Resources.ImportDocResultsDlg_OkDialog_The_document_must_be_saved_before_results_may_be_imported);
                 Action = MeasuredResults.MergeAction.remove;
                 return;
             }

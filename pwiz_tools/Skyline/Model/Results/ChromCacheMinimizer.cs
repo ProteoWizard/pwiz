@@ -370,7 +370,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 if (hasOrphanFiles)
                 {
-                    _replicates[results.Chromatograms.Count].Name = "<Unmatched Files>";
+                    _replicates[results.Chromatograms.Count].Name = "<Unmatched Files>"; //TODO: L10N. Function invoke uses?
                 }
                 foreach (var chromHeaderInfo in ChromCacheMinimizer.ChromGroupHeaderInfos)
                 {

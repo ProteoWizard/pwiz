@@ -29,11 +29,8 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
             Text = Program.Name;
+            TEXT = labelMessage.Text;
         }
-
-        public const string TEXT = "This document requires the '{0}' {1}.\n" +
-                                    "Click the Browse button specify its location on your system.\n" +
-                                    "Click the Open button to open the document without the {1}.";
 
         public string FileDlgInitialPath { get; set; }
         public string FileHint { get; set; }
@@ -41,6 +38,9 @@ namespace pwiz.Skyline.Alerts
         public string Filter { get; set; }
         //Title bar text
         public string Title { get; set; }
+
+        private string TEXT { get; set; }
+
         //Text to put in the initial dialog: something like 'My Background Proteome'
         public string ItemName
         {

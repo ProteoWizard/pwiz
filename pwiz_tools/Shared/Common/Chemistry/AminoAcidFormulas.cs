@@ -28,6 +28,7 @@ namespace pwiz.Common.Chemistry
 // ReSharper disable InconsistentNaming
         public const double ProtonMass = 1.00727649;
 
+        // Not L10N
         public static readonly IDictionary<String, char> LongNames = new ImmutableDictionary<String,char>(
             new Dictionary<string, char> {
             {"Ala",'A'},
@@ -52,6 +53,7 @@ namespace pwiz.Common.Chemistry
             {"Val",'V'}
         });
 
+        // Not L10N
         public static readonly IDictionary<char, String> DefaultFormulas = new ImmutableDictionary<char, String>
             (
             new Dictionary<char, string>

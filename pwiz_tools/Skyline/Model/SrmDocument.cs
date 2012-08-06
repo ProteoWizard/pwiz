@@ -38,6 +38,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -163,13 +164,18 @@ namespace pwiz.Skyline.Model
     /// rather than a record of actions taken to modify a mutable document.
     /// </para>
     /// </summary>
-    [XmlRoot("srm_settings")]
+    [XmlRoot("srm_settings")] // Not L10N
     public class SrmDocument : DocNodeParent, IXmlSerializable
     {
         /// <summary>
         /// Document extension on disk
         /// </summary>
-        public const string EXT = "sky";
+        public const string EXT = ".sky"; // Not L10N
+
+        public static string FILTER_DOC
+        {
+            get { return TextUtil.FileDialogFilter(Resources.SrmDocument_FILTER_DOC_Skyline_Documents, EXT); }
+        }
 
         public const double FORMAT_VERSION_0_1 = 0.1;
         public const double FORMAT_VERSION_0_2 = 0.2;
@@ -337,7 +343,9 @@ namespace pwiz.Skyline.Model
             foreach (PeptideGroupDocNode nodeGroup in Children)
                 ids.Add(nodeGroup.Name);
 
-            string baseId = (peptideList ? "peptides" : "sequence");
+            string baseId = peptideList
+                ? Resources.SrmDocument_GetPeptideGroupId_peptides 
+                : Resources.SrmDocument_GetPeptideGroupId_sequence; 
             int i = 1;
             while (ids.Contains(baseId + i))
                 i++;
@@ -574,7 +582,8 @@ namespace pwiz.Skyline.Model
                     continue;
                 if (dictPeptidesModified.ContainsKey(key))
                 {
-                    throw new InvalidDataException(string.Format("The peptide {0} was found multiple times with user modifications.",
+                    throw new InvalidDataException(
+                        string.Format(Resources.SrmDocument_MergeMatchingPeptidesUserInfo_The_peptide__0__was_found_multiple_times_with_user_modifications,
                         Settings.GetPrecursorCalc(IsotopeLabelType.light, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, true)));
                 }
                 dictPeptidesModified.Add(key, nodePep);
@@ -816,9 +825,9 @@ namespace pwiz.Skyline.Model
             else if (lastFrom == (int)Level.Peptides)
             {
                 if (from.GetIdentity((int)Level.PeptideGroups) is FastaSequence)
-                    throw new InvalidOperationException("Invalid move source.");
+                    throw new InvalidOperationException(Resources.SrmDocument_MoveNode_Invalid_move_source);
                 if (to == null || to.GetIdentity((int)Level.PeptideGroups) is FastaSequence)
-                    throw new InvalidOperationException("Invalid move target.");
+                    throw new InvalidOperationException(Resources.SrmDocument_MoveNode_Invalid_move_target);
 
                 SrmDocument document = (SrmDocument)RemoveChild(from.Parent, nodeFrom);
                 // If dropped over a group, add to the end
@@ -833,7 +842,7 @@ namespace pwiz.Skyline.Model
                 newLocation = new IdentityPath(to.GetPathTo((int)Level.PeptideGroups), nodeFrom.Id);
                 return document;
             }
-            throw new InvalidOperationException("Invalid move source.");
+            throw new InvalidOperationException(Resources.SrmDocument_MoveNode_Invalid_move_source);
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
@@ -866,20 +875,24 @@ namespace pwiz.Skyline.Model
             int indexSet;
             ChromatogramSet chromatograms;
             if (!Settings.HasResults || !Settings.MeasuredResults.TryGetChromatogramSet(nameSet, out chromatograms, out indexSet))
-                throw new ArgumentOutOfRangeException(string.Format("No replicate named {0} was found", nameSet));
+                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_replicate_named__0__was_found, nameSet));
             // Calculate the file index that supplied the chromatograms
             ChromFileInfoId fileId = chromatograms.FindFile(filePath);
             if (fileId == null)
-                throw new ArgumentOutOfRangeException(string.Format("The file {0} was not found in the replicate {1}.", filePath, nameSet));
+            {
+                throw new ArgumentOutOfRangeException(
+                    string.Format(Resources.SrmDocument_ChangePeak_The_file__0__was_not_found_in_the_replicate__1__,
+                                  filePath, nameSet));
+            }
             // Get all chromatograms for this transition group
             double mzMatchTolerance = Settings.TransitionSettings.Instrument.MzMatchTolerance;
             ChromatogramGroupInfo[] arrayChromInfo;
             if (!Settings.MeasuredResults.TryLoadChromatogram(chromatograms, nodeGroup, (float)mzMatchTolerance, loadPoints, out arrayChromInfo))
-                throw new ArgumentOutOfRangeException(string.Format("No results found for the precursor {0} in the replicate {1}", this, nameSet));
+                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_replicate__1__, this, nameSet));
             // Get the chromatograms for only the file of interest
             int indexInfo = arrayChromInfo.IndexOf(info => Equals(filePath, info.FilePath));
             if (indexInfo == -1)
-                throw new ArgumentOutOfRangeException(string.Format("No results found for the precursor {0} in the file {1}", this, filePath));
+                throw new ArgumentOutOfRangeException(string.Format(Resources.SrmDocument_ChangePeak_No_results_found_for_the_precursor__0__in_the_file__1__, this, filePath));
             var chromInfoGroup = arrayChromInfo[indexInfo];
             var nodeGroupNew = change(nodeGroup, chromInfoGroup, mzMatchTolerance, indexSet, fileId,
                 chromatograms.OptimizationFunction);
@@ -992,6 +1005,7 @@ namespace pwiz.Skyline.Model
         // Enum.ToString() was too slow for use in the document
         public static class EL
         {
+            //Not L10N
             // v0.1 lists
             public const string selected_proteins = "selected_proteins";
             public const string selected_peptides = "selected_peptides";
@@ -1039,6 +1053,7 @@ namespace pwiz.Skyline.Model
         // Enum.ToString() was too slow for use in the document
         public static class ATTR
         {
+            // Not L10N
             public const string format_version = "format_version";
             public const string name = "name";
             public const string category = "category";
@@ -1140,7 +1155,7 @@ namespace pwiz.Skyline.Model
             if (!settings.HasResults)
             {
                 if (results != null)
-                    throw new InvalidDataException("Results found in document with no replicates.");
+                    throw new InvalidDataException(Resources.SrmDocumentValidateChromInfoResults_found_in_document_with_no_replicates);
                 return;
             }
             // This check was a little too agressive.
@@ -1161,7 +1176,11 @@ namespace pwiz.Skyline.Model
             if (FormatVersion == 0)
                 FormatVersion = FORMAT_VERSION_0_1;
             else if (FormatVersion > FORMAT_VERSION)
-                throw new InvalidDataException(string.Format("The document format version {0} is not supported.", FormatVersion));
+            {
+                throw new InvalidDataException(
+                    string.Format(Resources.SrmDocumentReadXmlThe_document_format_version__0__is_not_supported,
+                                  FormatVersion));
+            }
 
             reader.ReadStartElement();  // Start document element
 
@@ -1248,13 +1267,13 @@ namespace pwiz.Skyline.Model
 
             // Support v0.1 documents, where peptide lists were saved as proteins,
             // pre-v0.1 documents, which may not have identified peptide lists correctly.
-            if (sequence.StartsWith("X") && sequence.EndsWith("X"))
+            if (sequence.StartsWith("X") && sequence.EndsWith("X")) // Not L10N
                 peptideList = true;
 
             // All v0.1 peptide lists should have a settable label
             if (peptideList)
             {
-                label = name ?? "";
+                label = name ?? string.Empty;
                 labelDescription = description;
             }
             // Or any protein without a name attribute
@@ -1548,7 +1567,7 @@ namespace pwiz.Skyline.Model
                     string nameMod = reader.GetAttribute(ATTR.modification_name);
                     int indexMod = typedMods.Modifications.IndexOf(mod => Equals(nameMod, mod.Name));
                     if (indexMod == -1)
-                        throw new InvalidDataException(string.Format("No modification named {0} was found in this document.", nameMod));
+                        throw new InvalidDataException(string.Format(Resources.TransitionInfo_ReadTransitionLosses_No_modification_named__0__was_found_in_this_document, nameMod));
                     StaticMod modAdd = typedMods.Modifications[indexMod];
                     listMods.Add(new ExplicitMod(indexAA, modAdd));
                     // Consume tag
@@ -1644,7 +1663,7 @@ namespace pwiz.Skyline.Model
                 typeName = labelTypeDefault.Name;
             var typedMods = Settings.PeptideSettings.Modifications.GetModificationsByName(typeName);
             if (typedMods == null)
-                throw new InvalidDataException(string.Format("The isotope modification type {0} does not exist in the document settings.", typeName));
+                throw new InvalidDataException(string.Format(Resources.SrmDocument_ReadLabelType_The_isotope_modification_type__0__does_not_exist_in_the_document_settings, typeName));
             return typedMods;
         }
 
@@ -1830,7 +1849,7 @@ namespace pwiz.Skyline.Model
             var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, isotopeDist);
 
             if (group.DecoyMassShift.HasValue && !info.DecoyMassShift.HasValue)
-                throw new InvalidDataException("All transitions of decoy precursors must have a decoy mass shift.");
+                throw new InvalidDataException(Resources.SrmDocument_ReadTransitionXml_All_transitions_of_decoy_precursors_must_have_a_decoy_mass_shift);
 
             return new TransitionDocNode(transition, info.Annotations, info.Losses,
                 massH, isotopeDistInfo, info.LibInfo, info.Results);
@@ -1851,7 +1870,7 @@ namespace pwiz.Skyline.Model
             {
                 string name = reader.GetAttribute(ATTR.name);
                 if (name == null)
-                    throw new InvalidDataException("Annotation found without name.");
+                    throw new InvalidDataException(Resources.SrmDocument_ReadAnnotations_Annotation_found_without_name);
                 annotations[name] = reader.ReadElementString();
             }
 
@@ -1940,10 +1959,18 @@ namespace pwiz.Skyline.Model
                             int indexLoss = reader.GetIntAttribute(ATTR.loss_index);
                             int indexMod = staticMods.IndexOf(mod => Equals(nameMod, mod.Name));
                             if (indexMod == -1)
-                                throw new InvalidDataException(string.Format("No modification named {0} was found in this document.", nameMod));
+                            {
+                                throw new InvalidDataException(
+                                    string.Format(Resources.TransitionInfo_ReadTransitionLosses_No_modification_named__0__was_found_in_this_document,
+                                                  nameMod));
+                            }
                             StaticMod modLoss = staticMods[indexMod];
                             if (!modLoss.HasLoss || indexLoss >= modLoss.Losses.Count)
-                                throw new InvalidDataException(string.Format("Invalid loss index {0} for modification {1}", indexLoss, nameMod));
+                            {
+                                throw new InvalidDataException(
+                                    string.Format(Resources.TransitionInfo_ReadTransitionLosses_Invalid_loss_index__0__for_modification__1__,
+                                                  indexLoss, nameMod));
+                            }
                             listLosses.Add(new TransitionLoss(modLoss, modLoss.Losses[indexLoss], massType));
                         }
                         reader.Read();
@@ -2029,7 +2056,7 @@ namespace pwiz.Skyline.Model
 
             MeasuredResults results = settings.MeasuredResults;
             if (results == null)
-                throw new InvalidDataException("No results information found in the document settings");
+                throw new InvalidDataException(Resources.SrmDocument_ReadResults_No_results_information_found_in_the_document_settings);
 
             reader.ReadStartElement();
             var arrayListChromInfos = new List<TItem>[results.Chromatograms.Count];
@@ -2041,14 +2068,14 @@ namespace pwiz.Skyline.Model
                 if (chromatogramSet == null || !Equals(name, chromatogramSet.Name))
                 {
                     if (!results.TryGetChromatogramSet(name, out chromatogramSet, out index))
-                        throw new InvalidDataException(string.Format("No replicate named {0} found in measured results", name));
+                        throw new InvalidDataException(string.Format(Resources.SrmDocument_ReadResults_No_replicate_named__0__found_in_measured_results, name));
                 }
                 string fileId = reader.GetAttribute(ATTR.file);
                 var fileInfoId = (fileId != null
                     ? chromatogramSet.FindFileById(fileId)
                     : chromatogramSet.MSDataFileInfos[0].FileId);
                 if (fileInfoId == null)
-                    throw new InvalidDataException(string.Format("No file with id {0} found in the replicate {1}", fileId, name));
+                    throw new InvalidDataException(string.Format(Resources.SrmDocument_ReadResults_No_file_with_id__0__found_in_the_replicate__1__, fileId, name));
 
                 TItem chromInfo = readInfo(reader, settings, fileInfoId);
                 // Consume the tag
@@ -2157,7 +2184,7 @@ namespace pwiz.Skyline.Model
         /// <returns>A formatted version of the input sequence</returns>
         private static string FormatProteinSequence(string sequence)
         {
-            const string lineSeparator = "\r\n        ";
+            const string lineSeparator = "\r\n        "; // Not L10N
 
             StringBuilder sb = new StringBuilder();
             if (sequence.Length > 50)
@@ -2169,7 +2196,7 @@ namespace pwiz.Skyline.Model
                 else
                 {
                     sb.Append(sequence.Substring(i, Math.Min(10, sequence.Length - i)));
-                    sb.Append(i % 50 == 40 ? "\r\n        " : " ");
+                    sb.Append(i % 50 == 40 ? "\r\n        " : " "); // Not L10N
                 }
             }
 
@@ -2345,7 +2372,7 @@ namespace pwiz.Skyline.Model
                 double massDiff = massCalc.GetModMass(sequence[mod.IndexAA], mod.Modification);
 
                 writer.WriteAttribute(ATTR.mass_diff,
-                                      string.Format("{0}{1}", (massDiff < 0 ? "" : "+"), Math.Round(massDiff, 1)));
+                                      string.Format("{0}{1}", (massDiff < 0 ? string.Empty : "+"), Math.Round(massDiff, 1))); // Not L10N
 
                 writer.WriteEndElement();
             }

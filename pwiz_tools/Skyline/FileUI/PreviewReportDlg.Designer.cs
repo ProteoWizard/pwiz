@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PreviewReportDlg));
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -40,45 +41,32 @@
             this.dataGridView.AllowUserToAddRows = false;
             this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.AllowUserToOrderColumns = true;
-            this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.dataGridView, "dataGridView");
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView.Location = new System.Drawing.Point(-1, -1);
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
-            this.dataGridView.Size = new System.Drawing.Size(572, 461);
-            this.dataGridView.TabIndex = 0;
             // 
             // recordNavBar1
             // 
             this.recordNavBar1.DataGridView = this.dataGridView;
-            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.recordNavBar1.Location = new System.Drawing.Point(0, 459);
+            resources.ApplyResources(this.recordNavBar1, "recordNavBar1");
             this.recordNavBar1.Name = "recordNavBar1";
-            this.recordNavBar1.Size = new System.Drawing.Size(570, 21);
-            this.recordNavBar1.TabIndex = 10;
             // 
             // panel1
             // 
             this.panel1.Controls.Add(this.dataGridView);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(570, 459);
-            this.panel1.TabIndex = 2;
             // 
             // PreviewReportDlg
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(570, 480);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.recordNavBar1);
             this.KeyPreview = true;
             this.Name = "PreviewReportDlg";
             this.ShowInTaskbar = false;
-            this.Text = "Preview Report";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);

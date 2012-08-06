@@ -922,7 +922,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             if (listChromInfoSets.Count == 0 || totalOptCount == 0)
-                throw new InvalidDataException("No optimization data available.");
+                throw new InvalidDataException(Resources.GraphChromatogram_DisplayOptimizationTotals_No_optimization_data_available);
 
             // Enumerate optimization steps, grouping the data into graph data by step
             var listGraphData = new List<OptimizationGraphData>();
@@ -1459,7 +1459,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listNames = new List<string>();
                 foreach (var arrayInfo in arrayChromInfo)
                 {
-                    string name = "";
+                    string name = string.Empty;
                     foreach (var info in arrayInfo)
                     {
                         if (info != null)

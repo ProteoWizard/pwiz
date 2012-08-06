@@ -25,6 +25,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -174,7 +175,7 @@ namespace pwiz.SkylineTestFunctional
                         exportMethodDlg.OkDialog,
                         messageDlg =>
                         {
-                            AssertEx.Contains(messageDlg.Message, "Export of DIA method is not supported for");
+                            AssertEx.AreComparableStrings(Resources.ExportMethodDlg_OkDialog_Export_of_DIA_method_is_not_supported_for__0__, messageDlg.Message, 1);
                             messageDlg.OkDialog();
                         });
                 }

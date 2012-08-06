@@ -19,12 +19,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.Skyline.Model.Lib;
@@ -106,6 +108,8 @@ namespace pwiz.Skyline.Model.Results
 
         private void BuildNextFile()
         {
+            // Called on a new UI thread.
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
             lock (this)
             {
                 try
@@ -160,7 +164,7 @@ namespace pwiz.Skyline.Model.Results
 
             if (_tempFileSubsitute == null)
             {
-                string message = String.Format("Importing {0}", dataFilePath);
+                string message = string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_Importing__0__, dataFilePath);
                 int percent = _currentFileIndex * 100 / MSDataFilePaths.Count;
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
                 _loader.UpdateProgress(_status);
@@ -169,9 +173,9 @@ namespace pwiz.Skyline.Model.Results
             try
             {
                 string dataFilePathPart;
-                dataFilePath = ChromatogramSet.GetExistingDataFilePath(CachePath, dataFilePath, out dataFilePathPart);                        
+                dataFilePath = ChromatogramSet.GetExistingDataFilePath(CachePath, dataFilePath, out dataFilePathPart);
                 if (dataFilePath == null)
-                    throw new FileNotFoundException(String.Format("The file {0} does not exist.", dataFilePathPart), dataFilePathPart);
+                    throw new FileNotFoundException(string.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_file__0__does_not_exist, dataFilePathPart), dataFilePathPart);
                 MSDataFilePaths[_currentFileIndex] = dataFilePath;
 
                 if (_tempFileSubsitute != null)
@@ -229,8 +233,8 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else
                     {
-                        throw new InvalidDataException(String.Format("The sample {0} contains no usable data.",
-                                                                        SampleHelp.GetFileSampleName(dataFilePath)));
+                        throw new InvalidDataException(String.Format(Resources.ChromCacheBuilder_BuildNextFileInner_The_sample__0__contains_no_usable_data,
+                                                                     SampleHelp.GetFileSampleName(dataFilePath)));
                     }
 
                     Read(provider);
@@ -265,8 +269,9 @@ namespace pwiz.Skyline.Model.Results
             }
             catch (NoSrmDataException)
             {
-                ExitRead(new InvalidDataException(String.Format("No SRM/MRM data found in {0}.",
-                    SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex]))));
+                ExitRead(new InvalidDataException(
+                    string.Format("No SRM/MRM data found in {0}.", // Not L10N
+                                    SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex]))));
             }
             catch (Exception x)
             {
@@ -676,6 +681,8 @@ namespace pwiz.Skyline.Model.Results
 
         private void WriteLoop(int currentFileIndex, bool primeThread)
         {
+            // Called in a new thread
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
             // HACK: This is a huge hack, for a temporary work-around to the problem
             // of Reader_Waters (or DACServer.dll) killing the ThreadPool.  WriteLoop
             // is called once as a no-op to force the thread it will use during
@@ -693,7 +700,7 @@ namespace pwiz.Skyline.Model.Results
                         try
                         {
                             if (WRITE_THREADS.Count > 0 && !_readCompleted)
-                                Console.WriteLine("Existing write threads: {0}", string.Join(", ", WRITE_THREADS.Select(t => t.ManagedThreadId)));
+                                Console.WriteLine("Existing write threads: {0}", string.Join(", ", WRITE_THREADS.Select(t => t.ManagedThreadId))); // Not L10N: Debugging purposes
                             WRITE_THREADS.Add(Thread.CurrentThread);
                             while (_writerStarted && !_readCompleted && _chromDataSets.Count == 0)
                                 Monitor.Wait(_chromDataSets);
@@ -740,7 +747,7 @@ namespace pwiz.Skyline.Model.Results
                     foreach (var chromDataSet in chromDataSetNext.DataSets)
                     {
                         if (_outStream == null)
-                            throw new InvalidDataException("Failure writing cache file.");
+                            throw new InvalidDataException(Resources.ChromCacheBuilder_WriteLoop_Failure_writing_cache_file);
 
                         long location = _outStream.Position;
 
@@ -776,7 +783,11 @@ namespace pwiz.Skyline.Model.Results
                             if (!transitionPeakCount.HasValue)
                                 transitionPeakCount = chromData.Peaks.Count;
                             else if (transitionPeakCount.Value != chromData.Peaks.Count)
-                                throw new InvalidDataException(string.Format("Transitions of the same precursor found with different peak counts {0} and {1}", transitionPeakCount, chromData.Peaks.Count));
+                            {
+                                throw new InvalidDataException(
+                                    string.Format(Resources.ChromCacheBuilder_WriteLoop_Transitions_of_the_same_precursor_found_with_different_peak_counts__0__and__1__,
+                                                  transitionPeakCount, chromData.Peaks.Count));
+                            }
 
                             // Add to peaks list
                             foreach (var peak in chromData.Peaks)

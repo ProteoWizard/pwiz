@@ -40,13 +40,13 @@ namespace pwiz.Skyline.EditUI
 
         public double[] TimeWindows
         {
-            get { return textTimeWindows.Text.Split(',').Select(t => double.Parse(t.Trim())).ToArray(); }
+            get { return textTimeWindows.Text.Split(',').Select(t => double.Parse(t.Trim())).ToArray(); } // TODO: Not L10N?
             set { textTimeWindows.Text = WindowsToString(value); }
         }
 
         private static string WindowsToString(IEnumerable<double> windows)
         {
-            return string.Join(", ", windows.Select(v => v.ToString(CultureInfo.CurrentCulture)).ToArray());
+            return string.Join(", ", windows.Select(v => v.ToString(CultureInfo.CurrentCulture)).ToArray()); // TODO: Not L10N?
         }
 
         private void btnOk_Click(object sender, EventArgs e)

@@ -3,7 +3,9 @@ using System.Collections;
 using System.Reflection;
 using NHibernate.Engine;
 using NHibernate.Properties;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Hibernate
 {
@@ -14,16 +16,16 @@ namespace pwiz.Skyline.Model.Hibernate
             peptide_result, precursor_result, transition_result
         }
 
-        private const string RATIO_PREFIX = "ratio_";
+        private const string RATIO_PREFIX = "ratio_"; // Not L10N
 
         public static string GetPeptideResultsHeader(IsotopeLabelType labelType, IsotopeLabelType standardType)
         {
-            return string.Format("Ratio {0} To {1}", labelType.Title, standardType.Title);
+            return string.Format(Resources.RatioPropertyAccessor_GetPeptideResultsHeader_Ratio__0__To__1_, labelType.Title, standardType.Title);
         }
 
         public static string GetPeptideKey(IsotopeLabelType labelType, IsotopeLabelType standardType)
         {
-            return string.Format("Ratio{0}To{1}",
+            return string.Format(Resources.RatioPropertyAccessor_GetPeptideKey_Ratio_0_To_1_,
                 Helpers.MakeId(labelType.ToString(), true),
                 Helpers.MakeId(standardType.ToString(), true));
         }
@@ -35,12 +37,12 @@ namespace pwiz.Skyline.Model.Hibernate
 
         public static string GetPrecursorResultsHeader(IsotopeLabelType standardType)
         {
-            return "Total " + GetTransitionResultsHeader(standardType);
+            return TextUtil.SpaceSeparate(Resources.RatioPropertyAccessor_GetPrecursorResultsHeader_Total,GetTransitionResultsHeader(standardType));
         }
 
         public static string GetPrecursorKey(IsotopeLabelType standardType)
         {
-            return "Total" + GetTransitionKey(standardType);
+            return Resources.RatioPropertyAccessor_GetPrecursorKey_Total + GetTransitionKey(standardType);
         }
 
         public static string GetPrecursorColumnName(IsotopeLabelType standardType)
@@ -50,12 +52,12 @@ namespace pwiz.Skyline.Model.Hibernate
 
         public static string GetTransitionResultsHeader(IsotopeLabelType standardType)
         {
-            return "Area Ratio To " + standardType.Title;
+            return TextUtil.SpaceSeparate(Resources.RatioPropertyAccessor_GetTransitionResultsHeader_Area_Ratio_To, standardType.Title);
         }
 
         public static string GetTransitionKey(IsotopeLabelType standardType)
         {
-            return "AreaRatioTo" + Helpers.MakeId(standardType.Name, true);
+            return Resources.RatioPropertyAccessor_GetTransitionKey_AreaRatioTo + Helpers.MakeId(standardType.Name, true);
         }
 
         public static string GetTransitionColumnName(IsotopeLabelType standardType)

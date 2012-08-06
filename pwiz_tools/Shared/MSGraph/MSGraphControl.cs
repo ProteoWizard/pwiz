@@ -98,7 +98,7 @@ namespace pwiz.MSGraph
             {
                 string[] tokens = value.Split( ",".ToCharArray() );
                 if( tokens.Length != 2 )
-                    throw new FormatException( "format string must have 2 tokens" );
+                    throw new FormatException( "format string must have 2 tokens" ); // Not L10N
 
                 switch( tokens[0] )
                 {
@@ -121,11 +121,11 @@ namespace pwiz.MSGraph
                         _buttons = MouseButtons.XButton2;
                         break;
                     default:
-                        throw new FormatException( "first format string token must be one of (None,Left,Middle,Right,XButton1,XButton2)" );
+                        throw new FormatException("first format string token must be one of (None,Left,Middle,Right,XButton1,XButton2)"); // Not L10N
                 }
 
                 if( !Int32.TryParse( tokens[1], out _clicks ) )
-                    throw new FormatException( "second format string token must be an integer specifying the number of button clicks" );
+                    throw new FormatException("second format string token must be an integer specifying the number of button clicks"); // Not L10N
             }
 
             public MouseButtonClicks( MouseButtons buttons, int clicks )
@@ -360,7 +360,7 @@ namespace pwiz.MSGraph
                         if( MasterPane.PaneList[0] is MSGraphPane )
                             return MasterPane.PaneList[0] as MSGraphPane;
                         else
-                            throw new Exception( "invalid graph pane type" );
+                            throw new Exception( "invalid graph pane type" ); // Not L10N
                     else
                         return null;
                 }

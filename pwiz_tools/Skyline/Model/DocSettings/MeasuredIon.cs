@@ -20,6 +20,7 @@ using System;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -191,26 +192,26 @@ namespace pwiz.Skyline.Model.DocSettings
             if (IsFragment)
             {
                 if (string.IsNullOrEmpty(Fragment))
-                    throw new InvalidDataException("Special fragment ions must have at least one fragmentation residue.");
+                    throw new InvalidDataException(Resources.MeasuredIon_Validate_Special_fragment_ions_must_have_at_least_one_fragmentation_residue);
                 AminoAcid.ValidateAAList(Fragment);
                 if (!string.IsNullOrEmpty(Restrict))
                     AminoAcid.ValidateAAList(Restrict);
                 if (!Terminus.HasValue)
-                    throw new InvalidDataException("Special fragment ions must specify the terminal side of the amino acid residue on which fragmentation occurs.");
+                    throw new InvalidDataException(Resources.MeasuredIon_Validate_Special_fragment_ions_must_specify_the_terminal_side_of_the_amino_acid_residue_on_which_fragmentation_occurs);
                 if (MIN_MIN_FRAGMENT_LENGTH > MinFragmentLength || MinFragmentLength > MAX_MIN_FRAGMENT_LENGTH)
                 {
-                    throw new InvalidDataException(string.Format("The minimum length {0} must be between {1} and {2}.",
-                        MinFragmentLength, MIN_MIN_FRAGMENT_LENGTH, MAX_MIN_FRAGMENT_LENGTH));
+                    throw new InvalidDataException(string.Format(Resources.MeasuredIon_Validate_The_minimum_length__0__must_be_between__1__and__2__,
+                                                                 MinFragmentLength, MIN_MIN_FRAGMENT_LENGTH, MAX_MIN_FRAGMENT_LENGTH));
                 }
             }
             else
             {
                 if (MonoisotopicMass == 0 || AverageMass == 0)
-                    throw new InvalidDataException("Reporter ions must specify a formula or valid monoisotopic and average masses.");
+                    throw new InvalidDataException(Resources.MeasuredIon_Validate_Reporter_ions_must_specify_a_formula_or_valid_monoisotopic_and_average_masses);
                 if (MonoisotopicMass < MIN_REPORTER_MASS || AverageMass < MIN_REPORTER_MASS)
-                    throw new InvalidDataException(string.Format("Reporter ion masses must be greater than or equal to {0}.", MIN_REPORTER_MASS));
+                    throw new InvalidDataException(string.Format(Resources.MeasuredIon_Validate_Reporter_ion_masses_must_be_greater_than_or_equal_to__0__, MIN_REPORTER_MASS));
                 if (MonoisotopicMass > MAX_REPORTER_MASS || AverageMass > MAX_REPORTER_MASS)
-                    throw new InvalidDataException(string.Format("Reporter ion masses must be less than or equal to {0}.", MAX_REPORTER_MASS));
+                    throw new InvalidDataException(string.Format(Resources.MeasuredIon_Validate_Reporter_ion_masses_must_be_less_than_or_equal_to__0__, MAX_REPORTER_MASS));
             }
         }
 

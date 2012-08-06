@@ -18,13 +18,14 @@
  */
 using System.IO;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
     internal class NoSrmDataException : IOException
     {
         public NoSrmDataException()
-            : base("No SRM/MRM data found")
+            : base(Resources.NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found)
         {
         }
     }
@@ -32,7 +33,7 @@ namespace pwiz.Skyline.Model.Results
     internal class LoadCanceledException : IOException
     {
         public LoadCanceledException(ProgressStatus status)
-            : base("Data import canceled")
+            : base(Resources.LoadCanceledException_LoadCanceledException_Data_import_canceled)
         {
             Status = status;
         }

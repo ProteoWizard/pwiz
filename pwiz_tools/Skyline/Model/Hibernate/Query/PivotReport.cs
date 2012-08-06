@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
@@ -160,14 +161,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             private static ColumnInfo QualifyColumnInfo(ColumnInfo columnInfo, RowKey rowKey)
             {
                 List<String> parts = new List<string>();
-                String caption = "";
-                parts.Add("pivot");
+                String caption = string.Empty;
+                parts.Add("pivot"); // Not L10N
 
                 foreach (var part in rowKey)
                 {
-                    String str = part == null ? "null" : part.ToString();
+                    String str = part == null ? "null" : part.ToString(); // Not L10N
                     parts.Add(str);
-                    caption += str + " ";
+                    caption += str + " "; // Not L10N
                 }
                 parts.AddRange(columnInfo.ReportColumn.Column.Parts);
                 Identifier identifier = new Identifier(parts);
@@ -176,10 +177,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 //       values in the case of label types and ratios.
                 // TODO(nicksh): Something more general
                 bool hidden = false;
-                const string nameTotalRatioTo = "TotalAreaRatioTo";
-                const string nameRatioTo = "AreaRatioTo";
+                //const string nameTotalRatioTo = "TotalAreaRatioTo";
+                //const string nameRatioTo = "AreaRatioTo";
                 string colCap = columnInfo.Caption;
-                if (Equals(colCap, "TotalAreaRatio") || Equals(colCap, "AreaRatio"))
+                // L10N: Caption is set to HeaderText in PreviewReportDlg
+                if (Equals(colCap, Resources.Pivoter_QualifyColumnInfo_TotalAreaRatio) || Equals(colCap, Resources.Pivoter_QualifyColumnInfo_AreaRatio))
                 {
                     // HACK: Unfortunately, the default internal standard label type
                     //       is needed in order to do this correctly.  The string "heavy"
@@ -190,13 +192,13 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     hidden = RowKeyContains(rowKey, IsotopeLabelType.heavy.ToString());
                 }
                 // Hide RatioTo columns for the label type for which they are a ratio
-                else if (colCap.StartsWith(nameTotalRatioTo))
+                else if (colCap.StartsWith(Resources.Pivoter_QualifyColumnInfo_TotalAreaRatioTo)) // L10N: Caption is set to HeaderText in PreviewReportDlg
                 {
-                    hidden = RowKeyContains(rowKey, colCap.Substring(nameTotalRatioTo.Length));
+                    hidden = RowKeyContains(rowKey, colCap.Substring(Resources.Pivoter_QualifyColumnInfo_TotalAreaRatioTo.Length));
                 }
-                else if (colCap.StartsWith(nameRatioTo))
+                else if (colCap.StartsWith(Resources.Pivoter_QualifyColumnInfo_AreaRatioTo))
                 {
-                    hidden = RowKeyContains(rowKey, colCap.Substring(nameRatioTo.Length));                    
+                    hidden = RowKeyContains(rowKey, colCap.Substring(Resources.Pivoter_QualifyColumnInfo_AreaRatioTo.Length));                    
                 }
 
                 return new ColumnInfo
@@ -214,7 +216,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 // ReSharper restore ParameterTypeCanBeEnumerable.Local
             {
                 string keyPartLower = keyPart.ToLower();
-                string keyPartSpaces = keyPartLower.Replace('_', ' ');  // Ugh.
+                string keyPartSpaces = keyPartLower.Replace('_', ' ');  // Ugh. // Not L10N
 
                 foreach (var part in rowKey)
                 {

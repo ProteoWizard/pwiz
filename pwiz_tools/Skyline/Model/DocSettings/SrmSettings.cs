@@ -893,7 +893,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     librarySpecs[i] = libraries.LibrarySpecs[i];
                     if (librarySpecs[i] == null)
-                        throw new InvalidDataException("Settings missing library spec.");
+                        throw new InvalidDataException(Resources.SrmSettings_ConnectLibrarySpecs_Settings_missing_library_spec);
                     continue;
                 }
 
@@ -964,8 +964,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         foreach (StaticMod existingMod in defSet.StaticModList)
                         {
                             if (Equals(existingMod.Name, modName))
+                            {
                                 throw new InvalidDataException(
-                                    string.Format("The modification '{0}' already exists with a different definition.", modName));
+                                    string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                                  modName));
+                            }
                         }
                     }
                 }
@@ -984,8 +987,11 @@ namespace pwiz.Skyline.Model.DocSettings
                             foreach (StaticMod existingMod in defSet.HeavyModList)
                             {
                                 if (Equals(existingMod.Name, modName))
+                                {
                                     throw new InvalidDataException(
-                                        string.Format("The modification '{0}' already exists with a different definition.", modName));
+                                        string.Format(Resources.SrmSettings_UpdateDefaultModifications_The_modification__0__already_exists_with_a_different_definition,
+                                                      modName));
+                                }
                             }
                         }
                     }

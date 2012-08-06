@@ -20,12 +20,14 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -55,9 +57,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public static class WindowMargin
         {
-            public const string NONE = "None";
-            public const string SYMMETRIC = "Symmetric";
-            public const string ASYMMETRIC = "Asymmetric";
+            public static string NONE { get { return Resources.WindowMargin_NONE_None; } }
+            public static string SYMMETRIC { get { return Resources.WindowMargin_SYMMETRIC_Symmetric; } }
+            public static string ASYMMETRIC { get { return Resources.WindowMargin_ASYMMETRIC_Asymmetric; } }
         };
 
         public CalculateIsolationSchemeDlg()
@@ -87,17 +89,18 @@ namespace pwiz.Skyline.SettingsUI
             int windowsPerScan = 0;
 
             double.TryParse(textOverlap.Text, out overlap);
-            switch (comboMargins.SelectedItem.ToString())
-            {
-                case WindowMargin.SYMMETRIC:
-                    double.TryParse(textMarginLeft.Text, out marginLeft);
-                    marginRight = marginLeft;
-                    break;
 
-                case WindowMargin.ASYMMETRIC:
-                    double.TryParse(textMarginLeft.Text, out marginLeft);
-                    double.TryParse(textMarginRight.Text, out marginRight);
-                    break;
+            var comboMarginSelectedItem = comboMargins.SelectedItem.ToString();
+
+            if (string.Equals(comboMarginSelectedItem,WindowMargin.SYMMETRIC))
+            {
+                double.TryParse(textMarginLeft.Text, out marginLeft);
+                marginRight = marginLeft;
+            }
+            else if (string.Equals(comboMarginSelectedItem, WindowMargin.ASYMMETRIC))
+            {
+                double.TryParse(textMarginLeft.Text, out marginLeft);
+                double.TryParse(textMarginRight.Text, out marginRight);
             }
 
             // No isolation windows if we don't have enough information or it is nonsense.
@@ -160,9 +163,9 @@ namespace pwiz.Skyline.SettingsUI
             if (windowCount == 0)
                 labelWindowCount.Text = string.Empty;
             else if (windowCount > MAX_GENERATED_WINDOWS)
-                labelWindowCount.Text = string.Format(">{0}", MAX_GENERATED_WINDOWS);
+                labelWindowCount.Text = string.Format(">{0}", MAX_GENERATED_WINDOWS); // Not L10N
             else
-                labelWindowCount.Text = string.Format("{0}", windowCount);
+                labelWindowCount.Text = string.Format("{0}", windowCount); // Not L10N
         }
 
         public void OkDialog()
@@ -182,7 +185,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (start >= end)
             {
-                MessageDlg.Show(this, "Start value must be less than End value.");
+                MessageDlg.Show(this, Resources.CalculateIsolationSchemeDlg_OkDialog_Start_value_must_be_less_than_End_value);
                 return;
             }
 
@@ -195,7 +198,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (windowWidth > end - start)
             {
-                MessageDlg.Show(this, "Window width must be less than or equal to the isolation range.");
+                MessageDlg.Show(this, Resources.CalculateIsolationSchemeDlg_OkDialog_Window_width_must_be_less_than_or_equal_to_the_isolation_range);
                 return;
             }
 
@@ -231,8 +234,7 @@ namespace pwiz.Skyline.SettingsUI
                 // Make sure multiplexed window count is a multiple of windows per scan.
                 if (Multiplexed && IsolationWindows.Count % windowsPerScan != 0)
                 {
-                    MessageDlg.Show(this,
-                        "The number of generated windows could not be adjusted to be a multiple of the windows per scan.  Try changing the windows per scan or the End value.");
+                    MessageDlg.Show(this, Resources.CalculateIsolationSchemeDlg_OkDialog_The_number_of_generated_windows_could_not_be_adjusted_to_be_a_multiple_of_the_windows_per_scan_Try_changing_the_windows_per_scan_or_the_End_value);
                     return;
                 }
             }
@@ -252,22 +254,21 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboMargins_SelectedIndexChanged(object sender, EventArgs e)
         {
-            switch (comboMargins.SelectedItem.ToString())
+            var comboMarginsSelectedItem = comboMargins.SelectedItem.ToString();
+            if (string.Equals(comboMarginsSelectedItem,WindowMargin.NONE))
             {
-                case WindowMargin.NONE:
-                    textMarginLeft.Enabled = false;
-                    textMarginRight.Visible = false;
-                    break;
-
-                case WindowMargin.SYMMETRIC:
-                    textMarginLeft.Enabled = true;
-                    textMarginRight.Visible = false;
-                    break;
-
-                case WindowMargin.ASYMMETRIC:
-                    textMarginLeft.Enabled = true;
-                    textMarginRight.Visible = true;
-                    break;
+                textMarginLeft.Enabled = false;
+                textMarginRight.Visible = false;
+            }
+            else if (string.Equals(comboMarginsSelectedItem,WindowMargin.SYMMETRIC))
+            {
+                textMarginLeft.Enabled = true;
+                textMarginRight.Visible = false;
+            }
+            else if (string.Equals(comboMarginsSelectedItem,WindowMargin.ASYMMETRIC))
+            {
+                textMarginLeft.Enabled = true;
+                textMarginRight.Visible = true;
             }
         }
 
@@ -277,8 +278,8 @@ namespace pwiz.Skyline.SettingsUI
             double.TryParse(textOverlap.Text, out overlap);
             if (cbOptimizeWindowPlacement.Checked && overlap != 0)
             {
-                using (var dlg = new MultiButtonMsgDlg("Window optimization cannot be applied to overlapping isolation windows. " +
-                    "Click OK to remove overlap, or Cancel to cancel optimization.", "OK"))
+                using (var dlg = new MultiButtonMsgDlg(Resources.CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization,
+                                                       MultiButtonMsgDlg.BUTTON_OK))
                 {
                     if (dlg.ShowDialog() == DialogResult.Cancel)
                         cbOptimizeWindowPlacement.Checked = false;

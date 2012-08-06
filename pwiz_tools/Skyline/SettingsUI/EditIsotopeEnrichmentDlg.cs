@@ -24,6 +24,7 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -36,11 +37,11 @@ namespace pwiz.Skyline.SettingsUI
         private static readonly IList<KeyValuePair<string, string>> LIST_NAME_SYMBOL =
             new[]
                 {
-                    new KeyValuePair<string, string>("2H", BioMassCalc.H2),
-                    new KeyValuePair<string, string>("13C", BioMassCalc.C13),
-                    new KeyValuePair<string, string>("15N", BioMassCalc.N15),
-                    new KeyValuePair<string, string>("17O", BioMassCalc.O17),
-                    new KeyValuePair<string, string>("18O", BioMassCalc.O18),
+                    new KeyValuePair<string, string>("2H", BioMassCalc.H2), // Not L10N
+                    new KeyValuePair<string, string>("13C", BioMassCalc.C13), // Not L10N
+                    new KeyValuePair<string, string>("15N", BioMassCalc.N15), // Not L10N
+                    new KeyValuePair<string, string>("17O", BioMassCalc.O17), // Not L10N
+                    new KeyValuePair<string, string>("18O", BioMassCalc.O18), // Not L10N
                 };
 
         private IsotopeEnrichments _enrichments;
@@ -102,7 +103,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(en => !ReferenceEquals(_enrichments, en) && Equals(name, en.Name)))
             {
-                helper.ShowTextBoxError(textName, "The isotope enrichments named '{0}' already exist.", name);
+                helper.ShowTextBoxError(textName, Resources.EditIsotopeEnrichmentDlg_OkDialog_The_isotope_enrichments_named__0__already_exist, name);
                 return;
             }
 
@@ -130,7 +131,7 @@ namespace pwiz.Skyline.SettingsUI
             const double max = IsotopeEnrichmentItem.MAX_ATOM_PERCENT_ENRICHMENT*100;
             if (min > enrichment || enrichment > max)
             {
-                InvalidCell(e, cell, "The enrichment {0} must be between {1} and {2}.", min, max);
+                InvalidCell(e, cell, Resources.EditIsotopeEnrichmentDlg_ValidateEnrichment_The_enrichment__0__must_be_between__1__and__2__, min, max);
                 return false;
             }
 
@@ -148,7 +149,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                InvalidCell(e, cell, "The entry {0} is not valid.", value);
+                InvalidCell(e, cell, Resources.EditIsotopeEnrichmentDlg_ValidateCell_The_entry__0__is_not_valid, value);
                 return false;
             }
 

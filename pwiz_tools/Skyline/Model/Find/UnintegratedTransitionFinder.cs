@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Model.Find
         {
             get
             {
-                return "Unintegrated transitions";
+                return Resources.UnintegratedTransitionFinder_DisplayName_Unintegrated_transitions;
             }
         }
 
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.Model.Find
             }
             if (transitionChromInfo.Area == 0)
             {
-                return new FindMatch("Unintegrated transition");
+                return new FindMatch(Resources.UnintegratedTransitionFinder_Match_Unintegrated_transition);
             }
             return null;
         }

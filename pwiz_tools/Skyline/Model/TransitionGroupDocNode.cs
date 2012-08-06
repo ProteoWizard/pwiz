@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -1390,7 +1391,7 @@ namespace pwiz.Skyline.Model
                     ChromFileInfoId fileId = chromInfo.FileId;
                     int fileOrder = IndexOfFileInSettings(fileId);
                     if (fileOrder == -1)
-                        throw new InvalidDataException("Attempt to add integration information for missing file.");
+                        throw new InvalidDataException(Resources.TransitionGroupChromInfoListCalculator_AddChromInfoList_Attempt_to_add_integration_information_for_missing_file);
                     int step = chromInfo.OptimizationStep;
                     int i = IndexOfCalc(fileOrder, step);
                     if (i >= 0)
@@ -1547,7 +1548,8 @@ namespace pwiz.Skyline.Model
                 ResultsCount++;
 
                 Debug.Assert(ReferenceEquals(info.FileId, FileId),
-                             string.Format("Grouping transitions from file {0} with file {1}", info.FileIndex, FileId.GlobalIndex));
+                             string.Format(Resources.TransitionGroupChromInfoCalculator_AddChromInfo_Grouping_transitions_from_file__0__with_file__1__,
+                                           info.FileIndex, FileId.GlobalIndex));
                 FileId = info.FileId;
                 FileOrder = Settings.MeasuredResults.Chromatograms[ResultsIndex].IndexOfId(FileId);
 
@@ -1700,7 +1702,7 @@ namespace pwiz.Skyline.Model
                 }
             }
             if (indexPeakBest == -1)
-                throw new ArgumentOutOfRangeException(string.Format("No peak found at {0:F01}", retentionTime));
+                throw new ArgumentOutOfRangeException(string.Format(Resources.TransitionGroupDocNode_ChangePeak_No_peak_found_at__0__, retentionTime));
             // Calculate extents of the peaks being added
             double startMin = double.MaxValue, endMax = double.MinValue;
             foreach (TransitionDocNode nodeTran in Children)

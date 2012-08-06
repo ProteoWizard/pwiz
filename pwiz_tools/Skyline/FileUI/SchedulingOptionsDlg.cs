@@ -144,7 +144,7 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                return string.Format("Using trends in scheduling requires at least {0} replicates.",
+                return string.Format(Resources.SchedulingOptionsDlg_TrendsError_Using_trends_in_scheduling_requires_at_least__0__replicates,
                                      TransitionGroupDocNode.MIN_TREND_REPLICATES);
             }
         }

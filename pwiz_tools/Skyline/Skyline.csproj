@@ -663,6 +663,11 @@
     <Compile Include="Controls\UndoRedoButtons.cs" />
     <Compile Include="Model\V01\Sequence.cs" />
     <Compile Include="Model\V01\XmlExport.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\EditIsolationWindow.cs" />
     <Compile Include="SettingsUI\CalculateIsolationSchemeDlg.cs">
       <SubType>Form</SubType>
@@ -889,6 +894,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\AlertLinkDlg.resx">
       <DependentUpon>AlertLinkDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\PasteTypeDlg.resx">
       <DependentUpon>PasteTypeDlg.cs</DependentUpon>
@@ -926,6 +932,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditIsolationSchemeDlg.resx">
       <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditListDlg.resx">
       <DependentUpon>EditListDlg.cs</DependentUpon>
@@ -952,8 +959,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\RTDetails.resx">
       <DependentUpon>RTDetails.cs</DependentUpon>
@@ -974,11 +981,6 @@
       <DependentUpon>Skyline.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-    </Compile>
     <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.resx">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
     </EmbeddedResource>

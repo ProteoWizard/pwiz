@@ -23,6 +23,7 @@ using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using Timer=System.Windows.Forms.Timer;
 
@@ -45,7 +46,7 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             _libraryName = libraryName;
-            LibraryNameLabel.Text = String.Format("Library {0}", _libraryName);
+            LibraryNameLabel.Text = string.Format(Resources.BuildLibraryNotification_BuildLibraryNotification_Library__0__, _libraryName);
 
             var showParams = new FormAnimator.AnimationParams(
                                     FormAnimator.AnimationMethod.slide, 
@@ -209,7 +210,8 @@ namespace pwiz.Skyline.SettingsUI
             var indexViewLibDlg = Program.MainWindow.OwnedForms.IndexOf(form => form is ViewLibraryDlg);
             if (indexViewLibDlg == -1)
             {
-                var dlg = new ViewLibraryDlg(NotificationContainer.LibraryManager, libName, Program.MainWindow) { Owner = Program.MainWindow };
+                var dlg = new ViewLibraryDlg(NotificationContainer.LibraryManager, libName, Program.MainWindow)
+                              {Owner = Program.MainWindow};
                 dlg.Show();
             }
             else
@@ -306,7 +308,7 @@ namespace pwiz.Skyline.SettingsUI
                     frm.Left = anchor.X;
                     frm.Top = anchor.Y - frm.Height;
 
-                    Thread th = new Thread(frm.Notify) { Name = "BuildLibraryNotification", IsBackground = true };
+                    Thread th = new Thread(frm.Notify) { Name = "BuildLibraryNotification", IsBackground = true }; // Not L10N
                     th.SetApartmentState(ApartmentState.STA);
                     th.Start();
 

@@ -25,14 +25,16 @@ using System.Text;
 using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
     internal static class VendorIssueHelper
     {
-        private const string EXE_MZ_WIFF = "mzWiff";
-        private const string EXT_WIFF_SCAN = ".scan";
+        private const string EXE_MZ_WIFF = "mzWiff"; // Not L10N
+        private const string EXT_WIFF_SCAN = ".scan"; // Not L10N
 
         private const string EXE_GROUP2_XML = "group2xml";
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
@@ -47,14 +49,20 @@ namespace pwiz.Skyline.Model.Results
                 switch (slowlyException.WorkAround)
                 {
                     case LoadingTooSlowlyException.Solution.local_file:
-                        loader.UpdateProgress(status = status.ChangeMessage(string.Format("Local copy work-around for {0}", Path.GetFileName(filePath))));
+                        loader.UpdateProgress(
+                            status = status.ChangeMessage(
+                                string.Format(Resources.VendorIssueHelper_CreateTempFileSubstitute_Local_copy_work_around_for__0__,
+                                              Path.GetFileName(filePath))));
                         File.Copy(filePath, tempFileSubsitute, true);
                         break;
                     // This is a legacy solution that should no longer ever be invoked.  The mzWiff.exe has
                     // been removed from the installation.
                     // TODO: This code should be removed also.
                     case LoadingTooSlowlyException.Solution.mzwiff_conversion:
-                        loader.UpdateProgress(status = status.ChangeMessage(string.Format("Convert to mzXML work-around for {0}", Path.GetFileName(filePath))));
+                        loader.UpdateProgress(
+                            status = status.ChangeMessage(
+                                string.Format(Resources.VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzXML_work_around_for__0__,
+                                              Path.GetFileName(filePath))));
                         ConvertWiffToMzxml(filePath, sampleIndex, tempFileSubsitute, slowlyException, loader);
                         break;
                 }
@@ -167,12 +175,14 @@ namespace pwiz.Skyline.Model.Results
         private static void ConvertWiffToMzxml(string filePathWiff, int sampleIndex,
             string outputPath, LoadingTooSlowlyException slowlyException, IProgressMonitor monitor)
         {
-            if (AdvApi.GetPathFromProgId("Analyst.ChromData") == null)
+            if (AdvApi.GetPathFromProgId("Analyst.ChromData") == null) // Not L10N
             {
-                throw new IOException(string.Format("The file {0} cannot be imported by the AB SCIEX WiffFileDataReader library in a reasonable time frame ({1:F02} min).\n" +
-                    "To work around this issue requires Analyst to be installed on the computer running {2}.\n" +
-                    "Please install Analyst, or run this import on a computure with Analyst installed",
-                    filePathWiff, slowlyException.PredictedMinutes, Program.Name));
+                var message = TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertWiffToMzxml_The_file__0__cannot_be_imported_by_the_AB_SCIEX_WiffFileDataReader_library_in_a_reasonable_time_frame_1_F02_min,
+                                                                  filePathWiff, slowlyException.PredictedMinutes),
+                                                    string.Format(Resources.VendorIssueHelper_ConvertWiffToMzxml_To_work_around_this_issue_requires_Analyst_to_be_installed_on_the_computer_running__0__,
+                                                                  Program.Name),
+                                                    Resources.VendorIssueHelper_ConvertWiffToMzxml_Please_install_Analyst__or_run_this_import_on_a_computure_with_Analyst_installed);
+                throw new IOException(message);
             }
 
             // The WIFF file needs to be on the local file system for the conversion
@@ -204,10 +214,10 @@ namespace pwiz.Skyline.Model.Results
         {
             var argv = new[]
                            {
-                               "--mzXML",
-                               "-s" + (sampleIndex + 1),
-                               "\"" + filePathWiff + "\"",
-                               "\"" + outputPath + "\"",
+                               "--mzXML", // Not L10N
+                               "-s" + (sampleIndex + 1), // Not L10N
+                               "\"" + filePathWiff + "\"", // Not L10N
+                               "\"" + outputPath + "\"", // Not L10N
                            };
 
             var psi = new ProcessStartInfo(EXE_MZ_WIFF)
@@ -215,7 +225,7 @@ namespace pwiz.Skyline.Model.Results
                 CreateNoWindow = true,
                 UseShellExecute = false,
                 // Common directory includes the directory separator
-                WorkingDirectory = Path.GetDirectoryName(filePathWiff) ?? "",
+                WorkingDirectory = Path.GetDirectoryName(filePathWiff) ?? string.Empty,
                 Arguments = string.Join(" ", argv.ToArray()),
                 RedirectStandardError = true,
                 RedirectStandardOutput = true,
@@ -234,15 +244,18 @@ namespace pwiz.Skyline.Model.Results
                 if (monitor.IsCanceled)
                 {
                     proc.Kill();
-                    throw new LoadCanceledException(new ProgressStatus("").Cancel());
+                    throw new LoadCanceledException(new ProgressStatus(string.Empty).Cancel());
                 }
             }
 
             // Exit code -4 is a compatibility warning but not necessarily an error
             if (proc == null || (proc.ExitCode != 0 && !IsCompatibilityWarning(proc.ExitCode)))
             {
-                throw new IOException(string.Format("Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library.\n\n{2}",
-                    sampleIndex, filePathWiff, sbOut));
+                var message = TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library,
+                                                                  sampleIndex, filePathWiff),
+                                                    string.Empty,
+                                                    sbOut.ToString());
+                throw new IOException(message);
             }
         }
 
@@ -263,7 +276,7 @@ namespace pwiz.Skyline.Model.Results
         public enum Solution { local_file, mzwiff_conversion }
 
         public LoadingTooSlowlyException(Solution solution, ProgressStatus status, double predictedMinutes, double maximumMinutes)
-            : base(string.Format("Data import expected to consume {0} minutes with maximum of {1} mintues",
+            : base(string.Format(Resources.LoadingTooSlowlyException_LoadingTooSlowlyException_Data_import_expected_to_consume__0__minutes_with_maximum_of__1__mintues,
                                  predictedMinutes, maximumMinutes))
         {
             WorkAround = solution;

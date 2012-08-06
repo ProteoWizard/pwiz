@@ -8,6 +8,7 @@ using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
 {
@@ -407,14 +408,15 @@ namespace pwiz.Skyline.Controls
                                                          },
                                            };
                         StatementCompletionForm.AddDescription(listItem,
-                                                               match.Protein.Name + " " + match.Protein.Description,
+                                                               TextUtil.SpaceSeparate(match.Protein.Name, match.Protein.Description),
                                                                null);
                         listItem.ImageIndex = (int) ImageId.peptide;
-                        var tooltip =
-                            new StringBuilder("Descriptions:\n" + match.Protein.Name + " " + match.Protein.Description);
+                        var tooltip = new StringBuilder();
+                        tooltip.AppendLine(Resources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
+                               .Append(match.Protein.Name).Append(TextUtil.SEPARATOR_SPACE).Append(match.Protein.Description);
                         foreach (var name in match.Protein.AlternativeNames)
                         {
-                            tooltip.Append("\n" + name.Name + " " + name.Description);
+                            tooltip.AppendLine().Append(name.Name).Append(TextUtil.SEPARATOR_SPACE).Append(name.Description);
                         }
                         listItem.ToolTipText = StripTabs(tooltip.ToString());
                         listItems.Add(listItem);
@@ -443,12 +445,12 @@ namespace pwiz.Skyline.Controls
                         StatementCompletionForm.AddDescription(listItem, match.Protein.Description, null);
                     }
                     listItem.ImageIndex = (int) ImageId.protein;
-                    var tooltip =
-                        new StringBuilder("Descriptions:\n" + match.Protein.Name + " "
-                                          + match.Protein.Description);
+                    var tooltip = new StringBuilder();
+                    tooltip.AppendLine(Resources.StatementCompletionTextBox_CreateListViewItems_Descriptions)
+                           .Append(match.Protein.Name).Append(TextUtil.SEPARATOR_SPACE).Append(match.Protein.Description);
                     foreach (var altName in match.Protein.AlternativeNames)
                     {
-                        tooltip.Append("\n" + altName.Name + " " + altName.Description);
+                        tooltip.AppendLine().Append(altName.Name).Append(TextUtil.SEPARATOR_SPACE).Append(altName.Description);
                     }
                     listItem.ToolTipText = StripTabs(tooltip.ToString());
                     listItems.Add(listItem);
@@ -465,7 +467,7 @@ namespace pwiz.Skyline.Controls
                     AlternativeName mainName = match.AlternativeDescription;
                     string matchName = match.Protein.Name;
                     if (matchName.Length > MAX_NAME_LENGTH)
-                        matchName = matchName.Substring(0, MAX_NAME_LENGTH) + "...";
+                        matchName = matchName.Substring(0, MAX_NAME_LENGTH) + "..."; // Not L10N
                     var proteinName = new AlternativeName
                                                       {
                                                           Name = matchName,
@@ -491,14 +493,14 @@ namespace pwiz.Skyline.Controls
                     if (match.Protein.AlternativeNames.Count > 0)
                     {
                         alternativeNames.AddRange(match.Protein.AlternativeNames);
-                        StringBuilder tooltip = new StringBuilder("Alternative Names:");
+                        StringBuilder tooltip = new StringBuilder(Resources.StatementCompletionTextBox_CreateListViewItems_Alternative_Names);
                         foreach (var altName in alternativeNames)
                         {
                             if (altName.Name == mainName.Name)
                             {
                                 continue;
                             }
-                            tooltip.Append("\n" + altName.Name + " " + altName.Description);
+                            tooltip.AppendLine().Append(altName.Name).Append(TextUtil.SEPARATOR_SPACE).Append(altName.Description);
                         }
                         listItem.ToolTipText = StripTabs(tooltip.ToString());
                     }
@@ -547,7 +549,7 @@ namespace pwiz.Skyline.Controls
 
         private static String StripTabs(String str)
         {
-            return str.Replace('\t', ' ');
+            return str.Replace(TextUtil.SEPARATOR_TSV, TextUtil.SEPARATOR_SPACE);
         }
 
         public void OnSelectionMade(StatementCompletionItem statementCompletionItem)

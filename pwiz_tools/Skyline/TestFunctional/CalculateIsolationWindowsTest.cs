@@ -21,6 +21,7 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
 
@@ -54,21 +55,21 @@ namespace pwiz.SkylineTestFunctional
             _calcDlg = ShowDialog<CalculateIsolationSchemeDlg>(_editDlg.Calculate);
 
             // Check Start values.
-            CheckError(() => _calcDlg.Start = null, "Start m/z must contain a decimal value.");
-            CheckError(() => _calcDlg.Start = 49, "Start m/z must be greater than or equal to 50.");
-            CheckError(() => _calcDlg.Start = 2001, "Start m/z must be less than or equal to 2000.");
-            CheckError(() => _calcDlg.Start = 100, "End m/z must contain a decimal value.");
+            CheckError(() => _calcDlg.Start = null, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, 1);
+            CheckError(() => _calcDlg.Start = 49, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.Start = 2001, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.Start = 100, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, 1);
 
             // Check End values.
-            CheckError(() => _calcDlg.End = 49, "End m/z must be greater than or equal to 50.");
-            CheckError(() => _calcDlg.End = 2001, "End m/z must be less than or equal to 2000.");
-            CheckError(() => _calcDlg.End = 100, "Start value must be less than End value.");
-            CheckError(() => _calcDlg.End = 101, "Window width must contain a decimal value.");
+            CheckError(() => _calcDlg.End = 49, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.End = 2001, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.End = 100, Resources.CalculateIsolationSchemeDlg_OkDialog_Start_value_must_be_less_than_End_value);
+            CheckError(() => _calcDlg.End = 101, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, 1);
 
             // Check WindowWidth values.
-            CheckError(() => _calcDlg.WindowWidth = 0.99, "Window width must be greater than or equal to 1.");
-            CheckError(() => _calcDlg.WindowWidth = 1951, "Window width must be less than or equal to 1950.");
-            CheckError(() => _calcDlg.WindowWidth = 1950, "Window width must be less than or equal to the isolation range.");
+            CheckError(() => _calcDlg.WindowWidth = 0.99, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.WindowWidth = 1951, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.WindowWidth = 1950, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
             CheckError(() => _calcDlg.WindowWidth = 1);
 
             // Check Overlap values.
@@ -79,8 +80,8 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.WindowWidth = 1;
                     _calcDlg.Overlap = -1;
                 },
-                "Overlap must be greater than or equal to 0.");
-            CheckError(() => _calcDlg.Overlap = 100, "Overlap must be less than or equal to 99.");
+                Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.Overlap = 100, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
             CheckError(() => _calcDlg.Overlap = 50);
 
             // Check Overlap/Optimize conflict.
@@ -94,7 +95,7 @@ namespace pwiz.SkylineTestFunctional
                 },
                 msgDlg =>
                 {
-                    AssertEx.Contains(msgDlg.Message, "Window optimization cannot be applied to overlapping isolation windows.");
+                    AssertEx.Contains(msgDlg.Message, Resources.CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization);
                     msgDlg.Btn1Click();
                 });
             RunUI(() =>
@@ -114,7 +115,7 @@ namespace pwiz.SkylineTestFunctional
                 },
                 msgDlg =>
                 {
-                    AssertEx.Contains(msgDlg.Message, "Window optimization cannot be applied to overlapping isolation windows.");
+                    AssertEx.Contains(msgDlg.Message, Resources.CalculateIsolationSchemeDlg_cbOptimizeWindowPlacement_CheckedChanged_Window_optimization_cannot_be_applied_to_overlapping_isolation_windows_Click_OK_to_remove_overlap_or_Cancel_to_cancel_optimization);
                     msgDlg.BtnCancelClick();
                 });
             RunUI(() =>
@@ -134,20 +135,20 @@ namespace pwiz.SkylineTestFunctional
                     _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.SYMMETRIC;
                     _calcDlg.MarginLeft = null;
                 },
-                "Margin width must contain a decimal value.");
-            CheckError(() => _calcDlg.MarginLeft = 0, "Margin width must be greater than or equal to ");
-            CheckError(() => _calcDlg.MarginLeft = 1951, "Margin width must be less than or equal to 1950.");
-            CheckError(() => _calcDlg.MarginLeft = 1900, "Isolation window margins cover the entire isolation window at the extremes of the instrument range.");
+                Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, 1);
+            CheckError(() => _calcDlg.MarginLeft = 0, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.MarginLeft = 1951, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.MarginLeft = 1900, Resources.IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range);
             CheckError(() =>
                 {
                     _calcDlg.Margins = CalculateIsolationSchemeDlg.WindowMargin.ASYMMETRIC;
                     _calcDlg.MarginLeft = 1;
                     _calcDlg.MarginRight = null;
                 },
-                "Margin width must contain a decimal value.");
-            CheckError(() => _calcDlg.MarginRight = 0, "Margin width must be greater than or equal to ");
-            CheckError(() => _calcDlg.MarginRight = 1951, "Margin width must be less than or equal to 1950.");
-            CheckError(() => _calcDlg.MarginRight = 1900, "Isolation window margins cover the entire isolation window at the extremes of the instrument range.");
+                Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_contain_a_decimal_value, 1);
+            CheckError(() => _calcDlg.MarginRight = 0, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_greater_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.MarginRight = 1951, Resources.MessageBoxHelper_ValidateDecimalTextBox__0__must_be_less_than_or_equal_to__1__, 2);
+            CheckError(() => _calcDlg.MarginRight = 1900, Resources.IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range);
             CheckError(() => _calcDlg.MarginRight = 3);
 
             // One simple window.
@@ -268,7 +269,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         // Set dialog values, and check for the expected error message.
-        private void CheckError(Action func, string errorMessage = null)
+        private void CheckError(Action func, string errorMessage = null, int replacement = 0)
         {
             RunUI(func);
             if (errorMessage == null)
@@ -280,7 +281,7 @@ namespace pwiz.SkylineTestFunctional
             {
                 RunDlg<MessageDlg>(_calcDlg.OkDialog, messageDlg =>
                 {
-                    AssertEx.Contains(messageDlg.Message, errorMessage);
+                    AssertEx.AreComparableStrings(errorMessage,messageDlg.Message,replacement);
                     messageDlg.OkDialog();
                 });
             }

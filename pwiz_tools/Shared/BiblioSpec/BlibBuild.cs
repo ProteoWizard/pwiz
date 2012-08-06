@@ -16,12 +16,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.BiblioSpec.Properties;
 using pwiz.Common.SystemUtil;
 
 namespace pwiz.BiblioSpec
@@ -29,6 +32,42 @@ namespace pwiz.BiblioSpec
 // ReSharper disable InconsistentNaming
     public enum LibraryBuildAction { Create, Append }
 // ReSharper restore InconsistentNaming
+    public static class LibraryBuildActionExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new[]
+                                                                {
+                                                                    Resources.LibraryBuildActionExtension_LOCALIZED_VALUES_Create,
+                                                                    Resources.LibraryBuildActionExtension_LOCALIZED_VALUES_Append
+                                                                };
+        public static string GetLocalizedString(this LibraryBuildAction val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static LibraryBuildAction GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (LibraryBuildAction)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static LibraryBuildAction GetEnum(string enumValue, LibraryBuildAction defaultValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (LibraryBuildAction)i;
+                }
+            }
+            return defaultValue;
+        }
+    }
 
     public sealed class BlibBuild
     {

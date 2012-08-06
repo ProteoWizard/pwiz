@@ -30,6 +30,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 
 namespace pwiz.Skyline.Util
@@ -450,12 +451,12 @@ namespace pwiz.Skyline.Util
 
         public void Add(TItem item)
         {
-            throw new ReadOnlyException("Attempted modification of a read-only collection.");
+            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
         }
 
         public void Clear()
         {
-            throw new ReadOnlyException("Attempted modification of a read-only collection.");
+            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
         }
 
         public bool Contains(TItem item)
@@ -475,7 +476,7 @@ namespace pwiz.Skyline.Util
 
         public bool Remove(TItem item)
         {
-            throw new ReadOnlyException("Attempted modification of a read-only collection.");
+            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
         }
 
         public int Count
@@ -502,12 +503,12 @@ namespace pwiz.Skyline.Util
 
         public void Insert(int index, TItem item)
         {
-            throw new ReadOnlyException("Attempted modification of a read-only collection.");
+            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
         }
 
         public void RemoveAt(int index)
         {
-            throw new ReadOnlyException("Attempted modification of a read-only collection.");
+            throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
         }
 
         public TItem this[int index]
@@ -522,7 +523,7 @@ namespace pwiz.Skyline.Util
 
             set
             {
-                throw new ReadOnlyException("Attempted modification of a read-only collection.");
+                throw new ReadOnlyException(Resources.OneOrManyList_Add_Attempted_modification_of_a_read_only_collection);
             }
         }
 
@@ -546,10 +547,14 @@ namespace pwiz.Skyline.Util
             if (Equals(_many, null))
             {
                 if (index != 0)
-                    throw new IndexOutOfRangeException(string.Format("The index {0} must be 0 for a single entry list.", index));
+                    throw new IndexOutOfRangeException(
+                        string.Format(
+                            Resources.OneOrManyList_ValidateIndex_The_index__0__must_be_0_for_a_single_entry_list, index));
             }
             else if (0 > index || index > _many.Length)
-                throw new IndexOutOfRangeException(string.Format("The index {0} must be between 0 and {1}.", index, _many.Length));
+                throw new IndexOutOfRangeException(
+                    string.Format(Resources.OneOrManyList_ValidateIndex_The_index__0__must_be_between_0_and__1__, index,
+                                  _many.Length));
         }
 
         #region object overrides
@@ -978,13 +983,13 @@ namespace pwiz.Skyline.Util
         public static string MakeId(IEnumerable<char> name, bool capitalize)
         {
             StringBuilder sb = new StringBuilder();
-            char lastC = '\0';
+            char lastC = '\0'; // Not L10N
             foreach (var c in name)
             {
                 if (char.IsLetterOrDigit(c))
                 {
-                    if (lastC == ' ')
-                        sb.Append('_');
+                    if (lastC == ' ') // Not L10N
+                        sb.Append('_'); // Not L10N
                     lastC = c;
                     if (capitalize && sb.Length == 0)
                         sb.Append(c.ToString(CultureInfo.InvariantCulture).ToUpper());
@@ -992,7 +997,7 @@ namespace pwiz.Skyline.Util
                         sb.Append(c);
                 }
                 // Must start with a letter or digit
-                else if (lastC != '\0')
+                else if (lastC != '\0') // Not L10N
                 {
                     // After the start _ okay (dashes turned out to be problematic)
                     if (c == '_' /* || c == '-'*/)
@@ -1000,12 +1005,13 @@ namespace pwiz.Skyline.Util
                     // All other characters are replaced with _, but once the next
                     // letter or number is seen.
                     else if (char.IsLetterOrDigit(lastC))
-                        lastC = ' ';
+                        lastC = ' '; // Not L10N
                 }
             }
             return sb.ToString();
         }
 
+        // Not L10N
         private static readonly Regex REGEX_XML_ID = new Regex("/^[:_A-Za-z][-.:_A-Za-z0-9]*$/");
         private const string XML_ID_FIRST_CHARS = ":_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
         private const string XML_ID_FOLLOW_CHARS = "-.:_ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -1015,7 +1021,8 @@ namespace pwiz.Skyline.Util
         public static string MakeXmlId(string name)
         {
             if (string.IsNullOrEmpty(name))
-                throw new InvalidOperationException("Failure creating XML ID. Input string may not be empty.");
+                throw new InvalidOperationException(
+                    Resources.Helpers_MakeXmlId_Failure_creating_XML_ID_Input_string_may_not_be_empty);
             if (REGEX_XML_ID.IsMatch(name))
                 return name;
 
@@ -1025,7 +1032,7 @@ namespace pwiz.Skyline.Util
                 sb.Append(name[i++]);
             else
             {
-                sb.Append('_');
+                sb.Append('_'); // Not L10N
                 // If the first character is not allowable, advance past it.
                 // Otherwise, keep it in the ID.
                 if (!XML_ID_FOLLOW_CHARS.Contains(name[i]))
@@ -1037,13 +1044,13 @@ namespace pwiz.Skyline.Util
                 if (XML_ID_FOLLOW_CHARS.Contains(c))
                     sb.Append(c);
                 else if (char.IsWhiteSpace(c))
-                    sb.Append('_');
+                    sb.Append('_'); // Not L10N
                 else if (XML_NON_ID_SEPARATOR_CHARS.Contains(c))
-                    sb.Append(':');
+                    sb.Append(':'); // Not L10N
                 else if (XML_NON_ID_PUNCTUATION_CHARS.Contains(c))
-                    sb.Append('.');
+                    sb.Append('.'); // Not L10N
                 else
-                    sb.Append('-');
+                    sb.Append('-'); // Not L10N
             }
             return sb.ToString();
         }
@@ -1125,9 +1132,9 @@ namespace pwiz.Skyline.Util
             return count;
         }
 
-        private const char LABEL_SEP_CHAR = '_';
-        private const string ELIPSIS = "...";
-        private static readonly char[] SPACE_CHARS = new[] {'_', '-', ' ', '.', ','};
+        private const char LABEL_SEP_CHAR = '_'; // Not L10N
+        private const string ELIPSIS = "..."; // Not L10N
+        private static readonly char[] SPACE_CHARS = new[] { '_', '-', ' ', '.', ',' }; // Not L10N
 
         /// <summary>
         /// Finds repetitive text in labels and removes the text to save space.
@@ -1319,7 +1326,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="condition">condition to check</param>
         /// <param name="error">optional error message</param>
-        public static void Assume(bool condition, string error = "")
+        public static void Assume(bool condition, string error = "") // Not L10N
         {
             if (!condition)
                 throw new AssumptionException(error);
@@ -1334,7 +1341,7 @@ namespace pwiz.Skyline.Util
         public static T AssumeValue<T>(T? value) where T : struct
         {
             if (!value.HasValue)
-                throw new AssumptionException("Nullable was expected to have a value.");
+                throw new AssumptionException(Resources.Helpers_AssumeValue_Nullable_was_expected_to_have_a_value);
             return value.Value;
         }
     }

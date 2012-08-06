@@ -28,6 +28,7 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PivotReportDlg));
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.treeView = new System.Windows.Forms.TreeView();
             this.panel1 = new System.Windows.Forms.Panel();
@@ -47,6 +48,7 @@ namespace pwiz.Skyline.FileUI
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOk = new System.Windows.Forms.Button();
             this.panel4 = new System.Windows.Forms.Panel();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -58,8 +60,7 @@ namespace pwiz.Skyline.FileUI
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.Location = new System.Drawing.Point(16, 52);
+            resources.ApplyResources(this.splitContainer1, "splitContainer1");
             this.splitContainer1.Name = "splitContainer1";
             // 
             // splitContainer1.Panel1
@@ -71,98 +72,68 @@ namespace pwiz.Skyline.FileUI
             // 
             this.splitContainer1.Panel2.Controls.Add(this.lbxColumns);
             this.splitContainer1.Panel2.Controls.Add(this.toolStrip1);
-            this.splitContainer1.Size = new System.Drawing.Size(609, 310);
-            this.splitContainer1.SplitterDistance = 297;
-            this.splitContainer1.TabIndex = 1;
             this.splitContainer1.TabStop = false;
             // 
             // treeView
             // 
-            this.treeView.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.treeView, "treeView");
             this.treeView.HideSelection = false;
-            this.treeView.Location = new System.Drawing.Point(0, 0);
             this.treeView.Name = "treeView";
-            this.treeView.Size = new System.Drawing.Size(241, 310);
-            this.treeView.TabIndex = 0;
             this.treeView.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView_AfterSelect);
             // 
             // panel1
             // 
             this.panel1.Controls.Add(this.btnAdd);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.panel1.Location = new System.Drawing.Point(241, 0);
+            resources.ApplyResources(this.panel1, "panel1");
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(56, 310);
-            this.panel1.TabIndex = 1;
             // 
             // btnAdd
             // 
-            this.btnAdd.Enabled = false;
-            this.btnAdd.Location = new System.Drawing.Point(4, 83);
+            resources.ApplyResources(this.btnAdd, "btnAdd");
             this.btnAdd.Name = "btnAdd";
-            this.btnAdd.Size = new System.Drawing.Size(47, 23);
-            this.btnAdd.TabIndex = 0;
-            this.btnAdd.Text = "&Add >";
             this.btnAdd.UseVisualStyleBackColor = true;
             this.btnAdd.Click += new System.EventHandler(this.btnAdd_Click);
             // 
             // lbxColumns
             // 
-            this.lbxColumns.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.lbxColumns, "lbxColumns");
             this.lbxColumns.FormattingEnabled = true;
-            this.lbxColumns.IntegralHeight = false;
-            this.lbxColumns.Location = new System.Drawing.Point(0, 0);
             this.lbxColumns.Name = "lbxColumns";
             this.lbxColumns.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.lbxColumns.Size = new System.Drawing.Size(276, 310);
-            this.lbxColumns.TabIndex = 0;
             this.lbxColumns.SelectedIndexChanged += new System.EventHandler(this.lbxColumns_SelectedIndexChanged);
             // 
             // toolStrip1
             // 
-            this.toolStrip1.Dock = System.Windows.Forms.DockStyle.Right;
+            resources.ApplyResources(this.toolStrip1, "toolStrip1");
             this.toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
             this.toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.btnRemove,
             this.btnUp,
             this.btnDown});
-            this.toolStrip1.Location = new System.Drawing.Point(276, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(32, 310);
-            this.toolStrip1.TabIndex = 1;
-            this.toolStrip1.Text = "toolStrip1";
             // 
             // btnRemove
             // 
             this.btnRemove.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnRemove.Enabled = false;
+            resources.ApplyResources(this.btnRemove, "btnRemove");
             this.btnRemove.Image = global::pwiz.Skyline.Properties.Resources.Delete;
-            this.btnRemove.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnRemove.Name = "btnRemove";
-            this.btnRemove.Size = new System.Drawing.Size(29, 20);
-            this.btnRemove.Text = "Remove";
             this.btnRemove.Click += new System.EventHandler(this.btnRemove_Click);
             // 
             // btnUp
             // 
             this.btnUp.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnUp.Enabled = false;
+            resources.ApplyResources(this.btnUp, "btnUp");
             this.btnUp.Image = global::pwiz.Skyline.Properties.Resources.up_pro32;
-            this.btnUp.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnUp.Name = "btnUp";
-            this.btnUp.Size = new System.Drawing.Size(29, 20);
-            this.btnUp.Text = "Up";
             this.btnUp.Click += new System.EventHandler(this.btnUp_Click);
             // 
             // btnDown
             // 
             this.btnDown.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
-            this.btnDown.Enabled = false;
+            resources.ApplyResources(this.btnDown, "btnDown");
             this.btnDown.Image = global::pwiz.Skyline.Properties.Resources.down_pro32;
-            this.btnDown.ImageTransparentColor = System.Drawing.Color.Magenta;
             this.btnDown.Name = "btnDown";
-            this.btnDown.Size = new System.Drawing.Size(29, 20);
-            this.btnDown.Text = "Down";
             this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
             // 
             // panel3
@@ -170,36 +141,23 @@ namespace pwiz.Skyline.FileUI
             this.panel3.Controls.Add(this.textName);
             this.panel3.Controls.Add(this.label2);
             this.panel3.Controls.Add(this.btnExecute);
-            this.panel3.Dock = System.Windows.Forms.DockStyle.Top;
-            this.panel3.Location = new System.Drawing.Point(0, 0);
+            resources.ApplyResources(this.panel3, "panel3");
             this.panel3.Name = "panel3";
-            this.panel3.Size = new System.Drawing.Size(625, 52);
-            this.panel3.TabIndex = 0;
             // 
             // textName
             // 
-            this.textName.Location = new System.Drawing.Point(91, 18);
+            resources.ApplyResources(this.textName, "textName");
             this.textName.Name = "textName";
-            this.textName.Size = new System.Drawing.Size(205, 20);
-            this.textName.TabIndex = 1;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(12, 21);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(73, 13);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "Report &Name:";
             // 
             // btnExecute
             // 
-            this.btnExecute.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnExecute.Location = new System.Drawing.Point(526, 18);
+            resources.ApplyResources(this.btnExecute, "btnExecute");
             this.btnExecute.Name = "btnExecute";
-            this.btnExecute.Size = new System.Drawing.Size(75, 23);
-            this.btnExecute.TabIndex = 4;
-            this.btnExecute.Text = "&Preview...";
             this.btnExecute.UseVisualStyleBackColor = true;
             this.btnExecute.Click += new System.EventHandler(this.btnExecute_Click);
             // 
@@ -209,69 +167,46 @@ namespace pwiz.Skyline.FileUI
             this.panel2.Controls.Add(this.cbxPivotReplicate);
             this.panel2.Controls.Add(this.btnCancel);
             this.panel2.Controls.Add(this.btnOk);
-            this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel2.Location = new System.Drawing.Point(0, 362);
+            resources.ApplyResources(this.panel2, "panel2");
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(625, 46);
-            this.panel2.TabIndex = 2;
             // 
             // cbxPivotIsotopeLabel
             // 
-            this.cbxPivotIsotopeLabel.AutoSize = true;
-            this.cbxPivotIsotopeLabel.Location = new System.Drawing.Point(147, 6);
+            resources.ApplyResources(this.cbxPivotIsotopeLabel, "cbxPivotIsotopeLabel");
             this.cbxPivotIsotopeLabel.Name = "cbxPivotIsotopeLabel";
-            this.cbxPivotIsotopeLabel.Size = new System.Drawing.Size(117, 17);
-            this.cbxPivotIsotopeLabel.TabIndex = 3;
-            this.cbxPivotIsotopeLabel.Text = "Pivot Isotope Label";
             this.cbxPivotIsotopeLabel.UseVisualStyleBackColor = true;
             // 
             // cbxPivotReplicate
             // 
-            this.cbxPivotReplicate.AutoSize = true;
-            this.cbxPivotReplicate.Location = new System.Drawing.Point(12, 6);
+            resources.ApplyResources(this.cbxPivotReplicate, "cbxPivotReplicate");
             this.cbxPivotReplicate.Name = "cbxPivotReplicate";
-            this.cbxPivotReplicate.Size = new System.Drawing.Size(129, 17);
-            this.cbxPivotReplicate.TabIndex = 2;
-            this.cbxPivotReplicate.Text = "Pivot Replicate Name";
             this.cbxPivotReplicate.UseVisualStyleBackColor = true;
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(537, 11);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 1;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(456, 11);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 0;
-            this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // panel4
             // 
-            this.panel4.Dock = System.Windows.Forms.DockStyle.Left;
-            this.panel4.Location = new System.Drawing.Point(0, 52);
+            resources.ApplyResources(this.panel4, "panel4");
             this.panel4.Name = "panel4";
-            this.panel4.Size = new System.Drawing.Size(16, 310);
-            this.panel4.TabIndex = 3;
             // 
             // PivotReportDlg
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(625, 408);
             this.Controls.Add(this.splitContainer1);
             this.Controls.Add(this.panel4);
             this.Controls.Add(this.panel2);
@@ -280,11 +215,10 @@ namespace pwiz.Skyline.FileUI
             this.MinimizeBox = false;
             this.Name = "PivotReportDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Edit Report";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.Panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
             this.splitContainer1.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);

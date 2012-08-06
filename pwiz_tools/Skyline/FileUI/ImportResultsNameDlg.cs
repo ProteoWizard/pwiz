@@ -19,6 +19,7 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
@@ -46,7 +47,7 @@ namespace pwiz.Skyline.FileUI
             {
                 if (!_prefixInitial.StartsWith(Prefix))
                 {
-                    MessageBox.Show(this, string.Format("The text '{0}' is not a prefix of the files chosen.", Prefix), Program.Name);
+                    MessageBox.Show(this, string.Format(Resources.ImportResultsNameDlg_OkDialog_The_text__0__is_not_a_prefix_of_the_files_chosen, Prefix), Program.Name);
                     return;
                 }
             }

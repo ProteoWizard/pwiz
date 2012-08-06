@@ -19,6 +19,7 @@
 using System;
 using System.Data.SQLite;
 using System.IO;
+using pwiz.Skyline.Properties;
 using zlib;
 
 namespace pwiz.Skyline.Util.Extensions
@@ -86,7 +87,7 @@ namespace pwiz.Skyline.Util.Extensions
             zstream.Write(compressed, 0, compressed.Length);
             zstream.finish();
             if (zstream.TotalOut != sizeUncompressed)
-                throw new IOException("Failure uncompressing data.");
+                throw new IOException(Resources.UtilDB_Uncompress_Failure_uncompressing_data);  // Not L10N
             return uncompressed;
         }
 

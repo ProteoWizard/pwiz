@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.Model.Results
         private void InitializeFile()
         {
             if (!AnalyzeFile())
-                throw new IOException("MsxDemultiplexer: InitializeFile: Improperly formed MSX file");
+                throw new IOException(Resources.MsxDemultiplexer_InitializeFile_MsxDemultiplexer_InitializeFile_Improperly_formed_MSX_file);
 
             DutyCycleLength = NumIsoWindows / IsoWindowsPerScan;
             DeconvWindowEpsilonTest = (int)Math.Ceiling((IsoWindowsPerScan * DutyCycleLength + 2 * DutyCycleLength) / 2.0);
@@ -191,7 +192,9 @@ namespace pwiz.Skyline.Model.Results
                 _msMsIndex = _msMsSpectra.LastIndexOf(scanIndex, _msMsIndex);
             }
             if (_msMsIndex == -1)
-                throw new IndexOutOfRangeException(string.Format("MsxDemultiplexer: MS/MS index {0} not found", scanIndex));
+                throw new IndexOutOfRangeException(
+                    string.Format(Resources.MsxDemultiplexer_FindStartStop_MsxDemultiplexer_MS_MS_index__0__not_found,
+                                  scanIndex));
 
             int countMsMs = (int)(DutyCycleLength * IsoWindowsPerScan + (1.5 * DutyCycleLength));
             int centerIndex = _msMsIndex;
@@ -348,8 +351,11 @@ namespace pwiz.Skyline.Model.Results
         {
             // make sure this index is within range
             if (index < 0 || index > _file.SpectrumCount)
-                throw new IndexOutOfRangeException(string.Format("MsxDemultiplexer: GetDeconvolvedSpectra: " +
-                                                          "spectrum index {0} out of range.", index));
+            {
+                throw new IndexOutOfRangeException(
+                    string.Format(Resources.MsxDemultiplexer_GetDeconvolvedSpectra_MsxDemultiplexer_GetDeconvolvedSpectra_spectrum_index__0__out_of_range,
+                                  index));
+            }
             // if the first time called, initialize the cache
             if (!_initialized)
                 InitializeFile();
@@ -628,8 +634,9 @@ namespace pwiz.Skyline.Model.Results
                 int windowIndex;
                 if (!TryGetWindowIndex(precursorMz, out windowIndex))
                 {
-                    throw new ArgumentException(string.Format("IsolationWindowMapper: Tried to get a window mask" +
-                        " for {0}, a spectrum with previously unobserved isolation windows", precursorMz));
+                    throw new ArgumentException(
+                        string.Format(Resources.IsolationWindowMapper_GetWindowMask_IsolationWindowMapper_Tried_to_get_a_window_mask_for__0__a_spectrum_with_previously_unobserved_isolation_windows,
+                                      precursorMz));
                 }
 
                 windowMask[windowIndex] = 1.0;
@@ -641,16 +648,22 @@ namespace pwiz.Skyline.Model.Results
         public double GetIsolationWindow(int isoIndex)
         {
             if (isoIndex < 0 || isoIndex > _isolationWindows.Count)
-                throw new ArgumentOutOfRangeException(String.Format("IsolationWindowMapper: " +
-                                                             "isoIndex {0} out of range", isoIndex));
+            {
+                throw new ArgumentOutOfRangeException(
+                    string.Format(Resources.IsolationWindowMapper_GetIsolationWindow_IsolationWindowMapper_isoIndex__0__out_of_range,
+                                  isoIndex));
+            }
             return _isolationWindows[isoIndex];
         }
 
         public MsPrecursor GetPrecursor(int isoIndex)
         {
             if (isoIndex < 0 || isoIndex > _precursors.Count)
-                throw new ArgumentOutOfRangeException(String.Format("IsolationWindowMapper: " +
-                                                             "isoIndex {0} out of range", isoIndex));
+            {
+                throw new ArgumentOutOfRangeException(
+                    string.Format(Resources.IsolationWindowMapper_GetIsolationWindow_IsolationWindowMapper_isoIndex__0__out_of_range,
+                                  isoIndex));
+            }
             return _precursors[isoIndex];
         }
 
@@ -672,8 +685,9 @@ namespace pwiz.Skyline.Model.Results
         {
             if (_windowWidth == null)
             {
-                throw new InvalidOperationException(String.Format("IsolationWindowMapper: TryGetWindowFromMz ({0}): " +
-                                                           "_windowWidth must be set before calling this method", mz));
+                throw new InvalidOperationException(
+                    String.Format(Resources.IsolationWindowMapper_TryGetWindowFromMz_IsolationWindowMapper_TryGetWindowFromMz__0__windowWidth_must_be_set_before_calling_this_method,
+                                  mz));
             }
             var comparer = new KvpKeyComparer();
             if (_lastSort < _isoWindowsSorted.Count)
@@ -849,7 +863,7 @@ namespace pwiz.Skyline.Model.Results
         public void BinData(double[] mzVals, double[] intensityVals, ref double[] binnedData)
         {
             if (mzVals.Length != intensityVals.Length)
-                throw new IndexOutOfRangeException(String.Format("TransitionBinner: BinData: m/z and intensity arrays don't match in length ({0} != {1})", mzVals.Length, intensityVals.Length));
+                throw new IndexOutOfRangeException(String.Format(Resources.TransitionBinner_BinData_mz_and_intensity_arrays_dont_match_in_length__0__1__, mzVals.Length, intensityVals.Length));
             if (binnedData.Length != NumBins)
                 binnedData = new double[NumBins];
             else
@@ -917,8 +931,12 @@ namespace pwiz.Skyline.Model.Results
 
         public TransitionInfo TransInfoFromBin(int queryBin)
         {
-            if (queryBin < MinBin || queryBin > MaxBin)
-                throw new IndexOutOfRangeException(string.Format("TransitionBinner[TransInfoFromBin]: Index out of range: {0}", queryBin));
+            if (MinBin > queryBin || queryBin > MaxBin)
+            {
+                throw new IndexOutOfRangeException(
+                    string.Format(Resources.TransitionBinner_TransInfoFromBin_TransitionBinner_TransInfoFromBin_Index_out_of_range__0__,
+                                  queryBin));
+            }
             return _allTransitions[queryBin];
         }
 
@@ -928,8 +946,12 @@ namespace pwiz.Skyline.Model.Results
 
             foreach (int t in precursors)
             {
-                if (0 > t|| t > _precursorTransitions.Length)
-                    throw new IndexOutOfRangeException(string.Format("TransitionBinner: BinsForPrecursors: precursor index out of range: {0}", t));
+                if (0 > t || t > _precursorTransitions.Length)
+                {
+                    throw new IndexOutOfRangeException(
+                        string.Format(Resources.TransitionBinner_BinsForPrecursors_TransitionBinner_BinsForPrecursors_precursor_index_out_of_range__0__,
+                                      t));
+                }
                 validBins.UnionWith(_precursorTransitions[t]);
             }
 
@@ -939,7 +961,11 @@ namespace pwiz.Skyline.Model.Results
         public bool BinInPrecursor(int bin, int precursor)
         {
             if (0 > precursor || precursor > _precursorTransitions.Length)
-                throw new IndexOutOfRangeException(string.Format("TransitionBinner: BinInPrecursor: precursor index out of range: {0}", precursor));
+            {
+                throw new IndexOutOfRangeException(
+                    string.Format(Resources.TransitionBinner_BinInPrecursor_TransitionBinner_BinInPrecursor_precursor_index_out_of_range__0__,
+                                  precursor));
+            }
             return _precursorTransitions[precursor].Contains(bin);
         }
 
@@ -947,9 +973,9 @@ namespace pwiz.Skyline.Model.Results
         {
             if (0 >= numWindows || numWindows > _precursorTransitions.Length)
             {
-                throw new ArgumentOutOfRangeException(string.Format("TransitionBinner: MaxTransitions" +
-                                                             "asked for transitions from too many" +
-                                                             "precursors: {0}", numWindows));
+                throw new ArgumentOutOfRangeException(
+                    string.Format(Resources.TransitionBinner_MaxTransitions_TransitionBinner_MaxTransitionsasked_for_transitions_from_too_manyprecursors__0__,
+                                  numWindows));
             }
             var transNumsSorted = from prec in _precursorTransitions
                                   orderby prec.Count descending

@@ -21,6 +21,7 @@ using System.Globalization;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -53,7 +54,7 @@ namespace pwiz.Skyline.Model
             // If filename is null, then no more work needs to be done.
             if (fileName == null)
             {
-                progressMonitor.UpdateProgress(new ProgressStatus("").Complete());
+                progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
                 return false;
             }
 
@@ -83,7 +84,7 @@ namespace pwiz.Skyline.Model
             {
                 var saver = new FileSaver(fileName);
                 if (!saver.CanSave(false))
-                    throw new IOException(string.Format("Cannot save to {0}.", fileName));
+                    throw new IOException(string.Format(Resources.AbstractDiaExporter_Export_Cannot_save_to__0__, fileName));
 
                 var writer = new StreamWriter(saver.SafeName);
                 writer.Write(ExportString);
@@ -118,7 +119,7 @@ namespace pwiz.Skyline.Model
             var startTime = DateTime.Now;
             var cycle = new Cycle(windowCount, windowsPerScan);
             int cyclesGenerated = 0;
-            ProgressStatus status = new ProgressStatus("Exporting Isolation List");
+            ProgressStatus status = new ProgressStatus(Resources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List);
             progressMonitor.UpdateProgress(status);
 
             // Generate each cycle.
@@ -127,8 +128,10 @@ namespace pwiz.Skyline.Model
                 // Update status.
                 if (progressMonitor.IsCanceled)
                     return;
-                progressMonitor.UpdateProgress(status.ChangePercentComplete((int)(DateTime.Now - startTime).TotalSeconds * 100 / CalculationTime).ChangeMessage(
-                    string.Format("Exporting Isolation List ({0} cycles out of {1})", cycleNumber - 1, cycleCount)));
+                progressMonitor.UpdateProgress(status.ChangePercentComplete(
+                    (int) (DateTime.Now - startTime).TotalSeconds*100/CalculationTime).ChangeMessage(
+                        string.Format(Resources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__1__,
+                            cycleNumber - 1, cycleCount)));
 
                 double secondsRemaining = CalculationTime - (DateTime.Now - startTime).TotalSeconds;
                 double secondsPerCycle = secondsRemaining / (cycleCount - cycleNumber + 1);
@@ -168,7 +171,8 @@ namespace pwiz.Skyline.Model
 
             // Show 100% in the wait dialog.
             progressMonitor.UpdateProgress(status.ChangePercentComplete(100).ChangeMessage(
-                string.Format("Exporting Isolation List ({0} cycles out of {0})", cycleCount)));
+                string.Format(Resources.AbstractDiaExporter_WriteMultiplexedWindows_Exporting_Isolation_List__0__cycles_out_of__0__,
+                              cycleCount)));
         }
 
         // For debugging...
@@ -176,7 +180,7 @@ namespace pwiz.Skyline.Model
         {
             if (!DebugCycles)
                 return;
-            Console.WriteLine("Total score = {0:0.00}", totalScore);
+            Console.WriteLine("Total score = {0:0.00}", totalScore); // Not L10N
         }
 
         // For debugging...
@@ -185,10 +189,10 @@ namespace pwiz.Skyline.Model
             if (!DebugCycles)
                 return;
             if (cycle.Repeats > 0)
-                Console.WriteLine("Cycle {0}: score {1:0.00}, repeats {2}, minDistance {3}, at iteration {4}, {5:0.00} seconds",
+                Console.WriteLine("Cycle {0}: score {1:0.00}, repeats {2}, minDistance {3}, at iteration {4}, {5:0.00} seconds", // Not L10N
                     cycleNumber, cycle.CycleScore, cycle.Repeats, cycle.MinDistance, cyclesGenerated, (DateTime.Now - startTime).TotalSeconds);
             else
-                Console.WriteLine("Cycle {0}: score {1:0.00}, at iteration {2}, {3:0.00} seconds",
+                Console.WriteLine("Cycle {0}: score {1:0.00}, at iteration {2}, {3:0.00} seconds", // Not L10N
                     cycleNumber, cycle.CycleScore, cyclesGenerated, (DateTime.Now - startTime).TotalSeconds);
         }
 

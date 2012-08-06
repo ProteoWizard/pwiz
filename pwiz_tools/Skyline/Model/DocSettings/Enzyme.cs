@@ -23,6 +23,7 @@ using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using System.Text.RegularExpressions;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -59,8 +60,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get
             {
-                string cut = "[" + Cleavage + "]";
-                string nocut = (Restrict == "" ? "[A-Z]" : "[^" + Restrict + "]");
+                string cut = "[" + Cleavage + "]"; // Not L10N
+                string nocut = (Restrict == string.Empty ? "[A-Z]" : "[^" + Restrict + "]"); // Not L10N
                 return (IsCTerm() ? cut + nocut : nocut + cut);
             }
         }
@@ -106,7 +107,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                     // Single amino acid peptides have no fragment ions.
                     int count = end - begin;
-                    if (count > 1 && sequence.IndexOfAny(new[] {'*', '-'}, begin, count) == -1)
+                    if (count > 1 && sequence.IndexOfAny(new[] { '*', '-' }, begin, count) == -1) // Not L10N
                     {
                         yield return new Peptide(fastaSeq, sequence.Substring(begin, end - begin),
                             begin, end, missed);
@@ -203,7 +204,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (string.IsNullOrEmpty(Cleavage))
-                throw new InvalidDataException("Enzymes must have at least one cleavage point.");
+                throw new InvalidDataException(Resources.Enzyme_Validate_Enzymes_must_have_at_least_one_cleavage_point);
             AminoAcid.ValidateAAList(Cleavage);
             if (!string.IsNullOrEmpty(Restrict))
                 AminoAcid.ValidateAAList(Restrict);
@@ -247,10 +248,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString()
         {
-            string restrict = (Restrict == "" ? "-" : Restrict);
+            string restrict = (Restrict == string.Empty ? "-" : Restrict);  // Not L10N
             if (IsCTerm())
-                return Name + " [" + Cleavage + " | " + restrict + "]";
-            return Name + " [" + restrict + " | " + Cleavage + "] n-term";
+                return Name + " [" + Cleavage + " | " + restrict + "]"; // Not L10N
+            return Name + " [" + restrict + " | " + Cleavage + "] n-term"; // Not L10N
         }
 
         public bool Equals(Enzyme obj)
@@ -321,13 +322,16 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            ValidateIntRange("maximum missed cleavages", MaxMissedCleavages, 0, 9);
+            ValidateIntRange(Resources.DigestSettings_Validate_maximum_missed_cleavages, MaxMissedCleavages, 0, 9);
         }
 
         private static void ValidateIntRange(string label, int n, int min, int max)
         {
             if (min > n || n > max)
-                throw new InvalidDataException(string.Format("The value {1} for {0} must be between {2} and {3}.", label, n, min, max));
+            {
+                throw new InvalidDataException(string.Format(Resources.DigestSettings_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__,
+                                                             label, n, min, max));
+            }
         }
 
         public static DigestSettings Deserialize(XmlReader reader)
@@ -444,7 +448,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (string.IsNullOrEmpty(Regex))
-                throw new InvalidDataException("Peptide exclusion must have a regular expression.");
+                throw new InvalidDataException(Resources.PeptideExcludeRegex_Validate_Peptide_exclusion_must_have_a_regular_expression);
         }
 
         public static PeptideExcludeRegex Deserialize(XmlReader reader)

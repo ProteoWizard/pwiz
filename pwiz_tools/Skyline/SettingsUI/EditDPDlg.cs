@@ -26,6 +26,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -63,9 +64,9 @@ namespace pwiz.Skyline.SettingsUI
                 _regression = value;
                 if (_regression == null)
                 {
-                    textName.Text = "";
-                    textSlope.Text = "";
-                    textIntercept.Text = "";
+                    textName.Text = string.Empty;
+                    textSlope.Text = string.Empty;
+                    textIntercept.Text = string.Empty;
                     textStepSize.Text = DeclusteringPotentialRegression.DEFAULT_STEP_SIZE.ToString(CultureInfo.CurrentCulture);
                     textStepCount.Text = DeclusteringPotentialRegression.DEFAULT_STEP_COUNT.ToString(CultureInfo.CurrentCulture);
                 }
@@ -92,7 +93,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, "The declustering potential regression '{0}' already exists.", name);
+                helper.ShowTextBoxError(textName, Resources.EditDPDlg_OkDialog_The_declustering_potential_regression__0__already_exists, name);
                 return;
             }
 
@@ -143,12 +144,12 @@ namespace pwiz.Skyline.SettingsUI
             var regressionLine = regressionData.RegressionLine;
             if (regressionLine == null)
             {
-                MessageDlg.Show(this, "Insufficient data found to calculate a new regression.");
+                MessageDlg.Show(this, Resources.EditDPDlg_UseCurrentData_Insufficient_data_found_to_calculate_a_new_regression);
                 return;
             }
 
-            textSlope.Text = string.Format("{0:F04}", regressionLine.Slope);
-            textIntercept.Text = string.Format("{0:F04}", regressionLine.Intercept);
+            textSlope.Text = string.Format("{0:F04}", regressionLine.Slope); // Not L10N
+            textIntercept.Text = string.Format("{0:F04}", regressionLine.Intercept); // Not L10N
         }
 
         private void btnShowGraph_Click(object sender, EventArgs e)
@@ -163,9 +164,9 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             var graphData = new RegressionGraphData
                                 {
-                                    Title = "Declustering Potential Regression",
-                                    LabelX = "Precursor m/z",
-                                    LabelY = "Declustering Potential",
+                                    Title = Resources.EditDPDlg_ShowGraph_Declustering_Potential_Regression,
+                                    LabelX = Resources.EditDPDlg_ShowGraph_Precursor_m_z,
+                                    LabelY = Resources.EditDPDlg_ShowGraph_Declustering_Potential,
                                     XValues = regressionData.PrecursorMzValues,
                                     YValues = regressionData.BestValues,
                                     RegressionLine = regressionData.RegressionLine,
@@ -184,7 +185,8 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageBox.Show(this, "Measured results must be completely loaded before they can be used to create a declustring potential regression.", Program.Name);
+                MessageBox.Show(this, Resources.EditDPDlg_GetRegressionData_Measured_results_must_be_completely_loaded_before_they_can_be_used_to_create_a_declustering_potential_regression,
+                                Program.Name);
                 return null;
             }
 

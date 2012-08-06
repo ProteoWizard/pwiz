@@ -33,8 +33,8 @@ namespace pwiz.Skyline.Controls.SeqNode
 {
     public class PeptideGroupTreeNode : SrmTreeNodeParent
     {
-        public const string PROTEIN_TITLE = "Protein";
-        public const string PEPTIDE_LIST_TITLE = "Peptide List";
+        //public string PROTEIN_TITLE = "Protein";
+        //public const string PEPTIDE_LIST_TITLE = "Peptide List";
 
         public static bool ExpandDefault { get { return Settings.Default.SequenceTreeExpandProteins; } }
 
@@ -60,17 +60,22 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string Heading
         {
-            get { return Model.Id is FastaSequence ? PROTEIN_TITLE : PEPTIDE_LIST_TITLE; }
+            get 
+            {
+                return Model.Id is FastaSequence
+                    ? Resources.PeptideGroupTreeNode_Heading_Protein
+                    : Resources.PeptideGroupTreeNode_Heading_Peptide_List;
+            }
         }
 
         public override string ChildHeading
         {
-            get { return string.Format("{0} {1}s", Text, PeptideTreeNode.TITLE); }
+            get { return string.Format(Resources.PeptideGroupTreeNode_ChildHeading__0__, Text); }
         }
 
         public override string ChildUndoHeading
         {
-            get { return string.Format("{0} {1}s", Text, PeptideTreeNode.TITLE.ToLower()); }
+            get { return string.Format(Resources.PeptideGroupTreeNode_ChildUndoHeading__0__, Text); }
         }
 
         protected override void OnModelChanged()
@@ -217,7 +222,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         #region ITipProvider Members
 
         private const string X80 =
-            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Not L10N
 
         public override bool HasTip
         {
@@ -250,7 +255,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     if (heightTotal + heightDesc + heightLine > heightMax)
                     {
                         if (draw)
-                            g.DrawString("...", rt.FontNormal, rt.BrushNormal, 0, heightTotal);
+                            g.DrawString("...", rt.FontNormal, rt.BrushNormal, 0, heightTotal); // Not L10N
                         return TipSize(widthLine, heightTotal + heightLine);
                     }
                     if (draw)
@@ -343,13 +348,13 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             if (elipsis)
             {
-                SizeF sizeElipsis = g.MeasureString(" ...", rt.FontNormal);
+                SizeF sizeElipsis = g.MeasureString(" ...", rt.FontNormal); // Not L10N
                 width -= sizeElipsis.Width;
             }
 
             float widthTotal = 0;
             PointF ptDraw = new PointF(widthTotal, height);
-            if (peptideList && aa[start] == 'X')
+            if (peptideList && aa[start] == 'X') // Not L10N: For amino acid comparison
                 start++;
             for (int i = start; i < aa.Length; i++)
             {
@@ -372,7 +377,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                             brush = (chosen ? rt.BrushChosen : rt.BrushChoice);
                     }
                 }
-                if (peptideList && aa[i] == 'X')
+                if (peptideList && aa[i] == 'X') // Not L10N: For amino acid comparison
                     return i + 1;
                 string s = aa.Substring(i, 1);
                 SizeF sizeAa = g.MeasureString(s, font);
@@ -380,7 +385,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 if (widthTotal > width)
                 {
                     if (elipsis && draw)
-                        g.DrawString(" ...", rt.FontNormal, rt.BrushNormal, ptDraw);
+                        g.DrawString(" ...", rt.FontNormal, rt.BrushNormal, ptDraw); // Not L10N
                     return i;
                 }
                 widthTotal -= 4;    // Remove MeasureString padding.
@@ -413,16 +418,16 @@ namespace pwiz.Skyline.Controls.SeqNode
             data.SetData(DataFormats.Text, fastaSeq.FastaFileText);
 
             var sb = new StringBuilder();
-            sb.Append("<b>").Append(Model.Id).Append("</b> ");
-            sb.Append("<i>");
+            sb.Append("<b>").Append(Model.Id).Append("</b> "); // Not L10N
+            sb.Append("<i>"); // Not L10N
             if (string.IsNullOrEmpty(DocNode.Description))
-                sb.AppendLine("<br/>");
+                sb.AppendLine("<br/>"); // Not L10N
             else
             {
                 foreach (string desc in Descriptions)
-                    sb.Append(desc).AppendLine("<br/>");
+                    sb.Append(desc).AppendLine("<br/>"); // Not L10N
             }
-            sb.Append("</i>");
+            sb.Append("</i>"); // Not L10N
 
             IEnumerator<DocNode> peptides = GetChoices(true).GetEnumerator();
             HashSet<DocNode> peptidesChosen = new HashSet<DocNode>(Chosen);
@@ -446,20 +451,19 @@ namespace pwiz.Skyline.Controls.SeqNode
                         if (!inPeptide)
                         {
                             sb.Append(chosen
-                                          ? "<font style=\"font-weight: bold; color: blue\">"
-                                          : "<font style=\"font-weight: bold\">");
+                                          ? "<font style=\"font-weight: bold; color: blue\">" // Not L10N
+                                          : "<font style=\"font-weight: bold\">"); // Not L10N
                             inPeptide = true;
                         }
                     }
                     else if (inPeptide)
                     {
-                        sb.Append("</font>");
-                        inPeptide = false;
+                        sb.Append("</font>"); // Not L10N
                     }
                 }
                 sb.Append(aa[i]);
             }
-            sb.Append("</font>");
+            sb.Append("</font>"); // Not L10N
             
 
             data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));                

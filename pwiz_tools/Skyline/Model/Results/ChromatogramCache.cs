@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Model.Results
         public const int FORMAT_VERSION_CACHE_3 = 3;
         public const int FORMAT_VERSION_CACHE_2 = 2;
 
-        public const string EXT = ".skyd";
+        public const string EXT = ".skyd"; // Not L10N
 
         /// <summary>
         /// Construct path to a final data cache from the document path.
@@ -45,8 +46,8 @@ namespace pwiz.Skyline.Model.Results
         /// <returns>A path to the data cache</returns>
         public static string FinalPathForName(string documentPath, string name)
         {
-            string documentDir = Path.GetDirectoryName(documentPath) ?? "";
-            string modifier = (name != null ? '_' + name : "");
+            string documentDir = Path.GetDirectoryName(documentPath) ?? string.Empty;
+            string modifier = (name != null ? '_' + name : string.Empty); // Not L10N
             return Path.Combine(documentDir,
                 Path.GetFileNameWithoutExtension(documentPath) + modifier + EXT);
         }
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.Model.Results
         {
             string filePath = SampleHelp.GetPathFilePart(dataFilePath);
             string dirData = Path.GetDirectoryName(filePath);
-            string dirDocument = Path.GetDirectoryName(documentPath) ?? "";
+            string dirDocument = Path.GetDirectoryName(documentPath) ?? string.Empty;
 
             // Start with the file basename
             StringBuilder sbName = new StringBuilder(Path.GetFileNameWithoutExtension(filePath));
@@ -324,7 +325,7 @@ namespace pwiz.Skyline.Model.Results
 
         public static ChromatogramCache Load(string cachePath, ProgressStatus status, ILoadMonitor loader)
         {
-            status = status.ChangeMessage(string.Format("Loading {0} cache", Path.GetFileName(cachePath)));
+            status = status.ChangeMessage(string.Format(Resources.ChromatogramCache_Load_Loading__0__cache, Path.GetFileName(cachePath)));
             loader.UpdateProgress(status);
 
             IPooledStream readStream = null;
@@ -512,7 +513,7 @@ namespace pwiz.Skyline.Model.Results
         private static void ReadComplete(Stream stream, byte[] buffer, int size)
         {
             if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException("Data truncation in cache header. File may be corrupted.");
+                throw new InvalidDataException(Resources.ChromatogramCache_ReadComplete_Data_truncation_in_cache_header_File_may_be_corrupted);
         }
 
         public static void WriteStructs(Stream outStream,
@@ -550,7 +551,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 long lastPeak = info.StartPeakIndex + info.NumPeaks*info.NumTransitions;
                 if (lastPeak > chromatogramPeaks.Count)
-                    throw new InvalidDataException(string.Format("Failure writing cache.  Specified {0} peaks exceed total peak count {1}", lastPeak, chromatogramPeaks.Count));
+                    throw new InvalidDataException(string.Format(Resources.ChromatogramCache_WriteStructs_Failure_writing_cache___Specified__0__peaks_exceed_total_peak_count__1_, lastPeak, chromatogramPeaks.Count));
                 outStream.Write(BitConverter.GetBytes(info.Precursor), 0, sizeof(float));
                 outStream.Write(BitConverter.GetBytes(info.FileIndex), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(info.NumTransitions), 0, sizeof(int));

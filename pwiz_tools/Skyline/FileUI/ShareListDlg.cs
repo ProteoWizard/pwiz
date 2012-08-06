@@ -25,14 +25,21 @@ using System.Xml.Serialization;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
+    /// <summary>
+    /// For naming of the resource file
+    /// </summary>
+    public class ShareListDlg
+    {
+    }
+
     public partial class ShareListDlg<TList, TItem> : FormEx
         where TList : IList<TItem>, IListSerializer<TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
-        private const string SETTINGS_DEFINITION_FILTER = "Skyline Settings (*.skys)|*.skys|All Files|*.*";
         private string _label;
 
         public ShareListDlg(TList list)
@@ -40,7 +47,7 @@ namespace pwiz.Skyline.FileUI
             InitializeComponent();
 
             List = list;
-            Filter = SETTINGS_DEFINITION_FILTER;
+            Filter = TextUtil.FileDialogFilterAll(Resources.ShareListDlg_ShareListDlg_Skyline_Settings, SrmSettingsList.EXT_SETTINGS);
             
             LoadList();
         }
@@ -56,8 +63,9 @@ namespace pwiz.Skyline.FileUI
             {
                 _label = value;
 
-                Text = string.Format("Save {0}", _label);
-                labelMessage.Text = string.Format("Select the {0} you want to save to a file.", _label.ToLower());
+                Text = string.Format(Resources.ShareListDlg_Label_Save__0__, _label);
+                labelMessage.Text = string.Format(Resources.ShareListDlg_Label_Select_the__0__you_want_to_save_to_a_file, 
+                    _label.ToLower());
             }
         }
 
@@ -142,7 +150,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception exception)
             {
-                MessageBox.Show(this, "An error occurred: " + exception.Message, Program.Name);
+                MessageBox.Show(this, TextUtil.LineSeparate(Resources.ShareListDlg_OkDialog_An_error_occurred, exception.Message), Program.Name);
             }
             Close();            
         }
@@ -179,7 +187,8 @@ namespace pwiz.Skyline.FileUI
 
         public static bool Import(Form parent, TList listDest)
         {
-            return ImportFile(parent, listDest, GetImportFileName(parent, SETTINGS_DEFINITION_FILTER));
+            return ImportFile(parent, listDest, GetImportFileName(parent,
+                TextUtil.FileDialogFilterAll(Resources.ShareListDlg_ShareListDlg_Skyline_Settings, SrmSettingsList.EXT_SETTINGS)));
         }
 
         public static string GetImportFileName(Form parent, string filter)
@@ -211,7 +220,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception exception)
             {
-                new MessageBoxHelper(parent).ShowXmlParsingError(string.Format("Failure loading {0}.", fileName),
+                new MessageBoxHelper(parent).ShowXmlParsingError(string.Format(Resources.ShareListDlg_ImportFile_Failure_loading__0__, fileName),
                                                                  fileName, exception);
                 return false;
             }
@@ -223,10 +232,12 @@ namespace pwiz.Skyline.FileUI
 
             if (existing.Count > 0)
             {
+                var multipleMessage = TextUtil.LineSeparate(Resources.ShareListDlg_ImportFile_The_following_names_already_exist, string.Empty,
+                                                    "{0}", string.Empty, Resources.ShareListDlg_ImportFile_Do_you_want_to_replace_them); // Not L10N
                 string messageFormat = existing.Count == 1 ?
-                   "The name '{0}' already exists. Do you want to replace it?" :
-                   "The following names already exist:\n\n{0}\n\nDo you want to replace them?";
-                var result = MessageBox.Show(string.Format(messageFormat, string.Join("\n", existing.ToArray())),
+                   Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
+                   multipleMessage;
+                var result = MessageBox.Show(string.Format(messageFormat, TextUtil.LineSeparate(existing)),
                                              Program.Name, MessageBoxButtons.YesNoCancel, MessageBoxIcon.None,
                                              MessageBoxDefaultButton.Button2);
                 switch (result)

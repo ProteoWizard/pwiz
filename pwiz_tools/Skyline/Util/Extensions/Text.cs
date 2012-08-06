@@ -19,7 +19,9 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util.Extensions
 {
@@ -28,9 +30,23 @@ namespace pwiz.Skyline.Util.Extensions
     /// </summary>
     public static class TextUtil
     {
-        public const char SEPARATOR_CSV = ',';
-        public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales
-        public const char SEPARATOR_TSV = '\t';
+        public const string EXT_CSV = ".csv"; // Not L10N
+        public const string EXT_TSV = ".tsv"; // Not L10N
+
+        public static string FILTER_CSV
+        {
+            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_CSV_CSV__Comma_delimited_, EXT_CSV); }
+        }
+
+        public static string FILTER_TSV
+        {
+            get { return FileDialogFilter(Resources.TextUtil_DESCRIPTION_TSV_TSV__Tab_delimited_, EXT_TSV); }
+        }
+
+        public const char SEPARATOR_CSV = ','; // Not L10N
+        public const char SEPARATOR_CSV_INTL = ';'; // International CSV for comma-decimal locales // Not L10N
+        public const char SEPARATOR_TSV = '\t'; // Not L10N
+        public const char SEPARATOR_SPACE = ' '; // Not L10N
 
         /// <summary>
         /// The CSV separator character for the current culture.  Like Excel, a comma
@@ -50,7 +66,7 @@ namespace pwiz.Skyline.Util.Extensions
         /// </summary>
         public static char GetCsvSeparator(CultureInfo cultureInfo)
         {
-            return (Equals(",", cultureInfo.NumberFormat.NumberDecimalSeparator) ? ';' : ',');
+            return (Equals(SEPARATOR_CSV.ToString(CultureInfo.InvariantCulture), cultureInfo.NumberFormat.NumberDecimalSeparator) ? SEPARATOR_CSV_INTL : SEPARATOR_CSV);
         }
 
         /// <summary>
@@ -72,9 +88,9 @@ namespace pwiz.Skyline.Util.Extensions
         /// <param name="separator">The separator being used</param>
         public static string ToDsvField(this string text, char separator)
         {
-            if (text.IndexOfAny(new[] {'"', separator, '\r', '\n'}) == -1)
+            if (text.IndexOfAny(new[] { '"', separator, '\r', '\n' }) == -1) // Not L10N
                 return text;
-            return '"' + text.Replace("\"", "\"\"") + '"';
+            return '"' + text.Replace("\"", "\"\"") + '"'; // Not L10N
         }
 
         /// <summary>
@@ -100,7 +116,7 @@ namespace pwiz.Skyline.Util.Extensions
             var listFields = new List<string>();
             var sbField = new StringBuilder();
             bool inQuotes = false;
-            char chLast = '\0';
+            char chLast = '\0';  // Not L10N
             foreach (char ch in line)
             {
                 if (inQuotes)
@@ -110,11 +126,11 @@ namespace pwiz.Skyline.Util.Extensions
                     else
                         sbField.Append(ch);
                 }
-                else if (ch == '"')
+                else if (ch == '"')  // Not L10N
                 {
                     inQuotes = true;
                     // Add quote character, for "" inside quotes
-                    if (chLast == '"')
+                    if (chLast == '"')  // Not L10N
                         sbField.Append(ch);
                 }
                 else if (ch == separator)
@@ -130,6 +146,103 @@ namespace pwiz.Skyline.Util.Extensions
             }
             listFields.Add(sbField.ToString());
             return listFields.ToArray();
+        }
+
+        /// <summary>
+        /// This function can be used as a replacement for String.Join("\n", ...)
+        /// </summary>
+        /// <param name="lines">A set of strings to be on separate lines</param>
+        /// <returns>A single string containing the original set separated by new lines</returns>
+        public static string LineSeparate(IEnumerable<string> lines)
+        {
+            var sb = new StringBuilder();
+            foreach (string line in lines)
+            {
+                if (sb.Length > 0)
+                    sb.AppendLine();
+                sb.Append(line);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// This function can be used as a replacement for String.Join("\n", ...)
+        /// </summary>
+        /// <param name="lines">A set of strings to be on separate lines</param>
+        /// <returns>A single string containing the original set separated by new lines</returns>
+        public static string LineSeparate(params string[] lines)
+        {
+            return LineSeparate(lines.AsEnumerable());
+        }
+
+        /// <summary>
+        /// This function can be used as a replacement for String.Join(" ", ...)
+        /// </summary>
+        /// <param name="values">A set of strings to be separated by spaces</param>
+        /// <returns>A single string containing the original set separated by spaces</returns>
+        public static string SpaceSeparate(IEnumerable<string> values)
+        {
+            var sb = new StringBuilder();
+            foreach (string value in values)
+            {
+                if (sb.Length > 0)
+                    sb.Append(SEPARATOR_SPACE);
+                sb.Append(value);
+            }
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// This function can be used as a replacement for String.Join(" ", ...)
+        /// </summary>
+        /// <param name="values">A set of strings to be separated by spaces</param>
+        /// <returns>A single string containing the original set separated by spaces</returns>
+        public static string SpaceSeparate(params string[] values)
+        {
+            return SpaceSeparate(values.AsEnumerable());
+        }
+
+        /// <summary>
+        /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")
+        /// </summary>
+        /// <param name="description">The description of the filter</param>
+        /// <param name="ext">The file extention, beginning with the period (e.g. ".csv")</param>
+        public static string FileDialogFilter(string description, string ext)
+        {
+            return string.Format("{0} (*{1})|*{1}", description, ext); // Not L10N
+        }
+
+        /// <summary>
+        /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")
+        /// with the All Files filter appended.
+        /// </summary>
+        /// <param name="description">The description of the filter</param>
+        /// <param name="ext">The file extention, beginning with the period (e.g. ".csv")</param>
+        public static string FileDialogFilterAll(string description, string ext)
+        {
+            return FileDialogFiltersAll(FileDialogFilter(description, ext));
+        }
+
+        /// <summary>
+        /// Converts a set of file dialog filter strings into a single string containing all filters
+        /// suitable for the Filter property on a common file dialog.
+        /// </summary>
+        /// <param name="filters">Filters to be joined</param>
+        public static string FileDialogFilters(params string[] filters)
+        {
+            return string.Join("|", filters); // Not L10N
+        }
+
+        /// <summary>
+        /// Converts a set of file dialog filter strings into a single string containing all filters,
+        /// with an "All Files" filter appended, suitable for the Filter property on a common file dialog.
+        /// </summary>
+        /// <param name="filters">Filters to be joined</param>
+        public static string FileDialogFiltersAll(params string[] filters)
+        {
+            var listFilters = filters.ToList();
+            listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, ".*")); // Not L10N
+            return string.Join("|", filters);
         }
     }
 }

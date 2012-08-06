@@ -29,6 +29,7 @@ namespace pwiz.Skyline.FileUI
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MinimizeResultsDlg));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
@@ -59,9 +60,7 @@ namespace pwiz.Skyline.FileUI
             // 
             this.dataGridViewSizes.AllowUserToAddRows = false;
             this.dataGridViewSizes.AllowUserToDeleteRows = false;
-            this.dataGridViewSizes.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.dataGridViewSizes, "dataGridViewSizes");
             this.dataGridViewSizes.AutoGenerateColumns = false;
             this.dataGridViewSizes.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -86,7 +85,6 @@ namespace pwiz.Skyline.FileUI
             dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridViewSizes.DefaultCellStyle = dataGridViewCellStyle4;
-            this.dataGridViewSizes.Location = new System.Drawing.Point(12, 170);
             this.dataGridViewSizes.Name = "dataGridViewSizes";
             this.dataGridViewSizes.ReadOnly = true;
             dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -98,13 +96,11 @@ namespace pwiz.Skyline.FileUI
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridViewSizes.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridViewSizes.RowHeadersVisible = false;
-            this.dataGridViewSizes.Size = new System.Drawing.Size(438, 176);
-            this.dataGridViewSizes.TabIndex = 5;
             // 
             // colReplicateName
             // 
             this.colReplicateName.DataPropertyName = "Name";
-            this.colReplicateName.HeaderText = "Replicate";
+            resources.ApplyResources(this.colReplicateName, "colReplicateName");
             this.colReplicateName.Name = "colReplicateName";
             this.colReplicateName.ReadOnly = true;
             // 
@@ -113,7 +109,7 @@ namespace pwiz.Skyline.FileUI
             this.colCacheFileSize.DataPropertyName = "Size";
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
             this.colCacheFileSize.DefaultCellStyle = dataGridViewCellStyle2;
-            this.colCacheFileSize.HeaderText = "Current Size";
+            resources.ApplyResources(this.colCacheFileSize, "colCacheFileSize");
             this.colCacheFileSize.Name = "colCacheFileSize";
             this.colCacheFileSize.ReadOnly = true;
             // 
@@ -124,111 +120,68 @@ namespace pwiz.Skyline.FileUI
             dataGridViewCellStyle3.Format = "0%";
             dataGridViewCellStyle3.NullValue = null;
             this.colMinimizedRatio.DefaultCellStyle = dataGridViewCellStyle3;
-            this.colMinimizedRatio.HeaderText = "Minimized Size";
+            resources.ApplyResources(this.colMinimizedRatio, "colMinimizedRatio");
             this.colMinimizedRatio.Name = "colMinimizedRatio";
             this.colMinimizedRatio.ReadOnly = true;
             // 
             // cbxDiscardUnmatchedChromatograms
             // 
-            this.cbxDiscardUnmatchedChromatograms.AutoSize = true;
-            this.cbxDiscardUnmatchedChromatograms.Location = new System.Drawing.Point(12, 71);
+            resources.ApplyResources(this.cbxDiscardUnmatchedChromatograms, "cbxDiscardUnmatchedChromatograms");
             this.cbxDiscardUnmatchedChromatograms.Name = "cbxDiscardUnmatchedChromatograms";
-            this.cbxDiscardUnmatchedChromatograms.Size = new System.Drawing.Size(175, 17);
-            this.cbxDiscardUnmatchedChromatograms.TabIndex = 1;
-            this.cbxDiscardUnmatchedChromatograms.Text = "Discard unused chromatograms";
             this.cbxDiscardUnmatchedChromatograms.UseVisualStyleBackColor = true;
             this.cbxDiscardUnmatchedChromatograms.CheckedChanged += new System.EventHandler(this.cbxDiscardUnmatchedChromatograms_CheckedChanged);
             // 
             // tbxNoiseTimeRange
             // 
-            this.tbxNoiseTimeRange.Location = new System.Drawing.Point(99, 3);
+            resources.ApplyResources(this.tbxNoiseTimeRange, "tbxNoiseTimeRange");
             this.tbxNoiseTimeRange.Name = "tbxNoiseTimeRange";
-            this.tbxNoiseTimeRange.Size = new System.Drawing.Size(100, 20);
-            this.tbxNoiseTimeRange.TabIndex = 1;
-            this.tbxNoiseTimeRange.Text = "1";
-            this.tbxNoiseTimeRange.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.tbxNoiseTimeRange.Leave += new System.EventHandler(this.tbxNoiseTimeRange_Leave);
             // 
             // cbxLimitNoiseTime
             // 
-            this.cbxLimitNoiseTime.AutoSize = true;
-            this.cbxLimitNoiseTime.Location = new System.Drawing.Point(3, 3);
+            resources.ApplyResources(this.cbxLimitNoiseTime, "cbxLimitNoiseTime");
             this.cbxLimitNoiseTime.Name = "cbxLimitNoiseTime";
-            this.cbxLimitNoiseTime.Size = new System.Drawing.Size(90, 17);
-            this.cbxLimitNoiseTime.TabIndex = 0;
-            this.cbxLimitNoiseTime.Text = "Limit noise to ";
-            this.cbxLimitNoiseTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cbxLimitNoiseTime.UseVisualStyleBackColor = true;
             this.cbxLimitNoiseTime.CheckedChanged += new System.EventHandler(this.cbxLimitNoiseTime_CheckedChanged);
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(371, 352);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 8;
-            this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnMinimize
             // 
-            this.btnMinimize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMinimize.Location = new System.Drawing.Point(130, 352);
+            resources.ApplyResources(this.btnMinimize, "btnMinimize");
             this.btnMinimize.Name = "btnMinimize";
-            this.btnMinimize.Size = new System.Drawing.Size(103, 23);
-            this.btnMinimize.TabIndex = 6;
-            this.btnMinimize.Text = "Minimize in place";
             this.btnMinimize.UseVisualStyleBackColor = true;
             this.btnMinimize.Click += new System.EventHandler(this.btnMinimize_Click);
             // 
             // label2
             // 
-            this.label2.Location = new System.Drawing.Point(12, 9);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(437, 59);
-            this.label2.TabIndex = 0;
-            this.label2.Text = "To reduce the size of the Skyline cache file (.skyd), you can discard chromatogra" +
-                "ms that are not used by this document, as well as limit the length of chromatogr" +
-                "ams.";
             // 
             // label3
             // 
-            this.label3.Location = new System.Drawing.Point(205, 3);
-            this.label3.Margin = new System.Windows.Forms.Padding(3);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(221, 17);
-            this.label3.TabIndex = 2;
-            this.label3.Text = "minutes before and after chromatogram peak.";
-            this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // lblCurrentCacheFileSize
             // 
-            this.lblCurrentCacheFileSize.AutoSize = true;
-            this.lblCurrentCacheFileSize.Location = new System.Drawing.Point(9, 123);
+            resources.ApplyResources(this.lblCurrentCacheFileSize, "lblCurrentCacheFileSize");
             this.lblCurrentCacheFileSize.Name = "lblCurrentCacheFileSize";
-            this.lblCurrentCacheFileSize.Size = new System.Drawing.Size(209, 13);
-            this.lblCurrentCacheFileSize.TabIndex = 3;
-            this.lblCurrentCacheFileSize.Text = "The current size of the cache file is xxx MB";
             // 
             // lblSpaceSavings
             // 
-            this.lblSpaceSavings.AutoSize = true;
-            this.lblSpaceSavings.Location = new System.Drawing.Point(12, 145);
+            resources.ApplyResources(this.lblSpaceSavings, "lblSpaceSavings");
             this.lblSpaceSavings.Name = "lblSpaceSavings";
-            this.lblSpaceSavings.Size = new System.Drawing.Size(137, 13);
-            this.lblSpaceSavings.TabIndex = 4;
-            this.lblSpaceSavings.Text = "Computing space savings...";
             // 
             // btnMinimizeAs
             // 
-            this.btnMinimizeAs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnMinimizeAs.Location = new System.Drawing.Point(239, 352);
+            resources.ApplyResources(this.btnMinimizeAs, "btnMinimizeAs");
             this.btnMinimizeAs.Name = "btnMinimizeAs";
-            this.btnMinimizeAs.Size = new System.Drawing.Size(126, 23);
-            this.btnMinimizeAs.TabIndex = 7;
-            this.btnMinimizeAs.Text = "Minimize and save as...";
             this.btnMinimizeAs.UseVisualStyleBackColor = true;
             this.btnMinimizeAs.Click += new System.EventHandler(this.btnMinimizeAs_Click);
             // 
@@ -237,17 +190,14 @@ namespace pwiz.Skyline.FileUI
             this.flowLayoutPanel1.Controls.Add(this.cbxLimitNoiseTime);
             this.flowLayoutPanel1.Controls.Add(this.tbxNoiseTimeRange);
             this.flowLayoutPanel1.Controls.Add(this.label3);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(9, 94);
+            resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(440, 26);
-            this.flowLayoutPanel1.TabIndex = 2;
             // 
             // MinimizeResultsDlg
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(458, 387);
             this.Controls.Add(this.flowLayoutPanel1);
             this.Controls.Add(this.btnMinimizeAs);
             this.Controls.Add(this.lblSpaceSavings);
@@ -261,8 +211,6 @@ namespace pwiz.Skyline.FileUI
             this.MinimizeBox = false;
             this.Name = "MinimizeResultsDlg";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Minimize Results";
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewSizes)).EndInit();
             this.flowLayoutPanel1.ResumeLayout(false);

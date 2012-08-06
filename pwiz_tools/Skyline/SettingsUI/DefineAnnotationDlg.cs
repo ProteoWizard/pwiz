@@ -25,6 +25,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -50,7 +51,7 @@ namespace pwiz.Skyline.SettingsUI
             _annotationDef = annotationDef;
             if (annotationDef == null)
             {
-                AnnotationName = "";
+                AnnotationName = string.Empty;
                 AnnotationType = AnnotationDef.AnnotationType.text;
                 AnnotationTargets = 0;
                 Items = new string[0];
@@ -118,11 +119,11 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     return new string[0];
                 }
-                return tbxValues.Text.Split(new[] {"\r\n"}, StringSplitOptions.None);
+                return tbxValues.Text.Split(new[] {"\r\n"}, StringSplitOptions.None); // Not L10N
             }
             set
             {
-                tbxValues.Text = string.Join("\r\n", value.ToArray());
+                tbxValues.Text = TextUtil.LineSeparate(value.ToArray()); 
             }
         }
 
@@ -155,14 +156,14 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (annotationDef.Name == name)
                     {
-                        messageBoxHelper.ShowTextBoxError(tbxName, "There is already an annotation defined named '{0}'.", name);
+                        messageBoxHelper.ShowTextBoxError(tbxName, Resources.DefineAnnotationDlg_OkDialog_There_is_already_an_annotation_defined_named__0__, name);
                         return;
                     }
                 }
             }
             if (checkedListBoxAppliesTo.CheckedItems.Count == 0)
             {
-                MessageBox.Show(this, "Choose at least one type for this annotation to apply to.", Program.Name);
+                MessageBox.Show(this, Resources.DefineAnnotationDlg_OkDialog_Choose_at_least_one_type_for_this_annotation_to_apply_to, Program.Name);
                 checkedListBoxAppliesTo.Focus();
                 return;
             }

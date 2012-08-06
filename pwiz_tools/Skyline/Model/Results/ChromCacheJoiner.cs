@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -75,7 +76,7 @@ namespace pwiz.Skyline.Model.Results
 
                 // If not cancelled, update progress.
                 string cacheFilePath = CacheFilePaths[_currentPartIndex];
-                string message = String.Format("Joining file {0}", cacheFilePath);
+                string message = String.Format(Resources.ChromCacheJoiner_JoinNextPart_Joining_file__0__, cacheFilePath);
                 int percent = _currentPartIndex * 100 / CacheFilePaths.Count;
                 _status = _status.ChangeMessage(message).ChangePercentComplete(percent);
                 _loader.UpdateProgress(_status);
@@ -132,7 +133,7 @@ namespace pwiz.Skyline.Model.Results
                 }
                 catch (Exception x)
                 {
-                    Complete(new Exception(String.Format("Failed to create cache '{0}'.", CachePath), x));
+                    Complete(new Exception(String.Format(Resources.ChromCacheJoiner_JoinNextPart_Failed_to_create_cache__0__, CachePath), x));
                 }
             }
         }
@@ -161,7 +162,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 int read = _inStream.EndRead(ar);
                 if (read == 0)
-                    throw new IOException(String.Format("Unexpected end of file in {0}.", CacheFilePaths[_currentPartIndex]));
+                    throw new IOException(String.Format(Resources.ChromCacheJoiner_FinishRead_Unexpected_end_of_file_in__0__, CacheFilePaths[_currentPartIndex]));
                 _copyBytes -= read;
                 _outStream.BeginWrite(_buffer, 0, read, FinishWrite, null);
             }

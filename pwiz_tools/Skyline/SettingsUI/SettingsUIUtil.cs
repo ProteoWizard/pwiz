@@ -22,7 +22,9 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -77,7 +79,8 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (ExternalException)
             {
-                MessageDlg.Show(parent, ClipboardHelper.GetOpenClipboardMessage("Failed getting data from the clipboard."));
+                MessageDlg.Show(parent, ClipboardHelper.GetOpenClipboardMessage(
+                    Resources.SettingsUIUtil_GetClipBoardText_Failed_getting_data_from_the_clipboard));
                 return null;
             }
         }
@@ -93,12 +96,12 @@ namespace pwiz.Skyline.SettingsUI
             while ((line = reader.ReadLine()) != null)
             {
                 lineNum++;
-                String[] columns = line.Split('\t');
+                String[] columns = line.Split(TextUtil.SEPARATOR_TSV);
                 if (columns.Length == 0)
                     continue;
                 if (columns.Length > columnCount)
                 {
-                    string message = string.Format("Incorrect number of columns ({0}) found on line {1}.",
+                    string message = string.Format(Resources.SettingsUIUtil_DoPasteText_Incorrect_number_of_columns__0__found_on_line__1__,
                                                    columns.Length, lineNum);
                     MessageDlg.Show(parent, message);
                     return false;

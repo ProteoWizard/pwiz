@@ -96,6 +96,8 @@ namespace pwiz.Skyline.Model.Esp
             return new KeyValuePair<string, double[]>(namedCoeffs.Key, newCoeffs);
         }
 
+
+        // Not L10N: Appears user does not need this information. GetFeatureName never called.
         private static readonly char[] ESP_COEFF_AAS = new[] { 'A', 'R', 'N', 'D', 'C', 'Q', 'E', 'G', 'H', 'I', 'L', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V' };
         private static readonly KeyValuePair<string, double[]>[] ESP_COEFFS = new[]
         {

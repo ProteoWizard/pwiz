@@ -19,12 +19,13 @@
 
 using System;
 using System.Windows.Forms;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
     public class ClipboardEx
     {
-        public const string SKYLINE_FORMAT = "Skyline Format";
+        public const string SKYLINE_FORMAT = "Skyline Format"; // Not L10N
 
 	    private static bool _useSystemClipboard = true;
         private static DataObject _dataObject;
@@ -90,7 +91,7 @@ namespace pwiz.Skyline.Util
                     if (((data == null || expected == null) && data != expected) ||
                         (data != null && data.ToString() != Clipboard.GetData(format).ToString()))
                     {
-                        throw new ApplicationException("ClipboardEx implementation problem");
+                        throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
                     }
                 }
                 return data;
@@ -139,7 +140,7 @@ namespace pwiz.Skyline.Util
             {
                 if (format != TextDataFormat.Text)
                 {
-                    throw new ApplicationException("ClipboardEx implementation problem");
+                    throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
                 }
                 _dataObject.SetData(text, DataFormats.Text);
                 if (CHECK_VALUES)
@@ -160,7 +161,7 @@ namespace pwiz.Skyline.Util
                 string text = (string)_dataObject.GetData(DataFormats.Text);
                 if (CHECK_VALUES && text != Clipboard.GetText())
                 {
-                    throw new ApplicationException("ClipboardEx implementation problem");
+                    throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
                 }
                 return text;
             }
@@ -174,14 +175,14 @@ namespace pwiz.Skyline.Util
             }
             else lock (_dataObject)
             {
-                string text = "";
+                string text = string.Empty;
                 if (format == TextDataFormat.Text)
                 {
                     text = (string)_dataObject.GetData(DataFormats.Text);
                 }
                 if (CHECK_VALUES && text != Clipboard.GetText(format))
                 {
-                    throw new ApplicationException("ClipboardEx implementation problem");
+                    throw new ApplicationException(Resources.ClipboardEx_GetData_ClipboardEx_implementation_problem);
                 }
                 return text;
             }

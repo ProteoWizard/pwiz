@@ -25,6 +25,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
 using ZedGraph;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -36,7 +37,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                string[] values = Settings.Default.RTScheduleWindows.Split(',');
+                string[] values = Settings.Default.RTScheduleWindows.Split(TextUtil.SEPARATOR_CSV);
                 List<double> windows = new List<double>(values.Length);
                 foreach (string value in values)
                 {
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             set
             {
-                Settings.Default.RTScheduleWindows = string.Join(",",
+                Settings.Default.RTScheduleWindows = string.Join(",", // Not L10N
                     value.Select(v => v.ToString(CultureInfo.InvariantCulture)).ToArray());
             }
         }
@@ -57,7 +58,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public RTScheduleGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            XAxis.Title.Text = "Scheduled Time";
+            XAxis.Title.Text = Resources.RTScheduleGraphPane_RTScheduleGraphPane_Scheduled_Time;
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
         }
@@ -68,8 +69,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // TODO: Make it possible to see transition scheduling when full-scan enabled.
             YAxis.Title.Text = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs
-                                   ? "Concurrent Precursors"
-                                   : "Concurrent Transitions";
+                                   ? Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Precursors
+                                   : Resources.RTScheduleGraphPane_UpdateGraph_Concurrent_Transitions;
 
             CurveList.Clear();
 
@@ -146,7 +147,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (double x = xMin; x < xMax; x += 0.1)
                 points.Add(x, PrecursorScheduleBase.GetOverlapCount(listSchedules, x));
 
-            string label = string.Format("{0} Minute Window", GetSchedulingWindow(document));
+            string label = string.Format(Resources.RTScheduleGraphPane_AddCurve__0__Minute_Window, GetSchedulingWindow(document));
             var curve = AddCurve(label, points, color);
             curve.Line.IsAntiAlias = true;
             curve.Line.IsOptimizedDraw = true;

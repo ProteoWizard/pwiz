@@ -18,6 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 
@@ -93,6 +95,8 @@ namespace pwiz.Skyline.Model
 
         private void OnLoadBackground(IDocumentContainer container, SrmDocument document)
         {
+            // Made on a new thread.
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
             SrmDocument docCurrent = container.Document;
             // If the document identity has changed, or the current document is loaded,
             // then end the processing.

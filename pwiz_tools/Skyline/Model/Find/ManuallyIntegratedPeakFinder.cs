@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Find
 {
@@ -29,22 +30,26 @@ namespace pwiz.Skyline.Model.Find
         {
             get
             {
-                return "manually_integrated_peaks";
+                return "manually_integrated_peaks"; // Not L10N
             }
         }
         public override string DisplayName
         {
-            get { return "Manually integrated peaks"; }
+            get { return Resources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks; }
         }
 
         protected override FindMatch MatchTransition(TransitionChromInfo transitionChromInfo)
         {
-            return transitionChromInfo.UserSet ? new FindMatch("Manually integrated peak") : null;
+            return transitionChromInfo.UserSet
+                       ? new FindMatch(Resources.ManuallyIntegratedPeakFinder_MatchTransition_Manually_integrated_peak)
+                       : null;
         }
 
         protected override FindMatch MatchTransitionGroup(TransitionGroupChromInfo transitionGroupChromInfo)
         {
-            return transitionGroupChromInfo.UserSet ? new FindMatch("Manually integrated peaks") : null;
+            return transitionGroupChromInfo.UserSet
+                       ? new FindMatch(Resources.ManuallyIntegratedPeakFinder_DisplayName_Manually_integrated_peaks)
+                       : null;
         }
     }
 }

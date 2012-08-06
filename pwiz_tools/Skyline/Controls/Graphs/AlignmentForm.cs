@@ -50,12 +50,12 @@ namespace pwiz.Skyline.Controls.Graphs
             SkylineWindow = skylineWindow;
             Icon = Resources.Skyline;
             bindingSource.DataSource = _dataRows;
-            colSlope.CellTemplate.Style.Format = "0.0000";
-            colIntercept.CellTemplate.Style.Format = "0.0000";
-            colCorrelationCoefficient.CellTemplate.Style.Format = "0.0000";
-            colUnrefinedSlope.CellTemplate.Style.Format = "0.0000";
-            colUnrefinedIntercept.CellTemplate.Style.Format = "0.0000";
-            colUnrefinedCorrelationCoefficient.CellTemplate.Style.Format = "0.0000";
+            colIntercept.CellTemplate.Style.Format = "0.0000"; // Not L10N  
+            colSlope.CellTemplate.Style.Format = "0.0000"; // Not L10N
+            colCorrelationCoefficient.CellTemplate.Style.Format = "0.0000"; // Not L10N
+            colUnrefinedSlope.CellTemplate.Style.Format = "0.0000"; // Not L10N
+            colUnrefinedIntercept.CellTemplate.Style.Format = "0.0000"; // Not L10N
+            colUnrefinedCorrelationCoefficient.CellTemplate.Style.Format = "0.0000"; // Not L10N
         }
 
         public SkylineWindow SkylineWindow { get; private set; }
@@ -104,7 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs
             var alignedFile = currentRow.AlignedRetentionTimes;
             if (alignedFile == null)
             {
-                zedGraphControl.GraphPane.Title.Text = "Waiting for retention time alignment";
+                zedGraphControl.GraphPane.Title.Text = Resources.AlignmentForm_UpdateGraph_Waiting_for_retention_time_alignment;
                 return;
             }
             var points = new PointPairList();
@@ -134,13 +134,13 @@ namespace pwiz.Skyline.Controls.Graphs
             
             if (outliers.Count > 0)
             {
-                var outlierLineItem = zedGraphControl.GraphPane.AddCurve("Outliers", outliers, Color.Black,
+                var outlierLineItem = zedGraphControl.GraphPane.AddCurve(Resources.AlignmentForm_UpdateGraph_Outliers, outliers, Color.Black,
                                                                         SymbolType.Diamond);
                 outlierLineItem.Symbol.Size = 8f;
                 outlierLineItem.Line.IsVisible = false;
                 outlierLineItem.Symbol.Border.IsVisible = false;
                 outlierLineItem.Symbol.Fill = new Fill(RTLinearRegressionGraphPane.COLOR_OUTLIERS);
-                goodPointsLineItem.Label.Text = "Peptides Refined";
+                goodPointsLineItem.Label.Text = Resources.AlignmentForm_UpdateGraph_Peptides_Refined;
             }
             zedGraphControl.GraphPane.CurveList.Add(goodPointsLineItem);
             if (points.Count > 0)
@@ -149,17 +149,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 double xMax = points.Select(p => p.X).Max();
                 var regression = alignedFile.RegressionRefined ?? alignedFile.Regression;
                 var regressionLine = zedGraphControl.GraphPane
-                    .AddCurve("Regression line", new[] { xMin, xMax },
+                        .AddCurve(Resources.AlignmentForm_UpdateGraph_Regression_line, new[] { xMin, xMax },
                         new[] { regression.Conversion.GetY(xMin), regression.Conversion.GetY(xMax) },
                         Color.Black);
                 regressionLine.Symbol.IsVisible = false;
             }
-            zedGraphControl.GraphPane.Title.Text = string.Format("Alignment of {0} to {1}",
+                zedGraphControl.GraphPane.Title.Text = string.Format(Resources.AlignmentForm_UpdateGraph_Alignment_of__0__to__1_,
                 currentRow.DataFile,
                 currentRow.Target.Name);
-            zedGraphControl.GraphPane.XAxis.Title.Text 
-                = string.Format("Time from {0}", currentRow.DataFile);
-            zedGraphControl.GraphPane.YAxis.Title.Text = "Aligned time";
+                zedGraphControl.GraphPane.XAxis.Title.Text = string.Format(Resources.AlignmentForm_UpdateGraph_Time_from__0__, 
+                    currentRow.DataFile);
+                zedGraphControl.GraphPane.YAxis.Title.Text = Resources.AlignmentForm_UpdateGraph_Aligned_time;
             zedGraphControl.GraphPane.AxisChange();
             zedGraphControl.Invalidate();
         }

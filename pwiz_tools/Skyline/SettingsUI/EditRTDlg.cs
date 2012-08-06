@@ -32,6 +32,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -71,7 +72,7 @@ namespace pwiz.Skyline.SettingsUI
                 _regression = value;
                 if (_regression == null)
                 {
-                    textName.Text = "";
+                    textName.Text = string.Empty;
                 }
                 else
                 {
@@ -102,7 +103,7 @@ namespace pwiz.Skyline.SettingsUI
                         textSlope.Text = _regression.Conversion.Slope.ToString(CultureInfo.CurrentCulture);
                         textIntercept.Text = _regression.Conversion.Intercept.ToString(CultureInfo.CurrentCulture);
                     }
-                    textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow);
+                    textTimeWindow.Text = string.Format("{0:F04}", _regression.TimeWindow); // Not L10N
                 }
             }
         }
@@ -119,7 +120,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(r => !ReferenceEquals(_regression, r) && Equals(name, r.Name)))
             {
-                helper.ShowTextBoxError(textName, "The retention time regression '{0}' already exists.", name);
+                helper.ShowTextBoxError(textName, Resources.EditRTDlg_OkDialog_The_retention_time_regression__0__already_exists, name);
                 e.Cancel = true;
                 return;
             }
@@ -146,13 +147,14 @@ namespace pwiz.Skyline.SettingsUI
 
             if (window <= 0)
             {
-                helper.ShowTextBoxError(textTimeWindow, "{0} must be greater than 0.");
+                helper.ShowTextBoxError(textTimeWindow, Resources.EditRTDlg_OkDialog__0__must_be_greater_than_0);
                 return;
             }
 
             if (comboCalculator.SelectedIndex == -1)
             {
-                MessageBox.Show(this, "Retention time prediction requires a calculator algorithm.", Program.Name);
+                MessageBox.Show(this, Resources.EditRTDlg_OkDialog_Retention_time_prediction_requires_a_calculator_algorithm,
+                                Program.Name);
                 comboCalculator.Focus();
                 return;
             }
@@ -174,13 +176,13 @@ namespace pwiz.Skyline.SettingsUI
             int yExtra = 0;
             if (visible)
             {
-                btnCalculate.Text = "&Calculate <<";
+                btnCalculate.Text = Resources.EditRTDlg_ShowPeptides_Calculate_Left;
                 ctlCorner = gridPeptides;
                 yExtra = btnUseCurrent.Height + 10;
             }
             else
             {
-                btnCalculate.Text = "&Calculate >>";
+                btnCalculate.Text = Resources.EditRTDlg_ShowPeptides_Calculate_Right;
                 ctlCorner = btnCalculate;
             }
 
@@ -339,8 +341,8 @@ namespace pwiz.Skyline.SettingsUI
             {
                 using (var longWait = new LongWaitDlg
                 {
-                    Text = "Initializing",
-                    Message = string.Format("Initializing {0} calculator", calc.Name)
+                    Text = Resources.EditRTDlg_ShowGraph_Initializing,
+                    Message = string.Format(Resources.EditRTDlg_ShowGraph_Initializing__0__calculator, calc.Name)
                 })
                 {
                     try
@@ -357,7 +359,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     catch (Exception x)
                     {
-                        MessageDlg.Show(this, string.Format("An error occurred attempting to initialize the calculator {0}.\n{1}", calc.Name, x.Message));
+                        var message = TextUtil.LineSeparate(string.Format(Resources.EditRTDlg_ShowGraph_An_error_occurred_attempting_to_initialize_the_calculator__0__,
+                                                                          calc.Name),
+                                                            x.Message);
+                        MessageDlg.Show(this,message);
                         return;
                     }
                 }
@@ -391,9 +396,9 @@ namespace pwiz.Skyline.SettingsUI
 
             var regressionGraphData = new RegressionGraphData
             {
-                Title = "Retention Times by Score",
+                Title = Resources.EditRTDlg_ShowGraph_Retention_Times_by_Score,
                 LabelX = calc.Name,
-                LabelY = "Measured Time",
+                LabelY = Resources.EditRTDlg_ShowGraph_Measured_Time,
                 XValues = scores.ToArray(),
                 YValues = times.ToArray(),
                 RegressionLine = new RegressionLine(slopeRegress, interceptRegress),
@@ -465,7 +470,9 @@ namespace pwiz.Skyline.SettingsUI
 
                 if (!calculator.IsUsable)
                 {
-                    MessageDlg.Show(this, "The calculator cannot be used to score peptides. Please check its settings.");
+                    MessageDlg.Show(this,
+                                    Resources.
+                                        EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please_check_its_settings);
                     return activePeptides;
                 }
 
@@ -480,7 +487,11 @@ namespace pwiz.Skyline.SettingsUI
 
             if (tablePeptides.Count == 0 && activePeptides.Count != 0)
             {
-                MessageDlg.Show(this, String.Format("The {0} calculator cannot score any of the peptides.", calculator.Name));
+                MessageDlg.Show(this,
+                                String.Format(
+                                    Resources.
+                                        EditRTDlg_UpdateCalculator_The__0__calculator_cannot_score_any_of_the_peptides,
+                                                    calculator.Name));
                 comboCalculator.SelectedIndex = 0;
                 return null;
             }
@@ -521,7 +532,7 @@ namespace pwiz.Skyline.SettingsUI
             RetentionScoreCalculatorSpec calculatorSpec;
             RetentionTimeStatistics statistics;
 
-            RetentionTimeRegression regression = RetentionTimeRegression.CalcRegression("Recalc", calculators,
+            RetentionTimeRegression regression = RetentionTimeRegression.CalcRegression("Recalc", calculators, // Not L10N
                                                                                         peptidesTimes, out statistics);
 
             double r = 0;
@@ -529,9 +540,9 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (calculators.Count() > 1)
                 {
-                    textSlope.Text = "";
-                    textIntercept.Text = "";
-                    textTimeWindow.Text = "";
+                    textSlope.Text = string.Empty;
+                    textIntercept.Text = string.Empty;
+                    textTimeWindow.Text = string.Empty;
                     comboCalculator.SelectedIndex = -1;
 
                     return null;
@@ -540,9 +551,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                textSlope.Text = string.Format("{0}", regression.Conversion.Slope);
-                textIntercept.Text = string.Format("{0}", regression.Conversion.Intercept);
-                textTimeWindow.Text = string.Format("{0:F01}", regression.TimeWindow);
+                textSlope.Text = string.Format("{0}", regression.Conversion.Slope); // Not L10N 
+                textIntercept.Text = string.Format("{0}", regression.Conversion.Intercept); // Not L10N
+                textTimeWindow.Text = string.Format("{0:F01}", regression.TimeWindow); // Not L10N
 
                 // Select best calculator match.
                 calculatorSpec = regression.Calculator;
@@ -554,7 +565,8 @@ namespace pwiz.Skyline.SettingsUI
 
             var pepCount = calculatorSpec.ChooseRegressionPeptides(peptidesTimes.Select(mrt => mrt.PeptideSequence)).Count();
 
-            labelRValue.Text = string.Format("({0} peptides, R = {1})", pepCount, Math.Round(r, RetentionTimeRegression.ThresholdPrecision));
+            labelRValue.Text = string.Format(Resources.EditRTDlg_RecalcRegression__0__peptides_R__1__, pepCount,
+                                             Math.Round(r, RetentionTimeRegression.ThresholdPrecision));
             // Right align with the peptide grid.
             labelRValue.Left = gridPeptides.Right - labelRValue.Width;
 
@@ -575,7 +587,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     ShowPeptides(false);
                 }
-                textSlope.Text = textIntercept.Text = "";
+                textSlope.Text = textIntercept.Text = string.Empty;
                 Peptides.Clear();
             }
         }
@@ -688,9 +700,9 @@ namespace pwiz.Skyline.SettingsUI
         public static string ValidateSequence(string sequence)
         {
             if (sequence == null)
-                return "A modified peptide sequence is required for each entry.";
+                return Resources.MeasuredPeptide_ValidateSequence_A_modified_peptide_sequence_is_required_for_each_entry;
             if (!FastaSequence.IsExSequence(sequence))
-                return string.Format("The sequence '{0}' is not a valid modified peptide sequence.", sequence);
+                return string.Format(Resources.MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide_sequence, sequence);
             return null;
         }
 
@@ -698,9 +710,9 @@ namespace pwiz.Skyline.SettingsUI
         {
             double rtValue;
             if (rtText == null || !double.TryParse(rtText, out rtValue))
-                return "Measured retention times must be valid decimal numbers.";
+                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_valid_decimal_numbers;
             if (!allowNegative && rtValue <= 0)
-                return "Measured retention times must be greater than zero.";
+                return Resources.MeasuredPeptide_ValidateRetentionTime_Measured_retention_times_must_be_greater_than_zero;
             return null;
         }
     }

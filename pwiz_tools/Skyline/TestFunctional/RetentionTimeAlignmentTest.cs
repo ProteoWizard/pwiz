@@ -121,12 +121,12 @@ namespace pwiz.SkylineTestFunctional
                           CollectionAssert.AreEqual(new[]{"S_1", "S_10"}, alignAgainstOptions);
                           Assert.AreEqual("S_10", alignmentForm.ComboAlignAgainst.SelectedItem.ToString());
                       });
-            WaitForConditionUI(10000, () => alignmentForm.RegressionGraph.GraphPane.XAxis.Title.Text == "Time from S_1");
+            WaitForConditionUI(10000, () => alignmentForm.RegressionGraph.GraphPane.XAxis.Title.Text == string.Format(Resources.AlignmentForm_UpdateGraph_Time_from__0__,"S_1"));
             RunUI(()=>
                       {
                           var curves = alignmentForm.RegressionGraph.GraphPane.CurveList;
-                          var outlierCurve = curves.Find(curveItem => "Outliers" == curveItem.Label.Text);
-                          var goodPointsCurve = curves.Find(curveItem => curveItem.Label.Text.StartsWith("Peptides"));
+                          var outlierCurve = curves.Find(curveItem => Resources.AlignmentForm_UpdateGraph_Outliers == curveItem.Label.Text);
+                          var goodPointsCurve = curves.Find(curveItem => curveItem.Label.Text == Resources.AlignmentForm_UpdateGraph_Peptides_Refined);
                           Assert.AreEqual(alignedRetentionTimes1To10.OutlierIndexes.Count, outlierCurve.Points.Count);
                           Assert.AreEqual(alignedRetentionTimes1To10.RegressionPointCount, outlierCurve.Points.Count + goodPointsCurve.Points.Count);
                       });

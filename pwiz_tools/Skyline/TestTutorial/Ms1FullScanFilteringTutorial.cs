@@ -18,6 +18,7 @@
  */
 
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -45,23 +46,23 @@ namespace pwiz.SkylineTestTutorial
         public void TestMs1Tutorial()
         {
             TestFilesZip = ExtensionTestContext.CanImportAbWiff
-                ? @"https://skyline.gs.washington.edu/tutorials/MS1Filtering.zip"
-                : @"https://skyline.gs.washington.edu/tutorials/MS1FilteringMzml.zip";
+                ? @"https://skyline.gs.washington.edu/tutorials/MS1Filtering.zip" // Not L10N
+                : @"https://skyline.gs.washington.edu/tutorials/MS1FilteringMzml.zip"; // Not L10N
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
-            var folderMs1Filtering = ExtensionTestContext.CanImportAbWiff ? "Ms1Filtering" : "Ms1FilteringMzml";
+            var folderMs1Filtering = ExtensionTestContext.CanImportAbWiff ? "Ms1Filtering" : "Ms1FilteringMzml"; // Not L10N
 
             SrmDocument doc = SkylineWindow.Document;
 
             // Configure the peptide settings for your new document.
             var peptideSettingsUI = ShowPeptideSettings();
-            const string carbamidomethylCysteineName = "Carbamidomethyl Cysteine";
-            const string phosphoStName = "Phospho (ST)";
-            const string phosphoYName = "Phospho (Y)";
-            const string oxidationMName = "Oxidation (M)";
+            const string carbamidomethylCysteineName = "Carbamidomethyl Cysteine"; // Not L10N
+            const string phosphoStName = "Phospho (ST)"; // Not L10N
+            const string phosphoYName = "Phospho (Y)"; // Not L10N
+            const string oxidationMName = "Oxidation (M)"; // Not L10N
             AddStaticMod(phosphoStName, true, peptideSettingsUI);
             AddStaticMod(phosphoYName, true, peptideSettingsUI);
             AddStaticMod(oxidationMName, true, peptideSettingsUI);
@@ -72,9 +73,9 @@ namespace pwiz.SkylineTestTutorial
             });
 
             // Build Spectral Library.
-            const string libraryName = "Phospho_TiO2";
-            string libraryPath = TestFilesDir.GetTestPath(libraryName + ".blib");
-            string redundantLibraryPath = TestFilesDir.GetTestPath(libraryName + ".redundant.blib");
+            const string libraryName = "Phospho_TiO2"; // Not L10N
+            string libraryPath = TestFilesDir.GetTestPath(libraryName + ".blib"); // Not L10N
+            string redundantLibraryPath = TestFilesDir.GetTestPath(libraryName + ".redundant.blib"); // Not L10N
             RunDlg<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg, buildLibraryDlg =>
             {
                 buildLibraryDlg.LibraryName = libraryName;
@@ -82,11 +83,11 @@ namespace pwiz.SkylineTestTutorial
                 buildLibraryDlg.LibraryKeepRedundant = true;
                 buildLibraryDlg.LibraryBuildAction = LibraryBuildAction.Create;
                 buildLibraryDlg.LibraryCutoff = 0.95;
-                buildLibraryDlg.LibraryAuthority = "buckinstitute.org";
+                buildLibraryDlg.LibraryAuthority = "buckinstitute.org"; // Not L10N
                 buildLibraryDlg.OkWizardPage();
                 IList<string> inputPaths = new List<string>
                  {
-                     TestFilesDir.GetTestPath(folderMs1Filtering + @"\100803_0005b_MCF7_TiTip3.group.xml")
+                     TestFilesDir.GetTestPath(folderMs1Filtering + @"\100803_0005b_MCF7_TiTip3.group.xml") // Not L10N
                  };
                 buildLibraryDlg.AddInputFiles(inputPaths);
                 buildLibraryDlg.OkWizardPage();
@@ -115,9 +116,9 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
                 Assert.AreEqual(MassType.Monoisotopic, transitionSettingsUI.PrecursorMassType);
-                transitionSettingsUI.PrecursorCharges = "2,3,4";
-                transitionSettingsUI.ProductCharges = "1,2,3";
-                transitionSettingsUI.FragmentTypes = "p";
+                transitionSettingsUI.PrecursorCharges = "2,3,4"; // Not L10N
+                transitionSettingsUI.ProductCharges = "1,2,3"; // Not L10N
+                transitionSettingsUI.FragmentTypes = "p"; // Not L10N
                 transitionSettingsUI.SetAutoSelect = true;
                 transitionSettingsUI.UseLibraryPick = false;
                 transitionSettingsUI.PrecursorIsotopesCurrent = FullScanPrecursorIsotopes.Count;
@@ -130,12 +131,12 @@ namespace pwiz.SkylineTestTutorial
             // Populating the Skyline peptide tree.
             doc = SkylineWindow.Document;
             RunUI(
-                () => SkylineWindow.ImportFastaFile(TestFilesDir.GetTestPath(folderMs1Filtering + @"\12_proteins.062011.fasta")));
+                () => SkylineWindow.ImportFastaFile(TestFilesDir.GetTestPath(folderMs1Filtering + @"\12_proteins.062011.fasta"))); // Not L10N
             WaitForDocumentChange(doc);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 11, 40, 40, 120);
 
             // Select the first transition group.
-            var documentPath = TestFilesDir.GetTestPath(folderMs1Filtering + @"\Template_MS1 Filtering_1118_2011_3.sky");
+            var documentPath = TestFilesDir.GetTestPath(folderMs1Filtering + @"\Template_MS1 Filtering_1118_2011_3.sky"); // Not L10N
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedPath =
@@ -151,8 +152,8 @@ namespace pwiz.SkylineTestTutorial
 
             // MS1 filtering of raw data imported into Skyline.
             doc = SkylineWindow.Document;
-            ImportResultsFile("100803_0005b_MCF7_TiTip3" + ExtensionTestContext.ExtAbWiff);
-            WaitForDocumentChange(doc);
+            ImportResultsFile("100803_0005b_MCF7_TiTip3" + ExtensionTestContext.ExtAbWiff); // Not L10N
+            WaitForDocumentChange(doc); 
 
             doc = SkylineWindow.Document;
             RunUI(() =>
@@ -170,7 +171,7 @@ namespace pwiz.SkylineTestTutorial
             // Jump to another peptide.
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findDlg =>
             {
-                findDlg.FindOptions = new FindOptions().ChangeText("YGP");
+                findDlg.FindOptions = new FindOptions().ChangeText("YGP"); // Not L10N
                 findDlg.FindNext();
                 findDlg.Close();
             });
@@ -179,8 +180,8 @@ namespace pwiz.SkylineTestTutorial
             doc = SkylineWindow.Document;
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
-                transitionSettingsUI.MinTime = "10";
-                transitionSettingsUI.MaxTime = "100";
+                transitionSettingsUI.MinTime = "10"; // Not L10N
+                transitionSettingsUI.MaxTime = "100"; // Not L10N
                 transitionSettingsUI.OkDialog();
             });
             WaitForDocumentChange(doc);
@@ -212,13 +213,13 @@ namespace pwiz.SkylineTestTutorial
 
             // Eliminate extraneous chromatogram data.
             doc = SkylineWindow.Document;
-            var minimizedFile = TestFilesDir.GetTestPath(folderMs1Filtering + @"\Template_MS1Filtering_1118_2011_3-2min.sky");
-            var cacheFile = minimizedFile + "d";
+            var minimizedFile = TestFilesDir.GetTestPath(folderMs1Filtering + @"\Template_MS1Filtering_1118_2011_3-2min.sky"); // Not L10N
+            var cacheFile = minimizedFile + "d"; // Not L10N
             var manageResultsDlg = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
             RunDlg<MinimizeResultsDlg>(manageResultsDlg.MinimizeResults, dlg =>
             {
                 dlg.LimitNoiseTime = true;
-                dlg.NoiseTimeRange = "2";
+                dlg.NoiseTimeRange = "2"; // Not L10N
                 dlg.MinimizeToFile(minimizedFile);
             });
             WaitForCondition(() => File.Exists(cacheFile));
@@ -238,8 +239,9 @@ namespace pwiz.SkylineTestTutorial
             // Now deviating from the tutorial script for a moment to make sure we can choose a Scheduled export method.
             RunDlg<RefineDlg>(SkylineWindow.ShowRefineDlg, dlg =>
             {
-                dlg.MinPeptides = "1";
-                dlg.MinPeakFoundRatio = "0.1";
+                dlg.MinPeptides = "1"; // Not L10N
+                const double minPeakFoundRatio = 0.1;
+                dlg.MinPeakFoundRatio = minPeakFoundRatio.ToString(CultureInfo.CurrentCulture);
                 dlg.OkDialog();
             });
 
@@ -247,7 +249,7 @@ namespace pwiz.SkylineTestTutorial
             var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.Method));
             RunUI(() =>
             {
-                exportMethodDlg.InstrumentType = "AB SCIEX TOF";
+                exportMethodDlg.InstrumentType = "AB SCIEX TOF"; // Not L10N
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
                 exportMethodDlg.CancelButton.PerformClick();
             });

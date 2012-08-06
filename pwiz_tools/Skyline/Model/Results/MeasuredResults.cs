@@ -22,12 +22,15 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -198,7 +201,7 @@ namespace pwiz.Skyline.Model.Results
             // has a pipeline that generates mzML files all uppercase
             if (!name.ToLower().StartsWith(prefix.ToLower()))
                 return false;
-            if (name.Length == prefix.Length || name[prefix.Length] == '.')
+            if (name.Length == prefix.Length || name[prefix.Length] == '.') // TODO: Not L10N?
                 return true;
             // Check for Waters MSe
             string suffix = name.Substring(prefix.Length);
@@ -231,7 +234,7 @@ namespace pwiz.Skyline.Model.Results
         public MeasuredResults CommitCacheFile(FileSaver fs)
         {
             if (!IsLoaded)
-                throw new InvalidOperationException("The chromatogram cache must be loaded before it can be changed.");
+                throw new InvalidOperationException(Resources.MeasuredResults_CommitCacheFile_The_chromatogram_cache_must_be_loaded_before_it_can_be_changed);
 
             _cacheFinal.CommitCache(fs);
             // Now the cach needs to be reloaded.
@@ -241,7 +244,7 @@ namespace pwiz.Skyline.Model.Results
         public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager)
         {
             if (!IsLoaded)
-                throw new InvalidOperationException("The chromatogram cache must be loaded before it is optimized.");
+                throw new InvalidOperationException(Resources.MeasuredResults_OptimizeCache_The_chromatogram_cache_must_be_loaded_before_it_is_optimized);
 
             var cacheOptimized = _cacheFinal.Optimize(documentPath, MSDataFilePaths, streamManager);
             if (ReferenceEquals(cacheOptimized, _cacheFinal))
@@ -753,7 +756,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 if (_resultsClone._statusLoading == null)
                 {
-                    _status = new ProgressStatus(string.Format("Loading results for {0}", Path.GetFileName(_documentPath)));
+                    _status = new ProgressStatus(string.Format(Resources.Loader_Load_Loading_results_for__0__, Path.GetFileName(_documentPath)));
                     _loader.UpdateProgress(_status);
                 }
                 else
@@ -803,8 +806,8 @@ namespace pwiz.Skyline.Model.Results
                         }
                         catch (Exception x)
                         {
-                            string message = string.Format("Failure reading the data file {0}.\n{1}",
-                                                           cachePath, x.Message);
+                            string message = TextUtil.LineSeparate(string.Format(Resources.Loader_Load_Failure_reading_the_data_file__0__, cachePath),
+                                                                   x.Message);
                             Fail(new IOException(message, x));
                             return;
                         }
@@ -953,7 +956,7 @@ namespace pwiz.Skyline.Model.Results
                                 }
                                 catch (Exception x)
                                 {
-                                    Fail(new IOException(string.Format("Failure attempting to load the data cache file {0}", partPath), x));
+                                    Fail(new IOException(string.Format(Resources.Loader_Load_Failure_attempting_to_load_the_data_cache_file__0_, partPath), x));
                                     return;
                                 }
                             }
@@ -1028,7 +1031,9 @@ namespace pwiz.Skyline.Model.Results
                     _loader.UpdateProgress(_status.ChangeErrorException(x));
                 else
                 {
-                    x = new Exception(string.Format("Failed to build a cache for '{0}'.\n{1}", _documentPath, x.Message), x);
+                    var message = TextUtil.LineSeparate(string.Format(Resources.Loader_Fail_Failed_to_build_a_cache_for__0__, _documentPath),
+                                                        x.Message);
+                    x = new Exception(message, x);
                     _loader.UpdateProgress(_status.ChangeErrorException(x));
                 }
 

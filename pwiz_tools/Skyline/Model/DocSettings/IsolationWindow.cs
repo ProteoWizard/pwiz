@@ -22,6 +22,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 
@@ -68,7 +69,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public bool TargetMatches(double isolationTarget, double mzMatchTolerance)
         {
             if (!Target.HasValue)
-                throw new InvalidDataException("Isolation window requires a Target value.");
+                throw new InvalidDataException(Resources.IsolationWindow_TargetMatches_Isolation_window_requires_a_Target_value);
             return Math.Abs(isolationTarget - Target.Value) <= mzMatchTolerance &&
                 Contains(isolationTarget);
         }
@@ -81,36 +82,35 @@ namespace pwiz.Skyline.Model.DocSettings
         private void DoValidate()
         {
             TransitionFullScan.ValidateRange(Start, TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER, TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
-                "Isolation window Start must be between {0} and {1}.");
+                Resources.IsolationWindow_DoValidate_Isolation_window_Start_must_be_between__0__and__1__);
             TransitionFullScan.ValidateRange(End, TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER, TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
-                "Isolation window End must be between {0} and {1}.");
+                Resources.IsolationWindow_DoValidate_Isolation_window_End_must_be_between__0__and__1__);
 
             if (Start >= End)
             {
-                throw new InvalidDataException("Isolation window Start value is greater than the End value.");
+                throw new InvalidDataException(Resources.IsolationWindow_DoValidate_Isolation_window_Start_value_is_greater_than_the_End_value);
             }
             if (Target.HasValue && (Target.Value < Start || Target.Value >= End))
             {
-                throw new InvalidDataException("Target value is not within the range of the isolation window.");
+                throw new InvalidDataException(Resources.IsolationWindow_DoValidate_Target_value_is_not_within_the_range_of_the_isolation_window);
             }
             if (StartMargin.HasValue)
             {
                 if (StartMargin.Value < 0)
                 {
-                    throw new InvalidDataException("Isolation window margin must be non-negative.");
+                    throw new InvalidDataException(Resources.IsolationWindow_DoValidate_Isolation_window_margin_must_be_non_negative);
                 }
                 if (EndMargin.HasValue)
                 {
                     if (EndMargin.Value < 0)
                     {
-                        throw new InvalidDataException("Isolation window margin must be non-negative.");
+                        throw new InvalidDataException(Resources.IsolationWindow_DoValidate_Isolation_window_margin_must_be_non_negative);
                     }
                 }
                 if (IsolationStart >= IsolationEnd)
                 {
                     // If the margins are too large, clipping at the ends of the instrument range may result in no useable window area.
-                    throw new InvalidDataException(
-                        "Isolation window margins cover the entire isolation window at the extremes of the instrument range.");
+                    throw new InvalidDataException(Resources.IsolationWindow_DoValidate_Isolation_window_margins_cover_the_entire_isolation_window_at_the_extremes_of_the_instrument_range);
                 }
             }
         }

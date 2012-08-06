@@ -23,7 +23,9 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
@@ -78,11 +80,22 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (invalidLines.Count > 0)
             {
+                string message;
                 if (invalidLines.Count == 1)
-                    MessageBox.Show(this, string.Format("The sequence '{0}' is not currently in the database.\nStandard peptides must exist in the database.", invalidLines[0]), Program.Name);
+                {
+                    message = string.Format(Resources.ChangeIrtPeptidesDlg_OkDialog_The_sequence__0__is_not_currently_in_the_database,
+                                            invalidLines[0]);
+                    MessageBox.Show(this, message, Program.Name);
+                }
                 else
-                    MessageBox.Show(this, string.Format("The following sequences are not currently in the database:\n\n{0}\n\nStandard peptides must exist in the database.",
-                                                  string.Join("\n", invalidLines.ToArray())), Program.Name);
+                {
+                    message = TextUtil.LineSeparate(Resources.ChangeIrtPeptidesDlg_OkDialog_The_following_sequences_are_not_currently_in_the_database,
+                                                    string.Empty,
+                                                    TextUtil.LineSeparate(invalidLines),
+                                                    string.Empty,
+                                                    Resources.ChangeIrtPeptidesDlg_OkDialog_Standard_peptides_must_exist_in_the_database);
+                    MessageBox.Show(this, message, Program.Name);
+                }
                 return;
             }
 

@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -81,7 +82,11 @@ namespace pwiz.Skyline.Model.Results
 
             int startIndex = expectedSpectrum.Intensities.IndexOf(inten => inten >= minimumAbundance);
             if (startIndex == -1)
-                throw new InvalidOperationException(string.Format("Minimum abundance {0} too high", minimumAbundance));
+            {
+                throw new InvalidOperationException(
+                    string.Format(Resources.IsotopeDistInfo_IsotopeDistInfo_Minimum_abundance__0__too_high,
+                                  minimumAbundance));
+            }
             // Always include the M-1 peak, even if it is expected to have zero intensity
             if (startIndex > monoMassIndex - 1)
                 startIndex = monoMassIndex - 1;

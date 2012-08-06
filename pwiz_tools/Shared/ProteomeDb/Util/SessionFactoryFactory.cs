@@ -28,7 +28,7 @@ namespace pwiz.ProteomeDatabase.Util
     // TODO: Move to Common
     public static class SessionFactoryFactory
     {
-        private const string DEFAULT_SCHEMA_FILENAME = "mapping.xml";
+        private const string DEFAULT_SCHEMA_FILENAME = "mapping.xml"; // Not L10N
 
         public static ISessionFactory CreateSessionFactory(String path, Type typeDb, bool createSchema)
         {
@@ -39,18 +39,18 @@ namespace pwiz.ProteomeDatabase.Util
         {
             Configuration configuration = new Configuration()
                 //.SetProperty("show_sql", "true")
-                .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
-                .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
+                .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName) // Not L10N
+                .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder // Not L10N
                 {
                     DataSource = path
                 }.ToString())
-                .SetProperty("connection.driver_class", 
+                .SetProperty("connection.driver_class", // Not L10N
                 typeof(NHibernate.Driver.SQLite20Driver).AssemblyQualifiedName);
             if (createSchema)
             {
-                configuration.SetProperty("hbm2ddl.auto", "create");
+                configuration.SetProperty("hbm2ddl.auto", "create"); // Not L10N
             }
-            configuration.SetProperty("connection.provider", 
+            configuration.SetProperty("connection.provider", // Not L10N
                 typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
             ConfigureMappings(configuration, typeDb, schemaFilename);
             ISessionFactory sessionFactory = configuration.BuildSessionFactory();

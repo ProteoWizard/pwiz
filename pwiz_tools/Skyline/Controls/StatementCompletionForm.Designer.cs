@@ -29,9 +29,10 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(StatementCompletionForm));
             this.toolTip = new System.Windows.Forms.ToolTip(this.components);
             this.listView = new System.Windows.Forms.ListView();
-            this.columnName = new System.Windows.Forms.ColumnHeader();
+            this.columnName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.SuspendLayout();
             // 
             // toolTip
@@ -43,16 +44,12 @@
             this.listView.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.columnName});
-            this.listView.Dock = System.Windows.Forms.DockStyle.Fill;
+            resources.ApplyResources(this.listView, "listView");
             this.listView.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
             this.listView.HideSelection = false;
-            this.listView.LabelWrap = false;
-            this.listView.Location = new System.Drawing.Point(0, 0);
             this.listView.MultiSelect = false;
             this.listView.Name = "listView";
             this.listView.OwnerDraw = true;
-            this.listView.Size = new System.Drawing.Size(284, 264);
-            this.listView.TabIndex = 0;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
             this.listView.DrawItem += new System.Windows.Forms.DrawListViewItemEventHandler(this.listView_DrawItem);
@@ -60,15 +57,12 @@
             // 
             // columnName
             // 
-            this.columnName.Text = "Name";
-            this.columnName.Width = 2560;
+            resources.ApplyResources(this.columnName, "columnName");
             // 
             // StatementCompletionForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.ClientSize = new System.Drawing.Size(284, 264);
             this.ControlBox = false;
             this.Controls.Add(this.listView);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
@@ -76,7 +70,6 @@
             this.MinimizeBox = false;
             this.Name = "StatementCompletionForm";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
             this.ResumeLayout(false);
 
         }

@@ -27,6 +27,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected SummaryPeptideGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            XAxis.Title.Text = "Peptide";
+            XAxis.Title.Text = Resources.SummaryPeptideGraphPane_SummaryPeptideGraphPane_Peptide;
             XAxis.Type = AxisType.Text;
         }
 
@@ -109,9 +110,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 BarItem curveItem;
                 if (HiLowMiddleErrorBarItem.IsHiLoMiddleErrorList(pointPairList))
-                    curveItem = new HiLowMiddleErrorBarItem("", pointPairList, color, Color.Black);
+                    curveItem = new HiLowMiddleErrorBarItem(string.Empty, pointPairList, color, Color.Black);
                 else
-                    curveItem = new MeanErrorBarItem("", pointPairList, color, Color.Black);
+                    curveItem = new MeanErrorBarItem(string.Empty, pointPairList, color, Color.Black);
 
                 curveItem.Bar.Border.IsVisible = false;
                 curveItem.Bar.Fill.Brush = new SolidBrush(color);
@@ -144,7 +145,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (Settings.Default.AreaLogScale && allowLogScale)
             {
-                YAxis.Title.Text = "Log " + YAxis.Title.Text;
+                YAxis.Title.Text = TextUtil.SpaceSeparate(Resources.SummaryPeptideGraphPane_UpdateAxes_Log, YAxis.Title.Text);
                 YAxis.Type = AxisType.Log;
                 YAxis.Scale.MinAuto = false;
                 FixedYMin = YAxis.Scale.Min = 1;
@@ -167,9 +168,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             if (!_graphData.MinY.HasValue && Settings.Default.ShowPeptideCV)
             {
-                YAxis.Title.Text += " CV";
+                YAxis.Title.Text += " CV"; //TODO: Not L10N?
                 if (!Settings.Default.PeakDecimalCv)
-                    YAxis.Title.Text += " (%)";
+                    YAxis.Title.Text += " (%)"; // Not L10N
                 if (_graphData.MaxCVSetting != 0)
                 {
                     YAxis.Scale.MaxAuto = false;
@@ -321,12 +322,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         string label = seqId[transitionGroup.Peptide.Sequence] +
                                        (chargeCount > 1
                                             ? Transition.GetChargeIndicator(transitionGroup.PrecursorCharge)
-                                            : "");
+                                            : string.Empty);
                         if (!displayTotals)
                             label += transitionGroup.LabelTypeText;
                         if (peptideOrder == SummaryPeptideOrder.time)
                         {
-                            label += string.Format(" ({0:F01})", displayTotals ?
+                            label += string.Format(" ({0:F01})", displayTotals ? // Not L10N
                                                                                    dataPoint.TimePepCharge : dataPoint.TimeGroup);                            
                         }
                         labels.Add(label);
@@ -537,8 +538,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (iVal < 0)
                     iVal = ~iVal;
 
-                string nextPrefix = (iVal < uniqueSeq.Count ? uniqueSeq[iVal].Key : "");
-                string nextSeq = (iVal < uniqueSeq.Count ? uniqueSeq[iVal].Value : "");
+                string nextPrefix = (iVal < uniqueSeq.Count ? uniqueSeq[iVal].Key : string.Empty);
+                string nextSeq = (iVal < uniqueSeq.Count ? uniqueSeq[iVal].Value : string.Empty);
 
                 if (Equals(prefix, nextPrefix))
                 {

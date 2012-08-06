@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using pwiz.Crawdad;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -254,7 +255,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Make sure the final time interval contains at least one time.
             if (start > end)
-                throw new InvalidOperationException(string.Format("The time interval {0} to {1} is not valid.", start, end));
+                throw new InvalidOperationException(string.Format(Resources.ChromDataSet_GetExtents_The_time_interval__0__to__1__is_not_valid, start, end));
         }
 
         private const double NOISE_CORRELATION_THRESHOLD = 0.95;
@@ -522,7 +523,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     var peak = listEnumerators[i].Current;
                     if (peak == null)
-                        throw new InvalidOperationException("Unexpected null peak");
+                        throw new InvalidOperationException(Resources.ChromDataSet_MergePeaks_Unexpected_null_peak);
                     float intensity = peak.Area;
                     if (intensity > maxIntensity)
                     {
@@ -586,7 +587,7 @@ namespace pwiz.Skyline.Model.Results
                 {
                     if (_listChromData[i + 1].Key.Product < _listChromData[i].Key.Product)
                     {
-                        throw new InvalidDataException(String.Format("Incorrectly sorted chromatograms {0} > {1}",
+                        throw new InvalidDataException(String.Format(Resources.ChromDataSet_MarkOptimizationData_Incorrectly_sorted_chromatograms__0__1__,
                                                                      _listChromData[i + 1].Key.Product, _listChromData[i].Key.Product));
                     }
                 }
@@ -902,7 +903,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return Count > 0 ? _listChromData[0].ToString() : "empty";
+            return Count > 0 ? _listChromData[0].ToString() : Resources.ChromDataSet_ToString_empty;
         }
     }
 }

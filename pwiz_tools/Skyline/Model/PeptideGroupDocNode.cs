@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -131,7 +132,7 @@ namespace pwiz.Skyline.Model
                         countIons += nodePepResult.TransitionCount;
                         if (countIons > SrmDocument.MAX_TRANSITION_COUNT ||
                             countPeptides > SrmDocument.MAX_PEPTIDE_COUNT)
-                            throw new InvalidDataException("Document size limit exceeded.");
+                            throw new InvalidDataException(Resources.PeptideGroupDocNode_ChangeSettings_Document_size_limit_exceeded);
                     }
                 }
 

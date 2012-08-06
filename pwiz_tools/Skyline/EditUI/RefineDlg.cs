@@ -45,7 +45,7 @@ namespace pwiz.Skyline.EditUI
             Icon = Resources.Skyline;
 
             // Fill label type combo box
-            comboRefineLabelType.Items.Add("");
+            comboRefineLabelType.Items.Add(string.Empty);
             comboRefineLabelType.Items.Add(IsotopeLabelType.LIGHT_NAME);
             foreach (var typedMods in _settings.PeptideSettings.Modifications.GetHeavyModifications())
                 comboRefineLabelType.Items.Add(typedMods.LabelType.Name);
@@ -145,7 +145,8 @@ namespace pwiz.Skyline.EditUI
             // If adding, make sure there is something to add
             if (addLabelType && refineLabelType != null && !CanAddLabelType(refineLabelType))
             {
-                MessageDlg.Show(this, string.Format("The label type '{0}' cannot be added. There are no modifications for this type.", refineLabelType.Name));
+                MessageDlg.Show(this, string.Format(Resources.RefineDlg_OkDialog_The_label_type__0__cannot_be_added_There_are_no_modifications_for_this_type,
+                                                    refineLabelType.Name));
                 tabControl1.SelectedIndex = 0;
                 comboRefineLabelType.Focus();
                 return;
@@ -169,7 +170,8 @@ namespace pwiz.Skyline.EditUI
             if (minPeakFoundRatio.HasValue && maxPeakFoundRatio.HasValue &&
                     minPeakFoundRatio.Value > maxPeakFoundRatio.Value)
             {
-                helper.ShowTextBoxError(textMaxPeakFoundRatio, "{0} must be less than min peak found ratio.");
+                helper.ShowTextBoxError(textMaxPeakFoundRatio,
+                                        Resources.RefineDlg_OkDialog__0__must_be_less_than_min_peak_found_ratio);
                 return;
             }
 
@@ -264,7 +266,9 @@ namespace pwiz.Skyline.EditUI
 
         private void cbAdd_CheckedChanged(object sender, EventArgs e)
         {
-            labelLabelType.Text = (cbAdd.Checked ? "Add la&bel type:" : "Remove la&bel type:");
+            labelLabelType.Text = cbAdd.Checked
+                                      ? Resources.RefineDlg_cbAdd_CheckedChanged_Add_label_type
+                                      : Resources.RefineDlg_cbAdd_CheckedChanged_Remove_label_type;
         }
 
         private void textMaxPeakRank_TextChanged(object sender, EventArgs e)

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.V01
@@ -48,7 +49,7 @@ namespace pwiz.Skyline.Model.V01
             string baseName;
             if (fileName == null)
             {
-                baseName = "memory";
+                baseName = "memory"; // Not L10N : Internal key
                 TestOutput = new Dictionary<string, StringBuilder>();
             }
             else
@@ -108,7 +109,7 @@ namespace pwiz.Skyline.Model.V01
                                 NextFile(baseNameBucket, suffix, ref writer, ref fileCount, ref transitionCount);
 
                             if (writer == null)
-                                throw new IOException("Unexpected failure writing transitions.");
+                                throw new IOException(Resources.XmlMassListExporter_Export_Unexpected_failure_writing_transitions);
 
                             // If this is for scheduled SRM, skip transitions lacking a
                             // predicted retention time.
@@ -154,11 +155,11 @@ namespace pwiz.Skyline.Model.V01
             // Make sure file names sort into the order in which they were
             // written.  This will help the results load in tree order.
             baseName = suffix == null
-                           ? string.Format("{0}_{1:0000}", baseName, fileCount)
-                           : string.Format("{0}_{1:0000}_{2}", baseName, fileCount, suffix);
+                           ? string.Format("{0}_{1:0000}", baseName, fileCount) // Not L10N
+                           : string.Format("{0}_{1:0000}_{2}", baseName, fileCount, suffix); // Not L10N
 
             if (TestOutput == null)
-                writer = new StreamWriter(baseName + ".csv");
+                writer = new StreamWriter(baseName + ".csv"); // Not L10N
             else
             {
                 StringBuilder sb = new StringBuilder();
@@ -172,7 +173,7 @@ namespace pwiz.Skyline.Model.V01
             StringBuilder sb = new StringBuilder();
             foreach (char c in namePart)
             {
-                sb.Append("/\\:*?\"<>|".IndexOf(c) == -1 ? c : '_');
+                sb.Append("/\\:*?\"<>|".IndexOf(c) == -1 ? c : '_'); // Not L10N
             }
             return sb.ToString();
         }
@@ -200,12 +201,12 @@ namespace pwiz.Skyline.Model.V01
             if (MethodType == ExportMethodType.Scheduled)
             {
                 if (!transition.StartRT.HasValue || !transition.StopRT.HasValue)
-                    throw new InvalidOperationException("Attempt to write scheduling parameters failed.");
+                    throw new InvalidOperationException(Resources.XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed);
                 writer.Write(transition.StartRT.Value.ToString(_cultureInfo));
                 writer.Write(separator);
                 writer.Write(transition.StopRT.Value.ToString(_cultureInfo));
                 writer.Write(separator);
-                writer.Write('1');
+                writer.Write('1'); // Not L10N
                 writer.Write(separator);
             }
             writer.Write(peptide.Sequence);
@@ -239,17 +240,17 @@ namespace pwiz.Skyline.Model.V01
             else
             {
                 if (!peptide.PredictedRetentionTime.HasValue)
-                    throw new InvalidOperationException("Attempt to write scheduling parameters failed.");
+                    throw new InvalidOperationException(Resources.XmlThermoMassListExporter_WriteTransition_Attempt_to_write_scheduling_parameters_failed);
                 writer.Write(peptide.PredictedRetentionTime.Value.ToString(_cultureInfo));
             }
             writer.Write(separator);
 
             // Write special ID for ABI software
-            string extPeptideId = string.Format("{0}.{1}.{2}.{3}",
+            string extPeptideId = string.Format("{0}.{1}.{2}.{3}", // Not L10N
                                                 sequence.Name,
                                                 peptide.Sequence,
                                                 GetTransitionName(transition),
-                                                "light");
+                                                "light"); // Not L10N : file format
 
             writer.WriteDsvField(extPeptideId, separator);
             writer.Write(separator);

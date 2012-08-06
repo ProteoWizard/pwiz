@@ -23,6 +23,7 @@ using System.IO;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -63,7 +64,7 @@ namespace pwiz.Skyline.Model
        
         public string LabelTypeText
         {
-            get { return (!LabelType.IsLight ? " ("+ LabelType + ")" : ""); }
+            get { return (!LabelType.IsLight ? " (" + LabelType + ")" : string.Empty); }
         }
 
         public static int CompareTransitions(TransitionDocNode node1, TransitionDocNode node2)
@@ -579,15 +580,16 @@ namespace pwiz.Skyline.Model
                 return;
             if (MIN_PRECURSOR_CHARGE > PrecursorCharge || PrecursorCharge > MAX_PRECURSOR_CHARGE)
             {
-                throw new InvalidDataException(string.Format("Precursor charge {0} must be between {1} and {2}.",
-                    PrecursorCharge, MIN_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
+                throw new InvalidDataException(
+                    string.Format(Resources.TransitionGroup_Validate_Precursor_charge__0__must_be_between__1__and__2__,
+                                  PrecursorCharge, MIN_PRECURSOR_CHARGE, MAX_PRECURSOR_CHARGE));
             }
             if (DecoyMassShift.HasValue)
             {
                 if ((DecoyMassShift != 0) && (DecoyMassShift < MIN_PRECURSOR_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRECURSOR_DECOY_MASS_SHIFT))
                 {
                     throw new InvalidDataException(
-                        string.Format("Precursor decoy mass shift {0} must be between {1} and {2}.",
+                        string.Format(Resources.TransitionGroup_Validate_Precursor_decoy_mass_shift__0__must_be_between__1__and__2__,
                                       DecoyMassShift, MIN_PRECURSOR_DECOY_MASS_SHIFT, MAX_PRECURSOR_DECOY_MASS_SHIFT));
                 }
             }
@@ -628,8 +630,10 @@ namespace pwiz.Skyline.Model
         public override string ToString()
         {
             return LabelType.IsLight
-                ? string.Format("Charge {0} {1}", PrecursorCharge, Transition.GetDecoyText(DecoyMassShift))
-                : string.Format("Charge {0} ({1}) {2}", PrecursorCharge, LabelType, Transition.GetDecoyText(DecoyMassShift));
+                       ? string.Format("Charge {0} {1}", PrecursorCharge,   // Not L10N : For debugging
+                                       Transition.GetDecoyText(DecoyMassShift)) 
+                       : string.Format("Charge {0} ({1}) {2}", PrecursorCharge, LabelType, // Not L10N: For debugging
+                                       Transition.GetDecoyText(DecoyMassShift));
         }
 
         #endregion

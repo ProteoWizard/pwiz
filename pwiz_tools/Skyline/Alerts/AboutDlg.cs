@@ -29,25 +29,25 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
-            labelSoftwareVersion.Text = string.Format("{0}{1} {2}",
+            labelSoftwareVersion.Text = string.Format("{0}{1} {2}", // Not L10N
                     Program.Name,
-                    (Install.Is64Bit ? " (64-bit)" : ""),
-                    (ApplicationDeployment.IsNetworkDeployed ? Install.Version : ""));
+                    (Install.Is64Bit ? " (64-bit)" : string.Empty), // Not L10N
+                    (ApplicationDeployment.IsNetworkDeployed ? Install.Version : string.Empty));
         }
 
         private void linkProteome_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu");
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu"); // Not L10N
         }
 
         private void linkProteoWizard_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://proteowizard.sourceforge.net/");
+            WebHelpers.OpenLink(this, "http://proteowizard.sourceforge.net/"); // Not L10N
         }
 
         private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/funding.html");
+            WebHelpers.OpenLink(this, "http://proteome.gs.washington.edu/software/Skyline/funding.html"); // Not L10N
         }
     }
 }

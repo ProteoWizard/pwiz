@@ -26,6 +26,8 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {
@@ -413,10 +415,11 @@ namespace pwiz.Skyline.Util
             foreach (TItem item in list)
             {
                 if (Equals(item, default(TItem)))
-                    throw new InvalidDataException("Attemt to serialize list missing an element.");
+                    throw new InvalidDataException(Resources.XmlUtil_WriteElements_Attempt_to_serialize_list_missing_an_element);
                 IXmlElementHelper<TItem> helper = FindHelper(item, helpers);
                 if (helper == null)
-                    throw new InvalidOperationException("Attempt to serialize list containing invalid type.");
+                    throw new InvalidOperationException(
+                        Resources.XmlUtil_WriteElements_Attempt_to_serialize_list_containing_invalid_type);
                 writer.WriteElement(helper.ElementNames[0], item);
             }
         }
@@ -451,7 +454,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception x)
             {
-                throw new InvalidDataException(string.Format("The value '{0}' is not valid for the attribute {1}.", value, name), x);
+                throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
             }
         }
 
@@ -468,7 +471,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception x)
             {
-                throw new InvalidDataException(string.Format("The value '{0}' is not valid for the attribute {1}.", value, name), x);
+                throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
             }
         }
 
@@ -628,7 +631,7 @@ namespace pwiz.Skyline.Util
                 }
                 catch (ArgumentException x)
                 {
-                    throw new InvalidDataException(string.Format("The value '{0}' is not valid for the attribute {1}.", value, name), x);
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
                 }
             }
             return defaultValue;
@@ -650,7 +653,7 @@ namespace pwiz.Skyline.Util
                 }
                 catch (ArgumentException x)
                 {
-                    throw new InvalidDataException(string.Format("The value '{0}' is not valid for the attribute {1}.", value, name), x);
+                    throw new InvalidDataException(string.Format(Resources.XmlUtil_GetAttribute_The_value__0__is_not_valid_for_the_attribute__1__, value, name), x);
                 }
             }
             return defaultValue;
@@ -764,13 +767,21 @@ namespace pwiz.Skyline.Util
             else
             {
                 if (line != 0)
-                    sb.Append(string.Format("The file contains an error on line {0} at column {1}.", line, column));
+                    sb.Append(
+                        string.Format(
+                            Resources.
+                                XmlUtil_GetInvalidDataMessage_The_file_contains_an_error_on_line__0__at_column__1__,
+                            line, column));
                 else
                 {
                     if (column == 0 && IsSmallAndWhiteSpace(path))
-                        return "The file is empty.\nIt may have been truncated during file transfer.";
-                    
-                    return "The file does not appear to be valid XML.";
+                    {
+                        var message = TextUtil.LineSeparate(Resources.XmlUtil_GetInvalidDataMessage_The_file_is_empty,
+                            Resources.XmlUtil_GetInvalidDataMessage_It_may_have_been_truncated_during_file_transfer);
+                        return message;
+                    }
+
+                    return Resources.XmlUtil_GetInvalidDataMessage_The_file_does_not_appear_to_be_valid_XML;
                 }
             }
             while (x != null)
@@ -785,7 +796,7 @@ namespace pwiz.Skyline.Util
             return sb.ToString();
         }
 
-        public static readonly Regex REGEX_XML_ERROR = new Regex(@"There is an error in XML document \((\d+), (\d+)\).");
+        public static readonly Regex REGEX_XML_ERROR = new Regex(@"There is an error in XML document \((\d+), (\d+)\)."); // Not L10N
 
         public static bool TryGetXmlLineColumn(string message, out int line, out int column)
         {
@@ -870,7 +881,9 @@ namespace pwiz.Skyline.Util
                     type.GetCustomAttributes(typeof(XmlRootAttribute), false);
 
                 if (attrs.Length < 1)
-                    throw new InvalidOperationException(string.Format("The class {0} has no {1}.", type.FullName, typeof(XmlRootAttribute).Name));
+                    throw new InvalidOperationException(
+                        string.Format(Resources.XmlElementHelper_XmlElementHelper_The_class__0__has_no__1__,
+                                      type.FullName, typeof (XmlRootAttribute).Name));
 
                 XmlRootAliasAttribute[] aliases = (XmlRootAliasAttribute[])
                     type.GetCustomAttributes(typeof(XmlRootAliasAttribute), false);
@@ -900,9 +913,9 @@ namespace pwiz.Skyline.Util
             // Unit tests depend on exceptions being thrown.
 //            try
 //            {
-                return (TElem)typeof(TElem).InvokeMember("Deserialize",
+                return (TElem)typeof(TElem).InvokeMember("Deserialize", // Not L10N
                                                  BindingFlags.Public | BindingFlags.Static | BindingFlags.InvokeMethod,
-                                                 null, null, new object[] { reader });
+                                                 null, null, new object[] { reader }, CultureInfo.InvariantCulture); 
 //            }
 //            catch (TargetInvocationException)
 //            {

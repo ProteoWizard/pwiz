@@ -37,6 +37,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
@@ -210,10 +211,10 @@ namespace pwiz.Skyline
                     }
                     catch (Exception x)
                     {
-                        throw new IOException(
-                            string.Format(
-                                "Failure attempting to load the window layout file {0}.\nRename or delete this file to restore the default layout.\nSkyline may also need to be restarted.",
-                                layoutFile), x);
+                        var message = TextUtil.LineSeparate(string.Format(Resources.SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__, layoutFile),
+                                                                            Resources.SkylineWindow_UpdateGraphUI_Rename_or_delete_this_file_to_restore_the_default_layout, 
+                                                                            Resources.SkylineWindow_UpdateGraphUI_Skyline_may_also_need_to_be_restarted);
+                        throw new IOException(message, x);
                     }
                 }
 
@@ -465,13 +466,13 @@ namespace pwiz.Skyline
             {
                 return _graphSpectrum ?? CreateGraphSpectrum();                
             }
-            if (persistentString.EndsWith("Skyline.Controls.GraphRetentionTime") ||  // Backward compatibility
+            if (persistentString.EndsWith("Skyline.Controls.GraphRetentionTime") ||  // Backward compatibility // Not L10N
                 (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
                  persistentString.EndsWith(typeof(RTGraphController).Name)))
             {
                 return _graphRetentionTime ?? CreateGraphRetentionTime();                
             }
-            if (persistentString.EndsWith("Skyline.Controls.GraphPeakArea") ||  // Backward compatibility
+            if (persistentString.EndsWith("Skyline.Controls.GraphPeakArea") ||  // Backward compatibility // Not L10N
                 (persistentString.StartsWith(typeof(GraphSummary).ToString()) &&
                  persistentString.EndsWith(typeof(AreaGraphController).Name)))
             {
@@ -573,7 +574,8 @@ namespace pwiz.Skyline
                 // asked on the event thread
                 if (InvokeRequired)
                 {
-                    throw new InvalidOperationException("Must be called from event thread");
+                    throw new InvalidOperationException(
+                        Resources.SkylineWindow_IsGraphUpdatePending_Must_be_called_from_event_thread);
                 }
                 if (_timerGraphs.Enabled)
                 {
@@ -715,7 +717,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom")
+                if (tag == "unzoom") // Not L10N
                     iUnzoom = i;
             }
 
@@ -771,7 +773,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val")
+                if (tag == "set_default" || tag == "show_val") // Not L10N
                     menuStrip.Items.Remove(item);
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
@@ -1042,7 +1044,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom")
+                if (tag == "unzoom") // Not L10N
                     iUnzoom = i;
             }
 
@@ -1156,7 +1158,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val")
+                if (tag == "set_default" || tag == "show_val") // Not L10N
                     menuStrip.Items.Remove(item);
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
@@ -1350,7 +1352,7 @@ namespace pwiz.Skyline
             if (i > 1)
             {
                 RemovePeakHandler handler = new RemovePeakHandler(this, pathGroup, nodeGroup, null);
-                var item = new ToolStripMenuItem("All", null, handler.menuItem_Click);
+                var item = new ToolStripMenuItem(Resources.SkylineWindow_removePeaksGraphMenuItem_DropDownOpening_All, null, handler.menuItem_Click);
                 menu.DropDownItems.Insert(i, item);
             }
         }
@@ -1397,13 +1399,13 @@ namespace pwiz.Skyline
             int iResults = SequenceTree.ResultsIndex;
             if (nodeTran == null)
             {
-                message = string.Format("Remove all peaks from {0}", ChromGraphItem.GetTitle(nodeGroup));
+                message = string.Format(Resources.SkylineWindow_RemovePeak_Remove_all_peaks_from__0__, ChromGraphItem.GetTitle(nodeGroup));
                 chromInfo = GetTransitionGroupChromInfo(nodeGroup, iResults);
                 transition = null;
             }
             else
             {
-                message = string.Format("Remove peak from {0}", ChromGraphItem.GetTitle(nodeTran));
+                message = string.Format(Resources.SkylineWindow_RemovePeak_Remove_peak_from__0__, ChromGraphItem.GetTitle(nodeTran));
                 chromInfo = GetTransitionChromInfo(nodeTran, iResults);
                 transition = nodeTran.Transition;
             }
@@ -1790,7 +1792,7 @@ namespace pwiz.Skyline
                 graphChrom.LockZoom();
             try
             {
-                ModifyDocument(string.Format("Pick peak {0:F01}", e.RetentionTime),
+                ModifyDocument(string.Format("Pick peak {0:F01}", e.RetentionTime), // Not L10N
                     doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime));
             }
             finally
@@ -1813,19 +1815,19 @@ namespace pwiz.Skyline
                     string message;
                     ChangedPeakBoundsEventArgs e = eMulti.Changes[0];
                     if (e.StartTime == e.EndTime)
-                        message = "Remove peak";
+                        message = "Remove peak"; // Not L10N
                     else if (e.ChangeType == PeakBoundsChangeType.both)
-                        message = string.Format("Change peak to {0:F01}-{1:F01}", e.StartTime, e.EndTime);
+                        message = string.Format("Change peak to {0:F01}-{1:F01}", e.StartTime, e.EndTime); // Not L10N
                     else if (e.ChangeType == PeakBoundsChangeType.start)
-                        message = string.Format("Change peak start to {0:F01}", e.StartTime);
+                        message = string.Format("Change peak start to {0:F01}", e.StartTime); // Not L10N
                     else
-                        message = string.Format("Change peak end to {0:F01}", e.EndTime);
+                        message = string.Format("Change peak end to {0:F01}", e.EndTime); // Not L10N
                     ModifyDocument(message, doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition,
                                                                   e.StartTime, e.EndTime, e.IsIndentified));
                 }
                 else
                 {
-                    ModifyDocument("Change peaks",
+                    ModifyDocument("Change peaks", // Not L10N
                         doc =>
                             {
                                 foreach (var e in eMulti.Changes)
@@ -1923,7 +1925,8 @@ namespace pwiz.Skyline
 
         private GraphSummary CreateGraphRetentionTime()
         {
-            _graphRetentionTime = new GraphSummary(this, new RTGraphController()) {TabText = "Retention Times"};
+            _graphRetentionTime = new GraphSummary(this, new RTGraphController())
+                                      {TabText = Resources.SkylineWindow_CreateGraphRetentionTime_Retention_Times};
             _graphRetentionTime.FormClosed += graphRetentinTime_FormClosed;
             _graphRetentionTime.VisibleChanged += graphRetentionTime_VisibleChanged;
             return _graphRetentionTime;
@@ -2026,7 +2029,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom")
+                if (tag == "unzoom") // Not L10N
                     iUnzoom = i;
             }
 
@@ -2212,7 +2215,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val")
+                if (tag == "set_default" || tag == "show_val") // Not L10N
                     menuStrip.Items.Remove(item);
             }
         }
@@ -2386,7 +2389,7 @@ namespace pwiz.Skyline
                     regression = dlg.Regression;
                     listRegression.Add(regression);
 
-                    ModifyDocument(string.Format("Set regression {0}", regression.Name),
+                    ModifyDocument(string.Format("Set regression {0}", regression.Name), // Not L10N
                                    doc =>
                                    doc.ChangeSettings(
                                        doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))));
@@ -2405,7 +2408,7 @@ namespace pwiz.Skyline
                 chooseCalculatorContextMenuItem.DropDownItems.RemoveAt(0);
 
             //If no calculator has been picked for use in the graph, get the best one.
-            var autoItem = new ToolStripMenuItem("Auto", null, delegate { ChooseCalculator(""); })
+            var autoItem = new ToolStripMenuItem(Resources.SkylineWindow_SetupCalculatorChooser_Auto, null, delegate { ChooseCalculator(""); })
                                {
                                    Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
                                };
@@ -2457,7 +2460,7 @@ namespace pwiz.Skyline
                     var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
                     if (regressionRTDoc != null && Equals(calcOld.Name, regressionRTDoc.Calculator.Name))
                     {
-                        ModifyDocument(string.Format("Update {0} calculator", calcNew.Name), doc =>
+                        ModifyDocument(string.Format("Update {0} calculator", calcNew.Name), doc => // Not L10N
                             doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
                                 predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))));
                     }
@@ -2480,7 +2483,7 @@ namespace pwiz.Skyline
             foreach (var outlier in outliers)
                 outlierIds.Add(outlier.Id.GlobalIndex);
 
-            ModifyDocument("Remove retention time outliers",
+            ModifyDocument("Remove retention time outliers", // Not L10N
                            doc => (SrmDocument) doc.RemoveAll(outlierIds));
         }
 
@@ -2677,7 +2680,7 @@ namespace pwiz.Skyline
             {
                 items[i] = menuStrip.Items[i];
                 string tag = (string)items[i].Tag;
-                if (tag == "unzoom")
+                if (tag == "unzoom") // Not L10N
                     iUnzoom = i;
             }
 
@@ -2755,8 +2758,8 @@ namespace pwiz.Skyline
                     {
                         showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
                         showLibraryPeakAreaContextMenuItem.Text = expectedVisible == AreaExpectedValue.library
-                                                                      ? "Show Library"
-                                                                      : "Show Expected";
+                                                                      ? Resources.SkylineWindow_BuildAreaGraphMenu_Show_Library
+                                                                      : Resources.SkylineWindow_BuildAreaGraphMenu_Show_Expected;
                         menuStrip.Items.Insert(iInsert++, showLibraryPeakAreaContextMenuItem);
                     }
 
@@ -2821,7 +2824,7 @@ namespace pwiz.Skyline
             foreach (var item in items)
             {
                 string tag = (string)item.Tag;
-                if (tag == "set_default" || tag == "show_val")
+                if (tag == "set_default" || tag == "show_val") // Not L10N
                     menuStrip.Items.Remove(item);
             }
         }
@@ -3188,7 +3191,7 @@ namespace pwiz.Skyline
 
         public void ArrangeGraphsGrouped()
         {
-            var order = Helpers.ParseEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
+            var order = GroupGraphsOrderExtension.GetEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
             bool reversed = Settings.Default.ArrangeGraphsReversed;
             var listGraphs = GetArrangeableGraphs(order, reversed);
 

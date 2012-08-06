@@ -56,9 +56,9 @@ namespace pwiz.Skyline.SettingsUI
                 _loss = value;
                 if (_loss == null)
                 {
-                    textLossFormula.Text = "";
-                    textLossMonoMass.Text = "";
-                    textLossAverageMass.Text = "";                    
+                    textLossFormula.Text = string.Empty;
+                    textLossMonoMass.Text = string.Empty;
+                    textLossAverageMass.Text = string.Empty;                    
                 }
                 else if (!string.IsNullOrEmpty(_loss.Formula))
                 {
@@ -66,11 +66,11 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    textLossFormula.Text = "";
+                    textLossFormula.Text = string.Empty;
                     textLossMonoMass.Text = (_loss.MonoisotopicMass != 0 ?
-                        _loss.MonoisotopicMass.ToString(CultureInfo.CurrentCulture) : "");
+                        _loss.MonoisotopicMass.ToString(CultureInfo.CurrentCulture) : string.Empty);
                     textLossAverageMass.Text = (_loss.AverageMass != 0 ?
-                        _loss.AverageMass.ToString(CultureInfo.CurrentCulture) : "");
+                        _loss.AverageMass.ToString(CultureInfo.CurrentCulture) : string.Empty);
                 }
             }
         }
@@ -92,12 +92,16 @@ namespace pwiz.Skyline.SettingsUI
                     double massAverage = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, formulaLoss);
                     if (FragmentLoss.MIN_LOSS_MASS > massMono || FragmentLoss.MIN_LOSS_MASS > massAverage)
                     {
-                        helper.ShowTextBoxError(textLossFormula, string.Format("Neutral loss masses must be greater than or equal to {0}.", FragmentLoss.MIN_LOSS_MASS));
+                        helper.ShowTextBoxError(textLossFormula,
+                                                string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_greater_than_or_equal_to__0__,
+                                                              FragmentLoss.MIN_LOSS_MASS));
                         return;
                     }
                     if (massMono > FragmentLoss.MAX_LOSS_MASS || massAverage > FragmentLoss.MAX_LOSS_MASS)
                     {
-                        helper.ShowTextBoxError(textLossFormula, string.Format("Neutral loss masses must be less than or equal to {0}.", FragmentLoss.MAX_LOSS_MASS));
+                        helper.ShowTextBoxError(textLossFormula,
+                                                string.Format(Resources.EditFragmentLossDlg_OkDialog_Neutral_loss_masses_must_be_less_than_or_equal_to__0__,
+                                                              FragmentLoss.MAX_LOSS_MASS));
                         return;
                     }
                 }
@@ -121,7 +125,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
-                helper.ShowTextBoxError(textLossFormula, "Please specify a formula or constant masses.");
+                helper.ShowTextBoxError(textLossFormula, Resources.EditFragmentLossDlg_OkDialog_Please_specify_a_formula_or_constant_masses);
                 return;
             }
 
@@ -129,7 +133,7 @@ namespace pwiz.Skyline.SettingsUI
             var loss = new FragmentLoss(formulaLoss, monoLoss, avgLoss);
             if (_existing.Contains(loss))
             {
-                MessageDlg.Show(this, string.Format("The loss '{0}' already exists", loss));
+                MessageDlg.Show(this, string.Format(Resources.EditFragmentLossDlg_OkDialog_The_loss__0__already_exists, loss));
                 return;
             }
 
@@ -153,7 +157,7 @@ namespace pwiz.Skyline.SettingsUI
             string formula = textLossFormula.Text;
             if (string.IsNullOrEmpty(formula))
             {
-                textLossMonoMass.Text = textLossAverageMass.Text = "";
+                textLossMonoMass.Text = textLossAverageMass.Text = string.Empty;
                 textLossMonoMass.Enabled = textLossAverageMass.Enabled = true;
             }
             else
@@ -170,7 +174,7 @@ namespace pwiz.Skyline.SettingsUI
                 catch (ArgumentException)
                 {
                     textLossFormula.ForeColor = Color.Red;
-                    textLossMonoMass.Text = textLossAverageMass.Text = "";
+                    textLossMonoMass.Text = textLossAverageMass.Text = string.Empty;
                 }
             }
         }

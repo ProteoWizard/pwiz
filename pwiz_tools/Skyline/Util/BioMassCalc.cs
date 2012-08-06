@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -33,6 +34,42 @@ namespace pwiz.Skyline.Util
 // ReSharper disable InconsistentNaming
         Monoisotopic, Average
 // ReSharper restore InconsistentNaming
+    }
+    public static class MassTypeExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new[]
+                                                                {
+                                                                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Monoisotopic,
+                                                                    Resources.ExportStrategyExtension_LOCALIZED_VALUES_Average
+                                                                };
+        public static string GetLocalizedString(this MassType val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+
+        public static MassType GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (MassType)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static MassType GetEnum(string enumValue, MassType defaultValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (MassType)i;
+                }
+            }
+            return defaultValue;
+        } 
     }
 
     /// <summary>
@@ -57,6 +94,7 @@ namespace pwiz.Skyline.Util
         public static readonly IsotopeAbundances DEFAULT_ABUNDANCES =
             MONOISOTOPIC.SynchMasses(IsotopeAbundances.Default);
 
+        // Not L10N
         public const string H = "H";    // Hydrogen
         public const string H2 = "H'";  // Deuterium
         public const string C = "C";    // Carbon
@@ -156,7 +194,7 @@ namespace pwiz.Skyline.Util
         /// Regular expression for possible characters that end an atomic
         /// symbol: capital letters, numbers or a space.
         /// </summary>
-        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");
+        private static readonly Regex REGEX_END_SYM = new Regex(@"[A-Z0-9 \-]");  // Not L10N
 
         /// <summary>
         /// Find the first atomic symbol in a given expression.
@@ -239,7 +277,8 @@ namespace pwiz.Skyline.Util
             double totalMass = ParseMass(ref parse);
 
             if (totalMass == 0.0 || parse.Length > 0)
-                throw new ArgumentException("The expression '{0}' is not a valid chemical formula.");
+                throw new ArgumentException(
+                    Resources.BioMassCalc_CalculateMass_The_expression__0__is_not_a_valid_chemical_formula);
 
             return totalMass;
         }
@@ -367,7 +406,9 @@ namespace pwiz.Skyline.Util
         public IsotopeAbundances SynchMasses(IsotopeAbundances abundances)
         {
             if (MassType != MassType.Monoisotopic)
-                throw new InvalidOperationException("Fixing isotope abundance masses requires a monoisotopic mass calculator");
+                throw new InvalidOperationException(
+                    Resources.
+                        BioMassCalc_SynchMasses_Fixing_isotope_abundance_masses_requires_a_monoisotopic_mass_calculator);
 
             var dictFixes = new Dictionary<string, MassDistribution>();
             foreach (var atomAbundance in abundances)

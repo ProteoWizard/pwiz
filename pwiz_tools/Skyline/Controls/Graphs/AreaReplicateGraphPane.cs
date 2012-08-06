@@ -26,6 +26,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -49,7 +50,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 // add an XAxis label of "Library" at the left most column
                 string[] labels = XAxis.Scale.TextLabels;
                 string[] withLibLabel = new string[labels.Length + 1];
-                withLibLabel[0] = ExpectedVisible == AreaExpectedValue.library ? "Library" : "Expected";
+                withLibLabel[0] = ExpectedVisible == AreaExpectedValue.library ? 
+                    Resources.AreaReplicateGraphPane_InitFromData_Library : 
+                    Resources.AreaReplicateGraphPane_InitFromData_Expected;
 
                 Array.Copy(labels, 0, withLibLabel, 1, labels.Length);
                
@@ -130,7 +133,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (!resultsAvailable)
             {
-                Title.Text = "No results available";
+                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_No_results_available;
                 EmptyGraph(document);
                 return;
             }
@@ -183,7 +186,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (!(selectedTreeNode is TransitionGroupTreeNode))
             {
-                Title.Text = "Select a peptide to see the peak area graph";
+                Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Select_a_peptide_to_see_the_peak_area_graph;
                 CanShowPeakAreaLegend = false;
                 CanShowDotProduct = false;
                 return;
@@ -321,7 +324,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
-                        label = string.Format("Step {0}", step);
+                        label = string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Step__0_, step);
                     var curveItem = new BarItem(label, pointPairList, color);
 
                     if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
@@ -385,7 +388,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Scale.Max = 100;
                 YAxis.Scale.MaxAuto = false;
-                YAxis.Title.Text = "Peak Area Percentage";
+                YAxis.Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage;
                 YAxis.Type = AxisType.Linear;
                 YAxis.Scale.MinAuto = false;
                 FixedYMin = YAxis.Scale.Min = 0;
@@ -398,7 +401,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (YAxis.Type == AxisType.Log || YAxis.Scale.Max == 1)
                         YAxis.Scale.MaxAuto = true;
 
-                    YAxis.Title.Text = "Percent of Regression Peak Area";
+                    YAxis.Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Percent_of_Regression_Peak_Area;
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -410,7 +413,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Make YAxis Scale Max a little higher to accommodate for the dot products
                         YAxis.Scale.Max = 1.1;
                     YAxis.Scale.MaxAuto = false;
-                    YAxis.Title.Text = "Peak Area Normalized";
+                    YAxis.Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Normalized;
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -426,7 +429,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         YAxis.Scale.Max = Settings.Default.PeakAreaMaxArea;
                     }
 
-                    YAxis.Title.Text = "Log Peak Area";
+                    YAxis.Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Log_Peak_Area;
                     YAxis.Type = AxisType.Log;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 1;
@@ -446,8 +449,8 @@ namespace pwiz.Skyline.Controls.Graphs
                         YAxis.Scale.MaxAuto = true;
                     }
                     YAxis.Title.Text = AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view
-                          ? string.Format("Peak Area Ratio To {0}", standardType.Title)
-                          : "Peak Area";
+                          ? string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_, standardType.Title)
+                          : Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -554,18 +557,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 switch (ExpectedVisible)
                 {
                     case AreaExpectedValue.library:
-                        return "dotp";
+                        return "dotp"; // Not L10N
                     case AreaExpectedValue.isotope_dist:
-                        return "idotp";
+                        return "idotp"; // Not L10N
                     default:
-                        return "";
+                        return string.Empty; 
                 }
             }
         }
 
         private string GetDotProductText(float? dotpValue)
         {
-            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null;
+            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null; // Not L10N
         }
 
         private void EmptyGraph(SrmDocument document)

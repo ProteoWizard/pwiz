@@ -22,6 +22,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -625,7 +626,11 @@ namespace pwiz.Skyline.Model.Results
         {
             var chromatogramSets = settings.MeasuredResults.Chromatograms;
             if (chromatogramSets.Count != Count)
-                throw new InvalidDataException(string.Format("DocNode results count {0} does not match document results count {1}.", Count, chromatogramSets.Count));
+            {
+                throw new InvalidDataException(
+                    string.Format(Resources.Results_Validate_DocNode_results_count__0__does_not_match_document_results_count__1__,
+                                  Count, chromatogramSets.Count));
+            }
 
             for (int i = 0; i < chromatogramSets.Count; i++)
             {
@@ -636,7 +641,8 @@ namespace pwiz.Skyline.Model.Results
                 var chromatogramSet = chromatogramSets[i];
                 if (chromList.Any(chromInfo => chromatogramSet.IndexOfId(chromInfo.FileId) == -1))
                 {
-                    throw new InvalidDataException(string.Format("DocNode peak info found for file with no match in document results."));
+                    throw new InvalidDataException(
+                        string.Format(Resources.Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results));
                 }
             }
         }
@@ -742,7 +748,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override string ToString()
         {
-            return string.Format("FileId = {0}", FileId.GlobalIndex);
+            return string.Format("FileId = {0}", FileId.GlobalIndex); // Not L10N : For debugging
         }
 
         #endregion

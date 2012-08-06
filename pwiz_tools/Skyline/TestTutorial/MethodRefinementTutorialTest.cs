@@ -30,6 +30,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 
@@ -45,12 +46,12 @@ namespace pwiz.SkylineTestTutorial
         public void TestMethodRefinementTutorial()
         {
             string supplementZip = (ExtensionTestContext.CanImportThermoRaw ?
-                @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplement.zip" :
-                @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplementMzml.zip");
+                @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplement.zip" : // Not L10N
+                @"https://skyline.gs.washington.edu/tutorials/MethodRefineSupplementMzml.zip"); // Not L10N
 
             TestFilesZipPaths = new[] { supplementZip, ExtensionTestContext.CanImportThermoRaw ?
-                    @"https://skyline.gs.washington.edu/tutorials/MethodRefine.zip" :
-                    @"https://skyline.gs.washington.edu/tutorials/MethodRefineMzml.zip"
+                    @"https://skyline.gs.washington.edu/tutorials/MethodRefine.zip" : // Not L10N
+                    @"https://skyline.gs.washington.edu/tutorials/MethodRefineMzml.zip" // Not L10N
                  };
 
          
@@ -61,15 +62,15 @@ namespace pwiz.SkylineTestTutorial
         {
             // Skyline Targeted Method Refinement
 
-            var folderMethodRefine = ExtensionTestContext.CanImportThermoRaw ? "MethodRefine" : "MethodRefineMzml";
+            var folderMethodRefine = ExtensionTestContext.CanImportThermoRaw ? "MethodRefine" : "MethodRefineMzml"; // Not L10N
 
             // Results Data, p. 2
             RunUI(() =>
             {
-                SkylineWindow.OpenFile(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\WormUnrefined.sky"));
+                SkylineWindow.OpenFile(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\WormUnrefined.sky")); // Not L10N
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
 
-                Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode.Text, "YLGAYLLATLGGNASPSAQDVLK");
+                Assert.AreEqual(SkylineWindow.SequenceTree.SelectedNode.Text, "YLGAYLLATLGGNASPSAQDVLK"); // Not L10N
             });
 
             // Unrefined Methods, p. 3
@@ -79,16 +80,16 @@ namespace pwiz.SkylineTestTutorial
                 exportDlg.MethodType = ExportMethodType.Standard;
                 exportDlg.OptimizeType = ExportOptimize.NONE;
                 exportDlg.MaxTransitions = 59;
-                exportDlg.OkDialog(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\worm"));
+                exportDlg.OkDialog(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\worm")); // Not L10N
             });
 
             for (int i = 1; i < 10; i++)
             {
-                Assert.IsTrue(File.Exists(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\worm_000" + i + ".csv")));
+                Assert.IsTrue(File.Exists(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\worm_000" + i + TextUtil.EXT_CSV))); // Not L10N
             }
             for (int i = 10; i < 40; i++)
             {
-                Assert.IsTrue(File.Exists(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\worm_00" + i + ".csv")));
+                Assert.IsTrue(File.Exists(TestFilesDirs[1].GetTestPath(folderMethodRefine + @"\worm_00" + i + TextUtil.EXT_CSV))); // Not L10N
             }
 
             // Importing Multiple Injection Data, p. 4
@@ -103,8 +104,8 @@ namespace pwiz.SkylineTestTutorial
 
             RunUI(() => SkylineWindow.SaveDocument());
             Assert.IsFalse(SkylineWindow.Document.Settings.HasResults);
-            
-            const string replicateName = "Unrefined";
+
+            const string replicateName = "Unrefined"; // Not L10N
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
                 importResultsDlg.RadioAddNewChecked = true;
@@ -133,7 +134,7 @@ namespace pwiz.SkylineTestTutorial
             // Simple Manual Refinement, p. 6
             int startingNodeCount = SkylineWindow.SequenceTree.Nodes[0].GetNodeCount(false);
 
-            Assert.AreEqual("YLGAYLLATLGGNASPSAQDVLK", SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Text);
+            Assert.AreEqual("YLGAYLLATLGGNASPSAQDVLK", SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Text); // Not L10N
 
             RunUI(() =>
             {
@@ -144,7 +145,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowRTLinearRegressionGraph();
             });
             Assert.AreEqual(SkylineWindow.SequenceTree.Nodes[0].GetNodeCount(false), startingNodeCount - 1);
-            Assert.AreEqual("VLEAGGLDCDMENANSVVDALK", SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Text);
+            Assert.AreEqual("VLEAGGLDCDMENANSVVDALK", SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Text); // Not L10N
 
             RunDlg<ShowRTThresholdDlg>(SkylineWindow.ShowRTThresholdDlg, rtThresholdDlg =>
             {
@@ -159,7 +160,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.RTGraphController.SelectPeptide(SkylineWindow.Document.GetPathTo(1, 163));
-                Assert.AreEqual("YLAEVASEDR", SkylineWindow.SequenceTree.SelectedNode.Text);
+                Assert.AreEqual("YLAEVASEDR", SkylineWindow.SequenceTree.SelectedNode.Text); // Not L10N
                 var nodePep = (PeptideDocNode)((SrmTreeNode)SkylineWindow.SequenceTree.SelectedNode).Model;
                 Assert.AreEqual(null,
                                 nodePep.GetPeakCountRatio(
@@ -178,7 +179,7 @@ namespace pwiz.SkylineTestTutorial
 //            Console.WriteLine("---------------------------------");
             RunUI(() =>
             {
-                var graphChrom = SkylineWindow.GetGraphChrom("Unrefined");
+                var graphChrom = SkylineWindow.GetGraphChrom("Unrefined"); // Not L10N
                 Assert.AreEqual(2, graphChrom.Files.Count);
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 SkylineWindow.RTGraphController.GraphSummary.Close();
@@ -225,7 +226,7 @@ namespace pwiz.SkylineTestTutorial
                                                                          (PeptideDocNode) nodePep.Model,
                                                                          SkylineWindow.SequenceTree));
                     var name = ((TransitionDocNode) nodeTran.Model).FragmentIonName;
-                    if (!(name == "y11" || name == "y13" || name == "y14"))
+                    if (!(name == "y11" || name == "y13" || name == "y14")) // Not L10N
                         SkylineWindow.SequenceTree.SelectedNode = nodeTran;
                     SkylineWindow.SequenceTree.KeysOverride = Keys.Control;
                 }
@@ -286,7 +287,7 @@ namespace pwiz.SkylineTestTutorial
 
                 mResults.SelectedChromatograms =
                     SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Where(
-                        set => Equals("Unrefined", set.Name));
+                        set => Equals("Unrefined", set.Name)); // Not L10N
 
                 mResults.Remove();
 
@@ -302,7 +303,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg0.NamedPathSets =
                     DataSourceUtil.GetDataSourcesInSubdirs(Path.Combine(TestFilesDirs[1].FullPath,
                                                                           Path.GetFileName(TestFilesDirs[1].FullPath) ??
-                                                                          "")).ToArray();
+                                                                          string.Empty)).ToArray();
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg0.OkDialog);
             RunUI(importResultsNameDlg.NoDialog);
@@ -318,7 +319,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
             {
                 exportMethodDlg.MaxTransitions = 130;
-                exportMethodDlg.OkDialog(TestFilesDirs[1].FullPath + "\\unscheduled");
+                exportMethodDlg.OkDialog(TestFilesDirs[1].FullPath + "\\unscheduled"); // Not L10N
             });
             ///////////////////////
 
@@ -347,7 +348,7 @@ namespace pwiz.SkylineTestTutorial
             });
             // TODO: Update tutorial to mention the scheduling options dialog.
             RunDlg<SchedulingOptionsDlg>(() =>
-                exportMethodDlg1.OkDialog(TestFilesDirs[1].FullPath + "\\scheduled"),
+                exportMethodDlg1.OkDialog(TestFilesDirs[1].FullPath + "\\scheduled"), // Not L10N
                 schedulingOptionsDlg => schedulingOptionsDlg.OkDialog());
             WaitForClosedForm(exportMethodDlg1);
 
@@ -366,7 +367,7 @@ namespace pwiz.SkylineTestTutorial
                 });
             RunDlg<ImportResultsNameDlg>(importResultsDlg1.OkDialog, importResultsNameDlg0 =>
             {
-                importResultsNameDlg0.Prefix = "Scheduled_";
+                importResultsNameDlg0.Prefix = "Scheduled_"; // Not L10N
                 importResultsNameDlg0.YesDialog();
             });
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 15 minutes

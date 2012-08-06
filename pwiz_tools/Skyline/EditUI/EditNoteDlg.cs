@@ -45,7 +45,7 @@ namespace pwiz.Skyline.EditUI
             AnnotationDef.AnnotationTarget annotationTarget;
             var annotations = MergeAnnotations(document, selPaths, out annotationTarget);
 
-            textNote.Text = _originalText = annotations.Note ?? "";
+            textNote.Text = _originalText = annotations.Note ?? string.Empty;
             _originalAnnotations = annotations;
 
             foreach (var annotationDef in document.Settings.DataSettings.AnnotationDefs)
@@ -82,7 +82,7 @@ namespace pwiz.Skyline.EditUI
             {
                 var cell = new DataGridViewComboBoxCell();
                 row.Cells[colValue.Index] = cell;
-                cell.Items.Add("");
+                cell.Items.Add(string.Empty);
                 foreach (var item in annotationDef.Items)
                 {
                     cell.Items.Add(item);
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.EditUI
                 annotationTarget = annotationTarget | nodeDoc.AnnotationTarget;
             }
             if (!matchingText)
-                text = "";
+                text = string.Empty;
             if (allEmpty)
                 colorIndex = Settings.Default.AnnotationColor;
             else if (!matchingColors)
@@ -191,13 +191,13 @@ namespace pwiz.Skyline.EditUI
                 }
                 else if (false.Equals(objValue))
                 {
-                    strValue = "";
+                    strValue = string.Empty;
                 }
                 else
                 {
-                    strValue = (objValue ?? "").ToString();
+                    strValue = (objValue ?? string.Empty).ToString();
                 }
-                if (strValue == "" && string.IsNullOrEmpty(_originalAnnotations.GetAnnotation(name)))
+                if (strValue == string.Empty && string.IsNullOrEmpty(_originalAnnotations.GetAnnotation(name)))
                 {
                     continue;
                 }

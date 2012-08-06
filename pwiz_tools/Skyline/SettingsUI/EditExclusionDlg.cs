@@ -23,6 +23,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -51,8 +52,8 @@ namespace pwiz.Skyline.SettingsUI
                 _exclusion = value;
                 if (_exclusion == null)
                 {
-                    textName.Text = "";
-                    textExclusionRegex.Text = "";
+                    textName.Text = string.Empty;
+                    textExclusionRegex.Text = string.Empty;
                     radioSequence.Checked = true;
                     radioMatching.Checked = true;
                 }
@@ -83,7 +84,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (_existing.Contains(exc => !ReferenceEquals(_exclusion, exc) && Equals(name, exc.Name)))
             {
-                helper.ShowTextBoxError(textName, "The peptide exclusion '{0}' already exists.", name);
+                helper.ShowTextBoxError(textName, Resources.EditExclusionDlg_OkDialog_The_peptide_exclusion__0__already_exists, name);
                 return;
             }
 
@@ -94,7 +95,7 @@ namespace pwiz.Skyline.SettingsUI
             }
             catch (Exception)
             {
-                helper.ShowTextBoxError(textExclusionRegex, "The text '{0}' is not a valid regular expression.", exRegex);
+                helper.ShowTextBoxError(textExclusionRegex, Resources.EditExclusionDlg_OkDialog_The_text__0__is_not_a_valid_regular_expression, exRegex);
                 return;
             }
             bool includeMatch = radioNotMatching.Checked;
@@ -113,7 +114,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void linkRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-            WebHelpers.OpenLink(this, "http://www.regular-expressions.info/reference.html");
+            WebHelpers.OpenLink(this, "http://www.regular-expressions.info/reference.html"); // Not L10N
         }
     }
 }

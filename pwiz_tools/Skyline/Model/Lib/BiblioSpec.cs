@@ -25,6 +25,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Lib
@@ -162,7 +163,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_library")]
     public sealed class BiblioSpecLibrary : Library
     {
-        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
+        public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
         private bool _bigEndian;
         private bool _linuxFormat;
@@ -203,7 +204,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 LibraryDetails details = new LibraryDetails
                 {
-                    Format = "BiblioSpec",
+                    Format = "BiblioSpec", // Not L10N
                     Revision = Revision.ToString(CultureInfo.CurrentCulture),
                     PeptideCount = SpectrumCount
                 };
@@ -297,7 +298,9 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool Load(ILoadMonitor loader)
         {
-            ProgressStatus status = new ProgressStatus(string.Format("Loading {0} library", Path.GetFileName(FilePath)));
+            ProgressStatus status =
+                new ProgressStatus(string.Format(Resources.BiblioSpecLibrary_Load_Loading__0__library,
+                                                 Path.GetFileName(FilePath)));
             loader.UpdateProgress(status);
 
             long lenRead = 0;
@@ -311,7 +314,7 @@ namespace pwiz.Skyline.Model.Lib
                 int countHeader = (int) LibHeaders.count*4;
                 byte[] libHeader = new byte[countHeader];
                 if (stream.Read(libHeader, 0, countHeader) != countHeader)
-                    throw new InvalidDataException("Data truncation in library header. File may be corrupted.");
+                    throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Data_truncation_in_library_header_File_may_be_corrupted);
                 lenRead += countHeader;
                 // Check the first byte of the primary version number to determine
                 // whether the format is little- or big-endian.  Little-endian will
@@ -352,7 +355,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Read spectrum header
                     int bytesRead = stream.Read(specHeader, 0, countHeader);
                     if (bytesRead != countHeader)
-                        throw new InvalidDataException("Data truncation in spectrum header. File may be corrupted.");
+                        throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted);
 
                     // If this is the first header, and the sequence length is zero,
                     // then this is a Linux format library.  Switch to linux format,
@@ -366,7 +369,7 @@ namespace pwiz.Skyline.Model.Lib
                         countHeader = (int)SpectrumHeadersLinux.count * 4;
                         bytesRead = stream.Read(specHeader, 0, countHeader);
                         if (bytesRead != countHeader)
-                            throw new InvalidDataException("Data truncation in spectrum header. File may be corrupted.");
+                            throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_header_File_may_be_corrupted);
                     }
 
                     lenRead += bytesRead;
@@ -375,7 +378,7 @@ namespace pwiz.Skyline.Model.Lib
                     
                     int charge = GetInt32(specHeader, (int)SpectrumHeaders.charge);
                     if (charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                        throw new InvalidDataException("Invalid precursor charge found. File may be corrupted.");
+                        throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
 
                     int numPeaks = GetInt32(specHeader, (int)SpectrumHeaders.num_peaks);
                     int seqLength = GetInt32(specHeader, (_linuxFormat ?
@@ -386,7 +389,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Read sequence information
                     int countSeq = (seqLength + 1)*2;
                     if (stream.Read(specSequence, 0, countSeq) != countSeq)
-                        throw new InvalidDataException("Data truncation in spectrum sequence. File may be corrupted.");
+                        throw new InvalidDataException(Resources.BiblioSpecLibrary_Load_Data_truncation_in_spectrum_sequence_File_may_be_corrupted);
 
                     lenRead += countSeq;
 
@@ -430,7 +433,7 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (Exception x)
             {
-                x = new Exception(string.Format("Failed loading library '{0}'.", FilePath), x);
+                x = new Exception(string.Format(Resources.BiblioSpecLibrary_Load_Failed_loading_library__0__, FilePath), x);
                 loader.UpdateProgress(status.ChangeErrorException(x));
                 return false;
             }
@@ -455,7 +458,7 @@ namespace pwiz.Skyline.Model.Lib
                 {
                     // All C's in these libraries assume carbamidomehtyl cysteine
                     string seqString = Encoding.Default.GetString(sequence, 0, len);
-                    byte[] bytes = Encoding.Default.GetBytes(seqString.Replace("C", "C[+57.0]"));
+                    byte[] bytes = Encoding.Default.GetBytes(seqString.Replace("C", "C[+57.0]")); // Not L10N
                     len = bytes.Length;
                     return bytes;
                 }
@@ -579,7 +582,7 @@ namespace pwiz.Skyline.Model.Lib
             const int lenPair = sizeof(float) + sizeof(float);
             byte[] peaks = new byte[info.NumPeaks * lenPair];
             if (fs.Read(peaks, 0, peaks.Length) < peaks.Length)
-                throw new IOException("Failure trying to read peaks");
+                throw new IOException(Resources.BiblioSpecLibrary_ReadSpectrum_Failure_trying_to_read_peaks);
 
             // Build the list
             var arrayMI = new SpectrumPeaksInfo.MI[info.NumPeaks];
@@ -651,7 +654,7 @@ namespace pwiz.Skyline.Model.Lib
                     Encoding.Default.GetBytes(sequence, 0, len, seqBuffer, 0);
                     outStream.Write(seqBuffer, 0, len + 1);
                     // Modifications
-                    const string zeros = "000000000000000000000000000000000000000000000000000";
+                    const string zeros = "000000000000000000000000000000000000000000000000000"; // Not L10N
                     Encoding.Default.GetBytes(zeros.Substring(0, len), 0, len, seqBuffer, 0);
                     outStream.Write(seqBuffer, 0, len + 1);
                     // Peaks

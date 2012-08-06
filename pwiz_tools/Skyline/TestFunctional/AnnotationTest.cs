@@ -63,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             // Define the annotations that we are going to be using in this test.
             RunUI(editListDlg.ResetList);
             DefineAnnotation(editListDlg, COL_PROTEIN_TEXT, AnnotationDef.AnnotationTarget.protein, AnnotationDef.AnnotationType.text, null);
-            DefineAnnotation(editListDlg, "peptide Items", AnnotationDef.AnnotationTarget.peptide,
+            DefineAnnotation(editListDlg, "peptide Items", AnnotationDef.AnnotationTarget.peptide, 
                              AnnotationDef.AnnotationType.value_list, new[] {"one","two","three"});
             DefineAnnotation(editListDlg, "precursor 'True' 'False'", AnnotationDef.AnnotationTarget.precursor,
                              AnnotationDef.AnnotationType.true_false, null);

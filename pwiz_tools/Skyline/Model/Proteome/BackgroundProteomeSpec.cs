@@ -100,7 +100,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         public Digestion Digest(Enzyme enzyme, DigestSettings digestSettings, ILoadMonitor loader)
         {
-            ProgressStatus progressStatus = new ProgressStatus("Digesting " + enzyme.Name);
+            ProgressStatus progressStatus = new ProgressStatus(string.Format(Resources.BackgroundProteomeSpec_Digest_Digesting__0__, enzyme.Name));
             return OpenProteomeDb().Digest(new ProteaseImpl(enzyme),
                                         (s, i) =>
                                         {
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Model.Proteome
             FastaSequence fastaSequence;
             try
             {
-                fastaSequence = new FastaSequence("name", "description", new List<AlternativeProtein>(), protein.Sequence);
+                fastaSequence = new FastaSequence("name", "description", new List<AlternativeProtein>(), protein.Sequence); // Not L10N
             }
             catch (InvalidDataException)
             {

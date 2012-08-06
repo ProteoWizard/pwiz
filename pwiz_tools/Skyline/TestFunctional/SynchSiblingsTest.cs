@@ -157,7 +157,8 @@ namespace pwiz.SkylineTestFunctional
         {
             // Make sure nodes have been added with siblings synchronized
             Assert.AreEqual(3, nodes.Count);
-            var regexTran = new Regex(@"[A-Z] \[([^\]]+)\] - [^+]*(\++) (\(rank \d+\))");
+            var regexTran = new Regex(string.Format(@"[A-Z] \[([^\]]+)\]? - [^+]*(\++) (\({0}\))",
+                                                    string.Format(Resources.TransitionTreeNode_GetLabel_rank__0__, @"\d+")));
             for (int i = 0; i < nodes[0].Nodes.Count; i++)
             {
                 var match0 = MatchTransitionText(nodes[0].Nodes[i], regexTran);

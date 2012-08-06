@@ -67,8 +67,8 @@ namespace pwiz.ProteomeDatabase.API
         {
             get
             {
-                string cut = "[" + Cleavage + "]";
-                string nocut = (Restrict == "" ? "[A-Z]" : "[^" + Restrict + "]");
+                string cut = "[" + Cleavage + "]"; // Not L10N
+                string nocut = (Restrict == "" ? "[A-Z]" : "[^" + Restrict + "]"); // Not L10N
                 return (IsCTerm() ? cut + nocut : nocut + cut);
             }
         }
@@ -114,7 +114,7 @@ namespace pwiz.ProteomeDatabase.API
 
                     // Single amino acid peptides have no fragment ions.
                     int count = end - begin;
-                    if (count > 1 && sequence.IndexOfAny(new[] { '*', '-' }, begin, count) == -1)
+                    if (count > 1 && sequence.IndexOfAny(new[] { '*', '-' }, begin, count) == -1) // Not L10N
                     {
                         DigestedPeptide peptide = new DigestedPeptide
                                                       {

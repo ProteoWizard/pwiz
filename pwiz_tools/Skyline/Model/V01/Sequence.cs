@@ -21,6 +21,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.V01
 {
@@ -95,7 +97,7 @@ namespace pwiz.Skyline.Model.V01
         public IEnumerable<PepV01> GetPeptideList(Enzyme enzyme)
         {
             if (!PeptideList)
-                throw new InvalidOperationException("Attempt to get peptide list from uncleaved FASTA sequence.");
+                throw new InvalidOperationException(Resources.FastaSeqV01_GetPeptideList_Attempt_to_get_peptide_list_from_uncleaved_FASTA_sequence);
 
             int begin = 1;
             int end = begin;
@@ -174,7 +176,7 @@ namespace pwiz.Skyline.Model.V01
         public void AppendSequence(string seq)
         {
             seq = seq.Trim();
-            if (seq.EndsWith("*"))
+            if (seq.EndsWith("*")) // Not L10N
                 seq = seq.Substring(0, seq.Length - 1);
             _sequence.Append(seq.Trim());
             if (_peptideList)
@@ -264,7 +266,7 @@ namespace pwiz.Skyline.Model.V01
         {
             get
             {
-                return (Begin == 0 ? '-' : _fastaSequence.AA[Begin - 1]);
+                return (Begin == 0 ? '-' : _fastaSequence.AA[Begin - 1]); // Not L10N
             }
         }
 
@@ -272,7 +274,7 @@ namespace pwiz.Skyline.Model.V01
         {
             get
             {
-                return (End == _fastaSequence.AA.Length ? '-' : _fastaSequence.AA[End]);
+                return (End == _fastaSequence.AA.Length ? '-' : _fastaSequence.AA[End]); // Not L10N
             }
         }
 
@@ -382,11 +384,10 @@ namespace pwiz.Skyline.Model.V01
 
         public override string ToString()
         {
-            string format = (MissedCleavages == 0 ?
-                                                      "{0}.{1}.{2} [{3}, {4}]" :
-                                                                                   "{0}.{1}.{2} [{3}, {4}] (missed {5})");
-            return string.Format(format, PrevAA, Sequence, NextAA,
-                                 Begin, End - 1, MissedCleavages);
+            string format = "{0}.{1}.{2} [{3}, {4}]"; // Not L10N
+            if (MissedCleavages > 0)
+                format = TextUtil.SpaceSeparate(format, Resources.Peptide_ToString__missed__5__);
+            return string.Format(format, PrevAA, Sequence, NextAA, Begin, End - 1, MissedCleavages);
         }
 
         public override bool Equals(object obj)
@@ -592,14 +593,14 @@ namespace pwiz.Skyline.Model.V01
 
         public string GetChargeIndicator(int charge)
         {
-            return "++++++++++".Substring(0, charge);
+            return "++++++++++".Substring(0, charge); // Not L10N
         }
 
         #region object overrides
 
         public override string ToString()
         {
-            return string.Format("{0} [{1}{2}] - {3:F04}{4} -> {5:F04}{6}",
+            return string.Format("{0} [{1}{2}] - {3:F04}{4} -> {5:F04}{6}", // Not L10N
                                  _fragment.AA, _fragment.IType.ToString().ToLower(), _fragment.Ordinal,
                                  PrecursorMZ, GetChargeIndicator(PrecursorCharge),
                                  MZ, GetChargeIndicator(Charge));

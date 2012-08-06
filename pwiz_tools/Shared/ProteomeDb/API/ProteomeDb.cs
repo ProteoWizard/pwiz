@@ -28,6 +28,7 @@ using NHibernate.Cfg;
 using NHibernate.Criterion;
 using pwiz.ProteomeDatabase.DataModel;
 using pwiz.ProteomeDatabase.Fasta;
+using pwiz.ProteomeDatabase.Properties;
 using pwiz.ProteomeDatabase.Util;
 
 namespace pwiz.ProteomeDatabase.API
@@ -103,11 +104,11 @@ namespace pwiz.ProteomeDatabase.API
                     FastaImporter fastaImporter = new FastaImporter();
                     IDbCommand insertProtein = session.Connection.CreateCommand();
                     insertProtein.CommandText =
-                        "INSERT INTO ProteomeDbProtein (Version, Sequence) Values (1,?);select last_insert_rowid();";
+                        "INSERT INTO ProteomeDbProtein (Version, Sequence) Values (1,?);select last_insert_rowid();"; // Not L10N
                     insertProtein.Parameters.Add(new SQLiteParameter());
                     IDbCommand insertName = session.Connection.CreateCommand();
                     insertName.CommandText =
-                        "INSERT INTO ProteomeDbProteinName (Version, Protein, IsPrimary, Name, Description) Values(1,?,?,?,?)";
+                        "INSERT INTO ProteomeDbProteinName (Version, Protein, IsPrimary, Name, Description) Values(1,?,?,?,?)"; // Not L10N
                     insertName.Parameters.Add(new SQLiteParameter());
                     insertName.Parameters.Add(new SQLiteParameter());
                     insertName.Parameters.Add(new SQLiteParameter());
@@ -116,7 +117,7 @@ namespace pwiz.ProteomeDatabase.API
                     foreach (DbProtein protein in fastaImporter.Import(reader))
                     {
                         int iProgress = (int)(reader.BaseStream.Position * 100 / (reader.BaseStream.Length + 1));
-                        if (!progressMonitor.Invoke("Added " + proteinCount + " proteins", iProgress))
+                        if (!progressMonitor.Invoke(string.Format(Resources.ProteomeDb_AddFastaFile_Added__0__proteins,proteinCount), iProgress))
                         {
                             return;
                         }
@@ -153,14 +154,15 @@ namespace pwiz.ProteomeDatabase.API
                             }
                         }
                     }
-                    if (!progressMonitor.Invoke("Committing transaction", 99))
+                    if (!progressMonitor.Invoke(Resources.ProteomeDb_AddFastaFile_Committing_transaction, 99))
                     {
                         return;
                     }
                     transaction.Commit();
                 }
                 AnalyzeDb(session);
-                progressMonitor.Invoke("Finished importing " + proteinCount + " proteins", 100);
+                progressMonitor.Invoke(
+                    string.Format(Resources.ProteomeDb_AddFastaFile_Finished_importing__0__proteins, proteinCount), 100);
             }
         }
 
@@ -172,7 +174,7 @@ namespace pwiz.ProteomeDatabase.API
         {
             using(IDbCommand command = session.Connection.CreateCommand())
             {
-                command.CommandText = "Analyze;";
+                command.CommandText = "Analyze;"; // Not L10N
                 command.ExecuteNonQuery();
             }
         }
@@ -183,14 +185,14 @@ namespace pwiz.ProteomeDatabase.API
             {
                 return
                     Convert.ToInt32(
-                        session.CreateQuery("SELECT Count(P.Id) From " + typeof (DbProtein) + " P").UniqueResult());
+                        session.CreateQuery("SELECT Count(P.Id) From " + typeof (DbProtein) + " P").UniqueResult()); // Not L10N
             }
         }
         public void AttachDatabase(IDbConnection connection)
         {
             using(IDbCommand command = connection.CreateCommand())
             {
-                command.CommandText = "ATTACH DATABASE '" + Path + "' AS ProteomeDb";
+                command.CommandText = "ATTACH DATABASE '" + Path + "' AS ProteomeDb"; // Not L10N
                 command.ExecuteNonQuery();
             }
         }
@@ -257,7 +259,7 @@ namespace pwiz.ProteomeDatabase.API
             using (ISession session = OpenSession())
             {
                 return (DbDigestion) session.CreateCriteria(typeof (DbDigestion))
-                    .Add(Restrictions.Eq("Name", name))
+                    .Add(Restrictions.Eq("Name", name)) // Not L10N
                     .UniqueResult();
             }
         }
@@ -279,8 +281,8 @@ namespace pwiz.ProteomeDatabase.API
             {
                 List<DbProteinName> proteinNames = new List<DbProteinName>();
                 ICriteria criteria = session.CreateCriteria(typeof(DbProteinName))
-                    .Add(Restrictions.InsensitiveLike("Name", prefix + "%"))
-                    .AddOrder(Order.Asc("Name"))
+                    .Add(Restrictions.InsensitiveLike("Name", prefix + "%")) // Not L10N
+                    .AddOrder(Order.Asc("Name")) // Not L10N
                     .SetMaxResults(maxResults);
                 criteria.List(proteinNames);
                 List<Protein> result = new List<Protein>();
@@ -296,7 +298,7 @@ namespace pwiz.ProteomeDatabase.API
             using (ISession session = OpenSession())
             {
                 ICriteria criteria = session.CreateCriteria(typeof(DbProteinName))
-                    .Add(Restrictions.Eq("Name", name));
+                    .Add(Restrictions.Eq("Name", name)); // Not L10N
                 DbProteinName proteinName = (DbProteinName)criteria.UniqueResult();
                 if (proteinName == null)
                 {
@@ -319,13 +321,13 @@ namespace pwiz.ProteomeDatabase.API
                         {
                             return new Digestion(this, dbDigestion);
                         }
-                        if (!progressMonitor.Invoke("Listing existing peptides", 0))
+                        if (!progressMonitor.Invoke(Resources.ProteomeDb_Digest_Listing_existing_peptides, 0))
                         {
                             return null;
                         }
-                        IQuery query = session.CreateQuery("SELECT P.Sequence FROM "
-                                                           + typeof(DbDigestedPeptide) + " P WHERE P.Digestion = :Digestion")
-                            .SetParameter("Digestion", dbDigestion);
+                        IQuery query = session.CreateQuery("SELECT P.Sequence FROM " // Not L10N
+                                                           + typeof(DbDigestedPeptide) + " P WHERE P.Digestion = :Digestion") // Not L10N
+                            .SetParameter("Digestion", dbDigestion); // Not L10N
                         List<String> listSequences = new List<string>();
                         query.List(listSequences);
                         existingSequences.UnionWith(listSequences);
@@ -342,7 +344,7 @@ namespace pwiz.ProteomeDatabase.API
                         };
                         session.Save(dbDigestion);
                     }
-                    if (!progressMonitor.Invoke("Listing proteins", 0))
+                    if (!progressMonitor.Invoke(Resources.ProteomeDb_Digest_Listing_proteins, 0)) 
                     {
                         return null;
                     }
@@ -351,14 +353,14 @@ namespace pwiz.ProteomeDatabase.API
                     Dictionary<String, long> digestedPeptideIds
                         = new Dictionary<string, long>();
                     const String sqlPeptide =
-                            "INSERT INTO ProteomeDbDigestedPeptide (Digestion, Sequence) VALUES(?,?);select last_insert_rowid();";
+                            "INSERT INTO ProteomeDbDigestedPeptide (Digestion, Sequence) VALUES(?,?);select last_insert_rowid();"; // Not L10N
                     using (var commandPeptide = session.Connection.CreateCommand())
                     {
                         commandPeptide.CommandText = sqlPeptide;
                         commandPeptide.Parameters.Add(new SQLiteParameter());
                         commandPeptide.Parameters.Add(new SQLiteParameter());
                         const String sqlPeptideProtein =
-                            "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);";
+                            "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);"; // Not L10N
                         var commandProtein = session.Connection.CreateCommand();
                         commandProtein.CommandText = sqlPeptideProtein;
                         commandProtein.Parameters.Add(new SQLiteParameter());
@@ -367,8 +369,7 @@ namespace pwiz.ProteomeDatabase.API
                         for (int i = 0; i < proteins.Count; i++)
                         {
                             var proteinSequences = new HashSet<string>();
-                            if (!progressMonitor.Invoke("Digesting " + proteins.Count
-                                + " proteins", 100 * i / proteins.Count))
+                            if (!progressMonitor.Invoke(string.Format(Resources.ProteomeDb_Digest_Digesting__0__proteins,proteins.Count), 100 * i / proteins.Count))
                             {
                                 return null;
                             }
@@ -405,14 +406,16 @@ namespace pwiz.ProteomeDatabase.API
                             }
                         }
                     }
-                    if (!progressMonitor.Invoke("Committing transaction", 99))
+                    if (!progressMonitor.Invoke(Resources.ProteomeDb_AddFastaFile_Committing_transaction, 99))
                     {
                         return null;
                     }
                     transaction.Commit();
 
                     AnalyzeDb(session);
-                    progressMonitor.Invoke(string.Format("Digested {0} proteins into {1} unique peptides", proteins.Count, digestedPeptideIds.Count),
+                    progressMonitor.Invoke(
+                        string.Format(Resources.ProteomeDb_Digest_Digested__0__proteins_into__1__unique_peptides,
+                                      proteins.Count, digestedPeptideIds.Count),
                         100);
                 }
                 return new Digestion(this, dbDigestion);

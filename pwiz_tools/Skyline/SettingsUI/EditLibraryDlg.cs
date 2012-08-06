@@ -27,6 +27,7 @@ using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -53,8 +54,8 @@ namespace pwiz.Skyline.SettingsUI
                 _librarySpec = value;
                 if (_librarySpec == null)
                 {
-                    textName.Text = "";
-                    textPath.Text = "";
+                    textName.Text = string.Empty;
+                    textPath.Text = string.Empty;
                 }
                 else
                 {
@@ -81,7 +82,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (Equals(name, mod.Name))
                     {
-                        helper.ShowTextBoxError(textName, "The library '{0}' already exists.", name);
+                        helper.ShowTextBoxError(textName, Resources.EditLibraryDlg_OkDialog_The_library__0__already_exists, name);
                         return;
                     }
                 }
@@ -92,13 +93,13 @@ namespace pwiz.Skyline.SettingsUI
 
             if (!File.Exists(path))
             {
-                MessageBox.Show(this, string.Format("The file {0} does not exist.", path), Program.Name);
+                MessageBox.Show(this, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__does_not_exist, path), Program.Name);
                 textPath.Focus();
                 return;
             }
             if (FileEx.IsDirectory(path))
             {
-                MessageBox.Show(this, string.Format("The path {0} is a directory.", path), Program.Name);
+                MessageBox.Show(this, string.Format(Resources.EditLibraryDlg_OkDialog_The_path__0__is_a_directory, path), Program.Name);
                 textPath.Focus();
                 return;
             }
@@ -107,7 +108,9 @@ namespace pwiz.Skyline.SettingsUI
             // and the library has the text "redundant" in the file name.
             if (path.EndsWith(BiblioSpecLiteSpec.EXT_REDUNDANT))
             {
-                MessageDlg.Show(this, string.Format("The file {0} appears to be a redundant library.\nPlease choose a  non-redundant library.", path));
+                var message = TextUtil.LineSeparate(string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__appears_to_be_a_redundant_library, path),
+                                                    Resources.EditLibraryDlg_OkDialog_Please_choose_a_non_redundant_library);
+                MessageDlg.Show(this, string.Format(message, path));
                 textPath.Focus();
                 return;
             }
@@ -125,7 +128,7 @@ namespace pwiz.Skyline.SettingsUI
                 librarySpec = new SpectrastSpec(name, path);
             else
             {
-                MessageDlg.Show(this, string.Format("The file {0} is not a supported spectral library file format.", path));
+                MessageDlg.Show(this, string.Format(Resources.EditLibraryDlg_OkDialog_The_file__0__is_not_a_supported_spectral_library_file_format, path));
                 textPath.Focus();
                 return;
             }
@@ -164,13 +167,9 @@ namespace pwiz.Skyline.SettingsUI
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
                 DefaultExt = BiblioSpecLibSpec.EXT,
-                Filter = string.Join("|", new[]
-                    {
-                        "Spectral Libraries (*" + BiblioSpecLiteSpec.EXT + ",*" + XHunterLibSpec.EXT + ",*" + NistLibSpec.EXT + ",*" + SpectrastSpec.EXT + ")|*" +
-                            BiblioSpecLiteSpec.EXT + ";*" + XHunterLibSpec.EXT + ";*" + NistLibSpec.EXT + ";*" + SpectrastSpec.EXT,
-                        "Legacy Libraries (*" + BiblioSpecLibSpec.EXT + ")|*" + BiblioSpecLibSpec.EXT,
-                        "All Files (*.*)|*.*"
-                    })
+                Filter = TextUtil.FileDialogFiltersAll(Resources.EditLibraryDlg_GetLibraryPath_Spectral_Libraries + " (*" + BiblioSpecLiteSpec.EXT + ",*" + XHunterLibSpec.EXT + ",*" + NistLibSpec.EXT + ",*" + SpectrastSpec.EXT + ")|*" + // Not L10N
+                                                        BiblioSpecLiteSpec.EXT + ";*" + XHunterLibSpec.EXT + ";*" + NistLibSpec.EXT + ";*" + SpectrastSpec.EXT, // Not L10N
+                                                        TextUtil.FileDialogFilter(Resources.EditLibraryDlg_GetLibraryPath_Legacy_Libraries, BiblioSpecLibSpec.EXT))
             })
             {
                 if (fileName != null)
@@ -203,6 +202,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             linkLabel.LinkVisited = true;
             WebHelpers.OpenLink(this, link);
+        }
+
+        private void EditLibraryDlg_Load(object sender, EventArgs e)
+        {
+
         }
     }
 }

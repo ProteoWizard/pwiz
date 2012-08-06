@@ -24,6 +24,7 @@ using System.Linq;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -38,9 +39,9 @@ namespace pwiz.Skyline.Model
 
     public static class DecoyGeneration
     {
-        public const string ADD_RANDOM = "Random Mass Shift";
-        public const string SHUFFLE_SEQUENCE = "Shuffle Sequence";
-        public const string REVERSE_SEQUENCE = "Reverse Sequence";
+        public static string ADD_RANDOM { get { return Resources.DecoyGeneration_ADD_RANDOM_Random_Mass_Shift; } }
+        public static string SHUFFLE_SEQUENCE { get { return Resources.DecoyGeneration_SHUFFLE_SEQUENCE_Shuffle_Sequence; } }
+        public static string REVERSE_SEQUENCE { get { return Resources.DecoyGeneration_REVERSE_SEQUENCE_Reverse_Sequence; } }
 
         public static IEnumerable<string> Methods
         {
@@ -592,7 +593,7 @@ namespace pwiz.Skyline.Model
                 if (!multiCycle || startDecoys == numDecoys)
                     break;
             }
-            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys",
+            var decoyNodePepGroup = new PeptideGroupDocNode(new PeptideGroup(true), Annotations.EMPTY, "Decoys", // Not L10N
                                                             null, decoyNodePepList.ToArray(), false);
             decoyNodePepGroup = decoyNodePepGroup.ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
 

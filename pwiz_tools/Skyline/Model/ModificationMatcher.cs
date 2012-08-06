@@ -64,7 +64,7 @@ namespace pwiz.Skyline.Model
             bool prevHeavy = false;
             int countModsPerAA = 0;
             List<int> badSeqIndices = new List<int>();
-            foreach (var info in EnumerateSequenceInfos(_sequences.Current ?? "", false))
+            foreach (var info in EnumerateSequenceInfos(_sequences.Current ?? string.Empty, false))
             {
                 int indexAA = info.IndexAA;
                 var indexAAinSeq = info.IndexAAInSeq;
@@ -88,7 +88,7 @@ namespace pwiz.Skyline.Model
         private static IEnumerable<AAModInfo> EnumerateSequenceInfos(string seq, bool includeUnmod)
         {
             string aas = FastaSequence.StripModifications(seq);
-            bool isSpecificHeavy = aas.Length > seq.Count(c => c == '{') && aas.Length > seq.Count(c => c == '[');
+            bool isSpecificHeavy = aas.Length > seq.Count(c => c == '{') && aas.Length > seq.Count(c => c == '['); // Not L10N
             int indexAA = 0;
             int indexAAInSeq = 0;
             int i = 0;
@@ -96,10 +96,10 @@ namespace pwiz.Skyline.Model
             {
                 var aa = aas[indexAA];
                 int indexBracket = i + 1;
-                if (indexBracket < seq.Length && (seq[indexBracket] == '[' || seq[indexBracket] == '{'))
+                if (indexBracket < seq.Length && (seq[indexBracket] == '[' || seq[indexBracket] == '{')) // Not L10N
                 {
-                    bool isHeavy = seq[indexBracket] == '{';
-                    char closeBracket = isHeavy ? '}' : ']';
+                    bool isHeavy = seq[indexBracket] == '{'; // Not L10N
+                    char closeBracket = isHeavy ? '}' : ']'; // Not L10N
                     int indexStart = indexBracket + 1;
                     int indexClose = seq.IndexOf(closeBracket, indexBracket);
                     string mod = seq.Substring(indexStart, indexClose - indexStart);
@@ -156,7 +156,7 @@ namespace pwiz.Skyline.Model
                 // If the next character is a bracket, continue using the same amino
                 // acid and leave i where it is.
                 int iNext = i + 1;
-                if (iNext >= seq.Length || (seq[iNext] != '[' && seq[iNext] != '{'))
+                if (iNext >= seq.Length || (seq[iNext] != '[' && seq[iNext] != '{')) // Not L10N
                 {
                     i = indexAAInSeq = iNext;
                     indexAA++;
@@ -166,15 +166,15 @@ namespace pwiz.Skyline.Model
 
         public string GetSeqModUnmatchedStr(int startIndex)
         {
-            var sequence = _sequences.Current ?? "";
+            var sequence = _sequences.Current ?? string.Empty;
             var result = new StringBuilder(sequence[startIndex].ToString(CultureInfo.InvariantCulture));
             bool parenExpected = true;
             for (int i = startIndex + 1; i < sequence.Length; i++)
             {
                 char c = sequence[i];
-                if (parenExpected && !(c == '[' || c == '{'))
+                if (parenExpected && !(c == '[' || c == '{')) // Not L10N
                     return result.ToString();
-                parenExpected = c == ']' || c == '}';
+                parenExpected = c == ']' || c == '}'; // Not L10N
                 result.Append(c);
             }
             return result.ToString();

@@ -55,7 +55,7 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                Assert.AreEqual(1, _testFilesZips.Length, "Attempt to use TestFilesZip on test with multiple ZIP files.\nUse TestFilesZipPaths instead.");
+                Assert.AreEqual(1, _testFilesZips.Length, "Attempt to use TestFilesZip on test with multiple ZIP files.\nUse TestFilesZipPaths instead."); // Not L10N
                 return _testFilesZips[0];
             }
             set { TestFilesZipPaths = new[] {value}; }
@@ -73,12 +73,12 @@ namespace pwiz.SkylineTestUtil
                     var zipPath = zipPaths[i];
                     // If the file is on the web, save it to the local disk in the developer's
                     // Downloads folder for future use
-                    if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://"))
+                    if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://")) // Not L10N
                     {
                         string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? "", "Downloads");
-                        string tutorialsFolder = Path.Combine(downloadsFolder, "Tutorials");
-                        string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
+                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? string.Empty, "Downloads"); 
+                        string tutorialsFolder = Path.Combine(downloadsFolder, "Tutorials"); 
+                        string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1); // Not L10N
                         string zipFilePath = Path.Combine(tutorialsFolder, fileName);
                         if (!File.Exists(zipFilePath))
                         {
@@ -100,7 +100,7 @@ namespace pwiz.SkylineTestUtil
         {
             get
             {
-                Assert.AreEqual(1, TestFilesDirs.Length, "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead.");
+                Assert.AreEqual(1, TestFilesDirs.Length, "Attempt to use TestFilesDir on test with multiple directories.\nUse TestFilesDirs instead."); // Not L10N
                 return TestFilesDirs[0];
             }
             set { TestFilesDirs = new[] {value}; }
@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestUtil
                                   {
                                       act();
                                   }
-                                  catch(Exception e)
+                                   catch(Exception e)
                                   {
                                       Assert.Fail(e.ToString());
                                   }
@@ -185,7 +185,7 @@ namespace pwiz.SkylineTestUtil
             }
             catch (ExternalException)
             {
-                Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failed to set text to the clipboard."));
+                Assert.Fail(ClipboardHelper.GetOpenClipboardMessage("Failed to set text to the clipboard.")); // Not L10N
             }
         }
 
@@ -216,7 +216,7 @@ namespace pwiz.SkylineTestUtil
 
         private static string GetExcelFileText(string connectionString, string page, int columns)
         {
-            var adapter = new OleDbDataAdapter(string.Format("SELECT * FROM [{0}$]", page), connectionString);
+            var adapter = new OleDbDataAdapter(string.Format("SELECT * FROM [{0}$]", page), connectionString); // Not L10N
             var ds = new DataSet();
             adapter.Fill(ds, "TransitionListTable");
             DataTable data = ds.Tables["TransitionListTable"];
@@ -236,7 +236,7 @@ namespace pwiz.SkylineTestUtil
 
         private static string GetExcelConnectionString(string filePath, bool hasHeader, bool legacyFile)
         {
-            string connectionFormat = legacyFile
+            string connectionFormat = legacyFile // Not L10N
                 ? "Provider=Microsoft.Jet.OLEDB.4.0; data source={0}; Extended Properties=\"Excel 8.0;HDR={1}\""
                 : "Provider=Microsoft.ACE.OLEDB.12.0;Password=\"\";User ID=Admin;Data Source={0};Mode=Share Deny Write;Extended Properties=\"HDR={1};\";Jet OLEDB:Engine Type=37";
             return string.Format(connectionFormat, filePath, hasHeader ? "YES" : "NO");
@@ -301,7 +301,7 @@ namespace pwiz.SkylineTestUtil
                     return tForm;
 
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles*SLEEP_INTERVAL/1000));
+                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
             }
             return null;
         }
@@ -329,7 +329,7 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
-            Assert.Fail(string.Format("Timeout {0} seconds exceeded in WaitForClosedForm", waitCycles*SLEEP_INTERVAL/1000));
+            Assert.Fail(string.Format("Timeout {0} seconds exceeded in WaitForClosedForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
@@ -365,7 +365,7 @@ namespace pwiz.SkylineTestUtil
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForCondition", waitCycles*SLEEP_INTERVAL/1000));
+                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForCondition", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
             }
             return false;
         }
@@ -385,7 +385,7 @@ namespace pwiz.SkylineTestUtil
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForConditionUI", waitCycles*SLEEP_INTERVAL/1000));
+                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForConditionUI", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
             }
             return false;
         }
@@ -417,7 +417,7 @@ namespace pwiz.SkylineTestUtil
             {
                 Program.Init();
                 Settings.Default.SrmSettingsList[0] = SrmSettingsList.GetDefault();
-                var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread" };
+                var threadTest = new Thread(WaitForSkyline) { Name = "Functional test thread", CurrentUICulture = Thread.CurrentThread.CurrentCulture }; // Not L10N
                 threadTest.Start();
                 Program.Main();
                 threadTest.Join();
@@ -459,7 +459,7 @@ namespace pwiz.SkylineTestUtil
                     RunTest();
                 }
             }
-            catch (Exception x)
+             catch (Exception x)
             {
                 // An exception occurred outside RunTest
                 _testExceptions.Add(x);
@@ -492,8 +492,8 @@ namespace pwiz.SkylineTestUtil
             // using the clipboard during a test run.
             ClipboardEx.UseInternalClipboard();
 
-            var doClipboardCheck = TestContext.Properties.Contains("ClipboardCheck");
-            string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties["ClipboardCheck"] : "";
+            var doClipboardCheck = TestContext.Properties.Contains("ClipboardCheck"); // Not L10N
+            string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties["ClipboardCheck"] : string.Empty; // Not L10N
             if (doClipboardCheck)
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
@@ -541,14 +541,14 @@ namespace pwiz.SkylineTestUtil
 
             foreach (var messageDlg in Application.OpenForms.OfType<MessageDlg>())
             {
-                Console.WriteLine("\n\nOpen MessageDlg: {0}\n", messageDlg.Message);
+                Console.WriteLine("\n\nOpen MessageDlg: {0}\n", messageDlg.Message); // Not L10N
             }
 
             // Actually throwing an exception can cause an infinite loop in MSTest
             _testExceptions.AddRange(from form in Application.OpenForms.Cast<Form>()
                                         where !(form is SkylineWindow)
                                         select new AssertFailedException(
-                                            string.Format("Form of type {0} left open at end of test", form.GetType())));
+                                            string.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
 
             _testCompleted = true;
 
@@ -572,7 +572,7 @@ namespace pwiz.SkylineTestUtil
         {
             var assembly = Assembly.GetAssembly(typeof(AbstractFunctionalTest));
             var layoutStream = assembly.GetManifestResourceStream(
-                typeof(AbstractFunctionalTest).Namespace + ".minimal.sky.view");
+                typeof(AbstractFunctionalTest).Namespace + ".minimal.sky.view"); // Not L10N
             Assert.IsNotNull(layoutStream);
             RunUI(() => SkylineWindow.LoadLayout(layoutStream));
             WaitForConditionUI(() => true);

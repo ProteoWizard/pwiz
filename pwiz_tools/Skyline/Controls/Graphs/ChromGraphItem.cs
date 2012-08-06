@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public class ChromGraphItem : AbstractChromGraphItem
     {
-        private const string FONT_FACE = "Arial";
+        private const string FONT_FACE = "Arial"; // Not L10N
 
         private static readonly Color COLOR_BEST_PEAK = Color.Black;
         private static readonly Color COLOR_RETENTION_TIME = Color.Gray;
@@ -194,7 +194,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static string GetTitle(TransitionDocNode nodeTran)
         {
             var tran = nodeTran.Transition;
-            return string.Format("{0}{1} - {2:F04}{3}", nodeTran.FragmentIonName,
+            return string.Format("{0}{1} - {2:F04}{3}", nodeTran.FragmentIonName, // Not L10N
                                  Transition.GetMassIndexText(tran.MassIndex),
                                  nodeTran.Mz,
                                  Transition.GetChargeIndicator(tran.Charge));
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public static string GetTitle(TransitionGroupDocNode nodeGroup)
         {
             var seq = nodeGroup.TransitionGroup.Peptide.Sequence;
-            return string.Format("{0} - {1:F04}{2}{3}", seq, nodeGroup.PrecursorMz,
+            return string.Format("{0} - {1:F04}{2}{3}", seq, nodeGroup.PrecursorMz, // Not L10N
                                  Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
                                  nodeGroup.TransitionGroup.LabelTypeText);            
         }
@@ -213,12 +213,11 @@ namespace pwiz.Skyline.Controls.Graphs
             get
             {
                 if (_step != 0)
-                    return string.Format("Step {0}", _step);
+                    return string.Format(Resources.ChromGraphItem_Title_Step__0_, _step);
 
-                return (TransitionNode == null?
-                                                  GetTitle(TransitionGroupNode)
-                            :
-                                GetTitle(TransitionNode));
+                return (TransitionNode == null
+                    ? GetTitle(TransitionGroupNode)
+                    : GetTitle(TransitionNode));
             }
         }
 
@@ -248,7 +247,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     foreach (double retentionTime in RetentionMsMs)
                     {
                         Color color = Equals(retentionTime, SelectedRetentionMsMs) ? ColorSelected : COLOR_MSMSID_TIME;
-                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, "ID", color, retentionTime);
+                        AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, 
+                            Resources.ChromGraphItem_AddAnnotations_ID, color, retentionTime);
                     }
                 }
                 if (AlignedRetentionMsMs != null)
@@ -274,7 +274,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (GraphChromatogram.ShowRT != ShowRTChrom.none)
                 {
                     AddRetentionTimeAnnotation(graphPane, g, annotations,
-                        ptTop, "Predicted", COLOR_RETENTION_TIME, time);
+                        ptTop, "Predicted", COLOR_RETENTION_TIME, time); // Not L10N
                 }
 
                 // Draw background for retention time window
@@ -493,9 +493,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public string FormatTimeLabel(double time, double dotProduct)
         {
-            string label = string.Format("{0:F01}", time);
+            string label = string.Format("{0:F01}", time); // Not L10N
             if (dotProduct != 0)
-                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct);
+                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct); // L10N
             return label;
         }
 
@@ -505,8 +505,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (ReferenceEquals(FontSpec, label.FontSpec))
             {
                 // Parse the time out of the label
-                double time;                
-                if (double.TryParse(label.Text.Split('\n')[0], out time))
+                double time;
+                if (double.TryParse(label.Text.Split('\n')[0], out time)) // Not L10N
                 {
                     // Search for a time that corresponds with the label
                     foreach (int iTime in _arrayLabelIndexes)
@@ -576,7 +576,7 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class FailedChromGraphItem : NoDataChromGraphItem
     {
         public FailedChromGraphItem(TransitionGroupDocNode nodeGroup, Exception x)
-            : base(string.Format("{0} (load failed: {1})", ChromGraphItem.GetTitle(nodeGroup), x.Message))
+            : base(string.Format(Resources.FailedChromGraphItem_FailedChromGraphItem__0__load_failed__1__, ChromGraphItem.GetTitle(nodeGroup), x.Message))
         {            
         }
     }
@@ -584,19 +584,19 @@ namespace pwiz.Skyline.Controls.Graphs
     public sealed class NotFoundChromGraphItem : NoDataChromGraphItem
     {
         public NotFoundChromGraphItem(TransitionDocNode nodeTran)
-            : base(string.Format("{0} (not found)", ChromGraphItem.GetTitle(nodeTran)))
+            : base(string.Format(Resources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeTran)))
         {
         }
 
         public NotFoundChromGraphItem(TransitionGroupDocNode nodeGroup)
-            : base(string.Format("{0} (not found)", ChromGraphItem.GetTitle(nodeGroup)))
+            : base(string.Format(Resources.NotFoundChromGraphItem_NotFoundChromGraphItem__0__not_found, ChromGraphItem.GetTitle(nodeGroup)))
         {
         }
     }
 
     public sealed class UnavailableChromGraphItem : NoDataChromGraphItem
     {
-        public UnavailableChromGraphItem() : base("Chromatogram information unavailable")
+        public UnavailableChromGraphItem() : base(Resources.UnavailableChromGraphItem_UnavailableChromGraphItem_Chromatogram_information_unavailable)
         {
         }
     }
@@ -661,17 +661,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void CustomizeYAxis(Axis axis)
         {
-            CustomizeAxis(axis, "Intensity");
+            CustomizeAxis(axis, Resources.AbstractChromGraphItem_CustomizeYAxis_Intensity);
         }
 
         public void CustomizeXAxis(Axis axis)
         {
-            CustomizeAxis(axis, "Retention Time");
+            CustomizeAxis(axis, Resources.AbstractChromGraphItem_CustomizeXAxis_Retention_Time);
         }
 
         private static void CustomizeAxis(Axis axis, string title)
         {
-            axis.Title.FontSpec.Family = "Arial";
+            axis.Title.FontSpec.Family = "Arial"; // Not L10N
             axis.Title.FontSpec.Size = 14;
             axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
             axis.Title.FontSpec.Border.IsVisible = false;

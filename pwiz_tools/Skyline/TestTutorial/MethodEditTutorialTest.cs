@@ -42,13 +42,13 @@ namespace pwiz.SkylineTestTutorial
     [TestClass]
     public class MethodEditTutorialTest : AbstractFunctionalTest
     {
-        private const string YEAST_ATLAS = "Yeast (Atlas)";
-        private const string YEAST_GPM = "Yeast (GPM)";
+        private const string YEAST_ATLAS = "Yeast (Atlas)"; // Not L10N
+        private const string YEAST_GPM = "Yeast (GPM)"; // Not L10N
 
         [TestMethod]
         public void TestMethodEditTutorial()
         {
-            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/MethodEdit.zip";
+            TestFilesZip = @"https://skyline.gs.washington.edu/tutorials/MethodEdit.zip"; // Not L10N
             RunFunctionalTest();
         }
 
@@ -58,34 +58,34 @@ namespace pwiz.SkylineTestTutorial
             PeptideSettingsUI peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunDlg<BuildLibraryDlg>(peptideSettingsUI.ShowBuildLibraryDlg, buildLibraryDlg =>
             {
-                buildLibraryDlg.LibraryPath = TestFilesDir.GetTestPath(@"MethodEdit\Library\");
+                buildLibraryDlg.LibraryPath = TestFilesDir.GetTestPath(@"MethodEdit\Library\"); // Not L10N
                 buildLibraryDlg.LibraryName = YEAST_ATLAS;
                 buildLibraryDlg.LibraryCutoff = 0.95;
-                buildLibraryDlg.LibraryAuthority = "peptideatlas.org";
+                buildLibraryDlg.LibraryAuthority = "peptideatlas.org"; // Not L10N
                 buildLibraryDlg.OkWizardPage();
                 IList<string> inputPaths = new List<string>
                  {
-                     TestFilesDir.GetTestPath(@"MethodEdit\Yeast_atlas\interact-prob.pep.xml")
+                     TestFilesDir.GetTestPath(@"MethodEdit\Yeast_atlas\interact-prob.pep.xml") // Not L10N
                  };
                 buildLibraryDlg.AddInputFiles(inputPaths);
                 buildLibraryDlg.OkWizardPage();
             });
 
             // Creating a Background Proteome File, p. 3
-            File.Delete(TestFilesDir.GetTestPath(@"MethodEdit\FASTA\Yeast" + ProteomeDb.EXT_PROTDB));
+            File.Delete(TestFilesDir.GetTestPath(@"MethodEdit\FASTA\Yeast" + ProteomeDb.EXT_PROTDB)); // Not L10N
             var buildBackgroundProteomeDlg =
                 ShowDialog<BuildBackgroundProteomeDlg>(peptideSettingsUI.ShowBuildBackgroundProteomeDlg);
             PeptideSettingsUI peptideSettingsUI1 = peptideSettingsUI;
-            RunUI(() =>
-            {
-                peptideSettingsUI1.PickedLibraries = new[] { YEAST_ATLAS };
-                buildBackgroundProteomeDlg.BuildNew = true;
-                buildBackgroundProteomeDlg.BackgroundProteomePath =
-                    TestFilesDir.GetTestPath(@"MethodEdit\FASTA\Yeast");
-                buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast";
-                buildBackgroundProteomeDlg.AddFastaFile(
-                    TestFilesDir.GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta"));
-            });
+             RunUI(() =>
+             {
+                 peptideSettingsUI1.PickedLibraries = new[] { YEAST_ATLAS };
+                 buildBackgroundProteomeDlg.BuildNew = true;
+                 buildBackgroundProteomeDlg.BackgroundProteomePath =
+                     TestFilesDir.GetTestPath(@"MethodEdit\FASTA\Yeast"); // Not L10N
+                 buildBackgroundProteomeDlg.BackgroundProteomeName = "Yeast"; // Not L10N
+                 buildBackgroundProteomeDlg.AddFastaFile(
+                     TestFilesDir.GetTestPath(@"MethodEdit\FASTA\sgd_yeast.fasta")); // Not L10N
+             });
             OkDialog(buildBackgroundProteomeDlg, buildBackgroundProteomeDlg.OkDialog);
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
 
@@ -101,7 +101,7 @@ namespace pwiz.SkylineTestTutorial
             }));
 
             // Pasting FASTA Sequences, p. 5
-            RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt"));
+            RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt")); // Not L10N
 
             // New in v0.7 : Skyline asks about removing empty proteins.
             var emptyProteinsDlg = ShowDialog<EmptyProteinsDlg>(SkylineWindow.Paste);
@@ -119,27 +119,27 @@ namespace pwiz.SkylineTestTutorial
                     SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Nodes[1];
             });
 
-            CheckTransitionCount("VDIIANDQGNR", 3);
+            CheckTransitionCount("VDIIANDQGNR", 3); // Not L10N
 
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
-                transitionSettingsUI.PrecursorCharges = "2,3";
-                transitionSettingsUI.ProductCharges = "1";
-                transitionSettingsUI.FragmentTypes = "y,b";
+                transitionSettingsUI.PrecursorCharges = "2,3"; // Not L10N
+                transitionSettingsUI.ProductCharges = "1"; // Not L10N
+                transitionSettingsUI.FragmentTypes = "y,b"; // Not L10N
                 transitionSettingsUI.IonCount = 5;
                 transitionSettingsUI.OkDialog();
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 35, 28, 31, 155);
 
-            CheckTransitionCount("VDIIANDQGNR", 5);
+            CheckTransitionCount("VDIIANDQGNR", 5); // Not L10N
 
             // Using a Public Spectral Library, p. 8
             peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             var editListUI =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(peptideSettingsUI.EditLibraryList);
             var addLibUI = ShowDialog<EditLibraryDlg>(editListUI.AddItem);
-            RunUI(() => addLibUI.LibrarySpec = 
-                new BiblioSpecLibSpec(YEAST_GPM, TestFilesDir.GetTestPath(@"MethodEdit\Library\yeast_cmp_20.hlf")));
+            RunUI(() => addLibUI.LibrarySpec =
+                new BiblioSpecLibSpec(YEAST_GPM, TestFilesDir.GetTestPath(@"MethodEdit\Library\yeast_cmp_20.hlf"))); // Not L10N
             OkDialog(addLibUI, addLibUI.OkDialog);
             WaitForClosedForm(addLibUI);
             OkDialog(editListUI, editListUI.OkDialog);
@@ -157,7 +157,7 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsUI2 =>
                {
                    peptideSettingsUI2.LimitPeptides = true;
-                   peptideSettingsUI2.RankID = new PeptideRankId("Expect");
+                   peptideSettingsUI2.RankID = new PeptideRankId(Resources.XHunterLibSpec_PEP_RANK_EXPECT_Expect);
                    peptideSettingsUI2.PeptidesPerProtein = 3;
                    peptideSettingsUI2.OkDialog();
                });
@@ -165,7 +165,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var refinementSettings = new RefinementSettings { MinPeptidesPerProtein = 1 };
-                SkylineWindow.ModifyDocument("Remove empty proteins", refinementSettings.Refine);
+                SkylineWindow.ModifyDocument("Remove empty proteins", refinementSettings.Refine); // Not L10N
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 19, 47, 47, 223);
 
@@ -175,7 +175,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 var node = SkylineWindow.SequenceTree.Nodes[SkylineWindow.SequenceTree.Nodes.Count - 1];
                 SkylineWindow.SequenceTree.SelectedNode = node;
-                SetClipboardFileText(@"MethodEdit\FASTA\Protein list.txt");
+                SetClipboardFileText(@"MethodEdit\FASTA\Protein list.txt"); // Not L10N
                 pasteProteinsDlg.SelectedPath = SkylineWindow.SequenceTree.SelectedPath;
                 pasteProteinsDlg.PasteProteins();
             });
@@ -184,17 +184,17 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 var refinementSettings = new RefinementSettings { MinPeptidesPerProtein = 1 };
-                SkylineWindow.ModifyDocument("Remove empty proteins", refinementSettings.Refine);
+                SkylineWindow.ModifyDocument("Remove empty proteins", refinementSettings.Refine); // Not L10N
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 24, 58, 58, 278);
 
             // Inserting a Peptide List, p. 12
             RunUI(() =>
             {
-                SetClipboardFileText(@"MethodEdit\FASTA\Peptide list.txt");
+                SetClipboardFileText(@"MethodEdit\FASTA\Peptide list.txt"); // Not L10N
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0];
                 SkylineWindow.Paste();
-                SkylineWindow.SequenceTree.Nodes[0].Text = "Primary Peptides";
+                SkylineWindow.SequenceTree.Nodes[0].Text = "Primary Peptides"; // Not L10N
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 25, 70, 70, 338);
             RunUI(() => SkylineWindow.Undo());
@@ -205,7 +205,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Simple Refinement, p. 13
             var findPeptideDlg = ShowDialog<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg);
-            RunUI(() => findPeptideDlg.SearchString = "IPEE");
+            RunUI(() => findPeptideDlg.SearchString = "IPEE"); // Not L10N
             OkDialog(findPeptideDlg, () =>
                                          {
                                              findPeptideDlg.FindNext();
@@ -235,19 +235,19 @@ namespace pwiz.SkylineTestTutorial
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 34, 63, 63, 315);
 
             // Protein Name Auto-Completion, p. 15
-            TestAutoComplete("ybl087", 0);
+            TestAutoComplete("ybl087", 0); // Not L10N
             var peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
-            Assert.AreEqual("YBL087C", peptideGroups[peptideGroups.Count - 1].Name);
+            Assert.AreEqual("YBL087C", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
             // Protein Description Auto-Completion, p. 16
-            TestAutoComplete("eft2", 1);
+            TestAutoComplete("eft2", 1); // Not L10N
             peptideGroups = new List<PeptideGroupDocNode>(Program.ActiveDocument.PeptideGroups);
-            Assert.AreEqual("YDR385W", peptideGroups[peptideGroups.Count - 1].Name);
+            Assert.AreEqual("YDR385W", peptideGroups[peptideGroups.Count - 1].Name); // Not L10N
 
             // Peptide Sequence Auto-Completion, p. 16
-            TestAutoComplete("IQGP", 0);
+            TestAutoComplete("IQGP", 0); // Not L10N
             var peptides = new List<PeptideDocNode>(Program.ActiveDocument.Peptides);
-            Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [769, 784]", peptides[peptides.Count - 1].Peptide.ToString());
+            Assert.AreEqual("K.AYLPVNESFGFTGELR.Q [769, 784]", peptides[peptides.Count - 1].Peptide.ToString()); // Not L10N
 
             // Pop-up Pick-Lists, p. 17
             RunUI(() =>
@@ -261,7 +261,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 pickList.ApplyFilter(false);
                 pickList.ToggleFind();
-                pickList.SearchString = "(rank 6)";
+                pickList.SearchString = string.Format(Resources.TransitionTreeNode_GetLabel_rank__0__, 6);
                 pickList.SetItemChecked(0, true);
                 pickList.OnOk();
             });
@@ -278,12 +278,12 @@ namespace pwiz.SkylineTestTutorial
             curDoc = SkylineWindow.Document;
             RunUI(() =>
             {
-                pickList1.SearchString = "y";
+                pickList1.SearchString = "y"; // Not L10N
                 pickList1.SetItemChecked(0, false);
                 pickList1.SetItemChecked(1, false);
                 pickList1.ApplyFilter(false);
                 pickList1.ToggleFind();
-                pickList1.SearchString = "b ++";
+                pickList1.SearchString = "b ++"; // Not L10N
                 pickList1.SetItemChecked(5, true);
                 pickList1.SetItemChecked(7, true);
                 pickList1.OnOk();
@@ -298,7 +298,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(nodeTip != null && nodeTip.HasTip);
                 var nodeName = SkylineWindow.SequenceTree.Nodes[1].Name;
                 IdentityPath selectPath;
-                SkylineWindow.ModifyDocument("Drag and drop",
+                SkylineWindow.ModifyDocument("Drag and drop", // Not L10N
                     doc => doc.MoveNode(SkylineWindow.Document.GetPathTo(0, 1), SkylineWindow.Document.GetPathTo(0, 0), out selectPath));
                 Assert.IsTrue(SkylineWindow.SequenceTree.Nodes[0].Name == nodeName);
             });
@@ -306,12 +306,12 @@ namespace pwiz.SkylineTestTutorial
             // Preparing to Measure, p. 20
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
-                transitionSettingsUI.RegressionCE = Settings.Default.GetCollisionEnergyByName("ABI 4000 QTrap");
-                transitionSettingsUI.RegressionDP = Settings.Default.GetDeclusterPotentialByName("ABI");
+                transitionSettingsUI.RegressionCE = Settings.Default.GetCollisionEnergyByName("ABI 4000 QTrap"); // Not L10N
+                transitionSettingsUI.RegressionDP = Settings.Default.GetDeclusterPotentialByName("ABI"); // Not L10N
                 transitionSettingsUI.InstrumentMaxMz = 1800;
                 transitionSettingsUI.OkDialog();
             });
-            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("MethodEdit Tutorial.sky")));
+            RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("MethodEdit Tutorial.sky"))); // Not L10N
             var exportDialog = ShowDialog<ExportMethodDlg>(() =>
                 SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
             RunUI(() =>
@@ -324,7 +324,7 @@ namespace pwiz.SkylineTestTutorial
             });
             OkDialog(exportDialog, () => exportDialog.OkDialog(TestFilesDir.GetTestPath("")));
         }
-
+        
         private void SetClipboardFileText(string filepath)
         {
             SetClipboardTextUI(File.ReadAllText(TestFilesDir.GetTestPath(filepath)));

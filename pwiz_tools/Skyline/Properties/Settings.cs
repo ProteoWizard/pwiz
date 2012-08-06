@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
@@ -35,6 +36,7 @@ using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Properties
 {    
@@ -102,7 +104,7 @@ namespace pwiz.Skyline.Properties
             {
                 if (this["StackTraceList"] == null)
                     StackTraceList = new List<string>();
-                return (List<string>) (this["StackTraceList"]);
+                return (List<string>)(this["StackTraceList"]);
             }
             set { this["StackTraceList"] = value; }
         }
@@ -564,7 +566,7 @@ namespace pwiz.Skyline.Properties
         {
             get
             {
-                var list = (AnnotationDefList) this["AnnotationDefList"];
+                var list = (AnnotationDefList)this["AnnotationDefList"];
                 if (list == null)
                 {
                     list = new AnnotationDefList();
@@ -612,7 +614,7 @@ namespace pwiz.Skyline.Properties
     {
         public static Enzyme GetDefault()
         {
-            return new Enzyme("Trypsin", "KR", "P");
+            return new Enzyme("Trypsin", "KR", "P"); // Not L10N
         }
 
         public override IEnumerable<Enzyme> GetDefaults(int revisionIndex)
@@ -620,9 +622,10 @@ namespace pwiz.Skyline.Properties
             return new[]
                 {
                     GetDefault(),
+                    // Not L10N
                     new Enzyme("Trypsin/P", "KR", ""),
-                    new Enzyme("TrypsinK", "K", "P"),
-                    new Enzyme("TrypsinR", "R", "P"),
+                    new Enzyme("TrypsinK", "K", "P"), 
+                    new Enzyme("TrypsinR", "R", "P"), 
                     new Enzyme("Chymotrypsin", "FWYM", "P"),
                     new Enzyme("ArgC", "R", "P"),
                     new Enzyme("AspN", "D", "", SequenceTerminus.N),
@@ -661,9 +664,9 @@ namespace pwiz.Skyline.Properties
             return (Enzyme) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Enzymes"; } }
+        public override string Title { get { return Resources.EnzymeList_Title_Edit_Enzymes; } }
 
-        public override string Label { get { return "En&zymes:"; } }
+        public override string Label { get { return Resources.EnzymeList_Label_Enzymes; } }
     }
 
     public sealed class PeptideExcludeList : SettingsList<PeptideExcludeRegex>
@@ -672,6 +675,7 @@ namespace pwiz.Skyline.Properties
         {
             return new[]
                 {
+                    // Not L10N
                     new PeptideExcludeRegex("Cys", "[C]"),
                     new PeptideExcludeRegex("Met", "[M]"),
                     new PeptideExcludeRegex("His", "[H]"),
@@ -697,9 +701,9 @@ namespace pwiz.Skyline.Properties
             return (PeptideExcludeRegex) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Exclusions"; } }
+        public override string Title { get { return Resources.PeptideExcludeList_Title_Edit_Exclusions; } }
 
-        public override string Label { get { return "&Exclusions:"; } }
+        public override string Label { get { return Resources.PeptideExcludeList_Label_Exclusions; } }
     }
 
     public sealed class ServerList : SettingsList<Server>
@@ -763,9 +767,9 @@ namespace pwiz.Skyline.Properties
             }            
         }
 
-        public override string Title { get { return "Edit Libraries"; } }
+        public override string Title { get { return Resources.SpectralLibraryList_Title_Edit_Libraries; } }
 
-        public override string Label { get { return "&Libraries:"; } }
+        public override string Label { get { return Resources.SpectralLibraryList_Label_Libraries; } }
 
         protected override IXmlElementHelper<LibrarySpec>[] GetXmlElementHelpers()
         {
@@ -775,7 +779,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class BackgroundProteomeList : SettingsList<BackgroundProteomeSpec>
     {
-        private static readonly BackgroundProteomeSpec NONE = new BackgroundProteomeSpec("None", "");
+        private static readonly BackgroundProteomeSpec NONE = new BackgroundProteomeSpec(ELEMENT_NONE, string.Empty);
 
         public static BackgroundProteomeSpec GetDefault()
         {
@@ -813,8 +817,8 @@ namespace pwiz.Skyline.Properties
             return (BackgroundProteomeSpec) item.ChangeName(string.Empty);
         }
 
-        public override String Title { get { return "Edit Background Proteomes"; } }
-        public override String Label { get { return "&Background Proteomes:"; } }
+        public override String Title { get { return Resources.BackgroundProteomeList_Title_Edit_Background_Proteomes; } }
+        public override String Label { get { return Resources.BackgroundProteomeList_Label_Background_Proteomes; } }
 
         protected override IXmlElementHelper<BackgroundProteomeSpec>[] GetXmlElementHelpers()
         {
@@ -841,7 +845,7 @@ namespace pwiz.Skyline.Properties
         {
             return new[]
                 {
-                    new StaticMod("Carbamidomethyl Cysteine", "C", null, "C2H3ON")
+                    new StaticMod("Carbamidomethyl Cysteine", "C", null, "C2H3ON") // Not L10N
                 };            
         }
 
@@ -867,9 +871,9 @@ namespace pwiz.Skyline.Properties
             return (StaticMod) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Structural Modifications"; } }
+        public override string Title { get { return Resources.StaticModList_Title_Edit_Structural_Modifications; } }
 
-        public override string Label { get { return "&Modifications:"; } }
+        public override string Label { get { return Resources.StaticModList_Label_Modifications; } }
     }
 
     public sealed class HeavyModList : SettingsList<StaticMod>
@@ -889,7 +893,7 @@ namespace pwiz.Skyline.Properties
         {
             using (EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true)
                                            {
-                                               Text = "Edit Isotope Modification"
+                                               Text = Resources.HeavyModList_EditItem_Edit_Isotope_Modification
                                            })
             {
                 if (editMod.ShowDialog(owner) == DialogResult.OK)
@@ -904,9 +908,9 @@ namespace pwiz.Skyline.Properties
             return (StaticMod) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Isotope Modifications"; } }
+        public override string Title { get { return Resources.HeavyModList_Title_Edit_Isotope_Modifications; } }
 
-        public override string Label { get { return "&Modifications:"; } }
+        public override string Label { get { return Resources.StaticModList_Label_Modifications; } }
     }
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
@@ -920,7 +924,7 @@ namespace pwiz.Skyline.Properties
                                     new ChargeRegressionLine(2, 0.03, 2.905),
                                     new ChargeRegressionLine(3, 0.038, 2.281)
                                 };
-            return new CollisionEnergyRegression("Thermo TSQ Vantage", thermoRegressions);
+            return new CollisionEnergyRegression("Thermo TSQ Vantage", thermoRegressions); // Not L10N
         }
 
         public override IEnumerable<CollisionEnergyRegression> GetDefaults(int revisionIndex)
@@ -930,58 +934,58 @@ namespace pwiz.Skyline.Properties
                 case 0: // v0.5
                     return new[]
                         {
-                            new CollisionEnergyRegression("Thermo", new []
+                            new CollisionEnergyRegression("Thermo", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.034, 3.314),
                                     new ChargeRegressionLine(3, 0.044, 3.314)
                                 }), 
-                            new CollisionEnergyRegression("ABI", new[]
+                            new CollisionEnergyRegression("ABI", new[] // Not L10N
                                 { new ChargeRegressionLine(2, 0.0431, 4.7556), }),
-                            new CollisionEnergyRegression("Agilent", new[]
+                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[]
+                            new CollisionEnergyRegression("Waters", new[] // Not L10N
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
                 case 1:    // v0.6
                     return new[]
                         {
-                            new CollisionEnergyRegression("Thermo TSQ Vantage", new[]
+                            new CollisionEnergyRegression("Thermo TSQ Vantage", new[] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.03, 2.786),
                                     new ChargeRegressionLine(3, 0.038, 2.183)
                                 }),
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new []
+                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.035, 1.643),
                                     new ChargeRegressionLine(3, 0.037, 3.265)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new []
+                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.057, 4.453),
                                     new ChargeRegressionLine(3, 0.03, 7.692)
                                 }), 
-                            new CollisionEnergyRegression("Agilent", new[]
+                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[]
+                            new CollisionEnergyRegression("Waters", new[] // Not L10N
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
                 case 2:    // v0.6 - fix
                     return new[]
                         {
                             GetDefault(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new []
+                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new []
+                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("Agilent", new[]
+                            new CollisionEnergyRegression("Agilent", new[] // Not L10N
                                 { new ChargeRegressionLine(2, 0.036, -4.8), }),
-                            new CollisionEnergyRegression("Waters", new[]
+                            new CollisionEnergyRegression("Waters", new[] // Not L10N
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
 
@@ -989,22 +993,22 @@ namespace pwiz.Skyline.Properties
                     return new[]
                         {
                             GetDefault(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new []
+                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new []
+                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("Agilent 6460", new[]
+                            new CollisionEnergyRegression("Agilent 6460", new[] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.051, -15.563),
                                     new ChargeRegressionLine(3, 0.037, -9.784)
                                 }),
-                            new CollisionEnergyRegression("Waters Xevo", new[]
+                            new CollisionEnergyRegression("Waters Xevo", new[] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.037, -1.066),
                                     new ChargeRegressionLine(3, 0.036, -1.328)
@@ -1014,27 +1018,27 @@ namespace pwiz.Skyline.Properties
                     return new[]
                         {
                             GetDefault(), 
-                            new CollisionEnergyRegression("Thermo TSQ Ultra", new []
+                            new CollisionEnergyRegression("Thermo TSQ Ultra", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.036, 0.954),
                                     new ChargeRegressionLine(3, 0.037, 3.525)
                                 }), 
-                            new CollisionEnergyRegression("ABI 4000 QTrap", new []
+                            new CollisionEnergyRegression("ABI 4000 QTrap", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
                                 }), 
-                            new CollisionEnergyRegression("ABI 5500 QTrap", new []
+                            new CollisionEnergyRegression("ABI 5500 QTrap", new [] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.036, 8.857),
                                     new ChargeRegressionLine(3, 0.0544, -2.4099)
                                 }), 
-                            new CollisionEnergyRegression("Agilent 6460", new[]
+                            new CollisionEnergyRegression("Agilent 6460", new[] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.051, -15.563),
                                     new ChargeRegressionLine(3, 0.037, -9.784)
                                 }),
-                            new CollisionEnergyRegression("Waters Xevo", new[]
+                            new CollisionEnergyRegression("Waters Xevo", new[] // Not L10N
                                 {
                                     new ChargeRegressionLine(2, 0.037, -1.066),
                                     new ChargeRegressionLine(3, 0.036, -1.328)
@@ -1060,15 +1064,15 @@ namespace pwiz.Skyline.Properties
             return (CollisionEnergyRegression) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Collision Energy Regressions"; } }
+        public override string Title { get { return Resources.CollisionEnergyList_Title_Edit_Collision_Energy_Regressions; } }
 
-        public override string Label { get { return "&Collision Energy Regression:"; } }
+        public override string Label { get { return Resources.CollisionEnergyList_Label_Collision_Energy_Regression; } }
     }
 
     public sealed class DeclusterPotentialList : SettingsList<DeclusteringPotentialRegression>
     {
         private static readonly DeclusteringPotentialRegression NONE =
-            new DeclusteringPotentialRegression("None", 0, 0);
+            new DeclusteringPotentialRegression(ELEMENT_NONE, 0, 0);
 
         public static DeclusteringPotentialRegression GetDefault()
         {
@@ -1080,7 +1084,7 @@ namespace pwiz.Skyline.Properties
             return new[]
             {
                GetDefault(),
-               new DeclusteringPotentialRegression("ABI", 0.0729, 31.117), 
+               new DeclusteringPotentialRegression("ABI", 0.0729, 31.117), // Not L10N
             };
         }
 
@@ -1109,9 +1113,9 @@ namespace pwiz.Skyline.Properties
             return (DeclusteringPotentialRegression) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Declustering Potential Regressions"; } }
+        public override string Title { get { return Resources.DeclusterPotentialList_Title_Edit_Declustering_Potential_Regressions; } }
 
-        public override string Label { get { return "&Declustering Potential Regressions:"; } }
+        public override string Label { get { return Resources.DeclusterPotentialList_Label_Declustering_Potential_Regressions; } }
 
         public override bool ExcludeDefaults { get { return true; } }
     }
@@ -1155,8 +1159,10 @@ namespace pwiz.Skyline.Properties
 
             if (listMissingCalc.Count > 0)
             {
-                using (var dlg = new MultiButtonMsgDlg(String.Format("The regression(s):\n{0}\nwill be deleted because the calculators they depend on have changed. Do you want to continue?",
-                    String.Join("\n", listMissingCalc.Select(reg => reg.Name).ToArray())), "Yes", "No", true))
+                var message = TextUtil.LineSeparate(Resources.RTScoreCalculatorList_AcceptList_The_regressions,
+                                                    TextUtil.LineSeparate(listMissingCalc.Select(reg => reg.Name)),
+                                                    Resources.RTScoreCalculatorList_AcceptList_will_be_deleted_because_the_calculators_they_depend_on_have_changed_Do_you_want_to_continue);
+                using (var dlg = new MultiButtonMsgDlg(message, MultiButtonMsgDlg.BUTTON_YES, MultiButtonMsgDlg.BUTTON_NO, true))
                 {
                     if(dlg.ShowDialog(owner) != DialogResult.Yes)
                         return false;
@@ -1239,9 +1245,9 @@ namespace pwiz.Skyline.Properties
             return calc;
         }
 
-        public override string Title { get { return "Edit Retention Time Calculators"; } }
+        public override string Title { get { return Resources.RTScoreCalculatorList_Title_Edit_Retention_Time_Calculators; } }
 
-        public override string Label { get { return "&Retention Time Calculators:"; } }
+        public override string Label { get { return Resources.RTScoreCalculatorList_Label_Retention_Time_Calculators; } }
 
         public override bool ExcludeDefaults { get { return true; } }
 
@@ -1286,7 +1292,7 @@ namespace pwiz.Skyline.Properties
     public sealed class RetentionTimeList : SettingsList<RetentionTimeRegression>
     {
         private static readonly RetentionTimeRegression NONE =
-            new RetentionTimeRegression("None", null, 0, 0, 0, new MeasuredRetentionTime[0]);
+            new RetentionTimeRegression(ELEMENT_NONE, null, 0, 0, 0, new MeasuredRetentionTime[0]);
 
         public static RetentionTimeRegression GetDefault()
         {
@@ -1323,9 +1329,9 @@ namespace pwiz.Skyline.Properties
             return (RetentionTimeRegression) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Retention Time Regressions"; } }
+        public override string Title { get { return Resources.RetentionTimeList_Title_Edit_Retention_Time_Regressions; } }
 
-        public override string Label { get { return "&Retention Time Regression:"; } }
+        public override string Label { get { return Resources.RetentionTimeList_Label_Retention_Time_Regression; } }
 
         public override bool ExcludeDefaults { get { return true; } }
     }
@@ -1333,14 +1339,14 @@ namespace pwiz.Skyline.Properties
     public sealed class MeasuredIonList : SettingsList<MeasuredIon>
     {
         public static readonly MeasuredIon NTERM_PROLINE =
-            new MeasuredIon("N-terminal to Proline", "P", null, SequenceTerminus.N, 3);
+            new MeasuredIon("N-terminal to Proline", "P", null, SequenceTerminus.N, 3); // Not L10N
         public static readonly MeasuredIon NTERM_PROLINE_LEGACY =
-            new MeasuredIon("N-terminal to Proline (legacy)", "P", null, SequenceTerminus.N, 1);
+            new MeasuredIon("N-terminal to Proline (legacy)", "P", null, SequenceTerminus.N, 1); // Not L10N
 
         public static readonly MeasuredIon CTERM_GLU_ASP =
-            new MeasuredIon("C-terminal to Glu or Asp", "ED", null, SequenceTerminus.C, 3);
+            new MeasuredIon("C-terminal to Glu or Asp", "ED", null, SequenceTerminus.C, 3); // Not L10N
         public static readonly MeasuredIon CTERM_GLU_ASP_LEGACY =
-            new MeasuredIon("C-terminal to Glu or Asp (legacy)", "ED", null, SequenceTerminus.C, 1);
+            new MeasuredIon("C-terminal to Glu or Asp (legacy)", "ED", null, SequenceTerminus.C, 1); // Not L10N
 
         public override IEnumerable<MeasuredIon> GetDefaults(int revisionIndex)
         {
@@ -1364,9 +1370,9 @@ namespace pwiz.Skyline.Properties
             return (MeasuredIon)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Special Ions"; } }
+        public override string Title { get { return Resources.MeasuredIonList_Title_Edit_Special_Ions; } }
 
-        public override string Label { get { return "&Special ion:"; } }
+        public override string Label { get { return Resources.MeasuredIonList_Label_Special_ion; } }
     }
 
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
@@ -1398,16 +1404,16 @@ namespace pwiz.Skyline.Properties
             return (IsotopeEnrichments)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Isotope Labeling Enrichments"; } }
+        public override string Title { get { return Resources.IsotopeEnrichmentsList_Title_Edit_Isotope_Labeling_Enrichments; } }
 
-        public override string Label { get { return "&Isotope labeling entrichment:"; } }        
+        public override string Label { get { return Resources.IsotopeEnrichmentsList_Label_Isotope_labeling_entrichment; } }        
     }
 
     public sealed class IsolationSchemeList : SettingsList<IsolationScheme>
     {
         public override IEnumerable<IsolationScheme> GetDefaults(int revisionIndex)
         {
-            return new[] { new IsolationScheme("MSe", new IsolationWindow[0], IsolationScheme.SpecialHandlingType.MS_E), };
+            return new[] { new IsolationScheme("MSe", new IsolationWindow[0], IsolationScheme.SpecialHandlingType.MS_E), }; // Not L10N
         }
 
         public override bool ExcludeDefaults { get { return true; } }
@@ -1429,13 +1435,14 @@ namespace pwiz.Skyline.Properties
             return (IsolationScheme)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Isolation Scheme"; } }
+        public override string Title { get { return Resources.IsolationSchemeList_Title_Edit_Isolation_Scheme; } }
 
-        public override string Label { get { return "&Isolation scheme:"; } }
+        public override string Label { get { return Resources.IsolationSchemeList_Label_Isolation_scheme; } }
     }
 
     public sealed class SrmSettingsList : SettingsListBase<SrmSettings>, IListSerializer<SrmSettings>
     {
+        public const string EXT_SETTINGS = ".skys"; // Not L10N
         private static readonly SrmSettings DEFAULT = new SrmSettings
             (
                 DefaultName,
@@ -1485,9 +1492,9 @@ namespace pwiz.Skyline.Properties
                         new[] { 2 }, // PrecursorCharges
                         new[] { 1 }, // ProductCharges
                         new[] { IonType.y }, // FragmentTypes
-                        "m/z > precursor", // FragmentRangeFirst
-                        "3 ions",       // FragmentRangeLast
-                        new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon
+                        Resources.SrmSettingsList_DEFAULT_m_z_precursor, // FragmentRangeFirst
+                        Resources.SrmSettingsList_DEFAULT_3_ions,       // FragmentRangeLast // TODO: Not L10N? Appears to be used for XML
+                        new[] {MeasuredIonList.NTERM_PROLINE},  // MeasuredIon // Not L10N
                         0,     // PrecursorMzWindow
                         true   // AutoSelect
                     ),
@@ -1517,7 +1524,7 @@ namespace pwiz.Skyline.Properties
 
         public static string DefaultName
         {
-            get { return "Default"; }
+            get { return Resources.SrmSettingsList_DefaultName_Default; }
         }
 
         /// <summary>
@@ -1539,9 +1546,9 @@ namespace pwiz.Skyline.Properties
             return new[] { GetDefault() };
         }
 
-        public override string Title { get { return "Edit Settings"; } }
+        public override string Title { get { return Resources.SrmSettingsList_Title_Edit_Settings; } }
 
-        public override string Label { get { return "&Saved Settings:"; } }
+        public override string Label { get { return Resources.SrmSettingsList_Label_Saved_Settings; } }
 
         public Type SerialType { get { return typeof(SrmSettingsList); } }
 
@@ -1558,6 +1565,8 @@ namespace pwiz.Skyline.Properties
 
     public sealed class ReportSpecList : SettingsList<ReportSpec>, IListSerializer<ReportSpec>
     {
+        public const string EXT_REPORTS = ".skyr"; // Not L10N
+
         public override IEnumerable<ReportSpec> GetDefaults(int revisionIndex)
         {
             Type tablePep = typeof (DbPeptide);
@@ -1566,48 +1575,56 @@ namespace pwiz.Skyline.Properties
             Type tableTranRes = typeof (DbTransitionResult);
 
             return new[]
-                       {
-                new ReportSpec("Peptide Ratio Results", 
-                    new QueryDef
-                        {
-                            Select = new[] {
-                               new ReportColumn(tablePep, "Sequence"),
-                               new ReportColumn(tablePep, "Protein", "Name"),
-                               new ReportColumn(tablePepRes, "ProteinResult","ReplicateName"),
-                               new ReportColumn(tablePepRes, "PeptidePeakFoundRatio"),
-                               new ReportColumn(tablePepRes, "PeptideRetentionTime"),
-                               new ReportColumn(tablePepRes, "RatioToStandard"),
-                           }
-                        }),
-                new ReportSpec("Peptide RT Results",
-                    new QueryDef 
-                    {
-                        Select = new[] {
-                            new ReportColumn(tablePep,"Sequence"), 
-                            new ReportColumn(tablePep,"Protein","Name"), 
-                            new ReportColumn(tablePepRes, "ProteinResult","ReplicateName"), 
-                            new ReportColumn(tablePep,"PredictedRetentionTime"), 
-                            new ReportColumn(tablePepRes, "PeptideRetentionTime"), 
-                            new ReportColumn(tablePepRes, "PeptidePeakFoundRatio"),
-                    }}),
-                new ReportSpec("Transition Results",
-                    new QueryDef
-                    {
-                        Select = new[] {
-                            new ReportColumn(tableTran,"Precursor","Peptide","Sequence"),
-                            new ReportColumn(tableTran,"Precursor","Peptide","Protein","Name"), 
-                            new ReportColumn(tableTranRes, "PrecursorResult","PeptideResult","ProteinResult","ReplicateName"), 
-                            new ReportColumn(tableTran,"Precursor","Mz"), 
-                            new ReportColumn(tableTran,"Precursor","Charge"), 
-                            new ReportColumn(tableTran,"ProductMz"), 
-                            new ReportColumn(tableTran,"ProductCharge"),
-                            new ReportColumn(tableTran,"FragmentIon"),
-                            new ReportColumn(tableTranRes, "RetentionTime"),
-                            new ReportColumn(tableTranRes, "Area"),
-                            new ReportColumn(tableTranRes, "Background"),
-                            new ReportColumn(tableTranRes, "PeakRank"), 
-                    }})
-            };
+                       { // Not L10N
+                    new ReportSpec(
+                        Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results,
+                                          new QueryDef
+                                              {
+                                                  Select = new[]
+                                                               {
+                                        new ReportColumn(tablePep, "Sequence"),
+                                        new ReportColumn(tablePep, "Protein", "Name"),
+                                        new ReportColumn(tablePepRes, "ProteinResult", "ReplicateName"),
+                                        new ReportColumn(tablePepRes, "PeptidePeakFoundRatio"),
+                                        new ReportColumn(tablePepRes, "PeptideRetentionTime"),
+                                        new ReportColumn(tablePepRes, "RatioToStandard"),
+                                                               }
+                                              }),
+                    new ReportSpec(
+                        Resources.ReportSpecList_GetDefaults_Peptide_RT_Results,
+                                          new QueryDef
+                                              {
+                                                  Select = new[]
+                                                               {
+                                        new ReportColumn(tablePep, "Sequence"),
+                                        new ReportColumn(tablePep, "Protein", "Name"),
+                                        new ReportColumn(tablePepRes, "ProteinResult", "ReplicateName"),
+                                        new ReportColumn(tablePep, "PredictedRetentionTime"),
+                                        new ReportColumn(tablePepRes, "PeptideRetentionTime"),
+                                        new ReportColumn(tablePepRes, "PeptidePeakFoundRatio"),
+                                                               }
+                                              }),
+                    new ReportSpec(
+                        Resources.ReportSpecList_GetDefaults_Transition_Results,
+                                          new QueryDef
+                                              {
+                                                  Select = new[]
+                                                               {
+                                        new ReportColumn(tableTran, "Precursor", "Peptide", "Sequence"),
+                                        new ReportColumn(tableTran, "Precursor", "Peptide", "Protein", "Name"),
+                                        new ReportColumn(tableTranRes, "PrecursorResult", "PeptideResult", "ProteinResult", "ReplicateName"),
+                                        new ReportColumn(tableTran, "Precursor", "Mz"),
+                                        new ReportColumn(tableTran, "Precursor", "Charge"),
+                                        new ReportColumn(tableTran, "ProductMz"),
+                                        new ReportColumn(tableTran, "ProductCharge"),
+                                        new ReportColumn(tableTran, "FragmentIon"),
+                                        new ReportColumn(tableTranRes, "RetentionTime"),
+                                        new ReportColumn(tableTranRes, "Area"),
+                                        new ReportColumn(tableTranRes, "Background"),
+                                        new ReportColumn(tableTranRes, "PeakRank"),
+                                                               }
+                                              })
+                       };
         }
 
         public override ReportSpec EditItem(Control owner, ReportSpec item,
@@ -1628,10 +1645,9 @@ namespace pwiz.Skyline.Properties
                 }
                 catch (Exception x)
                 {
-                    MessageDlg.Show(owner,
-                                    string.Format(
-                                        "An unexpected error occurred while analyzing the current document.\n{0}",
-                                        x.Message));
+                    var message = TextUtil.LineSeparate(Resources.ReportSpecList_EditItem_An_unexpected_error_occurred_while_analyzing_the_current_document,
+                                                        x.Message);
+                    MessageDlg.Show(owner,message);
                 }
 
                 return null;
@@ -1643,9 +1659,9 @@ namespace pwiz.Skyline.Properties
             return (ReportSpec) item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Reports"; } }
+        public override string Title { get { return Resources.ReportSpecList_Title_Edit_Reports; } }
 
-        public override string Label { get { return "&Report:"; } }
+        public override string Label { get { return Resources.ReportSpecList_Label_Report; } }
 
         public Type SerialType { get { return typeof(ReportSpecList); } }
 
@@ -1687,9 +1703,9 @@ namespace pwiz.Skyline.Properties
             return (AnnotationDef)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Define Annotations"; } }
+        public override string Title { get { return Resources.AnnotationDefList_Title_Define_Annotations; } }
 
-        public override string Label { get { return "&Annotations:"; } }
+        public override string Label { get { return Resources.AnnotationDefList_Label_Annotations; } }
 
         public Type SerialType { get { return typeof(AnnotationDef); } }
 
@@ -1703,6 +1719,8 @@ namespace pwiz.Skyline.Properties
         : SettingsListBase<TItem>, IItemEditor<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
+        public static string ELEMENT_NONE { get { return Resources.SettingsList_ELEMENT_NONE_None; } }
+
         #region IItemEditor<T> Members
 
         public TItem NewItem(Control owner, IEnumerable<TItem> existing, object tag)

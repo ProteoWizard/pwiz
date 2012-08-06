@@ -136,11 +136,11 @@ namespace pwiz.ProteomeDatabase.API
             // We fetched the protein ids.  Now fetch all the protein rows themselves.
             var newProteins = new List<DbProtein>();
             _session.CreateCriteria(typeof (DbProtein))
-                .Add(Restrictions.In("Id", newProteinIds))
+                .Add(Restrictions.In("Id", newProteinIds)) // Not L10N
                 .List(newProteins);
             // Now fetch all of the protein name records at once
             var criteria = _session.CreateCriteria(typeof (DbProteinName))
-                .Add(Restrictions.In("Protein", newProteins));
+                .Add(Restrictions.In("Protein", newProteins)); // Not L10N
             var proteinNames = new Dictionary<DbProtein, List<DbProteinName>>();
             foreach (DbProteinName proteinName in criteria.List())
             {
@@ -235,7 +235,7 @@ namespace pwiz.ProteomeDatabase.API
         {
             if (str.Length == 0)
             {
-                return "A";
+                return "A"; // Not L10N
             }
             return str.Substring(0, str.Length - 1) + (char) (str[str.Length - 1] + 1);
         }
@@ -251,14 +251,14 @@ namespace pwiz.ProteomeDatabase.API
                     {
                         String truncatedSearchText = Settings.SearchText.Substring(
                             0, Math.Min(Settings.SearchText.Length, Settings.Digestion.MaxSequenceLength));
-                        String hql = "SELECT distinct dpp.Protein FROM " + typeof (DbDigestedPeptideProtein) + " dpp"
+                        String hql = "SELECT distinct dpp.Protein FROM " + typeof(DbDigestedPeptideProtein) + " dpp" // Not L10N
                                      +
-                                     "\nWHERE dpp.Peptide.Digestion = :digestion AND dpp.Peptide.Sequence >= :start AND dpp.Peptide.Sequence < :end"
-                                     + "\nORDER BY dpp.Peptide.Sequence";
+                                     "\nWHERE dpp.Peptide.Digestion = :digestion AND dpp.Peptide.Sequence >= :start AND dpp.Peptide.Sequence < :end" // Not L10N
+                                     + "\nORDER BY dpp.Peptide.Sequence"; // Not L10N
                         IQuery query = _session.CreateQuery(hql)
-                            .SetParameter("digestion", Settings.Digestion.GetEntity(_session))
-                            .SetParameter("start", truncatedSearchText)
-                            .SetParameter("end", NextString(truncatedSearchText));
+                            .SetParameter("digestion", Settings.Digestion.GetEntity(_session)) // Not L10N
+                            .SetParameter("start", truncatedSearchText) // Not L10N
+                            .SetParameter("end", NextString(truncatedSearchText)); // Not L10N
                         AddProteinMatches(query);
                     }
                     if (_matches != null)
@@ -267,12 +267,12 @@ namespace pwiz.ProteomeDatabase.API
                     }
                     if (0 != (Settings.MatchTypes & ProteinMatchType.name))
                     {
-                        String hql = "SELECT distinct pn.Protein FROM " + typeof (DbProteinName) + " pn "
-                                     + "\nWHERE pn.Name >= :start AND pn.Name < :end"
-                                     + "\nORDER BY pn.IsPrimary DESC, pn.Name";
+                        String hql = "SELECT distinct pn.Protein FROM " + typeof(DbProteinName) + " pn " // Not L10N
+                                     + "\nWHERE pn.Name >= :start AND pn.Name < :end" // Not L10N
+                                     + "\nORDER BY pn.IsPrimary DESC, pn.Name"; // Not L10N
                         IQuery query = _session.CreateQuery(hql)
-                            .SetParameter("start", Settings.SearchText)
-                            .SetParameter("end", NextString(Settings.SearchText));
+                            .SetParameter("start", Settings.SearchText) // Not L10N
+                            .SetParameter("end", NextString(Settings.SearchText)); // Not L10N
                         AddProteinMatches(query);
                     }
                     if (_matches != null)
@@ -281,11 +281,11 @@ namespace pwiz.ProteomeDatabase.API
                     }
                     if (0 != (Settings.MatchTypes & ProteinMatchType.description) && Settings.SearchText.Length >= 3)
                     {
-                        String hql = "SELECT distinct pn.Protein FROM " + typeof (DbProteinName) + " pn "
-                                     + "\nWHERE pn.Name LIKE :expr OR pn.Description LIKE :expr"
-                                     + "\nORDER by pn.IsPrimary DESC, pn.Name";
+                        String hql = "SELECT distinct pn.Protein FROM " + typeof(DbProteinName) + " pn " // Not L10N
+                                     + "\nWHERE pn.Name LIKE :expr OR pn.Description LIKE :expr" // Not L10N
+                                     + "\nORDER by pn.IsPrimary DESC, pn.Name"; // Not L10N
                         IQuery query = _session.CreateQuery(hql)
-                            .SetParameter("expr", "%" + Settings.SearchText + "%");
+                            .SetParameter("expr", "%" + Settings.SearchText + "%"); // Not L10N
                         AddProteinMatches(query);
                     }
                 }

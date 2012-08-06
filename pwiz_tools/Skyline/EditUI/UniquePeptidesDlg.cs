@@ -29,6 +29,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -82,15 +83,15 @@ namespace pwiz.Skyline.EditUI
             if (!string.IsNullOrEmpty(proteinSequence))
             {
                 var regex = new Regex(peptideSequence);
-                StringBuilder formattedText = new StringBuilder("{\\rtf1\\ansi{\\fonttbl\\f0\\fswiss Helvetica;}{\\colortbl ;\\red0\\green0\\blue255;}\\f0\\pard \\fs16");
+                StringBuilder formattedText = new StringBuilder("{\\rtf1\\ansi{\\fonttbl\\f0\\fswiss Helvetica;}{\\colortbl ;\\red0\\green0\\blue255;}\\f0\\pard \\fs16"); // Not L10N
                 int lastIndex = 0;
                 for (Match match = regex.Match(proteinSequence, 0); match.Success; lastIndex = match.Index + match.Length, match = match.NextMatch())
                 {
-                    formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, match.Index - lastIndex));
-                    formattedText.Append("\\cf1\\b " + proteinSequence.Substring(match.Index, match.Length));
+                    formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, match.Index - lastIndex)); // Not L10N
+                    formattedText.Append("\\cf1\\b " + proteinSequence.Substring(match.Index, match.Length)); // Not L10N
                 }
-                formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, proteinSequence.Length - lastIndex));
-                formattedText.Append("\\par }");
+                formattedText.Append("\\cf0\\b0 " + proteinSequence.Substring(lastIndex, proteinSequence.Length - lastIndex)); // Not L10N
+                formattedText.Append("\\par }"); // Not L10N
                 richTextBoxSequence.Rtf = formattedText.ToString();
             }
         }
@@ -133,7 +134,8 @@ namespace pwiz.Skyline.EditUI
             var digestion = BackgroundProteome.GetDigestion(peptideSettings);
             if (digestion == null)
             {
-                MessageDlg.Show(this, string.Format("The background proteome {0} has not yet finished being digested with {1}.", BackgroundProteome.Name, peptideSettings.Enzyme.Name));
+                MessageDlg.Show(this, string.Format(Resources.UniquePeptidesDlg_OnShown_The_background_proteome__0__has_not_yet_finished_being_digested_with__1__,
+                                                    BackgroundProteome.Name, peptideSettings.Enzyme.Name));
                 Close();
                 return;
             }
@@ -145,9 +147,8 @@ namespace pwiz.Skyline.EditUI
             HashSet<Protein> proteinSet = new HashSet<Protein>();
             LongWaitDlg longWaitDlg = new LongWaitDlg
             {
-                Text = "Querying Background Proteome Database",
-                Message =
-                    "Looking for proteins with matching peptide sequences"
+                Text = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Querying_Background_Proteome_Database,
+                Message = Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Looking_for_proteins_with_matching_peptide_sequences
             };
             try
             {
@@ -155,7 +156,9 @@ namespace pwiz.Skyline.EditUI
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, string.Format("Failed querying backgroung proteome {0}.\n{1}", BackgroundProteome.Name, x.Message));
+                var message = TextUtil.LineSeparate(string.Format(Resources.UniquePeptidesDlg_LaunchPeptideProteinsQuery_Failed_querying_background_proteome__0__,
+                                            BackgroundProteome.Name),x.Message); 
+                MessageDlg.Show(this, message);
             }
             if (_peptideProteins == null)
             {
@@ -244,7 +247,7 @@ namespace pwiz.Skyline.EditUI
                 Index = index;
                 Protein = protein;
             }
-            public String Name { get { return "protein" + Index; } }
+            public String Name { get { return "protein" + Index; } } // Not L10N
             public int Index { get; set; }
             public Protein Protein { get; set; }
         }
@@ -285,7 +288,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            Program.MainWindow.ModifyDocument("Exclude peptides", ExcludePeptidesFromDocument);
+            Program.MainWindow.ModifyDocument("Exclude peptides", ExcludePeptidesFromDocument); // Not L10N
             Close();
         }
 

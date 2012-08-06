@@ -23,6 +23,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -104,11 +105,11 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (MonoisotopicMass == 0 || AverageMass == 0)
-                throw new InvalidDataException("Neutral losses must specify a formula or valid monoisotopic and average masses.");
+                throw new InvalidDataException(Resources.FragmentLoss_Validate_Neutral_losses_must_specify_a_formula_or_valid_monoisotopic_and_average_masses);
             if (MonoisotopicMass <= MIN_LOSS_MASS || AverageMass <= MIN_LOSS_MASS)
-                throw new InvalidDataException(string.Format("Neutral losses must be greater than or equal to {0}.", MIN_LOSS_MASS));
+                throw new InvalidDataException(string.Format(Resources.FragmentLoss_Validate_Neutral_losses_must_be_greater_than_or_equal_to__0__,MIN_LOSS_MASS));
             if (MonoisotopicMass > MAX_LOSS_MASS || AverageMass > MAX_LOSS_MASS)
-                throw new InvalidDataException(string.Format("Neutral losses must be less than or equal to {0}.", MAX_LOSS_MASS));
+                throw new InvalidDataException(string.Format(Resources.FragmentLoss_Validate_Neutral_losses_must_be_less_than_or_equal_to__0__, MAX_LOSS_MASS));
         }
 
         public static FragmentLoss Deserialize(XmlReader reader)
@@ -185,8 +186,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public string ToString(MassType massType)
         {
             return Formula != null ?
-                string.Format("{0:F04} - {1}", GetMass(massType), Formula) :
-                string.Format("{0:F04}", GetMass(massType));
+                string.Format("{0:F04} - {1}", GetMass(massType), Formula) : // Not L10N
+                string.Format("{0:F04}", GetMass(massType)); // Not L10N
         }
 
         #endregion
@@ -292,7 +293,10 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int lossIndex = PrecursorMod.Losses.IndexOf(Loss);
                 if (lossIndex == -1)
-                    throw new InvalidDataException(string.Format("Expected loss {0} not found in the modification {1}", this, PrecursorMod.Name));
+                {
+                    throw new InvalidDataException(string.Format(Resources.TransitionLoss_LossIndex_Expected_loss__0__not_found_in_the_modification__1_,
+                                                                 this, PrecursorMod.Name));
+                }
                 return lossIndex;
             }
         }

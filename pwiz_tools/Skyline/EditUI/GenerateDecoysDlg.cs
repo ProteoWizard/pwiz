@@ -73,7 +73,7 @@ namespace pwiz.Skyline.EditUI
             textNumberOfDecoys.Text = (document.TransitionGroupCount/2).ToString(CultureInfo.CurrentCulture);
 
             // Fill label type combo box
-            comboDecoysLabelType.Items.Add("All");
+            comboDecoysLabelType.Items.Add(Resources.GenerateDecoysDlg_GenerateDecoysDlg_All);
             comboDecoysLabelType.Items.Add(IsotopeLabelType.LIGHT_NAME);
             foreach (var typedMods in _settings.PeptideSettings.Modifications.GetHeavyModifications())
                 comboDecoysLabelType.Items.Add(typedMods.LabelType.Name);
@@ -106,12 +106,14 @@ namespace pwiz.Skyline.EditUI
                 Equals(refineLabelType, nodeGroup.TransitionGroup.LabelType));
             if (precursorsTyped == 0)
             {
-                helper.ShowTextBoxError(textNumberOfDecoys, "No precursors of type '{1}' were found.", null, refineLabelType);
+                helper.ShowTextBoxError(textNumberOfDecoys, Resources.GenerateDecoysDlg_OkDialog_No_precursors_of_type__1__were_found, null, refineLabelType);
                 return;
             }
             if (!Equals(DecoysMethod, DecoyGeneration.SHUFFLE_SEQUENCE) && precursorsTyped < numDecoys)
             {
-                helper.ShowTextBoxError(textNumberOfDecoys, "{0} must be less than the number of precursors of type '{1}', or use the '{2}' decoy generation method.", null, refineLabelType, DecoyGeneration.SHUFFLE_SEQUENCE);
+                helper.ShowTextBoxError(textNumberOfDecoys,
+                                        Resources.GenerateDecoysDlg_OkDialog__0__must_be_less_than_the_number_of_precursors_of_type__1__or_use_the__2__decoy_generation_method,
+                                        null, refineLabelType, DecoyGeneration.SHUFFLE_SEQUENCE);
                 return;
             }
 

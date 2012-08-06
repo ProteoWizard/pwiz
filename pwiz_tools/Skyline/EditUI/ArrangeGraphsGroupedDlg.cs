@@ -26,12 +26,6 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.EditUI
 {
-    public enum GroupGraphsType { separated, distributed }
-
-// ReSharper disable InconsistentNaming
-    public enum GroupGraphsOrder { Position, Document }
-// ReSharper restore InconsistentNaming
-
     public partial class ArrangeGraphsGroupedDlg : FormEx
     {
         private readonly int _countGraphs;
@@ -45,7 +39,7 @@ namespace pwiz.Skyline.EditUI
             textGroups.Text = Groups.ToString(CultureInfo.CurrentCulture);
             if (GroupType == GroupGraphsType.distributed)
                 radioDistribute.Checked = true;
-            comboSortOrder.SelectedItem = GroupOrder.ToString();
+            comboSortOrder.SelectedItem = GroupOrder.GetLocalizedString();
             cbReversed.Checked = Settings.Default.ArrangeGraphsReversed;
         }
 
@@ -79,12 +73,12 @@ namespace pwiz.Skyline.EditUI
         {
             get
             {
-                return Helpers.ParseEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
+				 return GroupGraphsOrderExtension.GetEnum(Settings.Default.ArrangeGraphsOrder, GroupGraphsOrder.Position);
             }
             set
             {
-                comboSortOrder.SelectedItem = 
-                    Settings.Default.ArrangeGraphsOrder = value.ToString();
+                comboSortOrder.SelectedItem =
+                    Settings.Default.ArrangeGraphsOrder = value.GetLocalizedString();
             }
         }
 
@@ -108,7 +102,7 @@ namespace pwiz.Skyline.EditUI
             else if (radioDistribute.Checked)
                 GroupType = GroupGraphsType.distributed;
 
-            GroupOrder = Helpers.ParseEnum(comboSortOrder.SelectedItem.ToString(), GroupGraphsOrder.Position);
+            GroupOrder = GroupGraphsOrderExtension.GetEnum(comboSortOrder.SelectedItem.ToString(), GroupGraphsOrder.Position);
             Reversed = cbReversed.Checked;
             // Only save the reverse flag, if the order is document.  Otherwise,
             // subsequent changes will flip the order back and forth.
@@ -118,4 +112,84 @@ namespace pwiz.Skyline.EditUI
             DialogResult = DialogResult.OK;
         }
     }
+
+    public enum GroupGraphsType { separated, distributed }
+    public static class GroupGraphsTypeExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new []
+                                                                {
+                                                                    Resources.GroupGraphsTypeExtension_LOCALIZED_VALUES_separated,
+                                                                    Resources.GroupGraphsTypeExtension_LOCALIZED_VALUES_distributed
+                                                                };
+        public static string GetLocalizedString(this GroupGraphsType val)
+        {
+            return LOCALIZED_VALUES[(int)val];
+        }
+        public static GroupGraphsType GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (string.Equals(LOCALIZED_VALUES[i], enumValue))
+                {
+                    return (GroupGraphsType)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static GroupGraphsType GetEnum(string enumValue, GroupGraphsType defaultValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (string.Equals(LOCALIZED_VALUES[i], enumValue))
+                {
+                    return (GroupGraphsType)i;
+                }
+            }
+            return defaultValue;
+        }
+    }
+
+    // ReSharper disable InconsistentNaming
+    public enum GroupGraphsOrder { Position, Document }
+
+    public static class GroupGraphsOrderExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new[]
+                                                                {
+                                                                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Position,
+                                                                    Resources.GroupGraphsOrderExtension_LOCALIZED_VALUES_Document
+                                                                };
+        public static string GetLocalizedString(this GroupGraphsOrder val)
+        {
+            return LOCALIZED_VALUES[(int) val];
+        }
+
+        public static GroupGraphsOrder GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (string.Equals(LOCALIZED_VALUES[i], enumValue))
+                {
+                    return (GroupGraphsOrder)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static GroupGraphsOrder GetEnum(string enumValue, GroupGraphsOrder defaultValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (string.Equals(LOCALIZED_VALUES[i], enumValue))
+                {
+                    return (GroupGraphsOrder)i;
+                }
+            }
+            return defaultValue;
+        }
+    }
+
+    // ReSharper restore InconsistentNaming
+
 }

@@ -26,6 +26,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
@@ -204,7 +205,7 @@ namespace pwiz.SkylineTestFunctional
                 exportMethodDlg.OkDialog,
                 messageDlg =>
                 {
-                    AssertEx.Contains(messageDlg.Message, "The precursor mass analyzer type is not set to");
+                    AssertEx.AreComparableStrings(Resources.ExportMethodDlg_OkDialog_The_precursor_mass_analyzer_type_is_not_set_to__0__in_Transition_Settings_under_the_Full_Scan_tab, messageDlg.Message, 1);
                     messageDlg.OkDialog();
                 });
             OkDialog(exportMethodDlg, exportMethodDlg.CancelDialog);

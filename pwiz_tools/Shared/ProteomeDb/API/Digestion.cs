@@ -49,14 +49,14 @@ namespace pwiz.ProteomeDatabase.API
             {
                 DbDigestion digestion = GetEntity(session);
                 String sequencePrefix = sequence.Substring(0, Math.Min(sequence.Length, MaxSequenceLength));
-                String hql = "SELECT DISTINCT pp.Protein, pn"
-                 + "\nFROM " + typeof(DbDigestedPeptideProtein) + " pp, " + typeof(DbProteinName) + " pn"
-                 + "\nWHERE pp.Protein.Id = pn.Protein.Id AND pn.IsPrimary <> 0"
-                 + "\nAND pp.Peptide.Digestion = :Digestion"
-                 + "\nAND pp.Peptide.Sequence = :Sequence";
+                String hql = "SELECT DISTINCT pp.Protein, pn" // Not L10N
+                 + "\nFROM " + typeof(DbDigestedPeptideProtein) + " pp, " + typeof(DbProteinName) + " pn" // Not L10N
+                 + "\nWHERE pp.Protein.Id = pn.Protein.Id AND pn.IsPrimary <> 0" // Not L10N
+                 + "\nAND pp.Peptide.Digestion = :Digestion" // Not L10N
+                 + "\nAND pp.Peptide.Sequence = :Sequence"; // Not L10N
                 IQuery query = session.CreateQuery(hql);
-                query.SetParameter("Digestion", digestion);
-                query.SetParameter("Sequence", sequencePrefix);
+                query.SetParameter("Digestion", digestion); // Not L10N
+                query.SetParameter("Sequence", sequencePrefix); // Not L10N
                 foreach (object[] values in query.List())
                 {
                     var protein = (DbProtein)values[0];
@@ -78,9 +78,9 @@ namespace pwiz.ProteomeDatabase.API
             {
                 DbDigestion digestion = GetEntity(session);
                 ICriteria criteria = session.CreateCriteria(typeof (DbDigestedPeptide))
-                    .Add(Restrictions.Eq("Digestion", digestion))
-                    .Add(Restrictions.Like("Sequence", sequence + "%"))
-                    .AddOrder(Order.Asc("Sequence"))
+                    .Add(Restrictions.Eq("Digestion", digestion)) // Not L10N
+                    .Add(Restrictions.Like("Sequence", sequence + "%")) // Not L10N
+                    .AddOrder(Order.Asc("Sequence")) // Not L10N
                     .SetMaxResults(maxResults);
                 foreach (DbDigestedPeptide dbDigestedPeptide in criteria.List())
                 {

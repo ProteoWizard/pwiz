@@ -24,7 +24,9 @@ using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls
 {
@@ -194,13 +196,14 @@ namespace pwiz.Skyline.Controls
         private void UpdateAutoManageUI()
         {
             tbbAutoManageChildren.Checked = _autoManageChildren;
-            tbbAutoManageChildren.Image = (_autoManageChildren ?
-                Properties.Resources.Wand : Properties.Resources.WandProhibit);
-            string[] words = cbItems.Text.Split(' ');
-            tbbAutoManageChildren.ToolTipText = string.Format("Auto-select filtered {0}",
-                words[words.Length - 1].ToLower());
+            tbbAutoManageChildren.Image = (_autoManageChildren ? Resources.Wand : Resources.WandProhibit);
+            string[] words = cbItems.Text.Split(TextUtil.SEPARATOR_SPACE);
+            tbbAutoManageChildren.ToolTipText =
+                string.Format(Resources.PopupPickList_UpdateAutoManageUI_Auto_select_filtered__0_,
+                              words[words.Length - 1].ToLower());
             if (!_autoManageChildren)
-                tbbAutoManageChildren.ToolTipText += " (off)";
+                tbbAutoManageChildren.ToolTipText += String.Format(" ({0})", // Not L10N
+                                                                   Resources.PopupPickList_UpdateAutoManageUI_off);
         }
 
         public void SetChoices(IEnumerable<DocNode> choices, IList<DocNode> chosen)
@@ -462,7 +465,7 @@ namespace pwiz.Skyline.Controls
             if (!textSearch.Visible)
                 return;
             if (!find)
-                textSearch.Text = "";
+                textSearch.Text = string.Empty;
             tbbFind_Click(this, null);            
         }
 

@@ -26,6 +26,7 @@ using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -34,7 +35,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("nist_lib_spec")]
     public sealed class NistLibSpec : NistLibSpecBase
     {
-        public const string EXT = ".msp";
+        public const string EXT = ".msp"; // Not L10N
 
         public NistLibSpec(string name, string path)
             : base(name, path)
@@ -86,7 +87,8 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class NistLibSpecBase : LibrarySpec
     {
-        public static readonly PeptideRankId PEP_RANK_TFRATIO = new PeptideRankId("TFRatio");
+        public static readonly PeptideRankId PEP_RANK_TFRATIO =
+            new PeptideRankId(Resources.NistLibSpecBase_PEP_RANK_TFRATIO_TFRatio);
 
         private static readonly PeptideRankId[] RANK_IDS = new[]
             { PEP_RANK_COPIES, PEP_RANK_TOTAL_INTENSITY, PEP_RANK_PICKED_INTENSITY, PEP_RANK_TFRATIO};
@@ -223,7 +225,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && obj.SpectrumCount == SpectrumCount && obj.TotalIntensity == TotalIntensity && obj.TFRatio == TFRatio;
+            return base.Equals(obj) && obj.SpectrumCount == SpectrumCount && obj.TotalIntensity == TotalIntensity &&
+                   obj.TFRatio == TFRatio;
         }
 
         public override bool Equals(object obj)
@@ -251,9 +254,9 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("nist_library")]
     public sealed class NistLibrary : NistLibraryBase
     {
-        public const string DEFAULT_AUTHORITY = "nist.gov";
+        public const string DEFAULT_AUTHORITY = "nist.gov"; // Not L10N
 
-        public const string EXT_CACHE = ".slc";
+        public const string EXT_CACHE = ".slc"; // Not L10N  
 
         public static NistLibrary Load(LibrarySpec spec, ILoadMonitor loader)
         {
@@ -272,8 +275,8 @@ namespace pwiz.Skyline.Model.Lib
         public override LibraryDetails LibraryDetails
         {
             get
-            {  
-                LibraryDetails details = new LibraryDetails {Format = "NIST", PeptideCount = SpectrumCount};
+            {
+                LibraryDetails details = new LibraryDetails { Format = "NIST", PeptideCount = SpectrumCount }; // Not L10N
 
                 if (!string.IsNullOrEmpty(Id))
                 {
@@ -341,7 +344,7 @@ namespace pwiz.Skyline.Model.Lib
     {
         private const int FORMAT_VERSION_CACHE = 3;
 
-        private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)");
+        private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)"); // Not L10N
 
         private static readonly Dictionary<string, string> MODIFICATION_MASSES = new Dictionary<string, string>
             {
@@ -367,6 +370,7 @@ namespace pwiz.Skyline.Model.Lib
 //                {"Carbamyl", SequenceMassCalc.GetModDiffDescription(43.00581)},
 
                 // Modification values taken from SpectraST
+                // Not L10N
                 // http://sashimi.svn.sourceforge.net/viewvc/sashimi/trunk/trans_proteomic_pipeline/src/Search/SpectraST/Peptide.cpp?revision=5277&view=markup
                 // line 1196
                 {"ICAT_light", SequenceMassCalc.GetModDiffDescription(227.126991)}, 
@@ -590,7 +594,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool Load(ILoadMonitor loader)
         {
-            ProgressStatus status = new ProgressStatus("");
+            ProgressStatus status = new ProgressStatus(string.Empty);
             loader.UpdateProgress(status);
 
             bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
@@ -619,7 +623,7 @@ namespace pwiz.Skyline.Model.Lib
                     // Building the cache will take 95% of the load time.
                     loadPercent = 5;
 
-                    status = status.ChangeMessage(string.Format("Building binary cache for {0} library", Path.GetFileName(FilePath)));
+                    status = status.ChangeMessage(string.Format(Resources.NistLibraryBase_Load_Building_binary_cache_for__0__library, Path.GetFileName(FilePath)));
                     status = status.ChangePercentComplete(0);
 
                     loader.UpdateProgress(status);
@@ -628,7 +632,7 @@ namespace pwiz.Skyline.Model.Lib
                         return false;
                 }
 
-                status = status.ChangeMessage(string.Format("Loading {0} library", Path.GetFileName(FilePath)));
+                status = status.ChangeMessage(string.Format(Resources.NistLibraryBase_Load_Loading__0__library, Path.GetFileName(FilePath)));
                 loader.UpdateProgress(status);
 
                 // Use a buffered stream for initial read
@@ -679,7 +683,7 @@ namespace pwiz.Skyline.Model.Lib
                     int seqKeyLength = GetInt32(specHeader, (int) SpectrumHeaders.seq_key_length);
                     int charge = GetInt32(specHeader, (int)SpectrumHeaders.charge);
                     if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
-                        throw new InvalidDataException("Invalid precursor charge found. File may be corrupted.");
+                        throw new InvalidDataException(Resources.NistLibraryBase_Load_Invalid_precursor_charge_found_File_may_be_corrupted);
 
                     float tfRatio = BitConverter.ToSingle(specHeader, ((int) SpectrumHeaders.tf_ratio)*4);
                     float totalIntensity = BitConverter.ToSingle(specHeader, ((int)SpectrumHeaders.total_intensity) * 4);
@@ -732,7 +736,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 if (!cached)
                 {
-                    x = new Exception(string.Format("Failed loading library '{0}'.", FilePath), x);
+                    x = new Exception(string.Format(Resources.NistLibraryBase_Load_Failed_loading_library__0__, FilePath), x);
                     loader.UpdateProgress(status.ChangeErrorException(x));
                 }
                 return false;
@@ -750,6 +754,7 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
+        // Not L10N
         private static readonly Regex REGEX_NAME = new Regex(@"^Name: ([A-Z()\[\]0-9]+)/(\d)"); // NIST libraries can contain M(O) and SpectraST M[16]
         private static readonly Regex REGEX_NUM_PEAKS = new Regex(@"^Num ?[pP]eaks: (\d+)");  // NIST uses "Num peaks" and SpectraST "NumPeaks"
         private static readonly Regex REGEX_COMMENT = new Regex(@"^Comment: ");
@@ -838,16 +843,16 @@ namespace pwiz.Skyline.Model.Lib
                                 tfRatio = float.Parse(match.Groups[1].Value, CultureInfo.InvariantCulture);
                         }
 
-                        if (line.StartsWith("_EOF_"))
-                            ThrowIOException(lineCount, "Unexpected end of file.");
-                        else if (line.StartsWith("Name:"))
+                        if (line.StartsWith("_EOF_")) // Not L10N
+                            ThrowIOException(lineCount, Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file);
+                        else if (line.StartsWith("Name:")) // Not L10N
                             break;
                     }
 
                     if (numPeaks == 0)
-                        ThrowIOException(lineCount, string.Format("No peaks found for peptide {0}.", sequence));
+                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_No_peaks_found_for_peptide__0__, sequence));
                     if (numPeaks > ushort.MaxValue)
-                        ThrowIOException(lineCount, string.Format("Peak count for MS/MS spectrum excedes maximum {0}.", ushort.MaxValue));
+                        ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Peak_count_for_MS_MS_spectrum_excedes_maximum__0__, ushort.MaxValue));
 
                     double totalIntensity = 0;
 
@@ -858,17 +863,17 @@ namespace pwiz.Skyline.Model.Lib
                         line = reader.ReadLine();
                         if (line == null)
                         {
-                            ThrowIOException(lineCount, string.Format("Unexpected end of file in peaks for {0}.", sequence));
+                            ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Unexpected_end_of_file_in_peaks_for__0__, sequence));
                             break;  // ReSharper
                         }
                         readChars += line.Length;
 
                         // Parse out mass and intensity as quickly as possible, since
                         // this will be the most repeated parsing code.
-                        int iTab1 = line.IndexOf('\t');
-                        int iTab2 = (iTab1 == -1 ? -1 : line.IndexOf('\t', iTab1 + 1));
+                        int iTab1 = line.IndexOf('\t'); // Not L10N
+                        int iTab2 = (iTab1 == -1 ? -1 : line.IndexOf('\t', iTab1 + 1)); // Not L10N
                         if (iTab1 == -1 || iTab2 == -1)
-                            ThrowIOException(lineCount, string.Format("Invalid format at peak {0} for {1}.", i + 1, sequence));
+                            ThrowIOException(lineCount, string.Format(Resources.NistLibraryBase_CreateCache_Invalid_format_at_peak__0__for__1__, i + 1, sequence));
 
                         string mzField = line.Substring(0, iTab1++);
                         string intensityField = line.Substring(iTab1, iTab2 - iTab1);
@@ -943,14 +948,15 @@ namespace pwiz.Skyline.Model.Lib
     
         private void ThrowIOException(long lineNum, string message)
         {
-            throw new IOException(string.Format("{0} (line {1}): {2}", FilePath, lineNum, message));
+            throw new IOException(string.Format(Resources.NistLibraryBase_ThrowIOException__0__line__1__2__, FilePath,
+                                                lineNum, message));
         }
 
         private static string Modify(string sequence, string mod)
         {
             // If no modifications, just return the input sequence
-            bool clean = (sequence.IndexOfAny(new[] {'(', '['}) == -1);
-            if (clean && Equals(mod, "0"))
+            bool clean = (sequence.IndexOfAny(new[] { '(', '[' }) == -1); // Not L10N
+            if (clean && Equals(mod, "0")) // Not L10N
                 return sequence;
 
             // Parse the modification spec, and insert [+/-00.0] modifiers
@@ -968,11 +974,11 @@ namespace pwiz.Skyline.Model.Lib
                 // At least for Oxidation the sequence already contains
                 // inserted identifiers that look like M(O) for Methyonine
                 // with oxidation.  So, these are removed.
-                if (c == '(' || c == '[')
+                if (c == '(' || c == '[') // Not L10N
                     inMod = true;
                 else if (inMod)
                 {
-                    if (c == ')' || c == ']')
+                    if (c == ')' || c == ']') // Not L10N
                         inMod = false;
                 }
                 else
@@ -1000,7 +1006,7 @@ namespace pwiz.Skyline.Model.Lib
             // are rare, and can be viewed by placing a breakpoint on the
             // line where if is true.
             if (!MODIFICATION_MASSES.TryGetValue(parts[2], out massDiff))
-                massDiff = "[?]";
+                massDiff = "[?]"; // Not L10N
             return index;
         }
 
@@ -1014,7 +1020,7 @@ namespace pwiz.Skyline.Model.Lib
             // Single read to get all the peaks
             byte[] peaksCompressed = new byte[info.CompressedSize];
             if (fs.Read(peaksCompressed, 0, peaksCompressed.Length) < peaksCompressed.Length)
-                throw new IOException("Failure trying to read peaks");
+                throw new IOException(Resources.NistLibraryBase_ReadSpectrum_Failure_trying_to_read_peaks);
 
             int mzBytes = sizeof(float)*info.NumPeaks;
             byte[] peaks = peaksCompressed.Uncompress(mzBytes*2);

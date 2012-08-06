@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -40,7 +41,7 @@ namespace pwiz.SkylineTestTutorial
     /// </summary>
     [TestClass]
     public class CEOptimizationTutorialTest : AbstractFunctionalTest
-    {
+    { 
         
         [TestMethod]
         public void TestCEOptimizationTutorial()
@@ -53,15 +54,15 @@ namespace pwiz.SkylineTestTutorial
         protected override void DoTest()
         {
             // Skyline Collision Energy Optimization
-            var folderOptimizeCE = ExtensionTestContext.CanImportThermoRaw ? "OptimizeCE" : "OptimizeCEMzml";
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.sky")));
+            var folderOptimizeCE = ExtensionTestContext.CanImportThermoRaw ? "OptimizeCE" : "OptimizeCEMzml"; // Not L10N
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.sky"))); // Not L10N
 
             // Deriving a New Linear Equation, p. 2
             var transitionSettingsUI = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
             var editList = 
                 ShowDialog<EditListDlg<SettingsListBase<CollisionEnergyRegression>, CollisionEnergyRegression>>
                 (transitionSettingsUI.EditCEList);
-            RunUI(() => editList.SelectItem("Thermo"));
+            RunUI(() => editList.SelectItem("Thermo")); // Not L10N
             EditCEDlg editItem = ShowDialog<EditCEDlg>(editList.EditItem);
 
             ChargeRegressionLine regressionLine2 = new ChargeRegressionLine(2, 0.034, 3.314); 
@@ -84,13 +85,13 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.ExportStrategy = ExportStrategy.Single;
                 exportMethodDlg.OptimizeType = ExportOptimize.NONE;
                 exportMethodDlg.MethodType = ExportMethodType.Standard;
-                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"));
+                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv")); // Not L10N
             });
 
-            string filePathTemplate = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv");
+            string filePathTemplate = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"); // Not L10N
             CheckTransitionList(filePathTemplate, 1, 6);
 
-            const string unscheduledName = "Unscheduled";
+            const string unscheduledName = "Unscheduled"; // Not L10N
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
                 importResultsDlg.RadioAddNewChecked = true;
@@ -99,7 +100,7 @@ namespace pwiz.SkylineTestTutorial
                         // This is not actually a valid file path (missing OptimizeCE)
                         // but Skyline should correctly find the file in the same folder
                         // as the document.
-                        new[] { TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw)})};
+                        new[] { TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw)})}; // Not L10N
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });
@@ -121,13 +122,13 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.IgnoreProteins = true;
                 exportMethodDlg.OptimizeType = ExportOptimize.CE;
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
-                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.csv"));
+                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.csv")); // Not L10N
             });
 
-            string filePathTemplate1 = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_000{0}.csv");
+            string filePathTemplate1 = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_000{0}.csv"); // Not L10N
             CheckTransitionList(filePathTemplate1, 5, 9);
 
-            var filePath = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_0001.csv");
+            var filePath = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_0001.csv"); // Not L10N
             CheckCEValues(filePath, 11);
            
             // Analyze Optimization Data, p. 7
@@ -137,7 +138,7 @@ namespace pwiz.SkylineTestTutorial
                 importResultsDlg.OptimizationName = ExportOptimize.CE;
                 importResultsDlg.NamedPathSets = DataSourceUtil.GetDataSourcesInSubdirs(TestFilesDirs[0].FullPath).Take(5).ToArray();
                 importResultsDlg.NamedPathSets[0] =
-                     new KeyValuePair<string, string[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value);
+                     new KeyValuePair<string, string[]>("Optimize CE", importResultsDlg.NamedPathSets[0].Value); // Not L10N
                 importResultsDlg.OkDialog();
             });
             RunUI(() => 
@@ -151,7 +152,8 @@ namespace pwiz.SkylineTestTutorial
 
             });
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
-
+            
+            // Not L10N
             RemovePeptide("EGIHAQQK");
             RemovePeptide("IDALNENK");
             RemovePeptide("LICDNTHITK");
@@ -162,7 +164,7 @@ namespace pwiz.SkylineTestTutorial
             var addItem = ShowDialog<EditCEDlg>(editCEDlg1.AddItem);
             RunUI(() =>
             {
-                addItem.RegressionName = "Thermo Vantage Tutorial";
+                addItem.RegressionName = "Thermo Vantage Tutorial"; // Not L10N
                 addItem.UseCurrentData();
             });
 
@@ -198,16 +200,16 @@ namespace pwiz.SkylineTestTutorial
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI2 =>
             {
                 transitionSettingsUI2.UseOptimized = true;
-                transitionSettingsUI2.OptimizeType = OptimizedMethodType.Transition.ToString();
+                transitionSettingsUI2.OptimizeType = OptimizedMethodType.Transition.GetLocalizedString();
                 transitionSettingsUI2.OkDialog();
             });
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
             {
                 exportMethodDlg.ExportStrategy = ExportStrategy.Single;
-                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv"));
+                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv")); // Not L10N
             });
 
-            var filePathTemplate2 = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv");
+            var filePathTemplate2 = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv"); // Not L10N
 
             CheckTransitionList(filePathTemplate2, 1, 9);
         }
@@ -231,7 +233,7 @@ namespace pwiz.SkylineTestTutorial
             }
             // If there are multiple file possibilities, make sure there are
             // not more files than expected by checking count+1
-            if (templatePath.Contains("{0}"))
+            if (templatePath.Contains("{0}")) // Not L10N
                 Assert.IsFalse(File.Exists(TestFilesDir.GetTestPath(string.Format(templatePath, transitionCount+1))));
 
         }
@@ -241,10 +243,10 @@ namespace pwiz.SkylineTestTutorial
             List<string> ceValues = new List<string>();
             string[] lines = File.ReadAllLines(filePath);
 
-            string precursor = lines[0].Split(',')[0];
+            string precursor = lines[0].Split(TextUtil.SEPARATOR_CSV)[0];
             foreach (var line in lines)
             {
-                var columns = line.Split(',');
+                var columns = line.Split(TextUtil.SEPARATOR_CSV);
                 var ce = columns[2];
                 var secondPrecursor = columns[0];
 

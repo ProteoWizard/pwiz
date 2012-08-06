@@ -22,6 +22,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -34,17 +35,20 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static class SpecialHandlingType
         {
-            public const string NONE = "None";
-            public const string MULTIPLEXED = "Multiplexed";
-            public const string MS_E = "MSe";
+            public static string NONE { get { return Resources.SpecialHandlingType_NONE_None; } }
+            public static string MULTIPLEXED { get { return Resources.SpecialHandlingType_MULTIPLEXED_Multiplexed; } }
+            public const string MS_E = "MSe"; // Not L10N : This is a Waters trademark, and probably not localizable
 
             public static void Validate(string specialHandling)
             {
                 if (!Equals(specialHandling, NONE) &&
                     !Equals(specialHandling, MULTIPLEXED) &&
                     !Equals(specialHandling, MS_E))
+                {
                     throw new InvalidDataException(string.Format(
-                        @"""{0}"" is not a valid setting for full scan special handling", specialHandling));
+                        Resources.SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling, specialHandling));
+                }
+                    
             }
         };
 
@@ -65,7 +69,12 @@ namespace pwiz.Skyline.Model.DocSettings
             DoValidate();
         }
 
-        public IsolationScheme(string name, IList<IsolationWindow> isolationWindows, string specialHandling = SpecialHandlingType.NONE, int? windowsPerScan = null)
+        public IsolationScheme(string name, IList<IsolationWindow> isolationWindows)
+            : this(name, isolationWindows, SpecialHandlingType.NONE)
+        {            
+        }
+
+        public IsolationScheme(string name, IList<IsolationWindow> isolationWindows, string specialHandling, int? windowsPerScan = null)
             : base(name)
         {
             PrespecifiedIsolationWindows = isolationWindows;
@@ -110,28 +119,32 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (PrespecifiedIsolationWindows.Count > 0)
                 {
-                    throw new InvalidDataException("Isolation scheme cannot have a filter and a prespecifed isolation window");
+                    throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_filter_and_a_prespecifed_isolation_window);
                 }
-                TransitionFullScan.ValidateRange(PrecursorFilter, TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER, TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
-                              "The precursor m/z filter must be between {0} and {1}");
+                TransitionFullScan.ValidateRange(PrecursorFilter,
+                                                 TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER,
+                                                 TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
+                                                 Resources.IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_);
                 if (PrecursorRightFilter.HasValue)
                 {
-                    TransitionFullScan.ValidateRange(PrecursorRightFilter, TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER, TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
-                                  "The precursor m/z filter must be between {0} and {1}");
+                    TransitionFullScan.ValidateRange(PrecursorRightFilter,
+                                                     TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER,
+                                                     TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER,
+                                                     Resources.IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_);
                 }
                 if (!Equals(SpecialHandling, SpecialHandlingType.NONE))
                 {
-                    throw new InvalidDataException("Special handling applies only to prespecified isolation windows");
+                    throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Special_handling_applies_only_to_prespecified_isolation_windows);
                 }
                 if (WindowsPerScan.HasValue)
                 {
-                    throw new InvalidDataException("Isolation scheme can specify multiplexed windows only for prespecified isolation windows");
+                    throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Isolation_scheme_can_specify_multiplexed_windows_only_for_prespecified_isolation_windows);
                 }
             }
 
             else if (PrecursorRightFilter != null)
             {
-                throw new InvalidDataException("Isolation scheme cannot have a right filter without a left filter");
+                throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Isolation_scheme_cannot_have_a_right_filter_without_a_left_filter);
             }
 
             else
@@ -139,29 +152,31 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (PrespecifiedIsolationWindows.Count == 0)
                 {
                     if (!Equals(SpecialHandling, SpecialHandlingType.MS_E))
-                        throw new InvalidDataException("Isolation scheme must have a filter or a prespecifed isolation window");
+                    {
+                        throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Isolation_scheme_must_have_a_filter_or_a_prespecifed_isolation_window);
+                    }
                 }
                 else if (Equals(SpecialHandling, SpecialHandlingType.MS_E))
                 {
-                    throw new InvalidDataException("Isolation scheme for MSe cannot contain isolation windows");
+                    throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Isolation_scheme_for_MSe_cannot_contain_isolation_windows);
                 }
 
                 if (Equals(SpecialHandling, SpecialHandlingType.MULTIPLEXED))
                 {
                     if (!WindowsPerScan.HasValue || WindowsPerScan.Value < 1)
                     {
-                        throw new InvalidDataException("Multiplexed windows require at least one window per scan");
+                        throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan);
                     }
                     if (PrespecifiedIsolationWindows.Count % WindowsPerScan.Value != 0)
                     {
-                        throw new InvalidDataException("The number of prespecified isolation windows must be a multiple of the windows per scan in multiplexed sampling.");
+                        throw new InvalidDataException(Resources.IsolationScheme_DoValidate_The_number_of_prespecified_isolation_windows_must_be_a_multiple_of_the_windows_per_scan_in_multiplexed_sampling);
                     }
                 }
                 else
                 {
                     if (WindowsPerScan.HasValue)
                     {
-                        throw new InvalidDataException("Windows per scan requires multiplexed isolation windows");
+                        throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Windows_per_scan_requires_multiplexed_isolation_windows);
                     }
                 }
             }

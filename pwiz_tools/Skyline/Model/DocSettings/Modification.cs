@@ -19,19 +19,21 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
 // ReSharper disable InconsistentNaming
-    public enum ModTerminus { C, N };
+    public enum ModTerminus { C, N };  // Not L10N
 
     [Flags]
-    public enum LabelAtoms
+    public enum LabelAtoms // Not L10N
     {
         None = 0,
         C13 = 0x1,
@@ -41,6 +43,48 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     public enum RelativeRT { Matching, Overlapping, Preceding, Unknown }
+
+    public static class RelativeRTExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new[]
+                                                                {
+                                                                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Matching,
+                                                                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Overlapping,
+                                                                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Preceding,
+                                                                    Resources.RelativeRTExtension_LOCALIZED_VALUES_Unknown
+                                                                };
+
+        public static string GetLocalizedString(this RelativeRT val)
+        {
+            return LOCALIZED_VALUES[(int) val];
+        }
+
+        public static RelativeRT GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (RelativeRT)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static RelativeRT GetEnum(string enumValue, RelativeRT defaultEnum)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (RelativeRT)i;
+                }
+            }
+            return defaultEnum;
+        }
+
+    }
+
 // ReSharper restore InconsistentNaming
 
     /// <summary>
@@ -249,7 +293,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        private enum ATTR
+        private enum ATTR // Not L10N
         {
             aminoacid,
             terminus,
@@ -274,19 +318,19 @@ namespace pwiz.Skyline.Model.DocSettings
             // This is important for 15N labeling, and reasonable for an explicit
             // static modification... but not for variable modifications.
             if (IsVariable && !Terminus.HasValue && AAs == null)
-                throw new InvalidDataException("Variable modifications must specify amino acid or terminus.");
+                throw new InvalidDataException(Resources.StaticMod_Validate_Variable_modifications_must_specify_amino_acid_or_terminus);
             if (AAs != null)
             {
-                foreach (string aaPart in AAs.Split(','))
+                foreach (string aaPart in AAs.Split(',')) // Not L10N
                 {
                     string aa = aaPart.Trim();
                     if (aa.Length != 1 || !AminoAcid.IsAA(aa[0]))
-                        throw new InvalidDataException(string.Format("Invalid amino acid '{0}'.", aa));
+                        throw new InvalidDataException(string.Format(Resources.StaticMod_Validate_Invalid_amino_acid___0___, aa));
                 }
             }
             else if (Terminus.HasValue && LabelAtoms != LabelAtoms.None)
             {
-                throw new InvalidDataException("Terminal modification with labeled atoms not allowed.");
+                throw new InvalidDataException(Resources.StaticMod_Validate_Terminal_modification_with_labeled_atoms_not_allowed);
             }
             if (Formula == null && LabelAtoms == LabelAtoms.None)
             {
@@ -295,24 +339,24 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Allow a modification that just specifies potential neutral losses
                     // from unmodified amino acid residues.
                     if (Losses == null)
-                        throw new InvalidDataException("Modification must specify a formula, labeled atoms or valid monoisotopic and average masses.");
+                        throw new InvalidDataException(Resources.StaticMod_Validate_Modification_must_specify_a_formula_labeled_atoms_or_valid_monoisotopic_and_average_masses);
                     if (IsVariable)
-                        throw new InvalidDataException("Loss-only modifications may not be variable.");
+                        throw new InvalidDataException(Resources.StaticMod_Validate_Loss_only_modifications_may_not_be_variable);
                     if (IsExplicit)
-                        throw new InvalidDataException("Loss-only modifications may not be explicit.");
+                        throw new InvalidDataException(Resources.StaticMod_Validate_Loss_only_modifications_may_not_be_explicit);
                 }
             }
             else
             {
                 // No explicit masses with formula or label atoms
                 if (MonoisotopicMass != null || AverageMass != null)
-                    throw new InvalidDataException("Modification with a formula may not specify modification masses.");
+                    throw new InvalidDataException(Resources.StaticMod_Validate_Modification_with_a_formula_may_not_specify_modification_masses);
                 if (Formula != null)
                 {
                     if (string.IsNullOrEmpty(Formula))
-                        throw new InvalidDataException("Modification formula may not be empty.");
+                        throw new InvalidDataException(Resources.StaticMod_Validate_Modification_formula_may_not_be_empty);
                     if (LabelAtoms != LabelAtoms.None)
-                        throw new InvalidDataException("Formula not allowed with labeled atoms.");
+                        throw new InvalidDataException(Resources.StaticMod_Validate_Formula_not_allowed_with_labeled_atoms);
                     // Cache mass values to improve performance of variable modifications
                     // Throws an exception, if given an invalid formula.
                     MonoisotopicMass = SequenceMassCalc.ParseModMass(BioMassCalc.MONOISOTOPIC, Formula);
@@ -320,7 +364,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             if (!UniMod.ValidateID(this))
-                throw new InvalidDataException(string.Format("Modification settings do not match the expected values for Unimod ID {0}.", UnimodId));
+                throw new InvalidDataException(string.Format(Resources.StaticMod_Validate_Modification_settings_do_not_match_the_expected_values_for_Unimod_ID__0__, UnimodId));
         }
 
         private static ModTerminus ToModTerminus(String value)
@@ -331,7 +375,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             catch (ArgumentException)
             {
-                throw new ArgumentException(string.Format("Invalid terminus '{0}'.", value));
+                throw new ArgumentException(string.Format(Resources.StaticMod_ToModTerminus_Invalid_terminus__0__, value));
             }            
         }
 
@@ -349,7 +393,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {                
                 AAs = aas;
                 // Support v0.1 format.
-                if (AAs[0] == '\0')
+                if (AAs[0] == '\0') // Not L10N
                     AAs = null;
             }
 
@@ -462,12 +506,12 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else if (Terminus != null)
             {
-                return EquivalentFormulas('\0', obj);
+                return EquivalentFormulas('\0', obj); // Not L10N
             }
             else
             {
                 // Label all amino acids with this label
-                for (char aa = 'A'; aa <= 'Z'; aa++)
+                for (char aa = 'A'; aa <= 'Z'; aa++) // Not L10N
                 {
                     if (AminoAcid.IsAA(aa) && !EquivalentFormulas(aa, obj))
                         return false;
@@ -898,7 +942,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             int index = GetModIndex(labelType);
             if (index == -1)
-                throw new IndexOutOfRangeException(string.Format("Modification type {0} not found.", labelType));
+                throw new IndexOutOfRangeException(string.Format(Resources.ExplicitMods_ChangeModifications_Modification_type__0__not_found, labelType));
             var modifications = _modifications.ToArrayStd();
             var typedMods = new TypedExplicitModifications(Peptide, labelType, prop);
             if (index != 0)
@@ -1059,9 +1103,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (typedStaticMods == null)
                 return this;
             if (_typedStaticMods != null)
-                throw new InvalidOperationException("Static mod masses have already been added for this heavy type.");
+                throw new InvalidOperationException(Resources.TypedExplicitModifications_AddModMasses_Static_mod_masses_have_already_been_added_for_this_heavy_type);
             if (LabelType.IsLight)
-                throw new InvalidOperationException("Static mod masses may not be added to light type.");
+                throw new InvalidOperationException(Resources.TypedExplicitModifications_AddModMasses_Static_mod_masses_may_not_be_added_to_light_type);
 
             var im = ImClone(this);
             im._typedStaticMods = typedStaticMods;

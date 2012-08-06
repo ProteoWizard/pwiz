@@ -22,7 +22,9 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 
 namespace pwiz.Skyline.Model
@@ -382,7 +384,7 @@ namespace pwiz.Skyline.Model
                         }
                         if (key.Mass != null)
                         {
-                            var keyStr = string.Format("{0}[{1}]",
+                            var keyStr = string.Format("{0}[{1}]", // Not L10N
                                 key.AA, Math.Round(GetDefaultModMass(key.AA, mod.StructuralMod), key.RoundedTo));
                             if (!keyStrings.Contains(keyStr))
                                 keyStrings.Add(keyStr);
@@ -400,7 +402,7 @@ namespace pwiz.Skyline.Model
                         }
                         if (key.Mass != null)
                         {
-                            var keyStr = string.Format("{0}{{{1}}}", 
+                            var keyStr = string.Format("{0}{{{1}}}", // Not L10N
                                 key.AA, Math.Round(GetDefaultModMass(key.AA, mod.HeavyMod), key.RoundedTo));
                             if (!keyStrings.Contains(keyStr))
                                 keyStrings.Add(keyStr);
@@ -415,7 +417,8 @@ namespace pwiz.Skyline.Model
                     var keyStrings = modKeysPair.Value;
                     keyStrings.Sort();
                     sb.AppendLine(keyStrings.Count > 0
-                                      ? string.Format("{0} = {1}", modName, string.Join(" ", keyStrings.ToArray()))
+                                      ? string.Format(Resources.AbstractModificationMatcherFoundMatches__0__equals__1__, modName,
+                                          TextUtil.SpaceSeparate(keyStrings))
                                       : modName);
                 }
                 return sb.ToString();
@@ -426,8 +429,10 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return string.Format("The following modifications could not be interpreted.\n\n{0}",
-                                     string.Join(" ", UnmatchedSequences.OrderBy(s => s).ToArray()));
+
+                return string.Format(TextUtil.LineSeparate(Resources.AbstractModificationMatcher_UninterpretedMods_The_following_modifications_could_not_be_interpreted,
+                                     string.Empty,
+                                     TextUtil.SpaceSeparate(UnmatchedSequences.OrderBy(s => s))));
             }
         }
 
@@ -628,7 +633,7 @@ namespace pwiz.Skyline.Model
             }
             public override string ToString()
             {
-                return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? "{0}{{{1}}}" : "{0}[{1}]", AA, Mass);
+                return string.Format(CultureInfo.InvariantCulture, UserIndicatedHeavy ? "{0}{{{1}}}" : "{0}[{1}]", AA, Mass); // Not L10N
             }
         }
 

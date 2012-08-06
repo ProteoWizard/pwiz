@@ -29,6 +29,7 @@ using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -51,16 +52,16 @@ namespace pwiz.SkylineTestTutorial
             // Skyline Custom Reports and Results Grid
 
             // Data Overview, p. 2
-            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky")));
+            RunUI(() => SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\Study7_example.sky"))); // Not L10N
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.SearchString = "HGFLPR";
+                findPeptideDlg.SearchString = "HGFLPR"; // Not L10N
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
             RunUI(() =>
             {
-                Assert.AreEqual("HGFLPR", SkylineWindow.SequenceTree.SelectedNode.Text);
+                Assert.AreEqual("HGFLPR", SkylineWindow.SequenceTree.SelectedNode.Text); // Not L10N
                 SkylineWindow.ShowPeakAreaReplicateComparison();
             });
             WaitForCondition(() => !SkylineWindow.GraphPeakArea.IsHidden);
@@ -73,13 +74,14 @@ namespace pwiz.SkylineTestTutorial
             var pivotReportDlg = ShowDialog<PivotReportDlg>(editReportListDlg.AddItem);
             RunUI(() =>
             {
-                pivotReportDlg.ReportName = "Overview";
-                Assert.IsTrue(pivotReportDlg.TrySelect(new Identifier("Peptides", "Sequence")));
+                pivotReportDlg.ReportName = "Overview"; // Not L10N
+                Assert.IsTrue(pivotReportDlg.TrySelect(new Identifier("Peptides", "Sequence"))); // Not L10N
                 pivotReportDlg.AddSelectedColumn();
                 Assert.AreEqual(1, pivotReportDlg.ColumnCount);
                 var expectedFields = new[]
                 {
-                     new Identifier("ProteinName"), new Identifier("ProteinDescription"),
+                    // Not L10N
+                     new Identifier("ProteinName"), new Identifier("ProteinDescription"), 
                      new Identifier("ProteinSequence"), new Identifier("ProteinNote"),
                      new Identifier("Results")
                 };
@@ -87,8 +89,9 @@ namespace pwiz.SkylineTestTutorial
                 {
                    Assert.IsTrue(pivotReportDlg.TrySelect(id));
                 }
-                var columnsToAdd = new[] 
+                var columnsToAdd = new[]
                 { 
+                    // Not L10N
                     new Identifier("Peptides", "Precursors", "IsotopeLabelType"),
                     new Identifier("Peptides", "Precursors", "PrecursorResults", "BestRetentionTime"),
                     new Identifier("Peptides", "Precursors", "PrecursorResults", "TotalArea") 
@@ -118,41 +121,41 @@ namespace pwiz.SkylineTestTutorial
             // Exporting Report Data to a File, p. 9
             RunDlg<ExportReportDlg>(SkylineWindow.ShowExportReportDialog, exportReportDlg0 =>
             {
-                exportReportDlg0.ReportName = "Overview";
-                exportReportDlg0.OkDialog(TestFilesDir.GetTestPath("Overview_Study7_example.csv"), ',');
+                exportReportDlg0.ReportName = "Overview"; // Not L10N
+                exportReportDlg0.OkDialog(TestFilesDir.GetTestPath("Overview_Study7_example.csv"), TextUtil.SEPARATOR_CSV); // Not L10N
             });
            
             // Sharing Report Templates, p. 9
             var exportReportDlg1 = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
             RunDlg<ShareListDlg<ReportSpecList, ReportSpec>>(exportReportDlg1.ShowShare, shareListDlg =>
             {
-                shareListDlg.ChosenNames = new[] { "Overview" };
-                shareListDlg.OkDialog(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr"));
+                shareListDlg.ChosenNames = new[] { "Overview" }; // Not L10N
+                shareListDlg.OkDialog(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr")); // Not L10N
             });
 
             // Managing Report Templayes in Skyline, p. 10
             var editReportListDlg0 = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg1.EditList);
             RunUI(() =>
             {
-                editReportListDlg0.SelectItem("Overview");
+                editReportListDlg0.SelectItem("Overview"); // Not L10N
                 editReportListDlg0.MoveItemDown();
                 editReportListDlg0.MoveItemDown();
                 var listReportSpecs = new List<ReportSpec>(editReportListDlg0.GetAllEdited());
                 Assert.AreEqual(listReportSpecs.Count - 1,
-                              listReportSpecs.IndexOf(spec => spec.Name == "Overview"));
+                              listReportSpecs.IndexOf(spec => spec.Name == "Overview")); // Not L10N
                 editReportListDlg0.MoveItemUp();
                 editReportListDlg0.MoveItemUp();
                 editReportListDlg0.MoveItemUp();
                 listReportSpecs = new List<ReportSpec>(editReportListDlg0.GetAllEdited());
-                Assert.AreEqual(0, listReportSpecs.IndexOf(spec => spec.Name == "Overview"));
+                Assert.AreEqual(0, listReportSpecs.IndexOf(spec => spec.Name == "Overview")); // Not L10N
                 editReportListDlg0.RemoveItem();
                 editReportListDlg0.OkDialog();
             });
             WaitForClosedForm(editReportListDlg0);
             RunUI(() =>
             {
-                exportReportDlg1.Import(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr"));
-                exportReportDlg1.ReportName = "Overview";
+                exportReportDlg1.Import(TestFilesDir.GetTestPath(@"CustomReports\Overview.skyr")); // Not L10N
+                exportReportDlg1.ReportName = "Overview"; // Not L10N
             });
             RunDlg<PreviewReportDlg>(exportReportDlg1.ShowPreview, previewReportDlg =>
             {
@@ -163,36 +166,38 @@ namespace pwiz.SkylineTestTutorial
 
             // Modifying Existing Report Templates, p. 13
             var editReportListDlg1 = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg1.EditList);
-            RunUI(() => editReportListDlg1.SelectItem(@"CustomReports\Overview"));
+            RunUI(() => editReportListDlg1.SelectItem(@"CustomReports\Overview")); // Not L10N
             var pivotReportDlg0 = ShowDialog<PivotReportDlg>(editReportListDlg1.CopyItem);
             RunUI(() =>
             {
-                pivotReportDlg0.ReportName = "Study 7";
-                var columnsToAdd = new[] 
-                { 
-                    new Identifier("ProteinName"),
-                    new Identifier("Results", "FileName"),
-                    new Identifier("Results", "SampleName"),
-                    new Identifier("Results", "ReplicateName"),
-                    new Identifier("Peptides", "AverageMeasuredRetentionTime"),
-                    new Identifier("Peptides", "PeptideResults", "PeptideRetentionTime"),
-                    new Identifier("Peptides", "PeptideResults", "RatioToStandard"),
-                    new Identifier("Peptides", "Precursors", "Charge"),
-                    new Identifier("Peptides", "Precursors", "Mz"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "ProductCharge"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "ProductMz"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "FragmentIon"),
-                    new Identifier("Peptides", "Precursors", "PrecursorResults", "MaxFwhm"),
-                    new Identifier("Peptides", "Precursors", "PrecursorResults", "MinStartTime"),
-                    new Identifier("Peptides", "Precursors", "PrecursorResults", "MaxEndTime"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "RetentionTime"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Fwhm"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "StartTime"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "EndTime"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Area"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Height"),
-                    new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "UserSetPeak")
-                };
+                pivotReportDlg0.ReportName = "Study 7"; // Not L10N
+                // Not L10N
+                var columnsToAdd = new[]
+                                       {
+                                           // Not L10N
+                                           new Identifier("ProteinName"),
+                                           new Identifier("Results", "FileName"),
+                                           new Identifier("Results", "SampleName"),
+                                           new Identifier("Results", "ReplicateName"),
+                                           new Identifier("Peptides", "AverageMeasuredRetentionTime"),
+                                           new Identifier("Peptides", "PeptideResults", "PeptideRetentionTime"),
+                                           new Identifier("Peptides", "PeptideResults", "RatioToStandard"),
+                                           new Identifier("Peptides", "Precursors", "Charge"),
+                                           new Identifier("Peptides", "Precursors", "Mz"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "ProductCharge"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "ProductMz"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "FragmentIon"),
+                                           new Identifier("Peptides", "Precursors", "PrecursorResults", "MaxFwhm"),
+                                           new Identifier("Peptides", "Precursors", "PrecursorResults", "MinStartTime"),
+                                           new Identifier("Peptides", "Precursors", "PrecursorResults", "MaxEndTime"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "RetentionTime"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Fwhm"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "StartTime"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "EndTime"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Area"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "Height"),
+                                           new Identifier("Peptides", "Precursors", "Transitions", "TransitionResults", "UserSetPeak")
+                                       };
                 foreach (Identifier id in columnsToAdd)
                 {
                     Assert.IsTrue(pivotReportDlg0.TrySelect(id));
@@ -217,7 +222,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunUI(() =>
             {
-                pivotReportDlg0.RemoveColumn("ProteinName");
+                pivotReportDlg0.RemoveColumn("ProteinName"); // Not L10N
                 pivotReportDlg0.OkDialog();
                 editReportListDlg1.OkDialog();
                 exportReportDlg1.CancelClick();
@@ -227,13 +232,13 @@ namespace pwiz.SkylineTestTutorial
             // Quality Control Summary Reports, p. 18
             RunUI(() =>
                       {
-                          SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\study9pilot.sky"));
+                          SkylineWindow.OpenFile(TestFilesDir.GetTestPath(@"CustomReports\study9pilot.sky")); // Not L10N
                           SkylineWindow.ExpandPeptides();
                       });
             var exportReportDlg2 = ShowDialog<ExportReportDlg>(SkylineWindow.ShowExportReportDialog);
-            RunUI(() => exportReportDlg2.Import(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr")));
+            RunUI(() => exportReportDlg2.Import(TestFilesDir.GetTestPath(@"CustomReports\Summary_stats.skyr"))); // Not L10N
             var editReportListDlg2 = ShowDialog<EditListDlg<SettingsListBase<ReportSpec>, ReportSpec>>(exportReportDlg2.EditList);
-            RunUI(() => editReportListDlg2.SelectItem("Summary Statistics"));
+            RunUI(() => editReportListDlg2.SelectItem("Summary Statistics")); // Not L10N
             var pivotReportDlg1 = ShowDialog<PivotReportDlg>(editReportListDlg2.EditItem);
             RunUI(() => Assert.AreEqual(11, pivotReportDlg1.ColumnCount));
             RunDlg<PreviewReportDlg>(pivotReportDlg1.ShowPreview, previewReportDlg => previewReportDlg.OkDialog());
@@ -245,7 +250,7 @@ namespace pwiz.SkylineTestTutorial
             });
             RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
             {
-                findPeptideDlg.SearchString = "INDISHTQSVSAK";
+                findPeptideDlg.SearchString = "INDISHTQSVSAK"; // Not L10N
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
@@ -271,6 +276,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 columnChooser.SetChecked(new Dictionary<string, bool>
                                              {
+                                                 // Not L10N
                                                  {"Min Start Time", false},
                                                  {"Max End Time", false},
                                                  {"Library Dot Product", false}
@@ -284,7 +290,7 @@ namespace pwiz.SkylineTestTutorial
             var editListDlg = ShowDialog<EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef>>(chooseAnnotationsDlg.EditList);
             RunDlg<DefineAnnotationDlg>(editListDlg.AddItem, defineAnnotationDlg =>
             {
-                defineAnnotationDlg.AnnotationName = "Trailing";
+                defineAnnotationDlg.AnnotationName = "Trailing"; // Not L10N
                 defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.true_false;
                 defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTarget.precursor_result;
                 defineAnnotationDlg.OkDialog();

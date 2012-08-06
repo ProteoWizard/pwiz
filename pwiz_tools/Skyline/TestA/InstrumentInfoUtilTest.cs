@@ -22,6 +22,8 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
 {
@@ -108,7 +110,7 @@ namespace pwiz.SkylineTestA
             }
             catch(IOException e)
             {
-                Assert.AreEqual("Unexpected line in instrument config: Invalid line", e.Message);
+                AssertEx.AreComparableStrings(Resources.InstrumentInfoUtil_ReadInstrumentConfig_Unexpected_line_in_instrument_config__0__, e.Message, 1);
             }
         }
 

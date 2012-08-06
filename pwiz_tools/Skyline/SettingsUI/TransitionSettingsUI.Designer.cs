@@ -150,45 +150,36 @@
             // 
             // btnCancel
             // 
-            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.btnCancel, "btnCancel");
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 537);
             this.btnCancel.Name = "btnCancel";
-            this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 2;
-            this.btnCancel.Text = "Cancel";
+            this.helpTip.SetToolTip(this.btnCancel, resources.GetString("btnCancel.ToolTip"));
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
-            this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(227, 537);
+            resources.ApplyResources(this.btnOk, "btnOk");
             this.btnOk.Name = "btnOk";
-            this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 1;
-            this.btnOk.Text = "OK";
+            this.helpTip.SetToolTip(this.btnOk, resources.GetString("btnOk.ToolTip"));
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
             // 
             // tabControl1
             // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.tabControl1, "tabControl1");
             this.tabControl1.Controls.Add(this.tabGeneral);
             this.tabControl1.Controls.Add(this.tabFilter);
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabInstrument);
             this.tabControl1.Controls.Add(this.tabFullScan);
             this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "TransitionSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 517);
-            this.tabControl1.TabIndex = 0;
+            this.helpTip.SetToolTip(this.tabControl1, resources.GetString("tabControl1.ToolTip"));
             // 
             // tabGeneral
             // 
+            resources.ApplyResources(this.tabGeneral, "tabGeneral");
             this.tabGeneral.Controls.Add(this.labelOptimizeType);
             this.tabGeneral.Controls.Add(this.comboOptimizeType);
             this.tabGeneral.Controls.Add(this.cbUseOptimized);
@@ -200,143 +191,102 @@
             this.tabGeneral.Controls.Add(this.label2);
             this.tabGeneral.Controls.Add(this.comboPrecursorMass);
             this.tabGeneral.Controls.Add(this.label1);
-            this.tabGeneral.Location = new System.Drawing.Point(4, 22);
             this.tabGeneral.Name = "tabGeneral";
-            this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeneral.Size = new System.Drawing.Size(363, 491);
-            this.tabGeneral.TabIndex = 0;
-            this.tabGeneral.Text = "Prediction";
+            this.helpTip.SetToolTip(this.tabGeneral, resources.GetString("tabGeneral.ToolTip"));
             this.tabGeneral.UseVisualStyleBackColor = true;
             // 
             // labelOptimizeType
             // 
-            this.labelOptimizeType.AutoSize = true;
-            this.labelOptimizeType.Location = new System.Drawing.Point(23, 187);
+            resources.ApplyResources(this.labelOptimizeType, "labelOptimizeType");
             this.labelOptimizeType.Name = "labelOptimizeType";
-            this.labelOptimizeType.Size = new System.Drawing.Size(64, 13);
-            this.labelOptimizeType.TabIndex = 9;
-            this.labelOptimizeType.Text = "&Optimize by:";
-            this.labelOptimizeType.Visible = false;
+            this.helpTip.SetToolTip(this.labelOptimizeType, resources.GetString("labelOptimizeType.ToolTip"));
             // 
             // comboOptimizeType
             // 
+            resources.ApplyResources(this.comboOptimizeType, "comboOptimizeType");
             this.comboOptimizeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboOptimizeType.FormattingEnabled = true;
             this.comboOptimizeType.Items.AddRange(new object[] {
-            "Precursor",
-            "Transition"});
-            this.comboOptimizeType.Location = new System.Drawing.Point(23, 206);
+            resources.GetString("comboOptimizeType.Items"),
+            resources.GetString("comboOptimizeType.Items1")});
             this.comboOptimizeType.Name = "comboOptimizeType";
-            this.comboOptimizeType.Size = new System.Drawing.Size(121, 21);
-            this.comboOptimizeType.TabIndex = 10;
-            this.helpTip.SetToolTip(this.comboOptimizeType, "Specifies if optimization is to be done either for all transitions\r\nin each precu" +
-        "rsor totaled or for each transition separately");
-            this.comboOptimizeType.Visible = false;
+            this.helpTip.SetToolTip(this.comboOptimizeType, resources.GetString("comboOptimizeType.ToolTip"));
             // 
             // cbUseOptimized
             // 
-            this.cbUseOptimized.AutoSize = true;
-            this.cbUseOptimized.Location = new System.Drawing.Point(23, 157);
+            resources.ApplyResources(this.cbUseOptimized, "cbUseOptimized");
             this.cbUseOptimized.Name = "cbUseOptimized";
-            this.cbUseOptimized.Size = new System.Drawing.Size(204, 17);
-            this.cbUseOptimized.TabIndex = 8;
-            this.cbUseOptimized.Text = "&Use optimization values when present";
-            this.helpTip.SetToolTip(this.cbUseOptimized, "If checked, the any measured CE or DP optimization values will\r\nbe used to select" +
-        " the value exported in methods and transition\r\nlists.  The value producing the m" +
-        "aximum total peak area will be\r\nchosen.");
+            this.helpTip.SetToolTip(this.cbUseOptimized, resources.GetString("cbUseOptimized.ToolTip"));
             this.cbUseOptimized.UseVisualStyleBackColor = true;
             this.cbUseOptimized.CheckedChanged += new System.EventHandler(this.cbUseOptimized_CheckedChanged);
             // 
             // comboDeclusterPotential
             // 
+            resources.ApplyResources(this.comboDeclusterPotential, "comboDeclusterPotential");
             this.comboDeclusterPotential.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboDeclusterPotential.FormattingEnabled = true;
-            this.comboDeclusterPotential.Location = new System.Drawing.Point(208, 109);
             this.comboDeclusterPotential.Name = "comboDeclusterPotential";
-            this.comboDeclusterPotential.Size = new System.Drawing.Size(121, 21);
-            this.comboDeclusterPotential.TabIndex = 7;
             this.helpTip.SetToolTip(this.comboDeclusterPotential, resources.GetString("comboDeclusterPotential.ToolTip"));
             this.comboDeclusterPotential.SelectedIndexChanged += new System.EventHandler(this.comboDeclusterPotential_SelectedIndexChanged);
             // 
             // label12
             // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(208, 93);
+            resources.ApplyResources(this.label12, "label12");
             this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(112, 13);
-            this.label12.TabIndex = 6;
-            this.label12.Text = "&Declustering potential:";
+            this.helpTip.SetToolTip(this.label12, resources.GetString("label12.ToolTip"));
             // 
             // comboCollisionEnergy
             // 
+            resources.ApplyResources(this.comboCollisionEnergy, "comboCollisionEnergy");
             this.comboCollisionEnergy.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboCollisionEnergy.FormattingEnabled = true;
-            this.comboCollisionEnergy.Location = new System.Drawing.Point(23, 109);
             this.comboCollisionEnergy.Name = "comboCollisionEnergy";
-            this.comboCollisionEnergy.Size = new System.Drawing.Size(121, 21);
-            this.comboCollisionEnergy.TabIndex = 5;
-            this.helpTip.SetToolTip(this.comboCollisionEnergy, "A linear equation used to predict the optimal collsion energy (CE)\r\nfor each prec" +
-        "ursor from its mass-to-charge ratio.  Isotope labeled\r\npeptides use the predicte" +
-        "d CE for the unlabeled form.");
+            this.helpTip.SetToolTip(this.comboCollisionEnergy, resources.GetString("comboCollisionEnergy.ToolTip"));
             this.comboCollisionEnergy.SelectedIndexChanged += new System.EventHandler(this.comboCollisionEnergy_SelectedIndexChanged);
             // 
             // label7
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(20, 92);
+            resources.ApplyResources(this.label7, "label7");
             this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(83, 13);
-            this.label7.TabIndex = 4;
-            this.label7.Text = "&Collision energy:";
+            this.helpTip.SetToolTip(this.label7, resources.GetString("label7.ToolTip"));
             // 
             // comboIonMass
             // 
+            resources.ApplyResources(this.comboIonMass, "comboIonMass");
             this.comboIonMass.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboIonMass.FormattingEnabled = true;
             this.comboIonMass.Items.AddRange(new object[] {
-            "Monoisotopic",
-            "Average"});
-            this.comboIonMass.Location = new System.Drawing.Point(208, 39);
+            resources.GetString("comboIonMass.Items"),
+            resources.GetString("comboIonMass.Items1")});
             this.comboIonMass.Name = "comboIonMass";
-            this.comboIonMass.Size = new System.Drawing.Size(121, 21);
-            this.comboIonMass.TabIndex = 3;
-            this.helpTip.SetToolTip(this.comboIonMass, "Molecular mass calculation strategy (monoisotopic or average)\r\nto use in calculat" +
-        "ing all product ion masses");
+            this.helpTip.SetToolTip(this.comboIonMass, resources.GetString("comboIonMass.ToolTip"));
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(205, 22);
+            resources.ApplyResources(this.label2, "label2");
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(91, 13);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "Pro&duct ion mass:";
+            this.helpTip.SetToolTip(this.label2, resources.GetString("label2.ToolTip"));
             // 
             // comboPrecursorMass
             // 
+            resources.ApplyResources(this.comboPrecursorMass, "comboPrecursorMass");
             this.comboPrecursorMass.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboPrecursorMass.FormattingEnabled = true;
             this.comboPrecursorMass.Items.AddRange(new object[] {
-            "Monoisotopic",
-            "Average"});
-            this.comboPrecursorMass.Location = new System.Drawing.Point(23, 39);
+            resources.GetString("comboPrecursorMass.Items"),
+            resources.GetString("comboPrecursorMass.Items1")});
             this.comboPrecursorMass.Name = "comboPrecursorMass";
-            this.comboPrecursorMass.Size = new System.Drawing.Size(121, 21);
-            this.comboPrecursorMass.TabIndex = 1;
-            this.helpTip.SetToolTip(this.comboPrecursorMass, "Molecular mass calculation strategy (monoisotopic or average)\r\nto use in calculat" +
-        "ing all precursor masses");
+            this.helpTip.SetToolTip(this.comboPrecursorMass, resources.GetString("comboPrecursorMass.ToolTip"));
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(20, 22);
+            resources.ApplyResources(this.label1, "label1");
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(82, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Precursor mass:";
+            this.helpTip.SetToolTip(this.label1, resources.GetString("label1.ToolTip"));
             // 
             // tabFilter
             // 
+            resources.ApplyResources(this.tabFilter, "tabFilter");
             this.tabFilter.Controls.Add(this.textIonTypes);
             this.tabFilter.Controls.Add(this.label8);
             this.tabFilter.Controls.Add(this.cbAutoSelect);
@@ -345,47 +295,32 @@
             this.tabFilter.Controls.Add(this.textPrecursorCharges);
             this.tabFilter.Controls.Add(this.label6);
             this.tabFilter.Controls.Add(this.label5);
-            this.tabFilter.Location = new System.Drawing.Point(4, 22);
             this.tabFilter.Name = "tabFilter";
-            this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 491);
-            this.tabFilter.TabIndex = 1;
-            this.tabFilter.Text = "Filter";
+            this.helpTip.SetToolTip(this.tabFilter, resources.GetString("tabFilter.ToolTip"));
             this.tabFilter.UseVisualStyleBackColor = true;
             // 
             // textIonTypes
             // 
-            this.textIonTypes.Location = new System.Drawing.Point(266, 40);
+            resources.ApplyResources(this.textIonTypes, "textIonTypes");
             this.textIonTypes.Name = "textIonTypes";
-            this.textIonTypes.Size = new System.Drawing.Size(76, 20);
-            this.textIonTypes.TabIndex = 5;
-            this.helpTip.SetToolTip(this.textIonTypes, "A list of comma separated product ion types (a, b, c, x, y, z, p for precursor) t" +
-        "o use\r\nfor calculating potential product ions");
+            this.helpTip.SetToolTip(this.textIonTypes, resources.GetString("textIonTypes.ToolTip"));
             // 
             // label8
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(263, 23);
+            resources.ApplyResources(this.label8, "label8");
             this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(53, 13);
-            this.label8.TabIndex = 4;
-            this.label8.Text = "Ion &types:";
+            this.helpTip.SetToolTip(this.label8, resources.GetString("label8.ToolTip"));
             // 
             // cbAutoSelect
             // 
-            this.cbAutoSelect.AutoSize = true;
-            this.cbAutoSelect.Location = new System.Drawing.Point(21, 332);
+            resources.ApplyResources(this.cbAutoSelect, "cbAutoSelect");
             this.cbAutoSelect.Name = "cbAutoSelect";
-            this.cbAutoSelect.Size = new System.Drawing.Size(188, 17);
-            this.cbAutoSelect.TabIndex = 7;
-            this.cbAutoSelect.Text = "&Auto-select all matching transitions";
-            this.helpTip.SetToolTip(this.cbAutoSelect, "If checked, tranitions are automatically chosen for peptides\r\nusing specified fil" +
-        "ter and library settings.  Otherwise, all transition\r\nselection must be done by " +
-        "manual document editing.");
+            this.helpTip.SetToolTip(this.cbAutoSelect, resources.GetString("cbAutoSelect.ToolTip"));
             this.cbAutoSelect.UseVisualStyleBackColor = true;
             // 
             // groupBox1
             // 
+            resources.ApplyResources(this.groupBox1, "groupBox1");
             this.groupBox1.Controls.Add(this.label28);
             this.groupBox1.Controls.Add(this.textExclusionWindow);
             this.groupBox1.Controls.Add(this.label19);
@@ -396,282 +331,198 @@
             this.groupBox1.Controls.Add(this.label3);
             this.groupBox1.Controls.Add(this.comboRangeTo);
             this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Location = new System.Drawing.Point(21, 83);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(321, 238);
-            this.groupBox1.TabIndex = 6;
             this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Product ions";
+            this.helpTip.SetToolTip(this.groupBox1, resources.GetString("groupBox1.ToolTip"));
             // 
             // label28
             // 
-            this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(98, 208);
+            resources.ApplyResources(this.label28, "label28");
             this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(20, 13);
-            this.label28.TabIndex = 9;
-            this.label28.Text = "Th";
+            this.helpTip.SetToolTip(this.label28, resources.GetString("label28.ToolTip"));
             // 
             // textExclusionWindow
             // 
-            this.textExclusionWindow.Location = new System.Drawing.Point(16, 205);
+            resources.ApplyResources(this.textExclusionWindow, "textExclusionWindow");
             this.textExclusionWindow.Name = "textExclusionWindow";
-            this.textExclusionWindow.Size = new System.Drawing.Size(76, 20);
-            this.textExclusionWindow.TabIndex = 8;
-            this.helpTip.SetToolTip(this.textExclusionWindow, "A m/z window around the precursor m/z within which transitions\r\nare excluded, or " +
-        "blank.  A window of 20 will exclude all transitions\r\nwithin 10 on either side of" +
-        " the precursor m/z.");
+            this.helpTip.SetToolTip(this.textExclusionWindow, resources.GetString("textExclusionWindow.ToolTip"));
             // 
             // label19
             // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(13, 189);
+            resources.ApplyResources(this.label19, "label19");
             this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(162, 13);
-            this.label19.TabIndex = 7;
-            this.label19.Text = "Precursor m/z exclusion window:";
+            this.helpTip.SetToolTip(this.label19, resources.GetString("label19.ToolTip"));
             // 
             // btnEditSpecialTransitions
             // 
-            this.btnEditSpecialTransitions.Location = new System.Drawing.Point(209, 103);
+            resources.ApplyResources(this.btnEditSpecialTransitions, "btnEditSpecialTransitions");
             this.btnEditSpecialTransitions.Name = "btnEditSpecialTransitions";
-            this.btnEditSpecialTransitions.Size = new System.Drawing.Size(75, 23);
-            this.btnEditSpecialTransitions.TabIndex = 6;
-            this.btnEditSpecialTransitions.Text = "&Edit List...";
-            this.helpTip.SetToolTip(this.btnEditSpecialTransitions, "Edit the list of available special product ions");
+            this.helpTip.SetToolTip(this.btnEditSpecialTransitions, resources.GetString("btnEditSpecialTransitions.ToolTip"));
             this.btnEditSpecialTransitions.UseVisualStyleBackColor = true;
             this.btnEditSpecialTransitions.Click += new System.EventHandler(this.btnEditSpecialTransitions_Click);
             // 
             // label18
             // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(13, 87);
+            resources.ApplyResources(this.label18, "label18");
             this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(64, 13);
-            this.label18.TabIndex = 4;
-            this.label18.Text = "Al&ways add:";
+            this.helpTip.SetToolTip(this.label18, resources.GetString("label18.ToolTip"));
             // 
             // listAlwaysAdd
             // 
+            resources.ApplyResources(this.listAlwaysAdd, "listAlwaysAdd");
             this.listAlwaysAdd.CheckOnClick = true;
             this.listAlwaysAdd.FormattingEnabled = true;
-            this.listAlwaysAdd.Location = new System.Drawing.Point(16, 103);
             this.listAlwaysAdd.Name = "listAlwaysAdd";
-            this.listAlwaysAdd.Size = new System.Drawing.Size(187, 64);
-            this.listAlwaysAdd.TabIndex = 5;
-            this.helpTip.SetToolTip(this.listAlwaysAdd, "Set of special product ions to measure when present, even outside\r\nthe filtered r" +
-        "ange");
+            this.helpTip.SetToolTip(this.listAlwaysAdd, resources.GetString("listAlwaysAdd.ToolTip"));
             // 
             // comboRangeFrom
             // 
+            resources.ApplyResources(this.comboRangeFrom, "comboRangeFrom");
             this.comboRangeFrom.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRangeFrom.FormattingEnabled = true;
-            this.comboRangeFrom.Location = new System.Drawing.Point(16, 44);
             this.comboRangeFrom.Name = "comboRangeFrom";
-            this.comboRangeFrom.Size = new System.Drawing.Size(121, 21);
-            this.comboRangeFrom.TabIndex = 1;
-            this.helpTip.SetToolTip(this.comboRangeFrom, "Starting product ion for a filtered range of ions");
+            this.helpTip.SetToolTip(this.comboRangeFrom, resources.GetString("comboRangeFrom.ToolTip"));
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(13, 27);
+            resources.ApplyResources(this.label3, "label3");
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(33, 13);
-            this.label3.TabIndex = 0;
-            this.label3.Text = "&From:";
+            this.helpTip.SetToolTip(this.label3, resources.GetString("label3.ToolTip"));
             // 
             // comboRangeTo
             // 
+            resources.ApplyResources(this.comboRangeTo, "comboRangeTo");
             this.comboRangeTo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRangeTo.FormattingEnabled = true;
-            this.comboRangeTo.Location = new System.Drawing.Point(163, 43);
             this.comboRangeTo.Name = "comboRangeTo";
-            this.comboRangeTo.Size = new System.Drawing.Size(121, 21);
-            this.comboRangeTo.TabIndex = 3;
-            this.helpTip.SetToolTip(this.comboRangeTo, "End point for a filtered range of product ions");
+            this.helpTip.SetToolTip(this.comboRangeTo, resources.GetString("comboRangeTo.ToolTip"));
             this.comboRangeTo.SelectedIndexChanged += new System.EventHandler(this.comboRangeTo_SelectedIndexChanged);
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(160, 27);
+            resources.ApplyResources(this.label4, "label4");
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(23, 13);
-            this.label4.TabIndex = 2;
-            this.label4.Text = "T&o:";
+            this.helpTip.SetToolTip(this.label4, resources.GetString("label4.ToolTip"));
             // 
             // textIonCharges
             // 
-            this.textIonCharges.Location = new System.Drawing.Point(148, 40);
+            resources.ApplyResources(this.textIonCharges, "textIonCharges");
             this.textIonCharges.Name = "textIonCharges";
-            this.textIonCharges.Size = new System.Drawing.Size(76, 20);
-            this.textIonCharges.TabIndex = 3;
-            this.helpTip.SetToolTip(this.textIonCharges, "A list of comma separated charge states to use for calculating\r\nproduct ion mass-" +
-        "to-charge ratios");
+            this.helpTip.SetToolTip(this.textIonCharges, resources.GetString("textIonCharges.ToolTip"));
             // 
             // textPrecursorCharges
             // 
-            this.textPrecursorCharges.Location = new System.Drawing.Point(21, 40);
+            resources.ApplyResources(this.textPrecursorCharges, "textPrecursorCharges");
             this.textPrecursorCharges.Name = "textPrecursorCharges";
-            this.textPrecursorCharges.Size = new System.Drawing.Size(76, 20);
-            this.textPrecursorCharges.TabIndex = 1;
-            this.helpTip.SetToolTip(this.textPrecursorCharges, "A list of comma separated charge states to use for calculating\r\nprecursur mass-to" +
-        "-charge ratios");
+            this.helpTip.SetToolTip(this.textPrecursorCharges, resources.GetString("textPrecursorCharges.ToolTip"));
             // 
             // label6
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(145, 23);
+            resources.ApplyResources(this.label6, "label6");
             this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(66, 13);
-            this.label6.TabIndex = 2;
-            this.label6.Text = "&Ion charges:";
+            this.helpTip.SetToolTip(this.label6, resources.GetString("label6.ToolTip"));
             // 
             // label5
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(18, 23);
+            resources.ApplyResources(this.label5, "label5");
             this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(96, 13);
-            this.label5.TabIndex = 0;
-            this.label5.Text = "&Precursor charges:";
+            this.helpTip.SetToolTip(this.label5, resources.GetString("label5.ToolTip"));
             // 
             // tabLibrary
             // 
+            resources.ApplyResources(this.tabLibrary, "tabLibrary");
             this.tabLibrary.Controls.Add(this.label9);
             this.tabLibrary.Controls.Add(this.panelPick);
             this.tabLibrary.Controls.Add(this.textTolerance);
             this.tabLibrary.Controls.Add(this.cbLibraryPick);
             this.tabLibrary.Controls.Add(this.label13);
-            this.tabLibrary.Location = new System.Drawing.Point(4, 22);
             this.tabLibrary.Name = "tabLibrary";
-            this.tabLibrary.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLibrary.Size = new System.Drawing.Size(363, 491);
-            this.tabLibrary.TabIndex = 3;
-            this.tabLibrary.Text = "Library";
+            this.helpTip.SetToolTip(this.tabLibrary, resources.GetString("tabLibrary.ToolTip"));
             this.tabLibrary.UseVisualStyleBackColor = true;
             // 
             // label9
             // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(18, 23);
+            resources.ApplyResources(this.label9, "label9");
             this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(104, 13);
-            this.label9.TabIndex = 0;
-            this.label9.Text = "&Ion match tolerance:";
+            this.helpTip.SetToolTip(this.label9, resources.GetString("label9.ToolTip"));
             // 
             // panelPick
             // 
+            resources.ApplyResources(this.panelPick, "panelPick");
             this.panelPick.Controls.Add(this.radioAllAndFiltered);
             this.panelPick.Controls.Add(this.radioFiltered);
             this.panelPick.Controls.Add(this.radioAll);
             this.panelPick.Controls.Add(this.label14);
             this.panelPick.Controls.Add(this.label15);
             this.panelPick.Controls.Add(this.textIonCount);
-            this.panelPick.Location = new System.Drawing.Point(3, 117);
             this.panelPick.Name = "panelPick";
-            this.panelPick.Size = new System.Drawing.Size(357, 142);
-            this.panelPick.TabIndex = 4;
+            this.helpTip.SetToolTip(this.panelPick, resources.GetString("panelPick.ToolTip"));
             // 
             // radioAllAndFiltered
             // 
-            this.radioAllAndFiltered.AutoSize = true;
-            this.radioAllAndFiltered.Location = new System.Drawing.Point(17, 91);
+            resources.ApplyResources(this.radioAllAndFiltered, "radioAllAndFiltered");
             this.radioAllAndFiltered.Name = "radioAllAndFiltered";
-            this.radioAllAndFiltered.Size = new System.Drawing.Size(306, 17);
-            this.radioAllAndFiltered.TabIndex = 4;
             this.radioAllAndFiltered.TabStop = true;
-            this.radioAllAndFiltered.Text = "From filtered ion charges and types pl&us filtered product ions";
             this.helpTip.SetToolTip(this.radioAllAndFiltered, resources.GetString("radioAllAndFiltered.ToolTip"));
             this.radioAllAndFiltered.UseVisualStyleBackColor = true;
             // 
             // radioFiltered
             // 
-            this.radioFiltered.AutoSize = true;
-            this.radioFiltered.Location = new System.Drawing.Point(17, 114);
+            resources.ApplyResources(this.radioFiltered, "radioFiltered");
             this.radioFiltered.Name = "radioFiltered";
-            this.radioFiltered.Size = new System.Drawing.Size(143, 17);
-            this.radioFiltered.TabIndex = 5;
             this.radioFiltered.TabStop = true;
-            this.radioFiltered.Text = "From filtered pro&duct ions";
-            this.helpTip.SetToolTip(this.radioFiltered, "Apply parameters from the Filter tab to the selection of MS/MS\r\npeaks matching io" +
-        "ns for ranking");
+            this.helpTip.SetToolTip(this.radioFiltered, resources.GetString("radioFiltered.ToolTip"));
             this.radioFiltered.UseVisualStyleBackColor = true;
             // 
             // radioAll
             // 
-            this.radioAll.AutoSize = true;
-            this.radioAll.Location = new System.Drawing.Point(17, 68);
+            resources.ApplyResources(this.radioAll, "radioAll");
             this.radioAll.Name = "radioAll";
-            this.radioAll.Size = new System.Drawing.Size(189, 17);
-            this.radioAll.TabIndex = 3;
             this.radioAll.TabStop = true;
-            this.radioAll.Text = "From filtered ion &charges and types";
-            this.helpTip.SetToolTip(this.radioAll, "Apply only the ion charges and types from the Filter tab to\r\nthe selection of MS/" +
-        "MS peaks matching ions for ranking");
+            this.helpTip.SetToolTip(this.radioAll, resources.GetString("radioAll.ToolTip"));
             this.radioAll.UseVisualStyleBackColor = true;
             // 
             // label14
             // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(14, 9);
+            resources.ApplyResources(this.label14, "label14");
             this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(31, 13);
-            this.label14.TabIndex = 0;
-            this.label14.Text = "&Pick:";
+            this.helpTip.SetToolTip(this.label14, resources.GetString("label14.ToolTip"));
             // 
             // label15
             // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(90, 28);
+            resources.ApplyResources(this.label15, "label15");
             this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(65, 13);
-            this.label15.TabIndex = 2;
-            this.label15.Text = "product ions";
+            this.helpTip.SetToolTip(this.label15, resources.GetString("label15.ToolTip"));
             // 
             // textIonCount
             // 
-            this.textIonCount.Location = new System.Drawing.Point(17, 25);
+            resources.ApplyResources(this.textIonCount, "textIonCount");
             this.textIonCount.Name = "textIonCount";
-            this.textIonCount.Size = new System.Drawing.Size(67, 20);
-            this.textIonCount.TabIndex = 1;
-            this.helpTip.SetToolTip(this.textIonCount, "Pick this many transitions for each precursor by library spectrum\r\npeak intensity" +
-        " ranking");
+            this.helpTip.SetToolTip(this.textIonCount, resources.GetString("textIonCount.ToolTip"));
             // 
             // textTolerance
             // 
-            this.textTolerance.Location = new System.Drawing.Point(21, 40);
+            resources.ApplyResources(this.textTolerance, "textTolerance");
             this.textTolerance.Name = "textTolerance";
-            this.textTolerance.Size = new System.Drawing.Size(67, 20);
-            this.textTolerance.TabIndex = 1;
-            this.helpTip.SetToolTip(this.textTolerance, "Maximum delta allowed when matching predicted product ion\r\nm/z values with measur" +
-        "ed MS/MS spectral library peak m/z values");
+            this.helpTip.SetToolTip(this.textTolerance, resources.GetString("textTolerance.ToolTip"));
             // 
             // cbLibraryPick
             // 
-            this.cbLibraryPick.AutoSize = true;
-            this.cbLibraryPick.Location = new System.Drawing.Point(20, 94);
+            resources.ApplyResources(this.cbLibraryPick, "cbLibraryPick");
             this.cbLibraryPick.Name = "cbLibraryPick";
-            this.cbLibraryPick.Size = new System.Drawing.Size(295, 17);
-            this.cbLibraryPick.TabIndex = 3;
-            this.cbLibraryPick.Text = "If a library &spectrum is available, pick its most intense ions";
-            this.helpTip.SetToolTip(this.cbLibraryPick, "If checked, the transition filter is based on MS/MS spectral library peaks\r\nwhene" +
-        "ver peptides are matched to library spectrum.");
+            this.helpTip.SetToolTip(this.cbLibraryPick, resources.GetString("cbLibraryPick.ToolTip"));
             this.cbLibraryPick.UseVisualStyleBackColor = true;
             this.cbLibraryPick.CheckedChanged += new System.EventHandler(this.cbLibraryPick_CheckedChanged);
             // 
             // label13
             // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(94, 43);
+            resources.ApplyResources(this.label13, "label13");
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(20, 13);
-            this.label13.TabIndex = 2;
-            this.label13.Text = "Th";
+            this.helpTip.SetToolTip(this.label13, resources.GetString("label13.ToolTip"));
             // 
             // tabInstrument
             // 
+            resources.ApplyResources(this.tabInstrument, "tabInstrument");
             this.tabInstrument.Controls.Add(this.textMaxInclusions);
             this.tabInstrument.Controls.Add(this.label21);
             this.tabInstrument.Controls.Add(this.label30);
@@ -692,230 +543,156 @@
             this.tabInstrument.Controls.Add(this.label11);
             this.tabInstrument.Controls.Add(this.textMaxMz);
             this.tabInstrument.Controls.Add(this.textMinMz);
-            this.tabInstrument.Location = new System.Drawing.Point(4, 22);
             this.tabInstrument.Name = "tabInstrument";
-            this.tabInstrument.Size = new System.Drawing.Size(363, 491);
-            this.tabInstrument.TabIndex = 2;
-            this.tabInstrument.Text = "Instrument";
+            this.helpTip.SetToolTip(this.tabInstrument, resources.GetString("tabInstrument.ToolTip"));
             this.tabInstrument.UseVisualStyleBackColor = true;
             // 
             // textMaxInclusions
             // 
-            this.textMaxInclusions.Location = new System.Drawing.Point(189, 185);
+            resources.ApplyResources(this.textMaxInclusions, "textMaxInclusions");
             this.textMaxInclusions.Name = "textMaxInclusions";
-            this.textMaxInclusions.Size = new System.Drawing.Size(68, 20);
-            this.textMaxInclusions.TabIndex = 20;
-            this.helpTip.SetToolTip(this.textMaxInclusions, "Maximum number of inclusion windows measured by the target\r\ninstrument during mul" +
-        "tiplexed scanning.");
+            this.helpTip.SetToolTip(this.textMaxInclusions, resources.GetString("textMaxInclusions.ToolTip"));
             // 
             // label21
             // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(186, 169);
+            resources.ApplyResources(this.label21, "label21");
             this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(116, 13);
-            this.label21.TabIndex = 19;
-            this.label21.Text = "Firmware &inclusion limit:";
+            this.helpTip.SetToolTip(this.label21, resources.GetString("label21.ToolTip"));
             // 
             // label30
             // 
-            this.label30.AutoSize = true;
-            this.label30.Location = new System.Drawing.Point(264, 252);
+            resources.ApplyResources(this.label30, "label30");
             this.label30.Name = "label30";
-            this.label30.Size = new System.Drawing.Size(23, 13);
-            this.label30.TabIndex = 18;
-            this.label30.Text = "min";
+            this.helpTip.SetToolTip(this.label30, resources.GetString("label30.ToolTip"));
             // 
             // label31
             // 
-            this.label31.AutoSize = true;
-            this.label31.Location = new System.Drawing.Point(101, 252);
+            resources.ApplyResources(this.label31, "label31");
             this.label31.Name = "label31";
-            this.label31.Size = new System.Drawing.Size(23, 13);
-            this.label31.TabIndex = 14;
-            this.label31.Text = "min";
+            this.helpTip.SetToolTip(this.label31, resources.GetString("label31.ToolTip"));
             // 
             // label33
             // 
-            this.label33.AutoSize = true;
-            this.label33.Location = new System.Drawing.Point(187, 233);
+            resources.ApplyResources(this.label33, "label33");
             this.label33.Name = "label33";
-            this.label33.Size = new System.Drawing.Size(52, 13);
-            this.label33.TabIndex = 16;
-            this.label33.Text = "M&ax time:";
+            this.helpTip.SetToolTip(this.label33, resources.GetString("label33.ToolTip"));
             // 
             // label34
             // 
-            this.label34.AutoSize = true;
-            this.label34.Location = new System.Drawing.Point(24, 233);
+            resources.ApplyResources(this.label34, "label34");
             this.label34.Name = "label34";
-            this.label34.Size = new System.Drawing.Size(49, 13);
-            this.label34.TabIndex = 12;
-            this.label34.Text = "Mi&n time:";
+            this.helpTip.SetToolTip(this.label34, resources.GetString("label34.ToolTip"));
             // 
             // textMaxTime
             // 
-            this.textMaxTime.Location = new System.Drawing.Point(190, 249);
+            resources.ApplyResources(this.textMaxTime, "textMaxTime");
             this.textMaxTime.Name = "textMaxTime";
-            this.textMaxTime.Size = new System.Drawing.Size(68, 20);
-            this.textMaxTime.TabIndex = 17;
-            this.helpTip.SetToolTip(this.textMaxTime, "Maximum time allowed in chromatograms regardless of how\r\nthey were acquired.  Set" +
-        "ting this can save memory and disk space\r\nthat might be used on uninteresting pa" +
-        "rts of the gradient.");
+            this.helpTip.SetToolTip(this.textMaxTime, resources.GetString("textMaxTime.ToolTip"));
             // 
             // textMinTime
             // 
-            this.textMinTime.Location = new System.Drawing.Point(27, 249);
+            resources.ApplyResources(this.textMinTime, "textMinTime");
             this.textMinTime.Name = "textMinTime";
-            this.textMinTime.Size = new System.Drawing.Size(68, 20);
-            this.textMinTime.TabIndex = 13;
-            this.helpTip.SetToolTip(this.textMinTime, "Minimum time allowed in chromatograms regardless of how\r\nthey were acquired.  Set" +
-        "ting this can save memory and disk space\r\nthat might be used on uninteresting pa" +
-        "rts of the gradient.");
+            this.helpTip.SetToolTip(this.textMinTime, resources.GetString("textMinTime.ToolTip"));
             // 
             // label26
             // 
-            this.label26.AutoSize = true;
-            this.label26.Location = new System.Drawing.Point(101, 127);
+            resources.ApplyResources(this.label26, "label26");
             this.label26.Name = "label26";
-            this.label26.Size = new System.Drawing.Size(20, 13);
-            this.label26.TabIndex = 9;
-            this.label26.Text = "Th";
+            this.helpTip.SetToolTip(this.label26, resources.GetString("label26.ToolTip"));
             // 
             // label25
             // 
-            this.label25.AutoSize = true;
-            this.label25.Location = new System.Drawing.Point(264, 41);
+            resources.ApplyResources(this.label25, "label25");
             this.label25.Name = "label25";
-            this.label25.Size = new System.Drawing.Size(20, 13);
-            this.label25.TabIndex = 6;
-            this.label25.Text = "Th";
+            this.helpTip.SetToolTip(this.label25, resources.GetString("label25.ToolTip"));
             // 
             // label24
             // 
-            this.label24.AutoSize = true;
-            this.label24.Location = new System.Drawing.Point(101, 41);
+            resources.ApplyResources(this.label24, "label24");
             this.label24.Name = "label24";
-            this.label24.Size = new System.Drawing.Size(20, 13);
-            this.label24.TabIndex = 2;
-            this.label24.Text = "Th";
+            this.helpTip.SetToolTip(this.label24, resources.GetString("label24.ToolTip"));
             // 
             // cbDynamicMinimum
             // 
-            this.cbDynamicMinimum.AutoSize = true;
-            this.cbDynamicMinimum.Location = new System.Drawing.Point(27, 64);
+            resources.ApplyResources(this.cbDynamicMinimum, "cbDynamicMinimum");
             this.cbDynamicMinimum.Name = "cbDynamicMinimum";
-            this.cbDynamicMinimum.Size = new System.Drawing.Size(146, 17);
-            this.cbDynamicMinimum.TabIndex = 3;
-            this.cbDynamicMinimum.Text = "&Dynamic min product m/z";
-            this.helpTip.SetToolTip(this.cbDynamicMinimum, "If checked, minimum m/z value for product ions is calculate\r\ndynamically from the" +
-        " precursor m/z using a specific equation\r\nprovided by Thermo-Scientific for LTQ " +
-        "instruments");
+            this.helpTip.SetToolTip(this.cbDynamicMinimum, resources.GetString("cbDynamicMinimum.ToolTip"));
             this.cbDynamicMinimum.UseVisualStyleBackColor = true;
             // 
             // textMaxTrans
             // 
-            this.textMaxTrans.Location = new System.Drawing.Point(27, 185);
+            resources.ApplyResources(this.textMaxTrans, "textMaxTrans");
             this.textMaxTrans.Name = "textMaxTrans";
-            this.textMaxTrans.Size = new System.Drawing.Size(68, 20);
-            this.textMaxTrans.TabIndex = 11;
-            this.helpTip.SetToolTip(this.textMaxTrans, "Maximum total number of transitions measurable by the target\r\ninstrument in a sin" +
-        "gle injection or blank if no maximum applies");
+            this.helpTip.SetToolTip(this.textMaxTrans, resources.GetString("textMaxTrans.ToolTip"));
             // 
             // label17
             // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(24, 169);
+            resources.ApplyResources(this.label17, "label17");
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(117, 13);
-            this.label17.TabIndex = 10;
-            this.label17.Text = "&Firmware transition limit:";
+            this.helpTip.SetToolTip(this.label17, resources.GetString("label17.ToolTip"));
             // 
             // textMzMatchTolerance
             // 
-            this.textMzMatchTolerance.Location = new System.Drawing.Point(27, 124);
+            resources.ApplyResources(this.textMzMatchTolerance, "textMzMatchTolerance");
             this.textMzMatchTolerance.Name = "textMzMatchTolerance";
-            this.textMzMatchTolerance.Size = new System.Drawing.Size(68, 20);
-            this.textMzMatchTolerance.TabIndex = 8;
-            this.helpTip.SetToolTip(this.textMzMatchTolerance, "Maximum delta for matching measured transition m/z values\r\nwith predicted transit" +
-        "ion m/z values");
+            this.helpTip.SetToolTip(this.textMzMatchTolerance, resources.GetString("textMzMatchTolerance.ToolTip"));
             // 
             // label16
             // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(24, 108);
+            resources.ApplyResources(this.label16, "label16");
             this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(108, 13);
-            this.label16.TabIndex = 7;
-            this.label16.Text = "Match &tolerance m/z:";
+            this.helpTip.SetToolTip(this.label16, resources.GetString("label16.ToolTip"));
             // 
             // label10
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(187, 22);
+            resources.ApplyResources(this.label10, "label10");
             this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(51, 13);
-            this.label10.TabIndex = 4;
-            this.label10.Text = "Ma&x m/z:";
+            this.helpTip.SetToolTip(this.label10, resources.GetString("label10.ToolTip"));
             // 
             // label11
             // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(24, 22);
+            resources.ApplyResources(this.label11, "label11");
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(48, 13);
-            this.label11.TabIndex = 0;
-            this.label11.Text = "&Min m/z:";
+            this.helpTip.SetToolTip(this.label11, resources.GetString("label11.ToolTip"));
             // 
             // textMaxMz
             // 
-            this.textMaxMz.Location = new System.Drawing.Point(190, 38);
+            resources.ApplyResources(this.textMaxMz, "textMaxMz");
             this.textMaxMz.Name = "textMaxMz";
-            this.textMaxMz.Size = new System.Drawing.Size(68, 20);
-            this.textMaxMz.TabIndex = 5;
-            this.helpTip.SetToolTip(this.textMaxMz, "Maximum measurable m/z value for the target instrument");
+            this.helpTip.SetToolTip(this.textMaxMz, resources.GetString("textMaxMz.ToolTip"));
             // 
             // textMinMz
             // 
-            this.textMinMz.Location = new System.Drawing.Point(27, 38);
+            resources.ApplyResources(this.textMinMz, "textMinMz");
             this.textMinMz.Name = "textMinMz";
-            this.textMinMz.Size = new System.Drawing.Size(68, 20);
-            this.textMinMz.TabIndex = 1;
-            this.helpTip.SetToolTip(this.textMinMz, "Minimum measurable m/z value for the target instrument");
+            this.helpTip.SetToolTip(this.textMinMz, resources.GetString("textMinMz.ToolTip"));
             // 
             // tabFullScan
             // 
+            resources.ApplyResources(this.tabFullScan, "tabFullScan");
             this.tabFullScan.Controls.Add(this.groupBoxRetentionTimeToKeep);
             this.tabFullScan.Controls.Add(this.groupBoxMS1);
             this.tabFullScan.Controls.Add(this.groupBoxMS2);
-            this.tabFullScan.Location = new System.Drawing.Point(4, 22);
             this.tabFullScan.Name = "tabFullScan";
-            this.tabFullScan.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFullScan.Size = new System.Drawing.Size(363, 491);
-            this.tabFullScan.TabIndex = 4;
-            this.tabFullScan.Text = "Full-Scan";
+            this.helpTip.SetToolTip(this.tabFullScan, resources.GetString("tabFullScan.ToolTip"));
             this.tabFullScan.UseVisualStyleBackColor = true;
             // 
             // groupBoxRetentionTimeToKeep
             // 
+            resources.ApplyResources(this.groupBoxRetentionTimeToKeep, "groupBoxRetentionTimeToKeep");
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioTimeAroundMs2Ids);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.flowLayoutPanel1);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioUseSchedulingWindow);
             this.groupBoxRetentionTimeToKeep.Controls.Add(this.radioKeepAllTime);
-            this.groupBoxRetentionTimeToKeep.Location = new System.Drawing.Point(18, 384);
             this.groupBoxRetentionTimeToKeep.Name = "groupBoxRetentionTimeToKeep";
-            this.groupBoxRetentionTimeToKeep.Size = new System.Drawing.Size(326, 92);
-            this.groupBoxRetentionTimeToKeep.TabIndex = 2;
             this.groupBoxRetentionTimeToKeep.TabStop = false;
-            this.groupBoxRetentionTimeToKeep.Text = "Retention time filtering";
+            this.helpTip.SetToolTip(this.groupBoxRetentionTimeToKeep, resources.GetString("groupBoxRetentionTimeToKeep.ToolTip"));
             // 
             // radioTimeAroundMs2Ids
             // 
-            this.radioTimeAroundMs2Ids.AutoSize = true;
-            this.radioTimeAroundMs2Ids.Location = new System.Drawing.Point(14, 65);
+            resources.ApplyResources(this.radioTimeAroundMs2Ids, "radioTimeAroundMs2Ids");
             this.radioTimeAroundMs2Ids.Name = "radioTimeAroundMs2Ids";
-            this.radioTimeAroundMs2Ids.Size = new System.Drawing.Size(14, 13);
-            this.radioTimeAroundMs2Ids.TabIndex = 2;
             this.radioTimeAroundMs2Ids.TabStop = true;
             this.helpTip.SetToolTip(this.radioTimeAroundMs2Ids, resources.GetString("radioTimeAroundMs2Ids.ToolTip"));
             this.radioTimeAroundMs2Ids.UseVisualStyleBackColor = true;
@@ -923,75 +700,50 @@
             // 
             // flowLayoutPanel1
             // 
-            this.flowLayoutPanel1.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            resources.ApplyResources(this.flowLayoutPanel1, "flowLayoutPanel1");
             this.flowLayoutPanel1.Controls.Add(this.label35);
             this.flowLayoutPanel1.Controls.Add(this.tbxTimeAroundMs2Ids);
             this.flowLayoutPanel1.Controls.Add(this.label27);
-            this.flowLayoutPanel1.Location = new System.Drawing.Point(27, 63);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(303, 22);
-            this.flowLayoutPanel1.TabIndex = 2;
+            this.helpTip.SetToolTip(this.flowLayoutPanel1, resources.GetString("flowLayoutPanel1.ToolTip"));
             // 
             // label35
             // 
-            this.label35.AutoSize = true;
-            this.label35.Location = new System.Drawing.Point(3, 3);
-            this.label35.Margin = new System.Windows.Forms.Padding(3);
+            resources.ApplyResources(this.label35, "label35");
             this.label35.Name = "label35";
-            this.label35.Size = new System.Drawing.Size(109, 13);
-            this.label35.TabIndex = 3;
-            this.label35.Text = "Use only scans within";
             this.helpTip.SetToolTip(this.label35, resources.GetString("label35.ToolTip"));
             // 
             // tbxTimeAroundMs2Ids
             // 
-            this.tbxTimeAroundMs2Ids.Location = new System.Drawing.Point(115, 0);
-            this.tbxTimeAroundMs2Ids.Margin = new System.Windows.Forms.Padding(0);
+            resources.ApplyResources(this.tbxTimeAroundMs2Ids, "tbxTimeAroundMs2Ids");
             this.tbxTimeAroundMs2Ids.Name = "tbxTimeAroundMs2Ids";
-            this.tbxTimeAroundMs2Ids.Size = new System.Drawing.Size(49, 20);
-            this.tbxTimeAroundMs2Ids.TabIndex = 3;
             this.helpTip.SetToolTip(this.tbxTimeAroundMs2Ids, resources.GetString("tbxTimeAroundMs2Ids.ToolTip"));
             // 
             // label27
             // 
-            this.label27.AutoSize = true;
-            this.label27.Location = new System.Drawing.Point(167, 3);
-            this.label27.Margin = new System.Windows.Forms.Padding(3);
+            resources.ApplyResources(this.label27, "label27");
             this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(114, 13);
-            this.label27.TabIndex = 4;
-            this.label27.Text = "minutes of MS/MS IDs";
             this.helpTip.SetToolTip(this.label27, resources.GetString("label27.ToolTip"));
             // 
             // radioUseSchedulingWindow
             // 
-            this.radioUseSchedulingWindow.AutoSize = true;
-            this.radioUseSchedulingWindow.Location = new System.Drawing.Point(14, 42);
+            resources.ApplyResources(this.radioUseSchedulingWindow, "radioUseSchedulingWindow");
             this.radioUseSchedulingWindow.Name = "radioUseSchedulingWindow";
-            this.radioUseSchedulingWindow.Size = new System.Drawing.Size(272, 17);
-            this.radioUseSchedulingWindow.TabIndex = 1;
             this.radioUseSchedulingWindow.TabStop = true;
-            this.radioUseSchedulingWindow.Text = "Use only scans in retention time scheduling windows";
-            this.helpTip.SetToolTip(this.radioUseSchedulingWindow, "Only scans that fall within the retention time scheduling\r\nwindows defined in the" +
-        " Peptide Settings Filter tab will\r\nbe used in chromatogram extraction.");
+            this.helpTip.SetToolTip(this.radioUseSchedulingWindow, resources.GetString("radioUseSchedulingWindow.ToolTip"));
             this.radioUseSchedulingWindow.UseVisualStyleBackColor = true;
             // 
             // radioKeepAllTime
             // 
-            this.radioKeepAllTime.AutoSize = true;
-            this.radioKeepAllTime.Location = new System.Drawing.Point(14, 19);
+            resources.ApplyResources(this.radioKeepAllTime, "radioKeepAllTime");
             this.radioKeepAllTime.Name = "radioKeepAllTime";
-            this.radioKeepAllTime.Size = new System.Drawing.Size(150, 17);
-            this.radioKeepAllTime.TabIndex = 0;
             this.radioKeepAllTime.TabStop = true;
-            this.radioKeepAllTime.Text = "Include all matching scans";
-            this.helpTip.SetToolTip(this.radioKeepAllTime, "All scans matching the MS1 and MS/MS filters will be used\r\nin chromatogram extrac" +
-        "tion.");
+            this.helpTip.SetToolTip(this.radioKeepAllTime, resources.GetString("radioKeepAllTime.ToolTip"));
             this.radioKeepAllTime.UseVisualStyleBackColor = true;
             // 
             // groupBoxMS1
             // 
+            resources.ApplyResources(this.groupBoxMS1, "groupBoxMS1");
             this.groupBoxMS1.Controls.Add(this.comboEnrichments);
             this.groupBoxMS1.Controls.Add(this.label29);
             this.groupBoxMS1.Controls.Add(this.labelPrecursorIsotopeFilterPercent);
@@ -1006,143 +758,106 @@
             this.groupBoxMS1.Controls.Add(this.labelPrecursorRes);
             this.groupBoxMS1.Controls.Add(this.comboPrecursorAnalyzerType);
             this.groupBoxMS1.Controls.Add(this.label32);
-            this.groupBoxMS1.Location = new System.Drawing.Point(18, 12);
             this.groupBoxMS1.Name = "groupBoxMS1";
-            this.groupBoxMS1.Size = new System.Drawing.Size(326, 211);
-            this.groupBoxMS1.TabIndex = 0;
             this.groupBoxMS1.TabStop = false;
-            this.groupBoxMS1.Text = "&MS1 filtering";
+            this.helpTip.SetToolTip(this.groupBoxMS1, resources.GetString("groupBoxMS1.ToolTip"));
             // 
             // comboEnrichments
             // 
+            resources.ApplyResources(this.comboEnrichments, "comboEnrichments");
             this.comboEnrichments.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboEnrichments.FormattingEnabled = true;
-            this.comboEnrichments.Location = new System.Drawing.Point(14, 176);
             this.comboEnrichments.Name = "comboEnrichments";
-            this.comboEnrichments.Size = new System.Drawing.Size(111, 21);
-            this.comboEnrichments.TabIndex = 6;
+            this.helpTip.SetToolTip(this.comboEnrichments, resources.GetString("comboEnrichments.ToolTip"));
             this.comboEnrichments.SelectedIndexChanged += new System.EventHandler(this.comboEnrichments_SelectedIndexChanged);
             // 
             // label29
             // 
-            this.label29.AutoSize = true;
-            this.label29.Location = new System.Drawing.Point(14, 160);
+            resources.ApplyResources(this.label29, "label29");
             this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(139, 13);
-            this.label29.TabIndex = 5;
-            this.label29.Text = "Isotope la&beling enrichment:";
+            this.helpTip.SetToolTip(this.label29, resources.GetString("label29.ToolTip"));
             // 
             // labelPrecursorIsotopeFilterPercent
             // 
-            this.labelPrecursorIsotopeFilterPercent.AutoSize = true;
-            this.labelPrecursorIsotopeFilterPercent.Location = new System.Drawing.Point(81, 114);
+            resources.ApplyResources(this.labelPrecursorIsotopeFilterPercent, "labelPrecursorIsotopeFilterPercent");
             this.labelPrecursorIsotopeFilterPercent.Name = "labelPrecursorIsotopeFilterPercent";
-            this.labelPrecursorIsotopeFilterPercent.Size = new System.Drawing.Size(15, 13);
-            this.labelPrecursorIsotopeFilterPercent.TabIndex = 4;
-            this.labelPrecursorIsotopeFilterPercent.Text = "%";
-            this.labelPrecursorIsotopeFilterPercent.Visible = false;
+            this.helpTip.SetToolTip(this.labelPrecursorIsotopeFilterPercent, resources.GetString("labelPrecursorIsotopeFilterPercent.ToolTip"));
             // 
             // textPrecursorIsotopeFilter
             // 
-            this.textPrecursorIsotopeFilter.Location = new System.Drawing.Point(14, 111);
+            resources.ApplyResources(this.textPrecursorIsotopeFilter, "textPrecursorIsotopeFilter");
             this.textPrecursorIsotopeFilter.Name = "textPrecursorIsotopeFilter";
-            this.textPrecursorIsotopeFilter.Size = new System.Drawing.Size(65, 20);
-            this.textPrecursorIsotopeFilter.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textPrecursorIsotopeFilter, resources.GetString("textPrecursorIsotopeFilter.ToolTip"));
             // 
             // labelPrecursorIsotopeFilter
             // 
-            this.labelPrecursorIsotopeFilter.AutoSize = true;
-            this.labelPrecursorIsotopeFilter.Location = new System.Drawing.Point(11, 94);
+            resources.ApplyResources(this.labelPrecursorIsotopeFilter, "labelPrecursorIsotopeFilter");
             this.labelPrecursorIsotopeFilter.Name = "labelPrecursorIsotopeFilter";
-            this.labelPrecursorIsotopeFilter.Size = new System.Drawing.Size(40, 13);
-            this.labelPrecursorIsotopeFilter.TabIndex = 2;
-            this.labelPrecursorIsotopeFilter.Text = "Pea&ks:";
+            this.helpTip.SetToolTip(this.labelPrecursorIsotopeFilter, resources.GetString("labelPrecursorIsotopeFilter.ToolTip"));
             // 
             // label23
             // 
-            this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(11, 28);
+            resources.ApplyResources(this.label23, "label23");
             this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(120, 13);
-            this.label23.TabIndex = 0;
-            this.label23.Text = "&Isotope peaks included:";
+            this.helpTip.SetToolTip(this.label23, resources.GetString("label23.ToolTip"));
             // 
             // comboPrecursorIsotopes
             // 
+            resources.ApplyResources(this.comboPrecursorIsotopes, "comboPrecursorIsotopes");
             this.comboPrecursorIsotopes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboPrecursorIsotopes.FormattingEnabled = true;
-            this.comboPrecursorIsotopes.Location = new System.Drawing.Point(14, 45);
             this.comboPrecursorIsotopes.Name = "comboPrecursorIsotopes";
-            this.comboPrecursorIsotopes.Size = new System.Drawing.Size(111, 21);
-            this.comboPrecursorIsotopes.TabIndex = 1;
+            this.helpTip.SetToolTip(this.comboPrecursorIsotopes, resources.GetString("comboPrecursorIsotopes.ToolTip"));
             this.comboPrecursorIsotopes.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorIsotopes_SelectedIndexChanged);
             // 
             // labelPrecursorAt
             // 
-            this.labelPrecursorAt.AutoSize = true;
-            this.labelPrecursorAt.Location = new System.Drawing.Point(246, 95);
+            resources.ApplyResources(this.labelPrecursorAt, "labelPrecursorAt");
             this.labelPrecursorAt.Name = "labelPrecursorAt";
-            this.labelPrecursorAt.Size = new System.Drawing.Size(20, 13);
-            this.labelPrecursorAt.TabIndex = 11;
-            this.labelPrecursorAt.Text = "&At:";
+            this.helpTip.SetToolTip(this.labelPrecursorAt, resources.GetString("labelPrecursorAt.ToolTip"));
             // 
             // textPrecursorAt
             // 
-            this.textPrecursorAt.Location = new System.Drawing.Point(244, 111);
+            resources.ApplyResources(this.textPrecursorAt, "textPrecursorAt");
             this.textPrecursorAt.Name = "textPrecursorAt";
-            this.textPrecursorAt.Size = new System.Drawing.Size(44, 20);
-            this.textPrecursorAt.TabIndex = 12;
-            this.helpTip.SetToolTip(this.textPrecursorAt, "The m/z value at which the resolving power\r\nfor MS1 scans is calibrated.");
+            this.helpTip.SetToolTip(this.textPrecursorAt, resources.GetString("textPrecursorAt.ToolTip"));
             // 
             // labelPrecursorTh
             // 
-            this.labelPrecursorTh.AutoSize = true;
-            this.labelPrecursorTh.Location = new System.Drawing.Point(290, 114);
+            resources.ApplyResources(this.labelPrecursorTh, "labelPrecursorTh");
             this.labelPrecursorTh.Name = "labelPrecursorTh";
-            this.labelPrecursorTh.Size = new System.Drawing.Size(20, 13);
-            this.labelPrecursorTh.TabIndex = 13;
-            this.labelPrecursorTh.Text = "Th";
+            this.helpTip.SetToolTip(this.labelPrecursorTh, resources.GetString("labelPrecursorTh.ToolTip"));
             // 
             // textPrecursorRes
             // 
-            this.textPrecursorRes.Enabled = false;
-            this.textPrecursorRes.Location = new System.Drawing.Point(153, 111);
+            resources.ApplyResources(this.textPrecursorRes, "textPrecursorRes");
             this.textPrecursorRes.Name = "textPrecursorRes";
-            this.textPrecursorRes.Size = new System.Drawing.Size(85, 20);
-            this.textPrecursorRes.TabIndex = 10;
+            this.helpTip.SetToolTip(this.textPrecursorRes, resources.GetString("textPrecursorRes.ToolTip"));
             // 
             // labelPrecursorRes
             // 
-            this.labelPrecursorRes.AutoSize = true;
-            this.labelPrecursorRes.Location = new System.Drawing.Point(150, 95);
+            resources.ApplyResources(this.labelPrecursorRes, "labelPrecursorRes");
             this.labelPrecursorRes.Name = "labelPrecursorRes";
-            this.labelPrecursorRes.Size = new System.Drawing.Size(89, 13);
-            this.labelPrecursorRes.TabIndex = 9;
-            this.labelPrecursorRes.Text = "&Resolving power:";
+            this.helpTip.SetToolTip(this.labelPrecursorRes, resources.GetString("labelPrecursorRes.ToolTip"));
             // 
             // comboPrecursorAnalyzerType
             // 
+            resources.ApplyResources(this.comboPrecursorAnalyzerType, "comboPrecursorAnalyzerType");
             this.comboPrecursorAnalyzerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboPrecursorAnalyzerType.Enabled = false;
             this.comboPrecursorAnalyzerType.FormattingEnabled = true;
-            this.comboPrecursorAnalyzerType.Location = new System.Drawing.Point(153, 45);
             this.comboPrecursorAnalyzerType.Name = "comboPrecursorAnalyzerType";
-            this.comboPrecursorAnalyzerType.Size = new System.Drawing.Size(111, 21);
-            this.comboPrecursorAnalyzerType.TabIndex = 8;
-            this.helpTip.SetToolTip(this.comboPrecursorAnalyzerType, "The mass analyzer used to collect MS1 scans.");
+            this.helpTip.SetToolTip(this.comboPrecursorAnalyzerType, resources.GetString("comboPrecursorAnalyzerType.ToolTip"));
             this.comboPrecursorAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorAnalyzerType_SelectedIndexChanged);
             // 
             // label32
             // 
-            this.label32.AutoSize = true;
-            this.label32.Location = new System.Drawing.Point(150, 28);
+            resources.ApplyResources(this.label32, "label32");
             this.label32.Name = "label32";
-            this.label32.Size = new System.Drawing.Size(124, 13);
-            this.label32.TabIndex = 7;
-            this.label32.Text = "&Precursor mass analyzer:";
+            this.helpTip.SetToolTip(this.label32, resources.GetString("label32.ToolTip"));
             // 
             // groupBoxMS2
             // 
+            resources.ApplyResources(this.groupBoxMS2, "groupBoxMS2");
             this.groupBoxMS2.Controls.Add(this.comboIsolationScheme);
             this.groupBoxMS2.Controls.Add(this.labelProductAt);
             this.groupBoxMS2.Controls.Add(this.textProductAt);
@@ -1154,118 +869,84 @@
             this.groupBoxMS2.Controls.Add(this.labelIsolationScheme);
             this.groupBoxMS2.Controls.Add(this.comboAcquisitionMethod);
             this.groupBoxMS2.Controls.Add(this.label20);
-            this.groupBoxMS2.Location = new System.Drawing.Point(18, 231);
             this.groupBoxMS2.Name = "groupBoxMS2";
-            this.groupBoxMS2.Size = new System.Drawing.Size(326, 145);
-            this.groupBoxMS2.TabIndex = 1;
             this.groupBoxMS2.TabStop = false;
-            this.groupBoxMS2.Text = "M&S/MS filtering";
+            this.helpTip.SetToolTip(this.groupBoxMS2, resources.GetString("groupBoxMS2.ToolTip"));
             // 
             // comboIsolationScheme
             // 
+            resources.ApplyResources(this.comboIsolationScheme, "comboIsolationScheme");
             this.comboIsolationScheme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboIsolationScheme.FormattingEnabled = true;
-            this.comboIsolationScheme.Location = new System.Drawing.Point(14, 110);
             this.comboIsolationScheme.Name = "comboIsolationScheme";
-            this.comboIsolationScheme.Size = new System.Drawing.Size(111, 21);
-            this.comboIsolationScheme.TabIndex = 14;
-            this.helpTip.SetToolTip(this.comboIsolationScheme, "Single - match a single precursor closest to the center of the isolation window\r\n" +
-        "Multiple - match any precursor within the isolation window");
+            this.helpTip.SetToolTip(this.comboIsolationScheme, resources.GetString("comboIsolationScheme.ToolTip"));
             this.comboIsolationScheme.SelectedIndexChanged += new System.EventHandler(this.comboIsolationScheme_SelectedIndexChanged);
             // 
             // labelProductAt
             // 
-            this.labelProductAt.AutoSize = true;
-            this.labelProductAt.Location = new System.Drawing.Point(245, 94);
+            resources.ApplyResources(this.labelProductAt, "labelProductAt");
             this.labelProductAt.Name = "labelProductAt";
-            this.labelProductAt.Size = new System.Drawing.Size(20, 13);
-            this.labelProductAt.TabIndex = 11;
-            this.labelProductAt.Text = "A&t:";
+            this.helpTip.SetToolTip(this.labelProductAt, resources.GetString("labelProductAt.ToolTip"));
             // 
             // textProductAt
             // 
-            this.textProductAt.Location = new System.Drawing.Point(244, 111);
+            resources.ApplyResources(this.textProductAt, "textProductAt");
             this.textProductAt.Name = "textProductAt";
-            this.textProductAt.Size = new System.Drawing.Size(44, 20);
-            this.textProductAt.TabIndex = 12;
-            this.helpTip.SetToolTip(this.textProductAt, "The m/z value at which the resolving power\r\nfor MS/MS scans is calibrated.");
+            this.helpTip.SetToolTip(this.textProductAt, resources.GetString("textProductAt.ToolTip"));
             // 
             // labelProductTh
             // 
-            this.labelProductTh.AutoSize = true;
-            this.labelProductTh.Location = new System.Drawing.Point(289, 114);
+            resources.ApplyResources(this.labelProductTh, "labelProductTh");
             this.labelProductTh.Name = "labelProductTh";
-            this.labelProductTh.Size = new System.Drawing.Size(20, 13);
-            this.labelProductTh.TabIndex = 13;
-            this.labelProductTh.Text = "Th";
+            this.helpTip.SetToolTip(this.labelProductTh, resources.GetString("labelProductTh.ToolTip"));
             // 
             // textProductRes
             // 
-            this.textProductRes.Enabled = false;
-            this.textProductRes.Location = new System.Drawing.Point(153, 111);
+            resources.ApplyResources(this.textProductRes, "textProductRes");
             this.textProductRes.Name = "textProductRes";
-            this.textProductRes.Size = new System.Drawing.Size(85, 20);
-            this.textProductRes.TabIndex = 10;
+            this.helpTip.SetToolTip(this.textProductRes, resources.GetString("textProductRes.ToolTip"));
             // 
             // labelProductRes
             // 
-            this.labelProductRes.AutoSize = true;
-            this.labelProductRes.Location = new System.Drawing.Point(150, 94);
+            resources.ApplyResources(this.labelProductRes, "labelProductRes");
             this.labelProductRes.Name = "labelProductRes";
-            this.labelProductRes.Size = new System.Drawing.Size(89, 13);
-            this.labelProductRes.TabIndex = 9;
-            this.labelProductRes.Text = "Res&olving power:";
+            this.helpTip.SetToolTip(this.labelProductRes, resources.GetString("labelProductRes.ToolTip"));
             // 
             // comboProductAnalyzerType
             // 
+            resources.ApplyResources(this.comboProductAnalyzerType, "comboProductAnalyzerType");
             this.comboProductAnalyzerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboProductAnalyzerType.Enabled = false;
             this.comboProductAnalyzerType.FormattingEnabled = true;
-            this.comboProductAnalyzerType.Location = new System.Drawing.Point(150, 45);
             this.comboProductAnalyzerType.Name = "comboProductAnalyzerType";
-            this.comboProductAnalyzerType.Size = new System.Drawing.Size(111, 21);
-            this.comboProductAnalyzerType.TabIndex = 8;
-            this.helpTip.SetToolTip(this.comboProductAnalyzerType, "The mass analyzer used to collect MS/MS scans.");
+            this.helpTip.SetToolTip(this.comboProductAnalyzerType, resources.GetString("comboProductAnalyzerType.ToolTip"));
             this.comboProductAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboProductAnalyzerType_SelectedIndexChanged);
             // 
             // label22
             // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(147, 28);
+            resources.ApplyResources(this.label22, "label22");
             this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(116, 13);
-            this.label22.TabIndex = 7;
-            this.label22.Text = "Product &mass analyzer:";
+            this.helpTip.SetToolTip(this.label22, resources.GetString("label22.ToolTip"));
             // 
             // labelIsolationScheme
             // 
-            this.labelIsolationScheme.AutoSize = true;
-            this.labelIsolationScheme.Location = new System.Drawing.Point(11, 94);
+            resources.ApplyResources(this.labelIsolationScheme, "labelIsolationScheme");
             this.labelIsolationScheme.Name = "labelIsolationScheme";
-            this.labelIsolationScheme.Size = new System.Drawing.Size(89, 13);
-            this.labelIsolationScheme.TabIndex = 2;
-            this.labelIsolationScheme.Text = "Iso&lation scheme:";
+            this.helpTip.SetToolTip(this.labelIsolationScheme, resources.GetString("labelIsolationScheme.ToolTip"));
             // 
             // comboAcquisitionMethod
             // 
+            resources.ApplyResources(this.comboAcquisitionMethod, "comboAcquisitionMethod");
             this.comboAcquisitionMethod.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboAcquisitionMethod.FormattingEnabled = true;
-            this.comboAcquisitionMethod.Location = new System.Drawing.Point(14, 45);
             this.comboAcquisitionMethod.Name = "comboAcquisitionMethod";
-            this.comboAcquisitionMethod.Size = new System.Drawing.Size(111, 21);
-            this.comboAcquisitionMethod.TabIndex = 1;
-            this.helpTip.SetToolTip(this.comboAcquisitionMethod, "Single - match a single precursor closest to the center of the isolation window\r\n" +
-        "Multiple - match any precursor within the isolation window");
+            this.helpTip.SetToolTip(this.comboAcquisitionMethod, resources.GetString("comboAcquisitionMethod.ToolTip"));
             this.comboAcquisitionMethod.SelectedIndexChanged += new System.EventHandler(this.comboAcquisitionMethod_SelectedIndexChanged);
             // 
             // label20
             // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(11, 28);
+            resources.ApplyResources(this.label20, "label20");
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(99, 13);
-            this.label20.TabIndex = 0;
-            this.label20.Text = "A&cquisition method:";
+            this.helpTip.SetToolTip(this.label20, resources.GetString("label20.ToolTip"));
             // 
             // helpTip
             // 
@@ -1276,10 +957,9 @@
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 572);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.tabControl1);
@@ -1288,8 +968,7 @@
             this.MinimizeBox = false;
             this.Name = "TransitionSettingsUI";
             this.ShowInTaskbar = false;
-            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "Transition Settings";
+            this.helpTip.SetToolTip(this, resources.GetString("$this.ToolTip"));
             this.tabControl1.ResumeLayout(false);
             this.tabGeneral.ResumeLayout(false);
             this.tabGeneral.PerformLayout();

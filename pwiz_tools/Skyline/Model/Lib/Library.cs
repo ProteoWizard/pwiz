@@ -19,9 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using pwiz.Common.SystemUtil;
@@ -181,6 +183,7 @@ namespace pwiz.Skyline.Model.Lib
 
         private bool BuildLibraryBackground(IDocumentContainer container, ILibraryBuilder builder)
         {
+            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
             // This blocks all library loading, while a library is being built
             // TODO: Something better than locking for the entire build
             lock (_loadedLibraries)
@@ -491,7 +494,7 @@ namespace pwiz.Skyline.Model.Lib
         protected static void ReadComplete(Stream stream, byte[] buffer, int size)
         {
             if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException("Data truncation in library header. File may be corrupted.");
+                throw new InvalidDataException(Resources.Library_ReadComplete_Data_truncation_in_library_header_File_may_be_corrupted);
         }
 
         #endregion
@@ -625,7 +628,7 @@ namespace pwiz.Skyline.Model.Lib
         {
                 var spectrumPeaks = ReadSpectrum(_libraryEntries[(int)spectrumKey]);
                 if (spectrumPeaks == null)
-                    throw new IOException(string.Format("Library entry not found {0}.", spectrumKey));
+                    throw new IOException(string.Format(Resources.CachedLibrary_LoadSpectrum_Library_entry_not_found__0__, spectrumKey));
 
                 return new SpectrumPeaksInfo(spectrumPeaks);
         }
@@ -798,12 +801,13 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class LibrarySpec : XmlNamedElement
     {
+        // TODO(L10N): Are these used in XML?
         public static readonly PeptideRankId PEP_RANK_COPIES =
-            new PeptideRankId("Spectrum count");
+            new PeptideRankId(Resources.LibrarySpec_PEP_RANK_COPIES_Spectrum_count);
         public static readonly PeptideRankId PEP_RANK_TOTAL_INTENSITY =
-            new PeptideRankId("Total intensity");
+            new PeptideRankId(Resources.LibrarySpec_PEP_RANK_TOTAL_INTENSITY_Total_intensity);
         public static readonly PeptideRankId PEP_RANK_PICKED_INTENSITY =
-            new PeptideRankId("Picked intensity");
+            new PeptideRankId(Resources.LibrarySpec_PEP_RANK_PICKED_INTENSITY_Picked_intensity);
 
         protected LibrarySpec(string name, string path)
             : base(name)
@@ -863,7 +867,7 @@ namespace pwiz.Skyline.Model.Lib
         public override void WriteXml(XmlWriter writer)
         {
             if (IsDocumentLocal)
-                throw new InvalidOperationException("Document local library specs cannot be persisted to XML.");
+                throw new InvalidOperationException(Resources.LibrarySpec_WriteXml_Document_local_library_specs_cannot_be_persisted_to_XML);
 
             // Write tag attributes
             base.WriteXml(writer);
@@ -1138,9 +1142,9 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public sealed class LibraryLink
     {
-        public static readonly LibraryLink PEPTIDEATLAS = new LibraryLink("PeptideAtlas", "http://www.peptideatlas.org/speclib/");
-        public static readonly LibraryLink NIST = new LibraryLink("NIST", "http://peptide.nist.gov/");
-        public static readonly LibraryLink GPM = new LibraryLink("GPM", "ftp://ftp.thegpm.org/projects/xhunter/libs/");
+        public static readonly LibraryLink PEPTIDEATLAS = new LibraryLink("PeptideAtlas", "http://www.peptideatlas.org/speclib/"); // Not L10N
+        public static readonly LibraryLink NIST = new LibraryLink("NIST", "http://peptide.nist.gov/"); // Not L10N
+        public static readonly LibraryLink GPM = new LibraryLink("GPM", "ftp://ftp.thegpm.org/projects/xhunter/libs/"); // Not L10N
 
         private LibraryLink(string name, string href)
         {
@@ -1230,7 +1234,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public string Sequence { get { return Encoding.Default.GetString(_key, 1, _key.Length - 1); } }
         public int Charge { get { return _key[0]; } }
-        public bool IsModified { get { return _key.Contains((byte)'['); } }
+        public bool IsModified { get { return _key.Contains((byte)'['); } } // Not L10N
 
         /// <summary>
         /// Only for use by <see cref="LibSeqKey"/>
@@ -1276,7 +1280,7 @@ namespace pwiz.Skyline.Model.Lib
                 int count = 0;
                 for (int i = 1; i < _key.Length; i++)
                 {
-                    if (_key[i] == '[')
+                    if (_key[i] == '[') // Not L10N
                         count++;
                 }
                 return count;
@@ -1390,7 +1394,7 @@ namespace pwiz.Skyline.Model.Lib
                     for (int i = 1; i < _libKeyBytes.Length; i++)
                     {
                         char aa = (char)_libKeyBytes[i];
-                        if ('A' <= aa && aa <= 'Z')
+                        if ('A' <= aa && aa <= 'Z') // Not L10N: Amino Acids
                             yield return aa;
                     }
                 }

@@ -26,6 +26,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -212,8 +213,8 @@ namespace pwiz.SkylineTestFunctional
                 VerifyLossGroup(losses, 3, 115, 61);
                 VerifyLossGroup(losses, 4, 116, 61);
                 VerifyLossGroup(losses, 5, 196, 109);
-                AssertEx.NoDiff(string.Join("\n", losses1[0].ToArray()), string.Join("\n", losses[2].ToArray()));
-                AssertEx.NoDiff(string.Join("\n", losses1[1].ToArray()), string.Join("\n", losses[5].ToArray()));
+                AssertEx.NoDiff(TextUtil.LineSeparate(losses1[0].ToArray()), TextUtil.LineSeparate(losses[2].ToArray()));
+                AssertEx.NoDiff(TextUtil.LineSeparate(losses1[1].ToArray()), TextUtil.LineSeparate(losses[5].ToArray()));
                 // Add new neutral loss transitions to the document
                 dlg.ToggleFind();
                 dlg.SearchString = "-17]";
@@ -283,7 +284,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(1, GetLossCount(docConstantMono, 1));
             var pathTranLoss = docConstantMono.GetPathTo((int) SrmDocument.Level.Transitions, 0);
             var nodeTranLos = (TransitionDocNode) docConstantMono.FindNode(pathTranLoss);
-            Assert.AreEqual("precursor -20", nodeTranLos.FragmentIonName);
+            Assert.AreEqual(IonType.precursor.GetLocalizedString() + " -20", nodeTranLos.FragmentIonName);
 
             // Switch mass type to average
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, dlg =>
@@ -296,7 +297,7 @@ namespace pwiz.SkylineTestFunctional
             var docConstantAverage = WaitForDocumentChange(docConstantMono);
             Assert.AreEqual(1, GetLossCount(docConstantAverage, 1));
             nodeTranLos = (TransitionDocNode)docConstantAverage.FindNode(pathTranLoss);
-            Assert.AreEqual("precursor -25", nodeTranLos.FragmentIonName);
+            Assert.AreEqual(IonType.precursor.GetLocalizedString() + " -25", nodeTranLos.FragmentIonName);
 
             // Make sure the resulting document is serializable
             AssertEx.Serializable(docConstantAverage, AssertEx.DocumentCloned);
@@ -336,12 +337,11 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private static readonly Regex REGEX_LOSS = new Regex(@"-(\d+)\]");
-        private static readonly Regex REGEX_PRECURSOR_LOSS = new Regex(@"precursor -(\d+)");
+        private static readonly Regex REGEX_PRECURSOR_LOSS = new Regex(string.Format("{0} -(\\d+)", IonType.precursor.GetLocalizedString()));
 
         private static double GetLossMass(string name)
         {
-
-            var regexLoss = (name.StartsWith("precursor") ? REGEX_PRECURSOR_LOSS : REGEX_LOSS);
+            var regexLoss = (name.StartsWith(IonType.precursor.GetLocalizedString()) ? REGEX_PRECURSOR_LOSS : REGEX_LOSS);
             var match = regexLoss.Match(name);
             if (!match.Success)
                 return 0;

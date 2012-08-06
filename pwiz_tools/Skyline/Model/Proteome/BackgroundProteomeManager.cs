@@ -19,10 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Proteome
@@ -114,7 +116,8 @@ namespace pwiz.Skyline.Model.Proteome
                 }
 
                 string name = originalBackgroundProteome.Name;
-                ProgressStatus progressStatus = new ProgressStatus(string.Format("Digesting {0} proteome", name));
+                ProgressStatus progressStatus =
+                    new ProgressStatus(string.Format(Resources.BackgroundProteomeManager_LoadBackground_Digesting__0__proteome, name));
                 try
                 {
                     using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
@@ -133,7 +136,9 @@ namespace pwiz.Skyline.Model.Proteome
                         if (!fs.Commit())
                         {
                             EndProcessing(docCurrent);
-                            throw new IOException(string.Format("Unable to rename temporary file to {0}.", fs.RealName));
+                            throw new IOException(
+                                string.Format(Resources.BackgroundProteomeManager_LoadBackground_Unable_to_rename_temporary_file_to__0__,
+                                              fs.RealName));
                         }
 
                         CompleteProcessing(container, new BackgroundProteome(originalBackgroundProteome, true));
@@ -143,8 +148,12 @@ namespace pwiz.Skyline.Model.Proteome
                 }
                 catch (Exception x)
                 {
-                    string message = string.Format(string.Format("Failed updating background proteome {0}.\n{1}", name, x.Message));
-                    UpdateProgress(progressStatus.ChangeErrorException(new IOException(message, x)));
+                    var message = new StringBuilder();
+                    message.AppendLine(
+                        string.Format(Resources.BackgroundProteomeManager_LoadBackground_Failed_updating_background_proteome__0__,
+                                      name));
+                    message.Append(x.Message); 
+                    UpdateProgress(progressStatus.ChangeErrorException(new IOException(message.ToString(), x)));
                     return false;
                 }
             }
@@ -199,7 +208,7 @@ namespace pwiz.Skyline.Model.Proteome
                     var enzyme = _document.Settings.PeptideSettings.Enzyme;
 
                     _progressStatus = new ProgressStatus(
-                        string.Format("Digesting {0} proteome with {1}", _nameProteome, enzyme.Name));
+                        string.Format(Resources.DigestHelper_Digest_Digesting__0__proteome_with__1__, _nameProteome, enzyme.Name));
                     var digestion = proteomeDb.Digest(new ProteaseImpl(enzyme), Progress);
                     progressStatus = _progressStatus;
 

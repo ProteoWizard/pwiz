@@ -63,9 +63,9 @@ namespace pwiz.Skyline
             if (Install.Is64Bit && !Environment.Is64BitProcess)
             {
                 string installUrl = Install.Url;
-                string installLabel = (installUrl == "") ? "" : string.Format("Install 32-bit {0}", Name);
+                string installLabel = (installUrl == string.Empty) ? string.Empty : string.Format(Resources.Program_Main_Install_32_bit__0__, Name);
                 AlertLinkDlg.Show(null,
-                    string.Format("You are attempting to run a 64-bit version of {0} on a 32-bit OS.  Please install the 32-bit version.", Name),
+                    string.Format(Resources.Program_Main_You_are_attempting_to_run_a_64_bit_version_of__0__on_a_32_bit_OS_Please_install_the_32_bit_version, Name),
                     installLabel,
                     installUrl);
                 return;
@@ -82,7 +82,7 @@ namespace pwiz.Skyline
             else if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0] == "CMD")
+                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0] == "CMD") // Not L10N
             {
                 CommandLineRunner clr = new CommandLineRunner();
                 clr.Start();
@@ -199,7 +199,7 @@ namespace pwiz.Skyline
             {
                 return _name ??
                        (_name =
-                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? "-daily" : ""));
+                        Settings.Default.ProgramName + (Install.Type == Install.InstallType.daily ? "-daily" : string.Empty)); // Not L10N
             }
         }
     }
@@ -227,7 +227,7 @@ namespace pwiz.Skyline
         public void Start()
         {
             List<string> args = new List<string>();
-            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylineInputPipe"))
+            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylineInputPipe")) // Not L10N
             {
                 // The connect function will wait 5s for the pipe to become available
                 try
@@ -251,7 +251,7 @@ namespace pwiz.Skyline
                 }
             }
 
-            using (var serverStream = new NamedPipeServerStream("SkylineOutputPipe"))
+            using (var serverStream = new NamedPipeServerStream("SkylineOutputPipe")) // Not L10N
             {
                 if (!WaitForConnection(serverStream))
                 {
@@ -291,7 +291,7 @@ namespace pwiz.Skyline
                 // Clear the waiting thread.
                 try
                 {
-                    using (var pipeFake = new NamedPipeClientStream("SkylineOutputPipe"))
+                    using (var pipeFake = new NamedPipeClientStream("SkylineOutputPipe")) // Not L10N
                     {
                         pipeFake.Connect(10);
                     }

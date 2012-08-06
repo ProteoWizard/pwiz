@@ -99,7 +99,7 @@ namespace pwiz.Skyline.Model
             get
             {
                 string ionName = Transition.FragmentIonName;
-                return (HasLoss ? string.Format("{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName);
+                return (HasLoss ? string.Format("{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName); // Not L10N
             }
         }
 

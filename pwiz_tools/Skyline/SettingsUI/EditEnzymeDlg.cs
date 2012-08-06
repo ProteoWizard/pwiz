@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -58,9 +59,9 @@ namespace pwiz.Skyline.SettingsUI
                 _enzyme = value;
                 if (_enzyme == null)
                 {
-                    textName.Text = "";
-                    textCleavage.Text = "";
-                    textRestrict.Text = "";
+                    textName.Text = string.Empty;
+                    textCleavage.Text = string.Empty;
+                    textRestrict.Text = string.Empty;
                     comboDirection.SelectedIndex = 0;
                 }
                 else
@@ -96,7 +97,7 @@ namespace pwiz.Skyline.SettingsUI
                 Enzyme enzyme = new Enzyme(name, cleavage, restrict, direction);
                 if (_enzyme == null && _existing.Contains(enzyme))
                 {
-                    _helper.ShowTextBoxError(textName, "The enzyme '{0}' already exists.", name);
+                    _helper.ShowTextBoxError(textName, Resources.EditEnzymeDlg_OnClosing_The_enzyme__0__already_exists, name);
                     e.Cancel = true;
                     return;
                 }
@@ -114,7 +115,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (!allowEmpty)
                 {
-                    _helper.ShowTextBoxError(control, "{0} must contain at least one amino acid.");
+                    _helper.ShowTextBoxError(control, Resources.EditEnzymeDlg_ValidateAATextBox__0__must_contain_at_least_one_amino_acid);
                     e.Cancel = true;
                     return false;
                 }
@@ -127,7 +128,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (!AminoAcid.IsAA(c))
                     {
-                        _helper.ShowTextBoxError(control, "The character '{0}' is not a valid amino acid.", c);
+                        _helper.ShowTextBoxError(control, Resources.EditEnzymeDlg_ValidateAATextBox_The_character__0__is_not_a_valid_amino_acid, c);
                         e.Cancel = true;
                         return false;
                     }

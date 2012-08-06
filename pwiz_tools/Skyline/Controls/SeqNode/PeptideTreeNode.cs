@@ -33,8 +33,11 @@ namespace pwiz.Skyline.Controls.SeqNode
 {
     public class PeptideTreeNode : SrmTreeNodeParent
     {
-        public const string TITLE = "Peptide";
-
+        /// <summary>
+        /// Peptide
+        /// </summary>
+        public static string TITLE { get { return Resources.PeptideTreeNode_Heading_Title; } }    
+       
         public static bool ExpandDefault { get { return Settings.Default.SequenceTreeExpandPeptides; } }
 
         public static PeptideTreeNode CreateInstance(SequenceTree tree, DocNode nodeDoc)
@@ -58,17 +61,17 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string Heading
         {
-            get { return TITLE; }
+            get { return Resources.PeptideTreeNode_Heading_Title; }
         }
 
         public override string ChildHeading
         {
-            get { return string.Format("{0} {1}s", Text, TransitionGroupTreeNode.TITLE); }
+            get { return string.Format(Resources.PeptideTreeNode_ChildHeading__0__, Text); }
         }
 
         public override string ChildUndoHeading
         {
-            get { return string.Format("{0} {1}s", Text, TransitionGroupTreeNode.TITLE.ToLower()); }
+            get { return string.Format(Resources.PeptideTreeNode_ChildUndoHeading__0__, Text); }
         }
 
         protected override void OnModelChanged()
@@ -149,7 +152,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public string ResultsText
         {
-            get { return ""; } 
+            get { return string.Empty; } 
         }
 
         public static string GetLabel(PeptideDocNode nodePep, string resultsText)
@@ -212,7 +215,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             var listTextSequences = new List<TextSequence>();
 
             // If no modifications, use a single plain text sequence
-            if (!heavyMods && !listTypeSequences[0].Text.Contains("["))
+            if (!heavyMods && !listTypeSequences[0].Text.Contains("[")) // Not L10N: For identifying modifications
                 listTextSequences.Add(CreatePlainTextSequence(label, fonts));
             else
             {
@@ -229,7 +232,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                 // Enumerate amino acid characters coallescing their font information
                 // into text sequences.
-                var prevCharFont = new CharFont('.', fonts.Plain, Color.Black);
+                var prevCharFont = new CharFont('.', fonts.Plain, Color.Black); // Not L10N: Amino acid format
                 var indexes = new int[listTypeSequences.Count];
 
                 CharFont charFont;
@@ -331,11 +334,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             // Increment the index, and check for modification string after the amino acid
             int iNext = ++indexes[i];
             string text = textSequences[i].Text;
-            if (iNext >= text.Length || text[iNext] != '[')
+            if (iNext >= text.Length || text[iNext] != '[') // Not L10N 
                 return null;
 
             // Find modification end character
-            int iEndMod = text.IndexOf(']', iNext);
+            int iEndMod = text.IndexOf(']', iNext); // Not L10N 
             // Be unnecessarily safe, and do something reasonable, if no end found
             if (iEndMod == -1)
                 iEndMod = text.Length - 1;
@@ -452,7 +455,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                                            Color backColor)
         {
             if (textSequences == null)
-                textSequences = CreateTextSequences(nodePep, settings, GetLabel(nodePep, ""), g, fonts);
+                textSequences = CreateTextSequences(nodePep, settings, GetLabel(nodePep, string.Empty), g, fonts);
             Rectangle rectDraw = new Rectangle(0, bounds.Y, 0, bounds.Height);
             foreach (var textSequence in textSequences)
             {
@@ -553,7 +556,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public static string DisplayText(PeptideDocNode node, DisplaySettings settings)
         {
-            return GetLabel(node, "");
+            return GetLabel(node, string.Empty);
         }
 
         #endregion
@@ -611,14 +614,14 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     // Add a spacing row, if anything was added
                     if (table.Count > 0)
-                        table.AddDetailRow(" ", " ", rt);
-                    table.AddDetailRow("Previous", peptide.PrevAA.ToString(CultureInfo.InvariantCulture), rt);
-                    table.AddDetailRow("First", peptide.Begin.Value.ToString(CultureInfo.CurrentCulture), rt);
-                    table.AddDetailRow("Last", ((peptide.End ?? 1) - 1).ToString(CultureInfo.CurrentCulture), rt);
-                    table.AddDetailRow("Next", peptide.NextAA.ToString(CultureInfo.InvariantCulture), rt);
+                        table.AddDetailRow(" ", " ", rt); // Not L10N
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Previous, peptide.PrevAA.ToString(CultureInfo.InvariantCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_First, peptide.Begin.Value.ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Last, ((peptide.End ?? 1) - 1).ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Next, peptide.NextAA.ToString(CultureInfo.InvariantCulture), rt);
                 }
                 if (nodePep.Rank.HasValue)
-                    table.AddDetailRow("Rank", nodePep.Rank.Value.ToString(CultureInfo.CurrentCulture), rt);
+                    table.AddDetailRow(Resources.PeptideTreeNode_RenderTip_Rank, nodePep.Rank.Value.ToString(CultureInfo.CurrentCulture), rt);
                
                 SizeF size = table.CalcDimensions(g);
                 if (draw)
@@ -660,7 +663,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 string modSequence = calc.GetModifiedSequence(nodePep.Peptide.Sequence, true);
 
                 // Only return if the modified sequence contains modifications
-                if (modSequence.Contains('['))
+                if (modSequence.Contains('[')) // Not L10N
                     yield return new KeyValuePair<IsotopeLabelType, string>(labelType, modSequence);
             }            
         }
@@ -682,15 +685,15 @@ namespace pwiz.Skyline.Controls.SeqNode
                     sb.Append(text.Text);
                 else
                 {
-                    sb.Append("<Font");
+                    sb.Append("<Font"); // Not L10N
                     if (text.Font.Bold && text.Font.Underline)
-                        sb.Append(" style=\"font-weight: bold; text-decoration: underline\"");
+                        sb.Append(" style=\"font-weight: bold; text-decoration: underline\""); // Not L10N
                     else if (text.Font.Bold)
-                        sb.Append(" style=\"font-weight: bold\"");
+                        sb.Append(" style=\"font-weight: bold\""); // Not L10N
                     else if (text.Font.Underline)
-                        sb.Append(" style=\"text-decoration: underline\"");
-                    sb.AppendFormat(" color = \"{0}\">{1}", text.Color.ToKnownColor(), text.Text);
-                    sb.Append("</font>");
+                        sb.Append(" style=\"text-decoration: underline\""); // Not L10N 
+                    sb.AppendFormat(" color = \"{0}\">{1}", text.Color.ToKnownColor(), text.Text); // Not L10N
+                    sb.Append("</font>"); // Not L10N
                 }
             }
             data.SetData(DataFormats.Html, HtmlFragment.ClipBoardText(sb.ToString()));

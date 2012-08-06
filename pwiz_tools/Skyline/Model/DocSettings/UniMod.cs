@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static readonly char[] AMINO_ACIDS = 
             {
                 'A', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'K', 'L', 'M', 'N', 
-                'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y'
+                'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y' // Not L10N
             };
         private static readonly bool INITIALIZING;
 
@@ -149,7 +150,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 return true;
             var idKey = new UniModIdKey
             {
-                Aa = mod.AAs == null ? 'A' : mod.AminoAcids.First(),
+                Aa = mod.AAs == null ? 'A' : mod.AminoAcids.First(), // Not L10N
                 AllAas = mod.AAs == null,
                 Id = mod.UnimodId.Value,
                 Terminus = mod.Terminus
@@ -201,7 +202,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public void Add(char aa, StaticMod mod, bool structural, bool allowDuplicates)
         {
             if (_completed)
-                throw new InvalidOperationException("Invalid attempt to add data to completed MassLookup.");
+                throw new InvalidOperationException(Resources.ModMassLookup_Add_Invalid_attempt_to_add_data_to_completed_MassLookup);
             // If structural, store in lowercase AA.
             _aaMassLookups[structural ? Char.ToLower(aa) : Char.ToUpper(aa)]
                 .Add(CALC.GetModMass(aa, mod), mod, allowDuplicates);
@@ -211,7 +212,7 @@ namespace pwiz.Skyline.Model.DocSettings
             ModTerminus? terminus, bool specific)
         {
             if (!_completed)
-                throw new InvalidOperationException("Invalid attempt to access incomplete MassLookup.");
+                throw new InvalidOperationException(Resources.ModMassLookup_MatchModificationMass_Invalid_attempt_to_access_incomplete_MassLookup);
             return _aaMassLookups[structural ? Char.ToLower(aa) : Char.ToUpper(aa)]
                 .ClosestMatch(mass, roundTo, terminus, specific);
         }

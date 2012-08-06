@@ -69,42 +69,42 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                     {
                         Name = "ReplicateName",
-                        HeaderText = "Replicate Name",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_Replicate_Name,
                         ReadOnly = true,
                     });
             Columns.Add(FileNameColumn
                 = new DataGridViewTextBoxColumn
                     {
                         Name = "FileName",
-                        HeaderText = "File Name",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_File_Name,
                         ReadOnly = true
                     });
             Columns.Add(SampleNameColumn
                 = new DataGridViewTextBoxColumn
                     {
                         Name = "SampleName",
-                        HeaderText = "Sample Name",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_Sample_Name,
                         ReadOnly = true
                     });
             Columns.Add(ModifiedTimeColumn
                 = new DataGridViewTextBoxColumn
                 {
                     Name = "ModifiedTime",
-                    HeaderText = "Modified Time",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Modified_Time,
                     ReadOnly = true
                 });
             Columns.Add(AcquiredTimeColumn
                 = new DataGridViewTextBoxColumn
                 {
                     Name = "AcquiredTime",
-                    HeaderText = "Acquired Time",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Acquired_Time,
                     ReadOnly = true
                 });
             Columns.Add(OptStepColumn
                 = new DataGridViewTextBoxColumn
                     {
                         Name = "OptStep",
-                        HeaderText = "Opt Step",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_Opt_Step,
                         ReadOnly = true,
                     });
 
@@ -113,7 +113,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                     {
                         Name = "PeptidePeakFoundRatio",
-                        HeaderText = "Peptide Peak Found Ratio",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_Peptide_Peak_Found_Ratio,
                         ReadOnly = true,
                         DefaultCellStyle = {Format = Formats.PEAK_FOUND_RATIO}
                     });
@@ -121,7 +121,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "PeptideRetentionTime",
-                          HeaderText = "Peptide Retention Time",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Peptide_Retention_Time,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.RETENTION_TIME}
                       });
@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "RatioToStandard",
-                          HeaderText = "Ratio To Standard",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Ratio_To_Standard,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
@@ -139,13 +139,13 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                 {
                     Name = "PrecursorReplicateNote",
-                    HeaderText = "Precursor Replicate Note",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Precursor_Replicate_Note,
                 });
             Columns.Add(PrecursorPeakFoundRatioColumn
                 = new DataGridViewTextBoxColumn
                     {
                         Name = "PrecursorPeakFound",
-                        HeaderText = "Precursor Peak Found Ratio",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_Precursor_Peak_Found_Ratio,
                         ReadOnly = true,
                         DefaultCellStyle = {Format = Formats.PEAK_FOUND_RATIO}
                     });
@@ -153,7 +153,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "BestRetentionTime",
-                          HeaderText = "Best Retention Time",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Best_Retention_Time,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.RETENTION_TIME}
                       });
@@ -161,7 +161,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "MaxFwhm",
-                          HeaderText = "Max Fwhm",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Max_Fwhm,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.RETENTION_TIME}
                       });
@@ -169,7 +169,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "MinStartTime",
-                          HeaderText = "Min Start Time",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Min_Start_Time,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.RETENTION_TIME}
                       });
@@ -177,7 +177,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "MaxEndTime",
-                          HeaderText = "Max End Time",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Max_End_Time,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.RETENTION_TIME}
                       });
@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "TotalArea",
-                          HeaderText = "Total Area",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Total_Area,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.PEAK_AREA}
                       });
@@ -193,7 +193,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "TotalBackground",
-                          HeaderText = "Total Background",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Total_Background,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.PEAK_AREA}
                       });
@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "TotalAreaRatio",
-                          HeaderText = "Total Area Ratio",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Total_Area_Ratio,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
@@ -209,28 +209,28 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "CountTruncated",
-                          HeaderText = "Count Truncated",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Count_Truncated,
                           ReadOnly = true
                       });
             Columns.Add(IdentifiedColumn
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "Identified",
-                          HeaderText = "Identified",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Identified,
                           ReadOnly = true
                       });
             Columns.Add(UserSetTotalColumn
                 = new DataGridViewTextBoxColumn
                 {
                     Name = "UserSetTotal",
-                    HeaderText = "User Set Total",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_User_Set_Total,
                     ReadOnly = true
                 });
             Columns.Add(LibraryDotProductColumn
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "LibraryDotProduct",
-                          HeaderText = "Library Dot Product",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Library_Dot_Product,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
@@ -238,7 +238,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                 {
                     Name = "IsotopeDotProduct",
-                    HeaderText = "Isotope Dot Product",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Isotope_Dot_Product,
                     ReadOnly = true,
                     DefaultCellStyle = { Format = Formats.STANDARD_RATIO }
                 });
@@ -246,7 +246,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "OptCollisionEnergy",
-                          HeaderText = "Opt Collision Energy",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Opt_Collision_Energy,
                           ReadOnly = true,
                           DefaultCellStyle = { Format = Formats.OPT_PARAMETER }
                       });
@@ -254,7 +254,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                 {
                     Name = "OptDeclusteringPotential",
-                    HeaderText = "Opt Declustering Potential",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Opt_Declustering_Potential,
                     ReadOnly = true,
                     DefaultCellStyle = { Format = Formats.OPT_PARAMETER }
                 });
@@ -264,13 +264,13 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                 {
                     Name = "TransitionReplicateNote",
-                    HeaderText = "Transition Replicate Note"
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_Transition_Replicate_Note
                 });
             Columns.Add(RetentionTimeColumn 
                 = new DataGridViewTextBoxColumn
                   {
                       Name = "RetentionTime",
-                      HeaderText = "Retention Time",
+                      HeaderText = Resources.ResultsGrid_ResultsGrid_Best_Retention_Time,
                       ReadOnly = true,
                       DefaultCellStyle = { Format = Formats.RETENTION_TIME },
                   });
@@ -278,7 +278,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                     {
                         Name = "Fwhm",
-                        HeaderText = "Fwhm",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_Fwhm,
                         ReadOnly = true,
                         DefaultCellStyle = { Format = Formats.RETENTION_TIME },
                     });
@@ -286,7 +286,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                     {
                         Name = "StartTime",
-                        HeaderText = "Start Time",
+                        HeaderText = Resources.ResultsGrid_ResultsGrid_Start_Time,
                         ReadOnly = true,
                         DefaultCellStyle = {Format = Formats.RETENTION_TIME},
                     });
@@ -294,7 +294,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "EndTime",
-                          HeaderText = "End Time",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_End_Time,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.RETENTION_TIME}
                       });
@@ -302,7 +302,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "Area",
-                          HeaderText = "Area",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Area,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.PEAK_AREA}
                       });
@@ -310,14 +310,14 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "Background",
-                          HeaderText = "Background",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Background,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.PEAK_AREA}
                       });
             Columns.Add(AreaRatioColumn = new DataGridViewTextBoxColumn
                       {
                           Name = "AreaRatio",
-                          HeaderText = "Area Ratio",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Area_Ratio,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
@@ -325,7 +325,7 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "Height",
-                          HeaderText = "Height",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Height,
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.PEAK_AREA}
                       });
@@ -333,21 +333,21 @@ namespace pwiz.Skyline.Controls
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "Truncated",
-                          HeaderText = "Truncated",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Truncated,
                           ReadOnly = true,
                       });
             Columns.Add(PeakRankColumn
                 = new DataGridViewTextBoxColumn
                       {
                           Name = "PeakRank",
-                          HeaderText = "Peak Rank",
+                          HeaderText = Resources.ResultsGrid_ResultsGrid_Peak_Rank,
                           ReadOnly = true,
                       });
             Columns.Add(UserSetColumn
                 = new DataGridViewTextBoxColumn
                 {
                     Name = "UserSet",
-                    HeaderText = "User Set",
+                    HeaderText = Resources.ResultsGrid_ResultsGrid_User_Set,
                     ReadOnly = true,
                 });
             KeyDown += ResultsGrid_KeyDown;
@@ -552,7 +552,7 @@ namespace pwiz.Skyline.Controls
             }
             if (!found)
             {
-                throw new InvalidOperationException("Element not found");
+                throw new InvalidOperationException(Resources.ResultsGrid_ChangeChromInfo_Element_not_found);
             }
             return new Results<TItem>(elements);
         }

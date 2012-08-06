@@ -293,7 +293,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     else if (listInfoGroups.Length > 1)
                     {
                         toolBar.Visible = false;
-                        AddGraphItem(graphPane, new NoDataMSGraphItem("Multiple charge states with library spectra"));
+                        AddGraphItem(graphPane, new NoDataMSGraphItem(Resources.GraphSpectrum_UpdateUI_Multiple_charge_states_with_library_spectra));
                         return;
                     }
                 }
@@ -394,7 +394,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 catch (Exception)
                 {
-                    AddGraphItem(graphPane, new NoDataMSGraphItem("Failure loading spectrum. Library may be corrupted."));
+                    AddGraphItem(graphPane, new NoDataMSGraphItem(Resources.GraphSpectrum_UpdateUI_Failure_loading_spectrum__Library_may_be_corrupted));
                     return;
                 }
             }
@@ -735,10 +735,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public override string ToString()
         {
             if (IsBest)
-                return LabelType == IsotopeLabelType.light ? LibName : String.Format("{0} ({1})", LibName, LabelType);
+                return LabelType == IsotopeLabelType.light ? LibName : String.Format("{0} ({1})", LibName, LabelType); // Not L10N
             if (IsReplicateUnique)
-                return string.Format("{0} ({1:F02} min)", ReplicateName, RetentionTime);
-            return string.Format("{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime);
+                return string.Format("{0} ({1:F02} min)", ReplicateName, RetentionTime); // Not L10N
+            return string.Format("{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime); // Not L10N
         }
     }
 

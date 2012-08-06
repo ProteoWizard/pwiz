@@ -21,12 +21,46 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
 {
     public enum IonType
     {
         precursor = -1, a, b, c, x, y, z
+    }
+
+    public static class IonTypeExtension
+    {
+        private static readonly string[] LOCALIZED_VALUES = new[] { Resources.IonTypeExtension_LOCALIZED_VALUES_precursor, "a", "b", "c", "x", "y", "z"}; // Not L10N
+        public static string GetLocalizedString(this IonType val)
+        {
+            return LOCALIZED_VALUES[(int) val + 1]; // To include precursor
+        }
+
+        public static IonType GetEnum(string enumValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (IonType)i;
+                }
+            }
+            throw new Exception("String does not match an enum");
+        }
+
+        public static IonType GetEnum(string enumValue, IonType defaultValue)
+        {
+            for (int i = 0; i < LOCALIZED_VALUES.Length; i++)
+            {
+                if (LOCALIZED_VALUES[i] == enumValue)
+                {
+                    return (IonType)i;
+                }
+            }
+            return defaultValue;
+        }
     }
 
     public class Transition : Identity
@@ -107,16 +141,16 @@ namespace pwiz.Skyline.Model
 
         public static string GetChargeIndicator(int charge)
         {
-            const string pluses = "++++";
+            const string pluses = "++++"; // Not L10N
             return charge < 5
                 ? pluses.Substring(0, Math.Min(charge, pluses.Length))
-                : string.Format("{0} +{1}", CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator, charge);
+                : string.Format("{0} +{1}", CultureInfo.CurrentCulture.NumberFormat.NumberGroupSeparator, charge); // Not L10N
         }
 
         public static string GetMassIndexText(int massIndex)
         {
             if (massIndex == 0)
-                return "";
+                return string.Empty;
 
             return " " + SequenceMassCalc.GetMassIDescripion(massIndex);
         }
@@ -124,9 +158,9 @@ namespace pwiz.Skyline.Model
         public static string GetDecoyText(int? decoyMassShift)
         {
             if (!decoyMassShift.HasValue || decoyMassShift.Value == 0)
-                return "";
+                return string.Empty;
             return string.Format("({0}{1})",
-                                 decoyMassShift.Value >= 0 ? "+" : "",
+                                 decoyMassShift.Value >= 0 ? "+" : string.Empty, // Not L10N
                                  decoyMassShift.Value);
         }
 
@@ -185,7 +219,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                string ionName = IonType.ToString();
+                string ionName = IonType.GetLocalizedString();
                 if (!IsPrecursor())
                     ionName += Ordinal;
                 return ionName;
@@ -228,26 +262,29 @@ namespace pwiz.Skyline.Model
             {
                 if (TransitionGroup.MIN_PRECURSOR_CHARGE > Charge || Charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                 {
-                    throw new InvalidDataException(string.Format("Precursor charge {0} must be between {1} and {2}.",
+                    throw new InvalidDataException(
+                        string.Format(Resources.Transition_Validate_Precursor_charge__0__must_be_between__1__and__2__,
                         Charge, TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE));                    
                 }
             }
             else if (MIN_PRODUCT_CHARGE > Charge || Charge > MAX_PRODUCT_CHARGE)
             {
-                throw new InvalidDataException(string.Format("Product ion charge {0} must be between {1} and {2}.",
+                throw new InvalidDataException(
+                    string.Format(Resources.Transition_Validate_Product_ion_charge__0__must_be_between__1__and__2__,
                                                              Charge, MIN_PRODUCT_CHARGE, MAX_PRODUCT_CHARGE));
             }
 
             if (Ordinal < 1)
-                throw new InvalidDataException(string.Format("Fragment ordinal {0} may not be less than 1.", Ordinal));
+                throw new InvalidDataException(string.Format(Resources.Transition_Validate_Fragment_ordinal__0__may_not_be_less_than__1__, Ordinal));
             if (IsPrecursor())
             {
                 if (Ordinal != Group.Peptide.Length)
-                    throw new InvalidDataException(string.Format("Precursor ordinal must be the lenght of the peptide."));
+                    throw new InvalidDataException(string.Format(Resources.Transition_Validate_Precursor_ordinal_must_be_the_lenght_of_the_peptide));
             }
             else if (Ordinal > Group.Peptide.Length - 1)
             {
-                throw new InvalidDataException(string.Format("Fragment ordinal {0} exceeds the maximum {1} for the peptide {2}.",
+                throw new InvalidDataException(
+                    string.Format(Resources.Transition_Validate_Fragment_ordinal__0__exceeds_the_maximum__1__for_the_peptide__2__,
                                                              Ordinal, Group.Peptide.Length - 1, Group.Peptide.Sequence));
             }
 
@@ -256,7 +293,7 @@ namespace pwiz.Skyline.Model
                 if (DecoyMassShift < MIN_PRODUCT_DECOY_MASS_SHIFT || DecoyMassShift > MAX_PRODUCT_DECOY_MASS_SHIFT)
                 {
                     throw new InvalidDataException(
-                        string.Format("Fragment decoy mass shift {0} must be between {1} and {2}.",
+                        string.Format(Resources.Transition_Validate_Fragment_decoy_mass_shift__0__must_be_between__1__and__2__,
                                       DecoyMassShift, MIN_PRODUCT_DECOY_MASS_SHIFT, MAX_PRODUCT_DECOY_MASS_SHIFT));
                 }
             }
@@ -314,10 +351,11 @@ namespace pwiz.Skyline.Model
         {
             if (IsPrecursor())
             {
-                return "precursor" + GetChargeIndicator(Charge) + GetMassIndexText(MassIndex);
+                return Resources.Transition_ToString_precursor + GetChargeIndicator(Charge) +
+                       GetMassIndexText(MassIndex);
             }
 
-            return string.Format("{0} - {1}{2}{3}{4}",
+            return string.Format("{0} - {1}{2}{3}{4}", // Not L10N
                                  AA,
                                  IonType.ToString().ToLower(),
                                  Ordinal,

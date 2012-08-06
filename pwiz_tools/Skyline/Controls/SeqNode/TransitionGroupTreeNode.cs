@@ -33,7 +33,13 @@ namespace pwiz.Skyline.Controls.SeqNode
 {
     public class TransitionGroupTreeNode : SrmTreeNodeParent
     {
-        public const string TITLE = "Precursor";
+        /// <summary>
+        /// Precursor
+        /// </summary>
+        public static string TITLE
+        {
+            get { return Resources.TransitionGroupTreeNode_Title; }
+        }
 
         public static bool ExpandDefault { get { return Settings.Default.SequenceTreeExpandPrecursors; } }
 
@@ -67,12 +73,12 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public override string Heading
         {
-            get { return TITLE; }
+            get { return Resources.TransitionGroupTreeNode_Title; }
         }
 
         public override string ChildHeading
         {
-            get { return TransitionTreeNode.TITLE + "s"; }
+            get { return TransitionTreeNode.TITLES; }
         }
 
         public override string ChildUndoHeading
@@ -165,23 +171,23 @@ namespace pwiz.Skyline.Controls.SeqNode
             float? stdev;
             float? ratio = nodeGroup.GetPeakAreaRatio(indexResult, indexRatio, out stdev);
             if (!ratio.HasValue && !isotopeProduct.HasValue && !libraryProduct.HasValue)
-                return "";
-            StringBuilder sb = new StringBuilder(" (");
+                return string.Empty;
+            StringBuilder sb = new StringBuilder(" ("); // Not L10N
             int len = sb.Length;
             if (isotopeProduct.HasValue)
-                sb.Append(string.Format("idotp {0:F02}", isotopeProduct.Value));
+                sb.Append(string.Format("idotp {0:F02}", isotopeProduct.Value)); // Not L10N
             if (libraryProduct.HasValue)
             {
                 if (sb.Length > len)
-                    sb.Append(", ");
-                sb.Append(string.Format("dotp {0:F02}", libraryProduct.Value));
+                    sb.Append(", "); // Not L10N
+                sb.Append(string.Format("dotp {0:F02}", libraryProduct.Value)); // Not L10N
             }
             if (ratio.HasValue)
             {
                 if (sb.Length > len)
-                    sb.Append(", ");
+                    sb.Append(", "); // Not L10N
                 double ratioRounded = MathEx.RoundAboveZero(ratio.Value, 2, 4);
-                sb.Append(string.Format("total ratio {0}", ratioRounded));
+                sb.Append(string.Format(Resources.TransitionGroupTreeNode_GetResultsText_total_ratio__0__, ratioRounded));
 
 //                if (stdev.HasValue)
 //                {
@@ -190,7 +196,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 //                        sb.Append(string.Format(" ± {0}", stdevRounded));
 //                }
             }
-            sb.Append(")");
+            sb.Append(")"); // Not L10N
             return sb.ToString();
         }
 
@@ -203,7 +209,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         public static string GetLabel(TransitionGroup tranGroup, double precursorMz,
             string resultsText)
         {
-            return string.Format("{0}{1}{2}{3}", GetMzLabel(tranGroup ,precursorMz),
+            return string.Format("{0}{1}{2}{3}", GetMzLabel(tranGroup, precursorMz), // Not L10N
                                  Transition.GetChargeIndicator(tranGroup.PrecursorCharge),
                                  tranGroup.LabelTypeText, resultsText);
         }
@@ -211,7 +217,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         private static string GetMzLabel(TransitionGroup tranGroup, double precursorMz)
         {
             int? massShift = tranGroup.DecoyMassShift;
-            return string.Format("{0:F04}{1}", precursorMz - (massShift ?? 0),
+            return string.Format("{0:F04}{1}", precursorMz - (massShift ?? 0), // Not L10N
                 Transition.GetDecoyText(massShift));
         }
 
@@ -274,7 +280,10 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             var nodePep = PepNode;
             if (nodePep == null)
-                throw new InvalidOperationException("Invalid attempt to get choices for a node that has not been added to the tree yet.");
+            {
+                throw new InvalidOperationException(
+                    Resources.TransitionGroupTreeNode_GetChoices_Invalid_attempt_to_get_choices_for_a_node_that_has_not_been_added_to_the_tree_yet);
+            }
 
             var listChildrenNew = GetChoices(DocNode, DocSettings, nodePep.ExplicitMods, useFilter);
             // Existing transitions must be part of the first settings change to ensure proper
@@ -325,7 +334,9 @@ namespace pwiz.Skyline.Controls.SeqNode
         {
             get
             {
-                return HasSiblingsToSynch(false) ? "Synchronize isotope label types" : null;
+                return HasSiblingsToSynch(false)
+                           ? Resources.TransitionGroupTreeNode_SynchSiblingsLabel_Synchronize_isotope_label_types
+                           : null;
             }
         }
 
@@ -432,17 +443,22 @@ namespace pwiz.Skyline.Controls.SeqNode
             {
                 string seqModified = GetModifiedSequence(nodePep, nodeGroup, settings);
                 if (!Equals(seqModified, nodeGroup.TransitionGroup.Peptide.Sequence))
-                    tableDetails.AddDetailRow("Modified", seqModified, rt);
+                    tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Modified, seqModified, rt);
 
                 var precursorCharge = nodeGroup.TransitionGroup.PrecursorCharge;
                 var precursorMz = nodeGroup.PrecursorMz;
-                tableDetails.AddDetailRow("Precursor charge", precursorCharge.ToString(CultureInfo.CurrentCulture), rt);
-                tableDetails.AddDetailRow("Precursor m/z", string.Format("{0:F04}", precursorMz), rt);
-                tableDetails.AddDetailRow("Precursor m+h", string.Format("{0:F04}", SequenceMassCalc.GetMH(precursorMz, precursorCharge)), rt);
+                tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_charge,
+                                          precursorCharge.ToString(CultureInfo.CurrentCulture), rt);
+                tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mz,
+                                          string.Format("{0:F04}", precursorMz), rt); // Not L10N
+                tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Precursor_mh,
+                                          string.Format("{0:F04}", SequenceMassCalc.GetMH(precursorMz, precursorCharge)), // Not L10N
+                                          rt);
                 int? decoyMassShift = nodeGroup.TransitionGroup.DecoyMassShift;
                 if (decoyMassShift.HasValue)
                 {
-                    tableDetails.AddDetailRow("Decoy Mass Shift", decoyMassShift.Value.ToString(CultureInfo.CurrentCulture), rt);
+                    tableDetails.AddDetailRow(Resources.TransitionGroupTreeNode_RenderTip_Decoy_Mass_Shift,
+                                              decoyMassShift.Value.ToString(CultureInfo.CurrentCulture), rt);
                 }
                 if (nodeGroup.HasLibInfo)
                 {
@@ -454,9 +470,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     var headers = new RowDesc
                                   {
-                                      CreateHead("#", rt),
-                                      CreateHead("AA", rt),
-                                      CreateHead("#", rt)
+                                      CreateHead("#", rt), // Not L10N
+                                      CreateHead("AA", rt), // Not L10N
+                                      CreateHead("#", rt) // Not L10N
                                   };
                     foreach (int charge in charges)
                     {
@@ -480,9 +496,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
                         var row = new RowDesc
                                   {
-                                      CreateRowLabel(i == len - 1 ? "" : (i + 1).ToString(CultureInfo.InvariantCulture), rt),
+                                      CreateRowLabel(i == len - 1 ? string.Empty : (i + 1).ToString(CultureInfo.InvariantCulture), rt),
                                       cellAA,
-                                      CreateRowLabel(i == 0 ? "" : (len - i).ToString(CultureInfo.InvariantCulture), rt)
+                                      CreateRowLabel(i == 0 ? string.Empty : (len - i).ToString(CultureInfo.InvariantCulture), rt)
                                   };
 
                         foreach (int charge in charges)
@@ -493,7 +509,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                                 if (Transition.IsNTerminal(type))
                                 {
                                     if (i == len - 1)
-                                        cell = CreateData("", rt);
+                                        cell = CreateData(string.Empty, rt);
                                     else
                                     {
                                         double massH = masses[(int)type, i];
@@ -504,7 +520,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                                 else
                                 {
                                     if (i == 0)
-                                        cell = CreateData("", rt);
+                                        cell = CreateData(string.Empty, rt);
                                     else
                                     {
                                         double massH = masses[(int)type, i - 1];

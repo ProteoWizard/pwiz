@@ -27,7 +27,9 @@ using NHibernate.Tool.hbm2ddl;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
 {
@@ -48,11 +50,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         public Database(SrmSettings settings)
         {
-            var configuration = SessionFactoryFactory.GetConfiguration(":memory:", settings);
+            var configuration = SessionFactoryFactory.GetConfiguration(":memory:", settings); // Not L10N
             // In-memory SQLite databases disappear the moment that you release the connection,
             // so we have to tell Hibernate not to release the connection until we close the 
             // session.
-            configuration.SetProperty("connection.release_mode", "on_close");
+            configuration.SetProperty("connection.release_mode", "on_close"); // Not L10N
             _sessionFactory = configuration.BuildSessionFactory();
             _session = _sessionFactory.OpenSession();
             new SchemaExport(configuration).Execute(false, true, false, _session.Connection, null);
@@ -84,8 +86,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         public ResultSet ExecuteQuery(IList<ReportColumn> columns)
         {
             Schema schema = new Schema(SessionFactory, _dataSettings);
-            StringBuilder hql = new StringBuilder("SELECT ");
-            String comma = "";
+            StringBuilder hql = new StringBuilder("SELECT "); // Not L10N
+            String comma = string.Empty;
             var columnInfos = new List<ColumnInfo>();
             var dictTableAlias = new Dictionary<Type, string>();
             foreach (ReportColumn column in columns)
@@ -96,27 +98,27 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
                 columnInfos.Add(schema.GetColumnInfo(column));
             }
-            hql.Append("\nFROM ");
-            comma = "";
+            hql.Append("\nFROM "); // Not L10N
+            comma = string.Empty;
             var listTableAlias = new List<KeyValuePair<Type, string>>(ReportColumn.Order(dictTableAlias));
             foreach (var tableAlias in listTableAlias)
             {
                 hql.Append(comma);
-                comma = ", ";
+                comma = ", "; // Not L10N
                 hql.Append(tableAlias.Key);
-                hql.Append(" ");
+                hql.Append(TextUtil.SEPARATOR_SPACE);
                 hql.Append(tableAlias.Value);
             }
             if (dictTableAlias.Count > 1)
             {
-                hql.Append("\nWHERE ");
-                string and = "";
+                hql.Append("\nWHERE "); // Not L10N
+                string and = string.Empty;
                 for (int i = 0; i < listTableAlias.Count - 1; i++)
                 {
                     for (int j = i + 1; j < listTableAlias.Count; j++)
                     {
                         hql.Append(and);
-                        and = " AND\n";
+                        and = " AND\n"; // Not L10N
                         Join(hql, listTableAlias[i], listTableAlias[j]);
                     }
                 }
@@ -130,7 +132,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             TableType tableType1 = ReportColumn.GetTableType(table1.Key);
             TableType tableType2 = ReportColumn.GetTableType(table2.Key);
             if (tableType1 == tableType2)
-                throw new InvalidOperationException("Cannot join tables of same type.");
+                throw new InvalidOperationException(Resources.Database_Join_Cannot_join_tables_of_same_type);
             if (tableType2 == TableType.node)
             {
                 Helpers.Swap(ref table1, ref table2);
@@ -141,27 +143,27 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 // Join node Id to the node column Id in the result table
                 // Node Id
                 hql.Append(table1.Value);
-                hql.Append(".Id = ");
+                hql.Append(".Id = "); // Not L10N
                 // Result node Id
                 hql.Append(table2.Value);
-                hql.Append(".");
+                hql.Append("."); // Not L10N
                 hql.Append(GetJoinColumn(table2, table1));
-                hql.Append(".Id");
+                hql.Append(".Id"); // Not L10N
             }
             else
             {
                 if (tableType2 == TableType.result)
                     Helpers.Swap(ref table1, ref table2);
                 // Join all entries for which their replicate path starts with the summary path
-                hql.Append("substring(");
+                hql.Append("substring("); // Not L10N
                 // Result replicate path
                 hql.Append(table1.Value);
-                hql.Append(".ResultFile.Replicate.ReplicatePath, 1, length(");
+                hql.Append(".ResultFile.Replicate.ReplicatePath, 1, length("); // Not L10N
                 // Summary path
                 hql.Append(table2.Value);
-                hql.Append(".ReplicatePath)) = ");
+                hql.Append(".ReplicatePath)) = "); // Not L10N
                 hql.Append(table2.Value);
-                hql.Append(".ReplicatePath");
+                hql.Append(".ReplicatePath"); // Not L10N
             }
         }
 
@@ -173,7 +175,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 table1.Key);
 
             if (memberInfo.Length < 1)
-                throw new InvalidOperationException(string.Format("The type {0} must have a column of type {1}", table2.Key, table1.Key));
+                throw new InvalidOperationException(
+                    string.Format(Resources.Database_GetJoinColumn_The_type__0__must_have_a_column_of_type__1_,
+                                  table2.Key, table1.Key));
 
             return memberInfo[0].Name;
         }
@@ -459,11 +463,11 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 dbPrecursor.LibraryName = libInfo.LibraryName;
                 int iValue = 0;
                 if (libInfo is NistSpectrumHeaderInfo)
-                    dbPrecursor.LibraryType = "NIST";
+                    dbPrecursor.LibraryType = "NIST"; // Not L10N
                 else if (libInfo is XHunterSpectrumHeaderInfo)
-                    dbPrecursor.LibraryType = "GPM";
+                    dbPrecursor.LibraryType = "GPM"; // Not L10N
                 else if (libInfo is BiblioSpecSpectrumHeaderInfo)
-                    dbPrecursor.LibraryType = "BiblioSpec";
+                    dbPrecursor.LibraryType = "BiblioSpec"; // Not L10N
                 foreach (var pair in libInfo.RankValues)
                 {
                     switch (iValue)
@@ -623,7 +627,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             if (nodeTran.HasLoss)
             {
-                dbTransition.Losses = string.Join(", ", nodeTran.Losses.ToStrings());
+                dbTransition.Losses = string.Join(", ", nodeTran.Losses.ToStrings()); // Not L10N
             }
             if (nodeTran.HasLibInfo)
             {
@@ -896,7 +900,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             public void CalculateStatistics(DbPrecursorResultSummary precursorResultSummary)
             {
-                precursorResultSummary.ReplicatePath = "/";
+                precursorResultSummary.ReplicatePath = "/"; // Not L10N
                 var bestRetentionTimeStats = BestRetentionTimeStats;
                 if (bestRetentionTimeStats.Length > 0)
                 {
@@ -1003,7 +1007,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
             public void CalculateStatistics(DbTransitionResultSummary transitionResultSummary)
             {
-                transitionResultSummary.ReplicatePath = "/";
+                transitionResultSummary.ReplicatePath = "/"; // Not L10N
                 var retentionTimeStats = RetentionTimeStats;
                 if (retentionTimeStats.Length > 0)
                 {

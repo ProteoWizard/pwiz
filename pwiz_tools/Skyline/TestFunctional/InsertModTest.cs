@@ -101,17 +101,17 @@ namespace pwiz.SkylineTestFunctional
                 // Check error and grid cell selection for a bad product m/z
                 VerifyTransitionListError(insertTransDlg, insertListText, 757.420279, 888.8888, 8, 2);
                 // Non-numeric product m/z
-                VerifyTransitionListError(insertTransDlg, insertListText, 908.447222, "x", "number", 1, 2);
+                VerifyTransitionListError(insertTransDlg, insertListText, 908.447222, "x", Resources.PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number, 1, 2);
                 // Check error and grid cell selection for a bad precursor m/z
                 VerifyTransitionListError(insertTransDlg, insertListText, 648.352161, 777.7777, 6, 1);
                 // Non-numeric precursor m/z
-                VerifyTransitionListError(insertTransDlg, insertListText, 762.033412, "x", "number", 0, 1);
+                VerifyTransitionListError(insertTransDlg, insertListText, 762.033412, "x", Resources.PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number, 0, 1);
                 // Empty peptide
-                VerifyTransitionListError(insertTransDlg, insertListText, "TISQSSSLKSSSNSNK", "", "blank", 9, 0);
+                VerifyTransitionListError(insertTransDlg, insertListText, "TISQSSSLKSSSNSNK", "", Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank, 9, 0);
                 // Bad peptide
-                VerifyTransitionListError(insertTransDlg, insertListText, "TISQSSSLKSSSNSNK", "BBBbBBBR", "invalid", 9, 0);
+                VerifyTransitionListError(insertTransDlg, insertListText, "TISQSSSLKSSSNSNK", "BBBbBBBR", Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters, 9, 0);
                 // No mods explain all transitions
-                VerifyTransitionListError(insertTransDlg, insertPart1 + insertPart2, null, null, "single precursor", 3, 0);
+                VerifyTransitionListError(insertTransDlg, insertPart1 + insertPart2, null, null, Resources.PeptideGroupBuilder_AppendTransition_Failed_to_explain_all_transitions_for_m_z__0__with_a_single_precursor, 3, 0, 1);
                 // Finally a working set of transitions
                 SetClipboardText(insertPart1 + insertSep + insertPart2);
                 insertTransDlg.PasteTransitions();
@@ -146,7 +146,7 @@ namespace pwiz.SkylineTestFunctional
         }
 
         private static void VerifyTransitionListError(PasteDlg insertTransDlg, string insertListText,
-            object oldValue, object newValue, object containsValue, int row, int col)
+            object oldValue, object newValue, object containsValue, int row, int col, int replacements = 0)
         {
             string pasteText = oldValue != null && newValue != null ?
                 insertListText.Replace(oldValue.ToString(), newValue.ToString()):
@@ -155,7 +155,7 @@ namespace pwiz.SkylineTestFunctional
             insertTransDlg.PasteTransitions();
             insertTransDlg.OkDialog();
             if (containsValue != null)
-                AssertEx.Contains(insertTransDlg.ErrorText, containsValue.ToString());
+               AssertEx.AreComparableStrings(containsValue.ToString(), insertTransDlg.ErrorText, replacements);
             Assert.AreEqual(row, insertTransDlg.SelectedGridRow);
             Assert.AreEqual(col, insertTransDlg.SelectedGridColumn);
             insertTransDlg.ClearRows();

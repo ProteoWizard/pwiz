@@ -24,6 +24,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.Hibernate;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Hibernate.Query;
 
@@ -99,8 +100,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return reader.Deserialize(new ReportSpec());
         }
 
-        public const string TABLE_ALIAS_ELEMENT = "Element";
-        public const string TABLE_ALIAS_RESULT = "Result";
+        public const string TABLE_ALIAS_ELEMENT = "Element"; // Not L10N
+        public const string TABLE_ALIAS_RESULT = "Result"; // Not L10N
 
         public override void ReadXml(XmlReader reader)
         {
@@ -115,7 +116,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 Type table = GetTable(tableTypeName);
 
-                const string resultSuffix = "Result";
+                const string resultSuffix = "Result"; // Not L10N
                 if (!tableTypeName.EndsWith(resultSuffix))
                     dictAliasTable.Add(TABLE_ALIAS_ELEMENT, table);
                 else
@@ -126,7 +127,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     table = GetTable(tableTypeName);
                     // If the element type does not exist, report an error on the original XML name string.
                     if (table == null)
-                        throw new InvalidDataException(string.Format("The name '{0}' is not a valid table name.", tableName));
+                        throw new InvalidDataException(string.Format(Resources.ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name, tableName));
 
                     dictAliasTable.Add(TABLE_ALIAS_ELEMENT, table);
                 }
@@ -139,7 +140,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     string tableAlias = reader.GetAttribute(ATTR.name);
                     if (string.IsNullOrEmpty(tableAlias))
-                        throw  new InvalidDataException("Missing table name.");
+                        throw  new InvalidDataException(Resources.ReportSpec_ReadXml_Missing_table_name);
 
                     dictAliasTable.Add(tableAlias, GetTable(reader.ReadString()));
                     reader.ReadEndElement();
@@ -156,13 +157,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private static Type GetTable(string tableTypeName)
         {
-            tableTypeName = typeof(DbProtein).Namespace + '.' + tableTypeName;
+            tableTypeName = typeof(DbProtein).Namespace + '.' + tableTypeName; // Not L10N  
 
             Type table = Type.GetType(tableTypeName);
             if (table == null)
             {
-                throw new InvalidDataException(string.Format("The name '{0}' is not a valid table name.",
-                    tableTypeName.Substring(tableTypeName.LastIndexOf('.') + 1)));                
+                throw new InvalidDataException(string.Format(Resources.ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name,
+                    tableTypeName.Substring(tableTypeName.LastIndexOf('.') + 1))); // Not L10N         
             }
 
             return table;
@@ -281,7 +282,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     // Support for v0.5 format when only a single table was used
                     if (dictAliasTable.Count == 1)
                         alias = TABLE_ALIAS_ELEMENT;
-                    else if (colId.Parts.Count < 2 || colId.Parts[0].Contains("Result"))
+                    else if (colId.Parts.Count < 2 || colId.Parts[0].Contains("Result")) // Not L10N
                         alias = TABLE_ALIAS_RESULT;
                     else
                     {
@@ -292,7 +293,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 Type table;
                 if (!dictAliasTable.TryGetValue(alias, out table))
-                    throw new InvalidDataException(string.Format("Failed to find the table for the column {0}.", columnString));
+                    throw new InvalidDataException(string.Format(Resources.ReportSpec_ReadColumns_Failed_to_find_the_table_for_the_column__0__, columnString));
 
                 identifiers.Add(new ReportColumn(table, colId));
                 reader.ReadEndElement();
@@ -344,7 +345,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             EnsureAlias(tableAliases);
 
-            return tableAliases[Table] + "." + Column;
+            return tableAliases[Table] + "." + Column; // Not L10N
         }
 
         public void EnsureAlias(IDictionary<Type, string> tableAliases)
@@ -355,7 +356,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public static void EnsureAlias(Type table, IDictionary<Type, string> tableAliases)
         {
             if (!tableAliases.ContainsKey(table))
-                tableAliases.Add(table, "T" + (tableAliases.Count + 1));
+                tableAliases.Add(table, "T" + (tableAliases.Count + 1)); // Not L10N
         }
 
         public static IEnumerable<KeyValuePair<Type, string>> Order(IDictionary<Type, string> tableAliases)
@@ -401,7 +402,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public override string ToString()
         {
-            return Table.Name + "." + Column;
+            return Table.Name + "." + Column; // Not L10N
         }
 
         #endregion

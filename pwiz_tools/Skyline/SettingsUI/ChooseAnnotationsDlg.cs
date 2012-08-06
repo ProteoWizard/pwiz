@@ -64,7 +64,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            _parent.ModifyDocument("Change Annotation Settings", ChangeAnnotationDefs);
+            _parent.ModifyDocument("Change Annotation Settings", ChangeAnnotationDefs); // Not L10N
             Close();
         }
 

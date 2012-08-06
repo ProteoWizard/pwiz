@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Controls.Graphs
         protected SummaryReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
-            XAxis.Title.Text = "Replicate";
+            XAxis.Title.Text = Resources.SummaryReplicateGraphPane_SummaryReplicateGraphPane_Replicate;
             XAxis.Type = AxisType.Text;
         }
 

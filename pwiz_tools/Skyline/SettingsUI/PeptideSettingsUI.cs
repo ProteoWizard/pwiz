@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -165,8 +166,12 @@ namespace pwiz.Skyline.SettingsUI
                 backgroundProteome = new BackgroundProteome(backgroundProteomeSpec, true);
                 if (backgroundProteome.DatabaseInvalid)
                 {
-                    MessageDlg.Show(this, string.Format("Failed to load background proteome {0}.\nThe file {1} may not be a valid proteome file.",
-                        backgroundProteomeSpec.Name, backgroundProteomeSpec.DatabasePath));
+
+                    var message = TextUtil.LineSeparate(string.Format(Resources.PeptideSettingsUI_ValidateNewSettings_Failed_to_load_background_proteome__0__,
+                                                                      backgroundProteomeSpec.Name),
+                                                        string.Format(Resources.PeptideSettingsUI_ValidateNewSettings_The_file__0__may_not_be_a_valid_proteome_file,
+                                                                      backgroundProteomeSpec.DatabasePath));
+                    MessageDlg.Show(this, message);
                     tabControl1.SelectedIndex = 0;
                     _driverBackgroundProteome.Combo.Focus();
                     e.Cancel = true;
@@ -294,7 +299,7 @@ namespace pwiz.Skyline.SettingsUI
             var standardTypes = _driverLabelType.InternalStandardTypes;
             if (standardTypes.Count < 1)
             {
-                MessageDlg.Show(this, "Choose at least one internal standard type.");
+                MessageDlg.Show(this, Resources.PeptideSettingsUI_ValidateNewSettings_Choose_at_least_one_internal_standard_type);
                 e.Cancel = true;
                 return null;
             }
@@ -413,7 +418,7 @@ namespace pwiz.Skyline.SettingsUI
                         PeptidePrediction.MIN_MEASURED_RT_WINDOW > measuredRTWindow ||
                         measuredRTWindow > PeptidePrediction.MAX_MEASURED_RT_WINDOW)
                 {
-                    textMeasureRTWindow.Text = "";
+                    textMeasureRTWindow.Text = string.Empty;
                 }
             }
         }
@@ -553,8 +558,10 @@ namespace pwiz.Skyline.SettingsUI
                 IEnumerable<LibrarySpec> chosen = _eventChosenLibraries ?? _driverLibrary.Chosen;
                 if (!IsValidRankId(rankId, chosen))
                 {
-                    if (MessageBox.Show(string.Format("Not all libraries chosen support the '{0}' ranking for peptides.\nDo you want to uncheck the ones that do not?", rankId),
-                            Program.Name, MessageBoxButtons.OKCancel) == DialogResult.OK)
+                    var message = TextUtil.LineSeparate(string.Format(Resources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Not_all_libraries_chosen_support_the__0__ranking_for_peptides,
+                                                                      rankId),
+                                                        Resources.PeptideSettingsUI_comboRank_SelectedIndexChanged_Do_you_want_to_uncheck_the_ones_that_do_not);
+                    if (MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel) == DialogResult.OK)
                     {
                         foreach (int i in listLibraries.CheckedIndices)
                         {
@@ -601,7 +608,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 labelPeptides.Enabled = false;
                 textPeptideCount.Enabled = false;
-                textPeptideCount.Text = "";
+                textPeptideCount.Text = string.Empty;
             }
         }
 
@@ -632,7 +639,7 @@ namespace pwiz.Skyline.SettingsUI
             // Only update, if anything changed
             if (!Equals(settings, _peptideSettings))
             {
-                var result = MessageBox.Show(this, "Peptide settings have been changed. Save changes?", Program.Name,
+                var result = MessageBox.Show(this, Resources.PeptideSettingsUI_ShowViewLibraryDlg_Peptide_settings_have_been_changed_Save_changes, Program.Name,
                                 MessageBoxButtons.YesNoCancel);
                 switch (result)
                 {
@@ -667,7 +674,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     libName = _driverLibrary.ListBox.SelectedItem != null
                                   ? _driverLibrary.ListBox.SelectedItem.ToString()
-                                  : (_driverLibrary.CheckedNames.Any() ? _driverLibrary.CheckedNames[0] : "");
+                                  : (_driverLibrary.CheckedNames.Any() ? _driverLibrary.CheckedNames[0] : string.Empty);
                 }
                 var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libName, _parent) { Owner = Owner };
                 viewLibraryDlg.Show();
@@ -839,8 +846,6 @@ namespace pwiz.Skyline.SettingsUI
 
         private sealed class LabelTypeComboDriver
         {
-            private const string EDIT_LIST_ITEM = "<Edit list...>";
-
             private readonly SettingsListBoxDriver<StaticMod> _driverHeavyMod;
 
             private int _selectedIndexLast;
@@ -857,7 +862,7 @@ namespace pwiz.Skyline.SettingsUI
 
                 LabelIS = labelIS;
                 Combo = combo;
-                Combo.DisplayMember = "LabelType";
+                Combo.DisplayMember = Resources.LabelTypeComboDriver_LabelTypeComboDriver_LabelType;
                 ComboIS = comboIS;
                 ListBoxIS = listBoxIS;
                 LoadList(null, modifications.InternalStandardTypes,
@@ -896,7 +901,7 @@ namespace pwiz.Skyline.SettingsUI
                     _singleStandard = (heavyMods.Count() <= 1);
                     if (_singleStandard)
                     {
-                        LabelIS.Text = "I&nternal standard type:";
+                        LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_type;
                         ComboIS.Items.Clear();
                         ComboIS.Items.Add(IsotopeLabelType.light);
                         if (internalStandardTypes.Contains(IsotopeLabelType.light))
@@ -908,7 +913,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                     else
                     {
-                        LabelIS.Text = "I&nternal standard types:";
+                        LabelIS.Text = Resources.LabelTypeComboDriver_LoadList_Internal_standard_types;
                         ListBoxIS.Items.Clear();
                         ListBoxIS.Items.Add(IsotopeLabelType.light);
                         if (internalStandardTypes.Contains(IsotopeLabelType.light))
@@ -941,7 +946,7 @@ namespace pwiz.Skyline.SettingsUI
                         }
                     }
 
-                    Combo.Items.Add(EDIT_LIST_ITEM);
+                    Combo.Items.Add(Resources.LabelTypeComboDriver_LoadList_Edit_list);
                     if (Combo.SelectedIndex < 0)
                         Combo.SelectedIndex = 0;
                     // If no internal standard selected yet, use the first heavy mod type
@@ -992,7 +997,7 @@ namespace pwiz.Skyline.SettingsUI
 
             private bool EditListSelected()
             {
-                return (EDIT_LIST_ITEM == Combo.SelectedItem.ToString());
+                return (Resources.LabelTypeComboDriver_LoadList_Edit_list == Combo.SelectedItem.ToString());
             }
 
             public void SelectedIndexChangedEvent()

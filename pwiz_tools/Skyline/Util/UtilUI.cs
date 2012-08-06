@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -214,7 +215,7 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception)
             {
-                AlertLinkDlg.Show(parent, "Could not open web browser to show link:", link, link, false);
+                AlertLinkDlg.Show(parent, Resources.WebHelpers_OpenLink_Could_not_open_web_browser_to_show_link, link, link, false);
             }
         }
     }

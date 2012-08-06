@@ -28,30 +28,30 @@ namespace pwiz.Skyline.Model.Hibernate
             get { return typeof (DbPrecursor); }
         }
         public virtual DbPeptide Peptide { get; set; }
-        [QueryColumn(FullName="PrecursorCharge")]
+        [QueryColumn(FullName="PrecursorCharge")] // Not L10N
         public virtual int Charge { get; set; }
         public virtual IsotopeLabelType IsotopeLabelType { get; set; }
-        [QueryColumn(FullName="PrecursorNeutralMass")]
+        [QueryColumn(FullName = "PrecursorNeutralMass")] // Not L10N
         public virtual double NeutralMass { get; set; }
-        [QueryColumn(FullName="PrecursorMz")]
+        [QueryColumn(FullName = "PrecursorMz")] // Not L10N
         public virtual double Mz { get; set; }
         [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double CollisionEnergy { get; set; }
         [QueryColumn(Format = Formats.OPT_PARAMETER)]
         public virtual double? DeclusteringPotential { get; set; }
         public virtual string ModifiedSequence { get; set; }
-        [QueryColumn(FullName="PrecursorNote")]
+        [QueryColumn(FullName = "PrecursorNote")] // Not L10N
         public virtual string Note { get; set; }
         public virtual string LibraryName { get; set; }
         public virtual string LibraryType { get; set; }
-        [QueryColumn(FullName="PrecursorLibraryRank")]
+        [QueryColumn(FullName = "PrecursorLibraryRank")] // Not L10N
         public virtual int? LibraryRank { get; set; }
         public virtual double? LibraryScore1 { get; set; }
         public virtual double? LibraryScore2 { get; set; }
         public virtual double? LibraryScore3 { get; set; }
-        [QueryColumn(FullName = "PrecursorIsDecoy")]
+        [QueryColumn(FullName = "PrecursorIsDecoy")] // Not L10N
         public virtual bool IsDecoy { get; set; }
-        [QueryColumn(FullName = "PrecursorDecoyMzShift")]
+        [QueryColumn(FullName = "PrecursorDecoyMzShift")] // Not L10N
         public virtual int? DecoyMzShift { get; set; }
     }
 }

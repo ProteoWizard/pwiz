@@ -27,6 +27,8 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using ZedGraph;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -55,22 +57,22 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 string libraryNamePrefix = LibraryName;
                 if (!string.IsNullOrEmpty(libraryNamePrefix))
-                    libraryNamePrefix += " - ";
+                    libraryNamePrefix += " - "; // Not L10N
 
                 TransitionGroup transitionGroup = TransitionGroupNode.TransitionGroup;
                 string sequence = transitionGroup.Peptide.Sequence;
                 int charge = transitionGroup.PrecursorCharge;
                 var labelType = SpectrumInfo.LabelType;
                 return labelType.IsLight
-                    ? string.Format("{0}{1}, Charge {2}", libraryNamePrefix, sequence, charge)
-                    : string.Format("{0}{1}, Charge {2} ({3})", libraryNamePrefix, sequence, charge, labelType);
+                    ? string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__, libraryNamePrefix, sequence, charge)
+                    : string.Format(Resources.SpectrumGraphItem_Title__0__1__Charge__2__3__, libraryNamePrefix, sequence, charge, labelType);
             }
         }
     }
     
     public abstract class AbstractSpectrumGraphItem : AbstractMSGraphItem
     {
-        private const string FONT_FACE = "Arial";
+        private const string FONT_FACE = "Arial"; // Not L10N
         private static readonly Color COLOR_A = Color.YellowGreen;
         private static readonly Color COLOR_X = Color.Green;
         private static readonly Color COLOR_B = Color.BlueViolet;
@@ -255,7 +257,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (showMzInLabel)
                         sb.AppendLine();
                     else
-                        sb.Append(", ");
+                        sb.Append(", "); // Not L10N
                 }
                 sb.Append(part);
             }
@@ -278,20 +280,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private string GetLabel(IonType type, int ordinal, TransitionLosses losses, int charge, double mz, int rank, bool showMz)
         {
-            var label = new StringBuilder(type.ToString());
+            var label = new StringBuilder(type.GetLocalizedString());
             if (!Transition.IsPrecursor(type))
                 label.Append(ordinal.ToString(CultureInfo.CurrentCulture));
             if (losses != null)
             {
-                label.Append(" -");
+                label.Append(" -"); // Not L10N
                 label.Append(Math.Round(losses.Mass, 1));
             }
-            string chargeIndicator = (charge == 1 ? "" : Transition.GetChargeIndicator(charge));
+            string chargeIndicator = (charge == 1 ? string.Empty : Transition.GetChargeIndicator(charge));
             label.Append(chargeIndicator);
             if (showMz)
-                label.Append(string.Format(" = {0:F01}", mz));
+                label.Append(string.Format(" = {0:F01}", mz)); // Not L10N
             if (rank > 0 && ShowRanks)
-                label.Append(string.Format(" (rank {0})", rank));
+                label.Append(TextUtil.SEPARATOR_SPACE).Append(string.Format("({0})",string.Format(Resources.AbstractSpectrumGraphItem_GetLabel_rank__0__, rank)));
             return label.ToString();
         }
 
@@ -318,7 +320,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class UnavailableMSGraphItem : NoDataMSGraphItem
     {
-        public UnavailableMSGraphItem() : base("Spectrum information unavailable")
+        public UnavailableMSGraphItem() : base(Resources.UnavailableMSGraphItem_UnavailableMSGraphItem_Spectrum_information_unavailable)
         {
         }
     }
@@ -383,17 +385,17 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void CustomizeYAxis(Axis axis)
         {
-            CustomizeAxis(axis, "Intensity");
+            CustomizeAxis(axis, Resources.AbstractMSGraphItem_CustomizeYAxis_Intensity);
         }
 
         public void CustomizeXAxis(Axis axis)
         {
-            CustomizeAxis(axis, "M/Z");
+            CustomizeAxis(axis, Resources.AbstractMSGraphItem_CustomizeXAxis_MZ);
         }
 
         private static void CustomizeAxis(Axis axis, string title)
         {
-            axis.Title.FontSpec.Family = "Arial";
+            axis.Title.FontSpec.Family = "Arial"; // Not L10N
             axis.Title.FontSpec.Size = 14;
             axis.Color = axis.Title.FontSpec.FontColor = Color.Black;
             axis.Title.FontSpec.Border.IsVisible = false;

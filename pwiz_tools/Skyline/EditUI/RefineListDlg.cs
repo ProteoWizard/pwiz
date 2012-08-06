@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.EditUI
 {
@@ -64,15 +66,14 @@ namespace pwiz.Skyline.EditUI
             if (invalidLines.Count > 0)
             {
                 if (invalidLines.Count == 1)
-                    MessageBox.Show(this, string.Format("The sequence '{0}' is not a valid peptide.", invalidLines[0]), Program.Name);
+                    MessageBox.Show(this, string.Format(Resources.RefineListDlg_OkDialog_The_sequence__0__is_not_a_valid_peptide, invalidLines[0]), Program.Name);
                 else
-                    MessageBox.Show(this, string.Format("The following sequences are not valid peptides:\n\n{0}",
-                                                  string.Join("\n", invalidLines.ToArray())), Program.Name);
+                    MessageBox.Show(this, TextUtil.LineSeparate(Resources.RefineListDlg_OkDialog_The_following_sequences_are_not_valid_peptides,string.Empty, TextUtil.LineSeparate(invalidLines)), Program.Name);
                 return;
             }
             if (acceptedPeptides.Count == 0)
             {
-                MessageBox.Show(this, "None of the specified peptides are in the document.");
+                MessageBox.Show(this, Resources.RefineListDlg_OkDialog_None_of_the_specified_peptides_are_in_the_document, Program.Name);
                 return;
             }
             if (notFoundLines.Count > 0)
@@ -80,16 +81,17 @@ namespace pwiz.Skyline.EditUI
                 string message;
                 if (notFoundLines.Count == 1)
                 {
-                    message = string.Format("The peptide '{0}' is not in the document. Do you want to continue?", notFoundLines[0]);
+                    message = string.Format(Resources.RefineListDlg_OkDialog_The_peptide__0__is_not_in_the_document_Do_you_want_to_continue, notFoundLines[0]);
                 }
                 else if (notFoundLines.Count < 15)
                 {
-                    message = string.Format("The following peptides are not in the document:\n\n{0}\n\nDo you want to continue?",
-                                            string.Join("\n", notFoundLines.ToArray()));
+                    message = TextUtil.LineSeparate(Resources.RefineListDlg_OkDialog_The_following_peptides_are_not_in_the_document, string.Empty,
+                                                    TextUtil.LineSeparate(notFoundLines),string.Empty,
+                                                    Resources.RefineListDlg_OkDialog_Do_you_want_to_continue);
                 }
                 else
                 {
-                    message = string.Format("Of the specified {0} peptides {1} are not in the document.  Do you want to continue?",
+                    message = string.Format(Resources.RefineListDlg_OkDialog_Of_the_specified__0__peptides__1__are_not_in_the_document_Do_you_want_to_continue,
                                             notFoundLines.Count + acceptedPeptides.Count, notFoundLines.Count);
                 }
                 if (MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)

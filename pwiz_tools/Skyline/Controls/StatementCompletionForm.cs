@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
@@ -49,7 +50,7 @@ namespace pwiz.Skyline.Controls
         public int TitleWidth { get; set; }
 
         private const string X80 =
-            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+            "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Not L10N
 
         /// <summary>
         /// Resizes the form so that it is just wide enough to show the list items.
@@ -73,7 +74,7 @@ namespace pwiz.Skyline.Controls
                     dxItem += 16;
                     dxTitle = Math.Max(dxTitle, dxItem);
                     dxItem += dxIcon;
-                    var description = GetDescription(item) ?? "";
+                    var description = GetDescription(item) ?? string.Empty;
                     dxItem += Math.Min(dxDescMax, TextRenderer.MeasureText(description, ListView.Font).Width);
                     dxRequired = Math.Max(dxRequired, dxItem);
                 }
@@ -152,7 +153,7 @@ namespace pwiz.Skyline.Controls
                 var descriptionBounds = new Rectangle(
                     titleBounds.Right, textBounds.Top,
                     textBounds.Right - titleBounds.Right, textBounds.Height);
-                DrawDescription(description, GetHighlightedText(item) ?? "",
+                DrawDescription(description, GetHighlightedText(item) ?? string.Empty,
                     graphics, descriptionBounds, textColor, backColor);
             }
         }
@@ -271,7 +272,8 @@ namespace pwiz.Skyline.Controls
         {
             if (listViewItem.SubItems.Count != 1)
             {
-                throw new InvalidOperationException("List view item already has a description");
+                throw new InvalidOperationException(
+                    Resources.StatementCompletionForm_AddDescription_List_view_item_already_has_a_description);
             }
             listViewItem.SubItems.Add(new ListViewItem.ListViewSubItem(listViewItem, description)
                                           {

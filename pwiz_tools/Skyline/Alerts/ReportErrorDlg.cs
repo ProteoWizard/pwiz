@@ -53,14 +53,14 @@ namespace pwiz.Skyline.Alerts
                 btnOK.Visible = false;
                 btnOK.DialogResult = DialogResult.None;
 
-                btnCancel.Text = "Close";
+                btnCancel.Text = Resources.ReportErrorDlg_ReportErrorDlg_Close;
                 btnCancel.DialogResult = DialogResult.OK;
                 AcceptButton = btnCancel;
 
-                StringBuilder error = new StringBuilder("An unexpected error has occurred, as shown below.");
-                error.AppendLine().Append("An error report will be posted.");
-
-                lblReportError.Text = error.ToString();
+                lblReportError.Text = new StringBuilder()
+                    .AppendLine(Resources.ReportErrorDlg_ReportErrorDlg_An_unexpected_error_has_occurred_as_shown_below)
+                    .Append(Resources.ReportErrorDlg_ReportErrorDlg_An_error_report_will_be_posted)
+                    .ToString();
             }
         }
 
@@ -86,9 +86,9 @@ namespace pwiz.Skyline.Alerts
         {
             WebClient webClient = new WebClient();
 
-            const string address = "https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view";
+            const string address = "https://skyline.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view"; // Not L10N
 
-            NameValueCollection form = new NameValueCollection
+            NameValueCollection form = new NameValueCollection // Not L10N: Information passed to browser
                                            {
                                                { "title", "Unhandled " + exceptionType},
                                                { "body", messageBody },
@@ -107,18 +107,18 @@ namespace pwiz.Skyline.Alerts
         {
             get
             {
-                StringBuilder stackTrace = new StringBuilder("Stack trace:");
+                StringBuilder stackTrace = new StringBuilder("Stack trace:"); // Not L10N
 
                 stackTrace.AppendLine().AppendLine(_exception.StackTrace).AppendLine();
 
                 for (var x = _exception.InnerException; x != null; x = x.InnerException)
                 {
                     if (ReferenceEquals(x, _exception.InnerException))
-                        stackTrace.AppendLine("Inner exceptions:");
+                        stackTrace.AppendLine("Inner exceptions:"); // Not L10N
                     else
-                        stackTrace.AppendLine("---------------------------------------------------------------");
-                    stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine();
-                    stackTrace.Append("Error message: ").AppendLine(x.Message);
+                        stackTrace.AppendLine("---------------------------------------------------------------"); // Not L10N
+                    stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine(); // Not L10N
+                    stackTrace.Append("Error message: ").AppendLine(x.Message); // Not L10N
                     stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
                 }
                 return stackTrace.ToString();
@@ -132,23 +132,23 @@ namespace pwiz.Skyline.Alerts
             {
                 StringBuilder sb = new StringBuilder();
                 if (!String.IsNullOrEmpty(tbEmail.Text))
-                    sb.Append("User email address: ").AppendLine(tbEmail.Text);
+                    sb.Append("User email address: ").AppendLine(tbEmail.Text); // Not L10N
                 
                 if (!String.IsNullOrEmpty(tbMessage.Text))
-                    sb.Append("User comments:").AppendLine().AppendLine(tbMessage.Text).AppendLine();
+                    sb.Append("User comments:").AppendLine().AppendLine(tbMessage.Text).AppendLine(); // Not L10N
                 
                 if (ApplicationDeployment.IsNetworkDeployed)
                 {
-                    sb.Append("Skyline version: ").AppendLine(Install.Version);
+                    sb.Append("Skyline version: ").AppendLine(Install.Version); // Not L10N
                 }
 
                 string guid = Settings.Default.InstallationId;
                 if (String.IsNullOrEmpty(guid))
                     guid = Settings.Default.InstallationId = Guid.NewGuid().ToString();
-                sb.Append("Installation ID: ").AppendLine(guid);
+                sb.Append("Installation ID: ").AppendLine(guid); // Not L10N
 
-                sb.Append("Exception type: ").AppendLine(ExceptionType);
-                sb.Append("Error message: ").AppendLine(_exception.Message).AppendLine();
+                sb.Append("Exception type: ").AppendLine(ExceptionType); // Not L10N
+                sb.Append("Error message: ").AppendLine(_exception.Message).AppendLine(); // Not L10N
                 
                 // Stack trace with any inner exceptions
                 sb.AppendLine(tbSourceCodeLocation.Text);

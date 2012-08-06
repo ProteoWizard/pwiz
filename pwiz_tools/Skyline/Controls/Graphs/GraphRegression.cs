@@ -81,9 +81,9 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = menuStrip.Items.Count - 1; i >= 0; i--)
             {
                 string tag = (string)menuStrip.Items[i].Tag;
-                if (tag == "unzoom")
+                if (tag == "unzoom") // Not L10N
                     menuStrip.Items.Insert(i, new ToolStripSeparator());
-                if (tag == "set_default" || tag == "show_val")
+                if (tag == "set_default" || tag == "show_val") // Not L10N
                     menuStrip.Items.RemoveAt(i);
             }
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
@@ -125,7 +125,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
 //            Legend.FontSpec.Size = 12;
 
-            var curve = AddCurve("Values", graphData.XValues, graphData.YValues,
+            var curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Values, graphData.XValues, graphData.YValues,
                                            Color.Black, SymbolType.Diamond);
             curve.Line.IsVisible = false;
             curve.Symbol.Border.IsVisible = false;
@@ -158,7 +158,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 lineY[0] = graphData.RegressionLine.GetY(lineX[0]);
                 lineY[1] = graphData.RegressionLine.GetY(lineX[1]);
 
-                curve = AddCurve("Regression", lineX, lineY, COLOR_LINE_REGRESSION);
+                curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Regression, lineX, lineY, COLOR_LINE_REGRESSION);
                 curve.Line.IsAntiAlias = true;
                 curve.Line.IsOptimizedDraw = true;
 
@@ -167,9 +167,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 double slope = statsY.Slope(statsX);
                 double intercept = statsY.Intercept(statsX);
 
-                _labelRegression = string.Format("slope = {0:F04}, intercept = {1:F04}\n" +
-                                          "r = {2:F02}",
+                _labelRegression = string.Format("{0} = {1:F04}, {2} = {3:F04}\n" + "r = {4:F02}",  // Not L10N
+                                          Resources.Regression_slope,
                                           slope,
+                                          Resources.Regression_intercept,
                                           intercept,
                                           statsY.R(statsX));
 
@@ -181,13 +182,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 lineY[0] = regressionLineCurrent.GetY(lineX[0]);
                 lineY[1] = regressionLineCurrent.GetY(lineX[1]);
 
-                curve = AddCurve("Current", lineX, lineY, COLOR_LINE_REGRESSION_CURRENT);
+                curve = AddCurve(Resources.RegressionGraphPane_RegressionGraphPane_Current, lineX, lineY, COLOR_LINE_REGRESSION_CURRENT);
                 curve.Line.IsAntiAlias = true;
                 curve.Line.IsOptimizedDraw = true;
                 curve.Line.Style = DashStyle.Dash;
 
-                _labelRegressionCurrent = string.Format("slope = {0:F04}, intercept = {1:F04}",
-                    regressionLineCurrent.Slope, regressionLineCurrent.Intercept);
+                _labelRegressionCurrent = string.Format("{0} = {1:F04}, {2} = {3:F04}", // Not L10N 
+                                                        Resources.Regression_slope,
+                                                        regressionLineCurrent.Slope,
+                                                        Resources.Regression_intercept,
+                                                        regressionLineCurrent.Intercept);
             }
 
         }

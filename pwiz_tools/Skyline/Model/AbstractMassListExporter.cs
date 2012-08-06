@@ -26,6 +26,7 @@ using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -44,7 +45,7 @@ namespace pwiz.Skyline.Model
         public const int MAX_TRANS_PER_INJ_DEFAULT = 130;
         public const int MAX_TRANS_PER_INJ_MIN = 2;
 
-        public const string MEMORY_KEY_ROOT = "memory";
+        public const string MEMORY_KEY_ROOT = "memory"; // Not L10N
 
         protected AbstractMassListExporter(SrmDocument document, DocNode node)
         {
@@ -112,7 +113,7 @@ namespace pwiz.Skyline.Model
             // If filename is null, then no more work needs to be done.
             if (fileName == null)
             {
-                progressMonitor.UpdateProgress(new ProgressStatus("").Complete());
+                progressMonitor.UpdateProgress(new ProgressStatus(string.Empty).Complete());
                 return false;
             }
 
@@ -128,7 +129,10 @@ namespace pwiz.Skyline.Model
             bool single = (Strategy == ExportStrategy.Single);
             RequiredPeptides = GetRequiredPeptides(single);
             if (MaxTransitions.HasValue && RequiredPeptides.TransitionCount > MaxTransitions)
-                throw new IOException(string.Format("The number of required transitions {0} exceeds the maximum {1}", RequiredPeptides.TransitionCount, MaxTransitions));
+            {
+                throw new IOException(string.Format(Resources.AbstractMassListExporter_Export_The_number_of_required_transitions__0__exceeds_the_maximum__1__,
+                                                    RequiredPeptides.TransitionCount, MaxTransitions));
+            }
 
             using (var fileIterator = new FileIterator(fileName, single, IsPrecursorLimited, WriteHeaders))
             {
@@ -305,7 +309,7 @@ namespace pwiz.Skyline.Model
         private void ExportScheduledBuckets(FileIterator fileIterator)
         {
             if (!MaxTransitions.HasValue)
-                throw new InvalidOperationException("Maximum transitions per file required");
+                throw new InvalidOperationException(Resources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
 
             bool singleWindow = ExportInstrumentType.IsSingleWindowInstrumentType(InstrumentType);
 
@@ -340,7 +344,10 @@ namespace pwiz.Skyline.Model
                     if (RequiredPeptides.IsRequired(nodePep))
                     {
                         if (!peptideSchedule.CanSchedule)
-                            throw new IOException(string.Format("The required peptide {0} cannot be scheduled", Document.Settings.GetModifiedSequence(nodePep)));
+                        {
+                            throw new IOException(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_The_required_peptide__0__cannot_be_scheduled,
+                                                                Document.Settings.GetModifiedSequence(nodePep)));
+                        }
                         listRequired.Add(peptideSchedule);
                     }
                     else if (peptideSchedule.CanSchedule)
@@ -364,22 +371,32 @@ namespace pwiz.Skyline.Model
                 // Throw an error if nothing beyond the required transitions could be added
                 if (listScheduleNext.TransitionCount == RequiredPeptides.TransitionCount)
                 {
-                    string itemName = IsPrecursorLimited ? "precursors" : "transitions";
+                    string itemName = IsPrecursorLimited
+                                          ? Resources.AbstractMassListExporter_ExportScheduledBuckets_precursors
+                                          : Resources.AbstractMassListExporter_ExportScheduledBuckets_transitions;
                     var sb = new StringBuilder();
                     foreach (var peptideSchedule in listSchedules)
                     {
                         if (peptideSchedule.TransitionCount > MaxTransitions.Value)
                         {
-                            sb.AppendLine(string.Format("{0} - {1} {2}",
+                            sb.AppendLine(string.Format("{0} - {1} {2}", // Not L10N
                                 peptideSchedule.Peptide.Peptide,
                                 peptideSchedule.TransitionCount,
                                 itemName));
                         }
                     }
+
+                    var message = new StringBuilder(Resources.AbstractMassListExporter_ExportScheduledBuckets_Failed_to_schedule_the_following_peptides_with_the_current_settings);
+                    message.AppendLine().AppendLine().AppendLine(sb.ToString());
                     if (OptimizeStepCount == 0)
-                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\n\nCheck max concurrent {1} count.", sb, itemName));
+                    {
+                        message.AppendLine().AppendLine(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count, itemName));
+                    }
                     else
-                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\nCheck max concurrent {1} count and optimization step count.", sb, itemName));
+                    {
+                        message.Append(string.Format(Resources.AbstractMassListExporter_ExportScheduledBuckets_Check_max_concurrent__0__count_and_optimization_step_count, itemName));
+                    }
+                    throw new IOException(message.ToString());
                 }
                 listScheduleBuckets.Add(listScheduleNext);
                 totalScheduled += listScheduleNext.TransitionCount;
@@ -424,7 +441,7 @@ namespace pwiz.Skyline.Model
         private void BorrowTransitions(PeptideScheduleBucket bucketUnder, PeptideScheduleBucket bucketOver, int balanceCount)
         {
             if (!MaxTransitions.HasValue)
-                throw new InvalidOperationException("Maximum transitions per file required");
+                throw new InvalidOperationException(Resources.AbstractMassListExporter_ExportScheduledBuckets_Maximum_transitions_per_file_required);
 
             foreach (var schedule in bucketOver.ToArray().RandomOrder())
             {
@@ -687,10 +704,10 @@ namespace pwiz.Skyline.Model
             StringBuilder sb = new StringBuilder();
             foreach (char c in namePart)
             {
-                if ("/\\:*?\"<>|".IndexOf(c) == -1)
+                if ("/\\:*?\"<>|".IndexOf(c) == -1) // Not L10N
                     sb.Append(c);
                 else
-                    sb.Append('_');
+                    sb.Append('_'); // Not L10N
             }
             return sb.ToString();
         }
@@ -718,8 +735,8 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    BaseName = Path.Combine(Path.GetDirectoryName(fileName) ?? "",
-                        Path.GetFileNameWithoutExtension(fileName) ?? "");
+                    BaseName = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
+                        Path.GetFileNameWithoutExtension(fileName) ?? string.Empty);
                 }
             }
 
@@ -743,7 +760,7 @@ namespace pwiz.Skyline.Model
                     {
                         _saver = new FileSaver(FileName);
                         if (!_saver.CanSave(false))
-                            throw new IOException(string.Format("Cannot save to {0}.", FileName));
+                            throw new IOException(string.Format(Resources.FileIterator_Init_Cannot_save_to__0__, FileName));
 
                         _writer = new StreamWriter(_saver.SafeName);
                     }
@@ -800,13 +817,13 @@ namespace pwiz.Skyline.Model
                 // Make sure file names sort into the order in which they were
                 // written.  This will help the results load in tree order.
                 if (Suffix == null)
-                    baseName = string.Format("{0}_{1:0000}", BaseName, FileCount);
+                    baseName = string.Format("{0}_{1:0000}", BaseName, FileCount); // Not L10N
                 else
-                    baseName = string.Format("{0}_{1:0000}_{2}", BaseName, FileCount, Suffix);
+                    baseName = string.Format("{0}_{1:0000}_{2}", BaseName, FileCount, Suffix); // Not L10N
 
                 if (MemoryOutput == null)
                 {
-                    _saver = new FileSaver(baseName + ".csv");
+                    _saver = new FileSaver(baseName + ".csv"); // Not L10N
                     _writer = new StreamWriter(_saver.SafeName);
                 }
                 else
@@ -826,7 +843,7 @@ namespace pwiz.Skyline.Model
                                         int step)
             {
                 if (!HasFile)
-                    throw new IOException("Unexpected failure writing transitions.");
+                    throw new IOException(Resources.FileIterator_WriteTransition_Unexpected_failure_writing_transitions);
 
                 exporter.WriteTransition(_writer, seq, peptide, group, transition, step);
 

@@ -25,7 +25,9 @@ using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
@@ -60,7 +62,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 if (Source == IrtCalculatorSource.settings)
                     return (RCalcIrt)comboLibrary.SelectedItem;
-                return new RCalcIrt("", textFilePath.Text);
+                return new RCalcIrt(string.Empty, textFilePath.Text);
             }
         }
 
@@ -71,11 +73,14 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 string path = textFilePath.Text;
                 string message = null;
                 if (string.IsNullOrEmpty(path))
-                    message = "Please specify a path to an existing iRT database.";
+                    message = Resources.AddIrtCalculatorDlg_OkDialog_Please_specify_a_path_to_an_existing_iRT_database;
                 else if (!path.EndsWith(IrtDb.EXT))
-                    message = string.Format("The file {0} is not an iRT database.", path);
+                    message = string.Format(Resources.AddIrtCalculatorDlg_OkDialog_The_file__0__is_not_an_iRT_database, path);
                 else if (!File.Exists(path))
-                    message = string.Format("The file {0} does not exist.\nPlease specify a path to an existing iRT database.", path);
+                {
+                    message = TextUtil.LineSeparate(string.Format(Resources.AddIrtCalculatorDlgOkDialogThe_file__0__does_not_exist, path),
+                                                    Resources.AddIrtCalculatorDlg_OkDialog_Please_specify_a_path_to_an_existing_iRT_database);
+                }
                 if (message != null)
                 {
                     MessageDlg.Show(this, message);
@@ -86,7 +91,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             var calculator = Calculator;
             if (calculator == null)
             {
-                MessageDlg.Show(this, "Please choose the iRT calculator you would like to add.");
+                MessageDlg.Show(this, Resources.AddIrtCalculatorDlg_OkDialog_Please_choose_the_iRT_calculator_you_would_like_to_add);
                 return;
             }
 
@@ -114,7 +119,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
             {
                 comboLibrary.Enabled = true;
                 textFilePath.Enabled = false;
-                textFilePath.Text = "";
+                textFilePath.Text = string.Empty;
                 btnBrowseFile.Enabled = false;
             }
             else
@@ -132,11 +137,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                  {
                                      CheckPathExists = true,
                                      DefaultExt = BiblioSpecLibSpec.EXT,
-                                     Filter = string.Join("|", new[]
-                                                                   {
-                                                                       "iRT Database Files (*" + IrtDb.EXT + ")|*" + IrtDb.EXT,
-                                                                       "All Files (*.*)|*.*"
-                                                                   })
+                                     Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
                                  })
             {
                 if (dlg.ShowDialog(this) != DialogResult.OK)

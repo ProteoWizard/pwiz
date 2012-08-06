@@ -168,7 +168,7 @@ namespace pwiz.Skyline.EditUI
             panelError.Visible = true;
             if (pasteError == null)
             {
-                tbxError.Text = "";
+                tbxError.Text = string.Empty;
                 tbxError.Visible = false;
                 return;
             }
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.EditUI
         {
             _noErrors = true;
             panelError.Visible = true;
-            tbxError.Text = "No errors";
+            tbxError.Text = Resources.PasteDlg_ShowNoErrors_No_errors;
             tbxError.BackColor = Color.LightGreen;
         }
 
@@ -259,7 +259,8 @@ namespace pwiz.Skyline.EditUI
                 return null;
             try
             {
-                matcher.CreateMatches(document.Settings, listPeptideSequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+                matcher.CreateMatches(document.Settings, listPeptideSequences, Settings.Default.StaticModList,
+                                      Settings.Default.HeavyModList);
             }
             catch (FormatException e)
             {
@@ -267,17 +268,16 @@ namespace pwiz.Skyline.EditUI
                 ShowPeptideError(new PasteError
                                      {
                                          Column = colPeptideSequence.Index,
-                                         Message = "Unable to interpret peptide modifications"
+                                         Message = Resources.PasteDlg_AddPeptides_Unable_to_interpret_peptide_modifications
                                      });
                 return null;
             }
             var strNameMatches = matcher.FoundMatches;
             if (!validating && !string.IsNullOrEmpty(strNameMatches))
             {
-                using (var dlg = new MultiButtonMsgDlg(
-                    string.Format(
-                        "Would you like to use the Unimod definitions for the following modifications?\n\n{0}",
-                        strNameMatches), "OK"))
+                string message = TextUtil.LineSeparate(Resources.PasteDlg_AddPeptides_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications,
+                                                        string.Empty, strNameMatches);
+                using (var dlg = new MultiButtonMsgDlg(message, Resources.PasteDlg_AddPeptides_OK))
                 {
                     if (dlg.ShowDialog() == DialogResult.Cancel)
                         return null;
@@ -308,14 +308,17 @@ namespace pwiz.Skyline.EditUI
                 {
                     if (string.IsNullOrEmpty(proteinName))
                     {
-                        peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), document.GetPeptideGroupId(true), null, new PeptideDocNode[0]);
+                        peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(),
+                                                                      document.GetPeptideGroupId(true), null,
+                                                                      new PeptideDocNode[0]);
                     }
                     else
                     {
                         PeptideGroup peptideGroup = backgroundProteome.IsNone ? new PeptideGroup() 
                             : (backgroundProteome.GetFastaSequence(proteinName) ??
                                                     new PeptideGroup());
-                        peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName, peptideGroup.Description, new PeptideDocNode[0]);
+                        peptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, proteinName,
+                                                                      peptideGroup.Description, new PeptideDocNode[0]);
                     }
                     // Add to the end, if no insert node
                     var to = selectedPath;
@@ -347,7 +350,7 @@ namespace pwiz.Skyline.EditUI
                                              {
                                                  Column = colPeptideSequence.Index,
                                                  Line = i,
-                                                 Message = "This peptide sequence was not found in the protein sequence"
+                                                 Message = Resources.PasteDlg_AddPeptides_This_peptide_sequence_was_not_found_in_the_protein_sequence
                                              });
                         return null;
                     }
@@ -392,7 +395,7 @@ namespace pwiz.Skyline.EditUI
                     {
                         Column = colPeptideSequence.Index,
                         Line = i,
-                        Message = "The peptide sequence cannot be blank."
+                        Message = Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank
                     });
                     return null;
                 }
@@ -402,7 +405,7 @@ namespace pwiz.Skyline.EditUI
                     {
                         Column = colPeptideSequence.Index,
                         Line = i,
-                        Message = "This peptide sequence contains invalid characters."
+                        Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
                     });
                     return null;
                 }
@@ -442,13 +445,17 @@ namespace pwiz.Skyline.EditUI
                         {
                             if (fastaSequence == null)
                             {
-                                fastaSequence = new FastaSequence(proteinName, Convert.ToString(row.Cells[colProteinDescription.Index].Value), new AlternativeProtein[0], fastaSequenceString);
+                                fastaSequence = new FastaSequence(proteinName,
+                                                                  Convert.ToString(
+                                                                      row.Cells[colProteinDescription.Index].Value),
+                                                                  new AlternativeProtein[0], fastaSequenceString);
                             }
                             else
                             {
                                 if (fastaSequence.Sequence != fastaSequenceString)
                                 {
-                                    fastaSequence = new FastaSequence(fastaSequence.Name, fastaSequence.Description, fastaSequence.Alternatives, fastaSequenceString);
+                                    fastaSequence = new FastaSequence(fastaSequence.Name, fastaSequence.Description,
+                                                                      fastaSequence.Alternatives, fastaSequenceString);
                                 }
                             }
                         }
@@ -458,7 +465,7 @@ namespace pwiz.Skyline.EditUI
                                                  {
                                                      Line = i,
                                                      Column = colProteinDescription.Index,
-                                                     Message = "Invalid protein sequence: " + exception.Message
+                                                     Message = string.Format(Resources.PasteDlg_AddProteins_Invalid_protein_sequence__0__, exception.Message)
                                                  });
                             return null;
                         }
@@ -469,8 +476,9 @@ namespace pwiz.Skyline.EditUI
                         new PasteError
                         {
                                              Line = i,
-                                             Message = backgroundProteome.IsNone ? "Missing protein sequence"
-                                                :   "This protein was not found in the background proteome database."
+                                Message = backgroundProteome.IsNone
+                                        ? Resources.PasteDlg_AddProteins_Missing_protein_sequence
+                                        : Resources.PasteDlg_AddProteins_This_protein_was_not_found_in_the_background_proteome_database
                         });
                     return null;
                 }
@@ -502,30 +510,30 @@ namespace pwiz.Skyline.EditUI
             {
                 return document;
             }
-            if (!text.StartsWith(">"))
+            if (!text.StartsWith(">")) // Not L10N
             {
                 ShowFastaError(new PasteError
                 {
-                    Message = "This must start with '>'",
+                    Message = Resources.PasteDlg_AddFasta_This_must_start_with,
                     Column = 0,
                     Length = 1,
                     Line = 0,
                 });
                 return null;
             }
-            string[] lines = text.Split('\n');
+            string[] lines = text.Split('\n'); // Not L10N
             int lastNameLine = -1;
             int aa = 0;
             for (int i = 0; i < lines.Length; i++)
             {
                 string line = lines[i];
-                if (line.StartsWith(">"))
+                if (line.StartsWith(">")) // Not L10N
                 {
                     if (line.Trim().Length == 1)
                     {
                         ShowFastaError(new PasteError
                         {
-                            Message = "There is no name for this protein",
+                            Message = Resources.PasteDlg_AddFasta_There_is_no_name_for_this_protein,
                             Column = 0,
                             Line = i,
                             Length = 1
@@ -544,12 +552,11 @@ namespace pwiz.Skyline.EditUI
                     char c = line[column];
                     if (AminoAcid.IsExAA(c))
                         aa++;
-                    else if (!char.IsWhiteSpace(c) && c != '*')
+                    else if (!char.IsWhiteSpace(c) && c != '*') // Not L10N
                     {
                         ShowFastaError(new PasteError
                         {
-                            Message =
-                                string.Format("'{0}' is not a capital letter that corresponds to an amino acid.", c),
+                                               Message = string.Format(Resources.PasteDlg_AddFasta__0__is_not_a_capital_letter_that_corresponds_to_an_amino_acid, c),
                             Column = column,
                             Line = i,
                             Length = 1,
@@ -578,7 +585,8 @@ namespace pwiz.Skyline.EditUI
                 Console.Out.WriteLine(exception);
                 ShowFastaError(new PasteError
                               {
-                                  Message = "An unexpected error occurred: " + exception.Message + " (" + exception.GetType() + ")"
+                                       Message = string.Format(Resources.PasteDlg_AddFasta_An_unexpected_error_occurred__0__1__,
+                                                               exception.Message, exception.GetType())
                               });
                 return null;
             }
@@ -591,7 +599,7 @@ namespace pwiz.Skyline.EditUI
             {
                 ShowFastaError(new PasteError
                 {
-                    Message = "There is no sequence for this protein",
+                    Message = Resources.PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein,
                     Column = 0,
                     Line = lastNameLine,
                     Length = lines[lastNameLine].Length
@@ -641,7 +649,7 @@ namespace pwiz.Skyline.EditUI
                                             {
                                                 Column = colTransitionPeptide.Index,
                                                 Line = i,
-                                                Message = "The peptide sequence cannot be blank."
+                                                Message = Resources.PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank
                                             });
                     return null;
                 }
@@ -651,7 +659,7 @@ namespace pwiz.Skyline.EditUI
                                             {
                                                 Column = colTransitionPeptide.Index,
                                                 Line = i,
-                                                Message = "This peptide sequence contains invalid characters."
+                                                Message = Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters
                                             });
                     return null;
                 }
@@ -662,7 +670,7 @@ namespace pwiz.Skyline.EditUI
                                             {
                                                 Column = colTransitionPrecursorMz.Index,
                                                 Line = i,
-                                                Message = "The precursor m/z must be a number."
+                                                Message = Resources.PasteDlg_AddTransitionList_The_precursor_m_z_must_be_a_number
                                             });
                     return null;
                 }
@@ -672,7 +680,7 @@ namespace pwiz.Skyline.EditUI
                                             {
                                                 Column = colTransitionProductMz.Index,
                                                 Line = i,
-                                                Message = "The product m/z must be a number."
+                                                Message = Resources.PasteDlg_AddTransitionList_The_product_m_z_must_be_a_number
                                             });
                     return null;
                 }
@@ -835,7 +843,7 @@ namespace pwiz.Skyline.EditUI
                     tabControl1.Controls.Add(tab);
                 }
                 tabControl1.SelectedTab = tab;
-                Text = "Insert " + tabControl1.Text;
+                Text = string.Format(Resources.PasteDlg_PasteFormat_Insert__0__,tabControl1.Text);
                 AcceptButton = tabControl1.SelectedTab != tabPageFasta ? btnInsert : null;
             }
         }
@@ -846,12 +854,12 @@ namespace pwiz.Skyline.EditUI
             {
                 switch (PasteFormat)
                 {
-                    case PasteFormat.fasta: return "Insert FASTA";
-                    case PasteFormat.protein_list: return "Insert protein list";
-                    case PasteFormat.peptide_list: return "Insert peptide list";
-                    case PasteFormat.transition_list: return "Insert transition list";
+                    case PasteFormat.fasta: return "Insert FASTA"; // Not L10N
+                    case PasteFormat.protein_list: return "Insert protein list"; // Not L10N
+                    case PasteFormat.peptide_list: return "Insert peptide list"; // Not L10N
+                    case PasteFormat.transition_list: return "Insert transition list"; // Not L10N
                 }
-                return "Insert";
+                return "Insert"; // Not L10N
             }
         }
 
@@ -996,7 +1004,7 @@ namespace pwiz.Skyline.EditUI
                 if (!FastaSequence.IsExSequence(peptideSequence))
                 {
                     dataGridView.CurrentCell = row.Cells[sequenceIndex];
-                    throw new InvalidDataException("This peptide sequence contains invalid characters.");
+                    throw new InvalidDataException(Resources.PasteDlg_ListPeptideSequences_This_peptide_sequence_contains_invalid_characters);
                 }
                 seenPepSeq.Add(peptideSequence);
             }
@@ -1087,7 +1095,7 @@ namespace pwiz.Skyline.EditUI
             {
                 // Sometimes the protein name in the background proteome will have an extra "|" on the end.
                 // In that case, update the name of the protein to match the one in the database.
-                fastaSequence = backgroundProteome.GetFastaSequence(proteinName + "|");
+                fastaSequence = backgroundProteome.GetFastaSequence(proteinName + "|"); // Not L10N
                 if (fastaSequence != null)
                 {
                     row.Cells[colPeptideProtein.Index].Value = fastaSequence.Name;
@@ -1228,7 +1236,7 @@ namespace pwiz.Skyline.EditUI
             }
             catch (ExternalException)
             {
-                MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage("Failed getting data from the clipboard."));
+                MessageDlg.Show(this, ClipboardHelper.GetOpenClipboardMessage(Resources.PasteDlg_Paste_Failed_getting_data_from_the_clipboard));
                 return;
             }
 
@@ -1340,7 +1348,7 @@ namespace pwiz.Skyline.EditUI
                 while ((line = reader.ReadLine()) != null)
                 {
                     // Avoid trimming off tabs, which will shift columns
-                    line = line.Trim('\r','\n',' ');
+                    line = line.Trim('\r', '\n', TextUtil.SEPARATOR_SPACE); // Not L10N
                     if (string.IsNullOrEmpty(line))
                     {
                         continue;

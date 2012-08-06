@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.RetentionTimes;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -360,8 +361,8 @@ namespace pwiz.Skyline.Model.Results
                 // Check the most common case where the file is in the same directory
                 // where the cache is being written.
                 // CONSIDER: Store relative paths instead?
-                string localPath = Path.Combine(Path.GetDirectoryName(cachePath) ?? "",
-                                                Path.GetFileName(dataFilePathPart) ?? "");  // Resharper
+                string localPath = Path.Combine(Path.GetDirectoryName(cachePath) ?? string.Empty,
+                                                Path.GetFileName(dataFilePathPart) ?? string.Empty);  // Resharper
                 if (!File.Exists(localPath) && !Directory.Exists(localPath))
                     return null;
 
@@ -472,7 +473,7 @@ namespace pwiz.Skyline.Model.Results
                 IXmlElementHelper<OptimizableRegression> helper = XmlUtil.FindHelper(
                     OptimizationFunction, OPTIMIZATION_HELPERS);
                 if (helper == null)
-                    throw new InvalidOperationException("Attempt to serialize list containing invalid type.");
+                    throw new InvalidOperationException(Resources.ChromatogramSet_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
                 writer.WriteElement(helper.ElementNames[0], OptimizationFunction);                
             }
 
@@ -485,11 +486,11 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteAttribute(ATTR.sample_name, SampleHelp.GetFileSampleName(fileInfo.FilePath));
                 if(fileInfo.RunStartTime != null)
                 {
-                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, "yyyy-MM-ddTHH:mm:ss"));
+                    writer.WriteAttribute(ATTR.acquired_time, XmlConvert.ToString((DateTime) fileInfo.RunStartTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
                 }
                 if(fileInfo.FileWriteTime != null)
                 {
-                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, "yyyy-MM-ddTHH:mm:ss"));
+                    writer.WriteAttribute(ATTR.modified_time, XmlConvert.ToString((DateTime)fileInfo.FileWriteTime, "yyyy-MM-ddTHH:mm:ss")); // Not L10N
                 }
 
                 // instrument information
@@ -530,7 +531,8 @@ namespace pwiz.Skyline.Model.Results
         private string GetOrdinalSaveId(int ordinalIndex)
         {
             if (ordinalIndex == -1)
-                throw new ArgumentOutOfRangeException("ordinalIndex", "Attempting to save results info for a file that cannot be found.");
+                throw new ArgumentOutOfRangeException("ordinalIndex", // Not L10N
+                                                      Resources.ChromatogramSet_GetOrdinalSaveId_Attempting_to_save_results_info_for_a_file_that_cannot_be_found);
 
             return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex);
         }
@@ -701,32 +703,32 @@ namespace pwiz.Skyline.Model.Results
     {
         public static string EncodePath(string filePath, string sampleName, int sampleIndex)
         {
-            return string.Format("{0}|{1}|{2}", filePath, sampleName, sampleIndex);
+            return string.Format("{0}|{1}|{2}", filePath, sampleName, sampleIndex); // Not L10N
         }
 
         public static string EscapeSampleId(string sampleId)
         {
             var invalidFileChars = Path.GetInvalidFileNameChars();
-            var invalidNameChars = new[] {',', '.', ';'};
+            var invalidNameChars = new[] {',', '.', ';'}; // Not L10N
             if (sampleId.IndexOfAny(invalidFileChars) == -1 &&
                     sampleId.IndexOfAny(invalidNameChars) == -1)
                 return sampleId;
             var sb = new StringBuilder();
             foreach (char c in sampleId)
-                sb.Append(invalidFileChars.Contains(c) || invalidNameChars.Contains(c) ? '_' : c);
+                sb.Append(invalidFileChars.Contains(c) || invalidNameChars.Contains(c) ? '_' : c); // Not L10N
             return sb.ToString();
         }
 
         public static string GetPathFilePart(string path)
         {
-            if (path.IndexOf('|') == -1)
+            if (path.IndexOf('|') == -1) // Not L10N
                 return path;
-            return path.Split('|')[0];
+            return path.Split('|')[0]; // Not L10N
         }
 
         public static bool HasSamplePart(string path)
         {
-            string[] parts = path.Split('|');
+            string[] parts = path.Split('|'); // Not L10N
 
             int sampleIndex;
             return parts.Length == 3 && int.TryParse(parts[2], out sampleIndex);
@@ -734,17 +736,17 @@ namespace pwiz.Skyline.Model.Results
 
         public static string GetPathSampleNamePart(string path)
         {
-            if (path.IndexOf('|') == -1)
+            if (path.IndexOf('|') == -1) // Not L10N
                 return null;
-            return path.Split('|')[1];
+            return path.Split('|')[1]; // Not L10N
         }
 
         public static int GetPathSampleIndexPart(string path)
         {
             int sampleIndex = -1;
-            if (path.IndexOf('|') != -1)
+            if (path.IndexOf('|') != -1) // Not L10N
             {
-                string[] parts = path.Split('|');
+                string[] parts = path.Split('|'); // Not L10N
                 int index;
                 if (parts.Length == 3 && int.TryParse(parts[2], out index))
                     sampleIndex = index;

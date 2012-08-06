@@ -25,6 +25,7 @@ using NHibernate;
 using NHibernate.Engine;
 using NHibernate.Stat;
 using NHibernate.Type;
+using pwiz.ProteomeDatabase.Properties;
 
 #pragma warning disable 612,618
 namespace pwiz.ProteomeDatabase.Util
@@ -45,7 +46,7 @@ namespace pwiz.ProteomeDatabase.Util
                 if (_lock.IsReaderLockHeld)
                 {
                     throw new InvalidOperationException(
-                        "Can't acquire write lock while holding read lock.");
+                        Resources.SessionWithLock_SessionWithLock_Cant_acquire_write_lock_while_holding_read_lock);
                 }
                 _lock.AcquireWriterLock(int.MaxValue);
             }
@@ -59,7 +60,7 @@ namespace pwiz.ProteomeDatabase.Util
         {
             if (!_writeLock)
             {
-                throw new InvalidOperationException("Must have write lock");
+                throw new InvalidOperationException(Resources.SessionWithLock_EnsureWriteLock_Must_have_write_lock);
             }
         }
 

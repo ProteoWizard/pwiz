@@ -237,7 +237,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public int CalcMaxTrendReplicates(SrmDocument document)
         {
             if (!UseMeasuredRTs || !MeasuredRTWindow.HasValue)
-                throw new InvalidOperationException("Calculating scheduling from trends requires a retention time window for measured data.");
+                throw new InvalidOperationException(Resources.PeptidePrediction_CalcMaxTrendReplicates_Calculating_scheduling_from_trends_requires_a_retention_time_window_for_measured_data);
 
             int i;
             for (i = 1; i < MAX_TREND_PREDICTION_REPLICATES; i++)
@@ -431,8 +431,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     MeasuredRTWindow = DEFAULT_MEASURED_RT_WINDOW;
                 else if (MIN_MEASURED_RT_WINDOW > MeasuredRTWindow || MeasuredRTWindow > MAX_MEASURED_RT_WINDOW)
                 {
-                    throw new InvalidDataException(string.Format("The retention time window {0} for a scheduled method based on measured results must be between {1} and {2}.",
-                                                                 MeasuredRTWindow, MIN_MEASURED_RT_WINDOW, MAX_MEASURED_RT_WINDOW));
+                    throw new InvalidDataException(
+                        string.Format(Resources.PeptidePrediction_DoValidate_The_retention_time_window__0__for_a_scheduled_method_based_on_measured_results_must_be_between__1__and__2__,
+                                      MeasuredRTWindow, MIN_MEASURED_RT_WINDOW, MAX_MEASURED_RT_WINDOW));
                 }
             }
 
@@ -702,11 +703,11 @@ namespace pwiz.Skyline.Model.DocSettings
         private void DoValidate()
         {
             // These values are repeated in PeptideSettingsUI
-            ValidateIntRange("excluded n-terminal amino acids", ExcludeNTermAAs,
+            ValidateIntRange(Resources.PeptideFilter_DoValidate_excluded_n_terminal_amino_acids, ExcludeNTermAAs,
                 MIN_EXCLUDE_NTERM_AA, MAX_EXCLUDE_NTERM_AA);
-            ValidateIntRange("minimum peptide length", MinPeptideLength,
+            ValidateIntRange(Resources.PeptideFilter_DoValidate_minimum_peptide_length, MinPeptideLength,
                 MIN_MIN_LENGTH, MAX_MIN_LENGTH);
-            ValidateIntRange("maximum peptide length", MaxPeptideLength,
+            ValidateIntRange(Resources.PeptideFilter_DoValidate_maximum_peptide_length, MaxPeptideLength,
                 Math.Max(MIN_MAX_LENGTH, MinPeptideLength), MAX_MAX_LENGTH);
 
             if (_regexExclude != null)
@@ -729,7 +730,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     }
                     catch(ArgumentException x)
                     {
-                        throw new InvalidDataException(string.Format("The peptide exclusion {0} has an invalid regular expression '{1}'.", exclude.Name, exclude.Regex), x);
+                        throw new InvalidDataException(
+                            string.Format(Resources.PeptideFilter_DoValidate_The_peptide_exclusion__0__has_an_invalid_regular_expression__1__,
+                                          exclude.Name, exclude.Regex), x);
                     }
 
                     // Add this expression to the single expression that will be used
@@ -751,7 +754,7 @@ namespace pwiz.Skyline.Model.DocSettings
         private static void AddRegEx(StringBuilder sb, string regex)
         {
             if (sb.Length > 0)
-                sb.Append('|');
+                sb.Append('|'); // Not L10N
             sb.Append(regex);
         }
 
@@ -766,14 +769,17 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             catch (ArgumentException x)
             {
-                throw new InvalidDataException("Invalid exclusion list.", x);
+                throw new InvalidDataException(Resources.PeptideFilter_ExcludeExprToRegEx_Invalid_exclusion_list, x);
             }
         }
 
         private static void ValidateIntRange(string label, int n, int min, int max)
         {
             if (min > n || n > max)
-                throw new InvalidDataException(string.Format("The value {1} for {0} must be between {2} and {3}.", label, n, min, max));
+            {
+                throw new InvalidDataException(string.Format(Resources.PeptideFilter_ValidateIntRange_The_value__1__for__0__must_be_between__2__and__3__,
+                                                             label, n, min, max));
+            }
         }
 
         public static PeptideFilter Deserialize(XmlReader reader)
@@ -1078,7 +1084,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             int index = GetModIndex(labelType);
             if (index == -1)
-                throw new IndexOutOfRangeException(string.Format("Modification type {0} not found.", labelType));
+                throw new IndexOutOfRangeException(string.Format(Resources.PeptideModifications_ChangeModifications_Modification_type__0__not_found, labelType));
             var modifications = _modifications.ToArrayStd();
             modifications[index] = new TypedModifications(labelType, prop);
             return ChangeProp(ImClone(this), im => im._modifications = MakeReadOnly(modifications));
@@ -1208,13 +1214,15 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (MIN_MAX_VARIABLE_MODS > MaxVariableMods || MaxVariableMods > MAX_MAX_VARIABLE_MODS)
             {
-                throw new InvalidDataException(string.Format("Maximum variable modifications {0} must be between {1} and {2}",
-                    MaxVariableMods, MIN_MAX_VARIABLE_MODS, MAX_MAX_VARIABLE_MODS));
+                throw new InvalidDataException(
+                    string.Format(Resources.PeptideModifications_DoValidate_Maximum_variable_modifications__0__must_be_between__1__and__2__,
+                                  MaxVariableMods, MIN_MAX_VARIABLE_MODS, MAX_MAX_VARIABLE_MODS));
             }
             if (MIN_MAX_NEUTRAL_LOSSES > MaxNeutralLosses || MaxNeutralLosses > MAX_MAX_NEUTRAL_LOSSES)
             {
-                throw new InvalidDataException(string.Format("Maximum neutral losses {0} must be between {1} and {2}",
-                    MaxNeutralLosses, MIN_MAX_NEUTRAL_LOSSES, MAX_MAX_NEUTRAL_LOSSES));
+                throw new InvalidDataException(
+                    string.Format(Resources.PeptideModifications_DoValidate_Maximum_neutral_losses__0__must_be_between__1__and__2__,
+                                  MaxNeutralLosses, MIN_MAX_NEUTRAL_LOSSES, MAX_MAX_NEUTRAL_LOSSES));
             }
         }
 
@@ -1293,7 +1301,11 @@ namespace pwiz.Skyline.Model.DocSettings
                         }
                     }
                     else if (typeOrder > IsotopeLabelType.FirstHeavy)
-                        throw new InvalidDataException(string.Format("Heavy modifications found without '{0}' attribute.", ATTR.isotope_label));
+                    {
+                        throw new InvalidDataException(
+                            string.Format(Resources.PeptideModifications_ReadXml_Heavy_modifications_found_without__0__attribute,
+                                          ATTR.isotope_label));
+                    }
                     typeOrder++;
 
                     SetInternalStandardType(labelType, internalStandardNames, internalStandardTypes);
@@ -1311,7 +1323,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 int iMissingType = internalStandardTypes.IndexOf(labelType => labelType == null);
                 if (iMissingType != -1)
-                    throw new InvalidDataException(string.Format("Internal standard type {0} not found.", internalStandardNames[iMissingType]));
+                {
+                    throw new InvalidDataException(string.Format(Resources.PeptideModifications_ReadXml_Internal_standard_type__0__not_found,
+                                                                 internalStandardNames[iMissingType]));
+                }
                 reader.ReadEndElement();
             }
 
@@ -1768,7 +1783,7 @@ namespace pwiz.Skyline.Model.DocSettings
             }
 
             if (idFound == null)
-                throw new InvalidDataException(string.Format("Specified libraries do not support the '{0}' peptide ranking.", idName));
+                throw new InvalidDataException(string.Format(Resources.PeptideLibraries_EnsureRankId_Specified_libraries_do_not_support_the___0___peptide_ranking, idName));
 
             // No longer necessary
             _rankIdName = null;
@@ -1791,16 +1806,16 @@ namespace pwiz.Skyline.Model.DocSettings
         private void DoValidate()
         {
             if ((Pick == PeptidePick.filter || Pick == PeptidePick.either) && RankId != null)
-                throw new InvalidDataException("The specified method of matching library spectra does not support peptide ranking.");
+                throw new InvalidDataException(Resources.PeptideLibraries_DoValidate_The_specified_method_of_matching_library_spectra_does_not_support_peptide_ranking);
             if (_rankIdName == null && RankId == null && PeptideCount != null)
-                throw new InvalidDataException("Limiting peptides per protein requires a ranking method to be specified.");
+                throw new InvalidDataException(Resources.PeptideLibraries_DoValidate_Limiting_peptides_per_protein_requires_a_ranking_method_to_be_specified);
 
             EnsureRankId();
 
             if (PeptideCount.HasValue && (PeptideCount.Value < MIN_PEPTIDE_COUNT || PeptideCount.Value > MAX_PEPTIDE_COUNT))
             {
-                throw new InvalidDataException(string.Format("Library picked peptide count {0} must be between {1} and {2}.",
-                    PeptideCount, MIN_PEPTIDE_COUNT, MAX_PEPTIDE_COUNT));
+                throw new InvalidDataException(string.Format(Resources.PeptideLibraries_DoValidate_Library_picked_peptide_count__0__must_be_between__1__and__2__,
+                                                             PeptideCount, MIN_PEPTIDE_COUNT, MAX_PEPTIDE_COUNT));
             }
 
             // Libraries and library specs must match.  If they do not, then
@@ -1943,7 +1958,7 @@ namespace pwiz.Skyline.Model.DocSettings
                         {
                             IXmlElementHelper<LibrarySpec> helper = XmlUtil.FindHelper(spec, LIBRARY_SPEC_HELPERS);
                             if (helper == null)
-                                throw new InvalidOperationException("Attempt to serialize list containing invalid type.");
+                                throw new InvalidOperationException(Resources.PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
                             writer.WriteElement(helper.ElementNames[0], spec);                            
                         }
                     }
@@ -1951,7 +1966,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         IXmlElementHelper<Library> helper = XmlUtil.FindHelper(item, LIBRARY_HELPERS);
                         if (helper == null)
-                            throw new InvalidOperationException("Attempt to serialize list containing invalid type.");
+                            throw new InvalidOperationException(Resources.PeptideLibraries_WriteXml_Attempt_to_serialize_list_containing_invalid_type);
                         writer.WriteElement(helper.ElementNames[0], item);                        
                     }
                 }

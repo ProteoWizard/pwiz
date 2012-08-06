@@ -23,6 +23,7 @@ using System.Drawing.Imaging;
 using System.Threading;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Controls
 {
@@ -1071,7 +1072,7 @@ namespace pwiz.Skyline.Controls
 				if (_alpha == value) return;
 				if (value < 0 || value > 255)
 				{
-					throw new ArgumentException("Alpha must be between 0 and 255");
+					throw new ArgumentException(Resources.CustomTip_Alpha_Alpha_must_be_between_0_and_255);
 				}
 				_alpha = (byte)value;
 				UpdateLayeredWindow(_alpha);
@@ -1312,6 +1313,7 @@ namespace pwiz.Skyline.Controls
 		private User32()
 		{
 		}
+        // Not L10N
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]
 		internal static extern bool AnimateWindow(IntPtr hWnd, uint dwTime, uint dwFlags);
 		[DllImport("User32.dll", CharSet=CharSet.Auto)]
@@ -1420,6 +1422,7 @@ namespace pwiz.Skyline.Controls
 		private Gdi32()
 		{
 		}
+        // Not L10N
 		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]
 		internal static extern int CombineRgn(IntPtr dest, IntPtr src1, IntPtr src2, int flags);
 		[DllImport("gdi32.dll", CharSet=CharSet.Auto)]

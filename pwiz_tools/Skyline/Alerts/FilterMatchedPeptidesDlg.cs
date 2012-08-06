@@ -51,9 +51,14 @@ namespace pwiz.Skyline.Alerts
             radioDoNotAddFiltered.Checked = !radioKeepFiltered.Checked;
             
             if (numWithDuplicates != 0)
-                msgDuplicatePeptides.Text = single ? "This peptide matches multiple proteins."
-                    : (numWithDuplicates == 1 ? "1 peptide matching multiple proteins."
-                    : string.Format("{0} peptides matching multiple proteins.", numWithDuplicates));
+            {
+                msgDuplicatePeptides.Text = single
+                                                ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_matches_multiple_proteins
+                                                : (numWithDuplicates == 1
+                                                       ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_matching_multiple_proteins
+                                                       : string.Format(Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_matching_multiple_proteins,
+                                                           numWithDuplicates));
+            }
             else
             {
                 int delta = panelUnmatched.Top - panelMultiple.Top;
@@ -63,9 +68,14 @@ namespace pwiz.Skyline.Alerts
                 Height -= delta;
             }
             if (numUnmatched != 0)
-                msgUnmatchedPeptides.Text = single ? "This peptide does not have a matching protein."
-                    : (numUnmatched == 1 ? "1 peptide without a matching protein."
-                    : string.Format("{0} peptides without matching proteins.", numUnmatched));
+            {
+                msgUnmatchedPeptides.Text = single
+                                                ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_have_a_matching_protein
+                                                : (numUnmatched == 1
+                                                       ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_without_a_matching_protein
+                                                       : string.Format(Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_without_matching_proteins,
+                                                           numUnmatched));
+            }
             else
             {
                 int delta = panelFiltered.Top - panelUnmatched.Top;
@@ -74,9 +84,14 @@ namespace pwiz.Skyline.Alerts
                 Height -= delta;
             }
             if (numFiltered != 0)
-                msgFilteredPeptides.Text = single ? "This peptide does not match the current filter settings."
-                    : (numFiltered == 1 ? "1 peptide not matching the current filter settings."
-                    : string.Format("{0} peptides not matching the current filter settings.", numFiltered));
+            {
+                msgFilteredPeptides.Text = single
+                                               ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_This_peptide_does_not_match_the_current_filter_settings
+                                               : (numFiltered == 1
+                                                      ? Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg_1_peptide_not_matching_the_current_filter_settings
+                                                      : string.Format(Resources.FilterMatchedPeptidesDlg_FilterMatchedPeptidesDlg__0__peptides_not_matching_the_current_filter_settings,
+                                                          numFiltered));
+            }
             else
             {
                 int delta = panelFiltered.Bottom - panelFiltered.Top;

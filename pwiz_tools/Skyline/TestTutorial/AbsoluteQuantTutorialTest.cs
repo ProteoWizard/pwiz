@@ -61,14 +61,14 @@ namespace pwiz.SkylineTestTutorial
                                              transitionSettingsUI.PrecursorMassType = MassType.Monoisotopic;
                                              transitionSettingsUI.FragmentMassType = MassType.Monoisotopic;
                                              transitionSettingsUI.RegressionCEName = "Thermo TSQ Vantage";
-                                             transitionSettingsUI.RegressionDPName = "None";
+                                             transitionSettingsUI.RegressionDPName = Resources.SettingsList_ELEMENT_NONE_None;
 
                                              // Filter Settings
                                              transitionSettingsUI.PrecursorCharges = "2";
                                              transitionSettingsUI.ProductCharges = "1";
-                                             transitionSettingsUI.FragmentTypes = "y";
-                                             transitionSettingsUI.RangeFrom = "ion 3";
-                                             transitionSettingsUI.RangeTo = "last ion - 1";
+                                             transitionSettingsUI.FragmentTypes = "Y";
+                                             transitionSettingsUI.RangeFrom = Resources.TransitionFilter_FragmentStartFinders_ion_3;
+                                             transitionSettingsUI.RangeTo = Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1;
                                              transitionSettingsUI.OkDialog();
                                          });
 

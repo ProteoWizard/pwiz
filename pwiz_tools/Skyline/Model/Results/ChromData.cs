@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Crawdad;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -251,7 +252,7 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             return Peak == null ? Data.Key.ToString() :
-                String.Format("{0} - area = {1:F0}, start = {2}, end = {3}, rt = {4}-{5}",
+                String.Format("{0} - area = {1:F0}, start = {2}, end = {3}, rt = {4}-{5}",  // Not L10N : For debugging
                     Data.Key, Peak.Area, Peak.StartIndex, Peak.EndIndex,
                     Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex]);
         }

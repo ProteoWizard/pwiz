@@ -28,6 +28,7 @@ using pwiz.Common.Collections;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -69,7 +70,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (slope.HasValue && intercept.HasValue)
                 Conversion = new RegressionLineElement(slope.Value, intercept.Value);
             else if (slope.HasValue || intercept.HasValue)
-                throw new InvalidDataException("Slope and intercept must both have values or both not have values");
+                throw new InvalidDataException(Resources.RetentionTimeRegression_RetentionTimeRegression_Slope_and_intercept_must_both_have_values_or_both_not_have_values);
             PeptideTimes = peptidesTimes;
 
             _calculator = calculator;
@@ -311,9 +312,9 @@ namespace pwiz.Skyline.Model.DocSettings
             if (Conversion == null || TimeWindow + Conversion.Slope + Conversion.Intercept != 0 || Calculator != null)
             {
                 if (Calculator == null)
-                    throw new InvalidDataException("Retention time regression must specify a sequence to score calculator.");
+                    throw new InvalidDataException(Resources.RetentionTimeRegression_Validate_Retention_time_regression_must_specify_a_sequence_to_score_calculator);
                 if (TimeWindow <= 0)
-                    throw new InvalidDataException(string.Format("Invalid negative retention time window {0}.", TimeWindow));
+                    throw new InvalidDataException(string.Format(Resources.RetentionTimeRegression_Validate_Invalid_negative_retention_time_window__0__, TimeWindow));
             }
         }
 
@@ -334,7 +335,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!string.IsNullOrEmpty(calculatorName))
                 _calculator = new RetentionScoreCalculator(calculatorName);
             // TODO: Fix this hacky way of dealing with the default value.
-            else if (reader.IsStartElement("irt_calculator"))
+            else if (reader.IsStartElement("irt_calculator")) // Not L10N
                 _calculator = RCalcIrt.Deserialize(reader);
 
             Conversion = reader.DeserializeElement<RegressionLineElement>(EL.regression_rt);
@@ -775,8 +776,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return Math.Round(value, precision ?? ThresholdPrecision) >= threshold;
         }
 
-        public const string SSRCALC_300_A = "SSRCalc 3.0 (300A)";
-        public const string SSRCALC_100_A = "SSRCalc 3.0 (100A)";
+        public const string SSRCALC_300_A = "SSRCalc 3.0 (300A)"; // Not L10N
+        public const string SSRCALC_100_A = "SSRCalc 3.0 (100A)"; // Not L10N
 
         public static IRetentionScoreCalculator GetCalculatorByName(string calcName)
         {
@@ -1003,7 +1004,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             _impl = RetentionTimeRegression.GetCalculatorByName(Name);
             if (_impl == null)
-                throw new InvalidDataException(string.Format("The retention time calculator {0} is not valid.", Name));
+                throw new InvalidDataException(string.Format(Resources.RetentionScoreCalculator_Validate_The_retention_time_calculator__0__is_not_valid, Name));
         }
 
         public override void ReadXml(XmlReader reader)
@@ -1090,9 +1091,12 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (!FastaSequence.IsExSequence(PeptideSequence))
-                throw new InvalidDataException(string.Format("The sequence {0} is not a valid peptide.", PeptideSequence));
+            {
+                throw new InvalidDataException(string.Format(Resources.MeasuredRetentionTime_Validate_The_sequence__0__is_not_a_valid_peptide,
+                                                             PeptideSequence));
+            }
             if (RetentionTime < 0)
-                throw new InvalidDataException("Measured retention times must be positive values.");            
+                throw new InvalidDataException(Resources.MeasuredRetentionTime_Validate_Measured_retention_times_must_be_positive_values);            
         }
 
         public static MeasuredRetentionTime Deserialize(XmlReader reader)
@@ -1273,14 +1277,18 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (_conversions == null || _conversions.Length == 0)
-                throw new InvalidDataException("Collision energy regressions require at least one regression function.");
+                throw new InvalidDataException(Resources.CollisionEnergyRegression_Validate_Collision_energy_regressions_require_at_least_one_regression_function);
 
             HashSet<int> seen = new HashSet<int>();
             foreach (ChargeRegressionLine regressionLine in _conversions)
             {
                 int charge = regressionLine.Charge;
                 if (seen.Contains(charge))
-                    throw new InvalidDataException(string.Format("Collision energy regression contains multiple coefficients for charge {0}.", charge));
+                {
+                    throw new InvalidDataException(
+                        string.Format(Resources.CollisionEnergyRegression_Validate_Collision_energy_regression_contains_multiple_coefficients_for_charge__0__,
+                                      charge));
+                }
                 seen.Add(charge);
             }
         }
@@ -1655,10 +1663,13 @@ namespace pwiz.Skyline.Model.DocSettings
         private void Validate()
         {
             if (StepSize <= 0)
-                throw new InvalidDataException(string.Format("The optimization step size {0} is not greater than zero.", StepSize));
+                throw new InvalidDataException(string.Format(Resources.OptimizableRegression_Validate_The_optimization_step_size__0__is_not_greater_than_zero, StepSize));
             if (MIN_OPT_STEP_COUNT > StepCount || StepCount > MAX_OPT_STEP_COUNT)
-                throw new InvalidDataException(string.Format("The number of optimization steps {0} is not between {1} and {2}.",
-                    StepCount, MIN_OPT_STEP_COUNT, MAX_OPT_STEP_COUNT));
+            {
+                throw new InvalidDataException(
+                    string.Format(Resources.OptimizableRegression_Validate_The_number_of_optimization_steps__0__is_not_between__1__and__2__,
+                                  StepCount, MIN_OPT_STEP_COUNT, MAX_OPT_STEP_COUNT));
+            }
         }
 
         /// <summary>

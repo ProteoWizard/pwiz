@@ -35,13 +35,14 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class EditIrtCalcDlg : FormEx
     {
-        private const string STANDARD_TABLE_NAME = "standard";
-        private const string LIBRARY_TABLE_NAME = "library";
+        //private const string STANDARD_TABLE_NAME = "standard";
+        //private const string LIBRARY_TABLE_NAME = "library";
 
         private readonly IEnumerable<RetentionScoreCalculatorSpec> _existingCalcs;
 
@@ -51,11 +52,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private readonly StandardGridViewDriver _gridViewStandardDriver;
         private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
-        private readonly string _databaseStartPath = "";
+        private readonly string _databaseStartPath = string.Empty;
         
         //Used to determine whether we are creating a new calculator, trying to overwrite
         //an old one, or editing an old one
-        private readonly string _editingName = "";
+        private readonly string _editingName = string.Empty;
 
         public EditIrtCalcDlg(RetentionScoreCalculatorSpec calc, IEnumerable<RetentionScoreCalculatorSpec> existingCalcs)
         {
@@ -145,8 +146,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(
-                    "Are you sure you want to create a new database file? Any changes to the current calculator will be lost.",
+                var result = MessageBox.Show(Resources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -155,15 +155,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             using (SaveFileDialog dlg = new SaveFileDialog
             {
-                Title = "Create iRT Database",
+                Title = Resources.EditIrtCalcDlg_btnCreateDb_Click_Create_iRT_Database,
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 OverwritePrompt = true,
                 DefaultExt = IrtDb.EXT,
-                Filter = string.Join("|", new[]
-                                {
-                                    "iRT Database Files (*" + IrtDb.EXT + ")|*" + IrtDb.EXT,
-                                    "All Files (*.*)|*.*"
-                                })
+                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB) 
             })
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
@@ -196,7 +192,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, String.Format("The file {0} could not be created.\n{1}", path, x.Message));
+                var message = TextUtil.LineSeparate(string.Format(Resources.EditIrtCalcDlg_CreateDatabase_The_file__0__could_not_be_created, path),
+                                                    x.Message);
+                MessageDlg.Show(this, message);
             }
         }
 
@@ -204,8 +202,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(
-                    "Are you sure you want to open a new database file? Any changes to the current calculator will be lost.",
+                var result = MessageBox.Show(Resources.EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -214,14 +211,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             using (OpenFileDialog dlg = new OpenFileDialog
             {
-                Title = "Open iRT Database",
+                Title = Resources.EditIrtCalcDlg_btnBrowseDb_Click_Open_iRT_Database,
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 DefaultExt = IrtDb.EXT,
-                Filter = string.Join("|", new[]
-                                {
-                                    "iRT Database Files (*" + IrtDb.EXT + ")|*" + IrtDb.EXT,
-                                    "All Files (*.*)|*.*"
-                                })
+                Filter = TextUtil.FileDialogFiltersAll(IrtDb.FILTER_IRTDB)
             })
             {
                 if (dlg.ShowDialog() == DialogResult.OK)
@@ -238,7 +231,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (!File.Exists(path))
             {
-                MessageDlg.Show(this, String.Format("The file {0} does not exist. Click the Create button to create a new database or the Open button to find the missing file.", path));
+                MessageDlg.Show(this, String.Format(Resources.EditIrtCalcDlg_OpenDatabase_The_file__0__does_not_exist_Click_te_Create_button_to_create_a_new_database_or_the_Open_button_to_find_the_missing_file,
+                                                    path));
                 return;
             }
 
@@ -265,7 +259,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if(string.IsNullOrEmpty(textCalculatorName.Text))
             {
-                MessageDlg.Show(this, "Please enter a name for the iRT calculator.");
+                MessageDlg.Show(this, Resources.EditIrtCalcDlg_OkDialog_Please_enter_a_name_for_the_iRT_calculator);
                 textCalculatorName.Focus();
                 return;
             }
@@ -276,26 +270,32 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 {
                     if (Equals(existingCalc.Name, textCalculatorName.Text) && !Equals(existingCalc.Name, _editingName))
                     {
-                        if (MessageBox.Show(this, String.Format("A calculator with the name {0} already exists. Do you want to overwrite it?", textCalculatorName.Text),
+                        if (MessageBox.Show(this, string.Format(Resources.EditIrtCalcDlg_OkDialog_A_calculator_with_the_name__0__already_exists_Do_you_want_to_overwrite_it,
+                                                                textCalculatorName.Text),
                                             Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
                         {
                             textCalculatorName.Focus();
-                            return;                            
+                            return;
                         }
                     }
                 }
             }
 
+            string message;
             if (string.IsNullOrEmpty(textDatabase.Text))
             {
-                MessageDlg.Show(this, "Please choose a database file for the iRT calculator.\nClick the Create button to create a new database or the Open button to open an existing database file.");
+                message = TextUtil.LineSeparate(Resources.EditIrtCalcDlg_OkDialog_Please_choose_a_database_file_for_the_iRT_calculator,
+                                                Resources.EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file);
+                MessageDlg.Show(this, message);
                 textDatabase.Focus();
                 return;
             }
             string path = Path.GetFullPath(textDatabase.Text);
             if (!Equals(path, textDatabase.Text))
             {
-                MessageDlg.Show(this, "Please use a full path to a database file for the iRT calculator.\nClick the Create button to create a new database or the Open button to open an existing database file.");
+                message = TextUtil.LineSeparate(Resources.EditIrtCalcDlg_OkDialog_Please_use_a_full_path_to_a_database_file_for_the_iRT_calculator,
+                                                Resources.EditIrtCalcDlg_OkDialog_Click_the_Create_button_to_create_a_new_database_or_the_Open_button_to_open_an_existing_database_file);
+                MessageDlg.Show(this, message);
                 textDatabase.Focus();
                 return;
             }
@@ -303,12 +303,12 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 path += IrtDb.EXT;
 
             //This function MessageBox.Show's error messages
-            if(!ValidatePeptideList(StandardPeptideList, STANDARD_TABLE_NAME))
+            if (!ValidatePeptideList(StandardPeptideList, Resources.EditIrtCalcDlg_OkDialog_standard_table_name))
             {
                 gridViewStandard.Focus();
                 return;
             }
-            if(!ValidatePeptideList(LibraryPeptideList, LIBRARY_TABLE_NAME))
+            if(!ValidatePeptideList(LibraryPeptideList, Resources.EditIrtCalcDlg_OkDialog_library_table_name))
             {
                 gridViewLibrary.Focus();
                 return;                
@@ -316,14 +316,17 @@ namespace pwiz.Skyline.SettingsUI.Irt
 
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
-                MessageDlg.Show(this, string.Format("Please enter at least {0} standard peptides.", CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
+                MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
+                                                    CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 gridViewStandard.Focus();
                 return;
             }
 
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
             {
-                DialogResult result = MessageBox.Show(this, string.Format("Using fewer than {0} standard peptides is not recommended. Are you sure you want to continue with only {1}?", CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count),
+                DialogResult result = MessageBox.Show(this, string.Format(Resources.EditIrtCalcDlg_OkDialog_Using_fewer_than__0__standard_peptides_is_not_recommended_Are_you_sure_you_want_to_continue_with_only__1__,
+                                                                          CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES,
+                                                                          StandardPeptideList.Count),
                                                       Program.Name, MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes)
                 {
@@ -366,13 +369,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 // CONSIDER: Select the peptide row
                 if (!FastaSequence.IsExSequence(seqModified))
                 {
-                    MessageDlg.Show(this, string.Format("The value {0} is not a valid modified peptide sequence.", seqModified));
+                    MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_ValidatePeptideList_The_value__0__is_not_a_valid_modified_peptide_sequence,
+                                                        seqModified));
                     return false;
                 }
 
                 if (sequenceSet.Contains(seqModified))
                 {
-                    MessageDlg.Show(this, string.Format("The peptide {0} appears in the {1} table more than once.", seqModified, tableName));
+                    MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_ValidatePeptideList_The_peptide__0__appears_in_the__1__table_more_than_once,
+                                                        seqModified, tableName));
                     return false;
                 }
                 sequenceSet.Add(seqModified);
@@ -451,7 +456,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (StandardPeptideCount < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
-                MessageDlg.Show(this, string.Format("Please enter at least {0} standard peptides.", CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
+                MessageDlg.Show(this, string.Format(Resources.EditIrtCalcDlg_OkDialog_Please_enter_at_least__0__standard_peptides,
+                                                    CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 return;
             }
             contextMenuAdd.Show(btnAddResults, 0, btnAddResults.Height + 2);
@@ -593,8 +599,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     string sequence = peptide.PeptideModSeq;
                     if (StandardPeptideList.Any(p => Equals(p.PeptideModSeq, sequence)))
                     {
-                        MessageDlg.Show(MessageParent, string.Format("The peptide {0} is already present in the {1} table, and may not be pasted into the {2} table.",
-                                                                     sequence, STANDARD_TABLE_NAME, LIBRARY_TABLE_NAME));
+                        MessageDlg.Show(MessageParent,
+                                        string.Format(Resources.LibraryGridViewDriver_DoPaste_The_peptide__0__is_already_present_in_the__1__table__and_may_not_be_pasted_into_the__2__table,
+                                                      sequence,
+                                                      Resources.EditIrtCalcDlg_OkDialog_standard_table_name,
+                                                      Resources.EditIrtCalcDlg_OkDialog_library_table_name));
                         return;
                     }
                 }
@@ -608,15 +617,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 var settings = document.Settings;
                 if (!settings.HasResults)
                 {
-                    MessageDlg.Show(MessageParent, "The active document must contain results in order to add iRT values.");
+                    MessageDlg.Show(MessageParent, Resources.LibraryGridViewDriver_AddResults_The_active_document_must_contain_results_in_order_to_add_iRT_values);
                     return;
                 }
 
                 ProcessedIrtAverages irtAverages = null;
                 using (var longWait = new LongWaitDlg
                 {
-                    Text = "Adding Results",
-                    Message = "Adding retention times from imported results",
+                    Text = Resources.LibraryGridViewDriver_AddResults_Adding_Results,
+                    Message = Resources.LibraryGridViewDriver_AddResults_Adding_retention_times_from_imported_results,
                     FormBorderStyle = FormBorderStyle.Sizable
                 })
                 {
@@ -634,7 +643,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                     catch (Exception x)
                     {
-                        MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to add results from current document.\n{0}", x.Message));
+                        var message = TextUtil.LineSeparate(Resources.LibraryGridViewDriver_AddResults_An_error_occurred_attempting_to_add_results_from_current_document,
+                                                            x.Message);
+                        MessageDlg.Show(MessageParent, message);
                         return;
                     }
                 }
@@ -713,8 +724,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     library = libraryManager.TryGetLibrary(librarySpec);
                     using (var longWait = new LongWaitDlg
                     {
-                        Text = "Adding Spectral Library",
-                        Message = string.Format("Adding retention times from {0}", librarySpec.FilePath),
+                        Text = Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_Spectral_Library,
+                        Message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_retention_times_from__0__, librarySpec.FilePath),
                         FormBorderStyle = FormBorderStyle.Sizable
                     })
                     {
@@ -728,8 +739,9 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                 int fileCount = library.FileCount ?? 0;
                                 if (fileCount == 0)
                                 {
-                                    string message = string.Format("The library {0} does not contain retention time information.", librarySpec.FilePath);
-                                    monitor.UpdateProgress(new ProgressStatus("").ChangeErrorException(new IOException(message)));
+                                    string message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_The_library__0__does_not_contain_retention_time_information,
+                                                                   librarySpec.FilePath);
+                                    monitor.UpdateProgress(new ProgressStatus(string.Empty).ChangeErrorException(new IOException(message)));
                                     return;
                                 }
 
@@ -743,7 +755,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                         }
                         catch (Exception x)
                         {
-                            MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to load the library file {0}.\n{1}", librarySpec.FilePath, x.Message));
+                            var message = TextUtil.LineSeparate(string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_An_error_occurred_attempting_to_load_the_library_file__0__,
+                                                                              librarySpec.FilePath),
+                                                                x.Message);
+                            MessageDlg.Show(MessageParent, message);
                             return;
                         }
                     }
@@ -791,8 +806,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 ProcessedIrtAverages irtAverages = null;
                 using (var longWait = new LongWaitDlg
                 {
-                    Text = "Adding iRT Database",
-                    Message = string.Format("Adding retention times from {0}", irtCalc.DatabasePath),
+                    Text = Resources.LibraryGridViewDriver_AddIrtDatabase_Adding_iRT_Database,
+                    Message = string.Format(Resources.LibraryGridViewDriver_AddSpectralLibrary_Adding_retention_times_from__0__, irtCalc.DatabasePath),
                     FormBorderStyle = FormBorderStyle.Sizable
                 })
                 {
@@ -813,7 +828,10 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     }
                     catch (Exception x)
                     {
-                        MessageDlg.Show(MessageParent, string.Format("An error occurred attempting to load the iRT database file {0}.\n{1}", irtCalc.DatabasePath, x.Message));
+                        var message = TextUtil.LineSeparate(string.Format(Resources.LibraryGridViewDriver_AddIrtDatabase_An_error_occurred_attempting_to_load_the_iRT_database_file__0__,
+                                                                          irtCalc.DatabasePath),
+                                                            x.Message);
+                        MessageDlg.Show(MessageParent, message);
                         return;
                     }
                 }
@@ -863,7 +881,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
                                           IEnumerable<IRetentionTimeProvider> providers,
                                           int countProviders)
             {
-                var status = new ProgressStatus("Adding retention times");
+                var status = new ProgressStatus(Resources.LibraryGridViewDriver_ProcessRetetionTimes_Adding_retention_times);
                 var dictPeptideAverages = new Dictionary<string, IrtPeptideAverages>();
                 int runCount = 0;
                 int regressionLineCount = 0;
@@ -872,7 +890,8 @@ namespace pwiz.Skyline.SettingsUI.Irt
                     if (monitor.IsCanceled)
                         return null;
 
-                    string message = string.Format("Converting retention times from {0}", retentionTimeProvider.Name);
+                    string message = string.Format(Resources.LibraryGridViewDriver_ProcessRetetionTimes_Converting_retention_times_from__0__,
+                                                   retentionTimeProvider.Name);
                     monitor.UpdateProgress(status = status.ChangeMessage(message));
 
                     runCount++;
@@ -901,11 +920,11 @@ namespace pwiz.Skyline.SettingsUI.Irt
                 if (regressionLineCount == 0)
                 {
                     if (!isCountable)
-                        MessageDlg.Show(MessageParent, "Correlation to the existing iRT values are not high enough to allow retention time conversion.");
+                        MessageDlg.Show(MessageParent, Resources.LibraryGridViewDriver_AddProcessedIrts_Correlation_to_the_existing_iRT_values_are_not_high_enough_to_allow_retention_time_conversion);
                     else if (runCount == 1)
-                        MessageDlg.Show(MessageParent, "A single run does not have high enough correlation to the existing iRT values to allow retention time conversion.");
+                        MessageDlg.Show(MessageParent, Resources.LibraryGridViewDriver_AddProcessedIrts_A_single_run_does_not_have_high_enough_correlation_to_the_existing_iRT_values_to_allow_retention_time_conversion);
                     else
-                        MessageDlg.Show(MessageParent, string.Format("None of {0} runs were found with high enough correlation to the existing iRT values to allow retention time conversion.", runCount));
+                        MessageDlg.Show(MessageParent, string.Format(Resources.LibraryGridViewDriver_AddProcessedIrts_None_of__0__runs_were_found_with_high_enough_correlation_to_the_existing_iRT_values_to_allow_retention_time_conversion, runCount));
                     return;
                 }
                 
@@ -1178,12 +1197,15 @@ namespace pwiz.Skyline.SettingsUI.Irt
         private void UpdateNumPeptides()
         {
             bool hasLibraryPeptides = LibraryPeptideList.Count != 0;
-            btnCalibrate.Text = (hasLibraryPeptides ? "Recali&brate..." : "Cali&brate...");
+            btnCalibrate.Text = (hasLibraryPeptides
+                                     ? Resources.EditIrtCalcDlg_UpdateNumPeptides_Recalibrate
+                                     : Resources.EditIrtCalcDlg_UpdateNumPeptides_Calibrate);
             btnPeptides.Visible = hasLibraryPeptides;
 
             labelNumPeptides.Text = string.Format(LibraryPeptideList.Count == 1
-                                                      ? "{0} Peptide"
-                                                      : "{0} Peptides", LibraryPeptideList.Count);
+                                                      ? Resources.EditIrtCalcDlg_UpdateNumPeptides__0__Peptide
+                                                      : Resources.EditIrtCalcDlg_UpdateNumPeptides__0__Peptides,
+                                                  LibraryPeptideList.Count);
         }
 
         #region Functional Test Support

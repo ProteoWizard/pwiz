@@ -28,13 +28,15 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.SettingsUI
 {
     public partial class TransitionSettingsUI : FormEx
     {
 // ReSharper disable InconsistentNaming
-        public enum TABS { Prediction, Filter, Library, Instrument, FullScan }
+        public enum TABS { Prediction, Filter, Library, Instrument, FullScan } // Not L10N
+       
 // ReSharper restore InconsistentNaming
 
         private readonly SkylineWindow _parent;
@@ -61,8 +63,8 @@ namespace pwiz.Skyline.SettingsUI
             _transitionSettings = _parent.DocumentUI.Settings.TransitionSettings;
 
             // Initialize prediction settings
-            comboPrecursorMass.SelectedItem = Prediction.PrecursorMassType.ToString();
-            comboIonMass.SelectedItem = Prediction.FragmentMassType.ToString();
+            comboPrecursorMass.SelectedItem = Prediction.PrecursorMassType.GetLocalizedString();
+            comboIonMass.SelectedItem = Prediction.FragmentMassType.GetLocalizedString();
 
             _driverCE = new SettingsListComboDriver<CollisionEnergyRegression>(comboCollisionEnergy,
                                                                                Settings.Default.CollisionEnergyList);
@@ -70,8 +72,7 @@ namespace pwiz.Skyline.SettingsUI
             _driverCE.LoadList(sel);
 
             _driverDP = new SettingsListComboDriver<DeclusteringPotentialRegression>(comboDeclusterPotential,
-                                                                                     Settings.Default.
-                                                                                         DeclusterPotentialList);
+                                                                                     Settings.Default.DeclusterPotentialList);
             sel = (Prediction.DeclusteringPotential == null ? null : Prediction.DeclusteringPotential.Name);
             _driverDP.LoadList(sel);
 
@@ -80,18 +81,18 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 cbUseOptimized.Checked = true;
-                comboOptimizeType.SelectedItem = Prediction.OptimizedMethodType.ToString();
+                comboOptimizeType.SelectedItem = Prediction.OptimizedMethodType.GetLocalizedString();
             }
 
             // Initialize filter settings
-            textPrecursorCharges.Text = Filter.PrecursorCharges.ToArray().ToString(", ");
+            textPrecursorCharges.Text = Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N
             textIonCharges.Text = Filter.ProductCharges.ToArray().ToString(", ");
             textIonTypes.Text = Filter.ToStringIonTypes(true);
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.GetKey();
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.GetKey();
             textExclusionWindow.Text = Filter.PrecursorMzWindow != 0
                                            ? Filter.PrecursorMzWindow.ToString(CultureInfo.CurrentCulture)
-                                           : "";
+                                           : string.Empty;
             cbAutoSelect.Checked = Filter.AutoSelect;
 
             _driverIons = new SettingsListBoxDriver<MeasuredIon>(listAlwaysAdd, Settings.Default.MeasuredIonList);
@@ -135,12 +136,12 @@ namespace pwiz.Skyline.SettingsUI
             comboPrecursorIsotopes.Items.AddRange(
                 new object[]
                     {
-                        FullScanPrecursorIsotopes.None.ToString(),
-                        FullScanPrecursorIsotopes.Count.ToString(),
-                        FullScanPrecursorIsotopes.Percent.ToString()
+                        FullScanPrecursorIsotopes.None.GetLocalizedString(),
+                        FullScanPrecursorIsotopes.Count.GetLocalizedString(),
+                        FullScanPrecursorIsotopes.Percent.GetLocalizedString()
                     });
             comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
-            comboPrecursorIsotopes.SelectedItem = FullScan.PrecursorIsotopes.ToString();
+            comboPrecursorIsotopes.SelectedItem = FullScan.PrecursorIsotopes.GetLocalizedString();
 
             // Update the precursor analyzer type in case the SelectedIndex is still -1
             UpdatePrecursorAnalyzerType();
@@ -149,12 +150,12 @@ namespace pwiz.Skyline.SettingsUI
             comboAcquisitionMethod.Items.AddRange(
                 new object[]
                     {
-                        FullScanAcquisitionMethod.None.ToString(),
-                        FullScanAcquisitionMethod.Targeted.ToString(),
-                        FullScanAcquisitionMethod.DIA.ToString()
+                        FullScanAcquisitionMethod.None.GetLocalizedString(),
+                        FullScanAcquisitionMethod.Targeted.GetLocalizedString(),
+                        FullScanAcquisitionMethod.DIA.GetLocalizedString()
                     });
             comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS.Cast<object>().ToArray());
-            comboAcquisitionMethod.SelectedItem = FullScan.AcquisitionMethod.ToString();
+            comboAcquisitionMethod.SelectedItem = FullScan.AcquisitionMethod.GetLocalizedString();
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();
@@ -187,11 +188,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return Helpers.ParseEnum((string)comboAcquisitionMethod.SelectedItem,
+                return FullScanAcquisitionExtension.GetEnum(comboAcquisitionMethod.SelectedItem.ToString(),
                     FullScanAcquisitionMethod.None);
             }
 
-            set { comboAcquisitionMethod.SelectedItem = value.ToString(); }
+            set { comboAcquisitionMethod.SelectedItem = value.GetLocalizedString(); }
         }
 
         public FullScanMassAnalyzerType ProductMassAnalyzer
@@ -208,11 +209,11 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
-                return Helpers.ParseEnum((string)comboPrecursorIsotopes.SelectedItem,
+                return FullScanPrecursorIsotopesExtension.GetEnum(comboPrecursorIsotopes.SelectedItem.ToString(),
                     FullScanPrecursorIsotopes.None);
             }
 
-            set { comboPrecursorIsotopes.SelectedItem = value.ToString(); }
+            set { comboPrecursorIsotopes.SelectedItem = value.GetLocalizedString(); }
         }
 
         public FullScanMassAnalyzerType PrecursorMassAnalyzer
@@ -238,11 +239,9 @@ namespace pwiz.Skyline.SettingsUI
 
             // Validate and store prediction settings
             string massType = comboPrecursorMass.SelectedItem.ToString();
-            MassType precursorMassType = (MassType)
-                                         Enum.Parse(typeof (MassType), massType);
+            MassType precursorMassType = MassTypeExtension.GetEnum(massType);
             massType = comboIonMass.SelectedItem.ToString();
-            MassType fragmentMassType = (MassType)
-                                        Enum.Parse(typeof (MassType), massType);
+            MassType fragmentMassType = MassTypeExtension.GetEnum(massType);
             string nameCE = comboCollisionEnergy.SelectedItem.ToString();
             CollisionEnergyRegression collisionEnergy =
                 Settings.Default.GetCollisionEnergyByName(nameCE);
@@ -252,8 +251,7 @@ namespace pwiz.Skyline.SettingsUI
             OptimizedMethodType optimizedMethodType = OptimizedMethodType.None;
             if (cbUseOptimized.Checked)
             {
-                optimizedMethodType = (OptimizedMethodType) Enum.Parse(typeof(OptimizedMethodType),
-                    comboOptimizeType.SelectedItem.ToString());
+                optimizedMethodType = OptimizedMethodTypeExtension.GetEnum(comboOptimizeType.SelectedItem.ToString());
             }
             TransitionPrediction prediction = new TransitionPrediction(precursorMassType,
                                                                        fragmentMassType, collisionEnergy,
@@ -282,7 +280,7 @@ namespace pwiz.Skyline.SettingsUI
             if (types.Length == 0)
             {
                 helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textIonTypes,
-                                         "Ion types must contain a comma separated list of ion types a, b, c, x, y z and p (for precursor).");
+                                        Resources.TransitionSettingsUI_OkDialog_Ion_types_must_contain_a_comma_separated_list_of_ion_types_a_b_c_x_y_z_and_p_for_precursor);
                 return;
             }
             types = types.Distinct().ToArray();
@@ -298,8 +296,14 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
-            string fragmentRangeFirst = comboRangeFrom.SelectedItem.ToString();
-            string fragmentRangeLast = comboRangeTo.SelectedItem.ToString();
+            string fragmentRangeFirst = TransitionFilter.GetStartFragmentIndex(comboRangeFrom.SelectedItem.ToString());
+            string fragmentRangeLast = TransitionFilter.GetEndFragmentIndex(comboRangeTo.SelectedItem.ToString());
+           
+            if (fragmentRangeFirst == null)
+                fragmentRangeFirst = comboRangeFrom.SelectedItem.ToString();
+            if (fragmentRangeLast == null)
+                fragmentRangeLast = comboRangeTo.SelectedItem.ToString();
+
             var measuredIons = _driverIons.Chosen;
             bool autoSelect = cbAutoSelect.Checked;
             TransitionFilter filter = new TransitionFilter(precursorCharges, productCharges, types,
@@ -405,9 +409,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             if (minTime.HasValue && maxTime.HasValue && maxTime.Value - minTime.Value < TransitionInstrument.MIN_TIME_RANGE)
             {
-                helper.ShowTextBoxError(tabControl1, (int)TABS.Instrument, textMaxTime,
-                    string.Format("The allowable retention time range {0} to {1} must be at least {2} minutes apart.",
-                    minTime, maxTime, TransitionInstrument.MIN_TIME_RANGE));
+                helper.ShowTextBoxError(tabControl1, (int) TABS.Instrument, textMaxTime,
+                                        string.Format(Resources.TransitionSettingsUI_OkDialog_The_allowable_retention_time_range__0__to__1__must_be_at_least__2__minutes_apart,
+                                                      minTime, maxTime, TransitionInstrument.MIN_TIME_RANGE));
                 return;
             }
 
@@ -451,7 +455,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (precursorIsotopes != FullScanPrecursorIsotopes.Count || precursorIsotopeFilter != 1)
                     {
                         helper.ShowTextBoxError(tabControl1, (int)TABS.FullScan, textPrecursorIsotopeFilter,
-                                                 "For MS1 filtering with a QIT mass analyzer only 1 isotope peak is supported.");
+                                                Resources.TransitionSettingsUI_OkDialog_For_MS1_filtering_with_a_QIT_mass_analyzer_only_1_isotope_peak_is_supported);
                         return;
                     }
                     minFilt = TransitionFullScan.MIN_LO_RES;
@@ -519,7 +523,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if (precursorMassType != MassType.Monoisotopic)
                 {
-                    MessageDlg.Show(this, "High resolution MS1 filtering requires use of monoisotopic precursor masses.");
+                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_High_resolution_MS1_filtering_requires_use_of_monoisotopic_precursor_masses);
                     tabControl1.SelectedIndex = (int)TABS.Prediction;
                     comboPrecursorMass.Focus();
                     return;
@@ -528,7 +532,7 @@ namespace pwiz.Skyline.SettingsUI
                 enrichments = _driverEnrichments.SelectedItem;
                 if (enrichments == null)
                 {
-                    MessageDlg.Show(this, "Isotope enrichment settings are required for MS1 filtering on high resolution mass spectrometers.");
+                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Isotope_enrichment_settings_are_required_for_MS1_filtering_on_high_resolution_mass_spectrometers);
                     tabControl1.SelectedIndex = (int) TABS.FullScan;
                     comboEnrichments.Focus();
                     return;
@@ -538,14 +542,14 @@ namespace pwiz.Skyline.SettingsUI
             IsolationScheme isolationScheme = _driverIsolationScheme.SelectedItem;
             if (isolationScheme == null && acquisitionMethod == FullScanAcquisitionMethod.DIA)
             {
-                MessageDlg.Show(this, "An isolation scheme is required to match multiple precursors.");
+                MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_An_isolation_scheme_is_required_to_match_multiple_precursors);
                 tabControl1.SelectedIndex = (int) TABS.FullScan;
                 comboIsolationScheme.Focus();
                 return;
             }
             if (isolationScheme != null && isolationScheme.WindowsPerScan.HasValue && !maxInclusions.HasValue)
             {
-                MessageDlg.Show(this, "Before performing a multiplexed DIA scan, the instrument's firmware inclusion limit must be specified.");
+                MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_Before_performing_a_multiplexed_DIA_scan_the_instrument_s_firmware_inclusion_limit_must_be_specified);
                 tabControl1.SelectedIndex = (int)TABS.Instrument;
                 textMaxInclusions.Focus();
                 return;
@@ -562,7 +566,7 @@ namespace pwiz.Skyline.SettingsUI
                 retentionTimeFilterType = RetentionTimeFilterType.ms2_ids;
                 if (!double.TryParse(tbxTimeAroundMs2Ids.Text, out timeAroundMs2Ids) || timeAroundMs2Ids < 0)
                 {
-                    MessageDlg.Show(this, "This is not a valid number of minutes.");
+                    MessageDlg.Show(this, Resources.TransitionSettingsUI_OkDialog_This_is_not_a_valid_number_of_minutes);
                     tabControl1.SelectedIndex = (int) TABS.FullScan;
                     tbxTimeAroundMs2Ids.Focus();
                     return;
@@ -739,12 +743,14 @@ namespace pwiz.Skyline.SettingsUI
             var precursorIsotopes = PrecursorIsotopesCurrent;
 
             bool percentType = (precursorIsotopes == FullScanPrecursorIsotopes.Percent);
-            labelPrecursorIsotopeFilter.Text = percentType ? "Min % of base pea&k:" : "Pea&ks:";
+            labelPrecursorIsotopeFilter.Text = percentType
+                                                   ? Resources.TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Min_percent_of_base_peak
+                                                   : Resources.TransitionSettingsUI_comboPrecursorIsotopes_SelectedIndexChanged_Peaks;
             labelPrecursorIsotopeFilterPercent.Visible = percentType;
             
             if (precursorIsotopes == FullScanPrecursorIsotopes.None)
             {
-                textPrecursorIsotopeFilter.Text = "";
+                textPrecursorIsotopeFilter.Text = string.Empty;
                 textPrecursorIsotopeFilter.Enabled = false;
                 comboEnrichments.SelectedIndex = -1;
                 comboEnrichments.Enabled = false;
@@ -759,7 +765,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textPrecursorIsotopeFilter.Text = FullScan.PrecursorIsotopeFilter.HasValue
                                                           ? FullScan.PrecursorIsotopeFilter.Value.ToString(CultureInfo.CurrentCulture)
-                                                          : "";
+                                                          : string.Empty;
                     if (FullScan.IsotopeEnrichments != null)
                         comboEnrichments.SelectedItem = FullScan.IsotopeEnrichments.Name;
                     if (!comboPrecursorAnalyzerType.Enabled)
@@ -806,7 +812,7 @@ namespace pwiz.Skyline.SettingsUI
             // For QIT, only 1 isotope peak is allowed
             if (precursorMassAnalyzer == FullScanMassAnalyzerType.qit)
             {
-                comboPrecursorIsotopes.SelectedItem = FullScanPrecursorIsotopes.Count.ToString();
+                comboPrecursorIsotopes.SelectedItem = FullScanPrecursorIsotopes.Count.GetLocalizedString();
                 textPrecursorIsotopeFilter.Text = 1.ToString(CultureInfo.CurrentCulture);
                 comboEnrichments.SelectedIndex = -1;
                 comboEnrichments.Enabled = false;
@@ -828,11 +834,11 @@ namespace pwiz.Skyline.SettingsUI
                                             TextBox textAt,
                                             Label labelTh)
         {
-            string labelText = "Res&olution:";
+            string labelText = Resources.TransitionSettingsUI_SetAnalyzerType_Resolution;
             if (analyzerTypeNew == FullScanMassAnalyzerType.none)
             {
                 textRes.Enabled = false;
-                textRes.Text = "";
+                textRes.Text = string.Empty;
                 labelAt.Visible = false;
                 textAt.Visible = false;
                 labelTh.Left = textRes.Right;
@@ -848,7 +854,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    labelText = "Res&olving power:";
+                    labelText = Resources.TransitionSettingsUI_SetAnalyzerType_Resolving_power;
                     if (analyzerTypeNew != FullScanMassAnalyzerType.tof)
                     {
                         variableRes = true;
@@ -856,7 +862,7 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 }
 
-                const string resolvingPowerFormat = "#,0.####";
+                const string resolvingPowerFormat = "#,0.####"; // Not L10N
                 if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
                     textRes.Text = resCurrent.Value.ToString(resolvingPowerFormat);
                 else
@@ -890,14 +896,26 @@ namespace pwiz.Skyline.SettingsUI
 
         public MassType PrecursorMassType
         {
-            get { return Helpers.ParseEnum(comboPrecursorMass.SelectedItem.ToString(), MassType.Monoisotopic); }
-            set { comboPrecursorMass.SelectedItem = value.ToString(); }
+            get
+            {
+                return MassTypeExtension.GetEnum(comboPrecursorMass.SelectedItem.ToString());
+        }
+            set
+            {
+                comboPrecursorMass.SelectedItem = value.GetLocalizedString();
+            }
         }
 
         public MassType FragmentMassType
         {
-            get { return Helpers.ParseEnum(comboIonMass.SelectedItem.ToString(), MassType.Monoisotopic); }
-            set { comboIonMass.SelectedItem = value.ToString(); }
+            get
+            {
+                return MassTypeExtension.GetEnum(comboIonMass.SelectedItem.ToString());
+        }
+            set
+            {
+                comboIonMass.SelectedItem = value.GetLocalizedString();
+            }
         }
 
         public string PrecursorCharges
@@ -950,7 +968,7 @@ namespace pwiz.Skyline.SettingsUI
                     radioTimeAroundMs2Ids.Checked = true;
                     break;
                 default:
-                    throw new ArgumentException("Invalid RetentionTimeFilterType", "retentionTimeFilterType");
+                    throw new ArgumentException("Invalid RetentionTimeFilterType", "retentionTimeFilterType"); // Not L10N
             }
             tbxTimeAroundMs2Ids.Text = length.ToString(CultureInfo.CurrentUICulture);
         }

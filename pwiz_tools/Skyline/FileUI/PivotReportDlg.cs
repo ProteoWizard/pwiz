@@ -88,7 +88,7 @@ namespace pwiz.Skyline.FileUI
         }
         
         public void Select(Identifier id)
-        {
+        {   
             treeView.SelectedNode = FindNode(treeView.Nodes, id);
         }
 
@@ -180,7 +180,7 @@ namespace pwiz.Skyline.FileUI
         {
             if (reportSpec == null)
             {
-                textName.Text = "";
+                textName.Text = string.Empty;
                 SetReport(new SimpleReport());
             }
             else
@@ -203,7 +203,7 @@ namespace pwiz.Skyline.FileUI
 
             if (_columns.Count == 0)
             {
-                MessageBox.Show(this, "A report must have at least one column.", Program.Name);
+                MessageBox.Show(this, Resources.PivotReportDlg_OkDialog_A_report_must_have_at_least_one_column, Program.Name);
                 return;
             }
 
@@ -212,7 +212,7 @@ namespace pwiz.Skyline.FileUI
             if ((_reportSpec == null || !Equals(reportSpec.Name, _reportSpec.Name)) &&
                     _existing.Contains(reportSpec, new NameComparer<ReportSpec>()))
             {
-                helper.ShowTextBoxError(textName, "The report '{0}' already exists.", name);
+                helper.ShowTextBoxError(textName, Resources.PivotReportDlg_OkDialog_The_report__0__already_exists, name);
                 return;                    
             }
 

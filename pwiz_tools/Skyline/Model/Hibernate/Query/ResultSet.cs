@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             Object value = GetValue(rowIndex, columnIndex);
             if (value == null)
             {
-                return GetNullValueString(columnIndex, "");
+                return GetNullValueString(columnIndex, string.Empty);
             }
             ColumnInfo columnInfo = ColumnInfos[columnIndex];
             if (columnInfo.Format != null || value is double || value is float)
@@ -107,7 +108,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
         public String GetNullValueString(int columnIndex, String defaultValue)
         {
-            return (ColumnInfos[columnIndex].IsNumeric ? "#N/A" : defaultValue);
+            return (ColumnInfos[columnIndex].IsNumeric ? "#N/A" : defaultValue);    // Not L10N - TODO: Make sure this doesn't change in Excel
         }
 
         public ColumnInfo GetColumnInfo(ReportColumn identifier)

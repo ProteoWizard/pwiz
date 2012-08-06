@@ -27,13 +27,13 @@ namespace pwiz.Skyline.Model.Hibernate
         {
             get { return typeof(DbProtein); }
         }
-        [QueryColumn(FullName="ProteinName")]
+        [QueryColumn(FullName = "ProteinName")] // Not L10N
         public virtual string Name { get; set; }
-        [QueryColumn(FullName="ProteinDescription")]
+        [QueryColumn(FullName = "ProteinDescription")] // Not L10N
         public virtual string Description { get; set; }
-        [QueryColumn(FullName="ProteinSequence")]
+        [QueryColumn(FullName = "ProteinSequence")] // Not L10N
         public virtual string Sequence { get; set; }
-        [QueryColumn(FullName="ProteinNote")]
+        [QueryColumn(FullName = "ProteinNote")] // Not L10N
         public virtual string Note { get; set; }
     }
 }

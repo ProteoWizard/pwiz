@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -44,7 +46,7 @@ namespace pwiz.Skyline.FileUI
             set
             {
                 if (ExistingNames.Contains(value))
-                    throw new InvalidOperationException(string.Format("The name {0} is already in use.", value));
+                    throw new InvalidOperationException(string.Format(Resources.RenameResultDlg_ReplicateName_The_name__0__is_already_in_use, value));
                 textName.Text = value;
             }
         }
@@ -58,7 +60,10 @@ namespace pwiz.Skyline.FileUI
         {
             if (ExistingNames.Contains(textName.Text))
             {
-                MessageDlg.Show(this, string.Format("The name {0} is already in use.\nPlease you a different name.", textName.Text));
+                var message = TextUtil.LineSeparate(
+                    string.Format(Resources.RenameResultDlg_ReplicateName_The_name__0__is_already_in_use, textName.Text),
+                    Resources.RenameResultDlg_OkDialog_Please_use_a_different_name);
+                MessageDlg.Show(this, message);
                 return;
             }
             DialogResult = DialogResult.OK;

@@ -22,6 +22,7 @@ using System.Linq;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra.Double.Factorization;
 using MathNet.Numerics.LinearAlgebra.Generic;
+using pwiz.Skyline.Properties;
 using LinProvider = MathNet.Numerics.Algorithms.LinearAlgebra.ManagedLinearAlgebraProvider;
 
 namespace pwiz.Skyline.Model.Results
@@ -54,7 +55,7 @@ namespace pwiz.Skyline.Model.Results
         public void SetNumCols(int numCols)
         {
             if (numCols < 0 || numCols > MaxCols)
-                throw new ArgumentOutOfRangeException("numCols");
+                throw new ArgumentOutOfRangeException("numCols"); // Not L10N
             NumCols = numCols;
         }
         public void IncrementNumCols()
@@ -64,7 +65,7 @@ namespace pwiz.Skyline.Model.Results
         public void SetNumRows(int numRows)
         {
             if (numRows < 0 || numRows > MaxRows)
-                throw new ArgumentOutOfRangeException("numRows");
+                throw new ArgumentOutOfRangeException("numRows"); // Not L10N
             NumRows = numRows;
         }
         public void IncrementNumRows()
@@ -154,7 +155,7 @@ namespace pwiz.Skyline.Model.Results
         public void Add(int value)
         {
             if (!CheckBoundary(value))
-                throw new IndexOutOfRangeException("SizedSet: index 'value' is out of range");
+                throw new IndexOutOfRangeException(Resources.SizedSet_Add_SizedSet_index_value_is_out_of_range);
             if (_data[value]) return;
             _data[value] = true;
             ++Count;
@@ -487,8 +488,7 @@ namespace pwiz.Skyline.Model.Results
             }
             else
             {
-                throw new NotSupportedException("NonNegLsSolver DecompSolve: LQ " +
-                                                "decomposition not supported");
+                throw new NotSupportedException(Resources.NonNegLsSolver_GetSolver_NonNegLsSolver_DecompSolve_LQ_decomposition_not_supported);
             }
         }
 
