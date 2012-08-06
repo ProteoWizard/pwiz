@@ -841,7 +841,7 @@ namespace IDPicker
                 var skipFiles = new List<string>();
                 foreach (string filepath in xml_filepaths)
                 {
-                    string idpDB_filepath = Path.ChangeExtension(filepath, ".idpDB");
+                    string idpDB_filepath = Path.ChangeExtension(filepath.Replace(".pep.xml", ".pepXML"), ".idpDB");
                     if (File.Exists(idpDB_filepath))
                     {
                         if (!warnOnce && MessageBox.Show("Some of these files have already been converted. Do you want to reconvert them?",
@@ -858,7 +858,7 @@ namespace IDPicker
                     }
                 }
                 xml_filepaths = xml_filepaths.Where(o => !skipFiles.Contains(o));
-                idpDB_filepaths = idpDB_filepaths.Union(skipFiles.Select(o => Path.ChangeExtension(o, ".idpDB")));
+                idpDB_filepaths = idpDB_filepaths.Union(skipFiles.Select(o => Path.ChangeExtension(o.Replace(".pep.xml", ".pepXML"), ".idpDB")));
 
 
                 // determine if merged filepath exists and that it's a valid idpDB
@@ -982,7 +982,7 @@ namespace IDPicker
                     if (importCancelled)
                         return;
 
-                    idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
+                    idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o.Replace(".pep.xml", ".pepXML"), ".idpDB")));
                 }
 
                 if (idpDB_filepaths.Count() > 1)
