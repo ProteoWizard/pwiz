@@ -402,7 +402,18 @@ import numbers ;
 if [ numbers.less 32000 $(PWIZ_SVNREV) ] 
 {
 echo PWIZ_ROOT_PATH $(PWIZ_ROOT_PATH) ;
-echo LIBRARIES_GLOB [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.jam ] ;
+echo TREE_GLOB [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz
+                             $(PWIZ_ROOT_PATH)/pwiz_aux/msrc
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/commandline
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/common
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/examples
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/sld
+                             $(PWIZ_ROOT_PATH)/scripts/wix
+                : *.?pp *.h *.jam *.cs *.manifest* *.wxs.template
+                : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs *DataSet.Designer.cs AssemblyInfo.*
+            ] ;
 errors.error "out of range SVN revision $(PWIZ_SVNREV)." ;
 }
 
