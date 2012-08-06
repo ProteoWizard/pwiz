@@ -915,8 +915,8 @@ namespace CustomDataSourceDialog
 
                     var info = new FileInfo(fileNode.ToolTipText);
 
-                    if (!_extensionList[sourceTypeComboBox.Text].Contains(".*")
-                        && !_extensionList[sourceTypeComboBox.Text].Contains(info.Extension))
+                    if (!_extensionList[sourceTypeComboBox.Text].Contains(".*") &&
+                        _extensionList[sourceTypeComboBox.Text].Count(o => info.Name.EndsWith(o)) == 0)
                         continue;
 
                     if (regexConversion.IsMatch(fileNode.Text.ToLower()))
@@ -1141,24 +1141,8 @@ namespace CustomDataSourceDialog
                 if (canceled) return null;
                 try
                 {
-                    //have to use slightly odd method of checking extension since
-                    //some extensions are multi-dotted. Allow for all possibilites
-                    var destructableName = file.Name;
-                    if (!_allExtensions.Contains(file.Extension))
-                    {
-                        while (destructableName.Length > 0 &&
-                            !_allExtensions.Contains(destructableName))
-                            destructableName = destructableName.Remove(0, 1);
-                        if (destructableName.Length == 0)
-                            continue;
-                        if (_extensionList != null &&
-                            _extensionList.ContainsKey(sourceType) &&
-                            !_extensionList[sourceType].Contains(destructableName))
-                            continue;
-                    }
-                    if (_extensionList != null &&
-                            _extensionList.ContainsKey(sourceType) &&
-                            !_extensionList[sourceType].Contains(file.Extension))
+                    if (_allExtensions.Count(o => file.Name.EndsWith(o)) == 0 ||
+                        _extensionList[sourceType].Count(o => file.Name.EndsWith(o)) == 0)
                         continue;
 
                     HandleItemToAdd(ref newNode, file);
