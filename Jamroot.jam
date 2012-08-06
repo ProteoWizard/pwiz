@@ -150,6 +150,7 @@ import feature ; # needed for install rules
 import package ; # needed for package install
 import path ; # needed for glob, exists, etc.
 import project ; # needed for project.current
+import errors ;
 
 
 if --teamcity-test-decoration in [ modules.peek : ARGV ]
@@ -368,7 +369,6 @@ generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/proteome/Version.cpp : pwiz pro
 
 # TODO: collecting global revision info should use revision info that's already been collected;
 # TODO: especially for things like SeeMS which have some MSVC-generated files that aren't versioned
-echo PWIZ_ROOT_PATH $(PWIZ_ROOT_PATH) ;
 local revision-info =
     [ generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/Version.cpp : pwiz : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
             $(PWIZ_ROOT_PATH)/Jamroot.jam
@@ -397,6 +397,14 @@ local day = $(revision-info[4]) ;
 
 constant PWIZ_SVNREV : $(revision-info[1]) ;
 constant PWIZ_SVNREVDATE : "(last committed change: $(year)-$(month)-$(day))" ;
+
+import numbers ;
+if [ numbers.less 32000 $(PWIZ_SVNREV) ] 
+{
+echo PWIZ_ROOT_PATH $(PWIZ_ROOT_PATH) ;
+echo LIBRARIES_GLOB [ path.glob $(PWIZ_ROOT_PATH)/libraries : *.jam ] ;
+errors.error "out of range SVN revision $(PWIZ_SVNREV)." ;
+}
 
 version-tag = $(PWIZ_MAJOR) $(PWIZ_MINOR) $(PWIZ_SVNREV) ;
 
