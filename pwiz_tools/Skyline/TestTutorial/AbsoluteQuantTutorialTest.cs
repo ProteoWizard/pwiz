@@ -66,7 +66,7 @@ namespace pwiz.SkylineTestTutorial
                                              // Filter Settings
                                              transitionSettingsUI.PrecursorCharges = "2";
                                              transitionSettingsUI.ProductCharges = "1";
-                                             transitionSettingsUI.FragmentTypes = "Y";
+                                             transitionSettingsUI.FragmentTypes = "y";
                                              transitionSettingsUI.RangeFrom = Resources.TransitionFilter_FragmentStartFinders_ion_3;
                                              transitionSettingsUI.RangeTo = Resources.TransitionFilter_FragmentEndFinders_last_ion_minus_1;
                                              transitionSettingsUI.OkDialog();
