@@ -1538,7 +1538,12 @@ namespace pwiz.Skyline
 
         private void lockYChromContextMenuItem_Click(object sender, EventArgs e)
         {
-            bool lockY = Settings.Default.LockYChrom = lockYChromContextMenuItem.Checked;
+            LockYChrom(lockYChromContextMenuItem.Checked);
+        }
+
+        public void LockYChrom (bool locked)
+        {
+            bool lockY = Settings.Default.LockYChrom = locked;
             // Avoid updating the rest of the chart just to change the y-axis lock state
             foreach (var chromatogram in _listGraphChrom)
                 chromatogram.LockYAxis(lockY);
@@ -1546,7 +1551,12 @@ namespace pwiz.Skyline
 
         private void synchronizeZoomingContextMenuItem_Click(object sender, EventArgs e)
         {
-            bool zoomAll = Settings.Default.AutoZoomAllChromatograms = synchronizeZoomingContextMenuItem.Checked;
+            SynchronizeZooming(synchronizeZoomingContextMenuItem.Checked);
+        }
+
+        public void SynchronizeZooming(bool isChecked)
+        {
+            bool zoomAll = Settings.Default.AutoZoomAllChromatograms = isChecked;
 
             if (zoomAll)
             {
@@ -2931,8 +2941,13 @@ namespace pwiz.Skyline
 
         private void peptideLogScaleContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaLogScale = peptideLogScaleContextMenuItem.Checked;
-            if (peptideLogScaleContextMenuItem.Checked)
+            ShowPeptideLogScale(peptideLogScaleContextMenuItem.Checked);
+        }
+
+        public void ShowPeptideLogScale(bool isChecked)
+        {
+            Settings.Default.AreaLogScale = isChecked ;
+            if (isChecked)
                 AreaGraphController.AreaView = AreaNormalizeToView.none;
             UpdateSummaryGraphs();
         }

@@ -1275,6 +1275,11 @@ namespace pwiz.Skyline.FileUI
 
         #region Functional Test Support
 
+        public void SetTemplateFile(string templateFile)
+        {
+            textTemplateFile.Text = templateFile;
+        }
+
         public void SetInstrument(string instrument)
         {
             if(ExportInstrumentType.TRANSITION_LIST_TYPES.ToList().Find(inst => Equals(inst, instrument)) == default(string))

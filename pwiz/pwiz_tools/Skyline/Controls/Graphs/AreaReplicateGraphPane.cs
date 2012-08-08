@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
     /// </summary>
-    internal class AreaReplicateGraphPane : SummaryReplicateGraphPane
+    public class AreaReplicateGraphPane : SummaryReplicateGraphPane
     {
         public AreaReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
@@ -483,6 +483,24 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private GraphObjList _dotpLabels;
+
+        private IEnumerable<string> DotProductStrings
+        {
+            get
+            {
+                 return (_dotpLabels.Count > 0 || !IsDotProductVisible)
+                     ? _dotpLabels.Select(l => ((TextObj)l).Text)
+                     : SumAreas.Select((t, i) => GetDotProductResultsText(ParentGroupNode, i));
+            }
+        }
+
+        public IEnumerable<double> DotProducts
+        {
+            get
+            {
+                return DotProductStrings.Select(l => double.Parse(l.Split('\n')[1]));
+            }
+        }
 
         private void AddDotProductLabels(Graphics g, TransitionGroupDocNode nodeGroup, IList<double> sumAreas)
         {

@@ -275,7 +275,7 @@ namespace pwiz.Skyline.FileUI
             return GetDataSourcePathsFileReplicates(dataSources);
         }
 
-        private KeyValuePair<string, string[]>[] GetDataSourcePathsFileSingle(string name, IEnumerable<string> dataSources)
+        public KeyValuePair<string, string[]>[] GetDataSourcePathsFileSingle(string name, IEnumerable<string> dataSources)
         {
             var listPaths = new List<string>();
             foreach (string dataSource in dataSources)
@@ -295,7 +295,7 @@ namespace pwiz.Skyline.FileUI
             return new[] { new KeyValuePair<string, string[]>(name, listPaths.ToArray()) };
         }
 
-        private KeyValuePair<string, string[]>[] GetDataSourcePathsFileReplicates(IEnumerable<string> dataSources)
+        public KeyValuePair<string, string[]>[] GetDataSourcePathsFileReplicates(IEnumerable<string> dataSources)
         {
             var listNamedPaths = new List<KeyValuePair<string, string[]>>();
             foreach (string dataSource in dataSources)

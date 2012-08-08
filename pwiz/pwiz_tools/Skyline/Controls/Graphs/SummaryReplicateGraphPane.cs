@@ -34,7 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
     /// </summary>
-    internal abstract class SummaryReplicateGraphPane : SummaryBarGraphPaneBase
+    public abstract class SummaryReplicateGraphPane : SummaryBarGraphPaneBase
     {
         public static SummaryReplicateOrder ReplicateOrder
         {
@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Currently, we don't hold onto this object, because we never need to look
         /// at the data after the graph is rendered.
         /// </summary>
-        internal abstract class GraphData : Immutable
+        public abstract class GraphData : Immutable
         {
             private readonly SrmDocument _document;
             private readonly DocNode _docNode;
