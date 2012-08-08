@@ -59,6 +59,16 @@ void printCommandUsage(ostream& os)
     os << endl;
 }
 
+// check for match, and construct list of expected values
+// in case of no match at all
+static string supportedAnalyzers;
+static bool supportedAnalyzer(const string &name,const string &id) 
+{
+    supportedAnalyzers += " \"";
+    supportedAnalyzers += id;
+    supportedAnalyzers += "\"";
+    return name==id;
+}
 
 void initializeAnalyzers(MSDataAnalyzerContainer& analyzers, 
                          const vector<string>& commands)
@@ -73,49 +83,49 @@ void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
         iss >> name;
         getline(iss, args);
 
-        if (name == analyzer_strings<MetadataReporter>::id())
+        if (supportedAnalyzer(name, analyzer_strings<MetadataReporter>::id()))
         {
             MSDataAnalyzerPtr anal(new MetadataReporter);
             analyzers.push_back(anal);
         }
-        else if (name == analyzer_strings<RunSummary>::id())
+        else if (supportedAnalyzer(name, analyzer_strings<RunSummary>::id()))
         {
             MSDataAnalyzerPtr anal(new RunSummary(*cache, args));
             analyzers.push_back(anal);
         }
-        else if (name == analyzer_strings<SpectrumTable>::id())
+        else if (supportedAnalyzer(name, analyzer_strings<SpectrumTable>::id()))
         {
             MSDataAnalyzerPtr anal(new SpectrumTable(*cache, args));
             analyzers.push_back(anal);
         }
-        else if (name == analyzer_strings<SpectrumBinaryData>::id())
+        else if (supportedAnalyzer(name, analyzer_strings<SpectrumBinaryData>::id()))
         {
             MSDataAnalyzerPtr anal(new SpectrumBinaryData(*cache, args));
             analyzers.push_back(anal);
         }
-        else if (name == analyzer_strings<RegionSlice>::id())
+        else if (supportedAnalyzer(name, analyzer_strings<RegionSlice>::id()))
         {
             MSDataAnalyzerPtr anal(new RegionSlice(*cache, args));
             analyzers.push_back(anal);
         }
-        else if (name == analyzer_strings<RegionTIC>::id())
+        else if (supportedAnalyzer(name, analyzer_strings<RegionTIC>::id()))
         {
             MSDataAnalyzerPtr anal(new RegionTIC(*cache, args));
             analyzers.push_back(anal);
         }
-        else if (name == analyzer_strings<RegionSIC>::id())
+        else if (supportedAnalyzer(name, analyzer_strings<RegionSIC>::id()))
         {
             MSDataAnalyzerPtr anal(new RegionSIC(*cache, args));
             analyzers.push_back(anal);
         }
-        else if (name == analyzer_strings<Pseudo2DGel>::id())
+        else if (supportedAnalyzer(name, analyzer_strings<Pseudo2DGel>::id()))
         {
             MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache, args));
             analyzers.push_back(anal);
         }
         else
         {
-            cerr << "Unknown analyzer: " << name << endl;
+            cerr << "Unknown analysis command \"" << name << "\".  Expected one of:" << supportedAnalyzers << "." << endl;
         }
     }
 }
@@ -127,13 +137,13 @@ string usage(const MSDataAnalyzerApplication& app)
 
     oss << "Usage: msaccess [options] [filenames]\n"
         << "MassSpecAccess - command line access to mass spec data files\n"
-        << "                 using the -x/--exec option to specify action.\n"
+        << "                 uses -x/--exec to specify analysis command.\n"
         << "\n"
         << "Options:\n" 
         << "\n"
         << app.usageOptions
         << "\n"
-        << "Commands:\n"
+        << "Analysis commands (used with -x/--exec):\n"
         << "\n";
 
     printCommandUsage<MetadataReporter>(oss);
