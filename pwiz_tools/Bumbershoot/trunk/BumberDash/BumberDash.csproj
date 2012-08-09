@@ -305,13 +305,7 @@
     <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.InternalRawXYProcessing.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.Muni.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.ProjectUtilities.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.RawXYProcessing.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.StructuredStorage.dll">
@@ -419,13 +413,7 @@
     <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.InternalRawXYProcessing.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.Muni.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.ProjectUtilities.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.RawXYProcessing.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.StructuredStorage.dll">
@@ -533,13 +521,7 @@
     <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.InternalRawXYProcessing.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.Muni.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.ProjectUtilities.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.RawXYProcessing.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.StructuredStorage.dll">
@@ -647,13 +629,7 @@
     <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.InternalRawXYProcessing.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.Muni.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
     <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.ProjectUtilities.dll">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.RawXYProcessing.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.StructuredStorage.dll">
