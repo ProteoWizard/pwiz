@@ -484,7 +484,7 @@ void BlibFilter::compAndInsert(vector<RefSpectrum*>& oneIon)
         if( oneIon.at(0)->getNumRawPeaks() < oneIon.at(1)->getNumRawPeaks() ) {
             bestIndex = 1;
         }
-        cerr << "selecting index " << bestIndex << ", scan " << oneIon.at(bestIndex)->getScanNumber() << " from " << oneIon.at(0)->getScanNumber() << " and " << oneIon.at(1)->getScanNumber() << endl;
+        // cerr << "selecting index " << bestIndex << ", scan " << oneIon.at(bestIndex)->getScanNumber() << " from " << oneIon.at(0)->getScanNumber() << " and " << oneIon.at(1)->getScanNumber() << endl;
 
         specID = transferSpectrum(redundantDbName_, 
                                   oneIon.at(bestIndex)->getLibSpecID(), 

@@ -193,6 +193,13 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                             if (name == "TITLE")
                             {
                                 bal::trim(value);
+
+                                // Some formats omit RTINSECONDS and store the retention time
+                                // in the title field instead.
+                                double scanTimeMin = getRetentionTimeFromTitle(value);
+                                if (scanTimeMin > 0)
+                                    scan.set(MS_scan_start_time, scanTimeMin * 60, UO_second);
+
                                 spectrum.set(MS_spectrum_title, value);
                             }
                             else if (name == "PEPMASS")
@@ -286,6 +293,73 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
         spectrum.set(MS_total_ion_current, tic);
         spectrum.set(MS_base_peak_m_z, basePeakMZ);
         spectrum.set(MS_base_peak_intensity, basePeakIntensity);
+    }
+
+    /**
+     * Parse the spectrum title to look for retention times.  If there are
+     * two times, return the center of the range.  Possible formats to look
+     * for are "Elution:<time> min", "RT:<time>min" and "rt=<time>,".
+     */
+    double getRetentionTimeFromTitle(const string& title) const
+    {
+        // text to search for preceeding and following time
+        const char* startTags[3] = { "Elution:", "RT:", "rt=" };
+        const char* secondStartTags[3] = { "to ", NULL, NULL };
+        const char* endTags[3] = { "min", "min", "," };
+
+        double firstTime = 0;
+        double secondTime = 0;
+        for(int format_idx = 0; format_idx < 2; format_idx++)
+        {
+
+            size_t position = 0;
+            firstTime = getTime(title, startTags[format_idx], 
+                                endTags[format_idx], position);
+            if (secondStartTags[format_idx] != NULL)
+            {
+                secondTime = getTime(title, secondStartTags[format_idx], 
+                                     endTags[format_idx], position);
+            }
+
+            if( firstTime > 0 )
+                break;
+
+        } // try another format
+
+        double time = firstTime;
+        if( secondTime != 0 )
+        {
+            time = (firstTime + secondTime) / 2 ;
+        }
+
+        return time;
+    }
+
+    /**
+     * Helper function to parse a double from the given string
+     * found between the two tags.  Search for number after position
+     * Update position to the end of the parsed double.
+     */
+    double getTime(const string& title, const char* startTag,
+                   const char* endTag, size_t position) const
+    {
+        size_t start = title.find(startTag, position);
+        if( start == string::npos )
+            return 0; // not found
+
+        start += strlen(startTag);
+        size_t end = title.find(endTag, start);
+        string timeStr = title.substr(start, end - start);
+        try
+        {
+            double time = boost::lexical_cast<double>(timeStr);
+            position = start;
+            return time;
+        }
+        catch(...)
+        {
+            return 0;
+        }
     }
 
     void createIndex()

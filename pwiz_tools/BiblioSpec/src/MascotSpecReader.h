@@ -133,7 +133,7 @@ class MascotSpecReader : public SpecFileReader {
             // seconds to minutes
         } catch (...){
             // if it wasn't there, try the title string
-            returnData.retentionTime = getRetentionTimeFromTitle(spec);
+            returnData.retentionTime = getRetentionTimeFromTitle(spec.getStringTitle(true));
         }
         returnData.numPeaks = spec.getNumberOfPeaks(1);// first ion series
 
@@ -179,66 +179,73 @@ class MascotSpecReader : public SpecFileReader {
     ms_mascotresfile* ms_file_;    // get spec from here
     ms_mascotresults* ms_results_; // get pep from here (for m/z)
 
+    // TODO: This code is now duplicated in SpectrumList_MGF.cpp
+    /**
+     * Parse the spectrum title to look for retention times.  If there are
+     * two times, return the center of the range.  Possible formats to look
+     * for are "Elution:<time> min", "RT:<time>min" and "rt=<time>,".
+     */
+    double getRetentionTimeFromTitle(const string& title) const
+    {
+        // text to search for preceeding and following time
+        const char* startTags[3] = { "Elution:", "RT:", "rt=" };
+        const char* secondStartTags[3] = { "to ", NULL, NULL };
+        const char* endTags[3] = { "min", "min", "," };
+
+        double firstTime = 0;
+        double secondTime = 0;
+        for(int format_idx = 0; format_idx < 2; format_idx++)
+        {
+
+            size_t position = 0;
+            firstTime = getTime(title, startTags[format_idx], 
+                                endTags[format_idx], position);
+            if (secondStartTags[format_idx] != NULL)
+            {
+                secondTime = getTime(title, secondStartTags[format_idx], 
+                                     endTags[format_idx], position);
+            }
+
+            if( firstTime > 0 )
+                break;
+
+        } // try another format
+
+        double time = firstTime;
+        if( secondTime != 0 )
+        {
+            time = (firstTime + secondTime) / 2 ;
+        }
+
+        return time;
+    }
+
     /**
      * Helper function to parse a double from the given string
      * found between the two tags.  Search for number after position
      * Update position to the end of the parsed double.
      */
-     double getTime(const string& title, const char* startTag,
-                    const char* endTag, size_t&position)
-     {
+    double getTime(const string& title, const char* startTag,
+                   const char* endTag, size_t position) const
+    {
         size_t start = title.find(startTag, position);
-        if( start == string::npos ){ // not found
-            return 0;
-        }
+        if( start == string::npos )
+            return 0; // not found
+
         start += strlen(startTag);
         size_t end = title.find(endTag, start);
         string timeStr = title.substr(start, end - start);
-        try{
+        try
+        {
             double time = boost::lexical_cast<double>(timeStr);
             position = start;
             return time;
-        } catch(...){
+        }
+        catch(...)
+        {
             return 0;
         }
-     }
-
-
-    /**
-     * Parse the spectrum title to look for retention times.  If there are
-     * two times, return the center of the range.  Possible formats to look
-     * for are "Elution:<time> min" and "rt=<time>,".
-     */
-    double getRetentionTimeFromTitle(ms_inputquery& spec){
-        // text to search for preceeding and following time
-        const char* startTags[2] = { "Elution:", "rt=" };
-        const char* secondStartTags[2] = { "to ", "rt=" };
-        const char* endTags[2] = { "min", "," };
-
-        double firstTime = 0;
-        double secondTime = 0;
-        string title = spec.getStringTitle(true);
-        for(int format_idx = 0; format_idx < 2; format_idx++){
-
-            size_t position = 0;
-            firstTime = getTime(title, startTags[format_idx], 
-                                endTags[format_idx], position);
-            secondTime = getTime(title, secondStartTags[format_idx], 
-                                 endTags[format_idx], position);
-
-            if( firstTime > 0 ){
-               break;
-            }
-        } // try another format
-
-        double time = firstTime;
-        if( secondTime != 0 ){
-            time = (firstTime + secondTime) / 2 ;
-        }
-
-        return time; // shouldn't get to here
     }
-
 
 
 

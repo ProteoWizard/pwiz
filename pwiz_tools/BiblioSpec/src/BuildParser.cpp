@@ -714,12 +714,32 @@ string BuildParser::getFilenameFromID(const string& idStr){
 
     size_t start = idStr.find("File:");
     if( start != string::npos ){ // found it
+        // strip any following spaces
         start = idStr.find_first_not_of(' ', start + strlen("File:"));
         if ( start != string::npos ){
-            size_t end = idStr[start] != '"'
-                ? idStr.find_first_of(',', start)
-                : idStr.find_first_of('"', ++start);
-
+            size_t end;
+            // if the file attribute is quoted, end at tht next quote
+            if (idStr[start] == '"'){
+                end = idStr.find_first_of('"', ++start);
+            } else {
+                // otherwise, end at the next comma
+                end = idStr.find_first_of(',', start);
+                if ( end == string::npos ) {
+                    // or, if no comma is found, look for a following attribute colon
+                    size_t nextAttr = idStr.find_first_of(':', start);
+                    if ( nextAttr != string::npos ) {
+                        // and back up to the space before the attribute name
+                        end = idStr.find_last_of(' ', nextAttr);
+                        // If end is now less than start, reset to end.
+                        if ( end < start )
+                            end = string::npos;
+                        // otherwise, strip space characters to the first non-space
+                        else if ( end != string::npos )
+                            end = idStr.find_last_not_of(' ', end) + 1;
+                    }
+                }
+            }
+            // if no other end specifier was found, just the entire string
             if ( end == string::npos )
                 end = idStr.length();
 
