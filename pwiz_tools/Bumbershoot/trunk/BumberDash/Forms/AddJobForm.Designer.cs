@@ -1,4 +1,25 @@
-﻿namespace BumberDash.Forms
+﻿//
+// $Id: AddJobForm.Designer.cs 48 2011-21-11 16:18:05Z holmanjd $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumberdash project.
+//
+// The Initial Developer of the Original Code is Jay Holman.
+//
+// Copyright 2010 Vanderbilt University
+//
+// Contributor(s): Surendra Dasari, Matt Chambers
+//
+namespace BumberDash.Forms
 {
     sealed partial class AddJobForm
     {
@@ -30,6 +51,7 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddJobForm));
             this.FolderPanel = new System.Windows.Forms.Panel();
+            this.RemoveDataFilesButton = new System.Windows.Forms.Button();
             this.SearchTypeBox = new System.Windows.Forms.ComboBox();
             this.newFolderBox = new System.Windows.Forms.CheckBox();
             this.IntermediateBox = new System.Windows.Forms.CheckBox();
@@ -40,9 +62,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.DatabaseLocBox = new System.Windows.Forms.ComboBox();
             this.OutputDirectoryBox = new System.Windows.Forms.ComboBox();
-            this.InputFilesBox = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.DataFilesButton = new System.Windows.Forms.Button();
+            this.AddDataFilesButton = new System.Windows.Forms.Button();
             this.AddJobRunButton = new System.Windows.Forms.Button();
             this.AddJobCancelButton = new System.Windows.Forms.Button();
             this.label7 = new System.Windows.Forms.Label();
@@ -79,12 +100,16 @@
             this.DirecTagInfoLabel = new System.Windows.Forms.Label();
             this.DirecTagInfoBox = new System.Windows.Forms.TextBox();
             this.TagConfigInfoPanel = new System.Windows.Forms.Panel();
+            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.DatabaseConfigInfoPanel = new System.Windows.Forms.Panel();
             this.MyriMatchInfoLabel = new System.Windows.Forms.Label();
             this.MyriMatchInfoBox = new System.Windows.Forms.TextBox();
             this.PepConfigInfoPanel = new System.Windows.Forms.Panel();
             this.PepInfoLabel = new System.Windows.Forms.Label();
             this.PepitomeInfoBox = new System.Windows.Forms.TextBox();
+            this.InputFilesList = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.FileNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.FolderPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
             this.PepPanel.SuspendLayout();
@@ -93,12 +118,20 @@
             this.ConfigDatabasePanel.SuspendLayout();
             this.ConfigTagPanel.SuspendLayout();
             this.TagConfigInfoPanel.SuspendLayout();
+            this.splitContainer1.Panel1.SuspendLayout();
+            this.splitContainer1.Panel2.SuspendLayout();
+            this.splitContainer1.SuspendLayout();
             this.DatabaseConfigInfoPanel.SuspendLayout();
             this.PepConfigInfoPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.InputFilesList)).BeginInit();
             this.SuspendLayout();
             // 
             // FolderPanel
             // 
+            this.FolderPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)));
+            this.FolderPanel.Controls.Add(this.InputFilesList);
+            this.FolderPanel.Controls.Add(this.RemoveDataFilesButton);
             this.FolderPanel.Controls.Add(this.SearchTypeBox);
             this.FolderPanel.Controls.Add(this.newFolderBox);
             this.FolderPanel.Controls.Add(this.IntermediateBox);
@@ -109,9 +142,8 @@
             this.FolderPanel.Controls.Add(this.label1);
             this.FolderPanel.Controls.Add(this.DatabaseLocBox);
             this.FolderPanel.Controls.Add(this.OutputDirectoryBox);
-            this.FolderPanel.Controls.Add(this.InputFilesBox);
             this.FolderPanel.Controls.Add(this.label2);
-            this.FolderPanel.Controls.Add(this.DataFilesButton);
+            this.FolderPanel.Controls.Add(this.AddDataFilesButton);
             this.FolderPanel.Controls.Add(this.AddJobRunButton);
             this.FolderPanel.Controls.Add(this.AddJobCancelButton);
             this.FolderPanel.Controls.Add(this.label7);
@@ -123,15 +155,25 @@
             this.FolderPanel.Controls.Add(this.ConfigGB);
             this.FolderPanel.Location = new System.Drawing.Point(0, 0);
             this.FolderPanel.Name = "FolderPanel";
-            this.FolderPanel.Size = new System.Drawing.Size(435, 415);
+            this.FolderPanel.Size = new System.Drawing.Size(435, 497);
             this.FolderPanel.TabIndex = 3;
+            // 
+            // RemoveDataFilesButton
+            // 
+            this.RemoveDataFilesButton.Location = new System.Drawing.Point(340, 173);
+            this.RemoveDataFilesButton.Name = "RemoveDataFilesButton";
+            this.RemoveDataFilesButton.Size = new System.Drawing.Size(55, 21);
+            this.RemoveDataFilesButton.TabIndex = 38;
+            this.RemoveDataFilesButton.Text = "Remove";
+            this.RemoveDataFilesButton.UseVisualStyleBackColor = true;
+            this.RemoveDataFilesButton.Click += new System.EventHandler(this.RemoveDataFilesButton_Click);
             // 
             // SearchTypeBox
             // 
             this.SearchTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.SearchTypeBox.FormattingEnabled = true;
             this.SearchTypeBox.Items.AddRange(new object[] {
-            "Myrimatch- Database Searching",
+            "MyriMatch- Database Searching",
             "DirecTag / TagRecon- Sequence Tagging",
             "Pepitome- Spectral Library"});
             this.SearchTypeBox.Location = new System.Drawing.Point(167, 45);
@@ -152,8 +194,9 @@
             // 
             // IntermediateBox
             // 
+            this.IntermediateBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.IntermediateBox.AutoSize = true;
-            this.IntermediateBox.Location = new System.Drawing.Point(12, 380);
+            this.IntermediateBox.Location = new System.Drawing.Point(12, 465);
             this.IntermediateBox.Name = "IntermediateBox";
             this.IntermediateBox.Size = new System.Drawing.Size(107, 17);
             this.IntermediateBox.TabIndex = 32;
@@ -163,8 +206,9 @@
             // 
             // CPUsAutoLabel
             // 
+            this.CPUsAutoLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.CPUsAutoLabel.BackColor = System.Drawing.SystemColors.ControlLightLight;
-            this.CPUsAutoLabel.Location = new System.Drawing.Point(362, 381);
+            this.CPUsAutoLabel.Location = new System.Drawing.Point(362, 466);
             this.CPUsAutoLabel.Name = "CPUsAutoLabel";
             this.CPUsAutoLabel.Size = new System.Drawing.Size(31, 15);
             this.CPUsAutoLabel.TabIndex = 31;
@@ -172,7 +216,8 @@
             // 
             // CPUsBox
             // 
-            this.CPUsBox.Location = new System.Drawing.Point(361, 379);
+            this.CPUsBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.CPUsBox.Location = new System.Drawing.Point(361, 464);
             this.CPUsBox.Name = "CPUsBox";
             this.CPUsBox.Size = new System.Drawing.Size(49, 20);
             this.CPUsBox.TabIndex = 30;
@@ -180,8 +225,9 @@
             // 
             // label3
             // 
+            this.label3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(321, 381);
+            this.label3.Location = new System.Drawing.Point(321, 466);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(34, 13);
             this.label3.TabIndex = 29;
@@ -206,27 +252,21 @@
             // 
             // DatabaseLocBox
             // 
+            this.DatabaseLocBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.DatabaseLocBox.FormattingEnabled = true;
-            this.DatabaseLocBox.Location = new System.Drawing.Point(28, 235);
+            this.DatabaseLocBox.Location = new System.Drawing.Point(28, 320);
             this.DatabaseLocBox.Name = "DatabaseLocBox";
             this.DatabaseLocBox.Size = new System.Drawing.Size(306, 21);
             this.DatabaseLocBox.TabIndex = 25;
             // 
             // OutputDirectoryBox
             // 
+            this.OutputDirectoryBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.OutputDirectoryBox.FormattingEnabled = true;
-            this.OutputDirectoryBox.Location = new System.Drawing.Point(28, 191);
+            this.OutputDirectoryBox.Location = new System.Drawing.Point(28, 276);
             this.OutputDirectoryBox.Name = "OutputDirectoryBox";
             this.OutputDirectoryBox.Size = new System.Drawing.Size(306, 21);
             this.OutputDirectoryBox.TabIndex = 24;
-            // 
-            // InputFilesBox
-            // 
-            this.InputFilesBox.FormattingEnabled = true;
-            this.InputFilesBox.Location = new System.Drawing.Point(28, 147);
-            this.InputFilesBox.Name = "InputFilesBox";
-            this.InputFilesBox.Size = new System.Drawing.Size(306, 21);
-            this.InputFilesBox.TabIndex = 23;
             // 
             // label2
             // 
@@ -238,21 +278,21 @@
             this.label2.TabIndex = 1;
             this.label2.Text = "Type of search:";
             // 
-            // DataFilesButton
+            // AddDataFilesButton
             // 
-            this.DataFilesButton.Location = new System.Drawing.Point(340, 146);
-            this.DataFilesButton.Name = "DataFilesButton";
-            this.DataFilesButton.Size = new System.Drawing.Size(55, 21);
-            this.DataFilesButton.TabIndex = 7;
-            this.DataFilesButton.Text = "Browse";
-            this.DataFilesButton.UseVisualStyleBackColor = true;
-            this.DataFilesButton.Click += new System.EventHandler(this.DataFilesButton_Click);
+            this.AddDataFilesButton.Location = new System.Drawing.Point(340, 146);
+            this.AddDataFilesButton.Name = "AddDataFilesButton";
+            this.AddDataFilesButton.Size = new System.Drawing.Size(55, 21);
+            this.AddDataFilesButton.TabIndex = 7;
+            this.AddDataFilesButton.Text = "Add";
+            this.AddDataFilesButton.UseVisualStyleBackColor = true;
+            this.AddDataFilesButton.Click += new System.EventHandler(this.AddDataFilesButton_Click);
             // 
             // AddJobRunButton
             // 
             this.AddJobRunButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.AddJobRunButton.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.AddJobRunButton.Location = new System.Drawing.Point(215, 385);
+            this.AddJobRunButton.Location = new System.Drawing.Point(215, 467);
             this.AddJobRunButton.Name = "AddJobRunButton";
             this.AddJobRunButton.Size = new System.Drawing.Size(75, 23);
             this.AddJobRunButton.TabIndex = 18;
@@ -264,7 +304,7 @@
             // 
             this.AddJobCancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.AddJobCancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.AddJobCancelButton.Location = new System.Drawing.Point(134, 385);
+            this.AddJobCancelButton.Location = new System.Drawing.Point(134, 467);
             this.AddJobCancelButton.Name = "AddJobCancelButton";
             this.AddJobCancelButton.Size = new System.Drawing.Size(75, 23);
             this.AddJobCancelButton.TabIndex = 22;
@@ -283,7 +323,8 @@
             // 
             // DatabaseLocButton
             // 
-            this.DatabaseLocButton.Location = new System.Drawing.Point(340, 234);
+            this.DatabaseLocButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.DatabaseLocButton.Location = new System.Drawing.Point(340, 319);
             this.DatabaseLocButton.Name = "DatabaseLocButton";
             this.DatabaseLocButton.Size = new System.Drawing.Size(55, 21);
             this.DatabaseLocButton.TabIndex = 8;
@@ -293,9 +334,10 @@
             // 
             // label5
             // 
+            this.label5.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label5.AutoSize = true;
             this.label5.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label5.Location = new System.Drawing.Point(25, 215);
+            this.label5.Location = new System.Drawing.Point(25, 300);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(120, 18);
             this.label5.TabIndex = 6;
@@ -303,7 +345,8 @@
             // 
             // InitialDirectoryButton
             // 
-            this.InitialDirectoryButton.Location = new System.Drawing.Point(340, 191);
+            this.InitialDirectoryButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.InitialDirectoryButton.Location = new System.Drawing.Point(340, 276);
             this.InitialDirectoryButton.Name = "InitialDirectoryButton";
             this.InitialDirectoryButton.Size = new System.Drawing.Size(55, 21);
             this.InitialDirectoryButton.TabIndex = 4;
@@ -313,9 +356,10 @@
             // 
             // label4
             // 
+            this.label4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.label4.AutoSize = true;
             this.label4.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label4.Location = new System.Drawing.Point(25, 171);
+            this.label4.Location = new System.Drawing.Point(25, 256);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(122, 18);
             this.label4.TabIndex = 2;
@@ -323,11 +367,12 @@
             // 
             // PepPanel
             // 
+            this.PepPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.PepPanel.Controls.Add(this.SpecLibBox);
             this.PepPanel.Controls.Add(this.SpecLibBrowse);
             this.PepPanel.Controls.Add(this.label6);
             this.PepPanel.Controls.Add(this.PepConfigGB);
-            this.PepPanel.Location = new System.Drawing.Point(9, 261);
+            this.PepPanel.Location = new System.Drawing.Point(9, 346);
             this.PepPanel.Name = "PepPanel";
             this.PepPanel.Size = new System.Drawing.Size(405, 118);
             this.PepPanel.TabIndex = 36;
@@ -419,9 +464,10 @@
             // 
             // ConfigGB
             // 
+            this.ConfigGB.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.ConfigGB.Controls.Add(this.ConfigDatabasePanel);
             this.ConfigGB.Controls.Add(this.ConfigTagPanel);
-            this.ConfigGB.Location = new System.Drawing.Point(12, 262);
+            this.ConfigGB.Location = new System.Drawing.Point(12, 347);
             this.ConfigGB.Name = "ConfigGB";
             this.ConfigGB.Size = new System.Drawing.Size(398, 112);
             this.ConfigGB.TabIndex = 26;
@@ -588,21 +634,22 @@
             // 
             // TagReconInfoBox
             // 
-            this.TagReconInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.TagReconInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.TagReconInfoBox.Location = new System.Drawing.Point(6, 223);
+            this.TagReconInfoBox.Location = new System.Drawing.Point(6, 24);
             this.TagReconInfoBox.Multiline = true;
             this.TagReconInfoBox.Name = "TagReconInfoBox";
             this.TagReconInfoBox.ReadOnly = true;
             this.TagReconInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.TagReconInfoBox.Size = new System.Drawing.Size(245, 175);
+            this.TagReconInfoBox.Size = new System.Drawing.Size(238, 213);
             this.TagReconInfoBox.TabIndex = 5;
             this.TagReconInfoBox.WordWrap = false;
             // 
             // TagReconInfoLabel
             // 
             this.TagReconInfoLabel.AutoSize = true;
-            this.TagReconInfoLabel.Location = new System.Drawing.Point(6, 207);
+            this.TagReconInfoLabel.Location = new System.Drawing.Point(6, 8);
             this.TagReconInfoLabel.Name = "TagReconInfoLabel";
             this.TagReconInfoLabel.Size = new System.Drawing.Size(123, 13);
             this.TagReconInfoLabel.TabIndex = 6;
@@ -619,36 +666,60 @@
             // 
             // DirecTagInfoBox
             // 
-            this.DirecTagInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+            this.DirecTagInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.DirecTagInfoBox.Location = new System.Drawing.Point(6, 24);
             this.DirecTagInfoBox.Multiline = true;
             this.DirecTagInfoBox.Name = "DirecTagInfoBox";
             this.DirecTagInfoBox.ReadOnly = true;
             this.DirecTagInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.DirecTagInfoBox.Size = new System.Drawing.Size(245, 175);
+            this.DirecTagInfoBox.Size = new System.Drawing.Size(237, 136);
             this.DirecTagInfoBox.TabIndex = 7;
             this.DirecTagInfoBox.WordWrap = false;
             // 
             // TagConfigInfoPanel
             // 
-            this.TagConfigInfoPanel.Controls.Add(this.DirecTagInfoLabel);
-            this.TagConfigInfoPanel.Controls.Add(this.DirecTagInfoBox);
-            this.TagConfigInfoPanel.Controls.Add(this.TagReconInfoBox);
-            this.TagConfigInfoPanel.Controls.Add(this.TagReconInfoLabel);
-            this.TagConfigInfoPanel.Location = new System.Drawing.Point(436, 1);
+            this.TagConfigInfoPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.TagConfigInfoPanel.Controls.Add(this.splitContainer1);
+            this.TagConfigInfoPanel.Location = new System.Drawing.Point(436, 0);
             this.TagConfigInfoPanel.Name = "TagConfigInfoPanel";
-            this.TagConfigInfoPanel.Size = new System.Drawing.Size(255, 409);
+            this.TagConfigInfoPanel.Size = new System.Drawing.Size(256, 497);
             this.TagConfigInfoPanel.TabIndex = 9;
             this.TagConfigInfoPanel.Visible = false;
             // 
+            // splitContainer1
+            // 
+            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer1.Name = "splitContainer1";
+            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer1.Panel1
+            // 
+            this.splitContainer1.Panel1.Controls.Add(this.DirecTagInfoLabel);
+            this.splitContainer1.Panel1.Controls.Add(this.DirecTagInfoBox);
+            // 
+            // splitContainer1.Panel2
+            // 
+            this.splitContainer1.Panel2.Controls.Add(this.TagReconInfoLabel);
+            this.splitContainer1.Panel2.Controls.Add(this.TagReconInfoBox);
+            this.splitContainer1.Size = new System.Drawing.Size(256, 497);
+            this.splitContainer1.SplitterDistance = 206;
+            this.splitContainer1.TabIndex = 9;
+            // 
             // DatabaseConfigInfoPanel
             // 
+            this.DatabaseConfigInfoPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.DatabaseConfigInfoPanel.Controls.Add(this.MyriMatchInfoLabel);
             this.DatabaseConfigInfoPanel.Controls.Add(this.MyriMatchInfoBox);
-            this.DatabaseConfigInfoPanel.Location = new System.Drawing.Point(436, 1);
+            this.DatabaseConfigInfoPanel.Location = new System.Drawing.Point(436, 0);
             this.DatabaseConfigInfoPanel.Name = "DatabaseConfigInfoPanel";
-            this.DatabaseConfigInfoPanel.Size = new System.Drawing.Size(255, 409);
+            this.DatabaseConfigInfoPanel.Size = new System.Drawing.Size(256, 497);
             this.DatabaseConfigInfoPanel.TabIndex = 33;
             this.DatabaseConfigInfoPanel.Visible = false;
             // 
@@ -663,22 +734,28 @@
             // 
             // MyriMatchInfoBox
             // 
+            this.MyriMatchInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.MyriMatchInfoBox.Location = new System.Drawing.Point(6, 24);
             this.MyriMatchInfoBox.Multiline = true;
             this.MyriMatchInfoBox.Name = "MyriMatchInfoBox";
             this.MyriMatchInfoBox.ReadOnly = true;
             this.MyriMatchInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.MyriMatchInfoBox.Size = new System.Drawing.Size(245, 374);
+            this.MyriMatchInfoBox.Size = new System.Drawing.Size(246, 466);
             this.MyriMatchInfoBox.TabIndex = 9;
             this.MyriMatchInfoBox.WordWrap = false;
             // 
             // PepConfigInfoPanel
             // 
+            this.PepConfigInfoPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.PepConfigInfoPanel.Controls.Add(this.PepInfoLabel);
             this.PepConfigInfoPanel.Controls.Add(this.PepitomeInfoBox);
-            this.PepConfigInfoPanel.Location = new System.Drawing.Point(436, 1);
+            this.PepConfigInfoPanel.Location = new System.Drawing.Point(436, 0);
             this.PepConfigInfoPanel.Name = "PepConfigInfoPanel";
-            this.PepConfigInfoPanel.Size = new System.Drawing.Size(255, 409);
+            this.PepConfigInfoPanel.Size = new System.Drawing.Size(256, 497);
             this.PepConfigInfoPanel.TabIndex = 34;
             this.PepConfigInfoPanel.Visible = false;
             // 
@@ -693,20 +770,59 @@
             // 
             // PepitomeInfoBox
             // 
+            this.PepitomeInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.PepitomeInfoBox.Location = new System.Drawing.Point(6, 24);
             this.PepitomeInfoBox.Multiline = true;
             this.PepitomeInfoBox.Name = "PepitomeInfoBox";
             this.PepitomeInfoBox.ReadOnly = true;
             this.PepitomeInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.PepitomeInfoBox.Size = new System.Drawing.Size(245, 374);
+            this.PepitomeInfoBox.Size = new System.Drawing.Size(246, 466);
             this.PepitomeInfoBox.TabIndex = 11;
             this.PepitomeInfoBox.WordWrap = false;
+            // 
+            // InputFilesList
+            // 
+            this.InputFilesList.AllowUserToAddRows = false;
+            this.InputFilesList.AllowUserToDeleteRows = false;
+            this.InputFilesList.AllowUserToResizeColumns = false;
+            this.InputFilesList.AllowUserToResizeRows = false;
+            this.InputFilesList.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.InputFilesList.BackgroundColor = System.Drawing.Color.White;
+            this.InputFilesList.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.InputFilesList.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.None;
+            this.InputFilesList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.InputFilesList.ColumnHeadersVisible = false;
+            this.InputFilesList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.FileNameColumn});
+            this.InputFilesList.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
+            this.InputFilesList.Location = new System.Drawing.Point(28, 147);
+            this.InputFilesList.Name = "InputFilesList";
+            this.InputFilesList.RowHeadersVisible = false;
+            this.InputFilesList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.InputFilesList.Size = new System.Drawing.Size(306, 106);
+            this.InputFilesList.TabIndex = 39;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn1.HeaderText = "File Name";
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            // 
+            // FileNameColumn
+            // 
+            this.FileNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.FileNameColumn.HeaderText = "File Name";
+            this.FileNameColumn.Name = "FileNameColumn";
             // 
             // AddJobForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(690, 411);
+            this.ClientSize = new System.Drawing.Size(691, 496);
             this.Controls.Add(this.FolderPanel);
             this.Controls.Add(this.PepConfigInfoPanel);
             this.Controls.Add(this.DatabaseConfigInfoPanel);
@@ -729,11 +845,16 @@
             this.ConfigTagPanel.ResumeLayout(false);
             this.ConfigTagPanel.PerformLayout();
             this.TagConfigInfoPanel.ResumeLayout(false);
-            this.TagConfigInfoPanel.PerformLayout();
+            this.splitContainer1.Panel1.ResumeLayout(false);
+            this.splitContainer1.Panel1.PerformLayout();
+            this.splitContainer1.Panel2.ResumeLayout(false);
+            this.splitContainer1.Panel2.PerformLayout();
+            this.splitContainer1.ResumeLayout(false);
             this.DatabaseConfigInfoPanel.ResumeLayout(false);
             this.DatabaseConfigInfoPanel.PerformLayout();
             this.PepConfigInfoPanel.ResumeLayout(false);
             this.PepConfigInfoPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.InputFilesList)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -763,9 +884,8 @@
         private System.Windows.Forms.Panel DatabaseConfigInfoPanel;
         private System.Windows.Forms.Label MyriMatchInfoLabel;
         private System.Windows.Forms.ComboBox DatabaseLocBox;
-        private System.Windows.Forms.ComboBox InputFilesBox;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button DataFilesButton;
+        private System.Windows.Forms.Button AddDataFilesButton;
         private System.Windows.Forms.Button AddJobRunButton;
         private System.Windows.Forms.Button AddJobCancelButton;
         private System.Windows.Forms.Label label7;
@@ -796,6 +916,11 @@
         private System.Windows.Forms.Panel PepConfigInfoPanel;
         private System.Windows.Forms.Label PepInfoLabel;
         internal System.Windows.Forms.TextBox PepitomeInfoBox;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.Button RemoveDataFilesButton;
+        private System.Windows.Forms.DataGridView InputFilesList;
+        private System.Windows.Forms.DataGridViewTextBoxColumn FileNameColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
 
     }
 }

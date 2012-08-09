@@ -587,7 +587,7 @@ namespace BumberDash.Forms
         /// <param name="e"></param>
         private void documentationToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var helpFile = String.Format("\"file:///{0}/lib/BumberDash Help 2.htm\"", Application.StartupPath.Replace("\\", "/"));
+            var helpFile = String.Format("\"{0}/lib/BumberDash Help 2.htm\"", Application.StartupPath.Replace("\\", "/"));
             System.Diagnostics.Process.Start(helpFile);
         }
 
@@ -992,15 +992,15 @@ namespace BumberDash.Forms
             {
                 case DialogResult.Yes:
                     JobProcess.ForceKill();
-
+                    var trimmedOutput = hi.OutputDirectory.TrimEnd('*');
                     if (hi.TagConfigFile == null)
                     {
                         foreach (var file in hi.FileList)
                         {
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", hi.OutputDirectory, fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.mzid", hi.OutputDirectory, fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}.mzid", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
                         }
                     }
@@ -1011,25 +1011,32 @@ namespace BumberDash.Forms
                         foreach (var file in hi.FileList)
                         {
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.tags", hi.OutputDirectory, fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}.tags", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", hi.OutputDirectory, fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value,
                                                      secondConfig == null ? string.Empty : secondConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", hi.OutputDirectory, fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value,
                                                      secondConfig == null ? string.Empty : secondConfig.Value));
                         }
                     }
                     if (hi.OutputDirectory.EndsWith("*"))
                     {
-                        if (Directory.Exists(hi.OutputDirectory.TrimEnd('*')))
+                        if (Directory.Exists(trimmedOutput))
                         {
-                            var filesLeft = Directory.GetFileSystemEntries(hi.OutputDirectory.TrimEnd('*'));
-                            if (filesLeft.Length == 0
-                                || (filesLeft.Length == 1
-                                    && filesLeft[0] == "directag_intensity_ranksum_bins.cache"))
-                                Directory.Delete(hi.OutputDirectory.TrimEnd('*'));
+                            try
+                            {
+                                var filesLeft = Directory.GetFileSystemEntries(trimmedOutput);
+                                if (filesLeft.Length == 0
+                                    || (filesLeft.Length == 1
+                                        && filesLeft[0] == "directag_intensity_ranksum_bins.cache"))
+                                    Directory.Delete(trimmedOutput);
+                            }
+                            catch
+                            {
+                                MessageBox.Show("Directory still in use on delete attempt. The folder " + trimmedOutput + " was not deleted");
+                            }
                         }
                     }
                     if (
@@ -1137,15 +1144,16 @@ namespace BumberDash.Forms
                                     MessageBoxButtons.YesNoCancel))
             {
                 case DialogResult.Yes:
+                    var trimmedOutput = hi.OutputDirectory.TrimEnd('*');
                     if (hi.TagConfigFile == null)
                     {
                         foreach (var file in hi.FileList)
                         {
-                            if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, hi.OutputDirectory.TrimEnd('*')))) continue;
+                            if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, trimmedOutput))) continue;
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", hi.OutputDirectory.TrimEnd('*'), fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.mzid", hi.OutputDirectory.TrimEnd('*'), fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}.mzid", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
                         }
                     }
@@ -1155,14 +1163,14 @@ namespace BumberDash.Forms
                             hi.TagConfigFile.PropertyList.Where(x => x.Name == "OutputSuffix").SingleOrDefault();
                         foreach (var file in hi.FileList)
                         {
-                            if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, hi.OutputDirectory.TrimEnd('*')))) continue;
+                            if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, trimmedOutput))) continue;
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
-                            DeleteFile(String.Format(@"{0}\{1}{2}.tags", hi.OutputDirectory.TrimEnd('*'), fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}.tags", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", hi.OutputDirectory.TrimEnd('*'), fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value,
                                                      secondConfig == null ? string.Empty : secondConfig.Value));
-                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", hi.OutputDirectory.TrimEnd('*'), fileOnly,
+                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", trimmedOutput, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value,
                                                      secondConfig == null ? string.Empty : secondConfig.Value));
                         }
@@ -1170,16 +1178,16 @@ namespace BumberDash.Forms
 
                     if (hi.OutputDirectory.EndsWith("*"))
                     {
-                        if (Directory.Exists(hi.OutputDirectory.TrimEnd('*')))
+                        if (Directory.Exists(trimmedOutput))
                         {
-                            var filesLeft = Directory.GetFileSystemEntries(hi.OutputDirectory.TrimEnd('*'));
+                            var filesLeft = Directory.GetFileSystemEntries(trimmedOutput);
                             if (filesLeft.Length == 0)
-                                Directory.Delete(hi.OutputDirectory.TrimEnd('*'));
+                                Directory.Delete(trimmedOutput);
                             if (filesLeft.Length == 1 
                                 && filesLeft[0].EndsWith("directag_intensity_ranksum_bins.cache"))
                             {
                                 File.Delete(filesLeft[0]);
-                                Directory.Delete(hi.OutputDirectory.TrimEnd('*'));
+                                Directory.Delete(trimmedOutput);
                             }
                                 
                         }
@@ -1295,10 +1303,10 @@ namespace BumberDash.Forms
                         for (var oldProperty = 0; oldProperty < item.PropertyList.Count; oldProperty++)
                         {
                             var property = item.PropertyList[oldProperty];
-                            var otherProperty = hi.TagConfigFile.PropertyList.Where(
+                            var otherProperties = hi.TagConfigFile.PropertyList.Where(
                                 x => (x.Name == property.Name &&
-                                      x.Value == property.Value)).SingleOrDefault();
-
+                                      x.Value == property.Value));
+                            var otherProperty = otherProperties.Count() == 1 ? otherProperties.SingleOrDefault() : null;
                             if (otherProperty == null)
                             {
                                 foundDuplicate = false;
@@ -1668,11 +1676,6 @@ namespace BumberDash.Forms
             }
 
             CheckForRunableJob();
-        }
-
-        private void MSFileReaderDownloadLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            System.Diagnostics.Process.Start("\"http://sjsupport.thermofinnigan.com/public/detail.asp?id=703\"");
         }
     }
 }

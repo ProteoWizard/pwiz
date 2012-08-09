@@ -6,16 +6,19 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="MyriMatchVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">2.1.97</Value>
+      <Value Profile="(Default)">2.1.129</Value>
     </Setting>
     <Setting Name="DirecTagVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">1.3.39</Value>
+      <Value Profile="(Default)">1.3.62</Value>
     </Setting>
     <Setting Name="TagReconVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">1.4.42</Value>
+      <Value Profile="(Default)">1.4.63</Value>
     </Setting>
     <Setting Name="PepitomeVersion" Type="System.String" Scope="User">
-      <Value Profile="(Default)">1.0.23</Value>
+      <Value Profile="(Default)">1.0.45</Value>
+    </Setting>
+    <Setting Name="DatabaseFolder" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
     </Setting>
   </Settings>
 </SettingsFile>

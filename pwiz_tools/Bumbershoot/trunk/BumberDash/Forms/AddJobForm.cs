@@ -1,4 +1,25 @@
-﻿using System;
+﻿//
+// $Id: AddJobForm.cs 48 2011-21-11 16:18:05Z holmanjd $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumberdash project.
+//
+// The Initial Developer of the Original Code is Jay Holman.
+//
+// Copyright 2010 Vanderbilt University
+//
+// Contributor(s): Surendra Dasari, Matt Chambers
+//
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -61,9 +82,15 @@ namespace BumberDash.Forms
         /// <param name="e"></param>
         private void DatabaseLocButton_Click(object sender, EventArgs e)
         {
+            var initialDir = Properties.Settings.Default.DatabaseFolder;
+            if (string.IsNullOrEmpty(initialDir) || !Directory.Exists(initialDir))
+                initialDir = OutputDirectoryBox.Text;
+            if (string.IsNullOrEmpty(initialDir) || !Directory.Exists(initialDir))
+                initialDir = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+
             var fileLoc = new OpenFileDialog
                               {
-                                  InitialDirectory = OutputDirectoryBox.Text,
+                                  InitialDirectory = initialDir,
                                   RestoreDirectory = true,
                                   Filter = "FASTA files|*.fasta;*.fa;*.seq;*.fsa;*.fna;*.ffn;*.faa;*.frn",
                                   SupportMultiDottedExtensions = true,
@@ -73,7 +100,15 @@ namespace BumberDash.Forms
                                   Title = "Database Location"                                  
                               };
             if (fileLoc.ShowDialog() == DialogResult.OK)
+            {
                 DatabaseLocBox.Text = fileLoc.FileName;
+                var parentDir = Path.GetDirectoryName(fileLoc.FileName);
+                if (!string.IsNullOrEmpty(parentDir) && Directory.Exists(parentDir))
+                {
+                    Properties.Settings.Default.DatabaseFolder = parentDir;
+                    Properties.Settings.Default.Save();
+                }
+            }
         }
 
         private void SpecLibBrowse_Click(object sender, EventArgs e)
@@ -82,7 +117,7 @@ namespace BumberDash.Forms
             {
                 InitialDirectory = OutputDirectoryBox.Text,
                 RestoreDirectory = true,
-                Filter = "All files|*.*|Spectral library text files|*.sptxt",
+                Filter = "Spectral library index files|*.sptxt.index|Spectral library text files|*.sptxt|All files|*.*",
                 SupportMultiDottedExtensions = true,
                 CheckFileExists = true,
                 CheckPathExists = true,
@@ -115,7 +150,7 @@ namespace BumberDash.Forms
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void DataFilesButton_Click(object sender, EventArgs e)
+        private void AddDataFilesButton_Click(object sender, EventArgs e)
         {
             var fileLoc = new OpenFileDialog
                               {
@@ -138,13 +173,17 @@ namespace BumberDash.Forms
             if (fileLoc.ShowDialog() == DialogResult.OK)
             {
                 var selectedFiles = fileLoc.FileNames;
-                InputFilesBox.Text = string.Empty;
                 OutputDirectoryBox.Text = Directory.GetParent(selectedFiles[0]).ToString();
-                foreach (var foo in selectedFiles)
-                    InputFilesBox.Text += string.Format("\"{0}\"{1}", foo, Environment.NewLine);
-
-                //OverallPBar.Maximum = SelectedFiles.Length;
-                InputFilesBox.Text = InputFilesBox.Text.Trim();
+                var usedFiles = GetInputFileNames();
+                foreach (var file in selectedFiles)
+                {
+                    if (usedFiles.Contains(file))
+                        continue;
+                    var currentRow = InputFilesList.Rows.Count;
+                    var newItem = new object[] { Path.GetFileName(file) };
+                    InputFilesList.Rows.Insert(currentRow, newItem);
+                    InputFilesList.Rows[currentRow].Cells[0].ToolTipText = "\"" + file + "\"";
+                }
 
                 if (string.IsNullOrEmpty(NameBox.Text))
                     NameBox.Text = (new DirectoryInfo(OutputDirectoryBox.Text)).Name;
@@ -393,15 +432,22 @@ namespace BumberDash.Forms
                     button.Text = "Edit";
 
                     //preview file
-                    var fileIn = new StreamReader(configBox.Text);
-                    var contents = fileIn.ReadToEnd();
-                    if (System.Text.RegularExpressions.Regex.IsMatch(contents.ToLower(), "deisotopingmode *= *[12]")
-                        && !System.Text.RegularExpressions.Regex.IsMatch(info.Text.ToLower(), "deisotopingmode *= *[12]"))
-                        MessageBox.Show(
-                            "Warning- Deisotoping mode is currently unstable. Use of this parameter may cause unexpected behavior.");
-                    info.Text = contents;
-                    fileIn.Close();
-                    fileIn.Dispose();
+                    if (File.Exists(configBox.Text))
+                    {
+                        var fileIn = new StreamReader(configBox.Text);
+                        var contents = fileIn.ReadToEnd();
+                        if (System.Text.RegularExpressions.Regex.IsMatch(contents.ToLower(), "deisotopingmode *= *[12]")
+                            &&
+                            !System.Text.RegularExpressions.Regex.IsMatch(info.Text.ToLower(),
+                                                                          "deisotopingmode *= *[12]"))
+                            MessageBox.Show(
+                                "Warning- Deisotoping mode is currently unstable. Use of this parameter may cause unexpected behavior.");
+                        info.Text = contents;
+                        fileIn.Close();
+                        fileIn.Dispose();
+                    }
+                    else
+                        info.Text = "File Not Found";
                 }
                 else
                     info.Text = "Invalid File";
@@ -543,17 +589,15 @@ namespace BumberDash.Forms
 
 
             // Get all input files and validate that they exist
-            var inputFiles = InputFilesBox.Text.Split(Environment.NewLine.ToCharArray(),
-                                                      StringSplitOptions.RemoveEmptyEntries);
-            if (inputFiles.Select(str => str.Trim("\"".ToCharArray()))
-                .Any(fileName => !File.Exists(fileName) || !(extensionList.Contains((Path.GetExtension(fileName) ?? string.Empty).ToLower()))))
+            var inputFiles = GetInputFileNames();
+            if (inputFiles.Any(fileName => !File.Exists(fileName.Trim('"')) || !(extensionList.Contains((Path.GetExtension(fileName.Trim('"')) ?? string.Empty).ToLower()))))
             {
                 allValid = false;
-                InputFilesBox.BackColor = Color.LightPink;
+                InputFilesList.BackgroundColor = Color.LightPink;
             }
 
             if (allValid)
-                InputFilesBox.BackColor = Color.White;
+                InputFilesList.BackgroundColor = Color.White;
 
             // Validate Output Directory
             if (Directory.Exists(OutputDirectoryBox.Text) &&
@@ -648,15 +692,6 @@ namespace BumberDash.Forms
 
             foreach (var hi in oldFiles)
             {
-                foreach (var i in hi.FileList)
-                {
-                    if (!usedInputList.Contains(i.FilePath))
-                    {
-                        usedInputList.Add(i.FilePath);
-                        InputFilesBox.Items.Add(i.FilePath);
-                    }
-                }
-
                 if (!usedOutputList.Contains(hi.OutputDirectory))
                 {
                     usedOutputList.Add(hi.OutputDirectory);
@@ -724,14 +759,20 @@ namespace BumberDash.Forms
         /// <param name="hi"></param>
         private void SetHistoryItem(HistoryItem hi)
         {
-            var fileList = string.Empty;
-            foreach (var file in hi.FileList)
-                fileList += file.FilePath + Environment.NewLine;
-            fileList = fileList.TrimEnd();
+            var fileList = hi.FileList.Select(file => file.FilePath).Distinct().ToList();
 
             NameBox.Text = hi.JobName;
             CPUsBox.Value = hi.Cpus;
-            InputFilesBox.Text = fileList;
+            var usedFiles = GetInputFileNames();
+            foreach(var file in fileList)
+            {
+                if (usedFiles.Contains(file))
+                    continue;
+                var currentRow = InputFilesList.Rows.Count;
+                var newItem = new[] { Path.GetFileName(file.Trim('"')) };
+                InputFilesList.Rows.Insert(currentRow, newItem);
+                InputFilesList.Rows[currentRow].Cells[0].ToolTipText = file;
+            }
             DatabaseLocBox.Text = hi.ProteinDatabase;
 
             //Output directory handled differently depending on if new folder is/was created
@@ -853,8 +894,7 @@ namespace BumberDash.Forms
             else
                 hi.FileList.Clear();
 
-            var files = InputFilesBox.Text.Split(Environment.NewLine.ToCharArray(),
-                                                  StringSplitOptions.RemoveEmptyEntries);
+            var files = GetInputFileNames();
             foreach (var item in files)
                 hi.FileList.Add(new InputFile { FilePath = item, HistoryItem = hi });
 
@@ -920,7 +960,7 @@ namespace BumberDash.Forms
             return config;
         }
 
-        private string PepXMLtoEntireFileString(string file)
+        public static string PepXMLtoEntireFileString(string file)
         {
             var parameterTypes = lib.Util.parameterTypes;
             var cutFile = string.Empty;
@@ -973,6 +1013,7 @@ namespace BumberDash.Forms
                             for (int i = 2; i < propertySplit.Length; i++)
                                 propertySplit[1] += " " + propertySplit[i];
                         }
+                        formattedFile += propertySplit[0] + " = " + propertySplit[1] + Environment.NewLine;
                     }
                 }
             }
@@ -981,7 +1022,7 @@ namespace BumberDash.Forms
             return formattedFile;
         }
 
-        private string TagsFileToEntireFileString(string file)
+        public static string TagsFileToEntireFileString(string file)
         {
             var parameterTypes = lib.Util.parameterTypes;
 
@@ -1079,6 +1120,21 @@ namespace BumberDash.Forms
                     PepConfigInfoPanel.Visible = true;
                     break;
             }
+        }
+
+        private void RemoveDataFilesButton_Click(object sender, EventArgs e)
+        {
+            var selectedItems = InputFilesList.SelectedRows;
+            foreach (DataGridViewRow item in selectedItems)
+                InputFilesList.Rows.Remove(item);
+        }
+
+        private List<String> GetInputFileNames()
+        {
+            var fileList = new List<string>();
+            foreach (DataGridViewRow row in InputFilesList.Rows)
+                fileList.Add(row.Cells[0].ToolTipText);
+            return fileList;
         }
     }
 }

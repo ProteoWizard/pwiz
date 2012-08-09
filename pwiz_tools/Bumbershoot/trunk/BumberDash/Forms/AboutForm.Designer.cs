@@ -1,5 +1,5 @@
 //
-// $Id: AboutForm.Designer.cs 114 2010-02-24 16:34:33Z chambm $
+// $Id: AboutForm.Designer.cs 48 2010-02-24 16:34:33Z chambm $
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in

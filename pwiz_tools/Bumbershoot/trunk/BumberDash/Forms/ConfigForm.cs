@@ -1,4 +1,25 @@
-﻿using System;
+﻿//
+// $Id: ConfigForm.cs 48 2011-21-11 16:18:05Z holmanjd $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumberdash project.
+//
+// The Initial Developer of the Original Code is Jay Holman.
+//
+// Copyright 2010 Vanderbilt University
+//
+// Contributor(s): Surendra Dasari, Matt Chambers
+//
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -53,11 +74,12 @@ namespace BumberDash.Forms
         private string _filePath; //Stores the assigned file path
         private bool _isCustom = false; //stores whether configuration is temorary
         private Dictionary<Control, string> _templateDefaults; //Stores default values for current template
-        private IList<ConfigFile> _myriTemplateList; //List of all templates user has specified for Myrimatch
+        private IList<ConfigFile> _myriTemplateList; //List of all templates user has specified for MyriMatch
         private IList<ConfigFile> _DTTemplateList; //List of all templates user has specified for Directag
         private IList<ConfigFile> _TRTemplateList; //List of all templates user has specified for Tagrecon
         private IList<ConfigFile> _pepTemplateList; //List of all templates user has specified for Tagrecon
         private HashSet<Control> _nonTemplate;
+        private HashSet<Control> _changedItems;
 
         /// <summary>
         /// Create ConfigForm in template mode
@@ -83,6 +105,7 @@ namespace BumberDash.Forms
                                 {"Pepitome", new List<Control>()}
                             };
             _nonTemplate = new HashSet<Control>();
+            _changedItems = new HashSet<Control>();
 
             SetInitialValues();
             InitializePane(MyriGenPanel);
@@ -98,9 +121,6 @@ namespace BumberDash.Forms
 
             //Add templates to list
             ResetTemplateLists();
-
-            //Hack: Force Deisotoping to false
-            DTDeisotopingModeBox.Text = "Off";
         }
 
         /// <summary>
@@ -128,6 +148,7 @@ namespace BumberDash.Forms
             if (!File.Exists(_filePath))
                 SaveOverOldButton.Visible = false;
             _nonTemplate = new HashSet<Control>();
+            _changedItems = new HashSet<Control>();
 
             SetInitialValues();
             switch (baseConfig.DestinationProgram)
@@ -172,9 +193,6 @@ namespace BumberDash.Forms
 
             mainTabControl.TabPages.Remove(AdvTab);
             LoadConfig(baseConfig);
-
-            //Hack: Force Deisotoping mode to false
-            DTDeisotopingModeBox.Text = "Off";
         }
 
         /// <summary>
@@ -201,6 +219,7 @@ namespace BumberDash.Forms
             _defaultName = defaultName;
             SaveOverOldButton.Visible = false;
             _nonTemplate = new HashSet<Control>();
+            _changedItems = new HashSet<Control>();
             SetInitialValues();
             
             switch (configProgram)
@@ -243,9 +262,6 @@ namespace BumberDash.Forms
                     break;
             }
             mainTabControl.TabPages.Remove(AdvTab);
-
-            //Hack: Force Deisotoping to false
-            DTDeisotopingModeBox.Text = "Off";
         }
 
         private bool _noPrompt = false;
@@ -299,10 +315,7 @@ namespace BumberDash.Forms
             MyriOutputFormatBox.Text = "pepXML";
             DTPrecursorMzToleranceUnitsList.Text = "mz";
             DTFragmentMzToleranceUnitsList.Text = "mz";
-
-            //Hack: Value should be "Precursor Adj Only"
-            //DTDeisotopingModeBox.Text = "Off";
-
+            DTDeisotopingModeBox.Text = "Off";
             DTModTypeList.Text = "Static";
             TRPrecursorMzToleranceRuleBox.Text = "mono";
             TRMinTerminiCleavagesBox.Text = "Fully-Specific";
@@ -445,8 +458,18 @@ namespace BumberDash.Forms
                 value += "\"";
             }
 
-            if (value == _defaults[item] || (isModBox && ModStringsEqual(value, _defaults[item])))
+            double firstNum;
+            double secondNum;
+            var numbersSame = false;
+            if (double.TryParse(value, out firstNum) && double.TryParse(_defaults[item], out secondNum))
             {
+                if (Math.Round(firstNum, 6) == Math.Round(secondNum, 6))
+                    numbersSame = true;
+            }
+
+            if (numbersSame || value == _defaults[item] || (isModBox && ModStringsEqual(value, _defaults[item])))
+            {
+                _changedItems.Remove(item);
                 if (!_templateDefaults.ContainsKey(item)
                     || value == _templateDefaults[item]
                     || (isModBox && ModStringsEqual(value, _templateDefaults[item])))
@@ -456,6 +479,7 @@ namespace BumberDash.Forms
             }
             else
             {
+                _changedItems.Add(item);
                 if (!_templateDefaults.ContainsKey(item)
                     || value == _templateDefaults[item]
                     || (isModBox && ModStringsEqual(value, _templateDefaults[item])))
@@ -480,9 +504,11 @@ namespace BumberDash.Forms
                 else
                     _nonTemplate.Add(item);
             }
+        }
 
-            //HACK: Deisotoping mode should not be counted until it is used
-            _nonTemplate.Remove(DTDeisotopingModeBox);
+        public bool ContainsNonDefaultConfiguration()
+        {
+            return _changedItems.Any();
         }
 
         /// <summary>
@@ -581,8 +607,10 @@ namespace BumberDash.Forms
             //MyriMatch
             if (item == MyriMonoisotopeAdjustmentSetBox)
             {
-                return string.Format("\"[{0},{1}]\"", MyriMonoisotopeAdjustmentSetBox.Value,
-                                     MyriMonoisotopeAdjustmentSet2.Value);
+                return MyriAdjustMassOption.Checked
+                           ? string.Format("\"[{0},{1}]\"", MyriMonoisotopeAdjustmentSetBox.Value,
+                                           MyriMonoisotopeAdjustmentSet2.Value)
+                           : "\"\"";
             }
             if (item == MyriAvgPrecursorMzToleranceBox)
                 return "\"" + item.Text + MyriAvgPrecursorMzToleranceUnitsList.Text + "\"";
@@ -600,8 +628,10 @@ namespace BumberDash.Forms
             //Pepitome
             if (item == PepMonoisotopeAdjustmentSetBox)
             {
-                return string.Format("\"[{0},{1}]\"", PepMonoisotopeAdjustmentSetBox.Value,
-                                     PepMonoisotopeAdjustmentSet2.Value);
+                return PepAdjustMassOption.Checked
+                           ? string.Format("\"[{0},{1}]\"", PepMonoisotopeAdjustmentSetBox.Value,
+                                           PepMonoisotopeAdjustmentSet2.Value)
+                           : "\"\"";
             }
             if (item == PepAvgPrecursorMzToleranceBox)
                 return "\"" + item.Text + PepAvgPrecursorMzToleranceUnitsList.Text + "\"";
@@ -619,9 +649,18 @@ namespace BumberDash.Forms
             if (item == MyriMonoisotopeAdjustmentSetBox ||
                 item == PepMonoisotopeAdjustmentSetBox)
             {
+                if (value.Trim('"') == string.Empty)
+                {
+                    if (item == MyriMonoisotopeAdjustmentSetBox)
+                        MyriAdjustMassOption.Checked = false;
+                    else
+                        PepAdjustMassOption.Checked = false;
+                    return;
+                }
+
                 int first;
                 int second;
-                splitValue = value.Trim('"').Trim('[').Trim(']').Split(',');
+                splitValue = value.Trim().Trim('"').Trim().Trim('[').Trim(']').Split(',');
                 int.TryParse(splitValue[0], out first);
                 int.TryParse(splitValue[1], out second);
                 if (item == MyriMonoisotopeAdjustmentSetBox)
@@ -811,6 +850,12 @@ namespace BumberDash.Forms
                 var value = configValues.ContainsKey(root)
                                 ? configValues[root]
                                 : kvp.Value;
+                if (root == "MaxMissedCleavages" && decimal.Parse(value) > 90000)
+                    value = "-1";
+                if (root == "TicCutoffPercentage" || root == "LibTicCutoffPercentage")
+                    value = Math.Round(decimal.Parse(value), 2).ToString();
+                if (root == "PrecursorAdjustmentStep")
+                    value = Math.Round(decimal.Parse(value), 6).ToString();
 
                 var isDual = GetDualDependenceValue(kvp.Key);
                 if (isDual != string.Empty)
@@ -837,7 +882,7 @@ namespace BumberDash.Forms
                 }
                 else if (root == "UseAvgMassOfSequences")
                     ((ComboBox)kvp.Key).SelectedIndex = (value == "true") ? 1 : 0;
-                else if (root == "NumMinTerminiCleavages" || root == "DeisotopingMode")
+                else if (root == "MinTerminiCleavages" || root == "DeisotopingMode")
                     ((ComboBox)kvp.Key).SelectedIndex = int.Parse(value);
                 else if (kvp.Key is ComboBox || kvp.Key is TextBox)
                     kvp.Key.Text = value;
@@ -2125,6 +2170,41 @@ namespace BumberDash.Forms
         }
 
         #endregion
+
+        private void AdjustMassOption_CheckedChanged(object sender, EventArgs e)
+        {
+            bool itemChecked;
+            Control item;
+            if (sender == MyriAdjustMassOption)
+            {
+                MyriAdjustMassPanel.Enabled = MyriAdjustMassOption.Checked;
+                item = MyriMonoisotopeAdjustmentSetBox;
+                itemChecked = MyriAdjustMassOption.Checked;
+            }
+            else
+            {
+                PepAdjustMassPanel.Enabled = PepAdjustMassOption.Checked;
+                item = PepMonoisotopeAdjustmentSetBox;
+                itemChecked = PepAdjustMassOption.Checked;
+            }
+
+            if ((_defaults[item] == string.Empty) == (!itemChecked))
+            {
+                if (!_templateDefaults.ContainsKey(item)
+                    || ((_templateDefaults[item] == string.Empty) == (!itemChecked)))
+                    ((Control)sender).ForeColor = DefaultForeColor;
+                else
+                    ((Control)sender).ForeColor = Color.Blue;
+            }
+            else
+            {
+                if (!_templateDefaults.ContainsKey(item)
+                    || ((_templateDefaults[item] == string.Empty) == (!itemChecked)))
+                    ((Control)sender).ForeColor = Color.Green;
+                else
+                    ((Control)sender).ForeColor = Color.DarkViolet;
+            }
+        }
 
 
     }
