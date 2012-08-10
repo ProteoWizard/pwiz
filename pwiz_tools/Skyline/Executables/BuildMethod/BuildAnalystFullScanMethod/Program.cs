@@ -680,7 +680,9 @@ namespace BuildAnalystFullScanMethod
         {
             if (transition.ProductMz < 5)
                 return true;
-
+            if(transition.Label.ToLower().Contains("precursor"))
+                return true;
+				
             return Math.Abs(transition.PrecursorMz - transition.ProductMz) < 0.01;
         }
 
