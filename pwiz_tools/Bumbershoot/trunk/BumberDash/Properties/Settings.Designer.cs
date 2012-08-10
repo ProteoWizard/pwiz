@@ -37,7 +37,7 @@ namespace BumberDash.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("2.1.129")]
+        [global::System.Configuration.DefaultSettingValueAttribute("2.1.97")]
         public string MyriMatchVersion {
             get {
                 return ((string)(this["MyriMatchVersion"]));
@@ -49,7 +49,7 @@ namespace BumberDash.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.3.62")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.3.39")]
         public string DirecTagVersion {
             get {
                 return ((string)(this["DirecTagVersion"]));
@@ -61,7 +61,7 @@ namespace BumberDash.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.4.63")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.4.42")]
         public string TagReconVersion {
             get {
                 return ((string)(this["TagReconVersion"]));
@@ -73,7 +73,7 @@ namespace BumberDash.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1.0.45")]
+        [global::System.Configuration.DefaultSettingValueAttribute("1.0.23")]
         public string PepitomeVersion {
             get {
                 return ((string)(this["PepitomeVersion"]));
