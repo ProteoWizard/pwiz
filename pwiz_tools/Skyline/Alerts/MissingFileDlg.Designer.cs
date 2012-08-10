@@ -60,9 +60,9 @@
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.BackColor = System.Drawing.SystemColors.Window;
             this.panel1.Controls.Add(this.labelMessage);
             this.panel1.Location = new System.Drawing.Point(-2, 0);
@@ -76,9 +76,11 @@
             this.labelMessage.Location = new System.Drawing.Point(24, 21);
             this.labelMessage.MaximumSize = new System.Drawing.Size(362, 0);
             this.labelMessage.Name = "labelMessage";
-            this.labelMessage.Size = new System.Drawing.Size(49, 13);
+            this.labelMessage.Size = new System.Drawing.Size(292, 39);
             this.labelMessage.TabIndex = 1;
-            this.labelMessage.Text = "message\r\n";
+            this.labelMessage.Text = "This document requires the \'{0}\' {1}.\r\nClick the Browse button specify its locati" +
+    "on on your system.\r\nClick the Open button to open the document without the {1}.\r" +
+    "\n";
             // 
             // btnOpen
             // 

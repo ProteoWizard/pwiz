@@ -8308,31 +8308,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
-        ///&lt;root&gt;
-        ///  &lt;!-- 
-        ///    Microsoft ResX Schema 
-        ///    
-        ///    Version 2.0
-        ///    
-        ///    The primary goals of this format is to allow a simple XML format 
-        ///    that is mostly human readable. The generation and parsing of the 
-        ///    various data types are done through the TypeConverter classes 
-        ///    associated with the data types.
-        ///    
-        ///    Example:
-        ///    
-        ///    ... ado.net/XML headers &amp; schema ...
-        ///    &lt;resheader name=&quot;resmimetype&quot;&gt;text/microsoft-resx&lt;/resheader&gt;
-        ///    &lt;resheader n [rest of string was truncated]&quot;;.
-        /// </summary>
-        public static string Resources1 {
-            get {
-                return ResourceManager.GetString("Resources", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to DocNode peak info found for file with no match in document results..
         /// </summary>
         public static string Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results {
@@ -8997,6 +8972,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to &lt;Edit current...&gt;.
+        /// </summary>
+        public static string SettingsListComboDriver_Edit_current {
+            get {
+                return ResourceManager.GetString("SettingsListComboDriver_Edit_current", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &lt;Edit list...&gt;.
         /// </summary>
         public static string SettingsListComboDriver_Edit_list {
@@ -9292,6 +9276,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Spectral Library.
+        /// </summary>
+        public static string SkylineWindow_ConnectLibrarySpecs_Spectral_Library {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ConnectLibrarySpecs_Spectral_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed setting data to the clipboard..
         /// </summary>
         public static string SkylineWindow_Copy_Failed_setting_data_to_the_clipboard {
@@ -9339,6 +9332,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Background Proteome.
+        /// </summary>
+        public static string SkylineWindow_FindBackgroundProteome_Background_Proteome {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindBackgroundProteome_Background_Proteome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Find Background Proteome.
         /// </summary>
         public static string SkylineWindow_FindBackgroundProteome_Find_Background_Proteome {
@@ -9362,6 +9364,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_FindIrtDatabase_Find_iRT_Calculator {
             get {
                 return ResourceManager.GetString("SkylineWindow_FindIrtDatabase_Find_iRT_Calculator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to iRT Calculator.
+        /// </summary>
+        public static string SkylineWindow_FindIrtDatabase_iRT_Calculator {
+            get {
+                return ResourceManager.GetString("SkylineWindow_FindIrtDatabase_iRT_Calculator", resourceCulture);
             }
         }
         
@@ -12622,12 +12633,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to The library {0} is no longer part of the document settings. Reload the library explorer?.
+        ///   Looks up a localized string similar to The library {0} is no longer available in the Skyline settings. Reload the library explorer?.
         /// </summary>
-        public static string ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_part_of_the_document_settings_Reload_the_library_explorer {
+        public static string ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_ {
             get {
-                return ResourceManager.GetString("ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_part_of_the_" +
-                        "document_settings_Reload_the_library_explorer", resourceCulture);
+                return ResourceManager.GetString("ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in" +
+                        "_the_Skyline_settings__Reload_the_library_explorer_", resourceCulture);
             }
         }
         

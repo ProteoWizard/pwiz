@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
@@ -734,7 +733,7 @@ namespace pwiz.Skyline.Properties
         }
     }
 
-    public sealed class SpectralLibraryList : SettingsList<LibrarySpec>
+    public sealed class SpectralLibraryList : SettingsListNotifying<LibrarySpec>
     {
         public override IEnumerable<LibrarySpec> GetDefaults(int revisionIndex)
         {
@@ -1120,7 +1119,7 @@ namespace pwiz.Skyline.Properties
         public override bool ExcludeDefaults { get { return true; } }
     }
     
-    public sealed class RTScoreCalculatorList : SettingsList<RetentionScoreCalculatorSpec>
+    public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
     {
         private static readonly RetentionScoreCalculator[] DEFAULTS =
             new[]
@@ -1254,38 +1253,6 @@ namespace pwiz.Skyline.Properties
         public bool CanEditItem(RetentionScoreCalculatorSpec item)
         {
             return item != null && !GetDefaults().Contains(item);
-        }
-
-        public event EventHandler<EventArgs> ListChanged;
-
-        private void FireListChanged()
-        {
-            if (ListChanged != null)
-                ListChanged(this, new EventArgs());
-        }
-
-        protected override void ClearItems()
-        {
-            base.ClearItems();
-            FireListChanged();
-        }
-
-        protected override void InsertItem(int index, RetentionScoreCalculatorSpec item)
-        {
-            base.InsertItem(index, item);
-            FireListChanged();
-        }
-
-        protected override void RemoveItem(int index)
-        {
-            base.RemoveItem(index);
-            FireListChanged();
-        }
-
-        protected override void SetItem(int index, RetentionScoreCalculatorSpec item)
-        {
-            base.SetItem(index, item);
-            FireListChanged();
         }
     }
     
@@ -1713,6 +1680,42 @@ namespace pwiz.Skyline.Properties
         {
             return new AnnotationDefList();
         }
+    }
+
+    public abstract class SettingsListNotifying<TItem> : SettingsList<TItem>
+        where TItem : IKeyContainer<string>, IXmlSerializable
+    {
+        public event EventHandler<EventArgs> ListChanged;
+
+        private void FireListChanged()
+        {
+            if (ListChanged != null)
+                ListChanged(this, new EventArgs());
+        }
+
+        protected override void ClearItems()
+        {
+            base.ClearItems();
+            FireListChanged();
+        }
+
+        protected override void InsertItem(int index, TItem item)
+        {
+            base.InsertItem(index, item);
+            FireListChanged();
+        }
+
+        protected override void RemoveItem(int index)
+        {
+            base.RemoveItem(index);
+            FireListChanged();
+        }
+
+        protected override void SetItem(int index, TItem item)
+        {
+            base.SetItem(index, item);
+            FireListChanged();
+        }        
     }
 
     public abstract class SettingsList<TItem>

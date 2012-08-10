@@ -86,8 +86,7 @@ namespace pwiz.Skyline.SettingsUI
         private const TextFormatFlags FORMAT_CUSTOM = FORMAT_PLAIN | TextFormatFlags.NoPadding;
         
         private readonly LibraryManager _libraryManager;
-        private IList<LibrarySpec> _libraryListDoc;
-        private IList<LibrarySpec> _libraryListThis;
+        private bool _libraryListChanged;
         private string _selectedLibName;
         private Library _selectedLibrary;
         private LibrarySpec _selectedSpec;
@@ -102,14 +101,14 @@ namespace pwiz.Skyline.SettingsUI
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
 
+        private readonly SettingsListComboDriver<LibrarySpec> _driverLibraries;
+
         private ViewLibraryPepInfo[] _peptides;
         private byte[] _lookupPool;
 
         private LibKeyModificationMatcher _matcher;
 
         private bool _activated;
-
-//        private int _listPeptidePrevSelIndex;
 
         private readonly NodeTip _nodeTip;
         private readonly MoveThreshold _moveThreshold = new MoveThreshold(5, 5);
@@ -147,10 +146,15 @@ namespace pwiz.Skyline.SettingsUI
 
             _libraryManager = libMgr;
             _selectedLibName = libName;
-            _libraryListThis = _libraryListDoc = Settings.Default.SpectralLibraryList.ToList();
+            if (string.IsNullOrEmpty(_selectedLibName) && Settings.Default.SpectralLibraryList.Count > 0)
+                _selectedLibName = Settings.Default.SpectralLibraryList[0].Name;
+
             _pageInfo = new PageInfo(100, 0, _currentRange);
             _documentUiContainer = documentContainer;
             _documentUiContainer.ListenUI(OnDocumentChange);
+
+            _driverLibraries = new SettingsListComboDriver<LibrarySpec>(comboLibrary, Settings.Default.SpectralLibraryList);
+            Settings.Default.SpectralLibraryList.ListChanged += SpectralLibraryList_ListChanged;
 
             graphControl.MasterPane.Border.IsVisible = false;
             var graphPane = GraphPane;
@@ -181,6 +185,12 @@ namespace pwiz.Skyline.SettingsUI
             _matcher = new LibKeyModificationMatcher();
         }
 
+        private void SpectralLibraryList_ListChanged(object sender, EventArgs e)
+        {
+            // Not necessary to remember this change, if it is the combo box doing the changing.
+            _libraryListChanged = !_driverLibraries.IsInSelectedIndexChangedEvent;
+        }
+
         private void graphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip,
             Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
         {
@@ -194,16 +204,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void InitializeLibrariesComboBox()
         {
-            comboLibrary.BeginUpdate();
-
-            comboLibrary.Items.Clear();
-
-            foreach (var librarySpec in _libraryListThis)
-                comboLibrary.Items.Add(librarySpec.Name);
-
-            comboLibrary.SelectedItem = SelectedLibraryName;
-
-            comboLibrary.EndUpdate();
+            _driverLibraries.LoadList(_selectedLibName);
         }
 
         /// <summary>
@@ -317,43 +318,36 @@ namespace pwiz.Skyline.SettingsUI
                 listPeptide.Invalidate(listPeptide.GetItemRectangle(listPeptide.SelectedIndex));
 
             // Check to see if the library list has changed.
-            var newSpectralLibraryList = Settings.Default.SpectralLibraryList.ToList();
-            if (!ArrayUtil.EqualsDeep(newSpectralLibraryList, _libraryListDoc))
+            if (_libraryListChanged)
             {
-                _libraryListDoc = newSpectralLibraryList;
-                // If the current library spec is no longer part of the document settings, 
+                _libraryListChanged = false;
+                // If the current library spec is no longer available in the global list of library specs, 
                 // ask if user wants to reload the explorer. Otherwise, simply update the LibrariesComboBox.
-                if (!_libraryListDoc.Contains(_selectedSpec))
+                if (Settings.Default.SpectralLibraryList.Contains(_selectedSpec))
+                {
+                    InitializeLibrariesComboBox();
+                }
+                else
                 {
                     Program.MainWindow.FocusDocument();
-                    using (var reloadExplorerMsg =
-                        new MultiButtonMsgDlg(
-                            string.Format(Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_part_of_the_document_settings_Reload_the_library_explorer,
-                            _selectedLibName),
+                    using (var reloadExplorerMsg = new MultiButtonMsgDlg(
+                            string.Format(Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_, _selectedLibName),
                             Resources.ViewLibraryDlg_MatchModifications_Yes, Resources.ViewLibraryDlg_MatchModifications_No, true))
                     {
                         var result = reloadExplorerMsg.ShowDialog(this);
                         if (result == DialogResult.Yes)
                         {
-                            if (newSpectralLibraryList.Count == 0)
+                            if (Settings.Default.SpectralLibraryList.Count == 0)
                             {
-                                MessageDlg.Show(this,
-                                                Resources.
-                                                    ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings);
+                                MessageDlg.Show(this, Resources.ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings);
                                 Close();
                                 return;
                             }
-                            _libraryListThis = _libraryListDoc;
                             InitializeLibrariesComboBox();
                             comboLibrary.SelectedIndex = 0;
                             Activate();
                         }
                     }
-                }
-                else
-                {
-                    _libraryListThis = _libraryListDoc;
-                    InitializeLibrariesComboBox();
                 }
             }
         }
@@ -370,6 +364,9 @@ namespace pwiz.Skyline.SettingsUI
             if (_selectedLibrary != null)
                 _selectedLibrary.ReadStream.CloseStream();
             _documentUiContainer.UnlistenUI(OnDocumentChange);
+
+            Settings.Default.SpectralLibraryList.ListChanged -= SpectralLibraryList_ListChanged;
+
             base.OnHandleDestroyed(e);
         }
 
@@ -407,7 +404,7 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         private void LoadLibrary()
         {
-            LibrarySpec selectedLibrarySpec = _selectedSpec = _libraryListThis[comboLibrary.SelectedIndex];
+            LibrarySpec selectedLibrarySpec = _selectedSpec = _driverLibraries.SelectedItem;
             if (_selectedLibrary != null)
                 _selectedLibrary.ReadStream.CloseStream();
             _selectedLibrary = _libraryManager.TryGetLibrary(selectedLibrarySpec);
@@ -424,14 +421,15 @@ namespace pwiz.Skyline.SettingsUI
                     });
                     if (status.IsError)
                     {
-                        MessageBox.Show(this, status.ErrorException.Message, Program.Name);
+                        MessageDlg.Show(this, status.ErrorException.Message);
+                        return;
                     }
                 }
                 catch (Exception x)
                 {
                     var message = TextUtil.LineSeparate(string.Format(Resources.ViewLibraryDlg_LoadLibrary_An_error_occurred_attempting_to_import_the__0__library, selectedLibrarySpec.Name),
                                     x.Message);
-                    MessageBox.Show(this, message, Program.Name);
+                    MessageDlg.Show(this, message);
                 }
             }
             btnAddAll.Enabled = true;
@@ -979,8 +977,6 @@ namespace pwiz.Skyline.SettingsUI
 
         private void listPeptide_SelectedIndexChanged(object sender, EventArgs e)
         {
-//            _listPeptidePrevSelIndex = listPeptide.SelectedIndex;
-
             // We need to update the spectrum graph when the peptide
             // selected in the listbox changes.
             UpdateUI();
@@ -988,14 +984,15 @@ namespace pwiz.Skyline.SettingsUI
 
         private void LibraryComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
-            ChangeSelectedLibrary(comboLibrary.SelectedItem.ToString());
+            if (!_driverLibraries.SelectedIndexChangedEvent(sender, e))
+                ChangeSelectedLibrary(comboLibrary.SelectedItem.ToString());
         }
 
         public void ChangeSelectedLibrary(string libName)
         {
             // The user has selected a different library. We need to reload 
             // everything in the dialog. 
-            if (comboLibrary.SelectedItem.ToString() != _selectedLibName)
+            if (libName != _selectedLibName)
             {
                 comboLibrary.SelectedItem = libName;
                 _selectedLibName = libName;
@@ -1221,9 +1218,7 @@ namespace pwiz.Skyline.SettingsUI
             var nodePepMatched = pepMatcher.MatchSinglePeptide(pepInfo);
             if (nodePepMatched == null)
             {
-                MessageDlg.Show(this,
-                                Resources.
-                                    ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings);
+                MessageDlg.Show(this, Resources.ViewLibraryDlg_AddPeptide_Modifications_for_this_peptide_do_not_match_current_document_settings);
                 return;
             }
             if (nodePepMatched.Children.Count > 0)
@@ -1232,11 +1227,8 @@ namespace pwiz.Skyline.SettingsUI
                 int chargeMatched = ((TransitionGroupDocNode)nodePepMatched.Children[0]).TransitionGroup.PrecursorCharge;
                 if (!cbAssociateProteins.Checked && Document.Peptides.Contains(nodePep => Equals(nodePep.SequenceKey, keyMatched) && nodePep.HasChildCharge(chargeMatched)))
                 {
-                    MessageDlg.Show(this,
-                                    string.Format(
-                                        Resources.
-                                            ViewLibraryDlg_AddPeptide_The_peptide__0__already_exists_with_charge__1__in_the_current_document,
-                                        nodePepMatched.Peptide, chargeMatched));
+                    MessageDlg.Show(this, string.Format(Resources.ViewLibraryDlg_AddPeptide_The_peptide__0__already_exists_with_charge__1__in_the_current_document,
+                                                        nodePepMatched.Peptide, chargeMatched));
                     return;
                 }
             }

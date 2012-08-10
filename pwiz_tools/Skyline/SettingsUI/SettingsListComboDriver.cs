@@ -50,6 +50,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         public bool IsVisibleEditting { get; private set; }
+        public bool IsInSelectedIndexChangedEvent { get; private set; }
         public ComboBox Combo { get; private set; }
         public SettingsList<TItem> List { get; private set; }
 
@@ -72,6 +73,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (IsVisibleEditting)
                 {
                     Combo.Items.Add(Resources.SettingsListComboDriver_Add);
+                    Combo.Items.Add(Resources.SettingsListComboDriver_Edit_current);
                     Combo.Items.Add(Resources.SettingsListComboDriver_Edit_list);
                 }
                 if (Combo.SelectedIndex < 0)
@@ -106,6 +108,11 @@ namespace pwiz.Skyline.SettingsUI
             return Equals(Resources.SettingsListComboDriver_Add, SelectedString);
         }
 
+        public bool EditCurrentSelected()
+        {
+            return Equals(Resources.SettingsListComboDriver_Edit_current, SelectedString);
+        }
+
         public bool EditListSelected()
         {
             return Equals(Resources.SettingsListComboDriver_Edit_list, SelectedString);
@@ -113,19 +120,32 @@ namespace pwiz.Skyline.SettingsUI
 
         public bool SelectedIndexChangedEvent(object sender, EventArgs e)
         {
-            bool handled = false;
-            if (AddItemSelected())
+            IsInSelectedIndexChangedEvent = true;
+            try
             {
-                AddItem();
-                handled = true;
+                bool handled = false;
+                if (AddItemSelected())
+                {
+                    AddItem();
+                    handled = true;
+                }
+                else if (EditCurrentSelected())
+                {
+                    EditCurrent();
+                    handled = true;
+                }
+                else if (EditListSelected())
+                {
+                    EditList();
+                    handled = true;
+                }
+                _selectedIndexLast = Combo.SelectedIndex;
+                return handled;
             }
-            else if (EditListSelected())
+            finally
             {
-                EditList();
-                handled = true;
+                IsInSelectedIndexChangedEvent = false;
             }
-            _selectedIndexLast = Combo.SelectedIndex;
-            return handled;
         }
 
         public void AddItem()
@@ -134,6 +154,22 @@ namespace pwiz.Skyline.SettingsUI
             if (!Equals(itemNew, default(TItem)))
             {
                 List.Add(itemNew);
+                LoadList(itemNew.GetKey());
+            }
+            else
+            {
+                // Reset the selected index before edit was chosen.
+                Combo.SelectedIndex = _selectedIndexLast;
+            }
+        }
+
+        public void EditCurrent()
+        {
+            int i = _selectedIndexLast;
+            TItem itemNew = List.EditItem(Combo.TopLevelControl, List[i], List, null);
+            if (!Equals(itemNew, default(TItem)) && !Equals(itemNew, List[i]))
+            {
+                List[i] = itemNew;
                 LoadList(itemNew.GetKey());
             }
             else

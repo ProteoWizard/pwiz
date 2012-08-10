@@ -245,7 +245,7 @@ namespace pwiz.Skyline
                     using (var dlg = new MissingFileDlg
                                   {
                                       ItemName = library.Name,
-                                      ItemType = "Spectral Library", // Not L10N
+                                      ItemType = Resources.SkylineWindow_ConnectLibrarySpecs_Spectral_Library,
                                       FileHint = fileName,
                                       Title = Resources.SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library
                                   })
@@ -315,7 +315,7 @@ namespace pwiz.Skyline
                 using (var dlg = new MissingFileDlg
                          {
                              ItemName = irtCalc.Name,
-                             ItemType = "iRT Calculator", // Not L10N
+                             ItemType = Resources.SkylineWindow_FindIrtDatabase_iRT_Calculator,
                              Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindIrtDatabase_iRT_Database_Files, IrtDb.EXT),
                              FileHint = Path.GetFileName(irtCalc.DatabasePath),
                              FileDlgInitialPath = Path.GetDirectoryName(documentPath),
@@ -380,7 +380,7 @@ namespace pwiz.Skyline
                     {
                         FileHint = fileName,
                         ItemName = backgroundProteomeSpec.Name,
-                        ItemType = "Background Proteome", // Not L10N
+                        ItemType = Resources.SkylineWindow_FindBackgroundProteome_Background_Proteome,
                         Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_FindBackgroundProteome_Proteome_File, ProteomeDb.EXT_PROTDB),
                         FileDlgInitialPath = Settings.Default.ProteomeDbDirectory,
                         Title = Resources.SkylineWindow_FindBackgroundProteome_Find_Background_Proteome
@@ -1222,7 +1222,7 @@ namespace pwiz.Skyline
                                 {
                                     ItemName = libraryName,
                                     FileHint = fileName,
-                                    ItemType = "Spectral Library", // Not L10N
+                                    ItemType = Resources.SkylineWindow_ConnectLibrarySpecs_Spectral_Library,
                                     Title = Resources.SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library
                                 })
                                 {

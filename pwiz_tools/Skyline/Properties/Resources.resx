@@ -172,9 +172,6 @@
   <data name="Comment" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\comment.bmp;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="Resources" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>resources.resx;System.String, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
   <data name="File" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\file.png;System.Drawing.Bitmap, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
@@ -3546,9 +3543,6 @@ Are you sure you want to continue?</value>
   <data name="TransitionSettingsUI_SetAnalyzerType_Resolving_power" xml:space="preserve">
     <value>Res&amp;olving power:</value>
   </data>
-  <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_part_of_the_document_settings_Reload_the_library_explorer" xml:space="preserve">
-    <value>The library {0} is no longer part of the document settings. Reload the library explorer?</value>
-  </data>
   <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_There_are_no_libraries_in_the_current_settings" xml:space="preserve">
     <value>There are no libraries in the current settings.</value>
   </data>
@@ -4344,5 +4338,20 @@ Are you sure you want to continue?</value>
   </data>
   <data name="AlignmentForm_UpdateGraph_Waiting_for_retention_time_alignment">
     <value xml:space="preserve">Waiting for retention time alignment</value>
+  </data>
+  <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_">
+    <value xml:space="preserve">The library {0} is no longer available in the Skyline settings. Reload the library explorer?</value>
+  </data>
+  <data name="SettingsListComboDriver_Edit_current">
+    <value xml:space="preserve">&lt;Edit current...&gt;</value>
+  </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Spectral_Library">
+    <value xml:space="preserve">Spectral Library</value>
+  </data>
+  <data name="SkylineWindow_FindIrtDatabase_iRT_Calculator">
+    <value xml:space="preserve">iRT Calculator</value>
+  </data>
+  <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome">
+    <value xml:space="preserve">Background Proteome</value>
   </data>
 </root>
