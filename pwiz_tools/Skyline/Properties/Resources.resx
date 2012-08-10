@@ -4354,4 +4354,10 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome">
     <value xml:space="preserve">Background Proteome</value>
   </data>
+  <data name="VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzML_work_around_for__0_">
+    <value xml:space="preserve">Convert to mzML work-around for {0}</value>
+  </data>
+  <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file">
+    <value xml:space="preserve">Calculating hash of input file</value>
+  </data>
 </root>

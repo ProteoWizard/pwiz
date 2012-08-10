@@ -35,6 +35,7 @@ namespace pwiz.PwizConvert
     /// </summary>
     class Program
     {
+        [STAThread]
         static void Main(string[] args)
         {
             if (1 > args.Length || args.Length > 2)

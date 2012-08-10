@@ -47,17 +47,11 @@ namespace pwiz.Skyline.FileUI
                 Resources.OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format,
 				DataSourceUtil.TYPE_WIFF,
                 DataSourceUtil.TYPE_AGILENT,
+                DataSourceUtil.TYPE_BRUKER,
 				DataSourceUtil.TYPE_THERMO_RAW,
                 DataSourceUtil.TYPE_WATERS_RAW,
 				DataSourceUtil.TYPE_MZML,
 				DataSourceUtil.TYPE_MZXML,
-				//"mzData",
-				//"Bruker YEP",
-                //"Bruker BAF",
-                //"Bruker FID",
-				//"Mascot Generic",
-                //"Bruker Data Exchange",
-				//"Sequest DTA"
             };
 
             sourceTypeComboBox.Items.AddRange(sourceTypes.Cast<object>().ToArray());

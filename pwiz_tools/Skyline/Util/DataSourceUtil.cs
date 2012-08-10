@@ -39,6 +39,7 @@ namespace pwiz.Skyline.Util
 
         public const string TYPE_WIFF = "ABSciex WIFF";
         public const string TYPE_AGILENT = "Agilent Data";
+        public const string TYPE_BRUKER = "Bruker Data";
         public const string TYPE_THERMO_RAW = "Thermo RAW";
         public const string TYPE_WATERS_RAW = "Waters RAW";
         public const string TYPE_MZML = "mzML";
@@ -64,6 +65,8 @@ namespace pwiz.Skyline.Util
                 if (dirInfo.Name.EndsWith(".d") &&
                         dirInfo.GetDirectories("AcqData").Length > 0)
                     return TYPE_AGILENT;
+                if (dirInfo.GetFiles("analysis.baf").Length > 0)
+                    return TYPE_BRUKER;
                 return FOLDER_TYPE;
             }
             catch (Exception)
@@ -80,9 +83,6 @@ namespace pwiz.Skyline.Util
 
         public static string GetSourceType(FileInfo fileInfo)
         {
-            //if (fileInfo.Name == "fid")
-            //    return "Bruker FID";
-
             switch (fileInfo.Extension.ToLower())
             {
                 case EXT_THERMO_RAW: return TYPE_THERMO_RAW;

@@ -21,7 +21,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.Win32;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.Lib;
@@ -35,6 +37,7 @@ namespace pwiz.Skyline.Model.Results
     {
         private const string EXE_MZ_WIFF = "mzWiff"; // Not L10N
         private const string EXT_WIFF_SCAN = ".scan"; // Not L10N
+        private const string KEY_COMPASSXPORT = @"SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths\CompassXport.exe";
 
         private const string EXE_GROUP2_XML = "group2xml";
         private const string KEY_PROTEIN_PILOT = @"SOFTWARE\Classes\groFile\shell\open\command";
@@ -54,6 +57,12 @@ namespace pwiz.Skyline.Model.Results
                                 string.Format(Resources.VendorIssueHelper_CreateTempFileSubstitute_Local_copy_work_around_for__0__,
                                               Path.GetFileName(filePath))));
                         File.Copy(filePath, tempFileSubsitute, true);
+                        break;
+                    case LoadingTooSlowlyException.Solution.bruker_conversion:
+                        ConvertBrukerToMzml(filePath, tempFileSubsitute, loader, status);
+                        loader.UpdateProgress(status = status.ChangeMessage(
+                            string.Format(Resources.VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzML_work_around_for__0_,
+                            filePath)));
                         break;
                     // This is a legacy solution that should no longer ever be invoked.  The mzWiff.exe has
                     // been removed from the installation.
@@ -149,7 +158,15 @@ namespace pwiz.Skyline.Model.Results
                 var reader = new ProcessStreamReader(proc);
                 string line;
                 while ((line = reader.ReadLine()) != null)
+                {
+                    if (progress.IsCanceled)
+                    {
+                        proc.Kill();
+                        throw new LoadCanceledException(status.Cancel());
+                    }
+
                     sbOut.AppendLine(line);
+                }
 
                 while (!proc.WaitForExit(200))
                 {
@@ -160,7 +177,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                if (proc == null || (proc.ExitCode != 0))
+                if (proc.ExitCode != 0)
                 {
                     throw new IOException(string.Format("Failure attempting to convert file {0} to .group.xml.\n\n{1}",
                                                         inputFile, sbOut));
@@ -237,7 +254,15 @@ namespace pwiz.Skyline.Model.Results
             var reader = new ProcessStreamReader(proc);
             string line;
             while ((line = reader.ReadLine()) != null)
+            {
+                if (monitor.IsCanceled)
+                {
+                    proc.Kill();
+                    throw new LoadCanceledException(new ProgressStatus(string.Empty).Cancel());
+                }
+
                 sbOut.AppendLine(line);
+            }
 
             while (!proc.WaitForExit(200))
             {
@@ -249,7 +274,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Exit code -4 is a compatibility warning but not necessarily an error
-            if (proc == null || (proc.ExitCode != 0 && !IsCompatibilityWarning(proc.ExitCode)))
+            if (proc.ExitCode != 0 && !IsCompatibilityWarning(proc.ExitCode))
             {
                 var message = TextUtil.LineSeparate(string.Format(Resources.VendorIssueHelper_ConvertLocalWiffToMzxml_Failure_attempting_to_convert_sample__0__in__1__to_mzXML_to_work_around_a_performance_issue_in_the_AB_Sciex_WiffFileDataReader_library,
                                                                   sampleIndex, filePathWiff),
@@ -269,11 +294,110 @@ namespace pwiz.Skyline.Model.Results
                    exitCode == -3 ||
                    exitCode == -4;
         }
+
+        private static void ConvertBrukerToMzml(string filePathBruker,
+            string outputPath, IProgressMonitor monitor, ProgressStatus status)
+        {
+            // We use CompassXport, if it is installed, to convert a Bruker raw file to mzML.  This solves two
+            // issues: the Bruker reader can't be called on any thread other than the main thread, and there
+            // is no 64-bit version of the reader.  So we start CompassXport in its own 32-bit process, 
+            // and use it to convert the raw data to mzML in a temporary file, which we read back afterwards.
+            var key = Registry.LocalMachine.OpenSubKey(KEY_COMPASSXPORT, false);
+            string compassXportExe = (key != null) ? (string)key.GetValue(string.Empty) : null;
+            if (compassXportExe == null)
+                throw new IOException("CompassXport software must be installed to import Bruker raw data files.");
+
+            // CompassXport arguments
+            var argv = new[]
+                           {
+                               "-a \"" + filePathBruker + "\"",     // input file (directory)
+                               "-o \"" + outputPath + "\"",         // output file (directory)
+                               "-mode 2",                           // mode 2 (mzML)
+                               "-raw 0"                             // export line spectra (profile data is HUGE and SLOW!)
+                           };
+
+            // Start CompassXport in its own process.
+            var psi = new ProcessStartInfo(compassXportExe)
+            {
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                // Common directory includes the directory separator
+                WorkingDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "",
+                Arguments = string.Join(" ", argv),
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+            };
+            var proc = Process.Start(psi);
+
+            // CompassXport starts by calculating a hash of the input file.  This takes a long time, and there is
+            // no intermediate output during this time.  So we set the progress bar some fraction of the way and
+            // let it sit there and animate while we wait for the start of spectra processing.
+            const int hashPercent = 25; // percentage of import time allocated to calculating the input file hash
+            
+            int spectrumCount = 0;
+
+            var sbOut = new StringBuilder();
+            var reader = new ProcessStreamReader(proc);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+            {
+                if (monitor.IsCanceled)
+                {
+                    proc.Kill();
+                    throw new LoadCanceledException(status.Cancel());
+                }
+
+                sbOut.AppendLine(line);
+                line = line.Trim();
+
+                // The main part of conversion starts with the hash calculation.
+                if (line.StartsWith("Calculating hash")) // Not L10N 
+                {
+                    status = status.ChangeMessage(Resources.VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file)
+                        .ChangePercentComplete(hashPercent);
+                    monitor.UpdateProgress(status);
+                    continue;
+                }
+
+                // Determine how many spectra will be converted so we can track progress.
+                var match = Regex.Match(line, @"Converting (\d+) spectra"); // Not L10N 
+                if (match.Success)
+                {
+                    spectrumCount = int.Parse(match.Groups[1].Value);
+                    continue;
+                }
+
+                // Update progress as each spectra batch is converted.
+                match = Regex.Match(line, @"Spectrum \d+ - (\d+)");
+                if (match.Success)
+                {
+                    var spectrumEnd = int.Parse(match.Groups[1].Value);
+                    var percentComplete = hashPercent + (100-hashPercent)*spectrumEnd/spectrumCount;
+                    status = status.ChangeMessage(line).ChangePercentComplete(percentComplete);
+                    monitor.UpdateProgress(status);
+                }
+            }
+
+            while (!proc.WaitForExit(200))
+            {
+                if (monitor.IsCanceled)
+                {
+                    proc.Kill();
+                    throw new LoadCanceledException(status.Cancel());
+                }
+            }
+
+            if (proc.ExitCode != 0)
+            {
+                throw new IOException(string.Format("Failure attempting to convert {0} to mzML to work around a performance issue in the Bruker reader library.\n\n{1}",
+                    filePathBruker, sbOut));
+            }
+        }
     }
 
     internal class LoadingTooSlowlyException : IOException
     {
-        public enum Solution { local_file, mzwiff_conversion }
+        public enum Solution { local_file, mzwiff_conversion, bruker_conversion }
 
         public LoadingTooSlowlyException(Solution solution, ProgressStatus status, double predictedMinutes, double maximumMinutes)
             : base(string.Format(Resources.LoadingTooSlowlyException_LoadingTooSlowlyException_Data_import_expected_to_consume__0__minutes_with_maximum_of__1__mintues,

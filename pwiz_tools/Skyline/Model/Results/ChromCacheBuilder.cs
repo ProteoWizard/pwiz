@@ -52,7 +52,13 @@ namespace pwiz.Skyline.Model.Results
         private LibraryRetentionTimes _libraryRetentionTimes;
         private int _currentFileIndex = -1;
         private FileBuildInfo _currentFileInfo;
+        
+        // Temporary file used as substitute for the current file for vendor-specific
+        // issues in file reading
         private string _tempFileSubsitute;
+        // True if write thread was started before temporary file substitution was
+        // made
+        private bool _tempFileWriteStarted;
 
         // Lock on _chromDataSets to access these variables
         private readonly List<PeptideChromDataSets> _chromDataSets = new List<PeptideChromDataSets>();
@@ -92,6 +98,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 FileEx.DeleteIfPossible(_tempFileSubsitute);
                 _tempFileSubsitute = null;
+                _tempFileWriteStarted = false;
             }
         }
 
@@ -131,7 +138,7 @@ namespace pwiz.Skyline.Model.Results
         private void BuildNextFileInner()
         {
             // If there is a temp file, rewind and retry last file
-            if (_tempFileSubsitute != null)
+            if (_tempFileWriteStarted)
             {
                 _listCachedFiles.RemoveAt(--_currentFileIndex);
                 if (_outStream != null)
@@ -202,9 +209,9 @@ namespace pwiz.Skyline.Model.Results
                 try
                 {
                     var enableSimSpectrum = _document.Settings.TransitionSettings.FullScan.IsEnabledMs;
-                    inFile = new MsDataFileImpl(dataFilePathPart, sampleIndex, enableSimSpectrum);
+                    inFile = GetMsDataFile(dataFilePathPart, sampleIndex, enableSimSpectrum);
 
-                    // Check for cancelation);
+                    // Check for cancelation
                     if (_loader.IsCanceled)
                     {
                         _loader.UpdateProgress(_status = _status.Cancel());
@@ -251,8 +258,17 @@ namespace pwiz.Skyline.Model.Results
                     _status = x.Status;
                     _tempFileSubsitute = VendorIssueHelper.CreateTempFileSubstitute(dataFilePathPart,
                         sampleIndex, x, _loader, ref _status);
-                    // Trigger next call to BuildNextFile from the write thread
-                    PostChromDataSet(null, true);
+                    _tempFileWriteStarted = _writerStarted;
+                    if (_tempFileWriteStarted)
+                    {
+                        // Trigger next call to BuildNextFile from the write thread
+                        PostChromDataSet(null, true);
+                    }
+                    else
+                    {
+                        // Just call this function again with the temp file subsitute
+                        BuildNextFileInner();
+                    }
                 }
                 finally
                 {
@@ -281,6 +297,18 @@ namespace pwiz.Skyline.Model.Results
                 // in on this channel.
                 ExitRead(x);
             }
+        }
+
+        private MsDataFileImpl GetMsDataFile(string dataFilePathPart, int sampleIndex, bool enableSimSpectrum)
+        {
+            if (Directory.Exists(dataFilePathPart))
+            {
+                DirectoryInfo directoryInfo = new DirectoryInfo(dataFilePathPart);
+                var type = DataSourceUtil.GetSourceType(directoryInfo);
+                if (type == DataSourceUtil.TYPE_BRUKER)
+                    throw new LoadingTooSlowlyException(LoadingTooSlowlyException.Solution.bruker_conversion, _status, 0, 0);
+            }
+            return new MsDataFileImpl(dataFilePathPart, sampleIndex, enableSimSpectrum);
         }
 
         private void ExitRead(Exception x)

@@ -360,6 +360,7 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
+                // TODO: Fix this throw to produce a better message for the user
                 if (chromMap.Count == 0 && chromMapMs1.Count == 0)
                     throw new NoSrmDataException();
 
