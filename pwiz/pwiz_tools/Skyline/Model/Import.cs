@@ -417,7 +417,7 @@ namespace pwiz.Skyline.Model
 
                     foreach (var labelType in peptideMods.GetHeavyModifications().Select(typeMods => typeMods.LabelType))
                     {
-                        precursorMassH = Settings.GetPrecursorMass(labelType, info.PeptideSequence, null);
+                        precursorMassH = Settings.GetPrecursorMass(labelType, info.PeptideSequence, variableMods);
                         precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
                         if (precursorCharge > 0)
                         {
