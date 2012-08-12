@@ -69,11 +69,16 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static string ExtMzml
+        {
+            get { return ".mzML"; }
+        }
+
         public static string ExtThermoRaw
         {
-            get { return CanImportThermoRaw ? ".RAW" : ".mzML"; }
+            get { return CanImportThermoRaw ? ".RAW" : ExtMzml; }
         }
-        
+
         public static bool CanImportAgilentRaw
         {
             get
@@ -85,7 +90,7 @@ namespace pwiz.SkylineTestUtil
 
         public static string ExtAbWiff
         {
-            get { return CanImportAbWiff ? ".wiff" : ".mzML"; }
+            get { return CanImportAbWiff ? ".wiff" : ExtMzml; }
         }
 
         public static bool CanImportAbWiff
@@ -99,7 +104,7 @@ namespace pwiz.SkylineTestUtil
 
         public static string ExtAgilentRaw
         {
-            get { return CanImportAgilentRaw ? ".d" : ".mzML"; }
+            get { return CanImportAgilentRaw ? ".d" : ExtMzml; }
         }
 
         public static bool CanImportWatersRaw
@@ -107,13 +112,13 @@ namespace pwiz.SkylineTestUtil
             get
             {
                 // return false to import mzML
-                return false; // !Program.NoVendorReaders && !IsDebugMode;  // no waters library for debug
+                return !Program.NoVendorReaders && !IsDebugMode;  // no waters library for debug
             }
         }
 
         public static string ExtWatersRaw
         {
-            get { return CanImportWatersRaw ? ".raw" : ".mzML"; }
+            get { return CanImportWatersRaw ? ".raw" : ExtMzml; }
         }
 
         public static bool IsDebugMode

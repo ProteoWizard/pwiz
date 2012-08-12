@@ -10,7 +10,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal abstract class SummaryBarGraphPaneBase : SummaryGraphPane
+    public abstract class SummaryBarGraphPaneBase : SummaryGraphPane
     {
         protected static bool ShowSelection
         {

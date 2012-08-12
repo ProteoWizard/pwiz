@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
@@ -521,7 +522,12 @@ namespace pwiz.SkylineTestFunctional
                 Settings.Default.ToolList.Add(new ToolDescription("example2", "example.exe", "$(DocumentPath)", "$(DocumentDir)"));
 
                 SkylineWindow.Paste("PEPTIDER");
-                bool saved = SkylineWindow.SaveDocument(TestContext.GetTestPath("ConfigureToolsTest.sky"));
+                string documentPath = TestContext.GetTestPath("ConfigureToolsTest.sky");
+                // Because TestRunner doesn't always create the directory, make sure it exists
+                string documentDir = Path.GetDirectoryName(documentPath);
+                if (!string.IsNullOrEmpty(documentDir) && !Directory.Exists(documentPath))
+                    Directory.CreateDirectory(documentDir);
+                bool saved = SkylineWindow.SaveDocument(documentPath);
                 //Todo: figure out why this fails to save in the dotCover context.
                 Assert.IsTrue(saved);
                 ToolDescription toolMenuItem = Settings.Default.ToolList[0];

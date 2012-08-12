@@ -24,7 +24,7 @@ namespace pwiz.Skyline.Controls.Graphs
     /// <summary>
     /// Base class for GraphPanes that are shown on the RetentionTime graph
     /// </summary>
-    internal abstract class SummaryGraphPane : GraphPane
+    public abstract class SummaryGraphPane : GraphPane
     {
         protected SummaryGraphPane(GraphSummary graphSummary)
         {

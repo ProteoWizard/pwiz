@@ -197,6 +197,12 @@ namespace pwiz.Skyline.Controls.Graphs
             set { graphControl.MasterPane[0] = value; }
         }
 
+        public bool TryGetGraphPane<TPane>(out TPane pane) where TPane : class
+        {
+            pane = GraphPane as TPane;
+            return (pane != null);
+        }
+
         protected override string GetPersistentString()
         {
             return base.GetPersistentString() + '|' + _controller.GetType().Name;

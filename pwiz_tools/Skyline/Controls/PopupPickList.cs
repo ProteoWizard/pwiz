@@ -395,6 +395,11 @@ namespace pwiz.Skyline.Controls
             return GetVisibleChoice(i).Chosen;
         }
 
+        public string GetItemLabel(int i)
+        {
+            return GetVisibleChoice(i).Label;
+        }
+
         public void SetItemChecked(int i, bool checkItem)
         {
             GetVisibleChoice(i).Chosen = checkItem;
