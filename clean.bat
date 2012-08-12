@@ -28,38 +28,38 @@ IF EXIST libraries\hdf5-1.8.7 rmdir /s /q libraries\hdf5-1.8.7
 IF EXIST libraries\fftw-3.1.2 rmdir /s /q libraries\fftw-3.1.2
 IF EXIST libraries\expat-2.0.1 rmdir /s /q libraries\expat-2.0.1
 
-del /q libraries\libfftw3-3.d* > nul 2>&1
+del /f /q libraries\libfftw3-3.d* > nul 2>&1
 
-del /q pwiz\Version.cpp > nul 2>&1
-del /q pwiz\data\msdata\Version.cpp > nul 2>&1
-del /q pwiz\data\identdata\Version.cpp > nul 2>&1
-del /q pwiz\data\tradata\Version.cpp > nul 2>&1
-del /q pwiz\data\proteome\Version.cpp > nul 2>&1
-del /q pwiz\analysis\Version.cpp > nul 2>&1
+del /f /q pwiz\Version.cpp > nul 2>&1
+del /f /q pwiz\data\msdata\Version.cpp > nul 2>&1
+del /f /q pwiz\data\identdata\Version.cpp > nul 2>&1
+del /f /q pwiz\data\tradata\Version.cpp > nul 2>&1
+del /f /q pwiz\data\proteome\Version.cpp > nul 2>&1
+del /f /q pwiz\analysis\Version.cpp > nul 2>&1
 
 if %VERBOSE%==1 echo   Cleaning vendor dlls...
-del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\install_pwiz_vendor_api_abi > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc9 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\ABI\vc10 > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\vc9_x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\vc10_x64 > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.* > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.* > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.xml > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.xml > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Bruker\install_pwiz_vendor_api_bruker_stub > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\x86 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\x64 > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Thermo\EULA.* > nul 2>&1
-del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
-del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Thermo\EULA.* > nul 2>&1
+del /f /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
+del /f /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-1 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_scl-0 > nul 2>&1
@@ -67,7 +67,7 @@ rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_x86_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_x86_scl-1 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x86_scl-0 > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc10_x64_scl-0 > nul 2>&1
-del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
+del /f /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
 
 if %VERBOSE%==1 echo   Cleaning vendor test data...
 rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data > nul 2>&1
