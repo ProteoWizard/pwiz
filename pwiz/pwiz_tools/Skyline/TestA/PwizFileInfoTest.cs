@@ -44,11 +44,8 @@ namespace pwiz.SkylineTestA
             var testFilesDir = new TestFilesDir(TestContext, testZipPath);
 
             // Waters file (.raw directory)
-            if (ExtensionTestContext.CanImportWatersRaw)
-            {
-                VerifyInstrumentInfo(testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"),
-                    "Waters instrument model", "", "", "");
-            }
+            VerifyInstrumentInfo(testFilesDir.GetTestPath("160109_Mix1_calcurve_075" + ExtensionTestContext.ExtWatersRaw),
+                "Waters instrument model", "", "", "");
 
             // ABI .wiff file
             if (ExtensionTestContext.CanImportAbWiff)
@@ -62,11 +59,8 @@ namespace pwiz.SkylineTestA
                 "4000 Q Trap", "electrospray ionization", "TOFMS", "");
 
             // Agilent file (.d directory)
-            if (ExtensionTestContext.CanImportAgilentRaw)
-            {
-                VerifyInstrumentInfo(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d"),
-                    "Agilent instrument model", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
-            }
+            VerifyInstrumentInfo(testFilesDir.GetTestPath("081809_100fmol-MichromMix-05" + ExtensionTestContext.ExtAgilentRaw),
+                "Agilent instrument model", "nanoelectrospray", "quadrupole/quadrupole/quadrupole", "electron multiplier");
 
             // Thermo .raw|mzML file
             VerifyInstrumentInfo(testFilesDir.GetTestPath("CE_Vantage_15mTorr_0001_REP1_01" + ExtensionTestContext.ExtThermoRaw),

@@ -586,7 +586,7 @@ namespace pwiz.Skyline.FileUI
             if (outputPath == null)
             {
                 string title = Text;
-                string ext = "csv";
+                string ext = ".csv";
                 string filter = "Method File";
 
                 switch (_fileType)
@@ -613,7 +613,7 @@ namespace pwiz.Skyline.FileUI
                     DefaultExt = ext,
                     Filter = string.Join("|", new[]
                     {
-                        string.Format("{0} (*.{1})|*.{1}", filter, ext),
+                        string.Format("{0} (*{1})|*{1}", filter, ext),
                         "All Files (*.*)|*.*"
                     })
                 };
