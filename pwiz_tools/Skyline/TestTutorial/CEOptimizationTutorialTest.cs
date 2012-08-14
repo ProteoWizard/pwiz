@@ -65,6 +65,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() => editList.SelectItem("Thermo")); // Not L10N
             EditCEDlg editItem = ShowDialog<EditCEDlg>(editList.EditItem);
 
+            PauseForScreenShot();   // Edit Collision Energy Regression form
+
             ChargeRegressionLine regressionLine2 = new ChargeRegressionLine(2, 0.034, 3.314); 
             ChargeRegressionLine regressionLine3 = new ChargeRegressionLine(3, 0.044, 3.314);
 
@@ -79,14 +81,21 @@ namespace pwiz.SkylineTestTutorial
             WaitForClosedForm(transitionSettingsUI);
 
             // Measuring Retention Times for Method Scheduling, p. 3
-            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
             {
-                exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
-                exportMethodDlg.ExportStrategy = ExportStrategy.Single;
-                exportMethodDlg.OptimizeType = ExportOptimize.NONE;
-                exportMethodDlg.MethodType = ExportMethodType.Standard;
-                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv")); // Not L10N
-            });
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
+                    exportMethodDlg.ExportStrategy = ExportStrategy.Single;
+                    exportMethodDlg.OptimizeType = ExportOptimize.NONE;
+                    exportMethodDlg.MethodType = ExportMethodType.Standard;
+                });
+
+                PauseForScreenShot();   // Export Transition List form
+
+                RunUI(() => exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"))); // Not L10N
+                WaitForClosedForm(exportMethodDlg);
+            }
 
             string filePathTemplate = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"); // Not L10N
             CheckTransitionList(filePathTemplate, 1, 6);
@@ -113,17 +122,32 @@ namespace pwiz.SkylineTestTutorial
                                                 docUnsched.TransitionGroupCount, 0,
                                                 docUnsched.TransitionCount - 1, 0);
 
-            // Creating Optimization Methods, p. 5
-            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
+            RunUI(() =>
             {
-                exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
-                exportMethodDlg.ExportStrategy = ExportStrategy.Buckets;
-                exportMethodDlg.MaxTransitions = 110;
-                exportMethodDlg.IgnoreProteins = true;
-                exportMethodDlg.OptimizeType = ExportOptimize.CE;
-                exportMethodDlg.MethodType = ExportMethodType.Scheduled;
-                exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.csv")); // Not L10N
+                SkylineWindow.ExpandProteins();
+                SkylineWindow.ExpandPeptides();
             });
+
+            PauseForScreenShot();   // Skyline window
+
+            // Creating Optimization Methods, p. 5
+            {
+                var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+                RunUI(() =>
+                {
+                    exportMethodDlg.InstrumentType = ExportInstrumentType.THERMO;
+                    exportMethodDlg.ExportStrategy = ExportStrategy.Buckets;
+                    exportMethodDlg.MaxTransitions = 110;
+                    exportMethodDlg.IgnoreProteins = true;
+                    exportMethodDlg.OptimizeType = ExportOptimize.CE;
+                    exportMethodDlg.MethodType = ExportMethodType.Scheduled;
+                });
+
+                PauseForScreenShot();   // Export Transition List form
+
+                RunUI(() => exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.csv"))); // Not L10N
+                WaitForClosedForm(exportMethodDlg);
+            }
 
             string filePathTemplate1 = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_000{0}.csv"); // Not L10N
             CheckTransitionList(filePathTemplate1, 5, 9);
@@ -145,17 +169,24 @@ namespace pwiz.SkylineTestTutorial
             {
                 SkylineWindow.ShowSingleTransition();
                 SkylineWindow.ShowPeakAreaReplicateComparison();
-                SkylineWindow.ExpandProteins();
-                SkylineWindow.ExpandPeptides();
-                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                SkylineWindow.ArrangeGraphsTiled();
-
             });
+            FindNode("IHGFDLAAINLQR");
             WaitForCondition(15*60*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded); // 10 minutes
+
+            PauseForScreenShot();   // Skyline window
             
+            // p. 8
             // Not L10N
             RemovePeptide("EGIHAQQK");
-            RemovePeptide("IDALNENK");
+
+            FindNode("IDALNENK");
+
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+
+            PauseForScreenShot();   // Skyline window
+
+            RunUI(SkylineWindow.EditDelete);
+
             RemovePeptide("LICDNTHITK");
 
             // Creating a New Equation for CE, p. 9
@@ -186,6 +217,8 @@ namespace pwiz.SkylineTestTutorial
                                                                   Math.Round(graphDatas[1].RegressionLine.Slope, 4),
                                                                   Math.Round(graphDatas[1].RegressionLine.Intercept, 4)), 
                                                           });
+
+            PauseForScreenShot();   // Collision Energy Regression graphs
 
             RunUI(graphRegression.CloseDialog);
             WaitForClosedForm(graphRegression);

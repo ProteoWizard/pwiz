@@ -31,6 +31,7 @@ using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -76,7 +77,7 @@ namespace pwiz.SkylineTestUtil
                     if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://")) // Not L10N
                     {
                         string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? string.Empty, "Downloads"); 
+                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder) ?? String.Empty, "Downloads"); 
                         string tutorialsFolder = Path.Combine(downloadsFolder, "Tutorials"); 
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1); // Not L10N
                         string zipFilePath = Path.Combine(tutorialsFolder, fileName);
@@ -216,7 +217,7 @@ namespace pwiz.SkylineTestUtil
 
         private static string GetExcelFileText(string connectionString, string page, int columns)
         {
-            var adapter = new OleDbDataAdapter(string.Format("SELECT * FROM [{0}$]", page), connectionString); // Not L10N
+            var adapter = new OleDbDataAdapter(String.Format("SELECT * FROM [{0}$]", page), connectionString); // Not L10N
             var ds = new DataSet();
             adapter.Fill(ds, "TransitionListTable");
             DataTable data = ds.Tables["TransitionListTable"];
@@ -227,7 +228,7 @@ namespace pwiz.SkylineTestUtil
                 {
                     if (i > 0)
                         sb.Append('\t');
-                    sb.Append(row[i] ?? string.Empty);
+                    sb.Append(row[i] ?? String.Empty);
                 }
                 sb.AppendLine();
             }
@@ -239,7 +240,7 @@ namespace pwiz.SkylineTestUtil
             string connectionFormat = legacyFile // Not L10N
                 ? "Provider=Microsoft.Jet.OLEDB.4.0; data source={0}; Extended Properties=\"Excel 8.0;HDR={1}\""
                 : "Provider=Microsoft.ACE.OLEDB.12.0;Password=\"\";User ID=Admin;Data Source={0};Mode=Share Deny Write;Extended Properties=\"HDR={1};\";Jet OLEDB:Engine Type=37";
-            return string.Format(connectionFormat, filePath, hasHeader ? "YES" : "NO");
+            return String.Format(connectionFormat, filePath, hasHeader ? "YES" : "NO");
         }
 
         public static TDlg FindOpenForm<TDlg>() where TDlg : Form
@@ -301,7 +302,7 @@ namespace pwiz.SkylineTestUtil
                     return tForm;
 
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
+                Assert.IsTrue(i < waitCycles - 1, String.Format("Timeout {0} seconds exceeded in WaitForOpenForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
             }
             return null;
         }
@@ -329,7 +330,7 @@ namespace pwiz.SkylineTestUtil
                     return;
                 Thread.Sleep(SLEEP_INTERVAL);
             }
-            Assert.Fail(string.Format("Timeout {0} seconds exceeded in WaitForClosedForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
+            Assert.Fail(String.Format("Timeout {0} seconds exceeded in WaitForClosedForm", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
         }
 
         public static SrmDocument WaitForDocumentChange(SrmDocument docCurrent)
@@ -365,7 +366,7 @@ namespace pwiz.SkylineTestUtil
                 if (func())
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForCondition", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
+                Assert.IsTrue(i < waitCycles - 1, String.Format("Timeout {0} seconds exceeded in WaitForCondition", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
             }
             return false;
         }
@@ -385,7 +386,7 @@ namespace pwiz.SkylineTestUtil
                 if (isCondition)
                     return true;
                 Thread.Sleep(SLEEP_INTERVAL);
-                Assert.IsTrue(i < waitCycles - 1, string.Format("Timeout {0} seconds exceeded in WaitForConditionUI", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
+                Assert.IsTrue(i < waitCycles - 1, String.Format("Timeout {0} seconds exceeded in WaitForConditionUI", waitCycles * SLEEP_INTERVAL / 1000)); // Not L10N
             }
             return false;
         }
@@ -400,6 +401,56 @@ namespace pwiz.SkylineTestUtil
         {
             ClipboardEx.UseInternalClipboard(false);
             Thread.Sleep(-1);
+        }
+
+        /// <summary>
+        /// If true, calls to PauseForScreenShot used in the tutorial tests will pause
+        /// the tests and wait until the pause form is dismissed, allowing a screenshot
+        /// to be taken.
+        /// </summary>
+        public static bool IsPauseForScreenShots { get { return false; } }
+
+        public void PauseForScreenShot()
+        {
+            if (IsPauseForScreenShots)
+                PauseAndContinue();
+        }
+
+        private readonly object _pauseLock = new object();
+
+        public void PauseAndContinue()
+        {
+            ClipboardEx.UseInternalClipboard(false);
+            RunUI(() =>
+                      {
+                          var dlg = new PauseAndContinueForm {Left = SkylineWindow.Left};
+                          const int spacing = 15;
+                          if (SkylineWindow.Top > dlg.Height + spacing)
+                              dlg.Top = SkylineWindow.Top - dlg.Height - spacing;
+                          else
+                              dlg.Top = SkylineWindow.Bottom + spacing;
+                          dlg.FormClosed += PauseAndContinue_Closed;
+                          dlg.Show(SkylineWindow);
+                      });
+
+            lock (_pauseLock)
+            {
+                // Wait for an event on the pause lock, when the form is closed
+                Monitor.Wait(_pauseLock);
+                ClipboardEx.UseInternalClipboard();
+            }
+        }
+
+        private void PauseAndContinue_Closed(object sender, FormClosedEventArgs e)
+        {
+            // Remove this event listener
+            ((Form) sender).FormClosed -= PauseAndContinue_Closed;
+
+            // Start the tests again
+            lock (_pauseLock)
+            {
+                Monitor.PulseAll(_pauseLock);
+            }
         }
 
         public static void OkDialog(Form form, Action okAction)
@@ -493,7 +544,7 @@ namespace pwiz.SkylineTestUtil
             ClipboardEx.UseInternalClipboard();
 
             var doClipboardCheck = TestContext.Properties.Contains("ClipboardCheck"); // Not L10N
-            string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties["ClipboardCheck"] : string.Empty; // Not L10N
+            string clipboardCheckText = doClipboardCheck ? (string)TestContext.Properties["ClipboardCheck"] : String.Empty; // Not L10N
             if (doClipboardCheck)
             {
                 RunUI(() => Clipboard.SetText(clipboardCheckText));
@@ -548,7 +599,7 @@ namespace pwiz.SkylineTestUtil
             _testExceptions.AddRange(from form in Application.OpenForms.Cast<Form>()
                                         where !(form is SkylineWindow)
                                         select new AssertFailedException(
-                                            string.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
+                                            String.Format("Form of type {0} left open at end of test", form.GetType()))); // Not L10N
 
             _testCompleted = true;
 
@@ -579,6 +630,16 @@ namespace pwiz.SkylineTestUtil
         }
 
         protected abstract void DoTest();
+
+        public void FindNode(string searchText)
+        {
+            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
+                                                                   {
+                                                                       findPeptideDlg.SearchString = searchText;
+                                                                       findPeptideDlg.FindNext();
+                                                                       findPeptideDlg.Close();
+                                                                   });
+        }
 
         #region Modification helpers
 

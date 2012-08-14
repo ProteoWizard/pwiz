@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestA
             var refineSettings = new RefinementSettings {RTRegressionThreshold = 0.3};
             Assert.AreSame(document, refineSettings.Refine(document));
             refineSettings.RTRegressionThreshold = null;
-            refineSettings.DotProductThreshold = 0.1;
+            refineSettings.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.1);    // Convert form original cos(angle) dot-product
             Assert.AreSame(document, refineSettings.Refine(document));
             refineSettings.DotProductThreshold = null;
             refineSettings.MinPeakFoundRatio = 0;
@@ -153,7 +153,8 @@ namespace pwiz.SkylineTestA
 
             // Filter for dot product, ignoring nodes without results
             refineSettings.RemoveMissingResults = false;
-            refineSettings.DotProductThreshold = 0.9;
+            double dotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.9);    // Convert form original cos(angle) dot-product
+            refineSettings.DotProductThreshold = dotProductThreshold;
             docRefined = refineSettings.Refine(document);
             int missingResults = 0;
             foreach (var nodeGroup in docRefined.TransitionGroups)
@@ -161,7 +162,7 @@ namespace pwiz.SkylineTestA
                 if (!nodeGroup.HasResults || nodeGroup.Results[0] == null)
                     missingResults++;
                 else
-                    Assert.IsTrue(nodeGroup.Results[0][0].LibraryDotProduct >= 0.9);
+                    Assert.IsTrue(nodeGroup.Results[0][0].LibraryDotProduct >= dotProductThreshold);
             }
             Assert.AreNotEqual(0, missingResults);
             Assert.IsTrue(missingResults < docRefined.TransitionGroupCount);

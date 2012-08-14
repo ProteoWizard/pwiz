@@ -803,7 +803,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     for (int i = 0; i < peakAreas.Length; i++)
                     {
                         var statPeakAreas = new Statistics(peakAreas[i]);
-                        double dotProductCurrent = statPeakAreas.AngleSqrt(statExpectedIntensities);
+                        double dotProductCurrent = statPeakAreas.NormalizedContrastAngleSqrt(statExpectedIntensities);
                         // Only show products that are greater than the best peak product,
                         // and by enough to be a significant improvement.  Also the library product
                         // on the group node is stored as a float, which means the version

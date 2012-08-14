@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -186,15 +187,22 @@ namespace pwiz.SkylineTestTutorial
                
                 // Picking Measurable Peptides and Transitions, p. 12
                 SkylineWindow.ExpandPeptides();
-
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text
-                    .Contains((0.78).ToString(CultureInfo.CurrentCulture)));
+            });
+
+            PauseForScreenShot();   // Skyline window
+
+            RunUI(() =>
+            {
+                double dotpExpect = Math.Round(Statistics.AngleToNormalizedContrastAngle(0.78), 2);  // 0.57
+                AssertEx.Contains(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text,
+                    dotpExpect.ToString(CultureInfo.CurrentCulture));
                 SkylineWindow.EditDelete();
 
+                dotpExpect = Math.Round(Statistics.AngleToNormalizedContrastAngle(0.633), 2);  // 0.44
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0];
-                Assert.IsTrue(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text
-                    .Contains((0.63).ToString(CultureInfo.CurrentCulture)));
+                AssertEx.Contains(SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Text,
+                    dotpExpect.ToString(CultureInfo.CurrentCulture));
                 SkylineWindow.EditDelete();
 
                 PeptideTreeNode nodePep;
@@ -244,7 +252,7 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.PreferLargerIons = true;
                 refineDlg.RemoveMissingResults = true;
                 refineDlg.RTRegressionThreshold = 0.95;
-                refineDlg.DotProductThreshold = 0.95;
+                refineDlg.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.95);    // Convert from original cos(angle) dot-product
                 refineDlg.OkDialog();
             });
             WaitForCondition(() => SkylineWindow.Document.PeptideCount < 75);
@@ -267,7 +275,7 @@ namespace pwiz.SkylineTestTutorial
                 refineDlg.MaxTransitionPeakRank = 6;
                 refineDlg.RemoveMissingResults = true;
                 refineDlg.RTRegressionThreshold = 0.90;
-                refineDlg.DotProductThreshold = 0.90;
+                refineDlg.DotProductThreshold = Statistics.AngleToNormalizedContrastAngle(0.90);    // Convert from original cos(angle) dot-product
                 refineDlg.OkDialog();
             });
 

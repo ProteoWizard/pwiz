@@ -26,7 +26,6 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
-using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -259,8 +258,8 @@ namespace pwiz.SkylineTestTutorial
                           // Graph p.15
                           Assert.AreEqual(3, SkylineWindow.GraphPeakArea.Categories.Count());
                           Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount);
-                          VerifyDotProducts(0.99, 0.99);
                       });
+            VerifyDotProducts(0.91, 0.92);
 
             // Check graph p15. (checked)
             RunUI(() => SkylineWindow.ShowGraphPeakArea(false));
@@ -493,9 +492,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 Assert.AreEqual(7, SkylineWindow.GraphPeakArea.Categories.Count());
                 Assert.AreEqual(6, SkylineWindow.GraphPeakArea.CurveCount);
-
-                VerifyDotProducts(0.98, 0.87, 0.99, 0.99, 0.99, 0.99);
             });
+            VerifyDotProducts(0.87, 0.67, 0.91, 0.90, 0.90, 0.90);
 
             RunUI(SkylineWindow.ShowPrecursorTransitions);
 
@@ -505,9 +503,8 @@ namespace pwiz.SkylineTestTutorial
             {
                 Assert.AreEqual(7, SkylineWindow.GraphPeakArea.Categories.Count());
                 Assert.AreEqual(3, SkylineWindow.GraphPeakArea.CurveCount);
-
-                VerifyDotProducts(1.00, 0.73, 1.00, 1.00, 1.00, 1.00);
             });
+            VerifyDotProducts(0.99, 0.52, 0.98, 1.00, 1.00, 1.00);
         }
 
         private void WaitForDotProducts()
@@ -518,12 +515,15 @@ namespace pwiz.SkylineTestTutorial
 
         private void VerifyDotProducts(params double[] dotpExpects)
         {
-            var dotpActuals = AreaGraphDotProducts;
-            Assert.AreEqual(dotpExpects.Length, dotpActuals.Length);
-            for (int i = 0; i < dotpExpects.Length; i++)
-            {
-                Assert.AreEqual(dotpExpects[i], dotpActuals[i], 0.05);
-            }
+            RunUI(() =>
+                      {
+                          var dotpActuals = AreaGraphDotProducts;
+                          Assert.AreEqual(dotpExpects.Length, dotpActuals.Length);
+                          for (int i = 0; i < dotpExpects.Length; i++)
+                          {
+                              Assert.AreEqual(dotpExpects[i], dotpActuals[i], 0.05);
+                          }
+                      });
         }
 
         private static double[] AreaGraphDotProducts
@@ -535,16 +535,6 @@ namespace pwiz.SkylineTestTutorial
                 var dotpActuals = pane.DotProducts.ToArray();
                 return dotpActuals;
             }
-        }
-
-        private static void FindNode(string searchText)
-        {
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-            {
-                findPeptideDlg.SearchString = searchText;
-                findPeptideDlg.FindNext();
-                findPeptideDlg.Close();
-            });
         }
     }
 }

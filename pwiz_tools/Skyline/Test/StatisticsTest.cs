@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 using System.Collections.Generic;
 using pwiz.Skyline.Util;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -797,6 +798,74 @@ namespace pwiz.SkylineTest
             stat2 = new Statistics(new[] { 1.0, 7.0, 3, 4, 5, 6, 2, 8 });
             cs2 = stat1.CostaSoares(stat2);
             Assert.IsTrue(cs1 < cs2);
+        }
+
+        /// <summary>
+        /// A test for dot-product scores
+        /// </summary>
+        [TestMethod]
+        public void DotpTest()
+        {
+            {
+                var stat1 = new Statistics(new[] {1.0, 2.0, 3.0});
+                Assert.AreEqual(1.0, stat1.Angle(stat1));
+                Assert.AreEqual(1.0, stat1.AngleSqrt(stat1));
+                Assert.AreEqual(1.0, stat1.AngleUnitVector(stat1));
+                Assert.AreEqual(1.0, stat1.NormalizedContrastAngleSqrt(stat1));
+                // Dot-product of zero should yield zero cos(angle)
+                var stat2 = new Statistics(new[] {-3.0, 3.0, -1.0});
+                Assert.AreEqual(0.0, stat1.Angle(stat2));
+                Assert.AreEqual(double.NaN, stat1.AngleSqrt(stat2));
+                Assert.AreEqual(0.0, stat1.AngleUnitVector(stat2));
+                // Without negatives this is only possible with vectors containing zeros
+                var statZeros1 = new Statistics(new[] {1.0, 0.0, 2.0, 0.0, 3.0, 0.0});
+                var statZeros2 = new Statistics(new[] {0.0, 1.0, 0.0, 1.0, 0.0, 3.0});
+                Assert.AreEqual(0.0, statZeros1.Angle(statZeros2));
+                // And this should work for square rooted angle
+                Assert.AreEqual(0.0, statZeros1.AngleSqrt(statZeros2));
+                Assert.AreEqual(0.0, statZeros1.AngleUnitVector(statZeros2));
+                Assert.AreEqual(0.0, statZeros1.NormalizedContrastAngleSqrt(statZeros2));
+            }
+
+            {
+                var stat0 = new Statistics(new[] {0.0, 10.0});
+                var stat1 = new Statistics(new[] {0.1, 10.0});
+                var stat2 = new Statistics(new[] {1.0, 10.0});
+                var stat3 = new Statistics(new[] {2.0, 10.0});
+                var stat4 = new Statistics(new[] {5.0, 10.0});
+                var stat5 = new Statistics(new[] {10.0, 10.0});
+
+                double a1 = stat0.Angle(stat1);
+                double aN1 = stat0.NormalizedContrastAngle(stat1);
+                Assert.AreEqual(1.0, a1, 0.01);
+                Assert.AreEqual(0.99, aN1, 0.01);
+                Assert.AreEqual(a1, Statistics.NormalizedContrastAngleToAngle(aN1), 0.0001);
+                Assert.AreEqual(aN1, Statistics.AngleToNormalizedContrastAngle(a1), 0.0001);
+                double a2 = stat0.Angle(stat2);
+                double aN2 = stat0.NormalizedContrastAngle(stat2);
+                Assert.AreEqual(0.99, a2, 0.01);
+                Assert.AreEqual(0.94, aN2, 0.01);
+                Assert.AreEqual(a2, Statistics.NormalizedContrastAngleToAngle(aN2), 0.0001);
+                Assert.AreEqual(aN2, Statistics.AngleToNormalizedContrastAngle(a2), 0.0001);
+                double a3 = stat0.Angle(stat3);
+                double aN3 = stat0.NormalizedContrastAngle(stat3);
+                Assert.AreEqual(0.98, a3, 0.01);
+                Assert.AreEqual(0.87, aN3, 0.01);
+                Assert.AreEqual(a3, Statistics.NormalizedContrastAngleToAngle(aN3), 0.0001);
+                Assert.AreEqual(aN3, Statistics.AngleToNormalizedContrastAngle(a3), 0.0001);
+                double a4 = stat0.Angle(stat4);
+                double aN4 = stat0.NormalizedContrastAngle(stat4);
+                Assert.AreEqual(0.89, a4, 0.01);
+                Assert.AreEqual(0.7, aN4, 0.01);
+                Assert.AreEqual(a4, Statistics.NormalizedContrastAngleToAngle(aN4), 0.0001);
+                Assert.AreEqual(aN4, Statistics.AngleToNormalizedContrastAngle(a4), 0.0001);
+                double a5 = stat0.Angle(stat5);
+                double aN5 = stat0.NormalizedContrastAngle(stat5);
+                Assert.AreEqual(0.7, a5, 0.01);
+                Assert.AreEqual(0.5, aN5, 0.01);
+                Assert.AreEqual(a5, Statistics.NormalizedContrastAngleToAngle(aN5), 0.0001);
+                Assert.AreEqual(aN5, Statistics.AngleToNormalizedContrastAngle(a5), 0.0001);
+            }
         }
     }
 }

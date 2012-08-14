@@ -1594,7 +1594,7 @@ namespace pwiz.Skyline.Model
 
                 var statPeakAreas = new Statistics(peakAreas);
                 var statLibIntensities = new Statistics(libIntensities);
-                LibraryDotProduct = (float) statPeakAreas.AngleSqrt(statLibIntensities);
+                LibraryDotProduct = (float) statPeakAreas.NormalizedContrastAngleSqrt(statLibIntensities);
             }
 
             public void SetIsotopeDistInfo(double[] peakAreas, double[] isotopeDistProportions)
@@ -1605,7 +1605,7 @@ namespace pwiz.Skyline.Model
 
                 var statPeakAreas = new Statistics(peakAreas);
                 var statIsotopeDistProportions = new Statistics(isotopeDistProportions);
-                IsotopeDotProduct = (float)statPeakAreas.AngleSqrt(statIsotopeDistProportions);
+                IsotopeDotProduct = (float)statPeakAreas.NormalizedContrastAngleSqrt(statIsotopeDistProportions);
             }
 
             public TransitionGroupChromInfo CalcChromInfo()

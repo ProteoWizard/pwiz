@@ -807,14 +807,24 @@ namespace pwiz.Skyline.Util
         /// <returns>Dot-Product of square roots of values in vectors</returns>
         public double AngleSqrt(Statistics s)
         {
-            var listNormal1 = new List<double>(_list);
-            listNormal1 = listNormal1.ConvertAll(Math.Sqrt);
-            var stat1 = new Statistics(listNormal1);
-            var listNormal2 = new List<double>(s._list);
-            listNormal2 = listNormal2.ConvertAll(Math.Sqrt);
-            var stat2 = new Statistics(listNormal2);
+            var stat1 = new Statistics(_list.Select(Math.Sqrt));
+            var stat2 = new Statistics(s._list.Select(Math.Sqrt));
 
             return stat1.Angle(stat2);
+        }
+
+        /// <summary>
+        /// Calculates the normalized contrast angle dot-product or 1 - angle/90 between two vectors,
+        /// using the square roots of the values in the vectors.
+        /// </summary>
+        /// <param name="s">The other vector</param>
+        /// <returns>Normalized contrast angle dot-product of square roots of values in vectors</returns>
+        public double NormalizedContrastAngleSqrt(Statistics s)
+        {
+            var stat1 = new Statistics(_list.Select(Math.Sqrt));
+            var stat2 = new Statistics(s._list.Select(Math.Sqrt));
+
+            return stat1.NormalizedContrastAngle(stat2);
         }
 
         /// <summary>
@@ -829,6 +839,20 @@ namespace pwiz.Skyline.Util
             var stat2 = s.NormalizeUnit();
 
             return stat1.Angle(stat2);            
+        }
+
+        /// <summary>
+        /// Calculates the normalized contrast angle dot-product or 1 - angle/90 between two vectors,
+        /// with both normalized to a unit vector first.
+        /// </summary>
+        /// <param name="s">The other vector</param>
+        /// <returns>Normalized contrast angle dot-product of normalized vectors</returns>
+        public double NormalizedContrastAngleUnitVector(Statistics s)
+        {
+            var stat1 = NormalizeUnit();
+            var stat2 = s.NormalizeUnit();
+
+            return stat1.NormalizedContrastAngle(stat2);
         }
 
         /// <summary>
@@ -860,6 +884,34 @@ namespace pwiz.Skyline.Util
                 return sumLeft == 0 && sumRight == 0 ? 1 : 0;
 
             return sumCross/Math.Sqrt(sumLeft*sumRight);
+        }
+
+        /// <summary>
+        /// Calculates a dot-product or 1 - angle/90 between two vectors,
+        /// which is more sensetive for small vectors than cos(angle).
+        /// </summary>
+        /// <param name="s">The other vector</param>
+        /// <returns>Normalized contrast angle dot-product</returns>
+        public double NormalizedContrastAngle(Statistics s)
+        {
+            // Acos returns the angle in radians, where Pi == 180 degrees
+            return AngleToNormalizedContrastAngle(Angle(s));
+        }
+
+        /// <summary>
+        /// Convert from dot-product of the form cos(angle) to 1 - angle/90
+        /// </summary>
+        public static double AngleToNormalizedContrastAngle(double angle)
+        {
+            return 1 - Math.Acos(angle)*2/Math.PI;
+        }
+
+        /// <summary>
+        /// Convert from dot-product of the form 1 - angle/90 to cos(angle)
+        /// </summary>
+        public static double NormalizedContrastAngleToAngle(double normalAngle)
+        {
+            return Math.Cos((1 - normalAngle)*Math.PI/2);
         }
 
         /// <summary>
