@@ -197,13 +197,15 @@ void PepXMLreader::startElement(const XML_Char* name, const XML_Char** attr)
        if (strcmp(getAttrValue("mod_nterm_mass", attr), "") != 0) {
            SeqMod curmod;
            curmod.position = 1;
-           curmod.deltaMass = getDoubleRequiredAttrValue("mod_nterm_mass", attr);
+           curmod.deltaMass = getDoubleRequiredAttrValue("mod_nterm_mass", attr) -
+		       aminoacidmass['h']; // H
            mods.push_back(curmod);
        }
        if (strcmp(getAttrValue("mod_cterm_mass", attr), "") != 0) {
            SeqMod curmod;
            curmod.position = (int)strlen(pepSeq);
-           curmod.deltaMass = getDoubleRequiredAttrValue("mod_cterm_mass", attr);
+           curmod.deltaMass = getDoubleRequiredAttrValue("mod_cterm_mass", attr) -
+		       aminoacidmass['o'] - aminoacidmass['h']; // OH
            mods.push_back(curmod);
        }
    } else if(isElement("mod_aminoacid_mass", name) && state == STATE_SEARCH_HIT_BEST) {
