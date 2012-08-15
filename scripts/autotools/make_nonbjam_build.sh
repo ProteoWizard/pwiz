@@ -16,6 +16,8 @@ export HERE=`pwd`
 pushd $HERE/../..
 export PWIZROOT=`pwd`
 export TMPDIR=`mktemp -d`
+echo "note automake version..."
+automake --version
 if [ $# -ne 1 ] ; then
 # 0 or many args, assume we're under development (0) or in teamcity (many)
 echo "running clean.sh"
