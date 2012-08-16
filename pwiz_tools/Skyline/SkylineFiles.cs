@@ -524,11 +524,7 @@ namespace pwiz.Skyline
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 OverwritePrompt = true,
                 DefaultExt = SrmDocument.EXT,
-                Filter = string.Join("|", new[]
-                    {
-                        "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
-                        "All Files (*.*)|*.*"
-                    })
+                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC)
             })
             {
                 if (!string.IsNullOrEmpty(DocumentFilePath))
@@ -678,9 +674,7 @@ namespace pwiz.Skyline
             var document = DocumentUI;
             if (!document.Settings.IsLoaded)
             {
-                MessageDlg.Show(this,
-                                Resources.
-                                    SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_shared);
+                MessageDlg.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_shared);
                 return;
             }
 
@@ -689,7 +683,7 @@ namespace pwiz.Skyline
             if (string.IsNullOrEmpty(fileName))
             {
                 if (MessageBox.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_saved_before_it_can_be_shared, 
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
 
                 if (!SaveDocumentAs())
@@ -716,7 +710,7 @@ namespace pwiz.Skyline
             {
                 Title = Resources.SkylineWindow_shareDocumentMenuItem_Click_Share_Document,
                 InitialDirectory = Path.GetDirectoryName(fileName),
-                FileName = Path.GetFileNameWithoutExtension(fileName) + "." + SrmDocumentSharing.EXT, // Not L10N
+                FileName = Path.GetFileNameWithoutExtension(fileName) + SrmDocumentSharing.EXT,
                 OverwritePrompt = true,
                 DefaultExt = SrmDocumentSharing.EXT,
                 Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents, SrmDocumentSharing.EXT),
@@ -993,12 +987,13 @@ namespace pwiz.Skyline
         {
             using (OpenFileDialog dlg = new OpenFileDialog
             {
-                Title = Resources.SkylineWindow_importMassListMenuItem_Click_Import_Mass_List,
+                Title = Resources.SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title,
                 InitialDirectory = Settings.Default.ActiveDirectory,    // TODO: Better value?
                 CheckPathExists = true,
                 SupportMultiDottedExtensions = true,
-                DefaultExt = "*.csv", // Not L10N
-                Filter = TextUtil.FileDialogFiltersAll(Resources.SkylineWindow_importMassListMenuItem_Click_Mass_List_Text_csv_tsv_csv_tsv),
+                DefaultExt = TextUtil.EXT_CSV,
+                Filter = TextUtil.FileDialogFiltersAll(TextUtil.FileDialogFilter(
+                    Resources.SkylineWindow_importMassListMenuItem_Click_Transition_List, TextUtil.EXT_CSV, TextUtil.EXT_TSV)),
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
@@ -1059,7 +1054,7 @@ namespace pwiz.Skyline
                 Multiselect = true,
                 SupportMultiDottedExtensions = true,
                 DefaultExt = SrmDocument.EXT,
-                Filter = TextUtil.FileDialogFilterAll(Resources.SkylineWindow_importDocumentMenuItem_Click_Skyline_Documents, SrmDocument.EXT),
+                Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC),
             })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)

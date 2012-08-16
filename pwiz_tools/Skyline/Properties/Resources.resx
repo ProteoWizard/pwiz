@@ -3350,10 +3350,6 @@ Are you sure you want to continue?</value>
     <value>Chromatograms</value>
     <comment>Default replicate name</comment>
   </data>
-  <data name="MinimizeResultsDlg_Minimize_Skyline_Documents_sky_sky" xml:space="preserve">
-    <value>Skyline Documents (*.sky)|*.sky</value>
-    <comment>Only localize Documents</comment>
-  </data>
   <data name="OpenDataSourceDialog_OpenDataSourceDialog_Any_spectra_format" xml:space="preserve">
     <value>Any spectra format</value>
   </data>
@@ -3857,9 +3853,6 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_ImportFasta_Unexpected_document_change_during_operation" xml:space="preserve">
     <value>Unexpected document change during operation.</value>
   </data>
-  <data name="SkylineWindow_importMassListMenuItem_Click_Import_Mass_List" xml:space="preserve">
-    <value>Import Mass List</value>
-  </data>
   <data name="SkylineWindow_importMassListMenuItem_Click_Data_columns_not_found_in_first_line" xml:space="preserve">
     <value>Data columns not found in first line.</value>
   </data>
@@ -3888,11 +3881,10 @@ Are you sure you want to continue?</value>
     <value>A failure occurred attempting to re-import results.</value>
   </data>
   <data name="SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents" xml:space="preserve">
-    <value>Skyline Shared Documents (*.</value>
+    <value>Skyline Shared Documents</value>
   </data>
   <data name="SkylineWindow_ShowExportEspFeaturesDialog_ESP_Feature_Files" xml:space="preserve">
-    <value>ESP Feature Files (*.</value>
-    <comment>Only localize 'ESP Feature Files'</comment>
+    <value>ESP Feature Files</value>
   </data>
   <data name="SkylineWindow_UpdateGraphUI_Failure_attempting_to_load_the_window_layout_file__0__" xml:space="preserve">
     <value>Failure attempting to load the window layout file {0}.</value>
@@ -4020,9 +4012,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="ExportReportDlg_ShowShare_Skyline_Reports" xml:space="preserve">
     <value>Skyline Reports</value>
-  </data>
-  <data name="MinimizeResultsDlg_Minimize_Skyline_Documents" xml:space="preserve">
-    <value>Skyline Documents</value>
   </data>
   <data name="ShareListDlg_ShareListDlg_Skyline_Settings" xml:space="preserve">
     <value>Skyline Settings</value>
@@ -4164,12 +4153,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SkylineWindow_FindIrtDatabase_iRT_Database_Files" xml:space="preserve">
     <value>iRT Database Files</value>
-  </data>
-  <data name="SkylineWindow_importMassListMenuItem_Click_Mass_List_Text_csv_tsv_csv_tsv" xml:space="preserve">
-    <value>Mass List Text (*.csv,*.tsv)|*.csv;*.tsv</value>
-  </data>
-  <data name="SkylineWindow_importDocumentMenuItem_Click_Skyline_Documents" xml:space="preserve">
-    <value>Skyline Documents</value>
   </data>
   <data name="SkylineWindow_ImportFiles_Importing__0__" xml:space="preserve">
     <value>Importing {0}</value>
@@ -4489,5 +4472,11 @@ Are you sure you want to continue?</value>
   </data>
   <data name="WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_">
     <value xml:space="preserve">Failure saving temporary post data to disk.</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title">
+    <value xml:space="preserve">Import Transition List</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Transition_List">
+    <value xml:space="preserve">Transition List</value>
   </data>
 </root>

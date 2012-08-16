@@ -6468,24 +6468,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline Documents.
-        /// </summary>
-        public static string MinimizeResultsDlg_Minimize_Skyline_Documents {
-            get {
-                return ResourceManager.GetString("MinimizeResultsDlg_Minimize_Skyline_Documents", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Skyline Documents (*.sky)|*.sky.
-        /// </summary>
-        public static string MinimizeResultsDlg_Minimize_Skyline_Documents_sky_sky {
-            get {
-                return ResourceManager.GetString("MinimizeResultsDlg_Minimize_Skyline_Documents_sky_sky", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to You have not chosen any options to minimize your cache file.  Are you sure you want to continue?.
         /// </summary>
         public static string MinimizeResultsDlg_Minimize_You_have_not_chosen_any_options_to_minimize_your_cache_file_Are_you_sure_you_want_to_continue {
@@ -9600,15 +9582,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline Documents.
-        /// </summary>
-        public static string SkylineWindow_importDocumentMenuItem_Click_Skyline_Documents {
-            get {
-                return ResourceManager.GetString("SkylineWindow_importDocumentMenuItem_Click_Skyline_Documents", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to OK.
         /// </summary>
         public static string SkylineWindow_ImportFasta_OK {
@@ -9682,15 +9655,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Import Mass List.
-        /// </summary>
-        public static string SkylineWindow_importMassListMenuItem_Click_Import_Mass_List {
-            get {
-                return ResourceManager.GetString("SkylineWindow_importMassListMenuItem_Click_Import_Mass_List", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Import transition list.
         /// </summary>
         public static string SkylineWindow_importMassListMenuItem_Click_Import_transition_list {
@@ -9700,11 +9664,20 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Mass List Text (*.csv,*.tsv)|*.csv;*.tsv.
+        ///   Looks up a localized string similar to Import Transition List.
         /// </summary>
-        public static string SkylineWindow_importMassListMenuItem_Click_Mass_List_Text_csv_tsv_csv_tsv {
+        public static string SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title {
             get {
-                return ResourceManager.GetString("SkylineWindow_importMassListMenuItem_Click_Mass_List_Text_csv_tsv_csv_tsv", resourceCulture);
+                return ResourceManager.GetString("SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition List.
+        /// </summary>
+        public static string SkylineWindow_importMassListMenuItem_Click_Transition_List {
+            get {
+                return ResourceManager.GetString("SkylineWindow_importMassListMenuItem_Click_Transition_List", resourceCulture);
             }
         }
         
@@ -10021,7 +9994,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Skyline Shared Documents (*..
+        ///   Looks up a localized string similar to Skyline Shared Documents.
         /// </summary>
         public static string SkylineWindow_shareDocumentMenuItem_Click_Skyline_Shared_Documents {
             get {
@@ -10050,7 +10023,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to ESP Feature Files (*..
+        ///   Looks up a localized string similar to ESP Feature Files.
         /// </summary>
         public static string SkylineWindow_ShowExportEspFeaturesDialog_ESP_Feature_Files {
             get {

@@ -255,7 +255,7 @@ namespace pwiz.Skyline.FileUI
                         InitialDirectory = Properties.Settings.Default.ActiveDirectory,
                         OverwritePrompt = true,
                         DefaultExt = SrmDocument.EXT,
-                        Filter = TextUtil.FileDialogFilterAll(Resources.MinimizeResultsDlg_Minimize_Skyline_Documents, SrmDocument.EXT),
+                        Filter = TextUtil.FileDialogFiltersAll(SrmDocument.FILTER_DOC),
                         FileName = Path.GetFileName(targetFile),
                     })
                 {
