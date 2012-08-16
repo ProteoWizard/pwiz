@@ -353,6 +353,7 @@ namespace pwiz.Skyline
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator47 = new System.Windows.Forms.ToolStripSeparator();
             this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.immediateWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.homeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.videosMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2613,7 +2614,8 @@ namespace pwiz.Skyline
             this.toolStripSeparator46,
             this.optionsToolStripMenuItem,
             this.toolStripSeparator47,
-            this.configureToolsMenuItem});
+            this.configureToolsMenuItem,
+            this.immediateWindowToolStripMenuItem});
             this.toolsMenu.Name = "toolsMenu";
             resources.ApplyResources(this.toolsMenu, "toolsMenu");
             this.toolsMenu.DropDownOpening += new System.EventHandler(this.toolsMenu_DropDownOpening);
@@ -2644,6 +2646,12 @@ namespace pwiz.Skyline
             this.configureToolsMenuItem.Name = "configureToolsMenuItem";
             resources.ApplyResources(this.configureToolsMenuItem, "configureToolsMenuItem");
             this.configureToolsMenuItem.Click += new System.EventHandler(this.configureToolsMenuItem_Click);
+            // 
+            // immediateWindowToolStripMenuItem
+            // 
+            this.immediateWindowToolStripMenuItem.Name = "immediateWindowToolStripMenuItem";
+            resources.ApplyResources(this.immediateWindowToolStripMenuItem, "immediateWindowToolStripMenuItem");
+            this.immediateWindowToolStripMenuItem.Click += new System.EventHandler(this.immediateWindowToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -3059,6 +3067,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator46;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem immediateWindowToolStripMenuItem;
     }
 }
 

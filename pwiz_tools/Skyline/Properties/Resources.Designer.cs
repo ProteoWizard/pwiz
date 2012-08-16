@@ -1953,6 +1953,156 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to All Executables.
+        /// </summary>
+        public static string ConfigureToolsDlg_btnFindCommand_Click_All_Executables {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_btnFindCommand_Click_All_Executables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Batch Files.
+        /// </summary>
+        public static string ConfigureToolsDlg_btnFindCommand_Click_Batch_Files {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_btnFindCommand_Click_Batch_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Command Files.
+        /// </summary>
+        public static string ConfigureToolsDlg_btnFindCommand_Click_Command_Files {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_btnFindCommand_Click_Command_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Information Files.
+        /// </summary>
+        public static string ConfigureToolsDlg_btnFindCommand_Click_Information_Files {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_btnFindCommand_Click_Information_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Do you wish to Save changes?.
+        /// </summary>
+        public static string ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note: if you would like the command to launch a link, make sure to include http:// or https://.
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_" +
+                        "link__make_sure_to_include_http____or_https___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The command for {0} may not exist in that location. Would you like to edit it? .
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_locati" +
+                        "on__Would_you_like_to_edit_it__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If you would like the command to launch a link, make sure to include http:// or https://.
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassTool_if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassTool_if_you_would_like_the_command_to_launch_a_link__m" +
+                        "ake_sure_to_include_http____or_https___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Supported Types: {1}.
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassTool_Supported_Types___1_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassTool_Supported_Types___1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The command cannot be blank. Please enter a valid command for {0}.
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid_command_for__0_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid" +
+                        "_command_for__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The command for {0} must be of a supported type..
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must enter a valid title for the tool..
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassTool_You_must_enter_a_valid_title_for_the_tool {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassTool_You_must_enter_a_valid_title_for_the_tool", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a report or remove {0} from arguments..
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from" +
+                        "_arguments_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please specify a valid URL..
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You have provided {0} as an argument but have not selected a report..
+        /// </summary>
+        public static string ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_" +
+                        "have_not_selected_a_report_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to [New Tool{0}].
+        /// </summary>
+        public static string ConfigureToolsDlg_GetTitle__New_Tool_0__ {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_GetTitle__New_Tool_0__", resourceCulture);
+            }
+        }
+        
         public static System.Drawing.Bitmap Copy {
             get {
                 object obj = ResourceManager.GetObject("Copy", resourceCulture);
@@ -2018,6 +2168,15 @@ namespace pwiz.Skyline.Properties {
         public static string CopyGraphDataToolStripMenuItem_CopyGraphDataToolStripMenuItem_Copy_Data {
             get {
                 return ResourceManager.GetString("CopyGraphDataToolStripMenuItem_CopyGraphDataToolStripMenuItem_Copy_Data", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not open web Browser to show link:.
+        /// </summary>
+        public static string Could_not_open_web_Browser_to_show_link_ {
+            get {
+                return ResourceManager.GetString("Could_not_open_web_Browser_to_show_link_", resourceCulture);
             }
         }
         
@@ -8954,6 +9113,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Failure loading {0}..
+        /// </summary>
+        public static string SerializableSettingsList_ImportSkyrFile_Failure_loading__0__ {
+            get {
+                return ResourceManager.GetString("SerializableSettingsList_ImportSkyrFile_Failure_loading__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string SettingsList_ELEMENT_NONE_None {
@@ -9013,15 +9181,6 @@ namespace pwiz.Skyline.Properties {
         public static string ShareListDlg_ImportFile_Do_you_want_to_replace_them {
             get {
                 return ResourceManager.GetString("ShareListDlg_ImportFile_Do_you_want_to_replace_them", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Failure loading {0}..
-        /// </summary>
-        public static string ShareListDlg_ImportFile_Failure_loading__0__ {
-            get {
-                return ResourceManager.GetString("ShareListDlg_ImportFile_Failure_loading__0__", resourceCulture);
             }
         }
         
@@ -10828,6 +10987,254 @@ namespace pwiz.Skyline.Properties {
         public static string TextUtil_FileDialogFiltersAll_All_Files {
             get {
                 return ResourceManager.GetString("TextUtil_FileDialogFiltersAll_All_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to File not found..
+        /// </summary>
+        public static string ToolDescription_RunTool_File_not_found_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunTool_File_not_found_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please check the command location is correct for this tool..
+        /// </summary>
+        public static string ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_ {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_too" +
+                        "l_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please reconfigure that tool, it failed to execute. .
+        /// </summary>
+        public static string ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__ {
+            get {
+                return ResourceManager.GetString("ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error: {0} requires a report titled {1} which no longer exists. Please select a new report or import the report format.
+        /// </summary>
+        public static string ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format {
+            get {
+                return ResourceManager.GetString("ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_long" +
+                        "er_exists__Please_select_a_new_report_or_import_the_report_format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Active Replicate Name.
+        /// </summary>
+        public static string ToolMacros__listArguments_Active_Replicate_Name {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Active_Replicate_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document Directory.
+        /// </summary>
+        public static string ToolMacros__listArguments_Document_Directory {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Document_Directory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document File Name.
+        /// </summary>
+        public static string ToolMacros__listArguments_Document_File_Name {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Document_File_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document File Name Without Extension.
+        /// </summary>
+        public static string ToolMacros__listArguments_Document_File_Name_Without_Extension {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Document_File_Name_Without_Extension", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Document Path.
+        /// </summary>
+        public static string ToolMacros__listArguments_Document_Path {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Document_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Input Report Temp Path.
+        /// </summary>
+        public static string ToolMacros__listArguments_Input_Report_Temp_Path {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Input_Report_Temp_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a peptide sequence before running this tool..
+        /// </summary>
+        public static string ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_ {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_to" +
+                        "ol_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a protein before running this tool..
+        /// </summary>
+        public static string ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_ {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected Peptide Sequence.
+        /// </summary>
+        public static string ToolMacros__listArguments_Selected_Peptide_Sequence {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Selected_Peptide_Sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected Precursor.
+        /// </summary>
+        public static string ToolMacros__listArguments_Selected_Precursor {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Selected_Precursor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected Protein Name.
+        /// </summary>
+        public static string ToolMacros__listArguments_Selected_Protein_Name {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_Selected_Protein_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a Document Directory to run.
+        /// </summary>
+        public static string ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a Document File Name  to run..
+        /// </summary>
+        public static string ToolMacros__listArguments_This_tool_requires_a_Document_File_Name__to_run_ {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_This_tool_requires_a_Document_File_Name__to_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a Document File Name to run.
+        /// </summary>
+        public static string ToolMacros__listArguments_This_tool_requires_a_Document_File_Name_to_run {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_This_tool_requires_a_Document_File_Name_to_run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a Document Path to run.
+        /// </summary>
+        public static string ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a Selected Peptide Sequence to run.
+        /// </summary>
+        public static string ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a Selected Protein to run..
+        /// </summary>
+        public static string ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_ {
+            get {
+                return ResourceManager.GetString("ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error exporting the report, tool execution canceled..
+        /// </summary>
+        public static string ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_ {
+            get {
+                return ResourceManager.GetString("ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The selected tool ( {0} ) requires a selected report. Please select a report for this tool..
+        /// </summary>
+        public static string ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Please_select_a_report_for_this_tool_ {
+            get {
+                return ResourceManager.GetString("ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Pleas" +
+                        "e_select_a_report_for_this_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a precursor before running this tool..
+        /// </summary>
+        public static string ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_ {
+            get {
+                return ResourceManager.GetString("ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a Selected Precursor to run.
+        /// </summary>
+        public static string ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run {
+            get {
+                return ResourceManager.GetString("ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires a selected report.
+        /// </summary>
+        public static string ToolMacros_listArguments_This_tool_requires_a_selected_report {
+            get {
+                return ResourceManager.GetString("ToolMacros_listArguments_This_tool_requires_a_selected_report", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to This tool requires an Active Replicate Name to run.
+        /// </summary>
+        public static string ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run {
+            get {
+                return ResourceManager.GetString("ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run", resourceCulture);
             }
         }
         
@@ -12742,11 +13149,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not open web browser to show link:.
+        ///   Looks up a localized string similar to Failure saving temporary post data to disk..
         /// </summary>
-        public static string WebHelpers_OpenLink_Could_not_open_web_browser_to_show_link {
+        public static string WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_ {
             get {
-                return ResourceManager.GetString("WebHelpers_OpenLink_Could_not_open_web_browser_to_show_link", resourceCulture);
+                return ResourceManager.GetString("WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_", resourceCulture);
             }
         }
         

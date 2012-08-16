@@ -426,6 +426,7 @@ namespace pwiz.Skyline
             DestroyGraphRetentionTime();
             DestroyGraphPeakArea();
             DestroyResultsGrid();
+            DestroyImmediateWindow();
             foreach (GraphChromatogram graphChrom in _listGraphChrom)
                 DestroyGraphChrom(graphChrom);
             _listGraphChrom.Clear();
@@ -481,6 +482,10 @@ namespace pwiz.Skyline
             if (Equals(persistentString, typeof(ResultsGridForm).ToString()))
             {
                 return _resultsGridForm ?? CreateResultsGrid();
+            }
+            if (Equals(persistentString, typeof(ImmediateWindow).ToString()))
+            {
+                 return _immediateWindow ?? CreateImmediateWindow();
             }
             if (persistentString.StartsWith(typeof(GraphChromatogram).ToString()))
             {

@@ -19,6 +19,9 @@
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
+using System.Net;
+using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -203,11 +206,25 @@ namespace pwiz.Skyline.Util
     }
 
     /// <summary>
+    /// This interface was created to enable swapping for a fake WebHelpers in testing.  
+    /// </summary>
+    public interface IWebHelpers
+    {
+        void OpenLink(string link);
+        void PostToLink(string link, string postData);
+    }
+
+    /// <summary>
     /// Helpers for doing web stuff.
     /// </summary>
-    public sealed class WebHelpers
-    {
-        public static void OpenLink(IWin32Window parent, string link)
+    public sealed class WebHelpers : IWebHelpers
+    {        
+        /// <summary>
+        /// Opens a URL in a web browser without exception handling
+        /// Used in the Model.ToolDescription when error messages aren't allowd. 
+        /// </summary>        
+        /// <param name="link">Web URL to open in browser</param>
+        public static void OpenLink(string link)
         {
             try
             {
@@ -215,8 +232,116 @@ namespace pwiz.Skyline.Util
             }
             catch (Exception)
             {
-                AlertLinkDlg.Show(parent, Resources.WebHelpers_OpenLink_Could_not_open_web_browser_to_show_link, link, link, false);
+                throw new WebToolException(Resources.Could_not_open_web_Browser_to_show_link_, link);
             }
         }
+                
+        /// <summary>
+        /// Opens a URL in a web browser, with exception handling
+        /// </summary>
+        /// <param name="parent">Parent form for error messages</param>
+        /// <param name="link">Web URL to open in browser</param>
+        public static void OpenLink(IWin32Window parent, string link)
+        {
+            try
+            {
+                OpenLink(link);
+            }
+            catch (Exception)
+            {
+                AlertLinkDlg.Show(parent, Resources.Could_not_open_web_Browser_to_show_link_, link, link, false);
+            }
+        }
+
+        
+        /// <summary>
+        /// Post a report to a website, without exception handling.  
+        /// </summary>        
+        /// <param name="link">Web URL to post report to</param>
+        /// <param name="postData">Report text</param>
+        public static void PostToLink(string link, string postData)
+        {
+            string filePath = Path.GetTempFileName() + ".html";
+
+            string javaScript = string.Format(
+
+@"<script type=""text/javascript"">
+function submitForm()
+{{
+    document.getElementById(""my_form"").submit();
+}}
+window.onload = submitForm;
+</script>
+<form id=""my_form"" action=""{0}"" method=""post"" style=""visibility: hidden;"">
+<textarea name=""SlylineReport"">{1}</textarea>
+</form>",
+
+                link, WebUtility.HtmlEncode(postData));
+
+            try
+            {
+                using (var saver = new FileSaver(filePath))
+                {
+                    using (var writer = new StreamWriter(saver.SafeName))
+                    {
+                        writer.Write(javaScript);
+                        writer.Flush();
+                        writer.Close();
+                    }
+
+                    saver.Commit();
+                }
+            }
+            catch (Exception)
+            {                                
+                throw new IOException(Resources.WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_);                
+            }
+
+            try
+            {
+                Process.Start(filePath);
+            }
+            catch(Exception)
+            {
+                throw new WebToolException(Resources.Could_not_open_web_Browser_to_show_link_, link);
+            }
+
+            DeleteTempHelper d = new DeleteTempHelper(filePath);
+            Thread t = new Thread(d.DeletePath);
+            t.Start();
+        }
+
+        #region Implementation of IWebHelpers
+        void IWebHelpers.PostToLink(string link, string postData)
+        {
+            PostToLink(link, postData);
+        }
+
+        void IWebHelpers.OpenLink(string link)
+        {
+            OpenLink(link);
+        }
+        #endregion // Implementation of IWebHelpers
+    }
+
+    public class DeleteTempHelper
+    {
+        private readonly string _path;
+
+        public DeleteTempHelper(string path)
+        {
+            _path = path;
+        }
+
+        /// <summary>
+        /// Wait 30 seconds then delete file located at _path.
+        /// </summary>
+        public void DeletePath()
+        {
+            Thread.Sleep(30*1000); //30 seconds.
+            Helpers.TryTwice(() => File.Delete(_path));
+        }
+
     }
 }
+

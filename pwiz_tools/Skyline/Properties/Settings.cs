@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
@@ -1407,7 +1408,7 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return Resources.IsolationSchemeList_Label_Isolation_scheme; } }
     }
 
-    public sealed class SrmSettingsList : SettingsListBase<SrmSettings>, IListSerializer<SrmSettings>
+    public sealed class SrmSettingsList : SerializableSettingsList<SrmSettings>
     {
         public const string EXT_SETTINGS = ".skys"; // Not L10N
         private static readonly SrmSettings DEFAULT = new SrmSettings
@@ -1517,12 +1518,28 @@ namespace pwiz.Skyline.Properties
 
         public override string Label { get { return Resources.SrmSettingsList_Label_Saved_Settings; } }
 
-        public Type SerialType { get { return typeof(SrmSettingsList); } }
+        public override Type SerialType { get { return typeof(SrmSettingsList); } }
 
-        public ICollection<SrmSettings> CreateEmptyList()
+        public override ICollection<SrmSettings> CreateEmptyList()
         {
             return new SrmSettingsList();
         }
+
+        #region Overrides of SettingsList<SrmSettings>
+
+        public override SrmSettings EditItem(Control owner, SrmSettings item, IEnumerable<SrmSettings> existing, object tag)
+        {
+            // Should never be called
+            throw new InvalidOperationException();
+        }
+
+        public override SrmSettings CopyItem(SrmSettings item)
+        {
+            // Should never be called
+            throw new InvalidOperationException();
+        }
+
+        #endregion
     }
 
     public interface IReportDatabaseProvider
@@ -1530,7 +1547,7 @@ namespace pwiz.Skyline.Properties
         Database GetDatabase(Control owner);
     }
 
-    public sealed class ReportSpecList : SettingsList<ReportSpec>, IListSerializer<ReportSpec>
+    public sealed class ReportSpecList : SerializableSettingsList<ReportSpec>
     {
         public const string EXT_REPORTS = ".skyr"; // Not L10N
 
@@ -1630,9 +1647,9 @@ namespace pwiz.Skyline.Properties
 
         public override string Label { get { return Resources.ReportSpecList_Label_Report; } }
 
-        public Type SerialType { get { return typeof(ReportSpecList); } }
+        public override Type SerialType { get { return typeof(ReportSpecList); } }
 
-        public ICollection<ReportSpec> CreateEmptyList()
+        public override ICollection<ReportSpec> CreateEmptyList()
         {
             return new ReportSpecList();
         }
@@ -1716,6 +1733,71 @@ namespace pwiz.Skyline.Properties
             base.SetItem(index, item);
             FireListChanged();
         }        
+    }
+
+    public abstract class SerializableSettingsList<TItem> : SettingsList<TItem>, IListSerializer<TItem>
+        where TItem : IKeyContainer<string>, IXmlSerializable
+    {
+        #region Implementation of IListSerializer<TItem>
+
+        public abstract Type SerialType { get; }
+
+        public abstract ICollection<TItem> CreateEmptyList();
+
+        #endregion
+
+        public bool ImportFile(string fileName, Func<IList<string>, IList<string>> whichToNotOverWrite)
+        {
+            if (String.IsNullOrEmpty(fileName))
+                return false;
+
+            XmlSerializer xmlSerializer = new XmlSerializer(SerialType);
+            SerializableSettingsList<TItem> loadedItems;
+            try
+            {
+                using (var stream = File.OpenRead(fileName))
+                {
+                    loadedItems = (SerializableSettingsList<TItem>)xmlSerializer.Deserialize(stream);
+                }
+            }
+            catch (Exception exception)
+            {
+                throw new IOException(String.Format(Resources.SerializableSettingsList_ImportSkyrFile_Failure_loading__0__, fileName), exception);
+            }
+            // Check for and warn about existing reports.
+            var existing = (from item in loadedItems
+                            where ContainsKey(item.GetKey())
+                            select item.GetKey()).ToList();
+
+            IList<string> toSkip = new string[0];
+            if (existing.Count > 0)
+            {
+                toSkip = whichToNotOverWrite(existing);
+                if (toSkip == null)
+                    return false;
+            }
+            foreach (TItem item in loadedItems)
+            {
+                // Skip anything still in the toSkip list
+                if (toSkip.Contains(item.GetKey()))
+                    continue;
+                RemoveKey(item.GetKey());
+                Add(item);
+            }
+            return true;
+        }
+
+        private void RemoveKey(string name)
+        {
+            for (int i = 0; i < Count; i++)
+            {
+                if (Equals(name, this[i].GetKey()))
+                {
+                    RemoveAt(i);
+                    break;
+                }
+            }
+        }
     }
 
     public abstract class SettingsList<TItem>

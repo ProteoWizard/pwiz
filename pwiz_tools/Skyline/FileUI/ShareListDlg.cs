@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Properties;
@@ -37,7 +38,7 @@ namespace pwiz.Skyline.FileUI
     }
 
     public partial class ShareListDlg<TList, TItem> : FormEx
-        where TList : IList<TItem>, IListSerializer<TItem>, IListDefaults<TItem>, IListEditorSupport
+        where TList : SerializableSettingsList<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
         private string _label;
@@ -185,6 +186,7 @@ namespace pwiz.Skyline.FileUI
                 listboxListItems.SetItemChecked(i, checkAll);
         }
 
+        //IListSerilizer<TItem> XmlMappedList<string, TItem>, IListDefaults<TItem>, IListEditor<TItem>, IListEditorSupport
         public static bool Import(Form parent, TList listDest)
         {
             return ImportFile(parent, listDest, GetImportFileName(parent,
@@ -206,136 +208,40 @@ namespace pwiz.Skyline.FileUI
 
         public static bool ImportFile(Form parent, TList listDest, string fileName)
         {
-            if (string.IsNullOrEmpty(fileName))
-                return false;
-
-            XmlSerializer xmlSerializer = new XmlSerializer(listDest.SerialType);
-            TList loadedItems;
+            bool sucess;
             try
             {
-                using (var stream = File.OpenRead(fileName))
-                {
-                    loadedItems = (TList)xmlSerializer.Deserialize(stream);
-                }
+                sucess = listDest.ImportFile(fileName, ResolveImportConflicts);
             }
-            catch (Exception exception)
+            catch (XmlException e)
             {
-                new MessageBoxHelper(parent).ShowXmlParsingError(string.Format(Resources.ShareListDlg_ImportFile_Failure_loading__0__, fileName),
-                                                                 fileName, exception);
+                new MessageBoxHelper(parent).ShowXmlParsingError(string.Format("Failure loading {0}.", fileName),
+                                                                 fileName, e.InnerException);
                 return false;
             }
+            return sucess;
+        }
 
-            // Check for and warn about existing reports.
-            List<string> existing = new List<string>(from reportSpec in loadedItems
-                                                     where listDest.ContainsKey(reportSpec.GetKey())
-                                                     select reportSpec.GetKey());
-
-            if (existing.Count > 0)
-            {
-                var multipleMessage = TextUtil.LineSeparate(Resources.ShareListDlg_ImportFile_The_following_names_already_exist, string.Empty,
+        private static IList<string> ResolveImportConflicts(IList<string> existing)
+        {
+            var multipleMessage = TextUtil.LineSeparate(Resources.ShareListDlg_ImportFile_The_following_names_already_exist, string.Empty,
                                                     "{0}", string.Empty, Resources.ShareListDlg_ImportFile_Do_you_want_to_replace_them); // Not L10N
-                string messageFormat = existing.Count == 1 ?
-                   Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
-                   multipleMessage;
-                var result = MessageBox.Show(string.Format(messageFormat, TextUtil.LineSeparate(existing)),
-                                             Program.Name, MessageBoxButtons.YesNoCancel, MessageBoxIcon.None,
-                                             MessageBoxDefaultButton.Button2);
-                switch (result)
-                {
-                    case DialogResult.Cancel:
-                        return false;
-                    case DialogResult.Yes:
-                        // Overwrite everything
-                        existing.Clear();
-                        break;
-                }
-            }
-
-            foreach (TItem reportSpec in loadedItems)
+            string messageFormat = existing.Count == 1 ?
+               Resources.ShareListDlg_ImportFile_The_name__0__already_exists_Do_you_want_to_replace_it :
+               multipleMessage;
+            var result = MessageBox.Show(string.Format(messageFormat, TextUtil.LineSeparate(existing)),
+                                         Program.Name, MessageBoxButtons.YesNoCancel, MessageBoxIcon.None,
+                                         MessageBoxDefaultButton.Button2);
+            switch (result)
             {
-                // Skip anything still in the existing list
-                if (existing.Contains(reportSpec.GetKey()))
-                    continue;
-                RemoveReport(listDest, reportSpec.GetKey());
-                listDest.Add(reportSpec);
-            }
-            return true;
-        }
-
-        // Another implementation of the above ImportFile used for importing a skyr file in a command line scenario 
-        // Maybe move this to a more sensable location.
-        public static bool ImportFile(TextWriter _out, TList listDest, string fileName, bool? resolveSkyrConflictsBySkipping)
-        {
-            if (string.IsNullOrEmpty(fileName))
-                return false;
-
-            XmlSerializer xmlSerializer = new XmlSerializer(listDest.SerialType);
-            TList loadedItems;
-            try
-            {
-                using (var stream = File.OpenRead(fileName))
-                {
-                    loadedItems = (TList)xmlSerializer.Deserialize(stream);
-                }
-            }
-
-            catch (Exception exception)
-            {
-                _out.WriteLine(string.Format("Failure loading {0}. \n {1}", fileName, exception));
-                return false;
-            }
-
-            // Check for and warn about existing reports.
-            List<string> existing = new List<string>(from reportSpec in loadedItems
-                                                     where listDest.ContainsKey(reportSpec.GetKey())
-                                                     select reportSpec.GetKey());
-
-            if (existing.Count > 0)
-            {
-                string messageFormat = existing.Count == 1 ?
-                   "The name '{0}' already exists." :
-                   "The following names already exist:\n\n{0}\n\n";
-                _out.WriteLine(string.Format(messageFormat, string.Join("\n", existing.ToArray())));
-                if (resolveSkyrConflictsBySkipping == null)
-                {
-                    _out.WriteLine("Error: Please specify a way to resolve conflicts.");
-                    _out.WriteLine("       Use command --resolve-skyr-conflicts=< overwrite | skip >");
-                    return false;
-                }
-                if (resolveSkyrConflictsBySkipping == true)
-                {
-                    _out.WriteLine("Resolving conflicts by skipping.");
-                    // The objects are skipped below for being in the list called existing
-                }
-                if (resolveSkyrConflictsBySkipping == false)
-                {
-                    _out.WriteLine("Resolving conflicts by overwriting.");
+                case DialogResult.Cancel:
+                    return null;
+                case DialogResult.Yes:
+                    // Overwrite everything
                     existing.Clear();
-                    // All conflicts are overwritten because existing is empty. 
-                }
-            }
-
-            foreach (TItem reportSpec in loadedItems)
-            {
-                // Skip anything still in the existing list
-                if (existing.Contains(reportSpec.GetKey()))
-                    continue;
-                RemoveReport(listDest, reportSpec.GetKey());
-                listDest.Add(reportSpec);
-            }
-            return true;
-        }
-
-        private static void RemoveReport(IList<TItem> reportSpecList, String name)
-        {
-            for (int i = 0; i < reportSpecList.Count; i++)
-            {
-                if (Equals(name, reportSpecList[i].GetKey()))
-                {
-                    reportSpecList.RemoveAt(i);
                     break;
-                }
             }
+            return existing;
         }
     }
 }

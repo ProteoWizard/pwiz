@@ -20,13 +20,16 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Hibernate.Query;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.DocSettings
 {
@@ -71,6 +74,32 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IList<ReportColumn> CrossTabValues { get; private set; }
 
+        /// <summary>
+        /// Returns a string representation of the report based on the document.         
+        /// </summary>       
+        public string ReportToCsvString (SrmDocument doc)
+        {
+            return ReportToCsvString(doc, TextUtil.CsvSeparator);
+        }
+
+        /// <summary>
+        /// Returns a string representation of the report based on the document.         
+        /// </summary>       
+        public string ReportToCsvString (SrmDocument doc, char separator)
+        {
+            Report report = Report.Load(this);
+            StringWriter writer = new StringWriter();
+            using (Database database = new Database(doc.Settings))
+            {
+                database.AddSrmDocument(doc);
+                ResultSet resultSet = report.Execute(database);
+                ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo.CurrentCulture);
+            }
+            writer.Flush();
+            string csv = writer.ToString();
+            writer.Close();
+            return csv;
+        }
 
         private enum ATTR
         {
@@ -127,7 +156,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     table = GetTable(tableTypeName);
                     // If the element type does not exist, report an error on the original XML name string.
                     if (table == null)
-                        throw new InvalidDataException(string.Format(Resources.ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name, tableName));
+                        throw new InvalidDataException(String.Format(Resources.ReportSpec_ReadXml_The_name__0__is_not_a_valid_table_name, tableName));
 
                     dictAliasTable.Add(TABLE_ALIAS_ELEMENT, table);
                 }
@@ -139,7 +168,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 while (reader.IsStartElement(EL.table))
                 {
                     string tableAlias = reader.GetAttribute(ATTR.name);
-                    if (string.IsNullOrEmpty(tableAlias))
+                    if (String.IsNullOrEmpty(tableAlias))
                         throw  new InvalidDataException(Resources.ReportSpec_ReadXml_Missing_table_name);
 
                     dictAliasTable.Add(tableAlias, GetTable(reader.ReadString()));
@@ -147,7 +176,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
-            Select = ReadColumns(reader, EL.select, dictAliasTable);
+            Select = ReadColumns(reader, EL.@select, dictAliasTable);
             GroupBy = ReadColumns(reader, EL.group_by, dictAliasTable);
             CrossTabHeaders = ReadColumns(reader, EL.cross_tab_headers, dictAliasTable);
             CrossTabValues = ReadColumns(reader, EL.cross_tab_values, dictAliasTable);
@@ -162,7 +191,7 @@ namespace pwiz.Skyline.Model.DocSettings
             Type table = Type.GetType(tableTypeName);
             if (table == null)
             {
-                throw new InvalidDataException(string.Format(Resources.ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name,
+                throw new InvalidDataException(String.Format(Resources.ReportSpec_GetTable_The_name__0__is_not_a_valid_table_name,
                     tableTypeName.Substring(tableTypeName.LastIndexOf('.') + 1))); // Not L10N         
             }
 
@@ -187,7 +216,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteEndElement();
             }
 
-            WriteColumns(writer, EL.select, Select, dictTableAlias);
+            WriteColumns(writer, EL.@select, Select, dictTableAlias);
             WriteColumns(writer, EL.group_by, GroupBy, dictTableAlias);
             WriteColumns(writer, EL.cross_tab_headers, CrossTabHeaders, dictTableAlias);
             WriteColumns(writer, EL.cross_tab_values, CrossTabValues, dictTableAlias);
@@ -277,7 +306,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 string columnString = reader.ReadString();
                 Identifier colId = Identifier.Parse(columnString);
 
-                if (string.IsNullOrEmpty(alias))
+                if (String.IsNullOrEmpty(alias))
                 {
                     // Support for v0.5 format when only a single table was used
                     if (dictAliasTable.Count == 1)
@@ -293,7 +322,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 Type table;
                 if (!dictAliasTable.TryGetValue(alias, out table))
-                    throw new InvalidDataException(string.Format(Resources.ReportSpec_ReadColumns_Failed_to_find_the_table_for_the_column__0__, columnString));
+                    throw new InvalidDataException(String.Format(Resources.ReportSpec_ReadColumns_Failed_to_find_the_table_for_the_column__0__, columnString));
 
                 identifiers.Add(new ReportColumn(table, colId));
                 reader.ReadEndElement();

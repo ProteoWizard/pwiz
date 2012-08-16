@@ -31,8 +31,6 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
-using System.Resources;
-using System.Reflection;
 using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
@@ -72,9 +70,12 @@ namespace pwiz.Skyline
             IDocumentUIContainer,
             IProgressMonitor,
             ILibraryBuildNotificationContainer,
-            IToolMacroProvider
+            IToolMacroProvider,
+            IExceptionHandler
     {
         private SequenceTreeForm _sequenceTreeForm;
+        private ImmediateWindow _immediateWindow;
+
         private SrmDocument _document;
         private SrmDocument _documentUI;
         private int _savedVersion;
@@ -317,6 +318,11 @@ namespace pwiz.Skyline
         public ToolStripComboBox ComboResults
         {
             get { return _sequenceTreeForm != null ? _sequenceTreeForm.ComboResults : null; }
+        }
+
+        public ImmediateWindow ImmediateWindow
+        {
+            get { return _immediateWindow; }
         }
 
         /// <summary>
@@ -584,7 +590,7 @@ namespace pwiz.Skyline
                 _resultName = resultName;
             }
 
-            public string ResultNameCurrent
+            private string ResultNameCurrent
             {
                 get
                 {
@@ -2113,12 +2119,12 @@ namespace pwiz.Skyline
             if (show)
             {
                 if (_sequenceTreeForm != null)
-        {
+                {
                     _sequenceTreeForm.Activate();
                     _sequenceTreeForm.Focus();
-        }
+                }
                 else
-        {
+                {
                     _sequenceTreeForm = CreateSequenceTreeForm();
                     _sequenceTreeForm.Show(dockPanel, DockState.DockLeft);
                 }
@@ -2182,17 +2188,17 @@ namespace pwiz.Skyline
         private void sequenceTreeForm_VisibleChanged(object sender, EventArgs e)
         {
             Settings.Default.ShowPeptides = _sequenceTreeForm.Visible;
-            }
+        }
 
         private void sequenceTreeForm_FormClosed(object sender, FormClosedEventArgs e)
-            {
+        {
             // Update settings and menu check
             Settings.Default.ShowPeptides = false;
             _sequenceTreeForm = null;
-            }
+        }
 
         private void sequenceTree_BeforeNodeEdit(object sender, NodeLabelEditEventArgs e)
-            {
+        {
             if (e.Node is EmptyNode)
                 e.Node.Text = string.Empty;
             else
@@ -3111,11 +3117,15 @@ namespace pwiz.Skyline
             }            
         }
 
-        //Todo: (danny) check with brendan this is correct for Active Replicate Name
         public string ResultNameCurrent
         {
-            get { return (new UndoState(this).ResultNameCurrent); }
-        }
+            get
+            {
+                return ComboResults != null && ComboResults.SelectedItem != null
+                           ? ComboResults.SelectedItem.ToString()
+                           : null;
+            }
+        }       
 
         public string SelectedPeptideSequence
         {
@@ -3159,36 +3169,24 @@ namespace pwiz.Skyline
 
             public void DoClick()
             {
-                // If one of the macros cannot be replaced a messageDlg is displayed and null is returned. 
-                string args = _tool.GetArguments(_parent, _parent);
-                string initDir = null;
-                if (args != null)
+                // Run the tool and catch all errors.
+                try
                 {
-                    initDir = _tool.GetInitialDirectory(_parent, _parent);
+                    if (_tool.OutputToImmediateWindow)
+                    {
+                        _parent.ShowImmediateWindow();
+                        _tool.RunTool(_parent, _parent._immediateWindow._textBoxStreamWriter);
+                    }
+                    else _tool.RunTool(_parent, null);                    
                 }
-                if (args != null && initDir != null)
+                catch(WebToolException e)
                 {
-                    ProcessStartInfo startInfo = new ProcessStartInfo(Command, args) {WorkingDirectory = initDir};
-
-                    try
-                    {
-                        Process.Start(startInfo);
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        MessageDlg.Show(_parent,
-                                        "File Not Found: \n\n Please check the command location is correct for this tool");
-                    }
-                    catch (Win32Exception)
-                    {
-                        MessageDlg.Show(_parent,
-                                        "File Not Found: \n\n Please check the command location is correct for this tool");
-                    }
-                    catch (Exception)
-                    {
-                        MessageDlg.Show(_parent, "Please reconfigure that tool, it failed to execute. ");
-                    }
+                    AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, e.Link, e.Link, false);
                 }
+                catch(Exception e)
+                {
+                    MessageDlg.Show(_parent, e.Message);                    
+                }               
             }
         }
 
@@ -3224,7 +3222,7 @@ namespace pwiz.Skyline
             {
                 if (!t.Equals( new ToolDescription("", "", "", "")))
                 {
-                    ToolDescription temp = new ToolDescription(t.Title, t.Command, t.Arguments, t.InitialDirectory);
+                    ToolDescription temp = new ToolDescription(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle);
                     output.Add(temp);
                 }                
             }
@@ -3260,14 +3258,19 @@ namespace pwiz.Skyline
         }
 
         /// <summary>
-        /// Runs a tool by index from the tools menu. (for testing)
+        /// Runs a tool by index from the tools menu. (for testing) make sure to SkylineWindow.PopulateToolsMenu() first
         /// </summary>
-        /// <param name="i">Index of tool in the menu</param>
+        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
         public void RunTool(int i)
         {
             GetToolMenuItem(i).DoClick();
         }
 
+        /// <summary>
+        /// Returns the title of a tool by index from the tools menu. (for testing) make sure to run SkylineWindow.PopulateToolsMenu() first
+        /// </summary>
+        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
+        /// <returns></returns>
         public string GetToolText(int i)
         {
             return GetToolMenuItem(i).Text;
@@ -3293,10 +3296,61 @@ namespace pwiz.Skyline
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowToolOptionsUI();
+        }      
+        #endregion
+
+        #region ImmediateWindow
+
+        private void immediateWindowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImmediateWindow();
         }
 
-        #endregion 
+        public void ShowImmediateWindow()
+        {
+            if (_immediateWindow != null)
+            {
+                _immediateWindow.Activate();
+            }
+            else
+            {
+                _immediateWindow = CreateImmediateWindow();
+                _immediateWindow.Activate();
+                _immediateWindow.Focus();
+                _immediateWindow.Show(dockPanel, DockState.DockBottom);
+//                ActiveDocumentChanged();
+            }
+        }
 
+        private ImmediateWindow CreateImmediateWindow()
+        {
+            _immediateWindow = new ImmediateWindow(this);       
+            return _immediateWindow;
+        }
+        
+        private void DestroyImmediateWindow()
+        {
+            if (_immediateWindow != null)
+            {                
+                _immediateWindow.Close();
+                _immediateWindow = null;
+            }
+        }
+
+        #endregion
+
+        #region Implementation of IExceptionHandler
+
+        /// <summary>
+        /// Implementation of IExceptionHandler. Enables Exceptions to be thrown to the SkylineWindow from other threads.
+        /// </summary>
+        /// <param name="e"></param>
+        public void HandleException(Exception e)
+        {
+            RunUIAction(() => MessageDlg.Show(this, e.Message));                          
+        }
+
+        #endregion
     }
 }
 

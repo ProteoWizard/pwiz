@@ -17,12 +17,17 @@
  * limitations under the License.
  */
 
+using System;
 using System.IO;
+using System.Threading;
+using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.ToolsUI;
+using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -33,11 +38,14 @@ namespace pwiz.SkylineTestFunctional
         [TestMethod]
         public void TestConfigureToolsDlg()
         {
+            TestFilesZip = @"TestFunctional\ConfigureToolsDlgTest.zip"; //Not L10N
             RunFunctionalTest();
         }
 
         protected override void DoTest()
         {
+            TestHttpPost();
+
             TestEmptyOpen();
 
             TestButtons();
@@ -64,43 +72,228 @@ namespace pwiz.SkylineTestFunctional
         
             TestMacroReplacement(); 
 
+            TestURL(); 
+
+            TestImmediateWindow();
+        }
+        
+        public class FakeWebHelper : IWebHelpers
+        {
+            public FakeWebHelper()
+            {
+                _openLinkCalled = false;
+                _httpPostCalled = false;
+            }
+
+            public bool _openLinkCalled { get; set; }
+            public bool _httpPostCalled { get; set; }
+            
+            #region Implementation of IWebHelpers
+
+            public void OpenLink(string link)
+            {
+                _openLinkCalled = true;
+            }
+
+            public void PostToLink(string link, string postData)
+            {
+                _httpPostCalled = true;
+            }
+
+            #endregion
         }
 
-        private static void TestMacros()
+        // Instead of putting Not L10N every time i use these i factored them out.
+        private readonly string _empty = String.Empty; // Not L10N 
+        private const string EXAMPLE = "example"; // Not L10N
+        private const string EXAMPLE_EXE = "example.exe"; //Not L10N
+        private const string EXAMPLE1 = "example1"; // Not L10N
+        private const string EXAMPLE1_EXE = "_example1.exe"; //Not L10N
+        private const string EXAMPLE2 = "example2"; // Not L10N
+        private const string EXAMPLE2_EXE = "example2.exe"; //Not L10N
+        private const string EXAMPLE2_ARGUMENT = "2Arguments"; //Not L10N
+        private const string EXAMPLE2_INTLDIR = "2InitialDir"; //Not L10N
+        private const string EXAMPLE3 = "example3"; // Not L10N
+        private const string EXAMPLE3_EXE = "example3.exe"; // Not L10N
+
+        private void TestHttpPost()
+        {            
+            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            RunUI(() =>
+                      {                          
+                          //Remove all tools.
+                          configureToolsDlg.RemoveAllTools();
+                          configureToolsDlg.AddDialog("OpenLinkTest", "http://www.google.com", _empty, _empty, false, _empty); // Not L10N
+                          configureToolsDlg.AddDialog("HttpPostTest", "http://www.google.com", _empty, _empty, false, "Transition Results"); // Not L10N
+                          Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
+                          configureToolsDlg.OkDialog();
+
+                          FakeWebHelper fakeWebHelper = new FakeWebHelper();
+                          Settings.Default.ToolList[0].WebHelpers = fakeWebHelper;
+                          Settings.Default.ToolList[1].WebHelpers = fakeWebHelper;
+
+                          SkylineWindow.PopulateToolsMenu();
+                          Assert.IsFalse(fakeWebHelper._openLinkCalled);
+                          SkylineWindow.RunTool(0);
+                          Assert.IsTrue(fakeWebHelper._openLinkCalled);
+                          Assert.IsFalse((fakeWebHelper._httpPostCalled));
+                          SkylineWindow.RunTool(1);
+                          Assert.IsTrue(fakeWebHelper._httpPostCalled);
+
+                          // Remove all tools
+                          while (Settings.Default.ToolList.Count > 0)
+                          {
+                              Settings.Default.ToolList.RemoveAt(0);
+                          }
+                          SkylineWindow.PopulateToolsMenu();
+
+                      });
+        }
+
+        private void TestImmediateWindow()
+        {            
+            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            string exePath = TestFilesDir.GetTestPath("ShortStdinToStdout.exe"); // Not L10N
+            // ShortStdinToStdout outputs the string provided to it. the string can come either as an argument or from stdin.
+            WaitForCondition(10*60*1000, () => File.Exists(exePath));
+            RunUI(() =>
+            {
+                Assert.IsTrue(File.Exists(exePath));
+                //Remove all tools.
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.AddDialog("ImWindowTest", exePath, _empty, _empty, true,
+                                            "Peptide RT Results"); // Report passed via stdin. // Not L10N
+                configureToolsDlg.AddDialog("ImWindowTestWithMacro", exePath, ToolMacros.INPUT_REPORT_TEMP_PATH,
+                                            _empty, true, "Transition Results");
+                // Report passed as an argument. // Not L10N
+                Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
+                configureToolsDlg.OkDialog();
+                SkylineWindow.PopulateToolsMenu();
+                Assert.AreEqual("ImWindowTest", SkylineWindow.GetToolText(0)); // Not L10N
+                Assert.AreEqual("ImWindowTestWithMacro", SkylineWindow.GetToolText(1)); // Not L10N
+                SkylineWindow.RunTool(0);                                               
+            });
+            Thread.Sleep(1000); // The tool is run on a different thread, without a pause it has touble writing across in time.
+            RunUI(()=>
+            {
+                const string reportText =
+                              "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
+                Assert.IsTrue(SkylineWindow.ImmediateWindow.TextContent.Contains(reportText));
+                SkylineWindow.ImmediateWindow.Clear();
+                SkylineWindow.RunTool(1);
+            });
+            Thread.Sleep(1000); // The tool is run on a different thread, without a pause it has touble writing across in time.
+            RunUI(() =>
+            {
+                const string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; //Not L10N
+                Assert.IsTrue(SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));              
+                SkylineWindow.ImmediateWindow.Clear();
+                SkylineWindow.ImmediateWindow.Close();
+            });            
+    }
+
+        private void TestURL()
+        {
+            ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
+            RunUI(() =>
+            {
+                    configureToolsDlg.RemoveAllTools();
+                    configureToolsDlg.AddDialog("ExampleWebsiteTool", "https://skyline.gs.washington.edu/labkey/project/home/begin.view?", _empty, _empty, false, _empty); // Not L10N
+                    configureToolsDlg.AddDialog(EXAMPLE1, EXAMPLE1_EXE, _empty, _empty);
+                    Assert.IsTrue(configureToolsDlg.btnRemove.Enabled);
+                    Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
+                    Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
+
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.textTitle.Text); 
+                    Assert.AreEqual(EXAMPLE1_EXE, configureToolsDlg.textCommand.Text); 
+
+                    Assert.IsTrue(configureToolsDlg.textTitle.Enabled);
+                    Assert.IsTrue(configureToolsDlg.textCommand.Enabled);
+                    Assert.IsTrue(configureToolsDlg.textArguments.Enabled);
+                    Assert.IsTrue(configureToolsDlg.textInitialDirectory.Enabled);
+                    Assert.IsTrue(configureToolsDlg.cbOutputImmediateWindow.Enabled);
+                    Assert.IsTrue(configureToolsDlg.comboReport.Enabled);
+                    Assert.IsTrue(configureToolsDlg.btnFindCommand.Enabled);
+                    Assert.IsTrue(configureToolsDlg.btnArguments.Enabled);
+                    Assert.IsTrue(configureToolsDlg.btnInitialDirectoryMacros.Enabled);
+                    Assert.IsTrue(configureToolsDlg.btnInitialDirectory.Enabled);
+             });
+
+            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(0), messageDlg =>
+            {
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
+                // Because of the way MultiButtonMsgDlg is written CancelClick is actually no when only yes/no options are avalible. 
+                messageDlg.BtnCancelClick(); // Dialog response no.
+            });
+            RunUI(()=>
+                      {
+                          Assert.AreEqual(0, configureToolsDlg.listTools.SelectedIndex);
+                          Assert.IsTrue(configureToolsDlg.textTitle.Enabled);
+                          Assert.AreEqual("ExampleWebsiteTool", configureToolsDlg.textTitle.Text); // Not L10N
+                          Assert.IsTrue(configureToolsDlg.textCommand.Enabled);
+                          Assert.AreEqual("https://skyline.gs.washington.edu/labkey/project/home/begin.view?", configureToolsDlg.textCommand.Text); // Not L10N
+                          Assert.IsFalse(configureToolsDlg.textArguments.Enabled);
+                          Assert.IsFalse(configureToolsDlg.textInitialDirectory.Enabled);
+                          Assert.IsFalse(configureToolsDlg.cbOutputImmediateWindow.Enabled);
+                          Assert.IsTrue(configureToolsDlg.comboReport.Enabled);
+                          Assert.AreEqual(_empty,configureToolsDlg.comboReport.SelectedItem);
+                          Assert.IsFalse(configureToolsDlg.btnFindCommand.Enabled);
+                          Assert.IsFalse(configureToolsDlg.btnArguments.Enabled);
+                          Assert.IsFalse(configureToolsDlg.btnInitialDirectoryMacros.Enabled);
+                          Assert.IsFalse(configureToolsDlg.btnInitialDirectory.Enabled);                        
+                          Assert.AreEqual(CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+
+                          configureToolsDlg.TestHelperIndexChange(1);
+                          Assert.AreEqual(EXAMPLE1, configureToolsDlg.textTitle.Text); 
+                          Assert.AreEqual(EXAMPLE1_EXE, configureToolsDlg.textCommand.Text);
+                          Assert.IsTrue(configureToolsDlg.textTitle.Enabled);
+                          Assert.IsTrue(configureToolsDlg.textCommand.Enabled);
+                          Assert.IsTrue(configureToolsDlg.textArguments.Enabled);
+                          Assert.IsTrue(configureToolsDlg.textInitialDirectory.Enabled);
+                          Assert.IsTrue(configureToolsDlg.cbOutputImmediateWindow.Enabled);
+                          Assert.IsTrue(configureToolsDlg.comboReport.Enabled);
+                          Assert.IsTrue(configureToolsDlg.btnFindCommand.Enabled);
+                          Assert.IsTrue(configureToolsDlg.btnArguments.Enabled);
+                          Assert.IsTrue(configureToolsDlg.btnInitialDirectoryMacros.Enabled);
+                          Assert.IsTrue(configureToolsDlg.btnInitialDirectory.Enabled);
+
+                          //delete both and exit
+                          configureToolsDlg.RemoveAllTools();
+                          configureToolsDlg.OkDialog();
+                      });
+        }
+
+        private void TestMacros()
         {
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.AddDialog("example", "example.exe", "", "");
-                Assert.AreEqual("", configureToolsDlg.textArguments.Text);
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.AddDialog(EXAMPLE, EXAMPLE_EXE, _empty, _empty);
+                Assert.AreEqual(_empty, configureToolsDlg.textArguments.Text);
                 configureToolsDlg.ClickMacro(configureToolsDlg._macroListArguments, 0);
                 string shortText = configureToolsDlg._macroListArguments[0].ShortText; 
                 Assert.AreEqual(shortText, configureToolsDlg.textArguments.Text);
-                Assert.AreEqual("", configureToolsDlg.textInitialDirectory.Text);
+                Assert.AreEqual(_empty, configureToolsDlg.textInitialDirectory.Text); 
                 string shortText2 = configureToolsDlg._macroListInitialDirectory[0].ShortText; 
                 configureToolsDlg.ClickMacro(configureToolsDlg._macroListInitialDirectory, 0);
                 Assert.AreEqual(shortText2, configureToolsDlg.textInitialDirectory.Text);
-                configureToolsDlg.Delete();
+                configureToolsDlg.Remove();
                 configureToolsDlg.OkDialog();
             });
         }
 
-        // Opens dlg assuming no tools exist exits with no tools.
-        private static void TestEmptyOpen()
+        private void TestEmptyOpen()
         {
             // Empty the tools list just in case.
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
                 {                    
-                    while (configureToolsDlg.ToolList.Count > 0)
-                    {
-                        configureToolsDlg.Delete();
-                    }
+                    configureToolsDlg.RemoveAllTools();
                     configureToolsDlg.Add();
-                    Assert.AreEqual("[New Tool1]", configureToolsDlg.ToolList[0].Title);
+                    Assert.AreEqual("[New Tool1]", configureToolsDlg.ToolList[0].Title); // Not L10N
                     Assert.AreEqual(1, configureToolsDlg.ToolList.Count);
                     Assert.IsFalse(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsFalse(configureToolsDlg.btnMoveDown.Enabled);
-                    configureToolsDlg.Delete();
+                    configureToolsDlg.Remove();
                     configureToolsDlg.SaveTools();
                     Assert.IsFalse(configureToolsDlg.btnApply.Enabled);
                     Assert.AreEqual(0, configureToolsDlg.ToolList.Count);
@@ -110,92 +303,136 @@ namespace pwiz.SkylineTestFunctional
                 });
         }
 
-        private static void TestButtons()
+        private void TestButtons()
         {
             {
+                
                 ConfigureToolsDlg configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
                 RunUI(() =>
                 {
-                    Assert.AreEqual(1, configureToolsDlg.ToolList.Count);
-                    configureToolsDlg.Delete();
-                    Assert.AreEqual("", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual("", configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual("", configureToolsDlg.textInitialDirectory.Text);
+                    configureToolsDlg.RemoveAllTools();
+                    Assert.AreEqual(_empty, configureToolsDlg.textTitle.Text); 
+                    Assert.AreEqual(_empty, configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(_empty, configureToolsDlg.textArguments.Text);  
+                    Assert.AreEqual(_empty, configureToolsDlg.textInitialDirectory.Text);
+                    Assert.AreEqual(CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual(_empty, configureToolsDlg.comboReport.SelectedItem);
+                    //All buttons and fields disabled
                     Assert.IsFalse(configureToolsDlg.textTitle.Enabled);
                     Assert.IsFalse(configureToolsDlg.textCommand.Enabled);
                     Assert.IsFalse(configureToolsDlg.textArguments.Enabled);
                     Assert.IsFalse(configureToolsDlg.textInitialDirectory.Enabled);
+                    Assert.IsFalse(configureToolsDlg.cbOutputImmediateWindow.Enabled);
+                    Assert.IsFalse(configureToolsDlg.comboReport.Enabled);
+                    Assert.IsFalse(configureToolsDlg.btnFindCommand.Enabled);
+                    Assert.IsFalse(configureToolsDlg.btnArguments.Enabled);
+                    Assert.IsFalse(configureToolsDlg.btnInitialDirectoryMacros.Enabled);
+                    Assert.IsFalse(configureToolsDlg.btnInitialDirectory.Enabled);
+
                     Assert.AreEqual(0, configureToolsDlg.ToolList.Count);
-                    Assert.IsFalse(configureToolsDlg.btnDelete.Enabled);
-                    // Now add an example.
-                    configureToolsDlg.AddDialog("example1", "example1.exe", "", "");
+                    Assert.IsFalse(configureToolsDlg.btnRemove.Enabled);
+                    // Now add an example.                    
+                    configureToolsDlg.AddDialog(EXAMPLE1, EXAMPLE1_EXE, _empty, _empty, true, _empty); 
                     Assert.AreEqual(1, configureToolsDlg.ToolList.Count);
                     Assert.AreEqual(0, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.IsTrue(configureToolsDlg.btnDelete.Enabled);
-                    Assert.AreEqual("example1", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("example1.exe", configureToolsDlg.textCommand.Text);
+                    //All buttons and fields enabled
+                    Assert.IsTrue(configureToolsDlg.btnRemove.Enabled);
+                    Assert.IsTrue(configureToolsDlg.textTitle.Enabled);
+                    Assert.IsTrue(configureToolsDlg.textCommand.Enabled);
+                    Assert.IsTrue(configureToolsDlg.textArguments.Enabled);
+                    Assert.IsTrue(configureToolsDlg.textInitialDirectory.Enabled);
+                    Assert.IsTrue(configureToolsDlg.cbOutputImmediateWindow.Enabled);
+                    Assert.IsTrue(configureToolsDlg.comboReport.Enabled);
+                    Assert.IsTrue(configureToolsDlg.btnFindCommand.Enabled);
+                    Assert.IsTrue(configureToolsDlg.btnArguments.Enabled);
+                    Assert.IsTrue(configureToolsDlg.btnInitialDirectoryMacros.Enabled);
+                    Assert.IsTrue(configureToolsDlg.btnInitialDirectory.Enabled);
+
+
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.textTitle.Text);
+                    Assert.AreEqual(EXAMPLE1_EXE, configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual(_empty, configureToolsDlg.comboReport.SelectedItem); 
                     Assert.IsFalse(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsFalse(configureToolsDlg.btnMoveDown.Enabled);
                     // Now add an example2.
-                    configureToolsDlg.AddDialog("example2", "example2.exe", "2Arguments",
-                                                "2InitialDirectory");
+                    configureToolsDlg.comboReport.Items.Add("ExampleReport"); // Not L10N
+                    configureToolsDlg.AddDialog(EXAMPLE2, EXAMPLE2_EXE, EXAMPLE2_ARGUMENT, EXAMPLE2_INTLDIR, false, "ExampleReport"); // Not L10N
                     Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
                     Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.AreEqual("example2", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("example2.exe", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual("2Arguments", configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual(configureToolsDlg.textInitialDirectory.Text,
-                                    "2InitialDirectory");
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.textTitle.Text); 
+                    Assert.AreEqual(EXAMPLE2_EXE, configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(EXAMPLE2_ARGUMENT, configureToolsDlg.textArguments.Text); 
+                    Assert.AreEqual(configureToolsDlg.textInitialDirectory.Text, EXAMPLE2_INTLDIR); 
+                    Assert.AreEqual(CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual("ExampleReport", configureToolsDlg.comboReport.SelectedItem); // Not L10N
+
                     Assert.IsTrue(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsFalse(configureToolsDlg.btnMoveDown.Enabled);
                     // Test move up/down with only 2 tools.
                     configureToolsDlg.MoveUp();
                     Assert.AreEqual(2, configureToolsDlg.ToolList.Count);
                     Assert.AreEqual(0, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.AreEqual("example2", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("example2.exe", configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.textTitle.Text); 
+                    Assert.AreEqual(EXAMPLE2_EXE, configureToolsDlg.textCommand.Text); 
+                    Assert.AreEqual(EXAMPLE2_ARGUMENT, configureToolsDlg.textArguments.Text); 
+                    Assert.AreEqual(configureToolsDlg.textInitialDirectory.Text, EXAMPLE2_INTLDIR);
+                    Assert.AreEqual(CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual("ExampleReport", configureToolsDlg.comboReport.SelectedItem); // Not L10N
+
                     Assert.IsFalse(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsTrue(configureToolsDlg.btnMoveDown.Enabled);
-                    Assert.AreEqual("example2", configureToolsDlg.ToolList[0].Title);
-                    Assert.AreEqual("example1", configureToolsDlg.ToolList[1].Title);
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.ToolList[0].Title); 
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.ToolList[1].Title); 
+
                     configureToolsDlg.MoveDown();
-                    Assert.AreEqual("example1", configureToolsDlg.ToolList[0].Title);
-                    Assert.AreEqual("example2", configureToolsDlg.ToolList[1].Title);
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.ToolList[0].Title); 
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.ToolList[1].Title); 
                     // Now add an example 3.
-                    configureToolsDlg.AddDialog("example3", "example3.exe", "", "");
+                    configureToolsDlg.AddDialog(EXAMPLE3, EXAMPLE3_EXE, _empty, _empty); 
                     Assert.AreEqual(3, configureToolsDlg.ToolList.Count);
                     Assert.AreEqual(2, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.AreEqual("example3", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("example3.exe", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual("", configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual("", configureToolsDlg.textInitialDirectory.Text);
+                    Assert.AreEqual(EXAMPLE3, configureToolsDlg.textTitle.Text); 
+                    Assert.AreEqual(EXAMPLE3_EXE, configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(_empty, configureToolsDlg.textArguments.Text);
+                    Assert.AreEqual(_empty, configureToolsDlg.textInitialDirectory.Text);
+                    Assert.AreEqual(CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual(_empty, configureToolsDlg.comboReport.SelectedItem);
                     Assert.IsTrue(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsFalse(configureToolsDlg.btnMoveDown.Enabled);
                     // Test btnMoveUp.
                     configureToolsDlg.MoveUp();
                     Assert.AreEqual(3, configureToolsDlg.ToolList.Count);
                     Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.AreEqual("example3", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("example3.exe", configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(EXAMPLE3, configureToolsDlg.textTitle.Text);
+                    Assert.AreEqual(EXAMPLE3_EXE, configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(_empty, configureToolsDlg.textArguments.Text); 
+                    Assert.AreEqual(_empty, configureToolsDlg.textInitialDirectory.Text); 
+                    Assert.AreEqual(CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual(_empty, configureToolsDlg.comboReport.SelectedItem); 
+
                     Assert.IsTrue(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsTrue(configureToolsDlg.btnMoveDown.Enabled);
-                    Assert.AreEqual("example2", configureToolsDlg.ToolList[2].Title);
-                    Assert.AreEqual("example3", configureToolsDlg.ToolList[1].Title);
-                    Assert.AreEqual("example1", configureToolsDlg.ToolList[0].Title);
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.ToolList[2].Title); 
+                    Assert.AreEqual(EXAMPLE3, configureToolsDlg.ToolList[1].Title); 
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.ToolList[0].Title); 
                 });
                 // Test response to selected index changing.
                 RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(0), messageDlg =>
                 {
-                    AssertEx.Contains(messageDlg.Message,
-                        "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
+                    AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                     // Because of the way MultiButtonMsgDlg is written CancelClick is actually no when only yes/no options are avalible. 
                     messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
-                    Assert.AreEqual("example1", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("example1.exe", configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.textTitle.Text); 
+                    Assert.AreEqual(EXAMPLE1_EXE, configureToolsDlg.textCommand.Text); 
+                    Assert.AreEqual(_empty, configureToolsDlg.textArguments.Text); 
+                    Assert.AreEqual(_empty, configureToolsDlg.textInitialDirectory.Text);
+                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual(_empty, configureToolsDlg.comboReport.SelectedItem);
+
                     Assert.IsFalse(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsTrue(configureToolsDlg.btnMoveDown.Enabled);
                     // Test update of previously selected index.
@@ -204,32 +441,63 @@ namespace pwiz.SkylineTestFunctional
                     // Test btnMoveDown.
                     configureToolsDlg.MoveDown();
                     Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
-                    Assert.AreEqual("example1", configureToolsDlg.textTitle.Text);
-                    Assert.AreEqual("example1.exe", configureToolsDlg.textCommand.Text);
-                    Assert.AreEqual("", configureToolsDlg.textArguments.Text);
-                    Assert.AreEqual("", configureToolsDlg.textInitialDirectory.Text);
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.textTitle.Text);
+                    Assert.AreEqual(EXAMPLE1_EXE, configureToolsDlg.textCommand.Text); 
+                    Assert.AreEqual(_empty, configureToolsDlg.textArguments.Text);  
+                    Assert.AreEqual(_empty, configureToolsDlg.textInitialDirectory.Text); 
+                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual(_empty, configureToolsDlg.comboReport.SelectedItem);
+
                     Assert.IsTrue(configureToolsDlg.btnMoveUp.Enabled);
                     Assert.IsTrue(configureToolsDlg.btnMoveDown.Enabled);
-                    Assert.AreEqual("example3", configureToolsDlg.ToolList[0].Title);
-                    Assert.AreEqual("example1", configureToolsDlg.ToolList[1].Title);
-                    Assert.AreEqual("example2", configureToolsDlg.ToolList[2].Title);
+                    Assert.AreEqual(EXAMPLE3, configureToolsDlg.ToolList[0].Title);
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.ToolList[1].Title); 
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.ToolList[2].Title); 
             });
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(2), messageDlg =>
+                {
+                    AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
+                    // Because of the way MultiButtonMsgDlg is written CancelClick is actually no when only yes/no options are avalible. 
+                    messageDlg.BtnCancelClick(); // Dialog response no.
+                });
+                RunUI(()=>
+                {
+                    Assert.AreEqual(2, configureToolsDlg.listTools.SelectedIndex);
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.textTitle.Text);
+                    Assert.AreEqual(EXAMPLE2_EXE, configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(EXAMPLE2_ARGUMENT, configureToolsDlg.textArguments.Text);
+                    Assert.AreEqual(configureToolsDlg.textInitialDirectory.Text, EXAMPLE2_INTLDIR);
+                    Assert.AreEqual(CheckState.Unchecked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual("ExampleReport", configureToolsDlg.comboReport.SelectedItem); // Not L10N
+                });
+                RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(1), messageDlg =>
+                {
+                    AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
+                    // Because of the way MultiButtonMsgDlg is written CancelClick is actually no when only yes/no options are avalible. 
+                    messageDlg.BtnCancelClick(); // Dialog response no.
+                });
+                RunUI(()=>
+                {
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.textTitle.Text);
+                    Assert.AreEqual(EXAMPLE1_EXE, configureToolsDlg.textCommand.Text);
+                    Assert.AreEqual(CheckState.Checked, configureToolsDlg.cbOutputImmediateWindow.CheckState);
+                    Assert.AreEqual(_empty, configureToolsDlg.comboReport.SelectedItem);
+                });
+
                 // Save and return to skylinewindow.
                 RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
                 {
-                    AssertEx.Contains(messageDlg.Message,
-                            "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
+                    AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                     messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
                     SkylineWindow.PopulateToolsMenu();
-                    Assert.AreEqual("example3", SkylineWindow.GetToolText(0));
-                    Assert.AreEqual("example1", SkylineWindow.GetToolText(1));
-                    Assert.AreEqual("example2", SkylineWindow.GetToolText(2));
+                    Assert.AreEqual(EXAMPLE3, SkylineWindow.GetToolText(0));
+                    Assert.AreEqual(EXAMPLE1, SkylineWindow.GetToolText(1));
+                    Assert.AreEqual(EXAMPLE2, SkylineWindow.GetToolText(2));
                     Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
                 });
-
             }
             {
                 // Reopen menu to swap, save, close, and check changes showed up.
@@ -237,35 +505,33 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                 {
                     Assert.AreEqual(3, configureToolsDlg.ToolList.Count);
-                    Assert.AreEqual("example3", configureToolsDlg.ToolList[0].Title);
-                    Assert.AreEqual("example1", configureToolsDlg.ToolList[1].Title);
-                    Assert.AreEqual("example2", configureToolsDlg.ToolList[2].Title);
+                    Assert.AreEqual(EXAMPLE3, configureToolsDlg.ToolList[0].Title);
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.ToolList[1].Title);
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.ToolList[2].Title);
                 });
                 RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(1), messageDlg =>
                 {
-                    AssertEx.Contains(messageDlg.Message,
-                            "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
+                    AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                     messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
                     configureToolsDlg.MoveDown();
-                    Assert.AreEqual("example3", configureToolsDlg.ToolList[0].Title);
-                    Assert.AreEqual("example2", configureToolsDlg.ToolList[1].Title);
-                    Assert.AreEqual("example1", configureToolsDlg.ToolList[2].Title);
+                    Assert.AreEqual(EXAMPLE3, configureToolsDlg.ToolList[0].Title);
+                    Assert.AreEqual(EXAMPLE2, configureToolsDlg.ToolList[1].Title);
+                    Assert.AreEqual(EXAMPLE1, configureToolsDlg.ToolList[2].Title);
                 });
                 RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
                 {
-                    AssertEx.Contains(messageDlg.Message,
-                            "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
+                    AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                     messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
                     SkylineWindow.PopulateToolsMenu();
-                    Assert.AreEqual("example3", SkylineWindow.GetToolText(0));
-                    Assert.AreEqual("example2", SkylineWindow.GetToolText(1));
-                    Assert.AreEqual("example1", SkylineWindow.GetToolText(2));
+                    Assert.AreEqual(EXAMPLE3, SkylineWindow.GetToolText(0));
+                    Assert.AreEqual(EXAMPLE2, SkylineWindow.GetToolText(1));
+                    Assert.AreEqual(EXAMPLE1, SkylineWindow.GetToolText(2));
                     Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
                 });
             }
@@ -275,17 +541,14 @@ namespace pwiz.SkylineTestFunctional
                 // Change selected index to test deleting from the middle.
                 RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(1), messageDlg =>
                 {
-                    AssertEx.Contains(messageDlg.Message,
-                         "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
+                    AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                     messageDlg.BtnCancelClick(); // Dialog response no.
                 });
                 RunUI(() =>
                 {
-                    configureToolsDlg.Delete();
-                    configureToolsDlg.Delete();
-                    configureToolsDlg.Delete();
+                    configureToolsDlg.RemoveAllTools();
                     // Now the tool list is empty.
-                    Assert.IsFalse(configureToolsDlg.btnDelete.Enabled);
+                    Assert.IsFalse(configureToolsDlg.btnRemove.Enabled);
                     configureToolsDlg.OkDialog();
                     SkylineWindow.PopulateToolsMenu();
                     Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
@@ -293,218 +556,221 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private static void TestPopups()
+        private void TestPopups()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunDlg<MessageDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "The command cannot be blank, please enter a valid command for [New Tool1]");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid_command_for__0_, messageDlg.Message, 1);
                 messageDlg.OkDialog();
             });
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.AddDialog("example1", "example1", "", "");
+                configureToolsDlg.Remove();
+                configureToolsDlg.AddDialog(EXAMPLE1, EXAMPLE1, _empty, _empty);
             });
             RunDlg<MessageDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "The command for example1 must be of a supported type \n\n Supported Types: *.exe; *.com; *.pif; *.cmd; *.bat");
+                string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS); // Not L10N
+                supportedTypes = supportedTypes.Replace(".", "*."); // Not L10N
+                AssertEx.Contains(messageDlg.Message, string.Format(TextUtil.LineSeparate(
+                            Resources.ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type,
+                            Resources.ConfigureToolsDlg_CheckPassTool_Supported_Types___1_,
+                            Resources.ConfigureToolsDlg_CheckPassTool_if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
+                            EXAMPLE1, supportedTypes));
                 messageDlg.OkDialog();
             });
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.AddDialog("example1", "example1.exe", "", "");
+                configureToolsDlg.Remove();
+                configureToolsDlg.AddDialog(EXAMPLE1, EXAMPLE1_EXE, _empty, _empty);
             });
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.Btn1Click(); //Dialog response yes.
             });
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.AddDialog("", "example1.exe", "", "");      
+                configureToolsDlg.Remove();
+                configureToolsDlg.AddDialog(_empty, EXAMPLE1_EXE, _empty, _empty);      
             });              
             RunDlg<MessageDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "You must enter a valid title for the tool");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool_You_must_enter_a_valid_title_for_the_tool, messageDlg.Message, 0);
                 messageDlg.OkDialog();
             });
             // Replace the value, save, delete it then cancel to test the "Do you wish to Save changes" dlg.
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.AddDialog("example", "example1.exe", "", "");
+                configureToolsDlg.Remove();
+                configureToolsDlg.AddDialog(EXAMPLE, EXAMPLE1_EXE, _empty, _empty);
              });
             RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.SaveTools(), messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Warning: \n The command for example may not exist in that location. Would you like to edit it?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick(); // Dialog response no.
             });
-            RunUI(configureToolsDlg.Delete);
+            RunUI(configureToolsDlg.Remove);
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.Cancel, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Do you wish to Save changes?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_, messageDlg.Message, 0);
                 messageDlg.CancelDialog();
             });
             RunUI(() => Assert.IsTrue(configureToolsDlg.btnApply.Enabled));
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.Cancel, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Do you wish to Save changes?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_, messageDlg.Message, 0);
                 messageDlg.Btn0Click();
             });
             RunUI(() => Assert.IsFalse(configureToolsDlg.btnApply.Enabled));
         }
 
-        private static void TestEmptyCommand()
+        private void TestEmptyCommand()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunDlg<MessageDlg>(configureToolsDlg.Add, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "The command cannot be blank, please enter a valid command for [New Tool1]");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid_command_for__0_, messageDlg.Message, 1);
                 messageDlg.OkDialog();
             });
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
+                configureToolsDlg.Remove();
                 configureToolsDlg.OkDialog();
             });
         }
 
-        private static void TestSaveDialogNo()
+        private void TestSaveDialogNo()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.Cancel, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Do you wish to Save changes?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_, messageDlg.Message, 0);
                 messageDlg.Btn1Click();
             }); 
         }
 
-        private static void TestSavedCancel()
+        private void TestSavedCancel()
         {
             // Test to show Cancel when saved has no dlg.
             RunDlg<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg, configureToolsDlg =>
             {
-                configureToolsDlg.Delete();
+                configureToolsDlg.Remove();
                 configureToolsDlg.SaveTools();
                 configureToolsDlg.Cancel();
             });
         }
 
-        private static void TestValidNo()
+        private void TestValidNo()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.AddDialog("example", "example.exe", "", "");
+                configureToolsDlg.Remove();
+                configureToolsDlg.AddDialog(EXAMPLE, EXAMPLE_EXE, _empty, _empty);
             });
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Warning: \n The command for example may not exist in that location. Would you like to edit it?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick();
             });
         }
 
-        private static void TestIndexChange()
+        private void TestIndexChange()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.AddDialog("example","example.exe","","");
-                configureToolsDlg.AddDialog("example1", ".exe", "", "");
-                Assert.AreEqual(configureToolsDlg._previouslySelectedIndex, 1);
+                configureToolsDlg.Remove();
+                configureToolsDlg.AddDialog(EXAMPLE,EXAMPLE_EXE,_empty,_empty);
+                configureToolsDlg.AddDialog(EXAMPLE1, EXAMPLE1_EXE, _empty, _empty);
+                Assert.AreEqual(1, configureToolsDlg._previouslySelectedIndex);
                 configureToolsDlg.listTools.SelectedIndex = 1;
-                Assert.AreEqual(configureToolsDlg.listTools.SelectedIndex, 1);
+                Assert.AreEqual(1, configureToolsDlg.listTools.SelectedIndex);
             });
            RunDlg<MultiButtonMsgDlg>(() => configureToolsDlg.TestHelperIndexChange(0), messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message,
-                    "Warning: \n The command for example1 may not exist in that location. Would you like to edit it?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.Btn1Click();
             });
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.Delete();
+                configureToolsDlg.Remove();
+                configureToolsDlg.Remove();
                 configureToolsDlg.SaveTools();
                 configureToolsDlg.OkDialog();
             });
         }
         
-        private static void TestProcessStart()
+        private void TestProcessStart()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
             {
-                configureToolsDlg.Delete();
-                configureToolsDlg.AddDialog("example", "test.exe", "", "");
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.AddDialog(EXAMPLE, EXAMPLE_EXE, _empty, _empty);
             });
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Warning: \n The command for example may not exist in that location. Would you like to edit it?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick();
             }); 
             RunUI(() =>
             {            
                 SkylineWindow.PopulateToolsMenu();
-                Assert.AreEqual("example", SkylineWindow.GetToolText(0));
+                Assert.AreEqual(EXAMPLE, SkylineWindow.GetToolText(0));
                 Assert.IsTrue(SkylineWindow.ConfigMenuPresent());
             });
             RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "File Not Found: \n\n Please check the command location is correct for this tool");
+                AssertEx.AreComparableStrings(TextUtil.LineSeparate(
+                        Resources.ToolDescription_RunTool_File_not_found_,
+                        Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_), 
+                        messageDlg.Message, 0);
                 messageDlg.OkDialog();
             });
           }
 
-        private static void TestNewToolName()
+        private void TestNewToolName()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
-            RunUI(() => configureToolsDlg.AddDialog("[New Tool1]", "example1.exe", "", ""));
+            RunUI(() => configureToolsDlg.AddDialog("[New Tool1]", EXAMPLE1_EXE, _empty, _empty));
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.Add, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Warning: \n The command for [New Tool1] may not exist in that location. Would you like to edit it?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick();
             });
             RunUI(() =>
             {
-                do
-                {
-                    configureToolsDlg.Delete();
-                } while (configureToolsDlg.ToolList.Count > 0);
+                configureToolsDlg.RemoveAllTools();
                 configureToolsDlg.OkDialog();
             });
         }
 
         // Check that a complaint dialog is displayed when the user tries to run a tool missing a macro. 
-        private static void TestMacroComplaint()
+        private void TestMacroComplaint()
         {
             var configureToolsDlg = ShowDialog<ConfigureToolsDlg>(SkylineWindow.ShowConfigureToolsDlg);
             RunUI(() =>
             {
-                while (configureToolsDlg.ToolList.Count > 0)
-                {
-                    configureToolsDlg.Delete();
-                }
-                configureToolsDlg.AddDialog("example3", "example.exe", "$(DocumentPath)", "");
+                configureToolsDlg.RemoveAllTools();
+                configureToolsDlg.AddDialog(EXAMPLE3, EXAMPLE_EXE, "$(DocumentPath)", _empty); // Not L10N
             });
             RunDlg<MultiButtonMsgDlg>(configureToolsDlg.OkDialog, messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "Warning: \n The command for example3 may not exist in that location. Would you like to edit it?");
+                AssertEx.AreComparableStrings(Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__, messageDlg.Message, 1);
                 messageDlg.BtnCancelClick();
             });
             RunUI(() =>
             {
                 ToolDescription toolMenuItem = Settings.Default.ToolList[0];
-                Assert.AreEqual("$(DocumentPath)", toolMenuItem.Arguments);
+                Assert.AreEqual("$(DocumentPath)", toolMenuItem.Arguments); // Not L10N
+                SkylineWindow.PopulateToolsMenu();
             });
-            RunDlg<MessageDlg>(() => Settings.Default.ToolList[0].GetArguments(SkylineWindow), messageDlg =>
+            RunDlg<MessageDlg>(() => SkylineWindow.RunTool(0), messageDlg =>
             {
-                AssertEx.Contains(messageDlg.Message, "This tool requires a Document Path to run");
+                AssertEx.AreComparableStrings(Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run, messageDlg.Message, 0);
                 messageDlg.OkDialog();
             });
 
@@ -519,24 +785,19 @@ namespace pwiz.SkylineTestFunctional
                 {
                     Settings.Default.ToolList.RemoveAt(0);
                 }
-                Settings.Default.ToolList.Add(new ToolDescription("example2", "example.exe", "$(DocumentPath)", "$(DocumentDir)"));
+                Settings.Default.ToolList.Add(new ToolDescription(EXAMPLE2, EXAMPLE2_EXE, "$(DocumentPath)", "$(DocumentDir)")); // Not L10N
 
-                SkylineWindow.Paste("PEPTIDER");
-                string documentPath = TestContext.GetTestPath("ConfigureToolsTest.sky");
-                // Because TestRunner doesn't always create the directory, make sure it exists
-                string documentDir = Path.GetDirectoryName(documentPath);
-                if (!string.IsNullOrEmpty(documentDir) && !Directory.Exists(documentPath))
-                    Directory.CreateDirectory(documentDir);
-                bool saved = SkylineWindow.SaveDocument(documentPath);
-                //Todo: figure out why this fails to save in the dotCover context.
+                SkylineWindow.Paste("PEPTIDER"); // Not L10N
+                bool saved = SkylineWindow.SaveDocument(TestContext.GetTestPath("ConfigureToolsTest.sky")); // Not L10N
+                // dotCover can cause trouble with saving
                 Assert.IsTrue(saved);
                 ToolDescription toolMenuItem = Settings.Default.ToolList[0];
-                Assert.AreEqual("$(DocumentPath)", toolMenuItem.Arguments);
-                Assert.AreEqual("$(DocumentDir)", toolMenuItem.InitialDirectory);
+                Assert.AreEqual("$(DocumentPath)", toolMenuItem.Arguments); // Not L10N
+                Assert.AreEqual("$(DocumentDir)", toolMenuItem.InitialDirectory); // Not L10N
                 string args = toolMenuItem.GetArguments(SkylineWindow);
                 string initDir = toolMenuItem.GetInitialDirectory(SkylineWindow);
-                Assert.AreEqual(System.IO.Path.GetDirectoryName(args), initDir);
-                string path = TestContext.GetTestPath("ConfigureToolsTest.sky");
+                Assert.AreEqual(Path.GetDirectoryName(args), initDir);
+                string path = TestContext.GetTestPath("ConfigureToolsTest.sky"); // Not L10N
                 Assert.AreEqual(args, path);
             });
         }

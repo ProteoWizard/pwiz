@@ -206,10 +206,17 @@ namespace pwiz.Skyline.Util.Extensions
         /// Returns a filter string suitable for a common file dialog (e.g. "CSV (Comma delimited) (*.csv)|*.csv")
         /// </summary>
         /// <param name="description">The description of the filter</param>
-        /// <param name="ext">The file extention, beginning with the period (e.g. ".csv")</param>
-        public static string FileDialogFilter(string description, string ext)
+        /// <param name="exts">The file extention(s), beginning with the period (e.g. ".csv")</param>
+        public static string FileDialogFilter(string description, params string[] exts)
         {
-            return string.Format("{0} (*{1})|*{1}", description, ext); // Not L10N
+            var sb = new StringBuilder();
+            foreach (var ext in exts)
+            {
+                if (sb.Length > 0)
+                    sb.Append(';');
+                sb.Append('*').Append(ext);
+            }
+            return string.Format("{0} ({1})|{1}", description, sb); // Not L10N
         }
 
         /// <summary>

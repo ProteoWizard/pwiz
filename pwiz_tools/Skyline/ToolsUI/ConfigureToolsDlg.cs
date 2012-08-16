@@ -24,18 +24,36 @@ using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.ToolsUI
 {
     public partial class ConfigureToolsDlg : FormEx
     {
+        private readonly SettingsListComboDriver<ReportSpec> _driverReportSpec;
+
+
         public ConfigureToolsDlg(List<ToolDescription> inList)
         {
             InitializeComponent();
 
             PopulateMacroList();
 
+            // Initialize the report comboBox.
+            // CONSIDER: Settings list editing is currently disabled, because
+            //           it had problems with the empty element added to the list.
+            //           Might be nice to allow report spec editing in this form
+            //           some day, though.
+            _driverReportSpec = new SettingsListComboDriver<ReportSpec>(comboReport,
+                Settings.Default.ReportSpecList, false);
+            _driverReportSpec.LoadList(string.Empty);
+            comboReport.Items.Insert(0, string.Empty);
+            comboReport.SelectedItem = string.Empty;
+            
             // Value for keeping track of the previously selected tool 
             // Used to check if the tool meets requirements before allowing you to navigate away from it.
             _previouslySelectedIndex = -1;
@@ -44,6 +62,7 @@ namespace pwiz.Skyline.ToolsUI
             LoadTools(inList);
             RefreshListBox();
             Unsaved = false;
+
             if (ToolList.Count == 0)           
             {
                 Add();
@@ -52,7 +71,6 @@ namespace pwiz.Skyline.ToolsUI
             {
                 listTools.SelectedIndex = 0;
             }
-            textTitle.Enabled = btnDelete.Enabled;
         }
 
         public int _previouslySelectedIndex;
@@ -61,7 +79,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             listTools.DataSource = null;     
             listTools.DataSource = ToolList;
-            listTools.DisplayMember = "Title";            
+            listTools.DisplayMember = "Title"; // Not L10N     
         }
 
         private void LoadTools(List<ToolDescription> items )
@@ -93,35 +111,55 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (CheckPassTool(_previouslySelectedIndex))
             {
-                AddDialog(GetTitle(), "", "", "");
+                AddDialog(GetTitle(), string.Empty, string.Empty, string.Empty);
             }
             if (ToolList.Count == 1)
             {
                 _previouslySelectedIndex = 0;
             }
         }
-        // Return a unique title for a New Tool. (eg. [New Tool1])
+        
+        /// <summary>
+        /// Return a unique title for a New Tool. (eg. [New Tool1])
+        /// </summary>
         private string GetTitle()
         {
             int i = 1;
             do
             {
-                if (ToolList.All(item => item.Title != (string.Format("[New Tool{0}]", i))))
+                if (ToolList.All(item => item.Title != (string.Format(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, i))))
                 {
-                    return string.Format("[New Tool{0}]", i);
+                    return string.Format(Resources.ConfigureToolsDlg_GetTitle__New_Tool_0__, i);
                 }
                 i++;
             } while (true);
         }
 
+
+        /// <summary>
+        /// Default to values cbOutputImmediateWindow = false, selectedReport=string.Empty
+        /// </summary>
         public void AddDialog(string title, string command, string arguments, string initialDirectory )
         {
-            ToolDescription newTool = new ToolDescription(title, command, arguments, initialDirectory);
+            AddDialog(title, command, arguments, initialDirectory, false, string.Empty);
+        }
+
+        public void AddDialog(string title, string command, string arguments, string initialDirectory, bool cbOutputImmediate, string selectedReport)
+        {
+            ToolDescription newTool;
+            if (ToolDescription.IsWebPageCommand(command))
+            {
+                newTool = new ToolDescription(title, command, string.Empty, string.Empty, false, selectedReport);
+            }
+            else
+            {
+                newTool = new ToolDescription(title, command, arguments, initialDirectory, cbOutputImmediate, selectedReport);    
+            }
             ToolList.Add(newTool);
             RefreshListBox();
             _previouslySelectedIndex = -1;
             listTools.SelectedIndex = ToolList.Count - 1;
-            btnDelete.Enabled = true;
+            btnRemove.Enabled = true;            
         }
 
         public void listTools_SelectedIndexChanged(object sender, EventArgs e)
@@ -141,11 +179,24 @@ namespace pwiz.Skyline.ToolsUI
                     textCommand.Text = highlighted.Command;
                     textArguments.Text = highlighted.Arguments;
                     textInitialDirectory.Text = highlighted.InitialDirectory;
-                  
+                    cbOutputImmediateWindow.CheckState = highlighted.OutputToImmediateWindow
+                                                   ? CheckState.Checked
+                                                   : CheckState.Unchecked;
+                    comboReport.SelectedItem = ComboContainsTitle(highlighted.ReportTitle)
+                                                   ? highlighted.ReportTitle
+                                                   : string.Empty;
                 }
                 btnMoveUp.Enabled = (listTools.SelectedIndex != 0);
                 btnMoveDown.Enabled = (listTools.SelectedIndex != ToolList.Count - 1);
             }            
+        }
+
+        /// <summary>
+        /// Returns a bool representing if there is a Report with the specified title.        
+        /// </summary>
+        private bool ComboContainsTitle(string reportTitle)
+        {
+            return comboReport.Items.Cast<string>().Any(item => item == reportTitle);
         }
 
         public static readonly string[] EXTENSIONS = new[]{".exe", ".com", ".pif", ".cmd", ".bat"};
@@ -157,6 +208,13 @@ namespace pwiz.Skyline.ToolsUI
 
         public bool CheckPassTool(int toolIndex)
         {
+            bool pass = CheckPassToolInternal(toolIndex);
+            if (!pass)
+                listTools.SelectedIndex = toolIndex;
+            return pass;
+        }
+        private bool CheckPassToolInternal(int toolIndex)
+        {
             ToolDescription tool;
             if (toolIndex < ToolList.Count && toolIndex >= 0)
             {
@@ -166,39 +224,71 @@ namespace pwiz.Skyline.ToolsUI
             {
                 return true;
             }
-            if (tool.Title == "") 
+            if (tool.Title == string.Empty) 
             {
-                MessageDlg.Show(this, "You must enter a valid title for the tool");
-                listTools.SelectedIndex = toolIndex;
+                MessageDlg.Show(this, Resources.ConfigureToolsDlg_CheckPassTool_You_must_enter_a_valid_title_for_the_tool);
+                textTitle.Focus();
                 return false;
             }
-            if (tool.Command == "")
+            if (tool.Command == string.Empty)
             {
-                MessageDlg.Show(this, string.Format("The command cannot be blank, please enter a valid command for {0}", tool.Title));
-                listTools.SelectedIndex = toolIndex;
+                MessageDlg.Show(this, string.Format(Resources.ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid_command_for__0_, tool.Title));
+                textCommand.Focus();
                 return false;
+            }
+            if (tool.IsWebPage)
+            {
+                try
+                {
+                    new Uri(tool.Command);
+                }
+                catch (Exception)
+                {
+                    MessageDlg.Show(this, Resources.ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_);
+                    textCommand.Focus();
+                    return false;
+                }
+
+                return true;
             }
             string supportedTypes = String.Join("; ", EXTENSIONS);
             supportedTypes = supportedTypes.Replace(".", "*.");
             if (!checkExtension(tool.Command))
             {
-                MessageDlg.Show(this, string.Format("The command for {0} must be of a supported type \n\n Supported Types: {1}", tool.Title, supportedTypes)); 
-                listTools.SelectedIndex = toolIndex;
+                MessageDlg.Show(this, string.Format(TextUtil.LineSeparate(
+                            Resources.ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type,
+                            Resources.ConfigureToolsDlg_CheckPassTool_Supported_Types___1_ , 
+                            Resources.ConfigureToolsDlg_CheckPassTool_if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
+                            tool.Title, supportedTypes));
+                textCommand.Focus();
                 return false;                
-            }            
+            }  
+           
             if (!System.IO.File.Exists(tool.Command))
             {
                 var dlg =
                 new MultiButtonMsgDlg(
-                    string.Format("Warning: \n The command for {0} may not exist in that location. Would you like to edit it?",
-                                    tool.Title), "Yes", "No", false);
+                    string.Format(TextUtil.LineSeparate(
+                            Resources.ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__,                            
+                            Resources.ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___),
+                                    tool.Title), Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, false);
                 DialogResult result = dlg.ShowDialog(this);
                 if (result == DialogResult.Yes)
                 {
-                    listTools.SelectedIndex = toolIndex;
+                    textCommand.Focus();
                     return false;
                 }
             }
+            if (tool.Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH) && string.IsNullOrEmpty(tool.ReportTitle))
+            {
+                MessageDlg.Show(this, TextUtil.LineSeparate(
+                            string.Format(Resources.ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_, ToolMacros.INPUT_REPORT_TEMP_PATH),
+                            string.Format(Resources.ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_, ToolMacros.INPUT_REPORT_TEMP_PATH)));
+                comboReport.Focus();
+                return false;                  
+            }
+
+
             return true;            
         }
 
@@ -221,6 +311,32 @@ namespace pwiz.Skyline.ToolsUI
             {
                 ToolList[spot].Command = textCommand.Text;
                 Unsaved = true;
+
+
+                if (ToolDescription.IsWebPageCommand(textCommand.Text) && textArguments.Enabled)
+                {                    
+                    textArguments.Enabled = false;
+                    textArguments.Text = string.Empty;
+                    textInitialDirectory.Enabled = false;
+                    textInitialDirectory.Text = string.Empty;
+                    cbOutputImmediateWindow.Enabled = false;
+                    btnArguments.Enabled = false;
+                    btnFindCommand.Enabled = false;
+                    btnInitialDirectory.Enabled = false;
+                    btnInitialDirectoryMacros.Enabled = false;
+                }
+                else if (!ToolDescription.IsWebPageCommand(textCommand.Text) && !textArguments.Enabled)
+                {
+                    textArguments.Enabled = true;
+                    textArguments.Text = ToolList[spot].Arguments;
+                    textInitialDirectory.Enabled = true;
+                    textInitialDirectory.Text = ToolList[spot].InitialDirectory;
+                    cbOutputImmediateWindow.Enabled = true;
+                    btnArguments.Enabled = true;
+                    btnFindCommand.Enabled = true;
+                    btnInitialDirectory.Enabled = true;
+                    btnInitialDirectoryMacros.Enabled = true;
+                }
             }
         }
 
@@ -244,30 +360,58 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-        private void btnDelete_Click(object sender, EventArgs e)
+        private void cbOutputImmediateWindow_CheckedChanged(object sender, EventArgs e)
         {
-           Delete();
+            int spot = listTools.SelectedIndex;
+            if (spot != -1)
+            {
+                ToolList[spot].OutputToImmediateWindow = (cbOutputImmediateWindow.CheckState == CheckState.Checked);                 
+                Unsaved = true;
+            }
         }
 
-        public void Delete()
+        private void comboReport_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Delete current value.
+            if (_driverReportSpec.SelectedIndexChangedEvent(sender, e))
+                return;
+
+            int spot = listTools.SelectedIndex;
+            if (spot != -1)
+            {
+                ToolList[spot].ReportTitle = comboReport.Text;
+                Unsaved = true;
+            }
+        }
+
+        private void btnRemove_Click(object sender, EventArgs e)
+        {
+           Remove();
+        }    
+
+        /// <summary>
+        /// Remove the currently selected value.
+        /// </summary>
+        public void Remove()
+        {
+            
             int spot = listTools.SelectedIndex;
             ToolList.RemoveAt(spot);
             RefreshListBox();
             if (ToolList.Count == 0)
             {
-                textTitle.Text = "";
-                textCommand.Text = "";
-                textArguments.Text = "";
-                textInitialDirectory.Text = "";
-                btnDelete.Enabled = false;
+                textTitle.Text = string.Empty;
+                textCommand.Text = string.Empty;
+                textArguments.Text = string.Empty;
+                textInitialDirectory.Text = string.Empty;
+                btnRemove.Enabled = false;
                 _previouslySelectedIndex = -1;
+                cbOutputImmediateWindow.CheckState = CheckState.Unchecked;
+                comboReport.SelectedItem = string.Empty;
             }
-            // If the deleted Index was the last in the list, the selected index is the new last element.
+            // If the removed Index was the last in the list, the selected index is the new last element.
             else if (spot == ToolList.Count)
             {
-                // If the deleted Index was the last in the list, the selected index is the new last element.
+                // If the removed Index was the last in the list, the selected index is the new last element.
                 listTools.SelectedIndex = spot - 1;
             }
             else
@@ -279,6 +423,12 @@ namespace pwiz.Skyline.ToolsUI
                 textCommand.Text = highlighted.Command;
                 textArguments.Text = highlighted.Arguments;
                 textInitialDirectory.Text = highlighted.InitialDirectory;
+                cbOutputImmediateWindow.CheckState = highlighted.OutputToImmediateWindow
+                                                   ? CheckState.Checked
+                                                   : CheckState.Unchecked;
+                comboReport.SelectedItem = ComboContainsTitle(highlighted.ReportTitle)
+                               ? highlighted.ReportTitle
+                               : string.Empty;
             }
             Unsaved = true;
         }
@@ -356,7 +506,7 @@ namespace pwiz.Skyline.ToolsUI
             }
             else
             {
-                var dlg = new MultiButtonMsgDlg("Do you wish to Save changes?", "Yes", "No", true);
+                var dlg = new MultiButtonMsgDlg(Resources.ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_, Resources.MultiButtonMsgDlg_BUTTON_YES__Yes, Resources.MultiButtonMsgDlg_BUTTON_NO__No, true);
                 DialogResult result = dlg.ShowDialog(this);
                 switch (result)
                 {
@@ -392,30 +542,18 @@ namespace pwiz.Skyline.ToolsUI
                 btnCancel.PerformClick();
         }
 
-        private void btnDelete_EnabledChanged(object sender, EventArgs e)
+        private void btnRemove_EnabledChanged(object sender, EventArgs e)
         {
-            if (!btnDelete.Enabled)
-            {
-                textTitle.Enabled = false;
-                textCommand.Enabled = false;
-                textArguments.Enabled = false;
-                textInitialDirectory.Enabled = false;
-                btnFindCommand.Enabled = false;
-                btnInitialDirectory.Enabled = false;
-                btnArguments.Enabled = false;
-                btnInitialDirectoryMacros.Enabled = false;
-            }
-            else
-            {
-                textTitle.Enabled = true;
-                textCommand.Enabled = true;
-                textArguments.Enabled = true;
-                textInitialDirectory.Enabled = true;
-                btnFindCommand.Enabled = true;
-                btnInitialDirectory.Enabled = true;
-                btnArguments.Enabled = true;
-                btnInitialDirectoryMacros.Enabled = true;
-            }
+            textTitle.Enabled =
+                textCommand.Enabled =
+                textArguments.Enabled =
+                textInitialDirectory.Enabled =
+                btnFindCommand.Enabled =
+                btnInitialDirectory.Enabled =
+                btnArguments.Enabled =
+                btnInitialDirectoryMacros.Enabled =
+                cbOutputImmediateWindow.Enabled =
+                comboReport.Enabled = btnRemove.Enabled;
         }
 
         #region Functional testing support
@@ -425,16 +563,35 @@ namespace pwiz.Skyline.ToolsUI
             listTools.SelectedIndex = i;
         }
 
+        public void RemoveAllTools()
+        {
+            // Remove one at a time to be sure necessary events fire.
+            while (ToolList.Count > 0)
+            {
+                Remove();
+            }
+            RefreshListBox();
+        }
+
+        public string GetComboReportText(int i)
+        {
+            return (string) comboReport.Items[i];
+        }
+
         #endregion
 
         // Cannot test methods below because of common dialogs
 
         private void btnFindCommand_Click(object sender, EventArgs e)
         {
+            int i = 0;
             var dlg = new OpenFileDialog
             {
-                Filter =
-                    "All Executables (*.exe, *.com, *.pif, *.bat, *.cmd)|*.exe;*.com;*.pif;*.bat;*.cmd|Command Files (*.com)|*.com|Information Files (*.pif)|*.pif|Batch Files (*.bat,*.cmd)|*.bat;*.cmd|All Files (*.*)|*.*",
+                Filter = TextUtil.FileDialogFiltersAll(
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, EXTENSIONS[i++], EXTENSIONS[i])),
                 FilterIndex = 1,
                 Multiselect = false
             };
@@ -455,7 +612,6 @@ namespace pwiz.Skyline.ToolsUI
             }
         }
 
-
         #region Macros
 
         public List<MacroMenuItem> _macroListArguments = new List<MacroMenuItem>();
@@ -474,7 +630,6 @@ namespace pwiz.Skyline.ToolsUI
                 _macroListInitialDirectory.Add(new MacroMenuItem(macro, textInitialDirectory, false));
             }            
         }
-
         
         public class MacroMenuItem : MenuItem
         { 
@@ -531,20 +686,26 @@ namespace pwiz.Skyline.ToolsUI
             btnArgumentsOpen();
         }
 
+        /// <summary>
+        /// Show the ContextMenu full of macros next to btnArguments.
+        /// </summary>
         public void btnArgumentsOpen()
-        {
-            // Show the ContextMenu full of macros next to btnArguments.
+        {            
             MacroMenuArguments.Show(btnArguments, new Point(btnArguments.Width, 0));
         }
 
-        // Populate the macroMenu on popup. (Arguments)
+        /// <summary>
+        /// Populate the macroMenu on popup. (Arguments)
+        /// </summary>        
         private void MacroMenuArguments_Popup(object sender, EventArgs e)
         {
             foreach (MacroMenuItem menuItem in _macroListArguments)
                 MacroMenuArguments.MenuItems.Add(menuItem);
         }
 
-        // Populate the macroMenu on popup. (initialDirectory)
+        /// <summary>
+        /// Populate the macroMenu on popup. (initialDirectory)
+        /// </summary>        
         private void MacroMenuInitialDirectory_Popup(object sender, EventArgs e)
         {                            
             foreach (MacroMenuItem menuItem in _macroListInitialDirectory)

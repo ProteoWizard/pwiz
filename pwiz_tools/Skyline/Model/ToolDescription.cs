@@ -18,13 +18,17 @@
  */
 
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
-using System.Windows.Forms;
+using System.Threading;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
@@ -39,55 +43,199 @@ namespace pwiz.Skyline.Model
         string ResultNameCurrent { get; }
     }
 
+    public interface IExceptionHandler
+    {        
+        void HandleException(Exception e);
+    }
+
     [XmlRoot("ToolDescription")]
     public class ToolDescription : IXmlSerializable
     {
-        public ToolDescription(string title, string command, string arguments, string initialDirectory)
+        public static bool IsWebPageCommand(string command)
+        {
+            return command.StartsWith("http:") || command.StartsWith("https:");
+        }
+
+        public ToolDescription(string title, string command, string arguments, string initialDirectory) : this(title, command, arguments, initialDirectory, false, "")
+        {
+        }
+
+        public ToolDescription(string title, string command, string arguments, string initialDirectory, bool outputToImmediateWindow,string reportTitle)
         {
             Title = title;
             Command = command;
             Arguments = arguments;
             InitialDirectory = initialDirectory;
+            OutputToImmediateWindow = outputToImmediateWindow;
+            ReportTitle = reportTitle;
         }
 
         public string Title { get; set; }
         public string Command { get; set; }
         public string Arguments { get; set; }
         public string InitialDirectory { get; set; }
+        public bool OutputToImmediateWindow { get; set; }
+        public string ReportTitle { get; set; }
+
+        public bool IsWebPage { get { return IsWebPageCommand(Command); } }
 
         /// <summary>
         ///  Return a string that is the Arguments string with the macros replaced.
         /// </summary>
-        /// <param name="parent"> Window to center the error message in if null is returned for one of the macros. </param>
+        /// <param name="doc"> Document for report data. </param>
         /// <param name="toolMacroProvider"> Interface to use to get the current macro values </param>
+        /// <param name="exceptionHandler">Interface for handling exceptions across threads. </param>
         /// <returns> Arguments with macros replaced or null if one of the macros was missing 
         /// (eg. no selected peptide for $(SelPeptide) then the return value is null </returns>
-        public string GetArguments(Form parent, IToolMacroProvider toolMacroProvider)
+        public string GetArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, IExceptionHandler exceptionHandler)
         {
-            return ToolMacros.ReplaceMacrosArguments(Arguments, parent, toolMacroProvider);
+            return ToolMacros.ReplaceMacrosArguments(doc, toolMacroProvider, this, exceptionHandler);
         }
+
         // In this case SkylineWindow serves as both the form and the interface.
         public string GetArguments(SkylineWindow window)
         {
-            return ToolMacros.ReplaceMacrosArguments(Arguments, window, window);
+            return ToolMacros.ReplaceMacrosArguments(window.Document, window, this, window);
         }
 
         /// <summary>
         ///  Return a string that is the InitialDirectoy string with the macros replaced.
         /// </summary>
-        /// <param name="parent"> Window to center the error message in if null is returned for one of the macros. </param>
+        /// <param name="doc"> Document for report data. </param>
         /// <param name="toolMacroProvider"> Interface to use to get the current macro values </param>
+        /// <param name="exceptionHandler"> Interface for throwing exceptions across threads. </param>
         /// <returns> InitialDirectory with macros replaced or null if one of the macros was missing 
         /// (eg. no document for $(DocumentDir) then the return value is null </returns>
-        public string GetInitialDirectory(Form parent, IToolMacroProvider toolMacroProvider)
+        public string GetInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, IExceptionHandler exceptionHandler)
         {
-            return ToolMacros.ReplaceMacrosInitialDirectory(InitialDirectory, parent, toolMacroProvider);
+            return ToolMacros.ReplaceMacrosInitialDirectory(doc, toolMacroProvider, this, exceptionHandler);
         }
         // In this case SkylineWindow serves as both the form and the interface.
         public string GetInitialDirectory(SkylineWindow window)
         {
-            return ToolMacros.ReplaceMacrosInitialDirectory(InitialDirectory, window, window);
+            return ToolMacros.ReplaceMacrosInitialDirectory(window.Document, window, this, window);
+        }        
+
+        /// <summary>
+        /// Run the tool. 
+        /// Override that uses the SkylineWindow to get both an SrmDocument and an IToolMacroProvider.
+        /// </summary>     
+        public void RunTool(SkylineWindow window, TextWriter textWriter)
+        {
+             RunTool(window.Document, window, textWriter, window);
         }
+
+        /// <summary>
+        /// Run the tool. When you call run tool. call it on a different thread. 
+        /// </summary>       
+        /// <param name="doc"> Document to base reports off of. </param>
+        /// <param name="toolMacroProvider"> Interface for replacing Tool Macros with the correct strings. </param>
+        /// <param name="textWriter"> A textWriter to write to when the tool redirects stdout. (eg. Outputs to an Immediate Window) </param>
+        /// <param name="exceptionHandler"> An interface for throwing exceptions to be delt with on different threads. </param>
+        public void RunTool(SrmDocument doc, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
+        {
+            if (IsWebPage)
+            {
+                var webHelpers = WebHelpers;
+                if (webHelpers == null)
+                    webHelpers = new WebHelpers();
+
+                if (String.IsNullOrEmpty(ReportTitle))
+                {
+                    webHelpers.OpenLink(Command);
+                }
+                else // It has a selected report that must be posted. 
+                {
+                    string report = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title);
+                    if (report != null)
+                        webHelpers.PostToLink(Command, report);                    
+                }                              
+            }
+            else // Not a website. Needs its own thread.
+            {                
+                RunExecutable(doc,toolMacroProvider,textWriter,exceptionHandler);                
+            }           
+        }    
+
+        public Thread RunExecutable(SrmDocument doc, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
+        {
+            var thread = new Thread(() => RunExecutableBackground(doc, toolMacroProvider, textWriter, exceptionHandler));
+            thread.Start();
+            return thread;
+        }
+
+        /// <summary>
+        ///  Method used to encapsolate the running of a executable for threading.
+        /// </summary>
+        /// <param name="doc"> Document to base reports off of. </param>
+        /// <param name="toolMacroProvider"> Interface for determining what to replace macros with. </param>
+        /// <param name="textWriter"> A textWriter to write to if outputting to the immediate window. </param>
+        /// <param name="exceptionHandler"> Interface to enable throwing exceptions on other threads. </param>
+        private void RunExecutableBackground(SrmDocument doc, IToolMacroProvider toolMacroProvider, TextWriter textWriter, IExceptionHandler exceptionHandler)
+        {                                                
+            // Need to know if $(InputReportTempPath) is an argument to determine if a report should be piped to stdin or not.
+            bool containsInputReportTempPath = Arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH);
+            string args = GetArguments(doc, toolMacroProvider, exceptionHandler);
+            string initDir = GetInitialDirectory(doc, toolMacroProvider, exceptionHandler); // If either of these fails an Exception is thrown.
+            if (args != null && initDir != null)
+            {
+                ProcessStartInfo startInfo = OutputToImmediateWindow
+                                          ? new ProcessStartInfo(Command, args) { WorkingDirectory = initDir, RedirectStandardOutput = true, UseShellExecute = false, CreateNoWindow = true}
+                                          : new ProcessStartInfo(Command, args) { WorkingDirectory = initDir };
+
+                // if it has a selected report title and its doesn't have a InputReportTempPath macro then the report needs to be piped to stdin.
+                string reportCsv = null;
+                if (!String.IsNullOrEmpty(ReportTitle) && !containsInputReportTempPath) // Then pipe to stdin.
+                {
+                    reportCsv = ToolDescriptionHelpers.GetReport(doc, ReportTitle, Title);
+                    startInfo.RedirectStandardInput = true;
+                }
+
+                Process p = new Process { StartInfo = startInfo };
+
+                try
+                {
+                    p.Start();
+
+                    // write the reportCsv string to stdin.
+                    // need to only check one of these conditions.
+                    if (startInfo.RedirectStandardInput && (reportCsv != null))
+                    {
+                        StreamWriter streamWriter = p.StandardInput;
+                        streamWriter.Write(reportCsv);
+                        streamWriter.Flush();
+                        streamWriter.Close();
+                    }
+
+                    // Return the output to be written to the ImmediateWindow.
+                    if (OutputToImmediateWindow)
+                    {
+                        textWriter.Write(p.StandardOutput.ReadToEnd());
+                    }
+                }
+                catch (Exception ex)
+                {
+                    if (ex is FileNotFoundException || ex is Win32Exception)
+                    {
+                        exceptionHandler.HandleException(new Exception(TextUtil.LineSeparate(Resources.ToolDescription_RunTool_File_not_found_,
+                                    Resources.ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_)));
+                    }
+                    else
+                    {
+                        exceptionHandler.HandleException(new Exception(Resources.ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__));
+                    }
+                }
+
+                // CONSIDER: We don't delete the temp path here, because the file may be open
+                //           in a long running application like Excel.
+//                if (ReportTempPath_toDelete != null)
+//                {
+//                    Helpers.TryTwice(() => File.Delete(ReportTempPath_toDelete));
+//                    ReportTempPath_toDelete = null;
+//                }  
+            }      
+        }
+
 
         #region Implementation of IXmlSerializable
         private  ToolDescription()
@@ -105,6 +253,8 @@ namespace pwiz.Skyline.Model
             command,
             arguments,
             initial_directory,
+            output_to_immediate_window,
+            report_title
         }
 
         public XmlSchema GetSchema()
@@ -118,6 +268,8 @@ namespace pwiz.Skyline.Model
             Command = reader.GetAttribute(ATTR.command);
             Arguments = reader.GetAttribute(ATTR.arguments);
             InitialDirectory = reader.GetAttribute(ATTR.initial_directory);
+            OutputToImmediateWindow = reader.GetBoolAttribute(ATTR.output_to_immediate_window);
+            ReportTitle = reader.GetAttribute(ATTR.report_title);
             reader.Read();
         }
 
@@ -127,15 +279,23 @@ namespace pwiz.Skyline.Model
             writer.WriteAttribute(ATTR.command, Command);
             writer.WriteAttribute(ATTR.arguments, Arguments);
             writer.WriteAttribute(ATTR.initial_directory, InitialDirectory);
+            writer.WriteAttribute(ATTR.output_to_immediate_window, OutputToImmediateWindow);
+            writer.WriteAttribute(ATTR.report_title, ReportTitle);
         }
         #endregion
+
+        public IWebHelpers WebHelpers { get; set; }
+        public string ReportTempPath_toDelete { get; set; }
+
 
         public bool Equals(ToolDescription tool)
         {
             return (Equals(Title, tool.Title) &&
                     Equals(Command, tool.Command) &&
                     Equals(Arguments, tool.Arguments) &&
-                    Equals(InitialDirectory, tool.InitialDirectory));
+                    Equals(InitialDirectory, tool.InitialDirectory) &&
+                    Equals(OutputToImmediateWindow, tool.OutputToImmediateWindow)) &&
+                    Equals(ReportTitle, tool.ReportTitle);
         }
 
         public override int GetHashCode()
@@ -146,45 +306,60 @@ namespace pwiz.Skyline.Model
                 result = (result * 397) ^ Command.GetHashCode();
                 result = (result * 397) ^ Arguments.GetHashCode();
                 result = (result * 397) ^ InitialDirectory.GetHashCode();
+                result = (result * 397) ^ OutputToImmediateWindow.GetHashCode();
+                result = (result * 397) ^ ReportTitle.GetHashCode();
                 return result;
             }
         }
     }
 
+    #region Macros
     public static class ToolMacros
     {
+        public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)";
+
         // Macros for Arguments.
         public static Macro[] _listArguments = new[]
             {
-                new Macro("Document Path", "$(DocumentPath)", GetDocumentFilePath, "This tool requires a Document Path to run"),
-                new Macro("Document Directory", "$(DocumentDir)", GetDocumentDir, "This tool requires a Document Directory to run"),
-                new Macro("Document File Name", "$(DocumentFileName)", GetDocumentFileName, "This tool requires a Document File Name to run"),
-                new Macro("Document File Name Without Extension", "$(DocumentBaseName)", GetDocumentFileNameWithoutExtension, "This tool requires a Document File Name  to run."),
-                new Macro("Selected Protein Name", "$(SelProtein)", GetSelectedProteinName, "This tool requires a Selected Protein to run. \n Please select a protein before running this tool."),
-                new Macro("Selected Peptide Sequence", "$(SelPeptide)", GetSelectedPeptideSequence, "This tool requires a Selected Peptide Sequence to run. \n Please select a peptide sequence before running this tool." ),
-                new Macro("Selected Precursor", "$(SelPrecursor)", GetSelectedPrecursor, "This tool requires a Selected Precursor to run. \n Please select a precursor before running this tool."),
-                new Macro("Active Replicate Name", "$(ReplicateName)", GetActiveReplicateName, "This tool requires an Active Replicate Name to run")
+                new Macro(Resources.ToolMacros__listArguments_Document_Path, "$(DocumentPath)", GetDocumentFilePath, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run), 
+                new Macro(Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run),
+                new Macro(Resources.ToolMacros__listArguments_Document_File_Name, "$(DocumentFileName)", GetDocumentFileName, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_File_Name_to_run),
+                new Macro(Resources.ToolMacros__listArguments_Document_File_Name_Without_Extension, "$(DocumentBaseName)", GetDocumentFileNameWithoutExtension, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_File_Name__to_run_),
+                new Macro(Resources.ToolMacros__listArguments_Selected_Protein_Name, "$(SelProtein)", GetSelectedProteinName, TextUtil.LineSeparate(Resources.ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_,Resources.ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_)),
+                new Macro(Resources.ToolMacros__listArguments_Selected_Peptide_Sequence, "$(SelPeptide)", GetSelectedPeptideSequence, TextUtil.LineSeparate(Resources.ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run, Resources.ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_ )),
+                new Macro(Resources.ToolMacros__listArguments_Selected_Precursor, "$(SelPrecursor)", GetSelectedPrecursor, TextUtil.LineSeparate(Resources.ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run,Resources.ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_)),
+                new Macro(Resources.ToolMacros__listArguments_Active_Replicate_Name, "$(ReplicateName)", GetActiveReplicateName, Resources.ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run),                
+                new Macro(Resources.ToolMacros__listArguments_Input_Report_Temp_Path, INPUT_REPORT_TEMP_PATH, GetReportTempPath , Resources.ToolMacros_listArguments_This_tool_requires_a_selected_report)
             };
 
         // Macros for InitialDirectory.
         public static Macro[] _listInitialDirectory = new[]
             {
-                new Macro("Document Directory", "$(DocumentDir)", GetDocumentDir, "This tool requires a Document Directory to run") 
+                new Macro(Resources.ToolMacros__listArguments_Document_Directory, "$(DocumentDir)", GetDocumentDir, Resources.ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run) 
             };
-        
-        // Check string arguments for the ShortText of each macro in the macro list.
-        // If the short text is present, get the actual value and replace it 
-        // If the actual value turns out to be null, display error message and return null.
-        public static string ReplaceMacrosArguments(string arguments, Form parent, IToolMacroProvider toolMacroProvider)
+
+        /// <summary>
+        /// Checks the string arguments of the tool for the ShortText of each macro in the macro list.
+        /// If the short text is present, get the actual value and replace it. 
+        /// If the actual value turns out to be null an exception will be thrown.
+        /// </summary>        
+        /// <param name="doc"> A SrmDocument to base reports off of </param>
+        /// <param name="toolMacroProvider"> Method provider for getting macro actual values </param>
+        /// <param name="tool"> The tool to run this on. </param>
+        /// <param name="exceptionHandler">InterfaceProvider for throwing exceptions on different threads. </param>
+        /// <returns> Arguments string with macros replaced or a thrown exception with error message. </returns>
+        public static string ReplaceMacrosArguments(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IExceptionHandler exceptionHandler)
         {
+
+            string arguments = tool.Arguments;
             foreach (Macro macro in _listArguments)
             {
                 if (arguments.Contains(macro.ShortText))
                 {
-                    string contents = macro.GetContents(toolMacroProvider);
+                    string contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc));
                     if (contents == null)
                     {
-                        MessageDlg.Show(null , macro.ErrorMessage);
+                        exceptionHandler.HandleException(new Exception(macro.ErrorMessage));
                         return null;
                     }
                     else
@@ -196,28 +371,99 @@ namespace pwiz.Skyline.Model
             return arguments; 
         }
 
-        // Check string initialDirectory for the ShortText of each macro in the macro list.
-        // If the short text is present, get the actual value and replace it 
-        // If the actual value turns out to be null, display error message and return null.
-        public static string ReplaceMacrosInitialDirectory(string initialDirectory, Form parent, IToolMacroProvider toolMacroProvider)
+        /// <summary>
+        /// Checks the string initialDirectory of the tool for the ShortText of each macro in the macro list.
+        /// If the short text is present, get the actual value and replace it. 
+        /// If the actual value turns out to be null an exception will be thrown.
+        /// </summary>        
+        /// <param name="doc"> A SrmDocument to base reports off of </param>
+        /// <param name="toolMacroProvider"> Method provider for getting macro actual values </param>
+        /// <param name="tool"> The tool to run this on. </param>
+        /// <param name="exceptionHandler"> Interface for throwing exceptions across threads. </param>
+        /// <returns> InitialDirectory string with macros replaced or a thrown exception with error message. </returns>
+        public static string ReplaceMacrosInitialDirectory(SrmDocument doc, IToolMacroProvider toolMacroProvider, ToolDescription tool, IExceptionHandler exceptionHandler)
         {
+            string initialDirectory = tool.InitialDirectory;
             foreach (Macro macro in _listInitialDirectory)
             {
                 if (initialDirectory.Contains(macro.ShortText))
                 {
-                    string contents = macro.GetContents(toolMacroProvider);
-                    if (contents == null)
+                    string contents;
+                    if (macro.PlainText == Resources.ToolMacros__listArguments_Input_Report_Temp_Path)
                     {
-                        MessageDlg.Show(null, macro.ErrorMessage);
-                        return null;
+                        try // InputReportTempPath throws more specific exceptions, this case deals with those.
+                        {
+                             contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc));
+                            tool.ReportTempPath_toDelete = contents;                            
+                        }
+                        catch(Exception e)
+                        {
+                            exceptionHandler.HandleException(e);
+                            return null;
+                        }                        
                     }
                     else
                     {
-                        initialDirectory = initialDirectory.Replace(macro.ShortText, contents);
+                        contents = macro.GetContents(new ToolMacroInfo(toolMacroProvider, tool.Title, tool.ReportTitle, doc));                        
                     }
+                    if (contents == null)
+                    {
+                        exceptionHandler.HandleException(new Exception(macro.ErrorMessage));
+                        return null;
+                    }    
+                    initialDirectory = initialDirectory.Replace(macro.ShortText, contents);                    
                 }
             }
             return initialDirectory;
+        }
+
+        #region Implementation of macro GetContents functions
+
+        //Save the report to a temp file and return the path to that file. 
+        private static string GetReportTempPath(ToolMacroInfo toolMacroInfo)
+        {
+            SrmDocument doc = toolMacroInfo.Doc;            
+            string reportName = toolMacroInfo.ReportName;
+            string toolTitle = toolMacroInfo.ToolTitle;
+            if (String.IsNullOrEmpty(reportName))
+            {                
+                throw new Exception(String.Format(Resources.ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Please_select_a_report_for_this_tool_, toolTitle));
+            }
+
+            string reportFileName = reportName.Replace(' ', '_');
+            string toolFileName = toolTitle.Replace(' ', '_');
+
+            string tempFilePath = Path.Combine(Path.GetTempPath(), toolFileName + "_" + reportFileName + ".csv");
+
+
+            string report = ToolDescriptionHelpers.GetReport(doc, reportName, toolTitle);
+            
+            if (report!=null)
+            {
+                try
+                {
+                    using (var saver = new FileSaver(tempFilePath))
+                    {
+                        if (!saver.CanSave(false))
+                        {
+                            throw new IOException();
+                        }
+                        using (var writer = new StreamWriter(saver.SafeName))
+                        {                            
+                            writer.Write(report);
+                            writer.Flush();
+                            writer.Close();
+                        }
+                        saver.Commit();
+                        return tempFilePath;                        
+                    }
+                }
+                catch (Exception)
+                {                    
+                    throw new IOException(Resources.ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_);
+                }     
+            }
+            return null;
         }
 
         private static string GetDocumentFilePath(IToolMacroProvider toolMacroProvider)
@@ -259,27 +505,144 @@ namespace pwiz.Skyline.Model
         {
             return toolMacroProvider.ResultNameCurrent;
         }
+        #endregion //implementation of macro GetContents functions        
     }
-
+    
     public class Macro
     {
-        /// <summary>
+         /// <summary>
         ///  A decription for Macros
         /// </summary>
         /// <param name="plainText"> The text that shows up on the drop down menu (eg. "Document Path")</param>
         /// <param name="shortText"> The text that shows up in the text box (eg. "$(DocumentPath)")</param>
-        /// <param name="getContents"> A function that when passed an IToolMacroProvider returns the actual string value the macro represents. </param>
-        /// <param name="errorMessage">The message that will be displayed if GetContents returns null in the replace macro methods. </param>
-        public Macro(string plainText, string shortText, Func<IToolMacroProvider, string> getContents, string errorMessage)
+        /// <param name="getContents"> A function that when passed an ToolMacroInfo returns the actual string value the macro represents. </param>
+        /// <param name="errorMessage">The message that will be displayed if GetContents returns null in the replace macro methods. (eg. When there is no document to get the path of) </param>
+        public Macro(string plainText, string shortText, Func<ToolMacroInfo, string> getContents, string errorMessage)
         {
             PlainText = plainText;
             ShortText = shortText;
             GetContents = getContents;
             ErrorMessage = errorMessage;
-        }
-        public string ErrorMessage { get; set; }
+        }        
+
         public string PlainText { get; set; }
         public string ShortText { get; set; }
-        public Func<IToolMacroProvider, string> GetContents { get; set; } 
+        public string ErrorMessage { get; set; }       
+        public Func<ToolMacroInfo, string> GetContents { get; set; }
+    }
+
+    public class ToolMacroInfo : IToolMacroProvider
+    {
+        private readonly IToolMacroProvider _macroProvider;
+
+        public ToolMacroInfo(IToolMacroProvider macroProvider, string toolTitle, string reportName, SrmDocument document)
+        {
+            _macroProvider = macroProvider;
+            ToolTitle = toolTitle;
+            ReportName = reportName;
+            Doc = document;
+        }
+
+        public string ToolTitle { get; private set; }
+        public string ReportName { get; private set; }
+        public SrmDocument Doc { get; private set; }
+
+        #region Implementation of IToolMacroProvider
+
+        public string DocumentFilePath
+        {
+            get { return _macroProvider.DocumentFilePath; }
+        }
+
+        public string SelectedProteinName
+        {
+            get { return _macroProvider.SelectedProteinName; }
+        }
+
+        public string SelectedPeptideSequence
+        {
+            get { return _macroProvider.SelectedPeptideSequence; }
+        }
+
+        public string SelectedPrecursor
+        {
+            get { return _macroProvider.SelectedPrecursor; }
+        }
+
+        public string ResultNameCurrent
+        {
+            get { return _macroProvider.ResultNameCurrent; }
+        }
+
+        #endregion
+    }
+    #endregion // Macros
+
+    /// <summary>
+    /// An exception to be thrown when a WebTool fails to open.
+    /// </summary>
+    public class WebToolException : Exception
+    {
+        /// <summary>
+        /// Returns an instance of WebToolException.
+        /// An exception to be thrown when a WebTool fails to open.
+        /// </summary>
+        public WebToolException (string errorMessage, string link)
+        {
+            _link = link;
+            _errorMessage = errorMessage;
+        }
+        
+        private readonly string _errorMessage;
+        private readonly string _link;
+
+        public string ErrorMessage
+        {
+            get { return _errorMessage; }
+        }
+
+        public string Link
+        {
+            get { return _link; }
+        }
+    }
+
+    public class ToolDescriptionHelpers
+    {
+
+        /// <summary>
+        ///  A helper function that generates the report with reportTitle from the SrmDocument.
+        ///  Throws an error if the reportSpec no longer exists in Settings.Default.
+        /// </summary>
+        /// <param name="doc"> Document to create the report from. </param>                
+        /// <param name="reportTitle"> Title of the reportSpec to make a report from. </param>
+        /// <param name="toolTitle"> Title of tool for exception error message. </param>
+        /// <returns> Returns a string representation of the ReportTitle report, or throws an error that the reportSpec no longer exist. </returns>
+        public static string GetReport(SrmDocument doc, string reportTitle, string toolTitle)
+        {
+            return GetReport(doc, reportTitle, toolTitle, null);
+        }
+
+        public static string GetReport(SrmDocument doc, string reportTitle, string toolTitle, IExceptionHandler exceptionHandler)
+        {
+            ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportTitle);
+            if (reportSpec == null)
+            {
+                // Complain that the report no longer exist.
+                Exception e = new Exception(string.Format(
+                        Resources.
+                            ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format,
+                        toolTitle, reportTitle));
+                if (exceptionHandler == null)
+                {
+                    throw e;
+                }
+                else exceptionHandler.HandleException(e);
+            }
+            Debug.Assert(reportSpec != null, "reportSpec != null"); // Change to Util.Assume?
+            return reportSpec.ReportToCsvString(doc);
+        }
+
+
     }
 }

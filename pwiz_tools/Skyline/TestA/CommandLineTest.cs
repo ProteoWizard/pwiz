@@ -943,7 +943,7 @@ namespace pwiz.SkylineTestA
             // Specify overwrite
             string output5 = RunCommand("--tool-add=" + title,
                      "--tool-command=" + command,
-                     "--resolve-tool-conflicts=overwrite");
+                     "--tool-conflict-resolution=overwrite");
             Assert.IsTrue((output5.Contains("Warning: overwriting")));
             // Check arguments and initialDir were written over.
             ToolDescription tool4 = Settings.Default.ToolList.Last();
@@ -954,7 +954,7 @@ namespace pwiz.SkylineTestA
             string output6 = RunCommand("--tool-add=" + title,
                      "--tool-command=" + command,
                      "--tool-arguments=thisIsATest",
-                     "--resolve-tool-conflicts=skip");
+                     "--tool-conflict-resolution=skip");
             Assert.IsTrue((output6.Contains("Warning: skipping")));
             // Check Arguments
             ToolDescription tool5 = Settings.Default.ToolList.Last();
@@ -964,8 +964,7 @@ namespace pwiz.SkylineTestA
             // It now complains in this case.
             string output7 = RunCommand( "--tool-arguments=" + arguments,
                      "--tool-initial-dir=" + initialDirectory);
-            Assert.IsTrue(output7.Contains("Error"));            
-            Assert.IsTrue(output7.Contains("Exiting..."));            
+            Assert.IsTrue(output7.Contains("Error"));                        
         }
 
         [TestMethod]
@@ -976,29 +975,29 @@ namespace pwiz.SkylineTestA
             // Add test.skyr which only has one report type named TextREportexam
             var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
             var skyrFile = commandFilesDir.GetTestPath("test.skyr");
-            string output = RunCommand("--skyr-add=" + skyrFile);
+            string output = RunCommand("--report-add=" + skyrFile);
             Assert.AreEqual(initialNumber+1, Settings.Default.ReportSpecList.Count);
             Assert.AreEqual("TextREportexam", Settings.Default.ReportSpecList.Last().GetKey());
             Assert.IsTrue(output.Contains("Success"));
             var skyrAdded = Settings.Default.ReportSpecList.Last();
 
             // Attempt to add the same skyr again.
-            string output2 = RunCommand("--skyr-add=" + skyrFile);
+            string output2 = RunCommand("--report-add=" + skyrFile);
             Assert.IsTrue(output2.Contains("Error"));
             // Do want to use == to show it is the same object, unchanged
             Assert.IsTrue(skyrAdded == Settings.Default.ReportSpecList.Last());
 
             // Specify skip
-            string output4 = RunCommand("--skyr-add=" + skyrFile,
-                "--resolve-skyr-conflicts=skip");
+            string output4 = RunCommand("--report-add=" + skyrFile,
+                "--report-conflict-resolution=skip");
             Assert.IsTrue(output4.Contains("skipping"));
             // Do want to use == to show it is the same object, unchanged
             Assert.IsTrue(skyrAdded == Settings.Default.ReportSpecList.Last());
 
 
             // Specify overwrite
-            string output3 = RunCommand("--skyr-add=" + skyrFile,
-                "--resolve-skyr-conflicts=overwrite");
+            string output3 = RunCommand("--report-add=" + skyrFile,
+                "--report-conflict-resolution=overwrite");
             Assert.IsTrue(output3.Contains("overwriting"));
             // Do want to use == to show it is not the same object, changed
             Assert.IsFalse(skyrAdded == Settings.Default.ReportSpecList.Last());
@@ -1011,7 +1010,7 @@ namespace pwiz.SkylineTestA
             int toolListCount = Settings.Default.ToolList.Count;
             var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
             var commandsToRun = commandFilesDir.GetTestPath("ToolList2.txt");
-            string output = RunCommand("--run-commands=" + commandsToRun);            
+            string output = RunCommand("--batch-commands=" + commandsToRun);            
             Assert.IsTrue(output.Contains("NeWtOOl was added to the Tools Menu"));
             Assert.IsTrue(output.Contains("iHope was added to the Tools Menu"));
             Assert.IsTrue(output.Contains("thisWorks was added to the Tools Menu"));
@@ -1023,7 +1022,7 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(toolListCount+4, Settings.Default.ToolList.Count);
 
             // run the same command again. this time each should be skipped.
-            string output2 = RunCommand("--run-commands=" + commandsToRun);
+            string output2 = RunCommand("--batch-commands=" + commandsToRun);
             Assert.IsFalse(output2.Contains("NeWtOOl was added to the Tools Menu"));
             Assert.IsFalse(output2.Contains("iHope was added to the Tools Menu"));
             Assert.IsFalse(output2.Contains("thisWorks was added to the Tools Menu"));
