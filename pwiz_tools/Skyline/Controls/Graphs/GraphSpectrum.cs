@@ -229,12 +229,24 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Selection by file name and retention time should not select best spectrum
                 int iSpectrum = _spectra.IndexOf(spectrumInfo => !spectrumInfo.IsBest &&
-                    Equals(spectrumInfo.FilePath, spectrumIdentifier.SourceFile) &&
-                    Equals(spectrumInfo.RetentionTime, spectrumIdentifier.RetentionTime));
+                    SpectrumMatches(spectrumInfo, spectrumIdentifier));
 
                 if (iSpectrum != -1)
                     comboSpectrum.SelectedIndex = iSpectrum;
             }
+        }
+
+        private bool SpectrumMatches(SpectrumDisplayInfo spectrumDisplayInfo, SpectrumIdentifier spectrumIdentifier)
+        {
+            if (!Equals(spectrumDisplayInfo.FilePath, spectrumIdentifier.SourceFile))
+            {
+                return false;
+            }
+            if (!spectrumDisplayInfo.RetentionTime.HasValue)
+            {
+                return false;
+            }
+            return Equals((float) spectrumDisplayInfo.RetentionTime, (float) spectrumIdentifier.RetentionTime);
         }
 
         public SpectrumDisplayInfo SelectedSpectrum
@@ -292,6 +304,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         nodeGroup = listInfoGroups[0];
                     else if (listInfoGroups.Length > 1)
                     {
+                        _nodeGroup = null;
                         toolBar.Visible = false;
                         AddGraphItem(graphPane, new NoDataMSGraphItem(Resources.GraphSpectrum_UpdateUI_Multiple_charge_states_with_library_spectra));
                         return;

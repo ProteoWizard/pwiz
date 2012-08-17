@@ -515,7 +515,6 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double[] GetRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
         {
-            var times = new List<double>();
             var source = DocumentRetentionTimes.RetentionTimeSources.Find(Path.GetFileNameWithoutExtension(filePath));
             if (source == null)
             {
@@ -526,16 +525,9 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 return new double[0];
             }
-            LibraryRetentionTimes libraryRetentionTimes;
-            library.TryGetRetentionTimes(filePath, out libraryRetentionTimes);
-            if (libraryRetentionTimes != null)
-            {
-                foreach (var typedSequence in GetTypedSequences(peptideSequence, explicitMods))
-                {
-                    times.AddRange(libraryRetentionTimes.GetRetentionTimes(typedSequence.ModifiedSequence));
-                }
-            }
-            return times.ToArray();
+            var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
+                .Select(typedSequence => typedSequence.ModifiedSequence);
+            return library.GetRetentionTimesWithSequences(source.Name, modifiedSequences).ToArray();
         }
 
         public double[] GetAlignedRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
@@ -546,14 +538,11 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 foreach (var retentionTimeAlignment in fileAlignments.RetentionTimeAlignments.Values)
                 {
-                    foreach (var typedSequence in GetTypedSequences(peptideSequence, explicitMods))
+                    var unalignedTimes = GetRetentionTimes(retentionTimeAlignment.Name, peptideSequence, explicitMods);
+                    foreach (var unalignedTime in unalignedTimes)
                     {
-                        var unalignedTimes = GetRetentionTimes(retentionTimeAlignment.Name, typedSequence.ModifiedSequence, explicitMods);
-                        foreach (var unalignedTime in unalignedTimes)
-                        {
-                            var alignedTime = retentionTimeAlignment.RegressionLine.GetY(unalignedTime);
-                            times.Add(alignedTime);
-                        }
+                        var alignedTime = retentionTimeAlignment.RegressionLine.GetY(unalignedTime);
+                        times.Add(alignedTime);
                     }
                 }
             }

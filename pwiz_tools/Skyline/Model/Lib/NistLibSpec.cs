@@ -342,9 +342,10 @@ namespace pwiz.Skyline.Model.Lib
 
     public abstract class NistLibraryBase : CachedLibrary<NistSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 3;
+        private const int FORMAT_VERSION_CACHE = 4;
 
         private static readonly Regex REGEX_BASENAME = new Regex(@"NIST_(.*)_v(\d+\.\d+)_(\d\d\d\d\-\d\d-\d\d)"); // Not L10N
+
 
         private static readonly Dictionary<string, string> MODIFICATION_MASSES = new Dictionary<string, string>
             {

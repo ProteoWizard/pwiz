@@ -16,6 +16,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -85,6 +87,50 @@ namespace pwiz.Common.Collections
         public static IDictionary<TKey,TValue> EmptyDictionary<TKey,TValue>()
         {
             return new ImmutableDictionary<TKey, TValue>(new Dictionary<TKey, TValue>());
+        }
+        /// <summary>
+        /// Performs a binary search in a list of items.  The list is assumed to be sorted with respect to 
+        /// <paramref name="compareFunc" /> such that those items for which compareFunc returns a negative
+        /// number appear earlier in the list than those items for which compareFunc returns 0, which appear
+        /// earlier than the items for which compareFunc returns a positive number.
+        /// The return value is the index of the first or last (depending on <paramref name="firstIndex"/>) item 
+        /// for which compareFunc returns 0.  If no item was found, then the return value is the one's complement
+        /// of the index of the first item in the list for which compareFunc returns a positive number.
+        /// </summary>
+        public static int BinarySearch<TItem>(IList<TItem> items, Func<TItem, int> compareFunc, bool firstIndex)
+        {
+            int lo = 0;
+            int hi = items.Count - 1;
+            while (lo <= hi)
+            {
+                int mid = (lo + hi) / 2;
+
+                int c = compareFunc(items[mid]);
+                if (c == 0)
+                {
+                    if (lo == hi)
+                    {
+                        return lo;
+                    }
+                    if (firstIndex)
+                    {
+                        hi = mid;
+                    }
+                    else
+                    {
+                        lo = mid;
+                    }
+                }
+                else if (c < 0)
+                {
+                    lo = mid + 1;
+                }
+                else
+                {
+                    hi = mid - 1;
+                }
+            }
+            return ~lo;
         }
     }
 }

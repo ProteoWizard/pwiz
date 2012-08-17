@@ -129,7 +129,7 @@ namespace pwiz.Skyline.Model.RetentionTimes
                     continue;
                 }
                 var alignedFile = AlignedRetentionTimes.AlignLibraryRetentionTimes(targetTimes, entry.Value, REFINEMENT_THRESHHOLD, ()=>progressMonitor.IsCanceled);
-                if (!RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
+                if (alignedFile == null || !RetentionTimeRegression.IsAboveThreshold(alignedFile.RegressionRefinedStatistics.R, REFINEMENT_THRESHHOLD))
                 {
                     continue;
                 }

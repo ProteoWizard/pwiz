@@ -286,7 +286,7 @@ namespace pwiz.SkylineTestTutorial
                 var graphChrom = SkylineWindow.GraphChromatograms.ToList()[0];
                 var listChanges = new List<ChangedPeakBoundsEventArgs>
                         {
-                            new ChangedPeakBoundsEventArgs(pathGroup, null, graphChrom.NameSet, graphChrom.ChromGroupInfos[0].FilePath, 44.0, 45.0, false, PeakBoundsChangeType.both)
+                            new ChangedPeakBoundsEventArgs(pathGroup, null, graphChrom.NameSet, graphChrom.ChromGroupInfos[0].FilePath, new ScaledRetentionTime(44.0, 44.0), new ScaledRetentionTime(45.0, 45.0), false, PeakBoundsChangeType.both)
                         };
                 graphChrom.SimulateChangedPeakBounds(listChanges);
                 foreach (TransitionTreeNode node in SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Nodes)

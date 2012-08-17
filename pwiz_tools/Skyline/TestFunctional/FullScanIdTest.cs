@@ -21,6 +21,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.BiblioSpec;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
@@ -148,7 +149,7 @@ namespace pwiz.SkylineTestFunctional
                 double idTime = availableSpectra[0].RetentionTime ?? 0;
                 Assert.AreEqual(idTime, graphChrom.SelectedRetentionTimeMsMs);
 
-                graphChrom.FirePickedSpectrum(idTime);
+                graphChrom.FirePickedSpectrum(new ScaledRetentionTime(idTime, idTime));
             });
 
             WaitForGraphs();

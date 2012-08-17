@@ -22,17 +22,17 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
+using System.Text;
 using System.Xml;
 using System.Xml.Schema;
+using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
-using System.Xml.Serialization;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -426,6 +426,11 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if retention time information was retrieved successfully</returns>
         public abstract bool TryGetRetentionTimes(int fileIndex, out LibraryRetentionTimes retentionTimes);
 
+        public virtual IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences)
+        {
+            yield break;
+        }
+
         /// <summary>
         /// Gets all of the spectrum information for a particular (sequence, charge) pair.  This
         /// may include redundant spectra.  The spectrum points themselves are only loaded as it they
@@ -701,8 +706,15 @@ namespace pwiz.Skyline.Model.Lib
         {
             Name = path;
             _dictPeptideRetentionTimes = dictPeptideRetentionTimes;
-            MinRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Min();
-            MaxRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Max();
+            if (_dictPeptideRetentionTimes.Count == 0)
+            {
+                MinRt = MaxRt = 0;
+            }
+            else
+            {
+                MinRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Min();
+                MaxRt = _dictPeptideRetentionTimes.SelectMany(p => p.Value).Max();
+            }
             var listStdev = new List<double>();
             foreach (double[] times in _dictPeptideRetentionTimes.Values)
             {
@@ -1247,17 +1259,27 @@ namespace pwiz.Skyline.Model.Lib
             outStream.Write(_key, 1, _key.Length - 1);
         }
 
-        public int Compare(LibKey key2)
+        public int CompareSequence(LibKey key2)
         {
             byte[] raw1 = _key, raw2 = key2._key;
             int len = Math.Min(raw1.Length, raw2.Length);
-            for (int i = 0; i < len; i++)
+            for (int i = 1; i < len; i++)
             {
                 byte b1 = raw1[i], b2 = raw2[i];
                 if (b1 != b2)
                     return b1 - b2;
             }
             return raw1.Length - raw2.Length;
+        }
+
+        public int Compare(LibKey key2)
+        {
+            int result = CompareSequence(key2);
+            if (result != 0)
+            {
+                return result;
+            }
+            return Charge.CompareTo(key2.Charge);
         }
 
         public IEnumerable<char> AminoAcids

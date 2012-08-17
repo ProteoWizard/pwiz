@@ -185,7 +185,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("hunter_library")]
     public sealed class XHunterLibrary : CachedLibrary<XHunterSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 2;
+        private const int FORMAT_VERSION_CACHE = 3;
 
         public const string DEFAULT_AUTHORITY = "thegpm.org"; // Not L10N
 

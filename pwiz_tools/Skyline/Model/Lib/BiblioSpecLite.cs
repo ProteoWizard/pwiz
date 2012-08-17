@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 3;
+        private const int FORMAT_VERSION_CACHE = 4;
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu"; // Not L10N
 
@@ -921,6 +921,35 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return base.TryGetRetentionTimes(filePath, out retentionTimes);
+        }
+
+        public override IEnumerable<double> GetRetentionTimesWithSequences(string filePath, IEnumerable<string> peptideSequences)
+        {
+            int iFile = FindSource(filePath);
+            if (iFile < 0)
+            {
+                return new double[0];
+            }
+            var times = new List<double[]>();
+            foreach (var sequence in peptideSequences)
+            {
+                LibKey libKey = new LibKey(sequence, 0);
+                int iFirstEntry = CollectionUtil.BinarySearch(_libraryEntries, item => item.Key.CompareSequence(libKey), true);
+                if (iFirstEntry < 0)
+                {
+                    continue;
+                }
+                for (int index = iFirstEntry; index < _libraryEntries.Length; index++)
+                {
+                    var item = _libraryEntries[index];
+                    if (0 != libKey.CompareSequence(item.Key))
+                    {
+                        break;
+                    }
+                    times.Add(item.RetentionTimesByFileId.GetTimes(_librarySourceFiles[iFile].Id));
+                }
+            }
+            return times.SelectMany(array => array);
         }
 
         /// <summary>

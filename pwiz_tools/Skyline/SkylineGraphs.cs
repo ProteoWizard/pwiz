@@ -1155,6 +1155,7 @@ namespace pwiz.Skyline
             menuStrip.Items.Insert(iInsert++, lockYChromContextMenuItem);
             synchronizeZoomingContextMenuItem.Checked = set.AutoZoomAllChromatograms;
             menuStrip.Items.Insert(iInsert++, synchronizeZoomingContextMenuItem);
+            iInsert = InsertAlignToSelectionMenuItem(menuStrip.Items, iInsert);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator18);
             menuStrip.Items.Insert(iInsert++, chromPropsContextMenuItem);
             menuStrip.Items.Insert(iInsert, toolStripSeparator19);
@@ -1807,8 +1808,8 @@ namespace pwiz.Skyline
                 graphChrom.LockZoom();
             try
             {
-                ModifyDocument(string.Format("Pick peak {0:F01}", e.RetentionTime), // Not L10N
-                    doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime));
+                ModifyDocument(string.Format("Pick peak {0:F01}", e.RetentionTime.MeasuredTime), // Not L10N
+                    doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime.MeasuredTime));
             }
             finally
             {
@@ -1829,16 +1830,16 @@ namespace pwiz.Skyline
                 {
                     string message;
                     ChangedPeakBoundsEventArgs e = eMulti.Changes[0];
-                    if (e.StartTime == e.EndTime)
+                    if (Equals(e.StartTime, e.EndTime))
                         message = "Remove peak"; // Not L10N
                     else if (e.ChangeType == PeakBoundsChangeType.both)
-                        message = string.Format("Change peak to {0:F01}-{1:F01}", e.StartTime, e.EndTime); // Not L10N
+                        message = string.Format("Change peak to {0:F01}-{1:F01}", e.StartTime.MeasuredTime, e.EndTime.MeasuredTime); // Not L10N
                     else if (e.ChangeType == PeakBoundsChangeType.start)
-                        message = string.Format("Change peak start to {0:F01}", e.StartTime); // Not L10N
+                        message = string.Format("Change peak start to {0:F01}", e.StartTime.MeasuredTime); // Not L10N
                     else
-                        message = string.Format("Change peak end to {0:F01}", e.EndTime); // Not L10N
+                        message = string.Format("Change peak end to {0:F01}", e.EndTime.MeasuredTime); // Not L10N
                     ModifyDocument(message, doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition,
-                                                                  e.StartTime, e.EndTime, e.IsIndentified));
+                                                                  e.StartTime.MeasuredTime, e.EndTime.MeasuredTime, e.IsIndentified));
                 }
                 else
                 {
@@ -1848,7 +1849,7 @@ namespace pwiz.Skyline
                                 foreach (var e in eMulti.Changes)
                                 {
                                     doc = doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition,
-                                        e.StartTime, e.EndTime, e.IsIndentified);                                    
+                                        e.StartTime.MeasuredTime, e.EndTime.MeasuredTime, e.IsIndentified);                                    
                                 }
                                 return doc;
                             });
@@ -1863,6 +1864,10 @@ namespace pwiz.Skyline
 
         private void graphChromatogram_PickedSpectrum(object sender, PickedSpectrumEventArgs e)
         {
+            if (_graphSpectrum == null || !_graphSpectrum.Visible)
+            {
+                ShowGraphSpectrum(true);
+            }
             if (_graphSpectrum != null)
                 _graphSpectrum.SelectSpectrum(e.SpectrumId);
         }
@@ -2170,13 +2175,7 @@ namespace pwiz.Skyline
                     }
                     if (rtReplicateGraphPane != null)
                     {
-                        if (DocumentUI.Settings.HasResults && !Document.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
-                        {
-                            var alignToSelectionItem = alignRTToSelectionContextMenuItem;
-                            alignToSelectionItem.Text = string.Format("Align Times To {0}", ComboResults.SelectedItem);
-                            alignToSelectionItem.Checked = AlignToReplicate == SelectedResultsIndex;
-                            menuStrip.Items.Insert(iInsert++, alignToSelectionItem);
-                        }
+                        iInsert = InsertAlignToSelectionMenuItem(menuStrip.Items, iInsert);
                     }
                 }
                 else if (graphType == GraphTypeRT.peptide)
@@ -2523,18 +2522,29 @@ namespace pwiz.Skyline
                 return;
             }
             var menuItem = (ToolStripMenuItem) sender;
-            var rtReplicateGraphPane = _graphRetentionTime.GraphPane as RTReplicateGraphPane;
-            if (rtReplicateGraphPane != null)
+            if (menuItem.Checked)
             {
-                if (menuItem.Checked)
-                {
-                    AlignToReplicate = SelectedResultsIndex;    
-                }
-                else
-                {
-                    AlignToReplicate = -1;
-                }
+                AlignToReplicate = SelectedResultsIndex;    
             }
+            else
+            {
+                AlignToReplicate = -1;
+            }
+        }
+
+        /// <summary>
+        /// Adds the "Align Times To {Selected Replicate} menu item to a context menu.
+        /// </summary>
+        private int InsertAlignToSelectionMenuItem(ToolStripItemCollection items, int iInsert)
+        {
+            if (DocumentUI.Settings.HasResults && !DocumentUI.Settings.DocumentRetentionTimes.FileAlignments.IsEmpty)
+            {
+                var alignToSelectionItem = alignRTToSelectionContextMenuItem;
+                alignToSelectionItem.Text = string.Format("Align Times To {0}", ComboResults.SelectedItem);
+                alignToSelectionItem.Checked = AlignToReplicate == SelectedResultsIndex;
+                items.Insert(iInsert++, alignToSelectionItem);
+            }
+            return iInsert;
         }
 
         private void allRTValueContextMenuItem_Click(object sender, EventArgs e)

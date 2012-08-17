@@ -85,7 +85,11 @@ namespace pwiz.Skyline.Model.Lib
                 targetTimesList.Add(new MeasuredRetentionTime(entry.Key, targetTime));
             }
             RetentionTimeStatistics regressionStatistics;
-            var regression = RetentionTimeRegression.CalcRegression("alignLibraryRetentionTimes", new[] {calculator}, targetTimesList, out regressionStatistics);
+            var regression = RetentionTimeRegression.CalcRegression(XmlNamedElement.NAME_INTERNAL, new[] {calculator}, targetTimesList, out regressionStatistics);
+            if (regression == null)
+            {
+                return null;
+            }
             RetentionTimeRegression regressionRefined;
             RetentionTimeStatistics regressionRefinedStatistics = regressionStatistics;
             HashSet<int> outIndexes = new HashSet<int>();

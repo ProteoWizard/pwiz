@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -299,7 +300,7 @@ namespace pwiz.SkylineTestTutorial
                         var nodeTran = document.FindNode(SkylineWindow.SelectedPath) as TransitionDocNode;
                         Assert.IsNotNull(nodeTran);
                         SkylineWindow.GetGraphChrom(MULTI_FILE_REPLICATE_NAME)
-                                     .FirePickedPeak(nodeGroup, nodeTran, 19.8);
+                                     .FirePickedPeak(nodeGroup, nodeTran, new ScaledRetentionTime(19.8, 19.8));
                     });
                 }
                 if (i == 5)
