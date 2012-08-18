@@ -203,7 +203,8 @@ namespace pwiz.Skyline.ToolsUI
 
         public static bool checkExtension(string path)
         {
-            return EXTENSIONS.Any(extension => extension == System.IO.Path.GetExtension(path));
+            string s = System.IO.Path.GetExtension(path);
+            return EXTENSIONS.Any(extension => s != null && extension == s.ToLower());
         }
 
         public bool CheckPassTool(int toolIndex)

@@ -273,7 +273,7 @@ function submitForm()
 window.onload = submitForm;
 </script>
 <form id=""my_form"" action=""{0}"" method=""post"" style=""visibility: hidden;"">
-<textarea name=""SlylineReport"">{1}</textarea>
+<textarea name=""SkylineReport"">{1}</textarea>
 </form>",
 
                 link, WebUtility.HtmlEncode(postData));
@@ -299,6 +299,8 @@ window.onload = submitForm;
 
             try
             {
+                // CONSIDER: User could have a configuration that opens html documents
+                //           with a text editor. This would defeat the redirection and post.
                 Process.Start(filePath);
             }
             catch(Exception)

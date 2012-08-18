@@ -153,7 +153,9 @@ namespace pwiz.Skyline.Model
             }
             else // Not a website. Needs its own thread.
             {                
-                RunExecutable(doc,toolMacroProvider,textWriter,exceptionHandler);                
+                // To eliminate a cross thread error make a copy of the IToolMacroProvider.
+                IToolMacroProvider newToolMacroProvider = new CopyIToolMacroProvider(toolMacroProvider);
+                RunExecutable(doc, newToolMacroProvider, textWriter, exceptionHandler);                
             }           
         }    
 
@@ -639,10 +641,39 @@ namespace pwiz.Skyline.Model
                 }
                 else exceptionHandler.HandleException(e);
             }
+            // At this point the null case should have been dealt with.
             Debug.Assert(reportSpec != null, "reportSpec != null"); // Change to Util.Assume?
-            return reportSpec.ReportToCsvString(doc);
+            if (reportSpec != null) return reportSpec.ReportToCsvString(doc);
+            return null;
+        }
+    }
+
+    public class CopyIToolMacroProvider : IToolMacroProvider
+    {
+
+        public CopyIToolMacroProvider(IToolMacroProvider iToolMacroProvider)
+        {
+            DocumentFilePath = iToolMacroProvider.DocumentFilePath;
+            SelectedProteinName = iToolMacroProvider.SelectedProteinName;
+            SelectedPeptideSequence = iToolMacroProvider.SelectedPeptideSequence;
+            SelectedPrecursor = iToolMacroProvider.SelectedPrecursor;
+            ResultNameCurrent = iToolMacroProvider.ResultNameCurrent;
         }
 
+        #region Implementation of IToolMacroProvider
 
+        public string DocumentFilePath { get; private set; }
+
+        public string SelectedProteinName { get; private set; }
+
+        public string SelectedPeptideSequence { get; private set; }
+
+        public string SelectedPrecursor { get; private set; }
+
+        public string ResultNameCurrent { get; private set; }
+
+        #endregion
     }
+
+    
 }
