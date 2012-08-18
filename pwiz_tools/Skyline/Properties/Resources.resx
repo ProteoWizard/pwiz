@@ -3401,7 +3401,7 @@ Are you sure you want to continue?</value>
   <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list" xml:space="preserve">
     <value>The peptide '{0}' appears multiple times in the added list.</value>
   </data>
-  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_lis_" xml:space="preserve">
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list" xml:space="preserve">
     <value>The following peptides appear multiple times in the added list:</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_appear_multiple_times" xml:space="preserve">
@@ -4337,6 +4337,33 @@ Are you sure you want to continue?</value>
     <value xml:space="preserve">Calculating hash of input file</value>
   </data> <data name="ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run">
     <value xml:space="preserve">This tool requires a Document Path to run</value>
+  </data>
+  <data name="RenameProteinsDlg_OkDialog__0__is_not_a_current_protein">
+    <value xml:space="preserve">{0} is not a current protein</value>
+  </data>
+  <data name="FastaSequence_Description_Original_Name__0__">
+    <value xml:space="preserve">Original Name: {0}</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Original_name__0__">
+    <value xml:space="preserve">Original name: {0}</value>
+  </data>
+  <data name="RenameProteinsDlg_OkDialog_Edit_name__0__">
+    <value xml:space="preserve">Edit name {0}</value>
+  </data>
+  <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__">
+    <value xml:space="preserve">Failed reading the file {0}. {1}</value>
+  </data>
+  <data name="RenameProteinsDlg_PasteProteins_Failed_getting_data_from_the_clipboard">
+    <value xml:space="preserve">Failed getting data from the clipboard.</value>
+  </data>
+  <data name="GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns">
+    <value xml:space="preserve">On line {0}, row has more than 2 columns</value>
+  </data>
+  <data name="RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File">
+    <value xml:space="preserve">Add FASTA File</value>
+  </data>
+  <data name="SkylineWindow_ManageResults_Manage_results">
+    <value xml:space="preserve">Manage results</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run">
     <value xml:space="preserve">This tool requires a Document Directory to run</value>

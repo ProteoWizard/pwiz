@@ -4354,6 +4354,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Original Name: {0}.
+        /// </summary>
+        public static string FastaSequence_Description_Original_Name__0__ {
+            get {
+                return ResourceManager.GetString("FastaSequence_Description_Original_Name__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to A protein sequence may not be empty..
         /// </summary>
         public static string FastaSequence_ValidateSequence_A_protein_sequence_may_not_be_empty {
@@ -4992,6 +5001,15 @@ namespace pwiz.Skyline.Properties {
         public static string GridViewDriver_ValidateRow_On_line__0__1__ {
             get {
                 return ResourceManager.GetString("GridViewDriver_ValidateRow_On_line__0__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to On line {0}, row has more than 2 columns.
+        /// </summary>
+        public static string GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns {
+            get {
+                return ResourceManager.GetString("GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns", resourceCulture);
             }
         }
         
@@ -7518,10 +7536,10 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The following peptides appear multiple times in the added list:.
         /// </summary>
-        public static string PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_lis_ {
+        public static string PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list {
             get {
                 return ResourceManager.GetString("PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multip" +
-                        "le_times_in_the_added_lis_", resourceCulture);
+                        "le_times_in_the_added_list", resourceCulture);
             }
         }
         
@@ -7617,6 +7635,15 @@ namespace pwiz.Skyline.Properties {
         public static string PeptideGroupTreeNode_Heading_Protein {
             get {
                 return ResourceManager.GetString("PeptideGroupTreeNode_Heading_Protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original name: {0}.
+        /// </summary>
+        public static string PeptideGroupTreeNode_RenderTip_Original_name__0__ {
+            get {
+                return ResourceManager.GetString("PeptideGroupTreeNode_RenderTip_Original_name__0__", resourceCulture);
             }
         }
         
@@ -8309,6 +8336,51 @@ namespace pwiz.Skyline.Properties {
         public static string RelativeRTExtension_LOCALIZED_VALUES_Unknown {
             get {
                 return ResourceManager.GetString("RelativeRTExtension_LOCALIZED_VALUES_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add FASTA File.
+        /// </summary>
+        public static string RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a current protein.
+        /// </summary>
+        public static string RenameProteinsDlg_OkDialog__0__is_not_a_current_protein {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_OkDialog__0__is_not_a_current_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit name {0}.
+        /// </summary>
+        public static string RenameProteinsDlg_OkDialog_Edit_name__0__ {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_OkDialog_Edit_name__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed getting data from the clipboard..
+        /// </summary>
+        public static string RenameProteinsDlg_PasteProteins_Failed_getting_data_from_the_clipboard {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_PasteProteins_Failed_getting_data_from_the_clipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed reading the file {0}. {1}.
+        /// </summary>
+        public static string RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__ {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__", resourceCulture);
             }
         }
         
@@ -9726,6 +9798,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results {
             get {
                 return ResourceManager.GetString("SkylineWindow_ManageResults_A_failure_occurred_attempting_to_reimport_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Manage results.
+        /// </summary>
+        public static string SkylineWindow_ManageResults_Manage_results {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ManageResults_Manage_results", resourceCulture);
             }
         }
         
