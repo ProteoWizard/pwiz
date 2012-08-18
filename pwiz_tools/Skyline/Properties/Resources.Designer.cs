@@ -9693,6 +9693,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to You must add at least one target transition before importing results..
+        /// </summary>
+        public static string SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_im" +
+                        "porting_results_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must save this document before importing results..
         /// </summary>
         public static string SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results {

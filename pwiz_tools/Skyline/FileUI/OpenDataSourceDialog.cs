@@ -597,8 +597,10 @@ namespace pwiz.Skyline.FileUI
                 DialogResult = DialogResult.OK;
             }
             else
-                MessageBox.Show(Resources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources, 
+            {
+                MessageBox.Show(this, Resources.OpenDataSourceDialog_Open_Please_select_one_or_more_data_sources,
                     Resources.OpenDataSourceDialog_Open_Error, MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
         }
 
         private void cancelButton_Click( object sender, EventArgs e )

@@ -1235,9 +1235,14 @@ namespace pwiz.Skyline
 
         public void ImportResults()
         {
+            if (DocumentUI.TransitionCount == 0)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_);
+                return;
+            }
             if (string.IsNullOrEmpty(DocumentFilePath))
             {
-                if (MessageBox.Show(Resources.SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results, 
+                if (MessageBox.Show(this, Resources.SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results, 
                     Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
                 if (!SaveDocument())

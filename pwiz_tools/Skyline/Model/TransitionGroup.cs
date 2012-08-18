@@ -274,7 +274,9 @@ namespace pwiz.Skyline.Model
             MassType massType = tranSettings.Prediction.FragmentMassType;
             int minMz = tranSettings.Instrument.GetMinMz(precursorMz);
             int maxMz = tranSettings.Instrument.MaxMz;
-            bool precursorMS1 = (fullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None);
+            bool precursorMS1 = fullScan.IsEnabledMs;
+            bool precursorNoProducts = precursorMS1 && !fullScan.IsEnabledMsMs &&
+                tranSettings.Filter.IonTypes.Count == 1 && tranSettings.Filter.IonTypes[0] == IonType.precursor;
             double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
 
             foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
@@ -305,7 +307,10 @@ namespace pwiz.Skyline.Model
                 }
 
                 // If filtering precursors from MS1 scans, then ranking in MS/MS does not apply
-                bool precursorIsProduct = !settings.TransitionSettings.FullScan.IsEnabledMs;
+                bool precursorIsProduct = !precursorMS1 || losses != null;
+                // Skip product ion precursors, if the should not be included
+                if (useFilter && precursorIsProduct && precursorNoProducts)
+                    continue;
                 if (!useFilter || !precursorIsProduct ||
                         !libraryFilter || IsMatched(transitionRanks, ionMz, IonType.precursor,
                                                     PrecursorCharge, losses))

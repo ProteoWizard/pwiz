@@ -88,8 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else if (selectedTreeNode is PeptideTreeNode)
                 {
                     var nodePep = ((PeptideTreeNode)selectedTreeNode).DocNode;
-                    if (nodePep.Children.Count > 0)
-                        selectedGroup = (TransitionGroupDocNode)nodePep.Children[0];
+                    selectedGroup = nodePep.TransitionGroups.FirstOrDefault();
                 }
                 var proteinTreeNode = selectedTreeNode.GetNodeOfType<PeptideGroupTreeNode>();
                 if (proteinTreeNode != null)
@@ -97,7 +96,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
-            var displayType = GraphChromatogram.GetDisplayType(document);
+            var displayType = GraphChromatogram.GetDisplayType(document, selectedTreeNode);
 
             _graphData = CreateGraphData(document, selectedProtein, selectedGroup, displayType);
 

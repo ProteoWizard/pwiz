@@ -4479,4 +4479,7 @@ Are you sure you want to continue?</value>
   <data name="SkylineWindow_importMassListMenuItem_Click_Transition_List">
     <value xml:space="preserve">Transition List</value>
   </data>
+  <data name="SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_">
+    <value xml:space="preserve">You must add at least one target transition before importing results.</value>
+  </data>
 </root>

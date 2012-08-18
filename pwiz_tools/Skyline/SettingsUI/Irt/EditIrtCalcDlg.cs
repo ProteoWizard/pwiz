@@ -146,7 +146,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(Resources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
+                var result = MessageBox.Show(this, Resources.EditIrtCalcDlg_btnCreateDb_Click_Are_you_sure_you_want_to_create_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)
@@ -202,7 +202,7 @@ namespace pwiz.Skyline.SettingsUI.Irt
         {
             if (DatabaseChanged)
             {
-                var result = MessageBox.Show(Resources.EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
+                var result = MessageBox.Show(this, Resources.EditIrtCalcDlg_btnBrowseDb_Click_Are_you_sure_you_want_to_open_a_new_database_file_Any_changes_to_the_current_calculator_will_be_lost,
                     Program.Name, MessageBoxButtons.YesNo);
 
                 if (result != DialogResult.Yes)

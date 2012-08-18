@@ -1063,22 +1063,20 @@ namespace pwiz.Skyline
                                    settings.TransitionSettings.FullScan.IsEnabled);
             var set = Settings.Default;
             int iInsert = 0;
-            var nodeTree = SelectedNode;
-            if (nodeTree is TransitionTreeNode && GraphChromatogram.IsSingleTransitionDisplay)
+            var selectedTreeNode = SelectedNode as SrmTreeNode;
+            if (selectedTreeNode is TransitionTreeNode && GraphChromatogram.IsSingleTransitionDisplay)
             {
-                if (HasPeak(SelectedResultsIndex, ((TransitionTreeNode)nodeTree).DocNode))
+                if (HasPeak(SelectedResultsIndex, ((TransitionTreeNode)selectedTreeNode).DocNode))
                 {
                     menuStrip.Items.Insert(iInsert++, removePeakGraphMenuItem);
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator33);                    
                 }
             }
-            else if ((nodeTree is TransitionTreeNode && GraphChromatogram.GetDisplayType(DocumentUI) == DisplayTypeChrom.all) ||
-                    (nodeTree is TransitionGroupTreeNode) ||
-                    (nodeTree is PeptideTreeNode && ((PeptideTreeNode)nodeTree).DocNode.Children.Count == 1))
+            else if ((selectedTreeNode is TransitionTreeNode && GraphChromatogram.GetDisplayType(DocumentUI, selectedTreeNode) == DisplayTypeChrom.all) ||
+                    (selectedTreeNode is TransitionGroupTreeNode) ||
+                    (selectedTreeNode is PeptideTreeNode && ((PeptideTreeNode)selectedTreeNode).DocNode.Children.Count == 1))
             {
-                var nodeGroupTree = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>();
-                var nodeGroup = nodeGroupTree != null ? nodeGroupTree.DocNode :
-                    (TransitionGroupDocNode)((PeptideTreeNode)nodeTree).ChildDocNodes[0];
+                var nodeGroup = SequenceTree.GetNodeOfType<PeptideTreeNode>().DocNode.TransitionGroups.First();
                 if (HasPeak(SelectedResultsIndex, nodeGroup))
                 {
                     menuStrip.Items.Insert(iInsert++, removePeaksGraphMenuItem);
@@ -1280,15 +1278,19 @@ namespace pwiz.Skyline
 
         private void transitionsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            var displayType = GraphChromatogram.GetDisplayType(DocumentUI);
+            var displayType = GraphChromatogram.DisplayType;
 
             // If both MS1 and MS/MS ions are not possible, then menu items to differentiate precursors and
             // products are not necessary.
-            var fullScan = DocumentUI.Settings.TransitionSettings.FullScan;
+            bool showIonTypeOptions = IsMultipleIonSources;
             precursorsTranMenuItem.Visible =
                 precursorsTranContextMenuItem.Visible =
                 productsTranMenuItem.Visible =
-                productsTranContextMenuItem.Visible = fullScan.IsEnabledMs && fullScan.IsEnabledMsMs;
+                productsTranContextMenuItem.Visible = showIonTypeOptions;
+
+            if (!showIonTypeOptions &&
+                    (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products))
+                displayType = DisplayTypeChrom.all;
 
             precursorsTranMenuItem.Checked = precursorsTranContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.precursors);
@@ -1300,6 +1302,19 @@ namespace pwiz.Skyline
                 (displayType == DisplayTypeChrom.all);
             totalTranMenuItem.Checked = totalTranContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.total);
+        }
+
+        private bool IsMultipleIonSources
+        {
+            get
+            {
+                var nodeTreePep = SequenceTree.GetNodeOfType<PeptideTreeNode>();
+                if (nodeTreePep == null)
+                    return false;
+                var fullScan = DocumentUI.Settings.TransitionSettings.FullScan;
+                return nodeTreePep.DocNode.TransitionGroups.Contains(
+                    nodeGroup => GraphChromatogram.IsMultipleIonSources(fullScan, nodeGroup));
+            }
         }
 
         private void removePeaksGraphMenuItem_DropDownOpening(object sender, EventArgs e)

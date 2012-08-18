@@ -78,16 +78,38 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        public static DisplayTypeChrom GetDisplayType(SrmDocument documentUI)
+        public static DisplayTypeChrom GetDisplayType(SrmDocument documentUI, SrmTreeNode selectedTreeNode)
+        {
+            TransitionGroupDocNode nodeGroup = null;
+            var peptideTreeNode = SequenceTree.GetNodeOfType<PeptideTreeNode>(selectedTreeNode);
+            if (peptideTreeNode != null && peptideTreeNode.DocNode.TransitionGroupCount == 1)
+                nodeGroup = peptideTreeNode.DocNode.TransitionGroups.First();
+            else
+            {
+                var transitionGroupTreeNode = SequenceTree.GetNodeOfType<TransitionGroupTreeNode>(selectedTreeNode);
+                if (transitionGroupTreeNode != null)
+                    nodeGroup = transitionGroupTreeNode.DocNode;
+            }
+            return GetDisplayType(documentUI, nodeGroup);
+        }
+
+        public static DisplayTypeChrom GetDisplayType(SrmDocument documentUI, TransitionGroupDocNode nodeGroup)
         {
             var displayType = DisplayType;
             var fullScan = documentUI.Settings.TransitionSettings.FullScan;
-            if (!fullScan.IsEnabledMs || !fullScan.IsEnabledMsMs)
+            if (!IsMultipleIonSources(fullScan, nodeGroup))
             {
                 if (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products)
                     displayType = DisplayTypeChrom.all;
             }
             return displayType;
+        }
+
+        public static bool IsMultipleIonSources(TransitionFullScan fullScan, TransitionGroupDocNode nodeGroup)
+        {
+            return fullScan.IsEnabledMs &&
+                   (fullScan.IsEnabledMsMs ||
+                        (nodeGroup != null && nodeGroup.Transitions.Contains(nodeTran => !nodeTran.IsMs1)));
         }
 
         public static bool IsSingleTransitionDisplay
@@ -706,7 +728,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Get points for all transitions, and pick maximum peaks.
             ChromatogramInfo[] arrayChromInfo;
-            DisplayTypeChrom displayType = GetDisplayType(DocumentUI);
+            DisplayTypeChrom displayType = GetDisplayType(DocumentUI, nodeGroup);
             var displayTrans = GetDisplayTransitions(nodeGroup, displayType).ToArray();
             int numTrans = displayTrans.Length;
             int numSteps = 0;

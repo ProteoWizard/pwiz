@@ -250,7 +250,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            DialogResult result = MessageBox.Show(Resources.EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue,
+            DialogResult result = MessageBox.Show(this, Resources.EditListDlg_btnReset_Click_This_will_reset_the_list_to_its_default_values_Continue,
                                                   Program.Name, MessageBoxButtons.YesNo);
 
             if (result == DialogResult.Yes)

@@ -585,7 +585,7 @@ namespace pwiz.Skyline.Controls
         /// <typeparam name="TNode">The type to look for</typeparam>
         /// <param name="nodeStart">The node to start from</param>
         /// <returns>The selected node or ancestor of the desired type</returns>
-        public TNode GetNodeOfType<TNode>(TreeNode nodeStart)
+        public static TNode GetNodeOfType<TNode>(TreeNode nodeStart)
             where TNode : TreeNode
         {
             for (TreeNode node = nodeStart; node != null; node = node.Parent)
