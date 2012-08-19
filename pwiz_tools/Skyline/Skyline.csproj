@@ -364,12 +364,6 @@
     <Compile Include="EditUI\CopyGraphDataToolStripMenuItem.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="EditUI\RenameProteinsDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="EditUI\RenameProteinsDlg.Designer.cs">
-      <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="EditUI\GenerateDecoysDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -926,9 +920,6 @@
     <EmbeddedResource Include="Controls\SequenceTreeForm.resx">
       <DependentUpon>SequenceTreeForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="EditUI\RenameProteinsDlg.resx">
-      <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportMethodDlg.resx">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1004,7 +995,6 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <None Include="app.config" />
-    <None Include="Properties\DataSources\pwiz.Skyline.EditUI.RenameProteinsDlg.datasource" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

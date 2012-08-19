@@ -88,7 +88,7 @@ namespace pwiz.Skyline.SettingsUI
         public string GetCellValue(int col, int row)
         {
             var cellValue = _gridView[col, row].Value;
-            return (cellValue != null) ? cellValue.ToString() : string.Empty;
+            return (cellValue != null) ? cellValue.ToString() : "";
         }
 
         public void SelectCell(int col, int row)

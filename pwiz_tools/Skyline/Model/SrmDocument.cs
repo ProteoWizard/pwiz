@@ -1245,8 +1245,8 @@ namespace pwiz.Skyline.Model
             string description = reader.GetAttribute(ATTR.description) ?? "";
             bool peptideList = reader.GetBoolAttribute(ATTR.peptide_list);
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
-            string label = reader.GetAttribute(ATTR.label_name);
-            string labelDescription = reader.GetAttribute(ATTR.label_description);
+            string label = reader.GetAttribute(ATTR.label_name) ?? "";
+            string labelDescription = reader.GetAttribute(ATTR.label_description) ?? "";
             reader.ReadStartElement();
 
             var annotations = ReadAnnotations(reader);
@@ -1279,6 +1279,7 @@ namespace pwiz.Skyline.Model
             // Or any protein without a name attribute
             else if (name != null)
             {
+                label = null;
                 labelDescription = null;
             }
 

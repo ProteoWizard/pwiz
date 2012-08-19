@@ -1358,7 +1358,7 @@ namespace pwiz.Skyline.Model
 
         private static int IndexEndId(string line)
         {
-            return line.IndexOfAny(new[] { TextUtil.SEPARATOR_SPACE, TextUtil.SEPARATOR_TSV });
+            return line.IndexOfAny(new[] { ' ', '\t' }); // Not L10N
         }
 
         /// <summary>
@@ -1392,7 +1392,7 @@ namespace pwiz.Skyline.Model
             // Get rid of whitespace
             seq = seq.Replace(" ", string.Empty).Trim(); // Not L10N
             // Get rid of 
-            if (seq.EndsWith("*")) // Not L10N  
+            if (seq.EndsWith("*")) // Not L10N
                 seq = seq.Substring(0, seq.Length - 1);
 
             if (!PeptideList)
@@ -1617,7 +1617,7 @@ namespace pwiz.Skyline.Model
             {
                 nodeGroup = new PeptideGroupDocNode(
                     new FastaSequence(null, null, Alternatives, _sequence.ToString()),
-                    Name, Description, new PeptideDocNode[0]);
+                    Name, Description, new PeptideDocNode[0]);                
             }
             else
             {
@@ -1630,73 +1630,6 @@ namespace pwiz.Skyline.Model
             // Materialize children, so that we have accurate accounting of
             // peptide and transition counts.
             return nodeGroup.ChangeSettings(_settings, diff);
-        }
-    }
-
-    public class FastaData
-    {
-        private readonly string _name;
-        private readonly string _sequence;
-
-        public string Name
-        {
-            get { return _name; }
-        }
-
-        public string Sequence
-        {
-            get { return _sequence; }
-        }
-
-        private FastaData(string name, string sequence)
-        {
-            _name = name;
-            _sequence = sequence;
-        }
-
-        public static void AppendSequence(StringBuilder sequence, string line)
-        {
-            var seq = FastaSequence.StripModifications(line);
-            // Get rid of whitespace
-            seq = seq.Replace(" ", string.Empty).Trim(); // Not L10N
-            // Get rid of end of sequence indicator
-            if (seq.EndsWith("*")) // Not L10N  
-                seq = seq.Substring(0, seq.Length - 1);
-            sequence.Append(seq);
-        }
-
-        public static List<FastaData> ParseFASTAFile(TextReader reader)
-        {
-            string line;
-            string name = string.Empty;
-            StringBuilder sequence = new StringBuilder();
-            List<FastaData> fastaList = new List<FastaData>();
-            FastaData fastaData;
-
-            while ((line = reader.ReadLine()) != null)
-            {
-                if (line.StartsWith(">")) // Not L10N
-                {
-                    if (!string.IsNullOrEmpty(name))
-                    {
-                        fastaData = new FastaData(name, sequence.ToString());
-                        fastaList.Add(fastaData);
-                        sequence.Clear();
-                    }
-                    var split = line.Split(TextUtil.SEPARATOR_SPACE);
-                    // Remove the '>'
-                    name = split[0].Remove(0, 1).Trim();
-                }
-                else
-                {
-                    AppendSequence(sequence, line);
-                }
-            }
-            // Add the last fasta sequence
-            fastaData = new FastaData(name, sequence.ToString());
-            fastaList.Add(fastaData);
-
-            return fastaList;
         }
     }
 }

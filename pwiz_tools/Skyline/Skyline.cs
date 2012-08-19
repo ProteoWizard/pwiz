@@ -2119,12 +2119,12 @@ namespace pwiz.Skyline
             if (show)
             {
                 if (_sequenceTreeForm != null)
-        {
+                {
                     _sequenceTreeForm.Activate();
                     _sequenceTreeForm.Focus();
-        }
+                }
                 else
-        {
+                {
                     _sequenceTreeForm = CreateSequenceTreeForm();
                     _sequenceTreeForm.Show(dockPanel, DockState.DockLeft);
                 }
@@ -2188,14 +2188,14 @@ namespace pwiz.Skyline
         private void sequenceTreeForm_VisibleChanged(object sender, EventArgs e)
         {
             Settings.Default.ShowPeptides = _sequenceTreeForm.Visible;
-            }
+        }
 
         private void sequenceTreeForm_FormClosed(object sender, FormClosedEventArgs e)
-            {
+        {
             // Update settings and menu check
             Settings.Default.ShowPeptides = false;
             _sequenceTreeForm = null;
-            }
+        }
 
         private void sequenceTree_BeforeNodeEdit(object sender, NodeLabelEditEventArgs e)
         {
@@ -3124,7 +3124,7 @@ namespace pwiz.Skyline
                 return ComboResults != null && ComboResults.SelectedItem != null
                            ? ComboResults.SelectedItem.ToString()
                            : null;
-        }
+            }
         }       
 
         public string SelectedPeptideSequence
@@ -3170,8 +3170,8 @@ namespace pwiz.Skyline
             public void DoClick()
             {
                 // Run the tool and catch all errors.
-                    try
-                    {
+                try
+                {
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
@@ -3180,15 +3180,15 @@ namespace pwiz.Skyline
                     else _tool.RunTool(_parent, null);                    
                 }
                 catch(WebToolException e)
-                    {
+                {
                     AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, e.Link, e.Link, false);
-                    }
-                catch(Exception e)
-                    {
-                    MessageDlg.Show(_parent, e.Message);                    
-                    }
                 }
+                catch(Exception e)
+                {
+                    MessageDlg.Show(_parent, e.Message);                    
+                }               
             }
+        }
 
         private void configureToolsMenuItem_Click(object sender, EventArgs e)
         {
@@ -3296,7 +3296,7 @@ namespace pwiz.Skyline
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
             ShowToolOptionsUI();
-        }
+        }      
         #endregion
 
         #region ImmediateWindow
@@ -3337,7 +3337,7 @@ namespace pwiz.Skyline
             }
         }
 
-        #endregion 
+        #endregion
 
         #region Implementation of IExceptionHandler
 
@@ -3347,24 +3347,10 @@ namespace pwiz.Skyline
         /// <param name="e"></param>
         public void HandleException(Exception e)
         {
-            RunUIAction(() => MessageDlg.Show(this, e.Message));
+            RunUIAction(() => MessageDlg.Show(this, e.Message));                          
         }
-
-        private void renameProteinsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRenameProteinsDlg();
-        }
-
-        public void ShowRenameProteinsDlg()
 
         #endregion
-        {
-            using (RenameProteinsDlg dlg = new RenameProteinsDlg(this))
-            {
-                dlg.ShowDialog(this);
-            }
-        }
-
     }
 }
 

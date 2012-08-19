@@ -965,7 +965,7 @@ namespace pwiz.Skyline.Controls
             if (SelectedNode is EmptyNode)
                 return true;
             PeptideGroupTreeNode nodeTree = node as PeptideGroupTreeNode;
-            return (nodeTree != null && !nodeTree.DocNode.IsDecoy);
+            return (nodeTree != null && nodeTree.DocNode.IsPeptideList && !nodeTree.DocNode.IsDecoy);
         }
 
         public void BeginEdit(bool commitOnLoseFocus)
