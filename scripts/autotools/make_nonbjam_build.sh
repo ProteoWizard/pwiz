@@ -67,7 +67,15 @@ mkdir -p $TARBALLDIR/autotools_test
 cd $TARBALLDIR/autotools_test
 tar -xzf $TARBALL
 cd pwiz
+echo "ls -l autotools"
+ls -l autotools
+echo "ls -l"
+ls -l
+echo "bash autotools/configure"
 bash autotools/configure
+echo "ls -l"
+ls -l
+echo "make check"
 make check
 rm -rf $TMPDIR
 
