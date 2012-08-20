@@ -29,7 +29,7 @@ import autotools_common as ac
 
 configs=["Debug|Win32","Release|Win32"]
 
-files_not_to_be_shipped=["pwiz.vcproj","pwiz.sln"] # these are just confusing bjam wrappers
+files_not_to_be_shipped=["pwiz\\pwiz.vcproj","pwiz\\pwiz.sln"] # these are just confusing bjam wrappers
 
 dbug = False
 
