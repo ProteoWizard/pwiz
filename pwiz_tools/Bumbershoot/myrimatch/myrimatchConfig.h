@@ -74,7 +74,8 @@ using namespace freicore;
     RTCONFIG_VARIABLE( string,          StaticMods,                     ""                      ) \
     RTCONFIG_VARIABLE( string,          DynamicMods,                    ""                      ) \
     RTCONFIG_VARIABLE( int,             MaxDynamicMods,                 2                       ) \
-    RTCONFIG_VARIABLE( int,             MaxPeptideVariants,             1000000                 )
+    RTCONFIG_VARIABLE( int,             MaxPeptideVariants,             1000000                 ) \
+    RTCONFIG_VARIABLE( bool,            KeepUnadjustedPrecursorMz,      false                   )
 
 
 namespace freicore

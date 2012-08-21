@@ -526,7 +526,15 @@ namespace myrimatch
 
 				    if( result.mvh >= g_rtConfig->MinResultScore )
 				    {
-                        result.precursorMassHypothesis = p;
+                        if( g_rtConfig->KeepUnadjustedPrecursorMz )
+                        {
+                            PrecursorMassHypothesis unadjustedHypothesis(p);
+                            unadjustedHypothesis.mass = Ion::neutralMass(spectrum->mzOfPrecursor, p.charge);
+                            result.precursorMassHypothesis = unadjustedHypothesis;
+                        }
+                        else
+                            result.precursorMassHypothesis = p;
+
 					    //result.massError = p.massType == MassType_Monoisotopic ? monoCalculatedMass - p.mass
                         //                                                       : avgCalculatedMass - p.mass;
 

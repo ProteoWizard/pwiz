@@ -63,7 +63,7 @@ namespace myrimatch
                 {
                     PrecursorMassHypothesis p;
                     p.mass = Ion::neutralMass(mzOfPrecursor, charge, 0, *itr);
-                    p.massType = precursorMzType;
+                    p.massType = MassType_Monoisotopic;
                     p.charge = charge;
                     precursorMassHypotheses.push_back(p);
                 }
@@ -75,7 +75,7 @@ namespace myrimatch
             {
                 PrecursorMassHypothesis p;
                 p.mass = Ion::neutralMass(mzOfPrecursor, charge);
-                p.massType = precursorMzType;
+                p.massType = MassType_Average;
                 p.charge = charge;
                 precursorMassHypotheses.push_back(p);
             }
