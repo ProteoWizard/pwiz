@@ -21,8 +21,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Crawdad;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
-
 namespace pwiz.Skyline.Model.Results
 {
     internal sealed class ChromData
@@ -305,9 +305,9 @@ namespace pwiz.Skyline.Model.Results
         /// Use proportion of total peaks found to avoid picking super small peaks
         /// in unrefined data
         /// </summary>
-        public double PeakCountScore { get { return GetPeakCountScore(PeakCount, Count); } }
+        public double PeakCountScore { get { return LegacyCountScoreCalc.GetPeakCountScore(PeakCount, Count); } }
         public double TotalArea { get; private set; }
-        public double ProductArea { get; private set; }
+        public double CombinedScore { get; private set; }
         public double MaxHeight { get; private set; }
 
         private const int MIN_TOLERANCE_LEN = 4;
@@ -319,6 +319,7 @@ namespace pwiz.Skyline.Model.Results
         public void SetIdentified(double[] retentionTimes)
         {
             IsIdentified = Count > 0 && this[0].IsIdentified(retentionTimes);
+            UpdateCombinedScore();
         }
 
         public void Extend()
@@ -458,7 +459,7 @@ namespace pwiz.Skyline.Model.Results
                     TotalArea += area;
                 PeakCount++;
             }
-            UpdateProductArea();
+            UpdateCombinedScore();
         }
 
         private void SubtractPeak(ChromDataPeak dataPeak)
@@ -473,33 +474,24 @@ namespace pwiz.Skyline.Model.Results
                 else
                     TotalArea -= area;
             }
-            UpdateProductArea();
+            UpdateCombinedScore();
         }
 
-        private void UpdateProductArea()
+        private void UpdateCombinedScore()
         {
-            ProductArea = ScorePeak(TotalArea, PeakCountScore);
+            CombinedScore = ScorePeak(TotalArea, PeakCountScore, IsIdentified);
         }
 
-        private static readonly double LOG10 = Math.Log(10);
-
-        public static double ScorePeak(double totalArea, double peakCount)
+        public static double ScorePeak(double totalArea, double peakCount, bool isIdentified)
         {
-            return Math.Log(totalArea) + LOG10*peakCount;
-        }
-
-        public static double GetPeakCountScore(double peakCount, double totalCount)
-        {
-            return totalCount > 4
-                       ? 4.0*peakCount/totalCount
-                       : peakCount;
+            return LegacyScoringModel.Score(Math.Log(totalArea), peakCount, 0, isIdentified ? 1 : 0);
         }
 
         protected override void ClearItems()
         {
             PeakCount = 0;
             TotalArea = 0;
-            ProductArea = 0;
+            CombinedScore = 0;
             MaxHeight = 0;
 
             base.ClearItems();

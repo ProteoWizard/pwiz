@@ -448,11 +448,15 @@ namespace pwiz.SkylineTestUtil
         {
             // Split strings on placeholders
             string[] expectedParts = Regex.Split(expected,@"{\d}");
-            Assert.AreEqual(replacements,expectedParts.Length - 1);
+            Assert.AreEqual(replacements, expectedParts.Length - 1);
 
+            int startIndex = 0;
             foreach (var expectedPart in expectedParts)
             {
-                Assert.IsTrue(actual.Contains(expectedPart));
+                int partIndex = actual.IndexOf(expectedPart, startIndex, StringComparison.Ordinal);
+                Assert.AreNotEqual(-1, partIndex,
+                    string.Format("Expected part '{0}' not found in the string '{1}'", expectedPart, actual));
+                startIndex = partIndex + expectedPart.Length;
             }
         }
     }

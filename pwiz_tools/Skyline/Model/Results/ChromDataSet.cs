@@ -381,12 +381,8 @@ namespace pwiz.Skyline.Model.Results
 
         public int ComparePeakLists(ChromDataPeakList p1, ChromDataPeakList p2)
         {
-            // All identified peaks come first
-            if (p1.IsIdentified != p2.IsIdentified)
-                return p1.IsIdentified ? -1 : 1;
-
-            // Then order by ProductArea descending
-            return Comparer<double>.Default.Compare(p2.ProductArea, p1.ProductArea);
+            // Then order by PeakScore descending
+            return Comparer<double>.Default.Compare(p2.CombinedScore, p1.CombinedScore);
         }
 
         /// <summary>

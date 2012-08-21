@@ -24,6 +24,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -298,11 +299,12 @@ namespace pwiz.Skyline.Model
             double bestArea = double.MinValue;
             for (int i = 0; i < Results.Count; i++)
             {
-                double productArea = 0;
+                double combinedScore = 0;
                 foreach (TransitionGroupDocNode nodeGroup in Children)
                 {
                     double groupArea = 0;
                     double groupTranMeasured = 0;
+                    bool isGroupIdentified = false;
                     foreach (TransitionDocNode nodeTran in nodeGroup.Children)
                     {
                         if (!nodeTran.HasResults)
@@ -321,19 +323,22 @@ namespace pwiz.Skyline.Model
                             if (chromInfo != null && chromInfo.Area > 0)
                             {
                                 tranArea += chromInfo.Area;
-                                tranMeasured++;                                
+                                tranMeasured++;
+
+                                isGroupIdentified = isGroupIdentified || chromInfo.IsIdentified;
                             }
                         }
                         groupArea += tranArea/result.Count;
                         groupTranMeasured += tranMeasured/result.Count;
                     }
-                    productArea += ChromDataPeakList.ScorePeak(groupArea,
-                        ChromDataPeakList.GetPeakCountScore(groupTranMeasured, nodeGroup.Children.Count));
+                    combinedScore += ChromDataPeakList.ScorePeak(groupArea,
+                        LegacyCountScoreCalc.GetPeakCountScore(groupTranMeasured, nodeGroup.Children.Count),
+                        isGroupIdentified);
                 }
-                if (productArea > bestArea)
+                if (combinedScore > bestArea)
                 {
                     iBest = i;
-                    bestArea = productArea;
+                    bestArea = combinedScore;
                 }
             }
             return iBest;            

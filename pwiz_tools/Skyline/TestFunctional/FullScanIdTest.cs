@@ -119,6 +119,8 @@ namespace pwiz.SkylineTestFunctional
 
             var docFullScan = WaitForDocumentChange(docPeptides);
             AssertEx.IsDocumentState(docFullScan, null, 1, 33, 41, 41);  // precursors only
+            foreach (var chromInfo in docFullScan.TransitionGroups.SelectMany(nodeGroup => nodeGroup.ChromInfos))
+                Assert.IsTrue(chromInfo.Identified);
 
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath("CAexample.sky")));
 

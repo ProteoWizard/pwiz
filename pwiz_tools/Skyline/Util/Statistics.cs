@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -864,7 +864,9 @@ namespace pwiz.Skyline.Util
         /// <returns>Dot-Product</returns>
         public double Angle(Statistics s)
         {
-            Debug.Assert(Length == s.Length);
+            if (Length != s.Length)
+                return double.NaN;
+
             double sumCross = 0;
             double sumLeft = 0;
             double sumRight = 0;
@@ -952,7 +954,8 @@ namespace pwiz.Skyline.Util
         /// <returns>Correlation coefficient</returns>
         public double CostaSoares(Statistics s, int limitRank)
         {
-            Debug.Assert(Length == s.Length);
+            if (Length != s.Length)
+                return double.NaN;
 
             int n = Length;
 
@@ -1014,6 +1017,53 @@ namespace pwiz.Skyline.Util
                 listNewValues[i] = -listNewValues[i];
             // And re-rank
             return new Statistics(listNewValues).Rank();
+        }
+
+        public Dictionary<int, double> CrossCorrelation(Statistics s, bool normalize)
+        {
+            if (Length != s.Length)
+                return null;
+
+            var result = new Dictionary<int, double>();
+
+            double mean1 = Mean();
+            double mean2 = s.Mean();
+            double denominator = 1;
+
+            // Normalized cross-correlation = subtract the mean and divide by the standard deviation
+            if (normalize)
+            {
+                double var1 = Variance();
+                double var2 = s.Variance();
+                denominator = Math.Sqrt(var1 * var2);
+            }
+
+            for (int delay = -Length; delay <= Length; delay++)
+            {
+                double sxy = 0;
+                for (int i = 0; i < Length; i++)
+                {
+                    int j = i + delay;
+                    if (j < 0 || j >= Length)
+                        continue;
+
+                    if (normalize)
+                        sxy += (_list[i] - mean1) * (s._list[j] - mean2);
+                    else
+                        sxy += (_list[i]) * (s._list[j]);
+                }
+
+                if (denominator > 0)
+                {
+                    result[delay] = sxy / denominator;
+                }
+                else
+                {
+                    // e.g. if all datapoints are zero
+                    result[delay] = 0;
+                }
+            }
+            return result;
         }
     }
 }

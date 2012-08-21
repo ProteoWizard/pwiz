@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Crawdad;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results.Scoring;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -370,8 +371,8 @@ namespace pwiz.Skyline.Model.Results
             if (p1.IsIdentified != p2.IsIdentified)
                 return p1.IsIdentified ? -1 : 1;
 
-            // Then order by ProductArea descending
-            return Comparer<double>.Default.Compare(p2.ProductArea, p1.ProductArea);
+            // Then order by CombinedScore descending
+            return Comparer<double>.Default.Compare(p2.CombinedScore, p1.CombinedScore);
         }
 
         private PeptideChromDataPeakList FindCoelutingPeptidePeaks(PeptideChromDataPeak dataPeakMax, IList<PeptideChromDataPeak> allPeakGroups)
@@ -438,10 +439,10 @@ namespace pwiz.Skyline.Model.Results
                     }
 
                     // Choose the next best peak that overlaps
-                    if (peakGroup.PeakGroup.ProductArea > bestProduct)
+                    if (peakGroup.PeakGroup.CombinedScore > bestProduct)
                     {
                         iPeakBest = i;
-                        bestProduct = peakGroup.PeakGroup.ProductArea;
+                        bestProduct = peakGroup.PeakGroup.CombinedScore;
                     }
                 }
 
@@ -486,7 +487,7 @@ namespace pwiz.Skyline.Model.Results
                     var dataPeakList = listEnumerators[i].Current;
                     if (dataPeakList == null)
                         throw new InvalidOperationException(Resources.PeptideChromDataSets_MergePeakGroups_Unexpected_null_peak_list);
-                    double intensity = dataPeakList.ProductArea;
+                    double intensity = dataPeakList.CombinedScore;
                     if (intensity > maxIntensity)
                     {
                         maxIntensity = intensity;
@@ -539,7 +540,7 @@ namespace pwiz.Skyline.Model.Results
         private double TotalAreaStandard { get; set; }
         private int IdentifiedCount { get; set; }
 
-        public double ProductArea { get; private set; }
+        public double CombinedScore { get; private set; }
 
         public bool IsIdentified { get { return IdentifiedCount > 0; } }
 
@@ -548,7 +549,7 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 return from peak in this
-                       orderby peak.PeakGroup != null ? peak.PeakGroup.ProductArea : 0 descending
+                       orderby peak.PeakGroup != null ? peak.PeakGroup.CombinedScore : 0 descending
                        group peak by peak.Data.DocNode.TransitionGroup.PrecursorCharge into g
                        select g;
             }
@@ -559,7 +560,7 @@ namespace pwiz.Skyline.Model.Results
             get
             {
                 return from peak in this
-                       orderby peak.PeakGroup != null ? peak.PeakGroup.ProductArea : 0 descending
+                       orderby peak.PeakGroup != null ? peak.PeakGroup.CombinedScore : 0 descending
                        select peak;
             }
         }
@@ -578,36 +579,40 @@ namespace pwiz.Skyline.Model.Results
                     PeakCount += dataPeak.PeakGroup.PeakCountScore;
                     TotalArea += dataPeak.PeakGroup.TotalArea;
                 }
-
-                ProductArea = ScorePeak(TotalArea, PeakCount, TotalAreaStandard, PeakCountStandard);
-
                 if (dataPeak.PeakGroup.IsIdentified)
                     IdentifiedCount++;
+
+                CombinedScore = ScorePeak(TotalArea, PeakCount, TotalAreaStandard, PeakCountStandard, IdentifiedCount);
             }
         }
 
-        private static readonly double LOG10 = Math.Log(10);
-
-        private static double ScorePeak(double totalArea, double peakCount, double totalAreaStandard, double peakCountStandard)
+        private static double ScorePeak(double totalArea,
+                                        double peakCount,
+                                        double totalAreaStandard,
+                                        double peakCountStandard,
+                                        int identifiedCount)
         {
-            return Math.Log(totalArea + totalAreaStandard) + LOG10*(peakCount + peakCountStandard);
+            return LegacyScoringModel.Score(Math.Log(totalArea + totalAreaStandard), peakCount, peakCountStandard, identifiedCount);
         }
 
         private void SubtractPeak(PeptideChromDataPeak dataPeak)
         {
             if (dataPeak.PeakGroup != null)
             {
-                PeakCount--;
-
-                if (PeakCount == 0)
-                    TotalArea = 0;
+                if (dataPeak.Data.IsStandardType)
+                {
+                    PeakCountStandard--;
+                    TotalAreaStandard -= dataPeak.PeakGroup.TotalArea;
+                }
                 else
-                    TotalArea -= dataPeak.PeakGroup.ProductArea;
-
-                ProductArea = TotalArea * Math.Pow(10.0, PeakCount);
-
+                {
+                    PeakCount--;
+                    TotalArea -= dataPeak.PeakGroup.TotalArea;
+                }
                 if (dataPeak.PeakGroup.IsIdentified)
                     IdentifiedCount--;
+
+                CombinedScore = ScorePeak(TotalArea, PeakCount, TotalAreaStandard, PeakCountStandard, IdentifiedCount);
             }
         }
 
@@ -615,7 +620,7 @@ namespace pwiz.Skyline.Model.Results
         {
             PeakCount = 0;
             TotalArea = 0;
-            ProductArea = 0;
+            CombinedScore = 0;
 
             base.ClearItems();
         }

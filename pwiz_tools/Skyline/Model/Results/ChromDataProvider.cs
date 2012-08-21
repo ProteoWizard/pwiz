@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
@@ -147,7 +146,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             if (_chromIds.Count == 0)
-                throw new NoSrmDataException();
+                throw new NoSrmDataException(dataFile.FilePath);
 
             SetPercentComplete(50);
         }
@@ -360,9 +359,8 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
 
-                // TODO: Fix this throw to produce a better message for the user
                 if (chromMap.Count == 0 && chromMapMs1.Count == 0)
-                    throw new NoSrmDataException();
+                    throw new NoFullScanDataException(dataFile.FilePath);
 
                 AddChromatograms(chromMap);
                 AddChromatograms(chromMapMs1);
@@ -649,8 +647,9 @@ namespace pwiz.Skyline.Model.Results
         private readonly double? _minTime;
         private readonly double? _maxTime;
         private readonly SpectrumFilterPair[] _filterMzValues;
+        private readonly bool _isWatersMse;
         private int _mseLevel;
-        private double _mseMaxTime;
+        private MsDataSpectrum _mseLastSpectrum;
 
         public SpectrumFilterPair[] FilterPairs { get { return _filterMzValues; } }
 
@@ -674,6 +673,7 @@ namespace pwiz.Skyline.Model.Results
                     if (_fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
                              Equals(_fullScan.IsolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MS_E))
                     {
+                        _isWatersMse = dataFile.IsWatersFile;
                         _mseLevel = 1;
                     }
                 }
@@ -843,11 +843,22 @@ namespace pwiz.Skyline.Model.Results
 
         private int UpdateMseLevel(MsDataSpectrum dataSpectrum)
         {
-            double retentionTime = dataSpectrum.RetentionTime ?? 0;
-            if (retentionTime < _mseMaxTime)
-                _mseLevel++;
-
-            _mseMaxTime = retentionTime;
+            if (_mseLastSpectrum != null && !ReferenceEquals(dataSpectrum, _mseLastSpectrum))
+            {
+                // Waters MSe is enumerated in two separate runs, first MS1 and then MS/MS
+                // Bruker MSe is enumerated in interleaved MS1 and MS/MS scans
+                if (!_isWatersMse)
+                {
+                    // Alternate between 1 and 2
+                    _mseLevel = (_mseLevel % 2) + 1;
+                }
+                else if ((dataSpectrum.RetentionTime ?? 0) < (_mseLastSpectrum.RetentionTime ?? 0))
+                {
+                    // level 1 followed by level 2, followed by data that should be ignored
+                    _mseLevel++;
+                }
+            }
+            _mseLastSpectrum = dataSpectrum;
             return _mseLevel;
         }
 

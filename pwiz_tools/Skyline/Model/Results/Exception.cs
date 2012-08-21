@@ -16,18 +16,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+using System;
 using System.IO;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model.Results
 {
-    internal class NoSrmDataException : IOException
+    internal class NoSrmDataException : MissingDataException
     {
-        public NoSrmDataException()
-            : base(Resources.NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found)
+        public NoSrmDataException(string filePath)
+            : base(Resources.NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__, filePath)
         {
         }
+    }
+
+    internal class NoFullScanDataException : MissingDataException
+    {
+        public NoFullScanDataException(string filePath)
+            : base(Resources.NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_, filePath)
+        {
+        }
+    }
+
+    internal class MissingDataException : IOException
+    {
+        public MissingDataException(string messageFormat, string fileName)
+            : base(string.Format(messageFormat, fileName))
+        {
+            MessageFormat = messageFormat;
+        }
+
+        public MissingDataException(string messageFormat, string fileName, Exception innerException)
+            : base(string.Format(messageFormat, fileName), innerException)
+        {
+            MessageFormat = messageFormat;
+        }
+
+        public string MessageFormat { get; private set; }
     }
 
     internal class LoadCanceledException : IOException

@@ -1093,15 +1093,12 @@ namespace pwiz.Skyline
             status = status ?? new ProgressStatus("").Complete();
             if (status.IsError && status.ErrorException != null)
             {
-                if (status.ErrorException is InvalidDataException)
+                if (status.ErrorException is MissingDataException)
                 {
-                    if (status.ErrorException.Message.Contains("No SRM/MRM data found"))
-                    {
-                        _out.WriteLine("Warning: Failed importing the results file {0}.", replicateFile);
-                        _out.WriteLine(status.ErrorException.Message);
-                        _out.WriteLine("         Ignoring...");
-                        return true;
-                    }
+                    _out.WriteLine("Warning: Failed importing the results file {0}.", replicateFile);
+                    _out.WriteLine(status.ErrorException.Message);
+                    _out.WriteLine("         Ignoring...");
+                    return true;
                 }
                 _out.WriteLine("Error: Failed importing the results file {0}.", replicateFile);
                 _out.WriteLine(status.ErrorException.Message);

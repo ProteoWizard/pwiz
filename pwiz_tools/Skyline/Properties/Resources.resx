@@ -2040,9 +2040,6 @@ Are you sure you want to continue?</value>
   <data name="Results_Validate_DocNode_peak_info_found_for_file_with_no_match_in_document_results" xml:space="preserve">
     <value>DocNode peak info found for file with no match in document results.</value>
   </data>
-  <data name="NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found" xml:space="preserve">
-    <value>No SRM/MRM data found</value>
-  </data>
   <data name="LoadCanceledException_LoadCanceledException_Data_import_canceled" xml:space="preserve">
     <value>Data import canceled</value>
   </data>
@@ -4481,5 +4478,11 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_">
     <value xml:space="preserve">You must add at least one target transition before importing results.</value>
+  </data>
+  <data name="NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__">
+    <value xml:space="preserve">No SRM/MRM data found in {0}.</value>
+  </data>
+  <data name="NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_">
+    <value xml:space="preserve">No scans in {0} match the current filter settings.</value>
   </data>
 </root>

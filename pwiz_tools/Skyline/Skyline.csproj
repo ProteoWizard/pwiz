@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3732</ApplicationRevision>
-    <ApplicationVersion>1.3.1.3732</ApplicationVersion>
+    <ApplicationRevision>3828</ApplicationRevision>
+    <ApplicationVersion>1.3.1.3828</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -650,6 +650,10 @@
     <Compile Include="Model\Results\NumericsLsSolver.cs" />
     <Compile Include="Model\Results\PeptideChromData.cs" />
     <Compile Include="Model\Results\ResultNameMap.cs" />
+    <Compile Include="Model\Results\Scoring\IPeakScoringModel.cs" />
+    <Compile Include="Model\Results\Scoring\LegacyFeatureCalc.cs" />
+    <Compile Include="Model\Results\Scoring\LegacyScoringModel.cs" />
+    <Compile Include="Model\Results\Scoring\MQuestFeatureCalc.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />
     <Compile Include="Model\RetentionTimes\DocumentRetentionTimes.cs" />
     <Compile Include="Model\RetentionTimes\FileRetentionTimeAlignments.cs" />

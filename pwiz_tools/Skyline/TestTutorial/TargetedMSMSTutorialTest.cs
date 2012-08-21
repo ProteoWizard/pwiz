@@ -378,8 +378,8 @@ namespace pwiz.SkylineTestTutorial
                 new[] { GetTestPath(@"TOF\1-BSA-50amol" + ExtAgilentRaw) }));
             RunDlg<MessageDlg>(importResultsDlg3.OkDialog, dlg =>
             {
-                AssertEx.Contains(dlg.Message,
-                                  "No SRM/MRM data found in 1-BSA-50amol.");
+                AssertEx.AreComparableStrings(Resources.NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_,
+                                              dlg.Message, 1);
                 dlg.OkDialog();
             });
             RunUI(() =>

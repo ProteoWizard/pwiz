@@ -6735,6 +6735,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No scans in {0} match the current filter settings..
+        /// </summary>
+        public static string NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_ {
+            get {
+                return ResourceManager.GetString("NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current" +
+                        "_filter_settings_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to NonNegLsSolver DecompSolve: LQ decomposition not supported.
         /// </summary>
         public static string NonNegLsSolver_GetSolver_NonNegLsSolver_DecompSolve_LQ_decomposition_not_supported {
@@ -6752,11 +6762,11 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to No SRM/MRM data found.
+        ///   Looks up a localized string similar to No SRM/MRM data found in {0}..
         /// </summary>
-        public static string NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found {
+        public static string NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__ {
             get {
-                return ResourceManager.GetString("NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found", resourceCulture);
+                return ResourceManager.GetString("NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__", resourceCulture);
             }
         }
         

@@ -283,11 +283,10 @@ namespace pwiz.Skyline.Model.Results
                 _status = x.Status;
                 ExitRead(null);
             }
-            catch (NoSrmDataException)
+            catch (MissingDataException x)
             {
-                ExitRead(new InvalidDataException(
-                    string.Format("No SRM/MRM data found in {0}.", // Not L10N
-                                    SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex]))));
+                ExitRead(new MissingDataException(x.MessageFormat,
+                                                  SampleHelp.GetFileSampleName(MSDataFilePaths[_currentFileIndex]), x));
             }
             catch (Exception x)
             {
