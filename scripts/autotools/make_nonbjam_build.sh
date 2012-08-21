@@ -20,6 +20,10 @@ echo "note automake version..."
 automake --version
 echo "note autoconf version..."
 autoconf --version
+echo "note libtoolize version..."
+libtoolize --version
+echo "note autoscan version..."
+autoscan --version
 if [ $# -ne 1 ] ; then
 # 0 or many args, assume we're under development (0) or in teamcity (many)
 echo "running clean.sh"
