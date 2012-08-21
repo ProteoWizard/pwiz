@@ -129,7 +129,7 @@ def addShipDir(d,addTree=False) :
 					addShipDir(ddd,addTree)
 
 def addFile(file) :
-	if not ".svn" in file and not file in files_not_to_be_shipped :
+	if not ".svn" in file :
 		addShipDir(os.path.dirname(file))
 		if ac.isTestFile(file) or ac.isExampleFile(file) :
 			projects.add(file)
@@ -507,8 +507,9 @@ for shipdir in shipdirs :
 		ext = file.partition(".")[2]
 		if (not stat.S_ISDIR(os.stat(f).st_mode)) and ext in exts or ext=="":
 			tname = ac.replace_pwizroot(f,"pwiz")
-			print 'adding %s as %s'%(f,tname)
-			z.write(f,tname)
+			if not tname in files_not_to_be_shipped :
+				print 'adding %s as %s'%(f,tname)
+				z.write(f,tname)
 			
 testfiles = set()
 for test in testargs : # grab data files
