@@ -2611,11 +2611,11 @@ namespace pwiz.Skyline
             // 
             this.toolsMenu.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.placeholderToolsMenuItem,
-            this.toolStripSeparator46,
-            this.optionsToolStripMenuItem,
-            this.toolStripSeparator47,
             this.configureToolsMenuItem,
-            this.immediateWindowToolStripMenuItem});
+            this.toolStripSeparator46,
+            this.immediateWindowToolStripMenuItem,
+            this.toolStripSeparator47,
+            this.optionsToolStripMenuItem});
             this.toolsMenu.Name = "toolsMenu";
             resources.ApplyResources(this.toolsMenu, "toolsMenu");
             this.toolsMenu.DropDownOpening += new System.EventHandler(this.toolsMenu_DropDownOpening);

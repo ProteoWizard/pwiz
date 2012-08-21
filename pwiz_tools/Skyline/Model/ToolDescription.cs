@@ -51,12 +51,20 @@ namespace pwiz.Skyline.Model
     [XmlRoot("ToolDescription")]
     public class ToolDescription : IXmlSerializable
     {
+        public static readonly ToolDescription EMPTY = new ToolDescription("", "", "", "");
+
         public static bool IsWebPageCommand(string command)
         {
             return command.StartsWith("http:") || command.StartsWith("https:");
         }
 
-        public ToolDescription(string title, string command, string arguments, string initialDirectory) : this(title, command, arguments, initialDirectory, false, "")
+        public ToolDescription(ToolDescription t)
+            : this(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle)
+        {            
+        }
+
+        public ToolDescription(string title, string command, string arguments, string initialDirectory)
+            : this(title, command, arguments, initialDirectory, false, "")
         {
         }
 
@@ -92,12 +100,6 @@ namespace pwiz.Skyline.Model
             return ToolMacros.ReplaceMacrosArguments(doc, toolMacroProvider, this, exceptionHandler);
         }
 
-        // In this case SkylineWindow serves as both the form and the interface.
-        public string GetArguments(SkylineWindow window)
-        {
-            return ToolMacros.ReplaceMacrosArguments(window.Document, window, this, window);
-        }
-
         /// <summary>
         ///  Return a string that is the InitialDirectoy string with the macros replaced.
         /// </summary>
@@ -110,21 +112,7 @@ namespace pwiz.Skyline.Model
         {
             return ToolMacros.ReplaceMacrosInitialDirectory(doc, toolMacroProvider, this, exceptionHandler);
         }
-        // In this case SkylineWindow serves as both the form and the interface.
-        public string GetInitialDirectory(SkylineWindow window)
-        {
-            return ToolMacros.ReplaceMacrosInitialDirectory(window.Document, window, this, window);
-        }        
-
-        /// <summary>
-        /// Run the tool. 
-        /// Override that uses the SkylineWindow to get both an SrmDocument and an IToolMacroProvider.
-        /// </summary>     
-        public void RunTool(SkylineWindow window, TextWriter textWriter)
-        {
-             RunTool(window.Document, window, textWriter, window);
-        }
-
+        
         /// <summary>
         /// Run the tool. When you call run tool. call it on a different thread. 
         /// </summary>       
@@ -154,7 +142,7 @@ namespace pwiz.Skyline.Model
             else // Not a website. Needs its own thread.
             {                
                 // To eliminate a cross thread error make a copy of the IToolMacroProvider.
-                IToolMacroProvider newToolMacroProvider = new CopyIToolMacroProvider(toolMacroProvider);
+                IToolMacroProvider newToolMacroProvider = new CopyToolMacroProvider(toolMacroProvider);
                 RunExecutable(doc, newToolMacroProvider, textWriter, exceptionHandler);                
             }           
         }    
@@ -238,6 +226,8 @@ namespace pwiz.Skyline.Model
             }      
         }
 
+        public IWebHelpers WebHelpers { get; set; }
+        public string ReportTempPath_toDelete { get; set; }
 
         #region Implementation of IXmlSerializable
         private  ToolDescription()
@@ -285,10 +275,8 @@ namespace pwiz.Skyline.Model
             writer.WriteAttribute(ATTR.report_title, ReportTitle);
         }
         #endregion
-
-        public IWebHelpers WebHelpers { get; set; }
-        public string ReportTempPath_toDelete { get; set; }
-
+        
+        #region object overrides
 
         public bool Equals(ToolDescription tool)
         {
@@ -313,9 +301,10 @@ namespace pwiz.Skyline.Model
                 return result;
             }
         }
+
+        #endregion
     }
 
-    #region Macros
     public static class ToolMacros
     {
         public const string INPUT_REPORT_TEMP_PATH = "$(InputReportTempPath)";
@@ -419,8 +408,6 @@ namespace pwiz.Skyline.Model
             return initialDirectory;
         }
 
-        #region Implementation of macro GetContents functions
-
         //Save the report to a temp file and return the path to that file. 
         private static string GetReportTempPath(ToolMacroInfo toolMacroInfo)
         {
@@ -507,12 +494,11 @@ namespace pwiz.Skyline.Model
         {
             return toolMacroProvider.ResultNameCurrent;
         }
-        #endregion //implementation of macro GetContents functions        
     }
     
     public class Macro
     {
-         /// <summary>
+        /// <summary>
         ///  A decription for Macros
         /// </summary>
         /// <param name="plainText"> The text that shows up on the drop down menu (eg. "Document Path")</param>
@@ -578,7 +564,34 @@ namespace pwiz.Skyline.Model
 
         #endregion
     }
-    #endregion // Macros
+
+    public class CopyToolMacroProvider : IToolMacroProvider
+    {
+
+        public CopyToolMacroProvider(IToolMacroProvider iToolMacroProvider)
+        {
+            DocumentFilePath = iToolMacroProvider.DocumentFilePath;
+            SelectedProteinName = iToolMacroProvider.SelectedProteinName;
+            SelectedPeptideSequence = iToolMacroProvider.SelectedPeptideSequence;
+            SelectedPrecursor = iToolMacroProvider.SelectedPrecursor;
+            ResultNameCurrent = iToolMacroProvider.ResultNameCurrent;
+        }
+
+        #region Implementation of IToolMacroProvider
+
+        public string DocumentFilePath { get; private set; }
+
+        public string SelectedProteinName { get; private set; }
+
+        public string SelectedPeptideSequence { get; private set; }
+
+        public string SelectedPrecursor { get; private set; }
+
+        public string ResultNameCurrent { get; private set; }
+
+        #endregion
+    }
+
 
     /// <summary>
     /// An exception to be thrown when a WebTool fails to open.
@@ -647,33 +660,4 @@ namespace pwiz.Skyline.Model
             return null;
         }
     }
-
-    public class CopyIToolMacroProvider : IToolMacroProvider
-    {
-
-        public CopyIToolMacroProvider(IToolMacroProvider iToolMacroProvider)
-        {
-            DocumentFilePath = iToolMacroProvider.DocumentFilePath;
-            SelectedProteinName = iToolMacroProvider.SelectedProteinName;
-            SelectedPeptideSequence = iToolMacroProvider.SelectedPeptideSequence;
-            SelectedPrecursor = iToolMacroProvider.SelectedPrecursor;
-            ResultNameCurrent = iToolMacroProvider.ResultNameCurrent;
-        }
-
-        #region Implementation of IToolMacroProvider
-
-        public string DocumentFilePath { get; private set; }
-
-        public string SelectedProteinName { get; private set; }
-
-        public string SelectedPeptideSequence { get; private set; }
-
-        public string SelectedPrecursor { get; private set; }
-
-        public string ResultNameCurrent { get; private set; }
-
-        #endregion
-    }
-
-    
 }

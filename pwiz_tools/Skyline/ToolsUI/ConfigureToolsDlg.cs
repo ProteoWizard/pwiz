@@ -37,7 +37,7 @@ namespace pwiz.Skyline.ToolsUI
         private readonly SettingsListComboDriver<ReportSpec> _driverReportSpec;
 
 
-        public ConfigureToolsDlg(List<ToolDescription> inList)
+        public ConfigureToolsDlg()
         {
             InitializeComponent();
 
@@ -58,8 +58,8 @@ namespace pwiz.Skyline.ToolsUI
             // Used to check if the tool meets requirements before allowing you to navigate away from it.
             _previouslySelectedIndex = -1;
             
-            ToolList = new List<ToolDescription>();
-            LoadTools(inList);
+            ToolList = CopyTools(Settings.Default.ToolList);
+
             RefreshListBox();
             Unsaved = false;
 
@@ -82,12 +82,15 @@ namespace pwiz.Skyline.ToolsUI
             listTools.DisplayMember = "Title"; // Not L10N     
         }
 
-        private void LoadTools(List<ToolDescription> items )
+        public List<ToolDescription> ToolList { get; private set; }
+
+        public static List<ToolDescription> CopyTools(IEnumerable<ToolDescription> list)
         {
-            ToolList = items;
+            return list.Where(t => !Equals(t, ToolDescription.EMPTY))
+                       .Select(t => new ToolDescription(t))
+                       .ToList();
         }
 
-        public List<ToolDescription> ToolList { get; private set; }
 
         private bool _unsaved;
 
@@ -526,8 +529,7 @@ namespace pwiz.Skyline.ToolsUI
         {
             if (CheckPassTool(_previouslySelectedIndex))
             {
-                SkylineWindow.SenderArgs args = new SkylineWindow.SenderArgs(SkylineWindow.Copier(ToolList));
-                SkylineWindow.SaveEvent(this, args);
+                Settings.Default.ToolList = CopyTools(ToolList);
                 Unsaved = false;
                 return true;
             }

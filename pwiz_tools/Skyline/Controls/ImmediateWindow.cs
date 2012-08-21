@@ -31,6 +31,9 @@ namespace pwiz.Skyline.Controls
 {
     public partial class ImmediateWindow : DockableFormEx     
     {
+        private readonly SkylineWindow _parent;
+        private readonly TextBoxStreamWriter _textBoxStreamWriter;
+
         public ImmediateWindow(SkylineWindow parent)
         {
             InitializeComponent();
@@ -39,9 +42,7 @@ namespace pwiz.Skyline.Controls
             _parent = parent;
         }
 
-        private readonly SkylineWindow _parent;
-
-        public readonly TextBoxStreamWriter _textBoxStreamWriter;
+        public TextWriter Writer { get { return _textBoxStreamWriter; } }
 
         private void textImWindow_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -55,7 +56,6 @@ namespace pwiz.Skyline.Controls
                     // this supresses the newline character if RunLine modified the textBoxText
                     e.Handled = true;
                 }
-
             }            
         }
 
@@ -80,7 +80,7 @@ namespace pwiz.Skyline.Controls
                         //CONSIDER: multiple tools running. eg. two tools titled "Tool" and "ToolTest" if you enter ToolTest then both tools will run.
                         try
                         {
-                            tool.RunTool(_parent, _textBoxStreamWriter);                                                                                                                                         
+                            tool.RunTool(_parent.Document, _parent, _textBoxStreamWriter, _parent);                                                                                                                                         
                         }
                         catch (WebToolException er  )
                         {

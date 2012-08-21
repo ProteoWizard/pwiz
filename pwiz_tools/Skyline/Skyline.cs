@@ -3085,22 +3085,6 @@ namespace pwiz.Skyline
             return form;
         }
 
-        #region Tools Menu
-
-        public class SenderArgs : EventArgs
-        {
-            public SenderArgs(List<ToolDescription> tools )
-            {
-                Tools = tools;
-            }
-            public List<ToolDescription> Tools { get; set; }
-        }
-    
-        public static void SaveEvent(object sender, SenderArgs args)
-        {
-            Settings.Default.ToolList = args.Tools;
-        }
-
         #region Implementation of IToolMacroProvider
 
         public string SelectedPrecursor
@@ -3113,8 +3097,8 @@ namespace pwiz.Skyline
                     return selprec.ModifiedSequence +
                            Transition.GetChargeIndicator(selprec.DocNode.TransitionGroup.PrecursorCharge);
                 }
-                return null;                
-            }            
+                return null;
+            }
         }
 
         public string ResultNameCurrent
@@ -3125,13 +3109,13 @@ namespace pwiz.Skyline
                            ? ComboResults.SelectedItem.ToString()
                            : null;
             }
-        }       
+        }
 
         public string SelectedPeptideSequence
         {
             get
             {
-                var peptTreeNode = SequenceTree.GetNodeOfType<PeptideTreeNode>(); 
+                var peptTreeNode = SequenceTree.GetNodeOfType<PeptideTreeNode>();
                 return peptTreeNode != null ? peptTreeNode.DocNode.Peptide.Sequence : null;
             }
         }
@@ -3146,6 +3130,91 @@ namespace pwiz.Skyline
         }
 
         #endregion
+
+        #region Tools Menu
+
+        private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowToolOptionsUI();
+        }
+
+        public void ShowToolOptionsUI()
+        {
+            using (var dlg = new ToolOptionsUI())
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // At this point the dialog does everything by itself.
+                }
+            }
+        }
+
+        private void configureToolsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowConfigureToolsDlg();
+        }
+
+        public void ShowConfigureToolsDlg()
+        {
+            using (var dlg = new ConfigureToolsDlg())
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
+        private void toolsMenu_DropDownOpening(object sender, EventArgs e)
+        {
+            PopulateToolsMenu();
+        }
+
+        public void PopulateToolsMenu()
+        {
+            // Remove all items from the toolToolStripMenuItem.
+            while (!ReferenceEquals(toolsMenu.DropDownItems[0], configureToolsMenuItem))
+            {
+                toolsMenu.DropDownItems.RemoveAt(0);
+            }
+
+            int lastInsertIndex = 0;
+            List<ToolDescription> toolList = Settings.Default.ToolList;
+            foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t, this) {Text = t.Title}))            
+                toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
+        }
+
+        /// <summary>
+        /// Runs a tool by index from the tools menu. (for testing) make sure to SkylineWindow.PopulateToolsMenu() first
+        /// </summary>
+        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
+        public void RunTool(int i)
+        {
+            GetToolMenuItem(i).DoClick();
+        }
+
+        /// <summary>
+        /// Returns the title of a tool by index from the tools menu. (for testing) make sure to run SkylineWindow.PopulateToolsMenu() first
+        /// </summary>
+        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
+        /// <returns></returns>
+        public string GetToolText(int i)
+        {
+            return GetToolMenuItem(i).Text;
+        }
+
+        public bool ConfigMenuPresent()
+        {
+            return toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
+        }
+
+        public ToolMenuItem GetToolMenuItem(int i)
+        {
+            foreach (var item in toolsMenu.DropDownItems)
+            {
+                var toolMenuItem = item as ToolMenuItem;
+                if (toolMenuItem != null && i-- == 0)
+                    return toolMenuItem;
+            }
+            return null;
+        }
 
         public class ToolMenuItem : ToolStripMenuItem
         {
@@ -3175,128 +3244,24 @@ namespace pwiz.Skyline
                     if (_tool.OutputToImmediateWindow)
                     {
                         _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent, _parent._immediateWindow._textBoxStreamWriter);
+                        _tool.RunTool(_parent.Document, _parent, _parent.ImmediateWindow.Writer, _parent);
                     }
-                    else _tool.RunTool(_parent, null);                    
+                    else
+                    {
+                        _tool.RunTool(_parent.Document, _parent, null, _parent);
+                    }
                 }
-                catch(WebToolException e)
+                catch (WebToolException e)
                 {
                     AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, e.Link, e.Link, false);
                 }
-                catch(Exception e)
+                catch (Exception e)
                 {
-                    MessageDlg.Show(_parent, e.Message);                    
-                }               
-            }
-        }
-
-        private void configureToolsMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowConfigureToolsDlg();
-        }
-
-        public void ShowToolOptionsUI()
-        {
-            using (ToolOptionsUI dlg = new ToolOptionsUI())
-            {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    // At this point the dialog does everything by itself.
+                    MessageDlg.Show(_parent, e.Message);
                 }
             }
         }
 
-        public void ShowConfigureToolsDlg()
-        {
-            using (ConfigureToolsDlg dlg = new ConfigureToolsDlg(Copier(Settings.Default.ToolList)))
-            {
-                dlg.ShowDialog(this);
-            }
-        }
-
-        public static List<ToolDescription> Copier(List<ToolDescription> list)
-        {
-            List<ToolDescription> output = new List<ToolDescription>();          
-           
-            foreach (var t in list)
-            {
-                if (!t.Equals( new ToolDescription("", "", "", "")))
-                {
-                    ToolDescription temp = new ToolDescription(t.Title, t.Command, t.Arguments, t.InitialDirectory, t.OutputToImmediateWindow, t.ReportTitle);
-                    output.Add(temp);
-                }                
-            }
-            return output;
-        }
-
-        private void toolsMenu_DropDownOpening(object sender, EventArgs e)
-        {
-            PopulateToolsMenu();
-        }
-
-        public void PopulateToolsMenu()
-        {
-            // Remove all items from the toolToolStripMenuItem.
-            while (!ReferenceEquals(toolsMenu.DropDownItems[0], toolStripSeparator46))
-            {
-                toolsMenu.DropDownItems.RemoveAt(0);
-            }
-
-            int lastInsertIndex = 0;
-            List<ToolDescription> toolList = Settings.Default.ToolList;
-            if (toolList.Count == 0)
-            {
-                toolStripSeparator46.Visible = false;
-            }
-            else
-            {
-                toolStripSeparator46.Visible = true;
-                foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t, this) {Text = t.Title}))
-            
-                    toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
-            }            
-        }
-
-        /// <summary>
-        /// Runs a tool by index from the tools menu. (for testing) make sure to SkylineWindow.PopulateToolsMenu() first
-        /// </summary>
-        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
-        public void RunTool(int i)
-        {
-            GetToolMenuItem(i).DoClick();
-        }
-
-        /// <summary>
-        /// Returns the title of a tool by index from the tools menu. (for testing) make sure to run SkylineWindow.PopulateToolsMenu() first
-        /// </summary>
-        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
-        /// <returns></returns>
-        public string GetToolText(int i)
-        {
-            return GetToolMenuItem(i).Text;
-        }
-
-        public bool ConfigMenuPresent()
-        {
-            return toolsMenu.DropDownItems.Contains(toolStripSeparator46) && 
-                    toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
-        }
-
-        public ToolMenuItem GetToolMenuItem(int i)
-        {
-            foreach (var item in toolsMenu.DropDownItems)
-            {
-                var toolMenuItem = item as ToolMenuItem;
-                if (toolMenuItem != null && i-- == 0)
-                    return toolMenuItem;
-            }
-            return null;
-        }
-
-        private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowToolOptionsUI();
-        }      
         #endregion
 
         #region ImmediateWindow
