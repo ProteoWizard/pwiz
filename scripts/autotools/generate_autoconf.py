@@ -248,7 +248,7 @@ if (not dryrun) :
 	print "run 'autoconf configure.ac > configure'"
 	os.system("autoconf configure.ac > configure")
 	ac.runcmd("chmod a+x configure")
-	ac.runcmd("automake -v --add-missing  --copy")
+	ac.runcmd("automake -v --add-missing --copy")
 
 	# create a source tarball 
 	for ipath in includes :

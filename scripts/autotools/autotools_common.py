@@ -82,8 +82,9 @@ def replace_pwizroot(str,repl) : # case insensitive
 import subprocess
 
 def runcmd(cmd) :
-	print "run '%s'\n"%cmd
-	p=subprocess.check_call(cmd.split(' '),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+	print 'run "'+cmd+'"...\n'
+	p=subprocess.Popen(cmd.split(' '),stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 	outs, errors = p.communicate()
 	print outs
 	print errors
+	print 'done with "'+cmd+'".\n'
