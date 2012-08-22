@@ -893,8 +893,16 @@ rule msparser-path ( properties * )
         lib-location = "/usr/local/msparser/gnu" ;
     }
 
+    if [ without-binary-msdata ] 
+    {
+        if ! $(.warn-once)
+        {
+            .warn-once = true ;
+            echo "Not using Mascot Parser due to --without-binary-msdata ." ;
+        }
+    }
     # Check for msparser existence.
-    if <toolset>msvc in $(properties) && [ path.exists $(lib-location)/lib/msparser.lib ]        
+    else if <toolset>msvc in $(properties) && [ path.exists $(lib-location)/lib/msparser.lib ]        
     {
         if ! $(.warn-once)
         {
