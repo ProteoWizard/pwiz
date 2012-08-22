@@ -248,6 +248,7 @@ if (not dryrun) :
 	print "run 'autoconf configure.ac > configure'"
 	os.system("autoconf configure.ac > configure")
 	ac.runcmd("chmod a+x configure")
+	ac.runcmd("touch config.h.in") # in case --add-missing doesn't
 	ac.runcmd("automake -v --add-missing --copy")
 
 	# create a source tarball 
