@@ -23,13 +23,19 @@
 
 import modules ;
 import path ;
-
+import regex ;
 
 path-constant API_PATH : . ;
 
 
 if [ modules.peek : NT ]
 {
+
+local rule read_version ( file ) 
+{
+    local nativePath = [ path.native $(file) ] ;
+    MATCH "FileVersion:     ([0-9\\.]+)" : [ SHELL "ShowVer.exe \"$(nativePath)\"" ] ;
+}
 
 if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
@@ -41,7 +47,7 @@ if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 }
 else
 {
-    if [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ]
+    if [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll ] && [ path.exists $(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest ]
     {
         .hasDLLs = true ;
     }
@@ -55,8 +61,17 @@ else
         echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\XRawfile2$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\\MSFileReader.XRawfile2.dll\"" ] ;
         echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fileio$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
         echo [ SHELL "copy \"$(MSFILEREADER_INSTALL_DIR)\\fregistry$(MSFILEREADER_SUFFIX).dll\" \"$(destination)\\$(PLATFORM)\"" ] ;
-        echo "Copying MSFileReader manifest to \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
-        echo [ SHELL "copy \"$(API_PATH)\\MSFileReader.XRawfile2$(MSFILEREADER_SUFFIX).SxS.manifest.real\" \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ] ;
+
+        local version = [ read_version "$(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.dll" ] ;
+        local manifestLines = [ SHELL "type \"$(API_PATH)\\MSFileReader.XRawfile2$(MSFILEREADER_SUFFIX).SxS.manifest.real\"" ] ;
+        manifestLines = [ regex.replace-list $(manifestLines) : "{VERSION}" : $(version) ] ;
+        
+        local outfile = $(API_PATH)/$(PLATFORM)/MSFileReader.XRawfile2.SxS.manifest ;
+        local fileContent = $(manifestLines:J="\r\n") ;
+
+        echo "Copying MSFileReader manifest version $(version) to \"$(API_PATH)\\$(PLATFORM)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
+        # Write new manifest file to outfile using Generated File Expansion syntax @(file:E=filecontent)
+        outfile = @($(outfile):E=$(fileContent)) ;
         RESCAN ;
     }
 }
