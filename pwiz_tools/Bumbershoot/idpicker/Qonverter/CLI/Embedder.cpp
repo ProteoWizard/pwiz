@@ -40,12 +40,17 @@ String^ Embedder::DefaultSourceExtensionPriorityList::get() { return ToSystemStr
 
 void Embedder::Embed(String^ idpDbFilepath,
                      String^ sourceSearchPath,
+                     IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                      pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
     try
     {
+        //map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
+        //for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
+        //    nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
         NativeEmbedder::embed(ToStdString(idpDbFilepath),
                               ToStdString(sourceSearchPath),
+                              //nativeQuantitationMethodBySource,
                               ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD
@@ -54,13 +59,18 @@ void Embedder::Embed(String^ idpDbFilepath,
 void Embedder::Embed(String^ idpDbFilepath,
                      String^ sourceSearchPath,
                      String^ sourceExtensionPriorityList,
+                     IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                      pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
     try
     {
+        //map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
+        //for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
+        //    nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
         NativeEmbedder::embed(ToStdString(idpDbFilepath),
                               ToStdString(sourceSearchPath),
                               ToStdString(sourceExtensionPriorityList),
+                              //nativeQuantitationMethodBySource,
                               ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD
@@ -69,12 +79,17 @@ void Embedder::Embed(String^ idpDbFilepath,
 
 void Embedder::EmbedScanTime(String^ idpDbFilepath,
                              String^ sourceSearchPath,
+                             IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                              pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
     try
     {
+        //map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
+        //for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
+        //    nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
         NativeEmbedder::embedScanTime(ToStdString(idpDbFilepath),
                                       ToStdString(sourceSearchPath),
+                                      //nativeQuantitationMethodBySource,
                                       ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD
@@ -83,13 +98,18 @@ void Embedder::EmbedScanTime(String^ idpDbFilepath,
 void Embedder::EmbedScanTime(String^ idpDbFilepath,
                              String^ sourceSearchPath,
                              String^ sourceExtensionPriorityList,
+                             IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                              pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
     try
     {
+        //map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
+        //for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
+        //    nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
         NativeEmbedder::embedScanTime(ToStdString(idpDbFilepath),
                                       ToStdString(sourceSearchPath),
                                       ToStdString(sourceExtensionPriorityList),
+                                      //nativeQuantitationMethodBySource,
                                       ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD

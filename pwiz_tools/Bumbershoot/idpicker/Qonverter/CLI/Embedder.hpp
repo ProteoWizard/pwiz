@@ -37,6 +37,17 @@ using namespace System;
 using namespace System::Collections::Generic;
 
 
+public enum class QuantitationMethod
+{
+    None = 0,
+    LabelFree,
+    ITRAQ4plex,
+    ITRAQ8plex,
+    TMT2plex,
+    TMT6plex
+};
+
+
 public ref struct Embedder abstract
 {
 
@@ -47,6 +58,7 @@ static property String^ DefaultSourceExtensionPriorityList { String^ get(); }
 /// and embed a MZ5 representation of the source's spectra in the MSDataBytes column of the idpDB
 static void Embed(String^ idpDbFilepath,
                   String^ sourceSearchPath,
+                  IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                   pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
@@ -54,12 +66,14 @@ static void Embed(String^ idpDbFilepath,
 static void Embed(String^ idpDbFilepath,
                   String^ sourceSearchPath,
                   String^ sourceExtensionPriorityList,
+                  IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                   pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
 /// and embed scan start times of the source's spectra in the ScanTimeInSeconds column of the idpDB
 static void EmbedScanTime(String^ idpDbFilepath,
                           String^ sourceSearchPath,
+                          IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                           pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
@@ -67,6 +81,7 @@ static void EmbedScanTime(String^ idpDbFilepath,
 static void EmbedScanTime(String^ idpDbFilepath,
                           String^ sourceSearchPath,
                           String^ sourceExtensionPriorityList,
+                          IDictionary<int, QuantitationMethod>^ quantitationMethodBySource,
                           pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath
