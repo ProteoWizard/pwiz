@@ -284,6 +284,7 @@ namespace IDPicker.DataModel
                                               Util.Version, SchemaUpdater.CurrentSchemaRevision));
 
             cmd.ExecuteNonQuery(@"CREATE TABLE PeptideSpectrumMatchScoreName (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);
+                                  CREATE TABLE DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);
                                   CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY);");
             CreateIndexes(conn);
             transaction.Commit();
