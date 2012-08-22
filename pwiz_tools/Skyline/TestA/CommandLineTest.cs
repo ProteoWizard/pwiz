@@ -944,7 +944,8 @@ namespace pwiz.SkylineTestA
             string output5 = RunCommand("--tool-add=" + title,
                      "--tool-command=" + command,
                      "--tool-conflict-resolution=overwrite");
-            Assert.IsTrue((output5.Contains("Warning: overwriting")));
+            Assert.IsTrue((output5.Contains("Warning:")));
+            Assert.IsTrue((output5.Contains("overwritten")));
             // Check arguments and initialDir were written over.
             ToolDescription tool4 = Settings.Default.ToolList.Last();
             Assert.AreEqual(title,tool4.Title);
@@ -964,7 +965,49 @@ namespace pwiz.SkylineTestA
             // It now complains in this case.
             string output7 = RunCommand( "--tool-arguments=" + arguments,
                      "--tool-initial-dir=" + initialDirectory);
-            Assert.IsTrue(output7.Contains("Error"));                        
+            Assert.IsTrue(output7.Contains("Error"));
+
+            // Test adding a tool.
+            const string newToolTitle = "TestTitle";
+            const string reportTitle = "\"Transition Results\"";
+            RunCommand("--tool-add=" + newToolTitle,
+                     "--tool-command=" + command,
+                     "--tool-arguments=" + arguments,
+                     "--tool-initial-dir=" + initialDirectory,
+                     "--tool-output-to-immediate-window",
+                     "--tool-report=" + reportTitle);
+            int index3 = Settings.Default.ToolList.Count - 1;
+            ToolDescription tool6 = Settings.Default.ToolList[index3];
+            Assert.AreEqual(newToolTitle, tool6.Title);
+            Assert.AreEqual(command, tool6.Command);
+            Assert.AreEqual(arguments, tool6.Arguments);
+            Assert.AreEqual(initialDirectory, tool6.InitialDirectory);
+            Assert.IsTrue(tool6.OutputToImmediateWindow);
+            Assert.AreEqual(reportTitle, tool6.ReportTitle);
+            // Remove that tool.
+            Settings.Default.ToolList.RemoveAt(index3);
+
+            const string importReportArgument = ToolMacros.INPUT_REPORT_TEMP_PATH;
+            string output8 = RunCommand("--tool-add=" + newToolTitle,
+                     "--tool-command=" + command,
+                     "--tool-arguments=" + importReportArgument,
+                     "--tool-initial-dir=" + initialDirectory,
+                     "--tool-output-to-immediate-window");                        
+            Assert.IsTrue(output8.Contains("Error:"));
+            Assert.IsTrue(output8.Contains("the tool must have a Report Title"));
+
+            const string reportTitle3 = "fakeReport";
+            string output9 = RunCommand("--tool-add=" + newToolTitle,
+                     "--tool-command=" + command,
+                     "--tool-arguments=" + importReportArgument,
+                     "--tool-initial-dir=" + initialDirectory,
+                     "--tool-output-to-immediate-window",
+                     "--tool-report=" + reportTitle3);           
+            Assert.IsTrue(output9.Contains(string.Format("Error: Please import the report format for {0}.", reportTitle3)));
+            Assert.IsTrue(output9.Contains("Use the --report-add parameter to add the missing custom report."));
+            Assert.IsTrue(output9.Contains("The tool was not imported..."));
+
+
         }
 
         [TestMethod]
@@ -1037,6 +1080,60 @@ namespace pwiz.SkylineTestA
         }
 
         [TestMethod]
+        public void ConsoleExportToolsTest()
+        {
+            Settings.Default.ToolList.Clear();
+
+            // Get a unique tool title.
+            string title = GetTitleHelper();
+            const string command = @"C:\Windows\Notepad.exe";
+            const string arguments = "$(DocumentDir) Other";
+            const string initialDirectory = @"C:\";
+
+
+            // Test adding a tool.
+            RunCommand("--tool-add=" + title,
+                     "--tool-command=" + command,
+                     "--tool-arguments=" + arguments,
+                     "--tool-initial-dir=" + initialDirectory);
+
+            // Test adding a tool.
+            const string newToolTitle = "TestTitle";
+            const string reportTitle = "\"Transition Results\"";
+            RunCommand("--tool-add=" + newToolTitle,
+                     "--tool-command=" + command,
+                     "--tool-arguments=" + arguments,
+                     "--tool-initial-dir=" + initialDirectory,
+                     "--tool-output-to-immediate-window",
+                     "--tool-report=" + reportTitle);
+
+            string filePath = Path.GetTempFileName();
+            RunCommand("--tool-list-export=" + filePath);
+
+            StreamReader sr = new StreamReader(filePath);
+            string line1 = sr.ReadLine();
+            Assert.IsTrue(line1!=null);
+            Assert.IsTrue(line1.Contains(string.Format("--tool-add=\"{0}\"",title)));
+            Assert.IsTrue(line1.Contains(string.Format("--tool-command=\"{0}\"",command)));
+            Assert.IsTrue(line1.Contains(string.Format("--tool-arguments=\"{0}\"", arguments)));
+            Assert.IsTrue(line1.Contains(string.Format("--tool-initial-dir=\"{0}\"", initialDirectory)));
+            Assert.IsTrue(line1.Contains("--tool-conflict-resolution=skip"));
+            Assert.IsTrue(line1.Contains("--tool-report=\"\""));
+
+            string line2 = sr.ReadLine();
+            Assert.IsTrue(line2 != null);
+            Assert.IsTrue(line2.Contains(string.Format("--tool-add=\"{0}\"", newToolTitle)));
+            Assert.IsTrue(line2.Contains(string.Format("--tool-command=\"{0}\"", command)));
+            Assert.IsTrue(line2.Contains(string.Format("--tool-arguments=\"{0}\"", arguments)));
+            Assert.IsTrue(line2.Contains(string.Format("--tool-initial-dir=\"{0}\"", initialDirectory)));
+            Assert.IsTrue(line2.Contains("--tool-conflict-resolution=skip"));
+            Assert.IsTrue(line2.Contains(string.Format("--tool-report=\"{0}\"",reportTitle)));
+            Assert.IsTrue(line2.Contains("--tool-output-to-immediate-window"));
+
+            //todo:(danny) delete filePath.            
+        }        
+
+        [TestMethod]
         public void ConsoleParserTest()
         {            
             // Assert.AreEqual(new[] { "--test=foo bar", "--new" }, CommandLine.ParseInput("\"--test=foo bar\" --new"));
@@ -1075,7 +1172,7 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(ParserTestHelper(new string[] {}, test));
         }
 
-        private string GetTitleHelper()
+        private static string GetTitleHelper()
         {
             int i = 1;
             do
@@ -1105,11 +1202,12 @@ namespace pwiz.SkylineTestA
 
         }
 
-        private string GetThermoDiskPath(string pathToRaw)
+        private static string GetThermoDiskPath(string pathToRaw)
         {
             return ExtensionTestContext.CanImportThermoRaw && ExtensionTestContext.CanImportWatersRaw
                 ? Path.ChangeExtension(pathToRaw, "raw")
                 : pathToRaw;
         }
+
     }
 }

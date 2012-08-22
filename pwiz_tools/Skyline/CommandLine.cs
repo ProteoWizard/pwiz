@@ -37,6 +37,7 @@ using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
+
 namespace pwiz.Skyline
 {
     public class CommandArgs
@@ -82,7 +83,9 @@ namespace pwiz.Skyline
         public string ToolName { get; private set; }
         public string ToolCommand { get; private set; }
         public string ToolArguments { get; private set; }
-        public string ToolInitialDirectory { get; private set; }        
+        public string ToolInitialDirectory { get; private set; }
+        public string ToolReportTitle { get; private set; }
+        public bool ToolOutputToImmediateWindow { get; private set; }
         private bool _importingTool;
         public bool ImportingTool
         {
@@ -318,22 +321,30 @@ namespace pwiz.Skyline
                 }
 
                 // A command that exports all the tools to a text file in a SkylineRunner form for --batch-commands
-//                    else if (pair.Name.Equals("tool-list-export"))
-//                    {
-//                        string pathToOutputFile = pair.Value;
-//                        using (StreamWriter sw = new StreamWriter(pathToOutputFile))
-//                        {
-//                            foreach (var tool in Settings.Default.ToolList)
-//                            {
-//                                sw.WriteLine("--tool-add=" + "\"" + tool.Title + "\"" +
-//                                                " --tool-command=" + "\"" + tool.Command + "\"" +
-//                                                " --tool-arguments=" + "\"" + tool.Arguments + "\"" +
-//                                                " --tool-initial-dir=" + "\"" + tool.InitialDirectory + "\"");
-//                            }
-//                        }
-//                    }
+                // Not advertised.
+                else if (pair.Name.Equals("tool-list-export"))
+                {
+                    string pathToOutputFile = pair.Value;
+                    using (StreamWriter sw = new StreamWriter(pathToOutputFile))
+                    {
+                        foreach (var tool in Settings.Default.ToolList)
+                        {
+                            string command = "--tool-add=" + "\"" + tool.Title + "\"" +
+                                                " --tool-command=" + "\"" + tool.Command + "\"" +
+                                                " --tool-arguments=" + "\"" + tool.Arguments + "\"" +
+                                                " --tool-initial-dir=" + "\"" + tool.InitialDirectory + "\"" +
+                                                " --tool-conflict-resolution=skip" +
+                                                " --tool-report=" + "\"" + tool.ReportTitle + "\"";
 
-                    // Import a skyr file.
+                            if (tool.OutputToImmediateWindow)
+                                command += " --tool-output-to-immediate-window";
+
+                            sw.WriteLine(command);
+                        }
+                    }
+                }
+
+                 // Import a skyr file.
                 else if (pair.Name.Equals("report-add"))
                 {
                     ImportingSkyr = true;
@@ -375,6 +386,16 @@ namespace pwiz.Skyline
                 {
                     ImportingTool = true;
                     ToolInitialDirectory = pair.Value;
+                }
+                else if (pair.Name.Equals("tool-report"))
+                {
+                    ImportingTool = true;
+                    ToolReportTitle = pair.Value;
+                }
+                else if (pair.Name.Equals("tool-output-to-immediate-window"))
+                {
+                    ImportingTool = true;
+                    ToolOutputToImmediateWindow = true;
                 }
 
                 else if (pair.Name.Equals("tool-conflict-resolution"))
@@ -728,7 +749,7 @@ namespace pwiz.Skyline
             if (commandArgs.ImportingTool)
             {
                 ImportTool(commandArgs.ToolName, commandArgs.ToolCommand, commandArgs.ToolArguments,
-                    commandArgs.ToolInitialDirectory, commandArgs.ResolveToolConflictsBySkipping);
+                    commandArgs.ToolInitialDirectory, commandArgs.ToolReportTitle, commandArgs.ToolOutputToImmediateWindow, commandArgs.ResolveToolConflictsBySkipping);
             }
             if (commandArgs.RunningBatchCommands)
             {
@@ -1243,7 +1264,7 @@ namespace pwiz.Skyline
         }
 
         // A function for adding tools to the Tools Menu.
-        public void ImportTool (string title, string command, string arguments, string initialDirectory, bool? resolveToolConflictsBySkipping)
+        public void ImportTool (string title, string command, string arguments, string initialDirectory, string reportTitle, bool outputToImmediateWindow, bool? resolveToolConflictsBySkipping)
         {
             if (title == null | command == null)
             {
@@ -1254,7 +1275,7 @@ namespace pwiz.Skyline
                 return;
             }
             // Check if the command is of a supported type and not a URL
-            else if (!ConfigureToolsDlg.checkExtension(command) && !command.Contains("http"))
+            else if (!ConfigureToolsDlg.checkExtension(command) && !ToolDescription.IsWebPageCommand(command))
             {
                 string supportedTypes = String.Join("; ", ConfigureToolsDlg.EXTENSIONS);
                 supportedTypes = supportedTypes.Replace(".", "*.");
@@ -1263,6 +1284,25 @@ namespace pwiz.Skyline
                 _out.WriteLine("       The tool was not imported...");
                 return;
             }
+            if (arguments != null && arguments.Contains(ToolMacros.INPUT_REPORT_TEMP_PATH))
+            {
+                if (string.IsNullOrEmpty(reportTitle))
+                {
+                    _out.WriteLine(string.Format("Error: If {0} is and argument the tool must have a Report Title", ToolMacros.INPUT_REPORT_TEMP_PATH));
+                    _out.WriteLine(string.Format("        use the --tool-report parameter to specify a report"));
+                    _out.WriteLine("        The tool was not imported...");
+                    return;
+                }
+
+                if (!Settings.Default.ReportSpecList.ContainsKey(reportTitle))
+                {
+                    _out.WriteLine(string.Format("Error: Please import the report format for {0}.", reportTitle));
+                    _out.WriteLine(string.Format("        Use the --report-add parameter to add the missing custom report."));
+                    _out.WriteLine("        The tool was not imported...");
+                    return;                    
+                }
+            }            
+
             // Check for a name conflict. 
             ToolDescription toolToRemove = null;
             foreach (var tool  in Settings.Default.ToolList)
@@ -1288,7 +1328,7 @@ namespace pwiz.Skyline
                     // Ovewrite conflicts
                     if (resolveToolConflictsBySkipping == false)
                     {
-                        _out.WriteLine(string.Format("Warning: overwriting tool {0}", tool.Title));
+                        _out.WriteLine(string.Format("Warning: the tool {0} was overwritten", tool.Title));
 //                      _out.WriteLine(string.Format("         tool {0} was modified.", tool.Title));
                         if (toolToRemove == null) // If there are multiple tools with the same name this makes sure the first one with a naming conflict is overwritten.
                             toolToRemove = tool;
@@ -1306,9 +1346,9 @@ namespace pwiz.Skyline
             // Conflicts have been dealt with now add the tool.                       
             // Adding the tool. ToolArguments and ToolInitialDirectory are optional. 
             // If arguments or initialDirectory is null set it to be an empty string.
-            arguments = arguments ?? ""; 
-            initialDirectory = initialDirectory ?? ""; 
-            Settings.Default.ToolList.Add(new ToolDescription(title, command, arguments, initialDirectory));
+            arguments = arguments ?? string.Empty; 
+            initialDirectory = initialDirectory ?? string.Empty; 
+            Settings.Default.ToolList.Add(new ToolDescription(title, command, arguments, initialDirectory, outputToImmediateWindow, reportTitle));
             Settings.Default.Save();        
         }
 
