@@ -26,6 +26,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using System.ComponentModel;
 using System.ComponentModel.Design;
@@ -189,6 +190,12 @@ namespace IDPicker
         public Font SequenceFont { get; set; }
 
         /// <summary>
+        /// Gets or sets the font used to display the amino acid sequence when the view is filtered on one or more peptides.
+        /// </summary>
+        [Browsable(true)]
+        public Font FilteredInSequenceFont { get; set; }
+
+        /// <summary>
         /// Gets or sets the font used to display the portions of the protein under the mouse cursor.
         /// </summary>
         [Browsable(true)]
@@ -226,6 +233,7 @@ namespace IDPicker
             HeaderFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
             OffsetFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
             SequenceFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
+            FilteredInSequenceFont = new Font(SequenceFont, FontStyle.Bold);
             HoverFont = new Font(SequenceFont, FontStyle.Bold | FontStyle.Underline);
 
             SetData(session, protein, viewFilter);
@@ -347,12 +355,37 @@ namespace IDPicker
     class SequenceCoverageSurface : UserControl
     {
         SequenceCoverageControl owner;
-        public DataFilter viewFilter { get; set; }
+
+        private DataFilter _viewFilter;
+        public DataFilter viewFilter
+        {
+            get { return _viewFilter; }
+            set
+            {
+                _viewFilter = value;
+                filteredInOffsets.Fill(false);
+
+                IEnumerable<Peptide> peptides;
+                if (!_viewFilter.Peptide.IsNullOrEmpty())
+                    peptides = _viewFilter.Peptide;
+                else if (!_viewFilter.DistinctMatchKey.IsNullOrEmpty())
+                    peptides = _viewFilter.DistinctMatchKey.Select(o => o.Peptide);
+                else
+                    return;
+
+                foreach (var peptide in peptides)
+                    foreach (var instance in peptide.Instances.Where(o => o.Protein.Id == owner.Protein.Id))
+                        for (int offset = instance.Offset; offset < instance.Offset + instance.Length; ++offset)
+                            filteredInOffsets[offset] = true;
+            }
+        }
+
         string header;
         private List<string> headerComponents;
         //List<int> totalCoverageMask = null;
         //List<List<int>> groupCoverageMasks = null;
         SizeF residueBounds;
+        bool[] filteredInOffsets;
 
         public event SequenceCoverageFilterEventHandler SequenceCoverageFilter;
 
@@ -382,6 +415,8 @@ namespace IDPicker
             //toolTip = new ToolTip() { Active = true, ShowAlways = true, InitialDelay = 100, ReshowDelay = 100, AutoPopDelay = 0 };
 
             calculateBoundingInfo();
+
+            filteredInOffsets = new bool[owner.Protein.Length];
         }
 
         #region Implementation details
@@ -567,12 +602,13 @@ namespace IDPicker
                     bool currentResidueIsUnderMouse = onSequenceLine && pair.Key == residueUnderMouse;
                     bool currentResidueIsInFilter = isProteinInFilter && viewFilter.AminoAcidOffset != null &&
                                                     viewFilter.AminoAcidOffset.Contains(pair.Key);
+                    Font sequenceFont = filteredInOffsets[pair.Key] ? owner.FilteredInSequenceFont : owner.SequenceFont;
                     if (currentResidueIsUnderMouse || currentResidueIsInFilter)
                         e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.HoverFont, hoverBrush, pair.Value);
                     else if (owner.Modifications.Contains(pair.Key))
-                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, modifiedBrush, pair.Value);
+                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), sequenceFont, modifiedBrush, pair.Value);
                     else
-                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, coveredBrush, pair.Value);
+                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), sequenceFont, coveredBrush, pair.Value);
                 }
                 else
                     e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, uncoveredBrush, pair.Value);

@@ -52,7 +52,7 @@ namespace IDPicker
             else if (String.IsNullOrEmpty(Path.GetFileName(commonFilename)))
                 commonFilename = Path.Combine(commonFilename, Path.GetFileName(Path.GetDirectoryName(commonFilename)) + ".idpDB");
             else
-                commonFilename = Path.ChangeExtension(commonFilename, ".idpDB");
+                commonFilename = Path.ChangeExtension(commonFilename.Replace(".pep.xml", ".pepXML"), ".idpDB");
 
             return commonFilename;
         }

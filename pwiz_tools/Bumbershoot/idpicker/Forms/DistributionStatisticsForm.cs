@@ -271,7 +271,7 @@ namespace IDPicker.Forms
                     precursorMassErrors = query.List<object[]>().Select(o => new PSMRow
                     {
                         ObservedNeutralMass = (double)o[0],
-                        MassError = Math.Abs((double)o[1]) < Math.Abs((double)o[2]) ? (double)o[1] : (double)o[2],
+                        MassError = PeptideSpectrumMatch.GetSmallerMassError((double)o[1], (double)o[2]),
                         ScanTime = (double)o[3] / 60 // convert to minutes
                     }).ToList();
 
