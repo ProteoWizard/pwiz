@@ -53,8 +53,6 @@ namespace IDPicker.Forms
         private void InitializeComponent ()
         {
             this.dataGridView = new System.Windows.Forms.DataGridView();
-            this.sourceNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.okButton = new System.Windows.Forms.Button();
             this.embedAllButton = new System.Windows.Forms.Button();
             this.deleteAllButton = new System.Windows.Forms.Button();
@@ -65,6 +63,10 @@ namespace IDPicker.Forms
             this.label2 = new System.Windows.Forms.Label();
             this.extensionsTextBox = new System.Windows.Forms.TextBox();
             this.scanTimeOnlyCheckBox = new System.Windows.Forms.CheckBox();
+            this.idColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.sourceNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.quantitationMethodColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -77,29 +79,15 @@ namespace IDPicker.Forms
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.idColumn,
             this.sourceNameColumn,
-            this.embeddedSourceColumn});
+            this.embeddedSourceColumn,
+            this.quantitationMethodColumn});
             this.dataGridView.Location = new System.Drawing.Point(0, 0);
             this.dataGridView.Name = "dataGridView";
-            this.dataGridView.ReadOnly = true;
             this.dataGridView.RowHeadersVisible = false;
             this.dataGridView.Size = new System.Drawing.Size(784, 502);
             this.dataGridView.TabIndex = 1;
-            // 
-            // sourceNameColumn
-            // 
-            this.sourceNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.sourceNameColumn.HeaderText = "Source";
-            this.sourceNameColumn.Name = "sourceNameColumn";
-            this.sourceNameColumn.ReadOnly = true;
-            // 
-            // embeddedSourceColumn
-            // 
-            this.embeddedSourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.embeddedSourceColumn.HeaderText = "Embedded Status";
-            this.embeddedSourceColumn.Name = "embeddedSourceColumn";
-            this.embeddedSourceColumn.ReadOnly = true;
-            this.embeddedSourceColumn.Width = 250;
             // 
             // okButton
             // 
@@ -196,6 +184,45 @@ namespace IDPicker.Forms
             this.scanTimeOnlyCheckBox.Text = "Only Embed Scan Times";
             this.scanTimeOnlyCheckBox.UseVisualStyleBackColor = true;
             // 
+            // idColumn
+            // 
+            this.idColumn.HeaderText = "Id";
+            this.idColumn.Name = "idColumn";
+            this.idColumn.ReadOnly = true;
+            this.idColumn.Visible = false;
+            // 
+            // sourceNameColumn
+            // 
+            this.sourceNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.sourceNameColumn.HeaderText = "Source";
+            this.sourceNameColumn.Name = "sourceNameColumn";
+            this.sourceNameColumn.ReadOnly = true;
+            // 
+            // embeddedSourceColumn
+            // 
+            this.embeddedSourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.embeddedSourceColumn.HeaderText = "Embedded Status";
+            this.embeddedSourceColumn.Name = "embeddedSourceColumn";
+            this.embeddedSourceColumn.ReadOnly = true;
+            this.embeddedSourceColumn.Width = 250;
+            // 
+            // quantitationMethodColumn
+            // 
+            this.quantitationMethodColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.quantitationMethodColumn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.quantitationMethodColumn.HeaderText = "Quantitation Method";
+            this.quantitationMethodColumn.Items.AddRange(new object[] {
+            "None",
+            "Label free",
+            "iTRAQ 4-plex",
+            "iTRAQ 8-plex",
+            "TMT duplex",
+            "TMT 6-plex"});
+            this.quantitationMethodColumn.Name = "quantitationMethodColumn";
+            this.quantitationMethodColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.quantitationMethodColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.quantitationMethodColumn.Width = 130;
+            // 
             // EmbedderForm
             // 
             this.AcceptButton = this.okButton;
@@ -231,8 +258,10 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.TextBox extensionsTextBox;
+        private System.Windows.Forms.CheckBox scanTimeOnlyCheckBox;
+        private System.Windows.Forms.DataGridViewTextBoxColumn idColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn sourceNameColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn embeddedSourceColumn;
-        private System.Windows.Forms.CheckBox scanTimeOnlyCheckBox;
+        private System.Windows.Forms.DataGridViewComboBoxColumn quantitationMethodColumn;
     }
 }

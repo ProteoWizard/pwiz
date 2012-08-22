@@ -42,6 +42,7 @@ namespace IDPicker.Forms
     {
         private NHibernate.ISession session;
         private bool hasEmbeddedSources, hasNonEmbeddedSources;
+        private bool embeddedChanges; // true if the embedded data has changed
 
         public EmbedderForm (NHibernate.ISession session)
         {
@@ -54,6 +55,7 @@ namespace IDPicker.Forms
         {
             searchPathTextBox.Text = String.Join(";", Util.StringCollectionToStringArray(Properties.Settings.Default.SourcePaths));
             extensionsTextBox.Text = Properties.Settings.Default.SourceExtensions;
+            embeddedChanges = false;
 
             base.OnLoad(e);
 
@@ -68,31 +70,42 @@ namespace IDPicker.Forms
             dataGridView.SuspendLayout();
             dataGridView.Rows.Clear();
 
-            var rows = session.CreateSQLQuery("SELECT Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MSDataBytes) FROM SpectrumSource WHERE Id=ss.Id), 0), MAX(s.ScanTimeInSeconds) " +
+            var rows = session.CreateSQLQuery("SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MSDataBytes) FROM SpectrumSource WHERE Id=ss.Id), 0), MAX(s.ScanTimeInSeconds), QuantitationMethod " +
                                               "FROM SpectrumSource ss " +
                                               "JOIN UnfilteredSpectrum s ON ss.Id=Source " +
                                               "GROUP BY ss.Id")
                               .List<object[]>()
-                              .Select(o => new { Name = (string) o[0], Spectra = Convert.ToInt32(o[1]), EmbeddedSize = Convert.ToInt32(o[2]), MaxScanTime = Convert.ToDouble(o[3]) });
+                              .Select(o => new { Id = Convert.ToInt32(o[0]),
+                                                 Name = (string) o[1],
+                                                 Spectra = Convert.ToInt32(o[2]),
+                                                 EmbeddedSize = Convert.ToInt32(o[3]),
+                                                 MaxScanTime = Convert.ToDouble(o[4]),
+                                                 QuantitationMethodIndex = Convert.ToInt32(o[5])
+                                               });
 
             hasEmbeddedSources = hasNonEmbeddedSources = false;
 
             foreach (var row in rows)
+            {
+                string status;
                 if (row.EmbeddedSize > 0)
                 {
-                    dataGridView.Rows.Add(row.Name, String.Format("{0} spectra embedded ({1} bytes)", row.Spectra, row.EmbeddedSize));
+                    status = String.Format("{0} spectra embedded ({1} bytes)", row.Spectra, row.EmbeddedSize);
                     hasEmbeddedSources = true;
                 }
                 else if (row.MaxScanTime > 0)
                 {
-                    dataGridView.Rows.Add(row.Name, String.Format("{0} spectra with scan times", row.Spectra));
+                    status = String.Format("{0} spectra with scan times", row.Spectra);
                     hasNonEmbeddedSources = true;
                 }
                 else
                 {
-                    dataGridView.Rows.Add(row.Name, "not embedded");
+                    status = "not embedded";
                     hasNonEmbeddedSources = true;
                 }
+
+                dataGridView.Rows.Add(row.Id, row.Name, status, quantitationMethodColumn.Items[row.QuantitationMethodIndex]);
+            }
 
             dataGridView.ResumeLayout();
 
@@ -146,6 +159,7 @@ namespace IDPicker.Forms
             string extensions = extensionsTextBox.Text;
             Application.UseWaitCursor = true;
             deleteAllButton.Enabled = embedAllButton.Enabled = okButton.Enabled = false;
+            embeddedChanges = true;
 
             try
             {
@@ -159,6 +173,15 @@ namespace IDPicker.Forms
                 // ignore if MergedFiles does not exist
             }
 
+            var quantitationMethodBySource = new Dictionary<int, QuantitationMethod>();
+            foreach (DataGridViewRow row in dataGridView.Rows)
+            {
+                int id = (int) row.Cells[idColumn.Index].Value;
+                string methodString = (string) (row.Cells[quantitationMethodColumn.Index] as DataGridViewComboBoxCell).Value;
+                int methodIndex = quantitationMethodColumn.Items.IndexOf(methodString);
+                quantitationMethodBySource[id] = (QuantitationMethod) methodIndex;
+            }
+
             new Thread(() =>
             {
                 try
@@ -168,9 +191,9 @@ namespace IDPicker.Forms
 
                     string idpDbFilepath = session.Connection.GetDataSource();
                     if (scanTimeOnlyCheckBox.Checked)
-                        Embedder.EmbedScanTime(idpDbFilepath, searchPath.ToString(), extensions, ilr);
+                        Embedder.EmbedScanTime(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
                     else
-                        Embedder.Embed(idpDbFilepath, searchPath.ToString(), extensions, ilr);
+                        Embedder.Embed(idpDbFilepath, searchPath.ToString(), extensions, quantitationMethodBySource, ilr);
                 }
                 catch (Exception ex)
                 {
@@ -198,6 +221,7 @@ namespace IDPicker.Forms
             Text = "Deleting embedded spectra (this could take a few minutes)";
             Application.UseWaitCursor = true;
             deleteAllButton.Enabled = embedAllButton.Enabled = okButton.Enabled = false;
+            embeddedChanges = true;
 
             if (TaskbarManager.IsPlatformSupported)
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.Indeterminate);
@@ -219,7 +243,7 @@ namespace IDPicker.Forms
 
         private void okButton_Click (object sender, EventArgs e)
         {
-            DialogResult = DialogResult.OK;
+            DialogResult = embeddedChanges ? DialogResult.OK : DialogResult.Cancel;
             Close();
         }
     }
