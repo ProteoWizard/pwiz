@@ -36,12 +36,26 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 2;
+const int CURRENT_SCHEMA_REVISION = 3;
 
 namespace SchemaUpdater {
 
 
 namespace {
+
+void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    // add empty quantitation tables and quantitative columns to SpectrumSource
+    db.execute("CREATE TABLE IF NOT EXISTS SpectrumQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
+               "CREATE TABLE IF NOT EXISTS DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
+               "CREATE TABLE IF NOT EXISTS PeptideQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
+               "CREATE TABLE IF NOT EXISTS ProteinQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
+               "ALTER TABLE SpectrumSource ADD COLUMN TotalSpectraMS1 INT;"
+               "ALTER TABLE SpectrumSource ADD COLUMN TotalIonCurrentMS1 NUMERIC;"
+               "ALTER TABLE SpectrumSource ADD COLUMN TotalSpectraMS2 INT;"
+               "ALTER TABLE SpectrumSource ADD COLUMN TotalIonCurrentMS2 NUMERIC;"
+               "ALTER TABLE SpectrumSource ADD COLUMN QuantitationMethod INT;");
+}
 
 void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr)
 {
@@ -69,6 +83,9 @@ void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr)
                "INSERT INTO NewSpectrum SELECT Id, Source, Index_, NativeID, PrecursorMZ, 0 FROM Spectrum;"
                "DROP TABLE Spectrum;"
                "ALTER TABLE NewSpectrum RENAME TO Spectrum;");
+
+    // continue updating schema
+    update_2_to_3(db, ilr);
 }
 
 void update_0_to_1(sqlite::database& db, IterationListenerRegistry* ilr)
@@ -154,6 +171,8 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
         update_0_to_1(db, ilr);
     else if (schemaRevision == 1)
         update_1_to_2(db, ilr);
+    else if (schemaRevision == 2)
+        update_2_to_3(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +
@@ -161,6 +180,9 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
                             lexical_cast<string>(CURRENT_SCHEMA_REVISION));
     else
         return false; // no update needed
+
+    // update the schema revision
+    db.execute("UPDATE About SET SchemaRevision = " + lexical_cast<string>(CURRENT_SCHEMA_REVISION));
 
     return true; // an update was done
 }

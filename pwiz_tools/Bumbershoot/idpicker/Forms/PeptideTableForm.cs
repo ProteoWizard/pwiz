@@ -877,6 +877,9 @@ namespace IDPicker.Forms
         {
             Text = TabText = "Peptide View";
 
+            // remember the first selected row
+            saveSelectionPath();
+
             Controls.OfType<Control>().ForEach(o => o.Enabled = false);
 
             treeDataGridView.RootRowCount = 0;

@@ -163,6 +163,8 @@ namespace IDPicker.Forms
             public DataModel.SpectrumSourceGroup Group { get; private set; }
             public string Key { get; private set; }
             public double BestQValue { get; private set; }
+            public double[] iTRAQ_ReporterIonIntensities { get; private set; }
+            public double[] TMT_ReporterIonIntensities { get; private set; }
 
             #region Constructor
             public SpectrumRow(object[] queryRow, DataFilter dataFilter, IList<Grouping<GroupBy>> checkedGroupings)
@@ -173,6 +175,8 @@ namespace IDPicker.Forms
                 Source = (DataModel.SpectrumSource) queryRow[++column];
                 Group = (DataModel.SpectrumSourceGroup) queryRow[++column];
                 BestQValue = Convert.ToDouble(queryRow[++column]);
+                iTRAQ_ReporterIonIntensities = (double[]) queryRow[++column];
+                TMT_ReporterIonIntensities = (double[]) queryRow[++column];
 
                 Key = Spectrum.NativeID;
 
@@ -336,7 +340,11 @@ namespace IDPicker.Forms
                 ObservedMass = Convert.ToDouble(queryRow[++column]);
                 double monoisotopicError = Convert.ToDouble(queryRow[++column]);
                 double averageError = Convert.ToDouble(queryRow[++column]);
-                if (Math.Abs(monoisotopicError) < Math.Abs(averageError))
+
+                // if absolute value of monoisotopic error is less than absolute value of average error
+                // or if the monoisotopic error is nearly a multiple of a neutron mass,
+                // then treat the mass as monoisotopic
+                if (PeptideSpectrumMatch.GetSmallerMassError(monoisotopicError, averageError) == monoisotopicError)
                     ExactMass = ObservedMass - monoisotopicError;
                 else
                     ExactMass = ObservedMass - averageError;
@@ -528,7 +536,10 @@ namespace IDPicker.Forms
         IList<Row> getSpectrumRows (DataFilter parentFilter)
         {
             lock (session)
-            return session.CreateQuery(AggregateRow.Selection + ", s, ss, ssg, MIN(psm.QValue) " +
+            return session.CreateQuery(AggregateRow.Selection +
+                                       ", s, ss, ssg, MIN(psm.QValue)" +
+                                       ", s.iTRAQ_ReporterIonIntensities" +
+                                       ", s.TMT_ReporterIonIntensities" +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                            DataFilter.PeptideSpectrumMatchToProtein,
                                                                            DataFilter.PeptideSpectrumMatchToSpectrumSourceGroup) +
@@ -682,8 +693,10 @@ namespace IDPicker.Forms
 
         private TotalCounts totalCounts, basicTotalCounts;
         private Dictionary<DataFilterKey, List<Row>> rowsBySource, basicRowsBySource;
-        
+
         DataGridViewColumn[] aggregateColumns, psmColumns;
+
+        List<DataGridViewTextBoxColumn> iTRAQ_ReporterIonColumns, TMT_ReporterIonColumns;
 
         public SpectrumTableForm()
         {
@@ -691,6 +704,36 @@ namespace IDPicker.Forms
 
             Text = TabText = "Spectrum View";
             Icon = Properties.Resources.SpectrumViewIcon;
+
+            iTRAQ_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
+            TMT_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
+
+            /*foreach (int ion in new int[] { 113, 114, 115, 116, 117, 118, 119, 121 })
+            {
+                var column = new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "iTRAQ-" + ion.ToString(),
+                    Name = "iTRAQ-" + ion.ToString() + "Column",
+                    ReadOnly = true,
+                    Width = 100
+                };
+                iTRAQ_ReporterIonColumns.Add(column);
+            }
+
+            foreach (int ion in new int[] { 126, 127, 128, 129, 130, 131 })
+            {
+                var column = new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "TMT-" + ion.ToString(),
+                    Name = "TMT-" + ion.ToString() + "Column",
+                    ReadOnly = true,
+                    Width = 100
+                };
+                TMT_ReporterIonColumns.Add(column);
+            }
+
+            treeDataGridView.Columns.AddRange(iTRAQ_ReporterIonColumns.ToArray());
+            treeDataGridView.Columns.AddRange(TMT_ReporterIonColumns.ToArray());*/
 
             aggregateColumns = new DataGridViewColumn[]
             {
@@ -870,6 +913,16 @@ namespace IDPicker.Forms
                 else if (columnIndex == precursorMzColumn.Index) return row.Spectrum.PrecursorMZ;
                 else if (columnIndex == scanTimeColumn.Index) return row.Spectrum.ScanTimeInSeconds / 60.0;
                 else if (columnIndex == qvalueColumn.Index) return row.BestQValue > 1 ? Double.PositiveInfinity : row.BestQValue;
+                else
+                {
+                    int iTRAQ_ReporterIonIndex = iTRAQ_ReporterIonColumns.FindIndex(o => o.Index == columnIndex);
+                    if (iTRAQ_ReporterIonIndex >= 0) return row.iTRAQ_ReporterIonIntensities[iTRAQ_ReporterIonIndex];
+                    else
+                    {
+                        int TMT_ReporterIonIndex = TMT_ReporterIonColumns.FindIndex(o => o.Index == columnIndex);
+                        if (TMT_ReporterIonIndex >= 0) return row.TMT_ReporterIonIntensities[TMT_ReporterIonIndex];
+                    }
+                }
             }
             else if (baseRow is AnalysisRow)
             {
@@ -901,6 +954,16 @@ namespace IDPicker.Forms
                 {
                     if (columnIndex == precursorMzColumn.Index) return row.Spectrum.PrecursorMZ;
                     else if (columnIndex == scanTimeColumn.Index) return row.Spectrum.ScanTimeInSeconds / 60.0;
+                    /*else
+                    {
+                        int iTRAQ_ReporterIonIndex = iTRAQ_ReporterIonColumns.FindIndex(o => o.Index == columnIndex);
+                        if (iTRAQ_ReporterIonIndex >= 0) return row.iTRAQ_ReporterIonIntensities[iTRAQ_ReporterIonIndex];
+                        else
+                        {
+                            int TMT_ReporterIonIndex = TMT_ReporterIonColumns.FindIndex(o => o.Index == columnIndex);
+                            if (TMT_ReporterIonIndex >= 0) return row.TMT_ReporterIonIntensities[TMT_ReporterIonIndex];
+                        }
+                    }*/
                 }
             }
             else if (baseRow is PeptideSpectrumMatchScoreRow)
@@ -1045,6 +1108,12 @@ namespace IDPicker.Forms
                 { qvalueColumn, new ColumnProperty() {Type = typeof(float), Precision = 2}},
                 { sequenceColumn, new ColumnProperty() {Type = typeof(string)}}
             };
+
+            /*foreach (var column in iTRAQ_ReporterIonColumns)
+                _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2});
+
+            foreach (var column in TMT_ReporterIonColumns)
+                _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2 });*/
 
             foreach (var kvp in _columnSettings)
             {
@@ -1196,9 +1265,13 @@ namespace IDPicker.Forms
         {
             Text = TabText = "Spectrum View";
 
-            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+            // remember the first selected row
+            saveSelectionPath();
 
             treeDataGridView.RootRowCount = 0;
+
+            Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+
             Refresh();
         }
 

@@ -49,6 +49,11 @@
 			<one-to-many class="Spectrum"/>
 		</bag>
 		<property name="Metadata" column="MsDataBytes" lazy="true" type="SpectrumSourceMetadataUserType"/>
+        <property name="TotalSpectraMS1"/>
+        <property name="TotalSpectraMS2"/>
+        <property name="TotalIonCurrentMS1"/>
+        <property name="TotalIonCurrentMS2"/>
+        <property name="QuantitationMethod"/>
 	</class>
 
 	<class name="SpectrumSourceGroupLink">
@@ -68,7 +73,9 @@
 			<key column="Spectrum"/>
 			<one-to-many class="PeptideSpectrumMatch"/>
 		</bag>
-		<!--<property name="Peaks" lazy="true" type="SpectrumPeakListUserType"/>-->
+		<join optional="true" table="SpectrumQuantitation"><key column="Id"/><property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/></join>
+        <join optional="true" table="SpectrumQuantitation"><key column="Id"/><property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/></join>
+        <join optional="true" table="SpectrumQuantitation"><key column="Id"/><property name="PrecursorIonIntensity" lazy="true"/></join>
 	</class>
 
 	<class name="AnalysisParameter">
@@ -120,6 +127,10 @@
 			<property name="Coverage"/>
 			<property name="CoverageMask" type="ProteinCoverageMaskUserType"/>
 		</join>
+
+		<join optional="true" table="ProteinQuantitation"><key column="Id"/><property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/></join>
+        <join optional="true" table="ProteinQuantitation"><key column="Id"/><property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/></join>
+        <join optional="true" table="ProteinQuantitation"><key column="Id"/><property name="PrecursorIonIntensity" lazy="true"/></join>
 	</class>
 
 	<class name="Peptide">
@@ -141,6 +152,10 @@
 			<key column="Peptide"/>
 			<one-to-many class="PeptideSpectrumMatch"/>
 		</bag>
+
+		<join optional="true" table="PeptideQuantitation"><key column="Id"/><property name="iTRAQ_ReporterIonIntensities" lazy="true" type="iTRAQArrayUserType"/></join>
+        <join optional="true" table="PeptideQuantitation"><key column="Id"/><property name="TMT_ReporterIonIntensities" lazy="true" type="TMTArrayUserType"/></join>
+        <join optional="true" table="PeptideQuantitation"><key column="Id"/><property name="PrecursorIonIntensity" lazy="true"/></join>
 	</class>
 
 	<class name="PeptideInstance">

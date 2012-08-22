@@ -20,9 +20,11 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Reflection;
 using System.Collections;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Linq;
 using System.Data.Linq;
@@ -84,6 +86,83 @@ namespace IDPicker.DataModel
             }
         }
 
+        /// <summary>
+        /// Takes one or more binary vectors of doubles (as BLOBs) and returns the summed array.
+        /// </summary>
+        /// <example>DOUBLE_ARRAY_SUM([1,2,3] [4,5,6]) -> [5,7,9]</example>
+        [SQLiteFunction(Name = "double_array_sum", Arguments = -1, FuncType = FunctionType.Aggregate)]
+        public class DoubleArraySum : SQLiteFunction
+        {
+            public override void Step(object[] args, int stepNumber, ref object contextData)
+            {
+                if (args[0] == null || args[0] == DBNull.Value)
+                    return;
+
+                byte[] arrayBytes = args[0] as byte[];
+                if (arrayBytes == null || arrayBytes.Length % 8 > 0)
+                    throw new ArgumentException("double_array_sum only works with BLOBs of double precision floats");
+
+                int arrayLength = arrayBytes.Length / 8;
+
+                if (stepNumber == 1)
+                    contextData = Enumerable.Repeat(0.0, arrayLength).ToArray();
+
+                double[] arrayValues = contextData as double[];
+                var arrayStream = new BinaryReader(new MemoryStream(arrayBytes));
+                for (int i = 0; i < arrayLength; ++i)
+                    arrayValues[i] += arrayStream.ReadDouble();
+            }
+
+            public override object Final(object contextData)
+            {
+                double[] arrayValues = contextData as double[];
+                if (arrayValues == null)
+                    return DBNull.Value;
+
+                var bytes = new List<byte>(sizeof(double) * arrayValues.Length);
+                for (int i = 0; i < arrayValues.Length; ++i)
+                    bytes.AddRange(BitConverter.GetBytes(arrayValues[i]));
+                return bytes.ToArray();
+            }
+        }
+
+        [SQLiteFunction(Name = "double_array_sum2", Arguments = -1, FuncType = FunctionType.Aggregate)]
+        public class DoubleArraySum2 : SQLiteFunction
+        {
+            public override void Step(object[] args, int stepNumber, ref object contextData)
+            {
+                if (args[0] == null)
+                    return;
+
+                byte[] arrayBytes = args[0] as byte[];
+                if (arrayBytes == null || arrayBytes.Length % 8 > 0)
+                    throw new ArgumentException("double_array_sum only works with BLOBs of double precision floats");
+
+                int arrayLength = arrayBytes.Length / 8;
+
+                if (stepNumber == 1)
+                    contextData = Enumerable.Repeat(0.0, arrayLength).ToArray();
+
+                double[] arrayValues = contextData as double[];
+                ArrayCaster.AsFloatArray(arrayBytes, floats =>
+                {
+                    for (int i = 0; i < arrayLength; ++i)
+                        arrayValues[i] += floats[i];
+                });
+            }
+
+            public override object Final(object contextData)
+            {
+                double[] arrayValues = contextData as double[];
+                if (arrayValues == null)
+                    return DBNull.Value;
+
+                byte[] result = new byte[arrayValues.Length * sizeof(double)];
+                ArrayCaster.AsByteArray(arrayValues, bytes => bytes.CopyTo(result, 0));
+                return result;
+            }
+        }
+
         public class CustomSQLiteDialect : SQLiteDialect
         {
             public CustomSQLiteDialect ()
@@ -92,6 +171,8 @@ namespace IDPicker.DataModel
                 RegisterFunction("group_concat", new StandardSQLFunction("group_concat", NHibernateUtil.String));
                 RegisterFunction("distinct_group_concat", new DistinctGroupConcat());
                 RegisterFunction("range_concat", new StandardSQLFunction("range_concat", NHibernateUtil.String));
+                RegisterFunction("double_array_sum", new StandardSQLFunction("double_array_sum", NHibernateUtil.BinaryBlob));
+                RegisterFunction("double_array_sum2", new StandardSQLFunction("double_array_sum2", NHibernateUtil.BinaryBlob));
             }
         }
         #endregion

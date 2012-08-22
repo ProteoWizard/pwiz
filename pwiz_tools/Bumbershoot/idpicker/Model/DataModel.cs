@@ -31,6 +31,7 @@ using System.Data;
 using NHibernate;
 using NHibernate.Linq;
 using Iesi.Collections.Generic;
+using pwiz.CLI.chemistry;
 using msdata = pwiz.CLI.msdata;
 
 namespace IDPicker.DataModel
@@ -54,6 +55,15 @@ namespace IDPicker.DataModel
         public virtual Iesi.Collections.Generic.ISet<SpectrumSourceGroupLink> Groups { get; set; }
         public virtual string Name { get; set; }
         public virtual string URL { get; set; }
+
+        public virtual int TotalSpectraMS1 { get; private set; }
+        public virtual int TotalSpectraMS2 { get; private set; }
+
+        public virtual double TotalIonCurrentMS1 { get; private set; }
+        public virtual double TotalIonCurrentMS2 { get; private set; }
+
+        public virtual QuantitationMethod QuantitationMethod { get; private set; }
+
         public virtual IList<Spectrum> Spectra { get; set; }
 
         public virtual msdata.MSData Metadata { get; set; }
@@ -76,7 +86,7 @@ namespace IDPicker.DataModel
         public virtual SpectrumSource Source { get; set; }
     }
 
-    public class Spectrum : Entity<Spectrum>
+    public class Spectrum : QuantitativeEntity<Spectrum>
     {
         public virtual SpectrumSource Source { get; set; }
         public virtual int Index { get; set; }
@@ -143,7 +153,7 @@ namespace IDPicker.DataModel
         public virtual IList<PeptideSpectrumMatch> Matches { get; set; }
     }
 
-    public class Protein : Entity<Protein>
+    public class Protein : QuantitativeEntity<Protein>
     {
         public virtual string Accession { get; set; }
         public virtual string Description { get; set; }
@@ -175,7 +185,7 @@ namespace IDPicker.DataModel
         #endregion
     }
 
-    public class Peptide : Entity<Peptide>
+    public class Peptide : QuantitativeEntity<Peptide>
     {
         public virtual string Sequence { get { return sequence; } }
 
@@ -241,6 +251,18 @@ namespace IDPicker.DataModel
         public virtual IDictionary<string, double> Scores { get; set; }
 
         public virtual string DistinctMatchKey { get { return distinctMatchKey; } }
+
+        /// <summary>
+        /// Automatically choose monoisotopic or average mass error based on the following logic:
+        /// if the absolute value of monoisotopic error is less than absolute value of average error
+        /// or if the monoisotopic error is nearly a multiple of a neutron mass,
+        /// then return the monoisotopic error.
+        /// </summary>
+        public static double GetSmallerMassError(double monoisotopicError, double averageError)
+        {
+            bool monoisotopic = Math.Abs(monoisotopicError) < Math.Abs(averageError) || (Neutron.Mass % (Math.Abs(monoisotopicError) % Neutron.Mass)) < Math.Abs(averageError);
+            return monoisotopic ? monoisotopicError : averageError;
+        }
 
         /// <summary>
         /// Valid Q values are always between 0 and 1;
@@ -356,6 +378,13 @@ namespace IDPicker.DataModel
         }
     }
 
+    public class QuantitativeEntity<T> : Entity<T> where T : QuantitativeEntity<T>, new()
+    {
+        public virtual double[] iTRAQ_ReporterIonIntensities { get; set; }
+        public virtual double[] TMT_ReporterIonIntensities { get; set; }
+        public virtual double PrecursorIonIntensity { get; set; }
+    }
+
     #region Implementation for custom types
 
     public class AminoAcidSequence
@@ -446,6 +475,116 @@ namespace IDPicker.DataModel
                 temporaryFiles.Clear();
             }
         }
+    }
+
+    public interface IHasSizeConstant { int Size { get; } }
+
+    public class iTRAQArray : IHasSizeConstant { public int Size { get { return 8; } } }
+    public class TMTArray : IHasSizeConstant { public int Size { get { return 6; } } }
+
+    public class iTRAQArrayUserType : DoubleArrayUserType<iTRAQArray> {}
+    public class TMTArrayUserType : DoubleArrayUserType<TMTArray> {}
+
+    public class DoubleArrayUserType<Size> : NHibernate.UserTypes.IUserType where Size: IHasSizeConstant, new()
+    {
+        private readonly int _size = new Size().Size;
+        private readonly double[] _default = new double[new Size().Size];
+
+        #region IUserType Members
+
+        public object Assemble(object cached, object owner)
+        {
+            if (cached == null)
+                return _default;
+
+            if (cached == DBNull.Value)
+                return _default;
+
+            if (!(cached is byte[]))
+                throw new ArgumentException();
+
+            var arrayBytes = cached as byte[];
+            var arrayStream = new BinaryReader(new MemoryStream(arrayBytes));
+
+            var values = new double[_size];
+            for (int i = 0; i < _size; ++i)
+                values[i] = arrayStream.ReadDouble();
+
+            return values;
+        }
+
+        public object DeepCopy(object value)
+        {
+            if (value == null)
+                return null;
+            return (value as double[]).ToArray();
+        }
+
+        public object Disassemble(object value)
+        {
+            if (value == null)
+                return DBNull.Value;
+
+            if (value == DBNull.Value)
+                return DBNull.Value;
+
+            if (!(value is double[]))
+                throw new ArgumentException();
+
+            var values = value as double[];
+            var bytes = new List<byte>(sizeof(double) * _size);
+            for (int i = 0; i < _size; ++i)
+                bytes.AddRange(BitConverter.GetBytes(values[i]));
+            return bytes.ToArray();
+        }
+
+        public int GetHashCode(object x)
+        {
+            return x.GetHashCode();
+        }
+
+        public object NullSafeGet(IDataReader rs, string[] names, object owner)
+        {
+            return Assemble(rs.GetValue(rs.GetOrdinal(names[0])), owner);
+        }
+
+        public void NullSafeSet(IDbCommand cmd, object value, int index)
+        {
+            (cmd.Parameters[index] as IDataParameter).Value = Disassemble(value);
+        }
+
+        public object Replace(object original, object target, object owner)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Type ReturnedType
+        {
+            get { return typeof(double[]); }
+        }
+
+        public NHibernate.SqlTypes.SqlType[] SqlTypes
+        {
+            get { return new NHibernate.SqlTypes.SqlType[] { NHibernate.SqlTypes.SqlTypeFactory.GetBinaryBlob(1) }; }
+        }
+
+        public bool IsMutable
+        {
+            get { return true; }
+        }
+
+        bool NHibernate.UserTypes.IUserType.Equals(object x, object y)
+        {
+            if (x == null && y == null)
+                return true;
+            else if (x == null || y == null)
+                return false;
+            var a = x as double[];
+            var b = y as double[];
+            return a.SequenceEqual(b);
+        }
+
+        #endregion
     }
 
     public class SpectrumSourceMetadataUserType : NHibernate.UserTypes.IUserType

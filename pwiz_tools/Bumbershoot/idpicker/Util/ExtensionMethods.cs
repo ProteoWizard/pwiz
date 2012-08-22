@@ -28,6 +28,7 @@ using System.Data;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace IDPicker
@@ -314,4 +315,106 @@ namespace IDPicker
                 array[i] = defaultValue;
         }
     }
+
+    public static class ArrayCaster
+    {
+        [StructLayout(LayoutKind.Explicit)]
+        private struct Union
+        {
+            [FieldOffset(0)]
+            public byte[] bytes;
+            [FieldOffset(0)]
+            public double[] floats;
+        }
+        private static readonly int byteId;
+        private static readonly int floatId;
+
+        static ArrayCaster()
+        {
+            byteId = getByteId();
+            floatId = getFloatId();
+        }
+
+        public static unsafe void AsByteArray(double[] floats, Action<byte[]> action)
+        {
+            if (floats == null)
+            {
+                action(null);
+                return;
+            }
+            if (floats.Length == 0)
+            {
+                action(new byte[0]);
+                return;
+            }
+
+            var union = new Union { floats = floats };
+
+            fixArray(union.bytes, union.floats.Length * sizeof(double), byteId);
+            try
+            {
+                action(union.bytes);
+            }
+            finally
+            {
+                fixArray(union.bytes, union.bytes.Length / sizeof(double), floatId);
+            }
+        }
+
+        public static unsafe void AsFloatArray(byte[] bytes, Action<double[]> action)
+        {
+            if (bytes == null)
+            {
+                action(null);
+                return;
+            }
+            if (bytes.Length == 0)
+            {
+                action(new double[0]);
+                return;
+            }
+
+            var union = new Union { bytes = bytes };
+
+            fixArray(union.bytes, union.bytes.Length * sizeof(double), floatId);
+            try
+            {
+                action(union.floats);
+            }
+            finally
+            {
+                fixArray(union.bytes, union.bytes.Length / sizeof(double), byteId);
+            }
+        }
+
+        private static unsafe void fixArray(byte[] bytes, int newSize, int newId)
+        {
+            fixed (byte* pBytes = bytes)
+            {
+                var pSize = (int*)(pBytes - 4);
+                var pId = (int*)(pBytes - 8);
+
+                *pSize = newSize;
+                *pId = newId;
+            }
+        }
+
+        private static unsafe int getByteId()
+        {
+            fixed (byte* pBytes = new byte[1])
+            {
+                return *(int*)(pBytes - 8);
+            }
+        }
+
+        private static unsafe int getFloatId()
+        {
+            fixed (double* pFloats = new double[1])
+            {
+                var pBytes = (byte*)pFloats;
+                return *(int*)(pBytes - 8);
+            }
+        }
+    }
+
 }

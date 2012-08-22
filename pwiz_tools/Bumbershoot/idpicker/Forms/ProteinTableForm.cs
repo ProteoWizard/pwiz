@@ -136,6 +136,8 @@ namespace IDPicker.Forms
             public DataModel.Protein FirstProtein { get; set; }
             public int ProteinCount { get; private set; }
             public double? MeanProteinCoverage { get; private set; }
+            public double[] iTRAQ_ReporterIonIntensities { get; private set; }
+            public double[] TMT_ReporterIonIntensities { get; private set; }
 
             public static IList<ProteinGroupRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
             {
@@ -148,6 +150,8 @@ namespace IDPicker.Forms
                                                        ", pro" +
                                                        ", COUNT(DISTINCT pro.id)" +
                                                        ", AVG(pro.Coverage)" +
+                                                       ", pro.iTRAQ_ReporterIonIntensities" +
+                                                       ", pro.TMT_ReporterIonIntensities" +
                                                        ", pro.ProteinGroup" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                                                          DataFilter.ProteinToPeptideSpectrumMatch) +
@@ -171,7 +175,9 @@ namespace IDPicker.Forms
                 Proteins = (string) basicColumns[++column];
                 FirstProtein = (DataModel.Protein) basicColumns[++column];
                 ProteinCount = Convert.ToInt32(basicColumns[++column]);
-                MeanProteinCoverage = (double?) basicColumns[++column];
+                MeanProteinCoverage = (double?)basicColumns[++column];
+                iTRAQ_ReporterIonIntensities = (double[])basicColumns[++column];
+                TMT_ReporterIonIntensities = (double[])basicColumns[++column];
                 ProteinGroup = Convert.ToInt32(basicColumns[++column]);
             }
             #endregion
@@ -180,6 +186,8 @@ namespace IDPicker.Forms
         public class ProteinRow : AggregateRow
         {
             public DataModel.Protein Protein { get; private set; }
+            public double[] iTRAQ_ReporterIonIntensities { get; private set; }
+            public double[] TMT_ReporterIonIntensities { get; private set; }
 
             public static IList<ProteinRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
             {
@@ -187,7 +195,10 @@ namespace IDPicker.Forms
                 IDictionary<long, object[]> detailedColumnsByKey;
                 lock (session)
                 {
-                    basicColumns = session.CreateQuery(AggregateRow.Selection + ", pro" +
+                    basicColumns = session.CreateQuery(AggregateRow.Selection +
+                                                       ", pro.iTRAQ_ReporterIonIntensities" +
+                                                       ", pro.TMT_ReporterIonIntensities" +
+                                                       ", pro" +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                                                          DataFilter.ProteinToPeptideSpectrumMatch) +
                                                        "GROUP BY pro.Id").List<object[]>();
@@ -207,6 +218,8 @@ namespace IDPicker.Forms
                 : base(basicColumns, detailedColumns, dataFilter)
             {
                 int column = AggregateRow.ColumnCount - 1;
+                iTRAQ_ReporterIonIntensities = (double[]) basicColumns[++column];
+                TMT_ReporterIonIntensities = (double[]) basicColumns[++column];
                 Protein = (DataModel.Protein) basicColumns[++column];
             }
             #endregion
@@ -356,12 +369,44 @@ namespace IDPicker.Forms
         private Dictionary<long, SpectrumSource> sourceById;
         private Dictionary<long, SpectrumSourceGroup> groupById;
 
+        List<DataGridViewTextBoxColumn> iTRAQ_ReporterIonColumns, TMT_ReporterIonColumns;
+
         public ProteinTableForm ()
         {
             InitializeComponent();
 
             Text = TabText = "Protein View";
             Icon = Properties.Resources.ProteinViewIcon;
+
+            iTRAQ_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
+            TMT_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
+
+            /*foreach (int ion in new int[] { 113, 114, 115, 116, 117, 118, 119, 121 })
+            {
+                var column = new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "iTRAQ-" + ion.ToString(),
+                    Name = "iTRAQ-" + ion.ToString() + "Column",
+                    ReadOnly = true,
+                    Width = 100
+                };
+                iTRAQ_ReporterIonColumns.Add(column);
+            }
+
+            foreach (int ion in new int[] { 126, 127, 128, 129, 130, 131 })
+            {
+                var column = new DataGridViewTextBoxColumn
+                {
+                    HeaderText = "TMT-" + ion.ToString(),
+                    Name = "TMT-" + ion.ToString() + "Column",
+                    ReadOnly = true,
+                    Width = 100
+                };
+                TMT_ReporterIonColumns.Add(column);
+            }
+
+            treeDataGridView.Columns.AddRange(iTRAQ_ReporterIonColumns.ToArray());
+            treeDataGridView.Columns.AddRange(TMT_ReporterIonColumns.ToArray());*/
 
             SetDefaults();
 
@@ -582,6 +627,16 @@ namespace IDPicker.Forms
                 else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
                 else if (columnIndex == peptideSequencesColumn.Index) return row.PeptideSequences;
                 else if (columnIndex == peptideGroupsColumn.Index) return row.PeptideGroups;
+                else
+                {
+                    int iTRAQ_ReporterIonIndex = iTRAQ_ReporterIonColumns.FindIndex(o => o.Index == columnIndex);
+                    if (iTRAQ_ReporterIonIndex >= 0) return row.iTRAQ_ReporterIonIntensities[iTRAQ_ReporterIonIndex];
+                    else
+                    {
+                        int TMT_ReporterIonIndex = TMT_ReporterIonColumns.FindIndex(o => o.Index == columnIndex);
+                        if (TMT_ReporterIonIndex >= 0) return row.TMT_ReporterIonIntensities[TMT_ReporterIonIndex];
+                    }
+                }
             }
             else if (baseRow is ProteinRow)
             {
@@ -598,6 +653,16 @@ namespace IDPicker.Forms
                     else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
                     else if (columnIndex == peptideSequencesColumn.Index) return row.PeptideSequences;
                     else if (columnIndex == peptideGroupsColumn.Index) return row.PeptideGroups;
+                    else
+                    {
+                        int iTRAQ_ReporterIonIndex = iTRAQ_ReporterIonColumns.FindIndex(o => o.Index == columnIndex);
+                        if (iTRAQ_ReporterIonIndex >= 0) return row.iTRAQ_ReporterIonIntensities[iTRAQ_ReporterIonIndex];
+                        else
+                        {
+                            int TMT_ReporterIonIndex = TMT_ReporterIonColumns.FindIndex(o => o.Index == columnIndex);
+                            if (TMT_ReporterIonIndex >= 0) return row.TMT_ReporterIonIntensities[TMT_ReporterIonIndex];
+                        }
+                    }
                 }
             }
             return null;
@@ -822,6 +887,9 @@ namespace IDPicker.Forms
             Text = TabText = "Protein View";
 
             Controls.OfType<Control>().ForEach(o => o.Enabled = false);
+
+            // remember the first selected row
+            saveSelectionPath();
 
             treeDataGridView.RootRowCount = 0;
             Refresh();
@@ -1071,18 +1139,24 @@ namespace IDPicker.Forms
         {
             _columnSettings = new Dictionary<DataGridViewColumn, ColumnProperty>()
             {
-                { keyColumn, new ColumnProperty() {Type = typeof(string)}},
-                { clusterColumn, new ColumnProperty() {Type = typeof(int)}},
-                { countColumn, new ColumnProperty() {Type = typeof(int)}},
-                { coverageColumn, new ColumnProperty() {Type = typeof(float)}},
-                { proteinGroupColumn, new ColumnProperty() {Type = typeof(int)}},
-                { distinctPeptidesColumn, new ColumnProperty() {Type = typeof(int)}},
-                { distinctMatchesColumn, new ColumnProperty() {Type = typeof(int)}},
-                { filteredSpectraColumn, new ColumnProperty() {Type = typeof(int)}},
-                { descriptionColumn, new ColumnProperty() {Type = typeof(string)}},
-                { peptideGroupsColumn, new ColumnProperty() {Type = typeof(string), Visible = false}},
-                { peptideSequencesColumn, new ColumnProperty() {Type = typeof(string), Visible = false}},
+                { keyColumn, new ColumnProperty {Type = typeof(string)}},
+                { clusterColumn, new ColumnProperty {Type = typeof(int)}},
+                { countColumn, new ColumnProperty {Type = typeof(int)}},
+                { coverageColumn, new ColumnProperty {Type = typeof(float)}},
+                { proteinGroupColumn, new ColumnProperty {Type = typeof(int)}},
+                { distinctPeptidesColumn, new ColumnProperty {Type = typeof(int)}},
+                { distinctMatchesColumn, new ColumnProperty {Type = typeof(int)}},
+                { filteredSpectraColumn, new ColumnProperty {Type = typeof(int)}},
+                { descriptionColumn, new ColumnProperty {Type = typeof(string)}},
+                { peptideGroupsColumn, new ColumnProperty {Type = typeof(string), Visible = false}},
+                { peptideSequencesColumn, new ColumnProperty {Type = typeof(string), Visible = false}},
             };
+
+            /*foreach (var column in iTRAQ_ReporterIonColumns)
+                _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2 });
+
+            foreach (var column in TMT_ReporterIonColumns)
+                _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2 });*/
 
             foreach (var kvp in _columnSettings)
             {

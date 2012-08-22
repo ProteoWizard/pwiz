@@ -43,7 +43,7 @@ namespace IDPicker.DataModel
             public FilteringProgressEventArgs(string stage, int completed, Exception ex)
             {
                 CompletedFilters = completed;
-                TotalFilters = 17;
+                TotalFilters = 18;
                 FilteringStage = stage;
                 FilteringException = ex;
             }
@@ -482,13 +482,14 @@ namespace IDPicker.DataModel
                   JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
                   JOIN Protein pro ON pi.Protein = pro.Id
                   JOIN SpectrumSource ss ON s.Source = ss.Id
-                  WHERE psm.Rank = 1
+                  WHERE psm.Rank = 1 AND {2} >= psm.QValue
                   GROUP BY pi.Protein
                   HAVING {0} <= COUNT(DISTINCT psm.Peptide) AND
                          {1} <= COUNT(DISTINCT psm.Spectrum);";
             session.CreateSQLQuery(String.Format(filterProteinsSql,
                                                  MinimumDistinctPeptidesPerProtein,
-                                                 MinimumSpectraPerProtein)).ExecuteUpdate();
+                                                 MinimumSpectraPerProtein,
+                                                 MaximumQValue)).ExecuteUpdate();
             session.CreateSQLQuery("CREATE UNIQUE INDEX FilteredProtein_Accession ON FilteredProtein (Accession);").ExecuteUpdate();
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide spectrum matches...", ++stepsCompleted, null)))
@@ -589,7 +590,8 @@ namespace IDPicker.DataModel
                 filterProteinsSql = filterProteinsSql.Replace("Filtered", "").Replace("JOIN Protein", "JOIN TempProtein");
                 session.CreateSQLQuery(String.Format(filterProteinsSql,
                                                      MinimumDistinctPeptidesPerProtein,
-                                                     MinimumSpectraPerProtein)).ExecuteUpdate();
+                                                     MinimumSpectraPerProtein,
+                                                     MaximumQValue)).ExecuteUpdate();
                 session.CreateSQLQuery(@"CREATE UNIQUE INDEX FilteredProtein_Accession ON Protein (Accession);
                                          DROP TABLE TempProtein").ExecuteUpdate();
 
@@ -610,6 +612,8 @@ namespace IDPicker.DataModel
 
             if (useScopedTransaction)
                 session.Transaction.Commit();
+
+            if (AggregateQuantitationData(session, ref stepsCompleted)) return;
         }
 
         #region Implementation of basic filters
@@ -876,6 +880,53 @@ namespace IDPicker.DataModel
             session.CreateSQLQuery(sql).ExecuteUpdate();
             return false;
         }
+
+        public void RecalculateAggregateQuantitationData(NHibernate.ISession session)
+        {
+            bool useScopedTransaction = !session.Transaction.IsActive;
+            if (useScopedTransaction)
+                session.Transaction.Begin();
+
+            int stepsCompleted = new FilteringProgressEventArgs("", 0, null).TotalFilters - 1;
+            AggregateQuantitationData(session, ref stepsCompleted);
+
+            if (useScopedTransaction)
+                session.Transaction.Commit();
+        }
+
+        bool AggregateQuantitationData(NHibernate.ISession session, ref int stepsCompleted)
+        {
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Aggregating quantitation data...", ++stepsCompleted, null)))
+                return true;
+
+            session.CreateSQLQuery(@"DELETE FROM PeptideQuantitation;
+                                     INSERT INTO PeptideQuantitation (Id, iTRAQ_ReporterIonIntensities, TMT_ReporterIonIntensities, PrecursorIonIntensity)
+                                        SELECT psm.Peptide, DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
+                                        FROM PeptideSpectrumMatch psm
+                                        JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id
+                                        GROUP BY psm.Peptide;
+                                    ").ExecuteUpdate();
+
+            session.CreateSQLQuery(@"DELETE FROM DistinctMatchQuantitation;
+                                     INSERT INTO DistinctMatchQuantitation (Id, iTRAQ_ReporterIonIntensities, TMT_ReporterIonIntensities, PrecursorIonIntensity)
+                                        SELECT dm.DistinctMatchKey, DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
+                                        FROM PeptideSpectrumMatch psm
+                                        JOIN DistinctMatch dm ON psm.Id=dm.PsmId
+                                        JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id
+                                        GROUP BY dm.DistinctMatchKey;
+                                    ").ExecuteUpdate();
+
+            session.CreateSQLQuery(@"DELETE FROM ProteinQuantitation;
+                                     INSERT INTO ProteinQuantitation (Id, iTRAQ_ReporterIonIntensities, TMT_ReporterIonIntensities, PrecursorIonIntensity)
+                                        SELECT pi.Protein, DOUBLE_ARRAY_SUM(iTRAQ_ReporterIonIntensities), DOUBLE_ARRAY_SUM(TMT_ReporterIonIntensities), SUM(PrecursorIonIntensity)
+                                        FROM PeptideSpectrumMatch psm
+                                        JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide
+                                        JOIN SpectrumQuantitation sq ON psm.Spectrum=sq.Id
+                                        GROUP BY pi.Protein;
+                                    ").ExecuteUpdate();
+            return false;
+        }
+
         #endregion
 
         #region Definitions for common HQL strings
