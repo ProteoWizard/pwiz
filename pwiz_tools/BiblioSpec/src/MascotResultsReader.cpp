@@ -172,25 +172,30 @@ bool MascotResultsReader::parseFile(){
         // add all PSMs that are rank 1, remove duplicates later
         while( hasPeptide && ionScore == pep->getIonsScore() ){ 
 
-            PSM* cur_psm = new PSM();
-            cur_psm->charge = pep->getCharge();
-            cur_psm->unmodSeq = pep->getPeptideStr();
-            cur_psm->specKey = specId;
-            cur_psm->score = expectationValue;
+            int charge = pep->getCharge();
+            if (0 >= charge || charge > 50) {
+                Verbosity::warn("Unexpected charge state %d.  Skipping match with %s", charge, pep->getPeptideStr().c_str());
+            } else {
+                PSM* cur_psm = new PSM();
+                cur_psm->charge = charge;
+                cur_psm->unmodSeq = pep->getPeptideStr();
+                cur_psm->specKey = specId;
+                cur_psm->score = expectationValue;
 
-           // get any labeling
-            string quant = pep->getComponentStr();
-            applyIsotopeDiffs(cur_psm, quant);
+                // get any labeling
+                string quant = pep->getComponentStr();
+                applyIsotopeDiffs(cur_psm, quant);
 
-            // get any modifications
-            string readVarMods =  ms_results_->getReadableVarMods(specId, rank);
-            parseMods(cur_psm, pep->getVarModsStr(), readVarMods);
-            mapAccess->second.push_back(cur_psm);
+                // get any modifications
+                string readVarMods =  ms_results_->getReadableVarMods(specId, rank);
+                parseMods(cur_psm, pep->getVarModsStr(), readVarMods);
+                mapAccess->second.push_back(cur_psm);
 
-            Verbosity::comment(V_ALL, "Adding spec %d, charge %d, score %f, "
-                               "seq %s from file '%s'.", cur_psm->specKey, 
-                               cur_psm->charge, cur_psm->score, 
-                               cur_psm->unmodSeq.c_str(), file.c_str());
+                Verbosity::comment(V_ALL, "Adding spec %d, charge %d, score %f, "
+                                   "seq %s from file '%s'.", cur_psm->specKey, 
+                                   cur_psm->charge, cur_psm->score, 
+                                   cur_psm->unmodSeq.c_str(), file.c_str());
+            }
 
             hasPeptide = ms_results_->getPeptide(specId, ++rank, pep);
         
