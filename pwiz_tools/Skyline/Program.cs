@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Pipes;
@@ -176,11 +177,40 @@ namespace pwiz.Skyline
             }
         }
 
-        public static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
+        /// <summary>
+        /// Asynchronously brings up the <see cref="ReportErrorDlg"/> dialog.
+        /// Unhandled exceptions on the UI thread are handled by the
+        /// <see cref="Application.ThreadException"/> event, but code on
+        /// other threads should catch and report exceptions here.
+        /// </summary>
+        public static void ReportException(Exception exception)
+        {
+            Trace.TraceError("Unhandled exception: {0}", exception);
+            var mainWindow = MainWindow;
+            try
+            {
+                if (mainWindow != null && !mainWindow.IsDisposed)
+                {
+                    mainWindow.BeginInvoke(new Action<Exception>(ReportExceptionUI), exception);
+                }
+            }
+            catch (Exception exception2)
+            {
+                Trace.TraceError("Exception in ReportException: {0}", exception2);
+            }
+        }
+
+        private static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
+        {
+            Trace.TraceError("Unhandled exception on UI thread: {0}", e.Exception);
+            ReportExceptionUI(e.Exception);
+        }
+
+        private static void ReportExceptionUI(Exception exception)
         {
             List<string> stackTraceList = Settings.Default.StackTraceList;
 
-            using (var reportForm = new ReportErrorDlg(e.Exception, stackTraceList))
+            using (var reportForm = new ReportErrorDlg(exception, stackTraceList))
             {
                 reportForm.ShowDialog(MainWindow);
             }         

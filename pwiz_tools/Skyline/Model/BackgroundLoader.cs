@@ -95,22 +95,29 @@ namespace pwiz.Skyline.Model
 
         private void OnLoadBackground(IDocumentContainer container, SrmDocument document)
         {
-            // Made on a new thread.
-            Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
-            SrmDocument docCurrent = container.Document;
-            // If the document identity has changed, or the current document is loaded,
-            // then end the processing.
-            if (!document.EqualsId(docCurrent) || IsLoaded(docCurrent))
+            try
             {
-                EndProcessing(document);
-                return;
+                // Made on a new thread.
+                Thread.CurrentThread.CurrentUICulture = CultureInfo.CurrentCulture;
+                SrmDocument docCurrent = container.Document;
+                // If the document identity has changed, or the current document is loaded,
+                // then end the processing.
+                if (!document.EqualsId(docCurrent) || IsLoaded(docCurrent))
+                {
+                    EndProcessing(document);
+                    return;
+                }
+
+                LoadBackground(container, document, docCurrent);
+
+                // Force a document changed notification, since loading blocks them
+                // from triggering new processing, but new processing may have accumulated
+                OnDocumentChanged(container, new DocumentChangedEventArgs(docCurrent));
             }
-
-            LoadBackground(container, document, docCurrent);
-
-            // Force a document changed notification, since loading blocks them
-            // from triggering new processing, but new processing may have accumulated
-            OnDocumentChanged(container, new DocumentChangedEventArgs(docCurrent));
+            catch (Exception exception)
+            {
+                Program.ReportException(exception);
+            }
         }
 
         /// <summary>

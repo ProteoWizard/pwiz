@@ -674,13 +674,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
             int mid = (left + right) / 2;
 
+            HashSet<int> outIndexesNew = outIndexes;
+            RetentionTimeStatistics statisticsNew = statisticsResult;
             // Rerun the regression
             var regressionNew = RecalcRegression(mid, standardPeptides, variablePeptides, statistics, calculator, scoreCache,
-                ref statisticsResult, ref outIndexes);
-
+                ref statisticsNew, ref outIndexesNew);
             // If no regression could be calculated, give up to avoid infinite recursion.
             if (regressionNew == null)
                 return this;
+
+            statisticsResult = statisticsNew;
+            outIndexes = outIndexesNew;
 
             if (IsAboveThreshold(statisticsResult.R, threshold, precision))
             {
