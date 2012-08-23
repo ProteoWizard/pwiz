@@ -182,6 +182,7 @@ for configac in open("%s/pwiz/configure.scan"%ac.get_pwizroot()) :
 	# we don't use config.h
 	configac=configac.replace("AC_CONFIG_HEADERS","#AC_CONFIG_HEADERS")
 	if ("AC_OUTPUT" in configac) : # last line, add anything else now!
+		f.write("BOOST_STATIC()\n")
 		f.write("BOOST_REQUIRE([%s])\n"%min_boost_ver)
 		for lib in boostlibs :
 			f.write("BOOST_%s\n"%lib)
