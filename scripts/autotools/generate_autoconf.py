@@ -127,7 +127,7 @@ def addFile(file) :
 for line in open(logfile):
 	if dbugLog :
 		print line
-	if ("g++" in line or "gcc" in line) and "-c" in line and '.o" "' in line:
+	if ("g++" in line or "gcc" in line) and " -c " in line and '.o" "' in line:
 		line = line.replace("\\","/") # in case its mingw gcc
 		file = (line.rpartition(".o\" \"")[2]).rpartition("\"")[0]
 		if ac.isSrcFile(file) or ac.isExampleFile(file):
