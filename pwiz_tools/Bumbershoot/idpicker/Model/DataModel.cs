@@ -32,6 +32,7 @@ using NHibernate;
 using NHibernate.Linq;
 using Iesi.Collections.Generic;
 using pwiz.CLI.chemistry;
+using pwiz.CLI.msdata;
 using msdata = pwiz.CLI.msdata;
 
 namespace IDPicker.DataModel
@@ -637,7 +638,11 @@ namespace IDPicker.DataModel
 
             var msd = value as msdata.MSData;
             msdata.MSDataFile.write(msd, tempFilepath,
-                                    new msdata.MSDataFile.WriteConfig() { gzipped = true });
+                                    new msdata.MSDataFile.WriteConfig
+                                    {
+                                        format = MSDataFile.Format.Format_MZ5,
+                                        compression = MSDataFile.Compression.Compression_Zlib
+                                    });
             byte[] msdataBytes = File.ReadAllBytes(tempFilepath);
             File.Delete(tempFilepath);
             return msdataBytes;

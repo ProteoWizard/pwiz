@@ -381,7 +381,7 @@ namespace IDPicker.Forms
             iTRAQ_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
             TMT_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
 
-            /*foreach (int ion in new int[] { 113, 114, 115, 116, 117, 118, 119, 121 })
+            foreach (int ion in new int[] { 113, 114, 115, 116, 117, 118, 119, 121 })
             {
                 var column = new DataGridViewTextBoxColumn
                 {
@@ -406,7 +406,7 @@ namespace IDPicker.Forms
             }
 
             treeDataGridView.Columns.AddRange(iTRAQ_ReporterIonColumns.ToArray());
-            treeDataGridView.Columns.AddRange(TMT_ReporterIonColumns.ToArray());*/
+            treeDataGridView.Columns.AddRange(TMT_ReporterIonColumns.ToArray());
 
             SetDefaults();
 
@@ -863,6 +863,8 @@ namespace IDPicker.Forms
             checkedPivots = pivotSetupControl.CheckedPivots;
             checkedGroupings = groupingSetupControl.CheckedGroupings;
 
+            setColumnVisibility();
+
             if (!_columnSettings[clusterColumn].Visible.HasValue || _columnSettings[clusterColumn].Visible.Value)
                 clusterColumn.Visible = groupingSetupControl.CheckedGroupings.Count(o => o.Mode == GroupBy.Cluster) == 0;
 
@@ -1152,11 +1154,11 @@ namespace IDPicker.Forms
                 { peptideSequencesColumn, new ColumnProperty {Type = typeof(string), Visible = false}},
             };
 
-            /*foreach (var column in iTRAQ_ReporterIonColumns)
+            foreach (var column in iTRAQ_ReporterIonColumns)
                 _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2 });
 
             foreach (var column in TMT_ReporterIonColumns)
-                _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2 });*/
+                _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2 });
 
             foreach (var kvp in _columnSettings)
             {
@@ -1210,6 +1212,27 @@ namespace IDPicker.Forms
             // the protein group column is kept since the keyColumn does not show it if the column is visible
             //else if (checkedGroupings.First().Mode == GroupBy.ProteinGroup)
             //    columnsIrrelevantForGrouping.Add(proteinGroupColumn);
+
+            if (session != null && session.IsOpen)
+                lock (session)
+                {
+                    var quantitationMethods = new Set<QuantitationMethod>(session.Query<SpectrumSource>().Select(o => o.QuantitationMethod).Distinct());
+                    if (!quantitationMethods.Contains(QuantitationMethod.ITRAQ4plex) &&
+                        !quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
+                        // hide all iTRAQ columns
+                        iTRAQ_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                    else if (!quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
+                        // hide iTRAQ8plex-only columns
+                        iTRAQ_ReporterIonColumns.Except(iTRAQ_ReporterIonColumns.GetRange(1, 4)).ForEach(o => columnsIrrelevantForGrouping.Add(o));
+
+                    if (!quantitationMethods.Contains(QuantitationMethod.TMT2plex) &&
+                        !quantitationMethods.Contains(QuantitationMethod.TMT6plex))
+                        // hide all TMT columns
+                        TMT_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                    else if (!quantitationMethods.Contains(QuantitationMethod.TMT6plex))
+                        // hide TMT6plex-only columns
+                        TMT_ReporterIonColumns.GetRange(2, 4).ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                }
 
             // if visibility is not forced, use grouping mode to set automatic visibility
             foreach (var kvp in _columnSettings)

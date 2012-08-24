@@ -126,8 +126,8 @@ void test()
 
         msd.instrumentConfigurationPtrs.push_back(instrumentConfigurationPtr);
 
-        vector<double> mzArray; mzArray += 100, 200, 300, 400, 500, 600, 700;
-        vector<double> intensityArray; intensityArray += 10, 20, 20, 40, 1, 5, 3;
+        vector<double> mzArray; mzArray += 100, 113.1, 114.1, 115.15, 115.18, 116.05, 200, 300, 400, 500, 600, 700;
+        vector<double> intensityArray; intensityArray += 10, 3.12, 4.2, 2.4, 42.0, 24.42, 20, 20, 40, 1, 5, 3;
 
         SpectrumListSimple* sl = new SpectrumListSimple;
         msd.run.spectrumListPtr.reset(sl);
@@ -136,8 +136,8 @@ void test()
             sl->spectra.push_back(SpectrumPtr(new Spectrum));
             sl->spectra.back()->id = "controllerType=0 controllerNumber=1 scan=" + lexical_cast<string>(i+1);
             sl->spectra.back()->index = i;
-            sl->spectra.back()->set(MS_MSn_spectrum);
-            sl->spectra.back()->set(MS_ms_level, 2);
+            sl->spectra.back()->set((i%10 == 0) ? MS_MS1_spectrum : MS_MSn_spectrum);
+            sl->spectra.back()->set(MS_ms_level, (i%10 == 0) ? 1 : 2);
             sl->spectra.back()->set(MS_centroid_spectrum);
             sl->spectra.back()->setMZIntensityArrays(mzArray, intensityArray, MS_number_of_counts);
             sl->spectra.back()->scanList.scans.push_back(Scan());
@@ -163,13 +163,17 @@ void test()
     bfs::remove("testEmbedder.fasta.index");
 
     // run embed on intermediate mzML
-    Embedder::embed("testEmbedder.idpDB", ".;..;testEmbedder.dir");
+    map<int, QuantitationMethod> quantitationMethodBySource;
+    quantitationMethodBySource[1] = QuantitationMethod::ITRAQ4plex;
+    Embedder::embed("testEmbedder.idpDB", "testEmbedder.dir", quantitationMethodBySource);
 
     // remove test files
     bfs::remove("testEmbedder.dir/testEmbedder.mzML");
     bfs::remove("testEmbedder.dir");
 
     // extract embedded mz5
+    if (bfs::exists("testEmbedder.mz5"))
+        bfs::remove("testEmbedder.mz5");
     Embedder::extract("testEmbedder.idpDB", "testEmbedder", "testEmbedder.mz5");
 
     // test extracted mz5

@@ -94,6 +94,20 @@ namespace Test
             StringAssert.StartsWith(Util.GetCommonFilename(input), "D:/idpicker-analysis-");
         }
 
+        void downgrade_4_to_3(NHibernate.ISession session)
+        {
+            // move MsDataBytes to SpectrumSource table and return to bugged INT key for DistinctMatchQuantitation
+            session.CreateSQLQuery(@"CREATE TABLE TempSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);
+                                     INSERT INTO TempSpectrumSource SELECT ss.Id, Name, URL, Group_, MsDataBytes, TotalSpectraMS1, TotalIonCurrentMS1, TotalSpectraMS2, TotalIonCurrentMS2, QuantitationMethod FROM SpectrumSource ss JOIN SpectrumSourceMetadata ssmd ON ss.Id=ssmd.Id;
+                                     DROP TABLE SpectrumSource;
+                                     ALTER TABLE TempSpectrumSource RENAME TO SpectrumSource;
+                                     DROP TABLE SpectrumSourceMetadata;
+                                     DROP TABLE DistinctMatchQuantitation;
+                                     CREATE TABLE DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);
+                                     UPDATE About SET SchemaRevision = 3;
+                                    ").ExecuteUpdate();
+        }
+
         void downgrade_3_to_2(NHibernate.ISession session)
         {
             // delete quantitation tables and quantitative columns from SpectrumSource
@@ -152,16 +166,25 @@ namespace Test
         [TestMethod]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(3, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(4, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel();
             TestModel.ClassInitialize(null);
             testModelFile(testModel, "testModel.idpDB");
 
+            File.Copy("testModel.idpDB", "testModel-v3.idpDB");
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v3.idpDB"))
+            using (var session = testModel.session = sessionFactory.OpenSession())
+            {
+                downgrade_4_to_3(session);
+            }
+            testModelFile(testModel, "testModel-v3.idpDB");
+
             File.Copy("testModel.idpDB", "testModel-v2.idpDB");
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v2.idpDB"))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
+                downgrade_4_to_3(session);
                 downgrade_3_to_2(session);
             }
             testModelFile(testModel, "testModel-v2.idpDB");
@@ -170,6 +193,7 @@ namespace Test
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v1.idpDB"))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
+                downgrade_4_to_3(session);
                 downgrade_3_to_2(session);
                 downgrade_2_to_1(session);
             }
@@ -179,6 +203,7 @@ namespace Test
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v0.idpDB"))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
+                downgrade_4_to_3(session);
                 downgrade_3_to_2(session);
                 downgrade_2_to_1(session);
                 downgrade_1_to_0(session);

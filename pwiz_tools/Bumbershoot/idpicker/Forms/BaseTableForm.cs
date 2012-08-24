@@ -474,7 +474,7 @@ namespace IDPicker.Forms
             //Set unspecified columns (most likely pivotColumns) to blend in better
             foreach (var column in untouchedColumns)
             {
-                _columnSettings[column].Visible = true;
+                _columnSettings[column].Visible = null;
                 _columnSettings[column].BackColor = formProperty.BackColor;
                 _columnSettings[column].ForeColor = formProperty.ForeColor;
             }

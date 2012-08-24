@@ -387,7 +387,8 @@ struct ParserImpl
                       "CREATE TABLE About (Id INTEGER PRIMARY KEY, SoftwareName TEXT, SoftwareVersion TEXT, StartTime DATETIME, SchemaRevision INT);"
                       "INSERT INTO About VALUES (1, 'IDPicker', '3.0', datetime('now'), " + lexical_cast<string>(CURRENT_SCHEMA_REVISION) + ");");
 
-        idpDb.execute("CREATE TABLE IF NOT EXISTS SpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);"
+        idpDb.execute("CREATE TABLE IF NOT EXISTS SpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);"
+                      "CREATE TABLE IF NOT EXISTS SpectrumSourceMetadata (Id INTEGER PRIMARY KEY, MsDataBytes BLOB);"
                       "CREATE TABLE IF NOT EXISTS SpectrumSourceGroup (Id INTEGER PRIMARY KEY, Name TEXT);"
                       "CREATE TABLE IF NOT EXISTS SpectrumSourceGroupLink (Id INTEGER PRIMARY KEY, Source INT, Group_ INT);"
                       "CREATE TABLE IF NOT EXISTS Spectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC, ScanTimeInSeconds NUMERIC);"
@@ -407,7 +408,7 @@ struct ParserImpl
                       "CREATE TABLE IF NOT EXISTS LayoutProperty (Id INTEGER PRIMARY KEY, Name TEXT, PaneLocations TEXT, HasCustomColumnSettings INT, FormProperties TEXT);"
                       "CREATE TABLE IF NOT EXISTS ProteinCoverage (Id INTEGER PRIMARY KEY, Coverage NUMERIC, CoverageMask BLOB);"
                       "CREATE TABLE IF NOT EXISTS SpectrumQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
-                      "CREATE TABLE IF NOT EXISTS DistinctMatchQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
+                      "CREATE TABLE IF NOT EXISTS DistinctMatchQuantitation (Id TEXT PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                       "CREATE TABLE IF NOT EXISTS PeptideQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                       "CREATE TABLE IF NOT EXISTS ProteinQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
 
@@ -451,7 +452,8 @@ struct ParserImpl
         sqlite::command(idpDb, "INSERT INTO SpectrumSourceGroupLink (Id, Source, Group_) VALUES (1,1,1)").execute();
 
         // create commands for inserting file-level metadata (SpectrumSource, Analysis, AnalysisParameter)
-        sqlite::command insertSpectrumSource(idpDb, "INSERT INTO SpectrumSource (Id, Name, URL, Group_, MsDataBytes, TotalSpectraMS1, TotalIonCurrentMS1, TotalSpectraMS2, TotalIonCurrentMS2, QuantitationMethod) VALUES (?,?,?,1,null,0,0,0,0,0)");
+        sqlite::command insertSpectrumSource(idpDb, "INSERT INTO SpectrumSource (Id, Name, URL, Group_, TotalSpectraMS1, TotalIonCurrentMS1, TotalSpectraMS2, TotalIonCurrentMS2, QuantitationMethod) VALUES (?,?,?,1,0,0,0,0,0)");
+        sqlite::command insertSpectrumSourceMetadata(idpDb, "INSERT INTO SpectrumSourceMetadata (Id) VALUES (1)");
         sqlite::command insertAnalysis(idpDb, "INSERT INTO Analysis (Id, Name, SoftwareName, SoftwareVersion, Type, StartTime) VALUES (?,?,?,?,?,?)");
         sqlite::command insertAnalysisParameter(idpDb, "INSERT INTO AnalysisParameter (Id, Analysis, Name, Value) VALUES (?,?,?,?)");
 
@@ -470,6 +472,7 @@ struct ParserImpl
                                       << spectraDataName
                                       << mzid.dataCollection.inputs.spectraData[0]->location;
         insertSpectrumSource.execute();
+        insertSpectrumSourceMetadata.execute();
 
         insertAnalysis.binder() << 1
                                 << analysis.importSettings.analysisName

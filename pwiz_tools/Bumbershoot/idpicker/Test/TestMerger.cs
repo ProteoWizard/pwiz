@@ -220,8 +220,8 @@ namespace Test
                 testModel.TestPeptides();
                 testModel.TestPeptideInstances();
                 testModel.TestSpectrumSourceGroups();
-                testModel.TestSpectrumSources();
-                testModel.TestSpectra();
+                testModel.TestSpectrumSources(false);
+                testModel.TestSpectra(false);
                 testModel.TestAnalyses();
                 testModel.TestPeptideSpectrumMatches();
                 testModel.TestModifications();
@@ -256,8 +256,8 @@ namespace Test
                 testModel.TestPeptides();
                 testModel.TestPeptideInstances();
                 testModel.TestSpectrumSourceGroups();
-                testModel.TestSpectrumSources();
-                testModel.TestSpectra();
+                testModel.TestSpectrumSources(false);
+                testModel.TestSpectra(false);
                 testModel.TestAnalyses();
                 testModel.TestPeptideSpectrumMatches();
                 testModel.TestModifications();

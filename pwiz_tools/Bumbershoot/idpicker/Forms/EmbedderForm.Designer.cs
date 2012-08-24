@@ -53,6 +53,10 @@ namespace IDPicker.Forms
         private void InitializeComponent ()
         {
             this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.idColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.sourceNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.quantitationMethodColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.okButton = new System.Windows.Forms.Button();
             this.embedAllButton = new System.Windows.Forms.Button();
             this.deleteAllButton = new System.Windows.Forms.Button();
@@ -63,10 +67,6 @@ namespace IDPicker.Forms
             this.label2 = new System.Windows.Forms.Label();
             this.extensionsTextBox = new System.Windows.Forms.TextBox();
             this.scanTimeOnlyCheckBox = new System.Windows.Forms.CheckBox();
-            this.idColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.sourceNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.embeddedSourceColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.quantitationMethodColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
@@ -74,6 +74,7 @@ namespace IDPicker.Forms
             // 
             this.dataGridView.AllowUserToAddRows = false;
             this.dataGridView.AllowUserToDeleteRows = false;
+            this.dataGridView.AllowUserToResizeRows = false;
             this.dataGridView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
@@ -88,6 +89,46 @@ namespace IDPicker.Forms
             this.dataGridView.RowHeadersVisible = false;
             this.dataGridView.Size = new System.Drawing.Size(784, 502);
             this.dataGridView.TabIndex = 1;
+            this.dataGridView.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellValueChanged);
+            // 
+            // idColumn
+            // 
+            this.idColumn.HeaderText = "Id";
+            this.idColumn.Name = "idColumn";
+            this.idColumn.ReadOnly = true;
+            this.idColumn.Visible = false;
+            // 
+            // sourceNameColumn
+            // 
+            this.sourceNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.sourceNameColumn.HeaderText = "Source";
+            this.sourceNameColumn.Name = "sourceNameColumn";
+            this.sourceNameColumn.ReadOnly = true;
+            // 
+            // embeddedSourceColumn
+            // 
+            this.embeddedSourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.embeddedSourceColumn.HeaderText = "Embedded Status";
+            this.embeddedSourceColumn.Name = "embeddedSourceColumn";
+            this.embeddedSourceColumn.ReadOnly = true;
+            this.embeddedSourceColumn.Width = 250;
+            // 
+            // quantitationMethodColumn
+            // 
+            this.quantitationMethodColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.quantitationMethodColumn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.quantitationMethodColumn.HeaderText = "Quantitation Method";
+            this.quantitationMethodColumn.Items.AddRange(new object[] {
+            "None",
+            "Label free",
+            "iTRAQ 4-plex",
+            "iTRAQ 8-plex",
+            "TMT duplex",
+            "TMT 6-plex"});
+            this.quantitationMethodColumn.Name = "quantitationMethodColumn";
+            this.quantitationMethodColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.quantitationMethodColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.quantitationMethodColumn.Width = 130;
             // 
             // okButton
             // 
@@ -183,45 +224,6 @@ namespace IDPicker.Forms
             this.scanTimeOnlyCheckBox.TabIndex = 9;
             this.scanTimeOnlyCheckBox.Text = "Only Embed Scan Times";
             this.scanTimeOnlyCheckBox.UseVisualStyleBackColor = true;
-            // 
-            // idColumn
-            // 
-            this.idColumn.HeaderText = "Id";
-            this.idColumn.Name = "idColumn";
-            this.idColumn.ReadOnly = true;
-            this.idColumn.Visible = false;
-            // 
-            // sourceNameColumn
-            // 
-            this.sourceNameColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.sourceNameColumn.HeaderText = "Source";
-            this.sourceNameColumn.Name = "sourceNameColumn";
-            this.sourceNameColumn.ReadOnly = true;
-            // 
-            // embeddedSourceColumn
-            // 
-            this.embeddedSourceColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.embeddedSourceColumn.HeaderText = "Embedded Status";
-            this.embeddedSourceColumn.Name = "embeddedSourceColumn";
-            this.embeddedSourceColumn.ReadOnly = true;
-            this.embeddedSourceColumn.Width = 250;
-            // 
-            // quantitationMethodColumn
-            // 
-            this.quantitationMethodColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.quantitationMethodColumn.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.quantitationMethodColumn.HeaderText = "Quantitation Method";
-            this.quantitationMethodColumn.Items.AddRange(new object[] {
-            "None",
-            "Label free",
-            "iTRAQ 4-plex",
-            "iTRAQ 8-plex",
-            "TMT duplex",
-            "TMT 6-plex"});
-            this.quantitationMethodColumn.Name = "quantitationMethodColumn";
-            this.quantitationMethodColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.quantitationMethodColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            this.quantitationMethodColumn.Width = 130;
             // 
             // EmbedderForm
             // 

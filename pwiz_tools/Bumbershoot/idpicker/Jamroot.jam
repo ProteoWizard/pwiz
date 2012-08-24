@@ -122,7 +122,7 @@ project bumbershoot
       <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
-      <toolset>msvc:<linkflags>/OPT:REF,ICF
+      <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
 
       # warning: _SECURE_SCL_THROWS is deprecated
       <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS

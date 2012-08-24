@@ -70,7 +70,7 @@ namespace IDPicker.Forms
             dataGridView.SuspendLayout();
             dataGridView.Rows.Clear();
 
-            var rows = session.CreateSQLQuery("SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MSDataBytes) FROM SpectrumSource WHERE Id=ss.Id), 0), MAX(s.ScanTimeInSeconds), QuantitationMethod " +
+            var rows = session.CreateSQLQuery("SELECT ss.Id, Name, COUNT(s.Id), IFNULL((SELECT LENGTH(MsDataBytes) FROM SpectrumSourceMetadata WHERE Id=ss.Id), 0), MAX(s.ScanTimeInSeconds), QuantitationMethod " +
                                               "FROM SpectrumSource ss " +
                                               "JOIN UnfilteredSpectrum s ON ss.Id=Source " +
                                               "GROUP BY ss.Id")
@@ -92,6 +92,12 @@ namespace IDPicker.Forms
                 {
                     status = String.Format("{0} spectra embedded ({1} bytes)", row.Spectra, row.EmbeddedSize);
                     hasEmbeddedSources = true;
+                }
+                else if (row.QuantitationMethodIndex != 0)
+                {
+                    status = String.Format("{0} spectra with quantitation", row.Spectra);
+                    hasEmbeddedSources = true;
+                    hasNonEmbeddedSources = true;
                 }
                 else if (row.MaxScanTime > 0)
                 {
@@ -212,7 +218,8 @@ namespace IDPicker.Forms
 
         private void deleteAllButton_Click (object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to delete all embedded spectra?", "Confirm",
+            if (MessageBox.Show("Are you sure you want to delete\r\n" +
+                                "all embedded spectra and quantitation data?", "Confirm",
                                 MessageBoxButtons.YesNo,
                                 MessageBoxIcon.Exclamation,
                                 MessageBoxDefaultButton.Button2) == DialogResult.No)
@@ -231,7 +238,14 @@ namespace IDPicker.Forms
                 try
                 {
                     var tls = session.SessionFactory.OpenStatelessSession();
-                    tls.CreateSQLQuery("UPDATE SpectrumSource SET MSDataBytes = NULL; VACUUM").ExecuteUpdate();
+                    tls.CreateSQLQuery(@"UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL;
+                                         UPDATE SpectrumSource SET QuantitationMethod = 0;
+                                         DELETE FROM PeptideQuantitation;
+                                         DELETE FROM DistinctMatchQuantitation;
+                                         DELETE FROM ProteinQuantitation;
+                                         DELETE FROM SpectrumQuantitation;
+                                         VACUUM
+                                        ").ExecuteUpdate();
                 }
                 catch (Exception ex)
                 {
@@ -245,6 +259,12 @@ namespace IDPicker.Forms
         {
             DialogResult = embeddedChanges ? DialogResult.OK : DialogResult.Cancel;
             Close();
+        }
+
+        private void dataGridView_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.ColumnIndex == quantitationMethodColumn.Index)
+                embedAllButton.Enabled = true;
         }
     }
 }

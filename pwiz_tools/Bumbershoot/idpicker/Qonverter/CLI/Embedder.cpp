@@ -45,12 +45,12 @@ void Embedder::Embed(String^ idpDbFilepath,
 {
     try
     {
-        //map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
-        //for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
-        //    nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
+        map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
+        for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
+            nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
         NativeEmbedder::embed(ToStdString(idpDbFilepath),
                               ToStdString(sourceSearchPath),
-                              //nativeQuantitationMethodBySource,
+                              nativeQuantitationMethodBySource,
                               ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD
@@ -64,13 +64,13 @@ void Embedder::Embed(String^ idpDbFilepath,
 {
     try
     {
-        //map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
-        //for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
-        //    nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
+        map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
+        for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
+            nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
         NativeEmbedder::embed(ToStdString(idpDbFilepath),
                               ToStdString(sourceSearchPath),
                               ToStdString(sourceExtensionPriorityList),
-                              //nativeQuantitationMethodBySource,
+                              nativeQuantitationMethodBySource,
                               ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD
@@ -84,12 +84,12 @@ void Embedder::EmbedScanTime(String^ idpDbFilepath,
 {
     try
     {
-        //map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
-        //for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
-        //    nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
+        map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
+        for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
+            nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
         NativeEmbedder::embedScanTime(ToStdString(idpDbFilepath),
                                       ToStdString(sourceSearchPath),
-                                      //nativeQuantitationMethodBySource,
+                                      nativeQuantitationMethodBySource,
                                       ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD
@@ -103,13 +103,13 @@ void Embedder::EmbedScanTime(String^ idpDbFilepath,
 {
     try
     {
-        //map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
-        //for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
-        //    nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
+        map<int, NativeIDPicker::QuantitationMethod> nativeQuantitationMethodBySource;
+        for each (KeyValuePair<int, QuantitationMethod>^ kvp in quantitationMethodBySource)
+            nativeQuantitationMethodBySource[(int) kvp->Key] = NativeIDPicker::QuantitationMethod::get_by_value((int) kvp->Value).get();
         NativeEmbedder::embedScanTime(ToStdString(idpDbFilepath),
                                       ToStdString(sourceSearchPath),
                                       ToStdString(sourceExtensionPriorityList),
-                                      //nativeQuantitationMethodBySource,
+                                      nativeQuantitationMethodBySource,
                                       ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD

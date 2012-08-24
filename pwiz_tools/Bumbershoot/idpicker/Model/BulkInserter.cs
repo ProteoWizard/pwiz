@@ -28,6 +28,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Data;
+using pwiz.CLI.msdata;
 using msdata = pwiz.CLI.msdata;
 
 namespace IDPicker.DataModel
@@ -38,7 +39,7 @@ namespace IDPicker.DataModel
         {
             Protein = 0, ProteinMetadata, ProteinData,
             Peptide, PeptideSequences, PeptideInstance,
-            SpectrumSourceGroup, SpectrumSource, SpectrumSourceGroupLink, Spectrum,
+            SpectrumSourceGroup, SpectrumSource, SpectrumSourceMetadata, SpectrumSourceGroupLink, Spectrum,
             Analysis, AnalysisParameter,
             PeptideSpectrumMatch, PeptideSpectrumMatchScoreName, PeptideSpectrumMatchScore,
             Modification, PeptideModification,
@@ -113,7 +114,10 @@ namespace IDPicker.DataModel
             insertCommandByTable[(int) Table.SpectrumSourceGroup].Key.CommandText = createInsertSql("SpectrumSourceGroup", "Id, Name");
 
             insertCommandByTable[(int) Table.SpectrumSource] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
-            insertCommandByTable[(int) Table.SpectrumSource].Key.CommandText = createInsertSql("SpectrumSource", "Id, Name, URL, Group_, MsDataBytes");
+            insertCommandByTable[(int) Table.SpectrumSource].Key.CommandText = createInsertSql("SpectrumSource", "Id, Name, URL, Group_");
+
+            insertCommandByTable[(int) Table.SpectrumSourceMetadata] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
+            insertCommandByTable[(int) Table.SpectrumSourceMetadata].Key.CommandText = createInsertSql("SpectrumSourceMetadata", "Id, MsDataBytes");
 
             insertCommandByTable[(int) Table.SpectrumSourceGroupLink] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
             insertCommandByTable[(int) Table.SpectrumSourceGroupLink].Key.CommandText = createInsertSql("SpectrumSourceGroupLink", "Id, Source, Group_");
@@ -194,6 +198,7 @@ namespace IDPicker.DataModel
                     memConn.ExecuteNonQuery("INSERT INTO disk.PeptideInstance SELECT * FROM PeptideInstance");
                     memConn.ExecuteNonQuery("INSERT INTO disk.SpectrumSourceGroup SELECT * FROM SpectrumSourceGroup");
                     memConn.ExecuteNonQuery("INSERT INTO disk.SpectrumSource SELECT * FROM SpectrumSource");
+                    memConn.ExecuteNonQuery("INSERT INTO disk.SpectrumSourceMetadata SELECT * FROM SpectrumSourceMetadata");
                     memConn.ExecuteNonQuery("INSERT INTO disk.SpectrumSourceGroupLink SELECT * FROM SpectrumSourceGroupLink");
                     memConn.ExecuteNonQuery("INSERT INTO disk.Spectrum SELECT * FROM Spectrum");
                     memConn.ExecuteNonQuery("INSERT INTO disk.Analysis SELECT * FROM Analysis");
@@ -306,14 +311,19 @@ namespace IDPicker.DataModel
             byte[] msdataBytes = null;
             if (ss.Metadata != null)
             {
-                string tmpFilepath = Path.GetTempFileName() + ".mzML.gz";
+                string tmpFilepath = Path.GetTempFileName() + ".mz5";
                 msdata.MSDataFile.write(ss.Metadata, tmpFilepath,
-                                        new msdata.MSDataFile.WriteConfig() {gzipped = true});
+                                        new msdata.MSDataFile.WriteConfig
+                                        {
+                                            format = MSDataFile.Format.Format_MZ5,
+                                            compression = MSDataFile.Compression.Compression_Zlib
+                                        });
                 msdataBytes = File.ReadAllBytes(tmpFilepath);
                 File.Delete(tmpFilepath);
             }
 
-            insertRow(Table.SpectrumSource, new object[] {ss.Id, ss.Name, ss.URL, ss.Group.Id, msdataBytes});
+            insertRow(Table.SpectrumSource, new object[] {ss.Id, ss.Name, ss.URL, ss.Group.Id});
+            insertRow(Table.SpectrumSourceMetadata, new object[] { ss.Id, msdataBytes });
         }
 
         public void Add (SpectrumSourceGroupLink ssgl)

@@ -48,12 +48,12 @@
 			<key column="Source"/>
 			<one-to-many class="Spectrum"/>
 		</bag>
-		<property name="Metadata" column="MsDataBytes" lazy="true" type="SpectrumSourceMetadataUserType"/>
         <property name="TotalSpectraMS1"/>
         <property name="TotalSpectraMS2"/>
         <property name="TotalIonCurrentMS1"/>
         <property name="TotalIonCurrentMS2"/>
         <property name="QuantitationMethod"/>
+        <join optional="true" table="SpectrumSourceMetadata"><key column="Id"/><property name="Metadata" column="MsDataBytes" lazy="true" type="SpectrumSourceMetadataUserType"/></join>
 	</class>
 
 	<class name="SpectrumSourceGroupLink">

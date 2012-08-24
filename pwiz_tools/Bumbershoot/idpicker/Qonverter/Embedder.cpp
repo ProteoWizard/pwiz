@@ -28,6 +28,8 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/chemistry/Chemistry.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "pwiz/data/vendor_readers/ExtendedReaderList.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
@@ -161,6 +163,7 @@ path unique_path(const path& model = "%%%%-%%%%-%%%%-%%%%", system::error_code* 
 using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
+using namespace pwiz::chemistry;
 namespace sqlite = sqlite3pp;
 
 
@@ -189,7 +192,9 @@ struct SpectrumSource
 {
     sqlite3_int64 id;
     string name;
+    vector<sqlite3_int64> spectrumIds;
     vector<string> spectrumNativeIds;
+    QuantitationMethod quantitationMethod;
 
     string filepath;
 };
@@ -219,6 +224,7 @@ void getSources(sqlite::database& idpDb,
                 const string& idpDbFilepath,
                 const string& sourceSearchPath,
                 const string& sourceExtensionPriorityList,
+                const map<int, QuantitationMethod>& quantitationMethodBySource,
                 pwiz::util::IterationListenerRegistry* ilr)
 {
     string databaseName = bfs::path(idpDbFilepath).replace_extension("").filename();
@@ -245,12 +251,14 @@ void getSources(sqlite::database& idpDb,
     ITERATION_UPDATE(ilr, 0, 0, "querying sources and spectra");
 
     // get a list of sources from the database
-    sqlite::query sourceQuery(idpDb, "SELECT Id, Name FROM SpectrumSource ORDER BY Id");
+    sqlite::query sourceQuery(idpDb, "SELECT Id, Name, QuantitationMethod FROM SpectrumSource ORDER BY Id");
     BOOST_FOREACH(sqlite::query::rows row, sourceQuery)
     {
         sources.push_back(SpectrumSource());
-        sources.back().id = row.get<sqlite3_int64>(0);
-        sources.back().name = row.get<string>(1);
+        SpectrumSource& ss = sources.back();
+        ss.id = row.get<sqlite3_int64>(0);
+        ss.name = row.get<string>(1);
+        ss.quantitationMethod = QuantitationMethod::get_by_index(row.get<int>(2)).get();
     }
 
     if (sources.empty())
@@ -263,7 +271,7 @@ void getSources(sqlite::database& idpDb,
 
     // get a list of spectra for each source
     vector<SpectrumSource>::iterator itr = sources.begin();
-    sqlite::query spectrumQuery(idpDb, ("SELECT Source, NativeID FROM " + spectrumTable + " ORDER BY Source").c_str());
+    sqlite::query spectrumQuery(idpDb, ("SELECT Source, Id, NativeID FROM " + spectrumTable + " ORDER BY Source").c_str());
     BOOST_FOREACH(sqlite::query::rows row, spectrumQuery)
     {
         sqlite3_int64 sourceId = row.get<sqlite3_int64>(0);
@@ -273,7 +281,8 @@ void getSources(sqlite::database& idpDb,
                 throw runtime_error("query returned no spectra for source \"" + itr->name + "\"");
             ++itr;
         }
-        itr->spectrumNativeIds.push_back(row.get<string>(1));
+        itr->spectrumIds.push_back(row.get<sqlite3_int64>(1));
+        itr->spectrumNativeIds.push_back(row.get<string>(2));
     }
 
     ITERATION_UPDATE(ilr, 0, 0, "searching for spectrum sources");
@@ -298,17 +307,237 @@ void getSources(sqlite::database& idpDb,
         throw runtime_error("no filepath could be found corresponding these sources:\n" + bal::join(missingSources, "\n"));
 }
 
+struct SpectrumList_Quantifier
+{
+    struct SpectrumRow
+    {
+        sqlite3_int64 id;
+        double precursorMz;
+        vector<double> reporterIonIntensities;
+    };
+
+    map<int, int> totalSpectraByMSLevel;
+    map<int, double> totalIonCurrentByMSLevel;
+    vector<SpectrumRow> spectrumQuantitationRows;
+
+    SpectrumList_Quantifier(const SpectrumListPtr& sl, const IntegerSet& filteredIndexes,
+                            const map<string, int>& rowIdByNativeID,
+                            QuantitationMethod quantitationMethod)
+        : rowIdByNativeID(rowIdByNativeID),
+          quantitationMethod(quantitationMethod),
+          tolerance(10, MZTolerance::PPM)
+    {
+        double iTRAQ_masses[8] = { 113.107873, 114.111228, 115.108263, 116.111618, 117.114973, 118.112008, 119.115363, 121.122072 };
+        for (int i=1; i < 5; ++i) itraq4plexIons.push_back(iTRAQ_masses[i]);
+        for (int i=0; i < 8; ++i) itraq8plexIons.push_back(iTRAQ_masses[i]);
+
+        double TMT_masses[6] = { 126.1283, 127.1316, 128.135, 129.1383, 130.1417, 131.1387 };
+        for (int i=0; i < 2; ++i) tmt2plexIons.push_back(TMT_masses[i]);
+        for (int i=0; i < 6; ++i) tmt6plexIons.push_back(TMT_masses[i]);
+
+        itraqReporterIonIntensities.resize(8);
+        itraqTotalReporterIonIntensities.resize(8, 0);
+        tmtReporterIonIntensities.resize(6);
+        tmtTotalReporterIonIntensities.resize(6, 0);
+
+        if (quantitationMethod == QuantitationMethod::None)
+            return;
+
+        for (size_t i=0, end=sl->size(); i < end; ++i)
+        {
+            SpectrumPtr s = sl->spectrum(i, true);
+
+            int msLevel = s->cvParam(MS_ms_level).valueAs<int>();
+            BinaryDataArrayPtr mz = s->getMZArray();
+            BinaryDataArrayPtr intensities = s->getIntensityArray();
+            if (msLevel == 0 || !mz.get() || !intensities.get())
+                continue;
+
+            int tic = s->cvParam(MS_TIC).valueAs<double>();
+            if (tic == 0.0)
+                tic = accumulate(intensities->data.begin(), intensities->data.end(), 0.0);
+        
+            ++totalSpectraByMSLevel[msLevel];
+            totalIonCurrentByMSLevel[msLevel] += tic;
+
+            if (msLevel > 1 && filteredIndexes.contains(i))
+            {
+                if (quantitationMethod != QuantitationMethod::None)
+                {
+                    switch (quantitationMethod.value())
+                    {
+                        case QuantitationMethod::ITRAQ4plex:
+                            // skip the 113 ion only used in 8plex
+                            findReporterIons(s->id, mz->data, intensities->data, itraq4plexIons, itraqReporterIonIntensities, itraqTotalReporterIonIntensities, 1);
+                            break;
+
+                        case QuantitationMethod::ITRAQ8plex:
+                            findReporterIons(s->id, mz->data, intensities->data, itraq8plexIons, itraqReporterIonIntensities, itraqTotalReporterIonIntensities);
+                            break;
+
+                        case QuantitationMethod::TMT2plex:
+                            findReporterIons(s->id, mz->data, intensities->data, tmt2plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                            break;
+
+                        case QuantitationMethod::TMT6plex:
+                            findReporterIons(s->id, mz->data, intensities->data, tmt6plexIons, tmtReporterIonIntensities, tmtTotalReporterIonIntensities);
+                            break;
+
+                        default: break;
+                    }
+                }
+            }
+        }
+
+        double itraq4plexIsotopeCorrectionFactors[4][4] =
+        {
+            // -2    -1     +1     +2
+            { 0.000, 0.01, 0.059, 0.002 }, // 114 (icf[0])
+            { 0.000, 0.02, 0.056, 0.001 }, // 115 (icf[1])
+            { 0.000, 0.03, 0.045, 0.001 }, // 116 (icf[2])
+            { 0.001, 0.04, 0.035, 0.001 }  // 117 (icf[3])
+        };
+
+        double itraq8plexIsotopeCorrectionFactors[8][4] =
+        {
+            //  -2      -1      +1      +2
+            { 0.0000, 0.0000, 0.0689, 0.0024 }, // 113 (icf[0])
+            { 0.0000, 0.0094, 0.0590, 0.0016 }, // 114 (icf[1])
+            { 0.0000, 0.0188, 0.0490, 0.0010 }, // 115 (icf[2])
+            { 0.0000, 0.0282, 0.0390, 0.0007 }, // 116 (icf[3])
+            { 0.0006, 0.0377, 0.0288, 0.0000 }, // 117 (icf[4])
+            { 0.0009, 0.0471, 0.0191, 0.0000 }, // 118 (icf[5])
+            { 0.0014, 0.0566, 0.0087, 0.0000 }, // 119 (icf[6])
+            { 0.0027, 0.0744, 0.0018, 0.0000 }  // 121 (icf[7])
+        };
+
+        // normalize reporter ion intensities to the total for each channel
+        if (quantitationMethod != QuantitationMethod::None)
+        {
+            switch (quantitationMethod.value())
+            {
+                case QuantitationMethod::ITRAQ4plex:
+                {
+                    normalizeReporterIons(itraqTotalReporterIonIntensities);
+                    double (&icf)[4][4] = itraq4plexIsotopeCorrectionFactors;
+                    for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
+                    {
+                        vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
+                        /*114*/ rii[1] -= icf[1][1]*rii[2];
+                        /*115*/ rii[2] -= icf[0][2]*rii[1] + icf[2][1]*rii[3] + icf[3][0]*rii[4];
+                        /*116*/ rii[3] -= icf[0][3]*rii[1] + icf[1][2]*rii[2] + icf[3][1]*rii[4];
+                        /*117*/ rii[4] -= icf[1][3]*rii[2] + icf[2][2]*rii[3];
+                    }
+                    break;
+                }
+
+                case QuantitationMethod::ITRAQ8plex:
+                {
+                    normalizeReporterIons(itraqTotalReporterIonIntensities);
+                    double (&icf)[8][4] = itraq8plexIsotopeCorrectionFactors;
+                    for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
+                    {
+                        vector<double>& rii = spectrumQuantitationRows[i].reporterIonIntensities;
+                        /*113*/ rii[0] -= icf[1][1]*rii[1];
+                        /*114*/ rii[1] -= icf[0][2]*rii[0] + icf[2][1]*rii[2];
+                        /*115*/ rii[2] -= icf[0][3]*rii[0] + icf[1][2]*rii[1] + icf[3][1]*rii[3] + icf[4][0]*rii[4];
+                        /*116*/ rii[3] -= icf[1][3]*rii[1] + icf[2][2]*rii[2] + icf[4][1]*rii[4] + icf[5][0]*rii[5];
+                        /*117*/ rii[4] -= icf[2][3]*rii[2] + icf[3][2]*rii[3] + icf[5][1]*rii[5] + icf[6][0]*rii[6];
+                        /*118*/ rii[5] -= icf[3][3]*rii[3] + icf[4][2]*rii[4] + icf[6][1]*rii[6];
+                        /*119*/ rii[6] -= icf[5][2]*rii[5];
+                        /*121*/ //rii[7] -= icf[][1] *rii[1];
+                    }
+                    break;
+                }
+
+                case QuantitationMethod::TMT2plex:
+                case QuantitationMethod::TMT6plex:
+                    normalizeReporterIons(tmtTotalReporterIonIntensities);
+                    break;
+
+                default: break;
+            }
+        }
+    }
+
+    private:
+
+    void findReporterIons(const string& nativeID, const vector<double>& mzArray, const vector<double>& intensityArray,
+                          const vector<double>& reporterIonMZs, vector<double>& reporterIonIntensities,
+                          vector<double>& totalReporterIonIntensities,
+                          int offset = 0)
+    {
+        std::fill(reporterIonIntensities.begin(), reporterIonIntensities.end(), 0);
+
+        vector<double>::const_iterator begin = reporterIonMZs.begin(), end = reporterIonMZs.end(), itr = begin;
+        for (size_t i=0; i < mzArray.size(); ++i)
+        {
+            if (mzArray[i] + tolerance < *itr)
+                continue;
+            else if (mzArray[i] - tolerance > *itr)
+            {
+                ++itr;
+                if (itr == end)
+                    break;
+                --i;
+            }
+            else
+            {
+                // use the highest intensity in the tolerance window
+                double& currentIonIntensity = reporterIonIntensities[(itr - begin) + offset];
+                currentIonIntensity = max(intensityArray[i], currentIonIntensity);
+            }
+        }
+
+        for (size_t i=0; i < reporterIonIntensities.size(); ++i)
+            totalReporterIonIntensities[i] += reporterIonIntensities[i];
+
+        map<string, int>::const_iterator findItr = rowIdByNativeID.find(nativeID);
+        if (findItr == rowIdByNativeID.end())
+            throw runtime_error("[findReporterIons] nativeID '" + nativeID + "' not found");
+
+        spectrumQuantitationRows.push_back(SpectrumRow());
+        spectrumQuantitationRows.back().id = findItr->second;
+        spectrumQuantitationRows.back().precursorMz = 0; // TODO
+        spectrumQuantitationRows.back().reporterIonIntensities = reporterIonIntensities;
+    }
+
+    void normalizeReporterIons(const vector<double>& totalReporterIonIntensities)
+    {
+        double maxChannelTotal = *std::max_element(totalReporterIonIntensities.begin(), totalReporterIonIntensities.end());
+        vector<double> channelCorrectionFactors(totalReporterIonIntensities.size());
+        for(size_t j=0; j < totalReporterIonIntensities.size(); ++j)
+            if (totalReporterIonIntensities[j] > 0)
+                channelCorrectionFactors[j] = maxChannelTotal / totalReporterIonIntensities[j];
+
+        for (size_t i=0; i < spectrumQuantitationRows.size(); ++i)
+            for(size_t j=0; j < channelCorrectionFactors.size(); ++j)
+                spectrumQuantitationRows[i].reporterIonIntensities[j] *= channelCorrectionFactors[j];
+    }
+
+    const map<string, int>& rowIdByNativeID;    
+    const QuantitationMethod quantitationMethod;
+    MZTolerance tolerance;
+    vector<double> itraq4plexIons, itraq8plexIons;
+    vector<double> tmt2plexIons, tmt6plexIons;
+    vector<double> itraqReporterIonIntensities, itraqTotalReporterIonIntensities;
+    vector<double> tmtReporterIonIntensities, tmtTotalReporterIonIntensities;
+};
+
 struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_Filter::Predicate
 {
-    SpectrumList_FilterPredicate_ScanStartTimeUpdater(sqlite::database& idpDb, int sourceId)
+    SpectrumList_FilterPredicate_ScanStartTimeUpdater(sqlite::database& idpDb,
+                                                      int sourceId,
+                                                      const map<string, int>& rowIdByNativeID)
         : idpDb(idpDb),
           sourceId(sourceId),
-          updateScanTime(idpDb, "UPDATE Spectrum SET ScanTimeInSeconds = ? WHERE Source = ? AND NativeID = ?")
+          rowIdByNativeID(rowIdByNativeID),
+          updateScanTime(idpDb, "UPDATE Spectrum SET ScanTimeInSeconds = ? WHERE Source = ? AND Id = ?")
     {
         try
         {
             sqlite::query(idpDb, "SELECT Id FROM UnfilteredSpectrum LIMIT 1").begin();
-            updateUnfilteredScanTime.reset(new sqlite::command(idpDb, "UPDATE UnfilteredSpectrum SET ScanTimeInSeconds = ? WHERE SOURCE = ? AND NativeID = ?"));
+            updateUnfilteredScanTime.reset(new sqlite::command(idpDb, "UPDATE UnfilteredSpectrum SET ScanTimeInSeconds = ? WHERE Source = ? AND Id = ?"));
             hasUnfilteredTables = true;
         }
         catch (sqlite::database_error&)
@@ -329,9 +558,13 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
 
         double scanTime = spectrum.scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
 
+        map<string, int>::const_iterator findItr = rowIdByNativeID.find(spectrum.id);
+        if (findItr == rowIdByNativeID.end())
+            throw runtime_error("[findReporterIons] nativeID '" + spectrum.id + "' not found");
+
         updateScanTime.bind(1, scanTime);
         updateScanTime.bind(2, sourceId);
-        updateScanTime.bind(3, spectrum.id);
+        updateScanTime.bind(3, findItr->second);
         updateScanTime.execute();
         updateScanTime.reset();
 
@@ -339,7 +572,7 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
         {
             updateUnfilteredScanTime->bind(1, scanTime);
             updateUnfilteredScanTime->bind(2, sourceId);
-            updateUnfilteredScanTime->bind(3, spectrum.id);
+            updateUnfilteredScanTime->bind(3, findItr->second);
             updateUnfilteredScanTime->execute();
             updateUnfilteredScanTime->reset();
         }
@@ -350,6 +583,7 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
     private:
     sqlite::database& idpDb;
     int sourceId;
+    const map<string, int>& rowIdByNativeID;    
     mutable sqlite::command updateScanTime;
     mutable boost::scoped_ptr<sqlite::command> updateUnfilteredScanTime;
     bool hasUnfilteredTables;
@@ -357,14 +591,18 @@ struct SpectrumList_FilterPredicate_ScanStartTimeUpdater : public SpectrumList_F
 
 } // namespace
 
-void embed(const string& idpDbFilepath, const string& sourceSearchPath, pwiz::util::IterationListenerRegistry* ilr)
+void embed(const string& idpDbFilepath,
+           const string& sourceSearchPath,
+           const map<int, QuantitationMethod>& quantitationMethodBySource,
+           pwiz::util::IterationListenerRegistry* ilr)
 {
-    embed(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, ilr);
+    embed(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, quantitationMethodBySource, ilr);
 }
 
 void embed(const string& idpDbFilepath,
            const string& sourceSearchPath,
            const string& sourceExtensionPriorityList,
+           const map<int, QuantitationMethod>& quantitationMethodBySource,
            pwiz::util::IterationListenerRegistry* ilr)
 {
     sqlite::database idpDb;
@@ -373,7 +611,7 @@ void embed(const string& idpDbFilepath,
     vector<SpectrumSource> sources;
     try
     {
-        getSources(idpDb, sources, idpDbFilepath, sourceSearchPath, sourceExtensionPriorityList, ilr);
+        getSources(idpDb, sources, idpDbFilepath, sourceSearchPath, sourceExtensionPriorityList, quantitationMethodBySource, ilr);
     }
     catch (runtime_error& e)
     {
@@ -399,19 +637,36 @@ void embed(const string& idpDbFilepath,
 
         // create a filtered spectrum list
         IntegerSet filteredIndexes;
+        map<string, int> rowIdByNativeID;
         const SpectrumList& sl = *msd.run.spectrumListPtr;
-        BOOST_FOREACH(const string& nativeID, source.spectrumNativeIds)
+        for (size_t j=0; j < source.spectrumIds.size(); ++j)
         {
+            const string& nativeID = source.spectrumNativeIds[j];
             size_t index = sl.find(nativeID);
             if (index == sl.size())
                 throw runtime_error("[embed] nativeID '" + nativeID + "' not found in \"" + sourceFilename + "\"");
             filteredIndexes.insert((int) index);
+            rowIdByNativeID[nativeID] = source.spectrumIds[j];
         }
         
         sqlite::transaction transaction(idpDb);
 
+        scoped_ptr<SpectrumList_Quantifier> slq;
+
+        QuantitationMethod newQuantitationMethod = quantitationMethodBySource.find(source.id) != quantitationMethodBySource.end() ?
+                                                   quantitationMethodBySource.find(source.id)->second :
+                                                   QuantitationMethod::None;
+
+        if (newQuantitationMethod != source.quantitationMethod)
+        {
+            ITERATION_UPDATE(ilr, i, sources.size(), "gathering quantitation data from \"" + sourceFilename + "\"");
+            slq.reset(new SpectrumList_Quantifier(msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationMethod));
+        }
+
+        ITERATION_UPDATE(ilr, i, sources.size(), "embedding scan times for \"" + sourceFilename + "\"");
+
         SpectrumList_FilterPredicate_IndexSet slfp(filteredIndexes);
-        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb, source.id);
+        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb, source.id, rowIdByNativeID);
         SpectrumDataFilterPtr sdf(new ThresholdFilter(ThresholdFilter::ThresholdingBy_Count, 150.));
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slfp));
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slstu));
@@ -441,24 +696,73 @@ void embed(const string& idpDbFilepath,
         ITERATION_UPDATE(ilr, i, sources.size(), "embedding subset spectra for \"" + source.name + "\"");
 
         // embed the file as a blob in the database
-        sqlite::command cmd(idpDb, "UPDATE SpectrumSource SET MSDataBytes = ? WHERE Id = ?");
+        sqlite::command cmd(idpDb, "UPDATE SpectrumSourceMetadata SET MsDataBytes = ? WHERE Id = ?");
         cmd.bind(1, static_cast<void*>(tmpBuffer), tmpSize);
         cmd.bind(2, source.id);
         cmd.execute();
         cmd.reset();
+
+        try { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM UnfilteredSpectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
+        catch (sqlite::database_error&) { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM Spectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
+        
+        if (newQuantitationMethod == source.quantitationMethod)
+        {
+            transaction.commit();
+            continue;
+        }
+
+        if (newQuantitationMethod != QuantitationMethod::None)
+        {
+            ITERATION_UPDATE(ilr, i, sources.size(), "adding spectrum quantitation data for \"" + source.name + "\"");
+
+            scoped_ptr<sqlite::command> insertSpectrumQuantitation;
+            if (newQuantitationMethod == QuantitationMethod::ITRAQ4plex ||
+                newQuantitationMethod == QuantitationMethod::ITRAQ8plex)
+                insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, iTRAQ_ReporterIonIntensities) VALUES (?,?)"));
+            else if (newQuantitationMethod == QuantitationMethod::TMT2plex ||
+                     newQuantitationMethod == QuantitationMethod::TMT6plex)
+                insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, TMT_ReporterIonIntensities) VALUES (?,?)"));
+
+            for (size_t i=0; i < slq->spectrumQuantitationRows.size(); ++i)
+            {
+                SpectrumList_Quantifier::SpectrumRow& row = slq->spectrumQuantitationRows[i];
+                insertSpectrumQuantitation->bind(1, row.id);
+                insertSpectrumQuantitation->bind(2, static_cast<void*>(&row.reporterIonIntensities[0]), row.reporterIonIntensities.size() * sizeof(double));
+                insertSpectrumQuantitation->execute();
+                insertSpectrumQuantitation->reset();
+            }
+        }
+
+        // populate the source statistics
+        sqlite::command cmd2(idpDb, "UPDATE SpectrumSource SET "
+                                    "TotalSpectraMS1 = ?, TotalIonCurrentMS1 = ?, "
+                                    "TotalSpectraMS2 = ?, TotalIonCurrentMS2 = ?, "
+                                    "QuantitationMethod = ? "
+                                    "WHERE Id = ?");
+        cmd2.binder() << slq->totalSpectraByMSLevel[1] << slq->totalIonCurrentByMSLevel[1] <<
+                         slq->totalSpectraByMSLevel[2] << slq->totalIonCurrentByMSLevel[2] <<
+                         newQuantitationMethod.value() <<
+                         source.id;
+        cmd2.execute();
+        cmd2.reset();
+
         transaction.commit();
     }
 }
 
 
-void embedScanTime(const string& idpDbFilepath, const string& sourceSearchPath, pwiz::util::IterationListenerRegistry* ilr)
+void embedScanTime(const string& idpDbFilepath,
+                   const string& sourceSearchPath,
+                   const map<int, QuantitationMethod>& quantitationMethodBySource,
+                   pwiz::util::IterationListenerRegistry* ilr)
 {
-    embedScanTime(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, ilr);
+    embedScanTime(idpDbFilepath, sourceSearchPath, defaultSourceExtensionPriorityList, quantitationMethodBySource, ilr);
 }
 
 void embedScanTime(const string& idpDbFilepath,
                    const string& sourceSearchPath,
                    const string& sourceExtensionPriorityList,
+                   const map<int, QuantitationMethod>& quantitationMethodBySource,
                    pwiz::util::IterationListenerRegistry* ilr)
 {
     sqlite::database idpDb;
@@ -467,7 +771,7 @@ void embedScanTime(const string& idpDbFilepath,
     vector<SpectrumSource> sources;
     try
     {
-        getSources(idpDb, sources, idpDbFilepath, sourceSearchPath, sourceExtensionPriorityList, ilr);
+        getSources(idpDb, sources, idpDbFilepath, sourceSearchPath, sourceExtensionPriorityList, quantitationMethodBySource, ilr);
     }
     catch (runtime_error& e)
     {
@@ -493,21 +797,79 @@ void embedScanTime(const string& idpDbFilepath,
 
         // create a filtered spectrum list
         IntegerSet filteredIndexes;
+        map<string, int> rowIdByNativeID;
         const SpectrumList& sl = *msd.run.spectrumListPtr;
-        BOOST_FOREACH(const string& nativeID, source.spectrumNativeIds)
+        for (size_t j=0; j < source.spectrumIds.size(); ++j)
         {
+            const string& nativeID = source.spectrumNativeIds[j];
             size_t index = sl.find(nativeID);
             if (index == sl.size())
-                throw runtime_error("[embedScanTime] nativeID '" + nativeID + "' not found in \"" + sourceFilename + "\"");
+                throw runtime_error("[embed] nativeID '" + nativeID + "' not found in \"" + sourceFilename + "\"");
             filteredIndexes.insert((int) index);
+            rowIdByNativeID[nativeID] = source.spectrumIds[j];
         }
-        
+
         sqlite::transaction transaction(idpDb);
 
+        scoped_ptr<SpectrumList_Quantifier> slq;
+
+        QuantitationMethod newQuantitationMethod = quantitationMethodBySource.find(source.id) != quantitationMethodBySource.end() ?
+                                                   quantitationMethodBySource.find(source.id)->second :
+                                                   QuantitationMethod::None;
+
+        if (newQuantitationMethod != source.quantitationMethod)
+        {
+            ITERATION_UPDATE(ilr, i, sources.size(), "gathering quantitation data from \"" + sourceFilename + "\"");
+            slq.reset(new SpectrumList_Quantifier(msd.run.spectrumListPtr, filteredIndexes, rowIdByNativeID, newQuantitationMethod));
+        }
+
+        ITERATION_UPDATE(ilr, i, sources.size(), "embedding scan times for \"" + sourceFilename + "\"");
+
         SpectrumList_FilterPredicate_IndexSet slfp(filteredIndexes);
-        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb, source.id);
+        SpectrumList_FilterPredicate_ScanStartTimeUpdater slstu(idpDb, source.id, rowIdByNativeID);
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slfp));
         msd.run.spectrumListPtr.reset(new SpectrumList_Filter(msd.run.spectrumListPtr, slstu));
+
+        try { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM UnfilteredSpectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
+        catch (sqlite::database_error&) { idpDb.execute("DELETE FROM SpectrumQuantitation WHERE Id IN (SELECT Id FROM Spectrum WHERE Source=" + lexical_cast<string>(source.id) + ")"); }
+
+        if (newQuantitationMethod == source.quantitationMethod)
+            continue;
+
+        if (newQuantitationMethod != QuantitationMethod::None)
+        {
+            ITERATION_UPDATE(ilr, i, sources.size(), "adding spectrum quantitation data for \"" + source.name + "\"");
+
+            scoped_ptr<sqlite::command> insertSpectrumQuantitation;
+            if (newQuantitationMethod == QuantitationMethod::ITRAQ4plex ||
+                newQuantitationMethod == QuantitationMethod::ITRAQ8plex)
+                insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, iTRAQ_ReporterIonIntensities) VALUES (?,?)"));
+            else if (newQuantitationMethod == QuantitationMethod::TMT2plex ||
+                     newQuantitationMethod == QuantitationMethod::TMT6plex)
+                insertSpectrumQuantitation.reset(new sqlite::command(idpDb, "INSERT INTO SpectrumQuantitation (Id, TMT_ReporterIonIntensities) VALUES (?,?)"));
+
+            for (size_t i=0; i < slq->spectrumQuantitationRows.size(); ++i)
+            {
+                SpectrumList_Quantifier::SpectrumRow& row = slq->spectrumQuantitationRows[i];
+                insertSpectrumQuantitation->bind(1, row.id);
+                insertSpectrumQuantitation->bind(2, static_cast<void*>(&row.reporterIonIntensities[0]), row.reporterIonIntensities.size() * sizeof(double));
+                insertSpectrumQuantitation->execute();
+                insertSpectrumQuantitation->reset();
+            }
+        }
+
+        // populate the source statistics
+        sqlite::command cmd(idpDb, "UPDATE SpectrumSource SET "
+                                    "TotalSpectraMS1 = ?, TotalIonCurrentMS1 = ?, "
+                                    "TotalSpectraMS2 = ?, TotalIonCurrentMS2 = ?, "
+                                    "QuantitationMethod = ? "
+                                    "WHERE Id = ?");
+        cmd.binder() << slq->totalSpectraByMSLevel[1] << slq->totalIonCurrentByMSLevel[1] <<
+                        slq->totalSpectraByMSLevel[2] << slq->totalIonCurrentByMSLevel[2] <<
+                        newQuantitationMethod.value() <<
+                        source.id;
+        cmd.execute();
+        cmd.reset();
 
         transaction.commit();
     }
@@ -520,7 +882,7 @@ void extract(const string& idpDbFilepath, const string& sourceName, const string
     sqlite::database idpDb(idpDbFilepath, sqlite::no_mutex);
 
     // write the associated MSDataBytes to the given filepath
-    sqlite::query blobQuery(idpDb, ("SELECT MSDataBytes FROM SpectrumSource WHERE Name = \"" + sourceName + "\"").c_str());
+    sqlite::query blobQuery(idpDb, ("SELECT ssmd.MsDataBytes FROM SpectrumSource ss JOIN SpectrumSourceMetadata ssmd ON ss.Id=ssmd.Id AND Name = \"" + sourceName + "\"").c_str());
     BOOST_FOREACH(sqlite::query::rows row, blobQuery)
     {
         const char* bytes = static_cast<const char*>(row.get<const void*>(0));

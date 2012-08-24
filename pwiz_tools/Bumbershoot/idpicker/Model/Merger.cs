@@ -291,6 +291,7 @@ namespace IDPicker.DataModel
                 try
                 {
                     addIntegerSet(conn);
+                    conn.ExecuteNonQuery("UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL");
                 }
                 finally
                 {
@@ -338,6 +339,7 @@ namespace IDPicker.DataModel
                     addNewAnalysisParameters(conn);
                     addNewQonverterSettings(conn);
                     addIntegerSet(conn);
+                    conn.ExecuteNonQuery("UPDATE SpectrumSourceMetadata SET MsDataBytes = NULL");
 
                     transaction.Commit();
 
@@ -545,7 +547,14 @@ namespace IDPicker.DataModel
 
         static string addNewSpectrumSourcesSql =
               @"INSERT INTO merged.SpectrumSource
-                SELECT ssMerge.AfterMergeId, Name, URL, ssgMerge.AfterMergeId, MsDataBytes, 0, 0, 0, 0, 0
+                SELECT ssMerge.AfterMergeId, Name, URL, ssgMerge.AfterMergeId, 0, 0, 0, 0, 0
+                FROM {0}.SpectrumSource newSource
+                JOIN SpectrumSourceMergeMap ssMerge ON newSource.Id = ssMerge.BeforeMergeId
+                JOIN SpectrumSourceGroupMergeMap ssgMerge ON newSource.Group_ = ssgMerge.BeforeMergeId
+                WHERE ssMerge.AfterMergeId > {1};
+
+                INSERT INTO merged.SpectrumSourceMetadata
+                SELECT ssMerge.AfterMergeId, NULL
                 FROM {0}.SpectrumSource newSource
                 JOIN SpectrumSourceMergeMap ssMerge ON newSource.Id = ssMerge.BeforeMergeId
                 JOIN SpectrumSourceGroupMergeMap ssgMerge ON newSource.Group_ = ssgMerge.BeforeMergeId

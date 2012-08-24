@@ -708,7 +708,7 @@ namespace IDPicker.Forms
             iTRAQ_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
             TMT_ReporterIonColumns = new List<DataGridViewTextBoxColumn>();
 
-            /*foreach (int ion in new int[] { 113, 114, 115, 116, 117, 118, 119, 121 })
+            foreach (int ion in new int[] { 113, 114, 115, 116, 117, 118, 119, 121 })
             {
                 var column = new DataGridViewTextBoxColumn
                 {
@@ -733,7 +733,7 @@ namespace IDPicker.Forms
             }
 
             treeDataGridView.Columns.AddRange(iTRAQ_ReporterIonColumns.ToArray());
-            treeDataGridView.Columns.AddRange(TMT_ReporterIonColumns.ToArray());*/
+            treeDataGridView.Columns.AddRange(TMT_ReporterIonColumns.ToArray());
 
             aggregateColumns = new DataGridViewColumn[]
             {
@@ -1109,11 +1109,11 @@ namespace IDPicker.Forms
                 { sequenceColumn, new ColumnProperty() {Type = typeof(string)}}
             };
 
-            /*foreach (var column in iTRAQ_ReporterIonColumns)
+            foreach (var column in iTRAQ_ReporterIonColumns)
                 _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2});
 
             foreach (var column in TMT_ReporterIonColumns)
-                _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2 });*/
+                _columnSettings.Add(column, new ColumnProperty { Type = typeof(float), Precision = 2 });
 
             foreach (var kvp in _columnSettings)
             {
@@ -1302,6 +1302,8 @@ namespace IDPicker.Forms
 
             ClearData();
 
+            setColumnVisibility();
+
             Text = TabText = "Loading spectrum view...";
 
             var workerThread = new BackgroundWorker()
@@ -1461,11 +1463,30 @@ namespace IDPicker.Forms
 
             if (session != null && session.IsOpen)
                 lock (session)
+                {
                     if (session.Query<Analysis>().Count() == 1)
                     {
                         columnsIrrelevantForGrouping.Add(analysisColumn);
                         columnsIrrelevantForGrouping.Add(distinctAnalysesColumn);
                     }
+
+                    var quantitationMethods = new Set<QuantitationMethod>(session.Query<SpectrumSource>().Select(o => o.QuantitationMethod).Distinct());
+                    if (!quantitationMethods.Contains(QuantitationMethod.ITRAQ4plex) &&
+                        !quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
+                        // hide all iTRAQ columns
+                        iTRAQ_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                    else if (!quantitationMethods.Contains(QuantitationMethod.ITRAQ8plex))
+                        // hide iTRAQ8plex-only columns
+                        iTRAQ_ReporterIonColumns.Except(iTRAQ_ReporterIonColumns.GetRange(1, 4)).ForEach(o => columnsIrrelevantForGrouping.Add(o));
+
+                    if (!quantitationMethods.Contains(QuantitationMethod.TMT2plex) &&
+                        !quantitationMethods.Contains(QuantitationMethod.TMT6plex))
+                        // hide all TMT columns
+                        TMT_ReporterIonColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                    else if (!quantitationMethods.Contains(QuantitationMethod.TMT6plex))
+                        // hide TMT6plex-only columns
+                        TMT_ReporterIonColumns.GetRange(2, 4).ForEach(o => columnsIrrelevantForGrouping.Add(o));
+                }
 
             if (checkedGroupings.IsNullOrEmpty())
                 aggregateColumns.ForEach(o => columnsIrrelevantForGrouping.Add(o));

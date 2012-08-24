@@ -36,12 +36,32 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 3;
+const int CURRENT_SCHEMA_REVISION = 4;
 
 namespace SchemaUpdater {
 
 
 namespace {
+
+void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    try
+    {
+        db.execute("CREATE TABLE SpectrumSourceMetadata (Id INTEGER PRIMARY KEY, MsDataBytes BLOB);"
+                   "INSERT INTO SpectrumSourceMetadata SELECT Id, MsDataBytes FROM SpectrumSource;"
+                   "CREATE TABLE NewSpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, TotalSpectraMS1 INT, TotalIonCurrentMS1 NUMERIC, TotalSpectraMS2 INT, TotalIonCurrentMS2 NUMERIC, QuantitationMethod INT);"
+                   "INSERT INTO NewSpectrumSource SELECT Id, Name, URL, Group_, TotalSpectraMS1, TotalIonCurrentMS1, TotalSpectraMS2, TotalIonCurrentMS2, QuantitationMethod FROM TempSpectrumSource;"
+                   "DROP TABLE SpectrumSource;"
+                   "ALTER TABLE NewSpectrumSource RENAME TO SpectrumSource;"
+                   "DROP TABLE DistinctMatchQuantitation;"
+                   "CREATE TABLE DistinctMatchQuantitation (Id TEXT PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);");
+    }
+    catch (sqlite::database_error& e)
+    {
+        if (!bal::contains(e.what(), "exists")) // table already exists
+            throw runtime_error(e.what());
+    }
+}
 
 void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr)
 {
@@ -55,6 +75,9 @@ void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr)
                "ALTER TABLE SpectrumSource ADD COLUMN TotalSpectraMS2 INT;"
                "ALTER TABLE SpectrumSource ADD COLUMN TotalIonCurrentMS2 NUMERIC;"
                "ALTER TABLE SpectrumSource ADD COLUMN QuantitationMethod INT;");
+
+    // continue updating schema
+    update_3_to_4(db, ilr);
 }
 
 void update_1_to_2(sqlite::database& db, IterationListenerRegistry* ilr)
@@ -173,6 +196,8 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
         update_1_to_2(db, ilr);
     else if (schemaRevision == 2)
         update_2_to_3(db, ilr);
+    else if (schemaRevision == 3)
+        update_3_to_4(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

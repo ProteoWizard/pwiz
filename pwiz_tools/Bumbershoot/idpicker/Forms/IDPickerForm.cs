@@ -2351,7 +2351,12 @@ namespace IDPicker
                 return;
 
             var form = new EmbedderForm(session) { StartPosition = FormStartPosition.CenterParent };
-            form.ShowDialog(this);
+            if (form.ShowDialog(this) == DialogResult.OK)
+            {
+                basicFilter.RecalculateAggregateQuantitationData(session);
+                clearData();
+                setData();
+            }
         }
 
         private void exportSubsetFASTAToolStripMenuItem_Click (object sender, EventArgs e)

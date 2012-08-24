@@ -34,6 +34,7 @@
 #include <boost/date_time.hpp>
 #include <boost/filesystem/path.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/enum.hpp>
 #include "../Lib/SQLite/sqlite3pp.h"
 
 
@@ -48,6 +49,18 @@
 
 
 BEGIN_IDPICKER_NAMESPACE
+
+
+BOOST_ENUM(QuantitationMethod,
+    (None)
+    (LabelFree)
+    (ITRAQ4plex)
+    (ITRAQ8plex)
+    (TMT2plex)
+    (TMT6plex)
+);
+
+
 namespace Embedder {
 
 
@@ -64,6 +77,7 @@ extern const string defaultSourceExtensionPriorityList;
 /// and embed a MZ5 representation of the source's spectra in the MSDataBytes column of the idpDB
 void embed(const string& idpDbFilepath,
            const string& sourceSearchPath,
+           const map<int, QuantitationMethod>& quantitationMethodBySource = map<int, QuantitationMethod>(),
            pwiz::util::IterationListenerRegistry* ilr = 0);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
@@ -71,12 +85,14 @@ void embed(const string& idpDbFilepath,
 void embed(const string& idpDbFilepath,
            const string& sourceSearchPath,
            const string& sourceExtensionPriorityList,
+           const map<int, QuantitationMethod>& quantitationMethodBySource = map<int, QuantitationMethod>(),
            pwiz::util::IterationListenerRegistry* ilr = 0);
 
-/// search for source files of the idpDB using the given search path, using the provided source extensions,
+/// search for source files of the idpDB using the given search path, using the default source extensions,
 /// and embed scan start times of the source's spectra in the ScanTimeInSeconds column of the idpDB
 void embedScanTime(const string& idpDbFilepath,
                    const string& sourceSearchPath,
+                   const map<int, QuantitationMethod>& quantitationMethodBySource = map<int, QuantitationMethod>(),
                    pwiz::util::IterationListenerRegistry* ilr = 0);
 
 /// search for source files of the idpDB using the given search path, using the provided source extensions,
@@ -84,6 +100,7 @@ void embedScanTime(const string& idpDbFilepath,
 void embedScanTime(const string& idpDbFilepath,
                    const string& sourceSearchPath,
                    const string& sourceExtensionPriorityList,
+                   const map<int, QuantitationMethod>& quantitationMethodBySource = map<int, QuantitationMethod>(),
                    pwiz::util::IterationListenerRegistry* ilr = 0);
 
 /// extract the MSDataBytes of the given source from the idpDB to the specified output filepath

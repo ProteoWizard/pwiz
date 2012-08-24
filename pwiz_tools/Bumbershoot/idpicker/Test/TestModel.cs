@@ -746,7 +746,8 @@ namespace Test
         }
 
         [TestMethod]
-        public void TestSpectrumSources()
+        public void TestSpectrumSources() { TestSpectrumSources(true); }
+        public void TestSpectrumSources(bool testMetadata)
         {
             SpectrumSource ss1 = session.UniqueResult<SpectrumSource>(o => o.Name == "Source 1");
             Assert.AreEqual(session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/A/1"), ss1.Group);
@@ -754,9 +755,12 @@ namespace Test
             Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group.Name == "/A"));
             Assert.IsNotNull(ss1.Groups.SingleOrDefault(o => o.Group.Name == "/A/1"));
             Assert.IsNull(ss1.Groups.SingleOrDefault(o => o.Group.Name == "/B"));
-            Assert.IsNotNull(ss1.Metadata);
-            Assert.AreEqual(ss1.Name, ss1.Metadata.id);
-            Assert.IsNotInstanceOfType(ss1.Metadata.run.spectrumList, typeof(msdata.SpectrumListSimple));
+            if (testMetadata)
+            {
+                Assert.IsNotNull(ss1.Metadata);
+                Assert.AreEqual(ss1.Name, ss1.Metadata.id);
+                Assert.IsNotInstanceOfType(ss1.Metadata.run.spectrumList, typeof (msdata.SpectrumListSimple));
+            }
 
             SpectrumSource ss4 = session.UniqueResult<SpectrumSource>(o => o.Name == "Source 4");
             Assert.AreEqual(session.UniqueResult<SpectrumSourceGroup>(o => o.Name == "/B/1"), ss4.Group);
@@ -764,42 +768,55 @@ namespace Test
             Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group.Name == "/B"));
             Assert.IsNotNull(ss4.Groups.SingleOrDefault(o => o.Group.Name == "/B/1"));
             Assert.IsNull(ss4.Groups.SingleOrDefault(o => o.Group.Name == "/A"));
-            Assert.IsNotNull(ss4.Metadata);
-            Assert.AreEqual(ss4.Name, ss4.Metadata.id);
-            Assert.IsNotInstanceOfType(ss4.Metadata.run.spectrumList, typeof(msdata.SpectrumListSimple));
+            if (testMetadata)
+            {
+                Assert.IsNotNull(ss4.Metadata);
+                Assert.AreEqual(ss4.Name, ss4.Metadata.id);
+                Assert.IsNotInstanceOfType(ss4.Metadata.run.spectrumList, typeof (msdata.SpectrumListSimple));
+            }
         }
 
         [TestMethod]
-        public void TestSpectra()
+        public void TestSpectra() { TestSpectra(true); }
+        public void TestSpectra(bool testMetadata)
         {
             Spectrum ss1s1 = session.UniqueResult<Spectrum>(o => o.Index == 0 &&
                                                                  o.Source.Name == "Source 1");
             Assert.AreEqual("scan=1", ss1s1.NativeID);
             Assert.AreEqual(6, ss1s1.Matches.Count);
             Assert.AreEqual(42, ss1s1.PrecursorMZ, 1e-12);
-            Assert.AreEqual(ss1s1.Index, ss1s1.Metadata.index);
-            Assert.AreEqual(ss1s1.NativeID, ss1s1.Metadata.id);
-            Assert.AreEqual(5UL, ss1s1.Metadata.defaultArrayLength);
-            Assert.AreEqual(100, ss1s1.MetadataWithPeaks.getMZArray().data[0]);
+            if (testMetadata)
+            {
+                Assert.AreEqual(ss1s1.Index, ss1s1.Metadata.index);
+                Assert.AreEqual(ss1s1.NativeID, ss1s1.Metadata.id);
+                Assert.AreEqual(5UL, ss1s1.Metadata.defaultArrayLength);
+                Assert.AreEqual(100, ss1s1.MetadataWithPeaks.getMZArray().data[0]);
+            }
 
             Spectrum ss1s2 = session.UniqueResult<Spectrum>(o => o.Index == 1 &&
                                                                  o.Source.Name == "Source 1");
             Assert.AreEqual("scan=2", ss1s2.NativeID);
             Assert.AreEqual(6, ss1s2.Matches.Count);
-            Assert.AreEqual(ss1s2.Index, ss1s2.Metadata.index);
-            Assert.AreEqual(ss1s2.NativeID, ss1s2.Metadata.id);
-            Assert.AreEqual(5UL, ss1s2.Metadata.defaultArrayLength);
-            Assert.AreEqual(200, ss1s2.MetadataWithPeaks.getMZArray().data[1]);
+            if (testMetadata)
+            {
+                Assert.AreEqual(ss1s2.Index, ss1s2.Metadata.index);
+                Assert.AreEqual(ss1s2.NativeID, ss1s2.Metadata.id);
+                Assert.AreEqual(5UL, ss1s2.Metadata.defaultArrayLength);
+                Assert.AreEqual(200, ss1s2.MetadataWithPeaks.getMZArray().data[1]);
+            }
 
             Spectrum ss4s1 = session.UniqueResult<Spectrum>(o => o.Index == 0 &&
                                                                  o.Source.Name == "Source 4");
             Assert.AreEqual("scan=1", ss4s1.NativeID);
             Assert.AreEqual(6, ss4s1.Matches.Count);
             Assert.AreEqual(42, ss4s1.PrecursorMZ, 1e-12);
-            Assert.AreEqual(ss4s1.Index, ss4s1.Metadata.index);
-            Assert.AreEqual(ss4s1.NativeID, ss4s1.Metadata.id);
-            Assert.AreEqual(5UL, ss4s1.Metadata.defaultArrayLength);
-            Assert.AreEqual(300, ss4s1.MetadataWithPeaks.getMZArray().data[2]);
+            if (testMetadata)
+            {
+                Assert.AreEqual(ss4s1.Index, ss4s1.Metadata.index);
+                Assert.AreEqual(ss4s1.NativeID, ss4s1.Metadata.id);
+                Assert.AreEqual(5UL, ss4s1.Metadata.defaultArrayLength);
+                Assert.AreEqual(300, ss4s1.MetadataWithPeaks.getMZArray().data[2]);
+            }
         }
 
         [TestMethod]
