@@ -188,6 +188,7 @@ for configac in open("%s/pwiz/configure.scan"%ac.get_pwizroot()) :
 			f.write("BOOST_%s\n"%lib)
 		f.write("AC_CONFIG_FILES([Makefile])\n")
 	f.write(configac)
+f.write("AM_CONDITIONAL(BOOST_ROOT_ENV_DEFINED, test x$(BOOST_ROOT) != x)\n")
 f.close()
 
 makefileam = open('%s/Makefile.am'%logdir, 'w')
@@ -203,7 +204,8 @@ makefileam.write('LIBS = $(BOOST_THREAD_LIBS)') # there's some disconnect betwee
 for lib in boostlibs :
 	makefileam.write(" $(BOOST_%s_LIBS)"%lib)
 makefileam.write('\n')
-makefileam.write('AM_LDFLAGS =')
+makefileam.write('if BOOST_ROOT_ENV_DEFINED\n	BOOST_ROOT_LIB = " -L$(BOOST_ROOT)/lib"\nendif\n')
+makefileam.write('AM_LDFLAGS =$(BOOST_ROOT_LIB)')
 for lib in boostlibs :
 	makefileam.write(' $(BOOST_%s_LDFLAGS)'%lib)
 makefileam.write('\n')
