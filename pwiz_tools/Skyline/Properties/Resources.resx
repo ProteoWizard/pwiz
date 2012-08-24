@@ -3398,7 +3398,7 @@ Are you sure you want to continue?</value>
   <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_peptide__0__appears_multiple_times_in_the_added_list" xml:space="preserve">
     <value>The peptide '{0}' appears multiple times in the added list.</value>
   </data>
-  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_lis_" xml:space="preserve">
+  <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list" xml:space="preserve">
     <value>The following peptides appear multiple times in the added list:</value>
   </data>
   <data name="PeptideGridViewDriver_ValidateUniquePeptides_The_added_lists_contains__0__peptides_which_appear_multiple_times" xml:space="preserve">
@@ -4310,179 +4310,220 @@ Are you sure you want to continue?</value>
   <data name="TransitionTreeNode_GetLabel_rank__0__" xml:space="preserve">
     <value>rank {0}</value>
   </data>
-  <data name="AlignmentForm_UpdateGraph_Waiting_for_retention_time_alignment">
-    <value xml:space="preserve">Waiting for retention time alignment</value>
-  </data> <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_">
-    <value xml:space="preserve">The library {0} is no longer available in the Skyline settings. Reload the library explorer?</value>
+  <data name="AlignmentForm_UpdateGraph_Waiting_for_retention_time_alignment" xml:space="preserve">
+    <value>Waiting for retention time alignment</value>
   </data>
-  <data name="SettingsListComboDriver_Edit_current">
-    <value xml:space="preserve">&lt;Edit current...&gt;</value>
+  <data name="ViewLibraryDlg_ViewLibraryDlg_Activated_The_library__0__is_no_longer_available_in_the_Skyline_settings__Reload_the_library_explorer_" xml:space="preserve">
+    <value>The library {0} is no longer available in the Skyline settings. Reload the library explorer?</value>
   </data>
-  <data name="SkylineWindow_ConnectLibrarySpecs_Spectral_Library">
-    <value xml:space="preserve">Spectral Library</value>
+  <data name="SettingsListComboDriver_Edit_current" xml:space="preserve">
+    <value>&lt;Edit current...&gt;</value>
   </data>
-  <data name="SkylineWindow_FindIrtDatabase_iRT_Calculator">
-    <value xml:space="preserve">iRT Calculator</value>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Spectral_Library" xml:space="preserve">
+    <value>Spectral Library</value>
   </data>
-  <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome">
-    <value xml:space="preserve">Background Proteome</value>
+  <data name="SkylineWindow_FindIrtDatabase_iRT_Calculator" xml:space="preserve">
+    <value>iRT Calculator</value>
   </data>
-  <data name="VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzML_work_around_for__0_">
-    <value xml:space="preserve">Convert to mzML work-around for {0}</value>
+  <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
+    <value>Background Proteome</value>
   </data>
-  <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file">
-    <value xml:space="preserve">Calculating hash of input file</value>
-  </data> <data name="ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run">
-    <value xml:space="preserve">This tool requires a Document Path to run</value>
+  <data name="VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzML_work_around_for__0_" xml:space="preserve">
+    <value>Convert to mzML work-around for {0}</value>
   </data>
-  <data name="ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run">
-    <value xml:space="preserve">This tool requires a Document Directory to run</value>
+  <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file" xml:space="preserve">
+    <value>Calculating hash of input file</value>
   </data>
-  <data name="ToolMacros__listArguments_This_tool_requires_a_Document_File_Name_to_run">
-    <value xml:space="preserve">This tool requires a Document File Name to run</value>
+  <data name="ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run" xml:space="preserve">
+    <value>This tool requires a Document Path to run</value>
   </data>
-  <data name="ToolMacros__listArguments_This_tool_requires_a_Document_File_Name__to_run_">
-    <value xml:space="preserve">This tool requires a Document File Name  to run.</value>
+  <data name="RenameProteinsDlg_OkDialog__0__is_not_a_current_protein" xml:space="preserve">
+    <value>{0} is not a current protein</value>
   </data>
-  <data name="ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_">
-    <value xml:space="preserve">This tool requires a Selected Protein to run.</value>
+  <data name="RenameProteinsDlg_OkDialog_Edit_name__0__" xml:space="preserve">
+    <value>Edit name {0}</value>
   </data>
-  <data name="ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_">
-    <value xml:space="preserve">Please select a protein before running this tool.</value>
+  <data name="RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__" xml:space="preserve">
+    <value>Failed reading the file {0}. {1}</value>
   </data>
-  <data name="ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run">
-    <value xml:space="preserve">This tool requires a Selected Peptide Sequence to run</value>
+  <data name="RenameProteinsDlg_PasteProteins_Failed_getting_data_from_the_clipboard" xml:space="preserve">
+    <value>Failed getting data from the clipboard.</value>
   </data>
-  <data name="ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_">
-    <value xml:space="preserve">Please select a peptide sequence before running this tool.</value>
+  <data name="GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns" xml:space="preserve">
+    <value>On line {0}, row has more than 2 columns</value>
   </data>
-  <data name="ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run">
-    <value xml:space="preserve">This tool requires a Selected Precursor to run</value>
+  <data name="RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File" xml:space="preserve">
+    <value>Add FASTA File</value>
   </data>
-  <data name="ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_">
-    <value xml:space="preserve">Please select a precursor before running this tool.</value>
+  <data name="SkylineWindow_ManageResults_Manage_results" xml:space="preserve">
+    <value>Manage results</value>
   </data>
-  <data name="ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run">
-    <value xml:space="preserve">This tool requires an Active Replicate Name to run</value>
+  <data name="ToolMacros__listArguments_This_tool_requires_a_Document_Directory_to_run" xml:space="preserve">
+    <value>This tool requires a Document Directory to run</value>
   </data>
-  <data name="ToolMacros_listArguments_This_tool_requires_a_selected_report">
-    <value xml:space="preserve">This tool requires a selected report</value>
+  <data name="ToolMacros__listArguments_This_tool_requires_a_Document_File_Name_to_run" xml:space="preserve">
+    <value>This tool requires a Document File Name to run</value>
   </data>
-  <data name="ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Please_select_a_report_for_this_tool_">
-    <value xml:space="preserve">The selected tool ( {0} ) requires a selected report. Please select a report for this tool.</value>
+  <data name="ToolMacros__listArguments_This_tool_requires_a_Document_File_Name__to_run_" xml:space="preserve">
+    <value>This tool requires a Document File Name  to run.</value>
   </data>
-  <data name="ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_">
-    <value xml:space="preserve">Error exporting the report, tool execution canceled.</value>
+  <data name="ToolMacros__listArguments_This_tool_requires_a_Selected_Protein_to_run_" xml:space="preserve">
+    <value>This tool requires a Selected Protein to run.</value>
   </data>
-  <data name="ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format">
-    <value xml:space="preserve">Error: {0} requires a report titled {1} which no longer exists. Please select a new report or import the report format</value>
+  <data name="ToolMacros__listArguments_Please_select_a_protein_before_running_this_tool_" xml:space="preserve">
+    <value>Please select a protein before running this tool.</value>
   </data>
-  <data name="ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__">
-    <value xml:space="preserve">Please reconfigure that tool, it failed to execute. </value>
+  <data name="ToolMacros__listArguments_This_tool_requires_a_Selected_Peptide_Sequence_to_run" xml:space="preserve">
+    <value>This tool requires a Selected Peptide Sequence to run</value>
   </data>
-  <data name="ToolDescription_RunTool_File_not_found_">
-    <value xml:space="preserve">File not found.</value>
+  <data name="ToolMacros__listArguments_Please_select_a_peptide_sequence_before_running_this_tool_" xml:space="preserve">
+    <value>Please select a peptide sequence before running this tool.</value>
   </data>
-  <data name="ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_">
-    <value xml:space="preserve">Please check the command location is correct for this tool.</value>
+  <data name="ToolMacros_listArguments_This_tool_requires_a_Selected_Precursor_to_run" xml:space="preserve">
+    <value>This tool requires a Selected Precursor to run</value>
   </data>
-  <data name="Could_not_open_web_Browser_to_show_link_">
-    <value xml:space="preserve">Could not open web Browser to show link:</value>
+  <data name="ToolMacros_listArguments_Please_select_a_precursor_before_running_this_tool_" xml:space="preserve">
+    <value>Please select a precursor before running this tool.</value>
   </data>
-  <data name="ToolMacros__listArguments_Document_Path">
-    <value xml:space="preserve">Document Path</value>
+  <data name="ToolMacros_listArguments_This_tool_requires_an_Active_Replicate_Name_to_run" xml:space="preserve">
+    <value>This tool requires an Active Replicate Name to run</value>
   </data>
-  <data name="ToolMacros__listArguments_Document_Directory">
-    <value xml:space="preserve">Document Directory</value>
+  <data name="ToolMacros_listArguments_This_tool_requires_a_selected_report" xml:space="preserve">
+    <value>This tool requires a selected report</value>
   </data>
-  <data name="ToolMacros__listArguments_Document_File_Name">
-    <value xml:space="preserve">Document File Name</value>
+  <data name="ToolMacros_GetReportTempPath_The_selected_tool_0_requires_a_selected_report_Please_select_a_report_for_this_tool_" xml:space="preserve">
+    <value>The selected tool ( {0} ) requires a selected report. Please select a report for this tool.</value>
   </data>
-  <data name="ToolMacros__listArguments_Document_File_Name_Without_Extension">
-    <value xml:space="preserve">Document File Name Without Extension</value>
+  <data name="ToolMacros_GetReportTempPath_Error_exporting_the_report__tool_execution_canceled_" xml:space="preserve">
+    <value>Error exporting the report, tool execution canceled.</value>
   </data>
-  <data name="ToolMacros__listArguments_Selected_Protein_Name">
-    <value xml:space="preserve">Selected Protein Name</value>
+  <data name="ToolDescriptionHelpers_GetReport_Error_0_requires_a_report_titled_1_which_no_longer_exists__Please_select_a_new_report_or_import_the_report_format" xml:space="preserve">
+    <value>Error: {0} requires a report titled {1} which no longer exists. Please select a new report or import the report format</value>
   </data>
-  <data name="ToolMacros__listArguments_Selected_Peptide_Sequence">
-    <value xml:space="preserve">Selected Peptide Sequence</value>
+  <data name="ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__" xml:space="preserve">
+    <value>Please reconfigure that tool, it failed to execute. </value>
   </data>
-  <data name="ToolMacros__listArguments_Selected_Precursor">
-    <value xml:space="preserve">Selected Precursor</value>
+  <data name="ToolDescription_RunTool_File_not_found_" xml:space="preserve">
+    <value>File not found.</value>
   </data>
-  <data name="ToolMacros__listArguments_Active_Replicate_Name">
-    <value xml:space="preserve">Active Replicate Name</value>
+  <data name="ToolDescription_RunTool_Please_check_the_command_location_is_correct_for_this_tool_" xml:space="preserve">
+    <value>Please check the command location is correct for this tool.</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassTool_You_must_enter_a_valid_title_for_the_tool">
-    <value xml:space="preserve">You must enter a valid title for the tool.</value>
+  <data name="Could_not_open_web_Browser_to_show_link_" xml:space="preserve">
+    <value>Could not open web Browser to show link:</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid_command_for__0_">
-    <value xml:space="preserve">The command cannot be blank. Please enter a valid command for {0}</value>
+  <data name="ToolMacros__listArguments_Document_Path" xml:space="preserve">
+    <value>Document Path</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type">
-    <value xml:space="preserve">The command for {0} must be of a supported type.</value>
+  <data name="ToolMacros__listArguments_Document_Directory" xml:space="preserve">
+    <value>Document Directory</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassTool_Supported_Types___1_">
-    <value xml:space="preserve">Supported Types: {1}</value>
+  <data name="ToolMacros__listArguments_Document_File_Name" xml:space="preserve">
+    <value>Document File Name</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassTool_if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___">
-    <value xml:space="preserve">If you would like the command to launch a link, make sure to include http:// or https://</value>
+  <data name="ToolMacros__listArguments_Document_File_Name_Without_Extension" xml:space="preserve">
+    <value>Document File Name Without Extension</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__">
-    <value xml:space="preserve">The command for {0} may not exist in that location. Would you like to edit it? </value>
+  <data name="ToolMacros__listArguments_Selected_Protein_Name" xml:space="preserve">
+    <value>Selected Protein Name</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___">
-    <value xml:space="preserve">Note: if you would like the command to launch a link, make sure to include http:// or https://</value>
+  <data name="ToolMacros__listArguments_Selected_Peptide_Sequence" xml:space="preserve">
+    <value>Selected Peptide Sequence</value>
   </data>
-  <data name="ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_">
-    <value xml:space="preserve">Do you wish to Save changes?</value>
+  <data name="ToolMacros__listArguments_Selected_Precursor" xml:space="preserve">
+    <value>Selected Precursor</value>
   </data>
-  <data name="ConfigureToolsDlg_btnFindCommand_Click_Command_Files">
-    <value xml:space="preserve">Command Files</value>
+  <data name="ToolMacros__listArguments_Active_Replicate_Name" xml:space="preserve">
+    <value>Active Replicate Name</value>
   </data>
-  <data name="ConfigureToolsDlg_btnFindCommand_Click_Information_Files">
-    <value xml:space="preserve">Information Files</value>
+  <data name="ConfigureToolsDlg_CheckPassTool_You_must_enter_a_valid_title_for_the_tool" xml:space="preserve">
+    <value>You must enter a valid title for the tool.</value>
   </data>
-  <data name="ConfigureToolsDlg_btnFindCommand_Click_Batch_Files">
-    <value xml:space="preserve">Batch Files</value>
+  <data name="ConfigureToolsDlg_CheckPassTool_The_command_cannot_be_blank__please_enter_a_valid_command_for__0_" xml:space="preserve">
+    <value>The command cannot be blank. Please enter a valid command for {0}</value>
   </data>
-  <data name="ConfigureToolsDlg_btnFindCommand_Click_All_Executables">
-    <value xml:space="preserve">All Executables</value>
+  <data name="ConfigureToolsDlg_CheckPassTool_The_command_for__0__must_be_of_a_supported_type" xml:space="preserve">
+    <value>The command for {0} must be of a supported type.</value>
   </data>
-  <data name="ToolMacros__listArguments_Input_Report_Temp_Path">
-    <value xml:space="preserve">Input Report Temp Path</value>
+  <data name="ConfigureToolsDlg_CheckPassTool_Supported_Types___1_" xml:space="preserve">
+    <value>Supported Types: {1}</value>
   </data>
-  <data name="ConfigureToolsDlg_GetTitle__New_Tool_0__">
-    <value xml:space="preserve">[New Tool{0}]</value>
+  <data name="ConfigureToolsDlg_CheckPassTool_if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___" xml:space="preserve">
+    <value>If you would like the command to launch a link, make sure to include http:// or https://</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_">
-    <value xml:space="preserve">Please specify a valid URL.</value>
+  <data name="ConfigureToolsDlg_CheckPassTool__The_command_for__0__may_not_exist_in_that_location__Would_you_like_to_edit_it__" xml:space="preserve">
+    <value>The command for {0} may not exist in that location. Would you like to edit it? </value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_">
-    <value xml:space="preserve">You have provided {0} as an argument but have not selected a report.</value>
+  <data name="ConfigureToolsDlg_CheckPassTool__Note__if_you_would_like_the_command_to_launch_a_link__make_sure_to_include_http____or_https___" xml:space="preserve">
+    <value>Note: if you would like the command to launch a link, make sure to include http:// or https://</value>
   </data>
-  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_">
-    <value xml:space="preserve">Please select a report or remove {0} from arguments.</value>
+  <data name="ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_" xml:space="preserve">
+    <value>Do you wish to Save changes?</value>
   </data>
-  <data name="SerializableSettingsList_ImportSkyrFile_Failure_loading__0__">
-    <value xml:space="preserve">Failure loading {0}.</value>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Command_Files" xml:space="preserve">
+    <value>Command Files</value>
   </data>
-  <data name="WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_">
-    <value xml:space="preserve">Failure saving temporary post data to disk.</value>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Information_Files" xml:space="preserve">
+    <value>Information Files</value>
   </data>
-  <data name="SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title">
-    <value xml:space="preserve">Import Transition List</value>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Batch_Files" xml:space="preserve">
+    <value>Batch Files</value>
   </data>
-  <data name="SkylineWindow_importMassListMenuItem_Click_Transition_List">
-    <value xml:space="preserve">Transition List</value>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_All_Executables" xml:space="preserve">
+    <value>All Executables</value>
   </data>
-  <data name="SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_">
-    <value xml:space="preserve">You must add at least one target transition before importing results.</value>
+  <data name="ToolMacros__listArguments_Input_Report_Temp_Path" xml:space="preserve">
+    <value>Input Report Temp Path</value>
   </data>
   <data name="NoSrmDataException_NoSrmDataException_No_SRM_MRM_data_found_in__0__">
     <value xml:space="preserve">No SRM/MRM data found in {0}.</value>
   </data>
   <data name="NoFullScanDataException_NoFullScanDataException_No_scans_in__0__match_the_current_filter_settings_">
     <value xml:space="preserve">No scans in {0} match the current filter settings.</value>
+  </data>
+  <data name="ConfigureToolsDlg_GetTitle__New_Tool_0__" xml:space="preserve">
+    <value>[New Tool{0}]</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_specify_a_valid_URL_" xml:space="preserve">
+    <value>Please specify a valid URL.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_You_have_provided__0__as_an_argument_but_have_not_selected_a_report_" xml:space="preserve">
+    <value>You have provided {0} as an argument but have not selected a report.</value>
+  </data>
+  <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_" xml:space="preserve">
+    <value>Please select a report or remove {0} from arguments.</value>
+  </data>
+  <data name="SerializableSettingsList_ImportSkyrFile_Failure_loading__0__" xml:space="preserve">
+    <value>Failure loading {0}.</value>
+  </data>
+  <data name="WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_" xml:space="preserve">
+    <value>Failure saving temporary post data to disk.</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Import_Transition_List_title" xml:space="preserve">
+    <value>Import Transition List</value>
+  </data>
+  <data name="SkylineWindow_importMassListMenuItem_Click_Transition_List" xml:space="preserve">
+    <value>Transition List</value>
+  </data>
+  <data name="SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_" xml:space="preserve">
+    <value>You must add at least one target transition before importing results.</value>
+  </data>
+  <data name="RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either__1__or__2__" xml:space="preserve">
+    <value>Cannot rename {0} more than once. Please remove either {1} or {2}</value>
+  </data>
+  <data name="ViewLibraryDlg_CheckLibraryInSettings_Add_Library" xml:space="preserve">
+    <value>Add Library</value>
+  </data>
+  <data name="ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library" xml:space="preserve">
+    <value>Add all peptides from {0} library</value>
+  </data>
+  <data name="SkylineWindow_ShowRenameProteinsDlg_Rename_proteins" xml:space="preserve">
+    <value>Rename proteins</value>
+  </data>
+  <data name="PeptideGroupTreeNode_RenderTip_Original_name__0__" xml:space="preserve">
+    <value>Original name: {0}</value>
+  </data>
+  <data name="RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences">
+    <value xml:space="preserve">The document contains a naming conflict.  The name {0} is currently used by multiple protein sequences.</value>
   </data>
 </root>

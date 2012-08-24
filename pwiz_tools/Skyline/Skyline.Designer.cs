@@ -247,6 +247,7 @@ namespace pwiz.Skyline
             this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMissingResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator45 = new System.Windows.Forms.ToolStripSeparator();
+            this.renameProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.sortProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator43 = new System.Windows.Forms.ToolStripSeparator();
             this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1872,6 +1873,7 @@ namespace pwiz.Skyline
             this.removeRepeatedPeptidesMenuItem,
             this.removeMissingResultsMenuItem,
             this.toolStripSeparator45,
+            this.renameProteinsMenuItem,
             this.sortProteinsMenuItem,
             this.toolStripSeparator43,
             this.acceptPeptidesMenuItem,
@@ -1909,6 +1911,12 @@ namespace pwiz.Skyline
             // 
             this.toolStripSeparator45.Name = "toolStripSeparator45";
             resources.ApplyResources(this.toolStripSeparator45, "toolStripSeparator45");
+            // 
+            // renameProteinsMenuItem
+            // 
+            this.renameProteinsMenuItem.Name = "renameProteinsMenuItem";
+            resources.ApplyResources(this.renameProteinsMenuItem, "renameProteinsMenuItem");
+            this.renameProteinsMenuItem.Click += new System.EventHandler(this.renameProteinsToolStripMenuItem_Click);
             // 
             // sortProteinsMenuItem
             // 
@@ -3067,6 +3075,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator46;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem renameProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem immediateWindowToolStripMenuItem;
     }
 }

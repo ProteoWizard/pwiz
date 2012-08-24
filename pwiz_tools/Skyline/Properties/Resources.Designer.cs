@@ -4996,6 +4996,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to On line {0}, row has more than 2 columns.
+        /// </summary>
+        public static string GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns {
+            get {
+                return ResourceManager.GetString("GridViewDriver_ValidateRow_On_line__0__row_has_more_than_2_columns", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Document.
         /// </summary>
         public static string GroupGraphsOrderExtension_LOCALIZED_VALUES_Document {
@@ -7528,10 +7537,10 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to The following peptides appear multiple times in the added list:.
         /// </summary>
-        public static string PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_lis_ {
+        public static string PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list {
             get {
                 return ResourceManager.GetString("PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multip" +
-                        "le_times_in_the_added_lis_", resourceCulture);
+                        "le_times_in_the_added_list", resourceCulture);
             }
         }
         
@@ -7627,6 +7636,15 @@ namespace pwiz.Skyline.Properties {
         public static string PeptideGroupTreeNode_Heading_Protein {
             get {
                 return ResourceManager.GetString("PeptideGroupTreeNode_Heading_Protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Original name: {0}.
+        /// </summary>
+        public static string PeptideGroupTreeNode_RenderTip_Original_name__0__ {
+            get {
+                return ResourceManager.GetString("PeptideGroupTreeNode_RenderTip_Original_name__0__", resourceCulture);
             }
         }
         
@@ -8319,6 +8337,71 @@ namespace pwiz.Skyline.Properties {
         public static string RelativeRTExtension_LOCALIZED_VALUES_Unknown {
             get {
                 return ResourceManager.GetString("RelativeRTExtension_LOCALIZED_VALUES_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add FASTA File.
+        /// </summary>
+        public static string RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_btnFASTA_Click_Add_FASTA_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is not a current protein.
+        /// </summary>
+        public static string RenameProteinsDlg_OkDialog__0__is_not_a_current_protein {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_OkDialog__0__is_not_a_current_protein", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot rename {0} more than once. Please remove either {1} or {2}.
+        /// </summary>
+        public static string RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either__1__or__2__ {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_OkDialog_Cannot_rename__0__more_than_once__Please_remove_either" +
+                        "__1__or__2__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit name {0}.
+        /// </summary>
+        public static string RenameProteinsDlg_OkDialog_Edit_name__0__ {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_OkDialog_Edit_name__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed getting data from the clipboard..
+        /// </summary>
+        public static string RenameProteinsDlg_PasteProteins_Failed_getting_data_from_the_clipboard {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_PasteProteins_Failed_getting_data_from_the_clipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed reading the file {0}. {1}.
+        /// </summary>
+        public static string RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__ {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_UseFastaFile_Failed_reading_the_file__0__1__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document contains a naming conflict.  The name {0} is currently used by multiple protein sequences..
+        /// </summary>
+        public static string RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__" +
+                        "0__is_currently_used_by_multiple_protein_sequences", resourceCulture);
             }
         }
         
@@ -9740,6 +9823,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Manage results.
+        /// </summary>
+        public static string SkylineWindow_ManageResults_Manage_results {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ManageResults_Manage_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure attempting to modify the document..
         /// </summary>
         public static string SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document {
@@ -10077,6 +10169,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_peptides_for_" +
                         "which_to_export_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Rename proteins.
+        /// </summary>
+        public static string SkylineWindow_ShowRenameProteinsDlg_Rename_proteins {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRenameProteinsDlg_Rename_proteins", resourceCulture);
             }
         }
         
@@ -12779,6 +12880,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add all peptides from {0} library.
+        /// </summary>
+        public static string ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to All library peptides already exist in the current document..
         /// </summary>
         public static string ViewLibraryDlg_AddAllPeptides_All_library_peptides_already_exist_in_the_current_document {
@@ -12887,6 +12997,15 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("ViewLibraryDlg_AddPeptide_The_peptide__0__already_exists_with_charge__1__in_the_c" +
                         "urrent_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add Library.
+        /// </summary>
+        public static string ViewLibraryDlg_CheckLibraryInSettings_Add_Library {
+            get {
+                return ResourceManager.GetString("ViewLibraryDlg_CheckLibraryInSettings_Add_Library", resourceCulture);
             }
         }
         

@@ -64,7 +64,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 if (countDuplicates < 15)
                 {
-                    return TextUtil.LineSeparate(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_lis_,
+                    return TextUtil.LineSeparate(Resources.PeptideGridViewDriver_ValidateUniquePeptides_The_following_peptides_appear_multiple_times_in_the_added_list,
                                                  string.Empty,
                                                  TextUtil.LineSeparate(multiplePeptides));
                 }

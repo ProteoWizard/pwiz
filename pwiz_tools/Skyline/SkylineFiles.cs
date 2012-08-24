@@ -1410,7 +1410,7 @@ namespace pwiz.Skyline
                     }
 
                     // And update the document to reflect real changes to the results structure
-                    ModifyDocument("Manage results", doc => // Not L10N
+                    ModifyDocument(Resources.SkylineWindow_ManageResults_Manage_results, doc =>
                     {
                         var results = doc.Settings.MeasuredResults;
                         if (results == null)

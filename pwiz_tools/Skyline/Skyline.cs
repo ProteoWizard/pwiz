@@ -1706,6 +1706,33 @@ namespace pwiz.Skyline
                 });
         }
 
+        private void renameProteinsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRenameProteinsDlg();
+        }
+
+        public void ShowRenameProteinsDlg()
+        {
+            using (RenameProteinsDlg dlg = new RenameProteinsDlg(DocumentUI))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    ModifyDocument(Resources.SkylineWindow_ShowRenameProteinsDlg_Rename_proteins, doc => RenameProtein(doc, dlg));
+                }
+            }
+        }
+
+        private SrmDocument RenameProtein(SrmDocument doc, RenameProteinsDlg dlg)
+        {
+            foreach (var name in dlg.DictNameToName.Keys)
+            {
+                PeptideGroupDocNode node = Document.PeptideGroups.FirstOrDefault(peptideGroup => Equals(name, peptideGroup.Name));
+                if (node != null)
+                    doc = (SrmDocument) doc.ReplaceChild(node.ChangeName(dlg.DictNameToName[name]));
+            }
+            return doc;
+        }
+
         private void acceptPeptidesMenuItem_Click(object sender, EventArgs e)
         {
             using (var dlg = new RefineListDlg(DocumentUI))
@@ -2119,12 +2146,12 @@ namespace pwiz.Skyline
             if (show)
             {
                 if (_sequenceTreeForm != null)
-                {
+        {
                     _sequenceTreeForm.Activate();
                     _sequenceTreeForm.Focus();
-                }
+        }
                 else
-                {
+        {
                     _sequenceTreeForm = CreateSequenceTreeForm();
                     _sequenceTreeForm.Show(dockPanel, DockState.DockLeft);
                 }
@@ -2188,14 +2215,14 @@ namespace pwiz.Skyline
         private void sequenceTreeForm_VisibleChanged(object sender, EventArgs e)
         {
             Settings.Default.ShowPeptides = _sequenceTreeForm.Visible;
-        }
+            }
 
         private void sequenceTreeForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
+            {
             // Update settings and menu check
             Settings.Default.ShowPeptides = false;
             _sequenceTreeForm = null;
-        }
+            }
 
         private void sequenceTree_BeforeNodeEdit(object sender, NodeLabelEditEventArgs e)
         {
@@ -3097,8 +3124,8 @@ namespace pwiz.Skyline
                     return selprec.ModifiedSequence +
                            Transition.GetChargeIndicator(selprec.DocNode.TransitionGroup.PrecursorCharge);
                 }
-                return null;
-            }
+                return null;                
+            }            
         }
 
         public string ResultNameCurrent
@@ -3108,14 +3135,14 @@ namespace pwiz.Skyline
                 return ComboResults != null && ComboResults.SelectedItem != null
                            ? ComboResults.SelectedItem.ToString()
                            : null;
-            }
         }
+        }       
 
         public string SelectedPeptideSequence
         {
             get
             {
-                var peptTreeNode = SequenceTree.GetNodeOfType<PeptideTreeNode>();
+                var peptTreeNode = SequenceTree.GetNodeOfType<PeptideTreeNode>(); 
                 return peptTreeNode != null ? peptTreeNode.DocNode.Peptide.Sequence : null;
             }
         }
@@ -3134,20 +3161,20 @@ namespace pwiz.Skyline
         #region Tools Menu
 
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
+            {
             ShowToolOptionsUI();
-        }
+            }
 
         public void ShowToolOptionsUI()
-        {
+            {
             using (var dlg = new ToolOptionsUI())
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
+                    {
                     // At this point the dialog does everything by itself.
+                    }
                 }
-            }
-        }
+                }
 
         private void configureToolsMenuItem_Click(object sender, EventArgs e)
         {
@@ -3177,9 +3204,9 @@ namespace pwiz.Skyline
 
             int lastInsertIndex = 0;
             List<ToolDescription> toolList = Settings.Default.ToolList;
-            foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t, this) {Text = t.Title}))            
-                toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
-        }
+                foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t, this) {Text = t.Title}))
+                    toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
+            }            
 
         /// <summary>
         /// Runs a tool by index from the tools menu. (for testing) make sure to SkylineWindow.PopulateToolsMenu() first
@@ -3302,7 +3329,7 @@ namespace pwiz.Skyline
             }
         }
 
-        #endregion
+        #endregion 
 
         #region Implementation of IExceptionHandler
 
@@ -3312,7 +3339,7 @@ namespace pwiz.Skyline
         /// <param name="e"></param>
         public void HandleException(Exception e)
         {
-            RunUIAction(() => MessageDlg.Show(this, e.Message));                          
+            RunUIAction(() => MessageDlg.Show(this, e.Message));
         }
 
         #endregion

@@ -1551,6 +1551,12 @@
   <data name="toolStripSeparator45.Size" type="System.Drawing.Size, System.Drawing">
     <value>215, 6</value>
   </data>
+  <data name="renameProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>218, 22</value>
+  </data>
+  <data name="renameProteinsMenuItem.Text" xml:space="preserve">
+    <value>Re&amp;name Proteins...</value>
+  </data>
   <data name="sortProteinsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
     <value>218, 22</value>
   </data>
@@ -3587,6 +3593,12 @@
   </data>
   <data name="&gt;&gt;toolStripSeparator45.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripSeparator, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;renameProteinsMenuItem.Name" xml:space="preserve">
+    <value>renameProteinsMenuItem</value>
+  </data>
+  <data name="&gt;&gt;renameProteinsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;sortProteinsMenuItem.Name" xml:space="preserve">
     <value>sortProteinsMenuItem</value>

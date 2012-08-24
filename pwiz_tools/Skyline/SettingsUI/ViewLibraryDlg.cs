@@ -1306,7 +1306,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (result == DialogResult.No)
                         return result;
                     if (result == DialogResult.Yes)
-                        Program.MainWindow.ModifyDocument("Add Library", doc => // Not L10N
+                        Program.MainWindow.ModifyDocument(Resources.ViewLibraryDlg_CheckLibraryInSettings_Add_Library, doc =>
                             doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
                                 pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
                                 new List<Library>(docLibraries.Libraries) { _selectedLibrary }))));
@@ -1417,7 +1417,7 @@ namespace pwiz.Skyline.SettingsUI
 
             // If the user chooses to continue with the operation, call AddPeptides again in case the document has changed.
             var toPath = Program.MainWindow.SelectedPath;
-            Program.MainWindow.ModifyDocument(string.Format("Add all peptides from {0} library", SelectedLibraryName), // Not L10N
+            Program.MainWindow.ModifyDocument(string.Format(Resources.ViewLibraryDlg_AddAllPeptides_Add_all_peptides_from__0__library, SelectedLibraryName), 
                 doc =>
                 {
                     if (ReferenceEquals(doc, startingDocument))

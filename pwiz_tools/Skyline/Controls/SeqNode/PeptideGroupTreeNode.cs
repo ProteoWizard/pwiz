@@ -246,7 +246,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                 float heightLine = sizeX80.Height;
                 float heightMax = sizeMax.Height;
                 float heightTotal = 0f;
-                foreach (string description in Descriptions)
+                IEnumerable<string> descriptionWithOriginalName = Descriptions; 
+                if (DocNode.PeptideGroup.Name != null && !Equals(DocNode.Name, DocNode.PeptideGroup.Name))
+                {
+                    IEnumerable<string> originalName = new[] {string.Format(Resources.PeptideGroupTreeNode_RenderTip_Original_name__0__, DocNode.PeptideGroup.Name)};
+                    descriptionWithOriginalName = originalName.Concat(descriptionWithOriginalName);
+                }
+                foreach (string description in descriptionWithOriginalName)
                 {
                     SizeF sizeDesc = g.MeasureString(description, rt.FontNormal, (int)widthLine);
                     int heightDesc = (int)(sizeDesc.Height + heightLine / 2);

@@ -364,6 +364,12 @@
     <Compile Include="EditUI\CopyGraphDataToolStripMenuItem.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="EditUI\RenameProteinsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="EditUI\RenameProteinsDlg.Designer.cs">
+      <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="EditUI\GenerateDecoysDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -923,6 +929,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\SequenceTreeForm.resx">
       <DependentUpon>SequenceTreeForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="EditUI\RenameProteinsDlg.resx">
+      <DependentUpon>RenameProteinsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ExportMethodDlg.resx">
       <DependentUpon>ExportMethodDlg.cs</DependentUpon>
