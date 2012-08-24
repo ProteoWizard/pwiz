@@ -81,6 +81,8 @@ echo "bash autotools/configure"
 bash autotools/configure
 echo "ls -l"
 ls -l
+echo "cat Makefile"
+cat Makefile
 echo "make check"
 make check
 rm -rf $TMPDIR
