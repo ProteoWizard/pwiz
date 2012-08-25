@@ -80,15 +80,13 @@ namespace pwiz.Skyline.Model
 
         public PeptideGroupDocNode ChangeName(string name)
         {
-            // Only allow set, if the id object has no name
-            Debug.Assert(PeptideGroup.Name == null);
             return ChangeProp(ImClone(this), (im, v) => im._name = v, name);
         }
 
         public PeptideGroupDocNode ChangeDescription(string desc)
         {
-            // Only allow set, if the id object has no name
-            Debug.Assert(PeptideGroup.Description == null);
+            // Only allow set, if the id object has no description
+            Helpers.Assume(PeptideGroup.Description == null);
             return ChangeProp(ImClone(this), (im, v) => im._description = v, desc);
         }
 
