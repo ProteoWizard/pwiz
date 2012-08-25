@@ -28,30 +28,34 @@ namespace pwiz.Skyline.SettingsUI
     public class SettingsListBoxDriver<TItem>
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
-        public SettingsListBoxDriver(CheckedListBox listBox, SettingsList<TItem> list)
+        public SettingsListBoxDriver(ListBox listBox, SettingsList<TItem> list)
         {
             ListBox = listBox;
             List = list;
         }
 
-        public CheckedListBox ListBox { get; private set; }
+        public ListBox ListBox { get; private set; }
+        public CheckedListBox CheckedListBox { get { return ListBox as CheckedListBox; } }
         public SettingsList<TItem> List { get; private set; }
 
         public TItem[] Chosen { get { return GetChosen(null); } }
 
         public TItem[] GetChosen(ItemCheckEventArgs e)
         {
+            if (CheckedListBox == null)
+                return new TItem[0];
+
             List<TItem> listChosen = new List<TItem>();
-            for (int i = 0; i < ListBox.Items.Count; i++)
+            for (int i = 0; i < CheckedListBox.Items.Count; i++)
             {
                 TItem item;
-                bool checkItem = ListBox.GetItemChecked(i);
+                bool checkItem = CheckedListBox.GetItemChecked(i);
 
                 // If even refers to this item, then use the check state in the event.
                 if (e != null && e.Index == i)
                     checkItem = (e.NewValue == CheckState.Checked);
 
-                if (checkItem && List.TryGetValue(ListBox.Items[i].ToString(), out item))
+                if (checkItem && List.TryGetValue(CheckedListBox.Items[i].ToString(), out item))
                     listChosen.Add(item);
             }
             return listChosen.ToArray();                            
@@ -74,14 +78,17 @@ namespace pwiz.Skyline.SettingsUI
         {
             ListBox.BeginUpdate();
             ListBox.Items.Clear();
+
             foreach (TItem item in List)
             {
                 string name = item.GetKey();
                 int i = ListBox.Items.Add(name);
 
-                // Set checkbox state from chosen list.
-                ListBox.SetItemChecked(i, chosen.Contains(item));
-
+                if (CheckedListBox != null)
+                {
+                    // Set checkbox state from chosen list.
+                    CheckedListBox.SetItemChecked(i, chosen.Contains(item));
+                }
                 // Select the previous selection if it is seen.
                 if (ListBox.Items[i].ToString() == selectedItemLast)
                     ListBox.SelectedIndex = i;
@@ -108,22 +115,27 @@ namespace pwiz.Skyline.SettingsUI
         {
             get
             {
+                if (CheckedListBox == null)
+                    return new string[0];
                 var checkedNames = new List<string>();
-                for (int i = 0; i < ListBox.Items.Count; i++)
+                for (int i = 0; i < CheckedListBox.Items.Count; i++)
                 {
-                    if (ListBox.GetItemChecked(i))
-                        checkedNames.Add(ListBox.Items[i].ToString());
+                    if (CheckedListBox.GetItemChecked(i))
+                        checkedNames.Add(CheckedListBox.Items[i].ToString());
                 }
                 return checkedNames.ToArray();                
             }
 
             set
             {
-                for (int i = 0; i < ListBox.Items.Count; i++)
+                if (CheckedListBox != null)
                 {
-                    ListBox.SetItemChecked(i,
-                        value.Contains(ListBox.Items[i].ToString()));
-                }                                
+                    for (int i = 0; i < ListBox.Items.Count; i++)
+                    {
+                        CheckedListBox.SetItemChecked(i,
+                                               value.Contains(ListBox.Items[i].ToString()));
+                    }
+                }
             }
         }
 

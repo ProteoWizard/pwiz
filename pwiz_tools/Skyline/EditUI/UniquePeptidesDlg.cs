@@ -288,7 +288,7 @@ namespace pwiz.Skyline.EditUI
 
         public void OkDialog()
         {
-            Program.MainWindow.ModifyDocument("Exclude peptides", ExcludePeptidesFromDocument); // Not L10N
+            Program.MainWindow.ModifyDocument(Resources.UniquePeptidesDlg_OkDialog_Exclude_peptides, ExcludePeptidesFromDocument);
             Close();
         }
 

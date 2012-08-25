@@ -30,7 +30,7 @@
         {
             this.PanaramaTabControl = new System.Windows.Forms.TabControl();
             this.tabPanorama = new System.Windows.Forms.TabPage();
-            this.listboxServers = new System.Windows.Forms.CheckedListBox();
+            this.listboxServers = new System.Windows.Forms.ListBox();
             this.lblServers = new System.Windows.Forms.Label();
             this.btnEditServers = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -69,12 +69,12 @@
             this.listboxServers.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.listboxServers.CheckOnClick = true;
             this.listboxServers.FormattingEnabled = true;
             this.listboxServers.Location = new System.Drawing.Point(9, 22);
             this.listboxServers.Name = "listboxServers";
-            this.listboxServers.Size = new System.Drawing.Size(167, 184);
-            this.listboxServers.TabIndex = 3;
+            this.listboxServers.SelectionMode = System.Windows.Forms.SelectionMode.None;
+            this.listboxServers.Size = new System.Drawing.Size(167, 186);
+            this.listboxServers.TabIndex = 4;
             // 
             // lblServers
             // 
@@ -147,8 +147,8 @@
         private System.Windows.Forms.TabPage tabPanorama;
         private System.Windows.Forms.Button btnEditServers;
         private System.Windows.Forms.Label lblServers;
-        private System.Windows.Forms.CheckedListBox listboxServers;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
+        private System.Windows.Forms.ListBox listboxServers;
     }
 }

@@ -379,7 +379,7 @@ namespace pwiz.Skyline.Controls
             {
                 if (DocumentUiContainer.InUndoRedo)
                     return;
-                Program.MainWindow.ModifyDocument("Edit note", doc => 
+                Program.MainWindow.ModifyDocument(Resources.ResultsGrid_ResultsGrid_CellEndEdit_Edit_note, doc => 
                     UpdateDocument(doc, SelectedPaths, Rows[e.RowIndex], Columns, e.ColumnIndex, 
                     PrecursorNoteColumn.Index, TransitionNoteColumn.Index ));
             }

@@ -812,6 +812,12 @@
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
+    <Compile Include="SettingsUI\PublishDocumentDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\PublishDocumentDlg.Designer.cs">
+      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\SimpleGridViewDriver.cs" />
     <Compile Include="SettingsUI\ToolOptionsUI.cs">
       <SubType>Form</SubType>
@@ -983,6 +989,9 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\PublishDocumentDlg.resx">
+      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\RTDetails.resx">
       <DependentUpon>RTDetails.cs</DependentUpon>

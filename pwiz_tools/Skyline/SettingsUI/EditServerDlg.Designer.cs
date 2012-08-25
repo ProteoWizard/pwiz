@@ -31,7 +31,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.lblProjectInfo = new System.Windows.Forms.Label();
-            this.textServerName = new System.Windows.Forms.TextBox();
+            this.textServerURL = new System.Windows.Forms.TextBox();
             this.textPassword = new System.Windows.Forms.TextBox();
             this.textUsername = new System.Windows.Forms.TextBox();
             this.lblPassword = new System.Windows.Forms.Label();
@@ -44,7 +44,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(242, 191);
+            this.btnCancel.Location = new System.Drawing.Point(242, 162);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -54,8 +54,7 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(161, 191);
+            this.btnOK.Location = new System.Drawing.Point(161, 162);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 3;
@@ -68,17 +67,17 @@
             this.lblProjectInfo.AutoSize = true;
             this.lblProjectInfo.Location = new System.Drawing.Point(12, 9);
             this.lblProjectInfo.Name = "lblProjectInfo";
-            this.lblProjectInfo.Size = new System.Drawing.Size(239, 13);
+            this.lblProjectInfo.Size = new System.Drawing.Size(237, 13);
             this.lblProjectInfo.TabIndex = 4;
-            this.lblProjectInfo.Text = "&Server name (e.g. panorama.gs.washington.edu):";
+            this.lblProjectInfo.Text = "&URL (e.g. https://panorama.gs.washington.edu):";
             // 
             // textServerName
             // 
-            this.textServerName.Location = new System.Drawing.Point(12, 25);
-            this.textServerName.Name = "textServerName";
-            this.textServerName.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textServerName.Size = new System.Drawing.Size(303, 20);
-            this.textServerName.TabIndex = 5;
+            this.textServerURL.Location = new System.Drawing.Point(12, 25);
+            this.textServerURL.Name = "textServerURL";
+            this.textServerURL.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textServerURL.Size = new System.Drawing.Size(303, 20);
+            this.textServerURL.TabIndex = 5;
             // 
             // textPassword
             // 
@@ -138,14 +137,14 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(327, 223);
+            this.ClientSize = new System.Drawing.Size(327, 194);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.textPassword);
             this.Controls.Add(this.textUsername);
             this.Controls.Add(this.lblPassword);
             this.Controls.Add(this.lblUsername);
-            this.Controls.Add(this.textServerName);
+            this.Controls.Add(this.textServerURL);
             this.Controls.Add(this.lblProjectInfo);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.btnCancel);
@@ -153,6 +152,7 @@
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "EditServerDlg";
+            this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Edit Server";
             this.ResumeLayout(false);
@@ -165,7 +165,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Label lblProjectInfo;
-        private System.Windows.Forms.TextBox textServerName;
+        private System.Windows.Forms.TextBox textServerURL;
         internal System.Windows.Forms.TextBox textPassword;
         internal System.Windows.Forms.TextBox textUsername;
         private System.Windows.Forms.Label lblPassword;

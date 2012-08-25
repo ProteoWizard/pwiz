@@ -730,7 +730,7 @@ namespace pwiz.Skyline.Properties
 
         public override Server CopyItem(Server item)
         {
-            return (Server) item.ChangeName(string.Empty);
+            return new Server(item.URI, item.Username, item.Password);
         }
     }
 

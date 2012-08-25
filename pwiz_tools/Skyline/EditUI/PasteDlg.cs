@@ -854,12 +854,12 @@ namespace pwiz.Skyline.EditUI
             {
                 switch (PasteFormat)
                 {
-                    case PasteFormat.fasta: return "Insert FASTA"; // Not L10N
-                    case PasteFormat.protein_list: return "Insert protein list"; // Not L10N
-                    case PasteFormat.peptide_list: return "Insert peptide list"; // Not L10N
-                    case PasteFormat.transition_list: return "Insert transition list"; // Not L10N
+                    case PasteFormat.fasta: return Resources.PasteDlg_Description_Insert_FASTA;
+                    case PasteFormat.protein_list: return Resources.PasteDlg_Description_Insert_protein_list;
+                    case PasteFormat.peptide_list: return Resources.PasteDlg_Description_Insert_peptide_list;
+                    case PasteFormat.transition_list: return Resources.PasteDlg_Description_Insert_transition_list;
                 }
-                return "Insert"; // Not L10N
+                return Resources.PasteDlg_Description_Insert;
             }
         }
 

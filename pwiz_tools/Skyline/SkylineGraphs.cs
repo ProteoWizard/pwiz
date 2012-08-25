@@ -1823,7 +1823,7 @@ namespace pwiz.Skyline
                 graphChrom.LockZoom();
             try
             {
-                ModifyDocument(string.Format("Pick peak {0:F01}", e.RetentionTime.MeasuredTime), // Not L10N
+                ModifyDocument(string.Format(Resources.SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_, e.RetentionTime), 
                     doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.TransitionId, e.RetentionTime.MeasuredTime));
             }
             finally
@@ -1848,17 +1848,17 @@ namespace pwiz.Skyline
                     if (Equals(e.StartTime, e.EndTime))
                         message = "Remove peak"; // Not L10N
                     else if (e.ChangeType == PeakBoundsChangeType.both)
-                        message = string.Format("Change peak to {0:F01}-{1:F01}", e.StartTime.MeasuredTime, e.EndTime.MeasuredTime); // Not L10N
+                        message = string.Format(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_, e.StartTime, e.EndTime); 
                     else if (e.ChangeType == PeakBoundsChangeType.start)
-                        message = string.Format("Change peak start to {0:F01}", e.StartTime.MeasuredTime); // Not L10N
+                        message = string.Format(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_, e.StartTime); 
                     else
-                        message = string.Format("Change peak end to {0:F01}", e.EndTime.MeasuredTime); // Not L10N
+                        message = string.Format(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_, e.EndTime); 
                     ModifyDocument(message, doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition,
                                                                   e.StartTime.MeasuredTime, e.EndTime.MeasuredTime, e.IsIndentified));
                 }
                 else
                 {
-                    ModifyDocument("Change peaks", // Not L10N
+                    ModifyDocument(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks,
                         doc =>
                             {
                                 foreach (var e in eMulti.Changes)
@@ -2191,8 +2191,8 @@ namespace pwiz.Skyline
                     if (rtReplicateGraphPane != null)
                     {
                         iInsert = InsertAlignToSelectionMenuItem(menuStrip.Items, iInsert);
+                        }
                     }
-                }
                 else if (graphType == GraphTypeRT.peptide)
                 {
                     menuStrip.Items.Insert(iInsert++, peptideOrderContextMenuItem);
@@ -2418,7 +2418,7 @@ namespace pwiz.Skyline
                     regression = dlg.Regression;
                     listRegression.Add(regression);
 
-                    ModifyDocument(string.Format("Set regression {0}", regression.Name), // Not L10N
+                    ModifyDocument(string.Format(Resources.SkylineWindow_CreateRegression_Set_regression__0__, regression.Name),
                                    doc =>
                                    doc.ChangeSettings(
                                        doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))));
@@ -2489,7 +2489,7 @@ namespace pwiz.Skyline
                     var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
                     if (regressionRTDoc != null && Equals(calcOld.Name, regressionRTDoc.Calculator.Name))
                     {
-                        ModifyDocument(string.Format("Update {0} calculator", calcNew.Name), doc => // Not L10N
+                        ModifyDocument(string.Format(Resources.SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator, calcNew.Name), doc =>
                             doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
                                 predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))));
                     }
@@ -2512,7 +2512,7 @@ namespace pwiz.Skyline
             foreach (var outlier in outliers)
                 outlierIds.Add(outlier.Id.GlobalIndex);
 
-            ModifyDocument("Remove retention time outliers", // Not L10N
+            ModifyDocument(Resources.SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers,
                            doc => (SrmDocument) doc.RemoveAll(outlierIds));
         }
 
@@ -2537,15 +2537,15 @@ namespace pwiz.Skyline
                 return;
             }
             var menuItem = (ToolStripMenuItem) sender;
-            if (menuItem.Checked)
-            {
-                AlignToReplicate = SelectedResultsIndex;    
+                if (menuItem.Checked)
+                {
+                    AlignToReplicate = SelectedResultsIndex;    
+                }
+                else
+                {
+                    AlignToReplicate = -1;
+                }
             }
-            else
-            {
-                AlignToReplicate = -1;
-            }
-        }
 
         /// <summary>
         /// Adds the "Align Times To {Selected Replicate} menu item to a context menu.
@@ -2558,7 +2558,7 @@ namespace pwiz.Skyline
                 alignToSelectionItem.Text = string.Format("Align Times To {0}", ComboResults.SelectedItem);
                 alignToSelectionItem.Checked = AlignToReplicate == SelectedResultsIndex;
                 items.Insert(iInsert++, alignToSelectionItem);
-            }
+        }
             return iInsert;
         }
 

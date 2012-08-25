@@ -363,6 +363,7 @@ namespace pwiz.Skyline
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.publishToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -1577,6 +1578,7 @@ namespace pwiz.Skyline
             this.saveMenuItem,
             this.saveAsMenuItem,
             this.shareDocumentMenuItem,
+            this.publishToolStripMenuItem,
             this.toolStripSeparator2,
             this.importToolStripMenuItem,
             this.exportToolStripMenuItem,
@@ -2715,6 +2717,12 @@ namespace pwiz.Skyline
             resources.ApplyResources(this.aboutMenuItem, "aboutMenuItem");
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
             // 
+            // publishToolStripMenuItem
+            // 
+            this.publishToolStripMenuItem.Name = "publishToolStripMenuItem";
+            resources.ApplyResources(this.publishToolStripMenuItem, "publishToolStripMenuItem");
+            this.publishToolStripMenuItem.Click += new System.EventHandler(this.publishToolStripMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             resources.ApplyResources(this, "$this");
@@ -3075,6 +3083,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator46;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem publishToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem renameProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem immediateWindowToolStripMenuItem;
     }

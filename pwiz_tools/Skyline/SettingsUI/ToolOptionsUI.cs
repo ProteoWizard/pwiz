@@ -51,11 +51,5 @@ namespace pwiz.Skyline.SettingsUI
         {
             DialogResult = DialogResult.OK;
         }
-
-        
-        public SettingsList<Server> GetServers()
-        {
-            return _driverServers.List;
-        }
     }
 }

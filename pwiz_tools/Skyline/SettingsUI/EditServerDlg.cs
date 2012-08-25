@@ -20,14 +20,17 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using System.IO;
 using System.Net;
 using System.Text;
 using System.Windows.Forms;
+using System.Xml;
+using System.Xml.Schema;
 using System.Xml.Serialization;
 using Newtonsoft.Json.Linq;
 using pwiz.Skyline.Controls;
-using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
@@ -42,6 +45,7 @@ namespace pwiz.Skyline.SettingsUI
         public EditServerDlg(IEnumerable<Server> existing)
         {
             _existing = existing;
+            Icon = Resources.Skyline;
             InitializeComponent();
         }
 
@@ -53,77 +57,63 @@ namespace pwiz.Skyline.SettingsUI
                 _server = value;
                 if (_server == null)
                 {
-                    textServerName.Text = "";
-                    textPassword.Text = "";
-                    textUsername.Text = "";
+                    textServerURL.Text = string.Empty;
+                    textPassword.Text = string.Empty;
+                    textUsername.Text = string.Empty;
                 }
                 else
                 {
-                    textServerName.Text = _server.Name;
+                    textServerURL.Text = _server.URI.ToString();
                     textPassword.Text = _server.Password;
                     textUsername.Text = _server.Username;
                 }
             }
         }
 
+        public string URL { get { return textServerURL.Text; } set { textServerURL.Text = value; } }
+        public string Username { get { return textUsername.Text; } set { textUsername.Text = value; } }
+        public string Password { get { return textPassword.Text; } set { textPassword.Text = value; } }
+
         public void OkDialog()
         {
-            var helper = new MessageBoxHelper(this);
+            MessageBoxHelper helper = new MessageBoxHelper(this);
             string serverName;
-            if (!helper.ValidateNameTextBox(new CancelEventArgs(), textServerName, out serverName))
+            if (!helper.ValidateNameTextBox(new CancelEventArgs(), textServerURL, out serverName))
                 return;
 
-            var uriServer = ServerNameToUri(serverName);
+            Uri uriServer = ServerNameToUri(serverName);
             if (uriServer == null)
             {
-                helper.ShowTextBoxError(textServerName, "The text '{0}' is not a valid server name.", serverName);
+                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_, serverName);
                 return;
             }
 
-            if ((_server == null || !Equals(uriServer, _server.Name)) && _existing.Any(e => 
-                Equals(e.Name, uriServer.Host)))
+            if (_existing.Contains(server => !ReferenceEquals(_server, server) && Equals(uriServer,server.URI)))
             {
-                helper.ShowTextBoxError(textServerName, "The server '{0}' already exists.", uriServer.Host);
+                helper.ShowTextBoxError(textServerURL, Resources.EditServerDlg_OkDialog_The_server__0__already_exists_, uriServer.Host);
                 return;
             }
 
-            
             var panoramaClient = PanoramaClient;
             if (panoramaClient == null)
                 panoramaClient = new WebPanoramaClient(uriServer);
 
-            switch (panoramaClient.GetServerState())
+            var waitDlg = new LongWaitDlg { Text = Resources.EditServerDlg_OkDialog_Verifying_server_information };
+            try
             {
-                case ServerState.missing:
-                    helper.ShowTextBoxError(textServerName, "The server {0} does not exist.", uriServer.Host);
-                    return;
-                case ServerState.unknown:
-                    helper.ShowTextBoxError(textServerName, "Unknown error connecting to the server {0}.", uriServer.Host);
-                    return;
+                waitDlg.PerformWork(this, 1000, () => VerifyServerInformation(helper, panoramaClient, uriServer, Username, Password));
             }
-            if (!panoramaClient.IsPanorama())
+            catch (Exception x)
             {
-                helper.ShowTextBoxError(textServerName, "The server {0} is not a Panorama server.", uriServer.Host);
-                return;
-            }
-            string username = textUsername.Text;
-            string password = textPassword.Text;
-            if (!panoramaClient.IsValidUser(username, password))
-            {
-                helper.ShowTextBoxError(textUsername, "The username and password could not be authenticated with the panorama server.");
+                helper.ShowTextBoxError(textServerURL, x.Message);
                 return;
             }
 
-            _server = new Server(uriServer.Host, textUsername.Text, textPassword.Text);
+            _server = new Server(uriServer, Username, Password);
             DialogResult = DialogResult.OK;
         }
 
-        private void btnOK_Click(object sender, EventArgs e)
-        {
-            OkDialog();
-        }
-
-        private Uri ServerNameToUri(string serverName)
+        public Uri ServerNameToUri(string serverName)
         {
             try
             {
@@ -135,54 +125,173 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private string ServerNameToUrl(string serverName)
+        public string ServerNameToUrl(string serverName)
         {
-            const string https = "https://";
-            const string http = "http://";
-            int length = http.Length;
+            const string https = "https://"; // Not L10N
+            const string http = "http://"; // Not L10N
+            int length = https.Length;
 
             var httpsIndex = serverName.IndexOf(https, StringComparison.Ordinal);
             var httpIndex = serverName.IndexOf(http, StringComparison.Ordinal);
 
             if (httpsIndex == -1 && httpIndex == -1)
             {
-                serverName = serverName.Insert(0, http);
+                serverName = serverName.Insert(0, https);
             }
-            else if (httpIndex == -1)
+            else if (httpsIndex == -1)
             {
-                length = https.Length;
+                length = http.Length;
             }
 
-            int pathIndex = serverName.IndexOf("/", length, StringComparison.Ordinal);
+            int pathIndex = serverName.IndexOf("/", length, StringComparison.Ordinal); // Not L10N
 
             if (pathIndex != -1)
                 serverName = serverName.Remove(pathIndex);
 
             return serverName;
         }
+
+        private void VerifyServerInformation(MessageBoxHelper helper, IPanoramaClient panoramaClient, Uri uriServer, string username, string password)
+        {
+            switch (panoramaClient.GetServerState())
+            {
+                case ServerState.missing:
+                    throw new Exception(string.Format(Resources.EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist, uriServer.Host));
+                case ServerState.unknown:
+                    throw new Exception(string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__, uriServer.Host));
+            }
+            switch (panoramaClient.IsPanorama())
+            {
+                case PanoramaState.other:
+                    throw new Exception(string.Format(Resources.EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server, uriServer.Host));
+                case PanoramaState.unknown:
+                    throw new Exception(string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__, uriServer.Host));
+            }
+
+            switch (panoramaClient.IsValidUser(username, password))
+            {
+                case UserState.nonvalid:
+                    throw new Exception(Resources.EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server);
+                case UserState.unknown:
+                    throw new Exception(string.Format(Resources.EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__, uriServer.Host));
+            }
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            OkDialog();
+        }
     }
 
     [XmlRoot("server")]
-    public sealed class Server : XmlNamedElement
+    public sealed class Server : Immutable, IKeyContainer<string>, IXmlSerializable
     {
-        public Server(string name, string username, string password)
-            : base(name)
+        public Server(string uriText, string username, string password)
         {
             Username = username;
             Password = password;
+            URI = new Uri(uriText);
+        }
+
+        public Server(Uri uri, string username, string password)
+        {
+            Username = username;
+            Password = password;
+            URI = uri;
         }
 
         internal string Username { get; set; }
         internal string Password { get; set; }
+        internal Uri URI { get; set; }
+
+        public string GetKey()
+        {
+            return URI.ToString();
+        }
+
+        internal string AuthHeader
+        {
+            get
+            {
+                byte[] authBytes = Encoding.UTF8.GetBytes(String.Format("{0}:{1}", Username, Password)); // Not L10N
+                var authHeader = "Basic " + Convert.ToBase64String(authBytes); // Not L10N
+                return authHeader;
+            }
+        }
+
+        #region Implementation of IXmlSerializable
+
+        /// <summary>
+        /// For serialization
+        /// </summary>
+        private Server()
+        {
+        }
+
+        private enum ATTR
+        {
+            username,
+            password,
+            uri
+        }
+
+        public static Server Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new Server());
+        }
+
+        private void Validate()
+        {
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            // Read tag attributes
+            Username = reader.GetAttribute(ATTR.username);
+            Password = reader.GetAttribute(ATTR.password);
+            string uriText = reader.GetAttribute(ATTR.uri);
+            if (string.IsNullOrEmpty(uriText))
+            {
+                throw new InvalidDataException(Resources.Server_ReadXml_A_Panorama_server_must_be_specified);
+            }
+            try
+            {
+                URI = new Uri(uriText);
+            }
+            catch (UriFormatException)
+            {
+                throw new InvalidDataException(Resources.Server_ReadXml_Server_URL_is_corrupt);
+            }
+            // Consume tag
+            reader.Read();
+
+            Validate();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            // Write tag attributes
+            writer.WriteAttributeString(ATTR.username, Username);
+            writer.WriteAttributeString(ATTR.password, Password);
+            writer.WriteAttribute(ATTR.uri, URI);
+        }
+        #endregion
     }
 
     public enum ServerState { unknown, missing, available }
+    public enum PanoramaState { panorama, other, unknown }
+    public enum UserState { valid, nonvalid, unknown }
 
     public interface IPanoramaClient
     {
         ServerState GetServerState();
-        bool IsPanorama();
-        bool IsValidUser(string username, string password);
+        PanoramaState IsPanorama();
+        UserState IsValidUser(string username, string password);
     }
 
     class WebPanoramaClient: IPanoramaClient
@@ -218,45 +327,76 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public bool IsPanorama()
+        public PanoramaState IsPanorama()
         {
             try
             {
-                Uri uri = new Uri(_server, "/labkey/project/home/getContainers.view");
+                Uri uri = new Uri(_server, "/labkey/project/home/getContainers.view"); // Not L10N
                 using (var webClient = new WebClient())
                 {
-                    string response = webClient.UploadString(uri, "POST", "");
+                    string response = webClient.UploadString(uri, "POST", string.Empty); // Not L10N
                     JObject jsonResponse = JObject.Parse(response);
-                    string type = (string) jsonResponse["type"];
-                    return String.Equals(type, "project");
+                    string type = (string)jsonResponse["type"]; // Not L10N
+                    if (string.Equals(type, "project")) // Not L10N
+                    {
+                        return PanoramaState.panorama;
+                    }
+                    else
+                    {
+                        return PanoramaState.other;
+                    }
                 }
             }
-            catch (WebException)
-            { 
-                return false;
+            catch (WebException ex)
+            {
+                HttpWebResponse response = ex.Response as HttpWebResponse;
+                // Labkey container page should be part of all Panorama servers. 
+                if (response != null && response.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return PanoramaState.other;
+                }
+                else
+                {
+                    return PanoramaState.unknown;
+                }
+                
+            }
+            catch (Exception ex)
+            {
+                Console.Write(ex.Message);
+                return PanoramaState.unknown;
             }
         }
 
-        public bool IsValidUser(string username, string password)
+        public UserState IsValidUser(string username, string password)
         {
             try
             {
-                byte[] authBytes = Encoding.UTF8.GetBytes(String.Format("{0}:{1}", username, password));
-                var authHeader = "Basic " + Convert.ToBase64String(authBytes);
+                byte[] authBytes = Encoding.UTF8.GetBytes(String.Format("{0}:{1}", username, password)); // Not L10N
+                var authHeader = "Basic " + Convert.ToBase64String(authBytes); // Not L10N
 
-                Uri uri = new Uri(_server, "/labkey/security/home/ensureLogin.view");
+                Uri uri = new Uri(_server, "/labkey/security/home/ensureLogin.view"); // Not L10N
 
                 using (WebClient webClient = new WebClient())
                 {
                     webClient.Headers.Add(HttpRequestHeader.Authorization, authHeader);
                     // If credentials are not valid, will return a 401 error.
-                    webClient.UploadString(uri, "POST", "");
-                    return true;
+                    webClient.UploadString(uri, "POST", string.Empty); // Not L10N
+                    return UserState.valid;
                 }
             }
-            catch (WebException)
+            catch (WebException ex)
             {
-                return false;
+                HttpWebResponse response = ex.Response as HttpWebResponse;
+                // Labkey container page should be part of all Panorama servers. 
+                if (response != null && response.StatusCode == HttpStatusCode.Unauthorized)
+                {
+                    return UserState.nonvalid;
+                }
+                else
+                {
+                    return UserState.unknown;
+                }
             }
         }
     }

@@ -1544,6 +1544,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Change Annotation Settings.
+        /// </summary>
+        public static string ChooseAnnotationsDlg_OkDialog_Change_Annotation_Settings {
+            get {
+                return ResourceManager.GetString("ChooseAnnotationsDlg_OkDialog_Change_Annotation_Settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Loading {0} cache.
         /// </summary>
         public static string ChromatogramCache_Load_Loading__0__cache {
@@ -3331,6 +3340,70 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("EditRTDlg_UpdateCalculator_The_calculator_cannot_be_used_to_score_peptides_Please" +
                         "_check_its_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server &apos;{0}&apos; already exists..
+        /// </summary>
+        public static string EditServerDlg_OkDialog_The_server__0__already_exists_ {
+            get {
+                return ResourceManager.GetString("EditServerDlg_OkDialog_The_server__0__already_exists_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} is not a Panorama server..
+        /// </summary>
+        public static string EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server {
+            get {
+                return ResourceManager.GetString("EditServerDlg_OkDialog_The_server__0__is_not_a_Panorama_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text &apos;{0}&apos; is not a valid server name..
+        /// </summary>
+        public static string EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_ {
+            get {
+                return ResourceManager.GetString("EditServerDlg_OkDialog_The_text__0__is_not_a_valid_server_name_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The username and password could not be authenticated with the panorama server..
+        /// </summary>
+        public static string EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_the_panorama_server {
+            get {
+                return ResourceManager.GetString("EditServerDlg_OkDialog_The_username_and_password_could_not_be_authenticated_with_" +
+                        "the_panorama_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown error connecting to the server {0}..
+        /// </summary>
+        public static string EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__ {
+            get {
+                return ResourceManager.GetString("EditServerDlg_OkDialog_Unknown_error_connecting_to_the_server__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Verifying server information..
+        /// </summary>
+        public static string EditServerDlg_OkDialog_Verifying_server_information {
+            get {
+                return ResourceManager.GetString("EditServerDlg_OkDialog_Verifying_server_information", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server {0} does not exist..
+        /// </summary>
+        public static string EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist {
+            get {
+                return ResourceManager.GetString("EditServerDlg_VerifyServerInformation_The_server__0__does_not_exist", resourceCulture);
             }
         }
         
@@ -7245,6 +7318,51 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Insert.
+        /// </summary>
+        public static string PasteDlg_Description_Insert {
+            get {
+                return ResourceManager.GetString("PasteDlg_Description_Insert", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert FASTA.
+        /// </summary>
+        public static string PasteDlg_Description_Insert_FASTA {
+            get {
+                return ResourceManager.GetString("PasteDlg_Description_Insert_FASTA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert peptide list.
+        /// </summary>
+        public static string PasteDlg_Description_Insert_peptide_list {
+            get {
+                return ResourceManager.GetString("PasteDlg_Description_Insert_peptide_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert protein list.
+        /// </summary>
+        public static string PasteDlg_Description_Insert_protein_list {
+            get {
+                return ResourceManager.GetString("PasteDlg_Description_Insert_protein_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert transition list.
+        /// </summary>
+        public static string PasteDlg_Description_Insert_transition_list {
+            get {
+                return ResourceManager.GetString("PasteDlg_Description_Insert_transition_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The peptide sequence cannot be blank..
         /// </summary>
         public static string PasteDlg_ListPeptideSequences_The_peptide_sequence_cannot_be_blank {
@@ -8062,6 +8180,116 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error retrieving server folders:.
+        /// </summary>
+        public static string PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Publish Document.
+        /// </summary>
+        public static string PublishDocumentDlg_btnBrowse_Click_Publish_Document {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Publish_Document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Shared Files.
+        /// </summary>
+        public static string PublishDocumentDlg_btnBrowse_Click_Shared_Files {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Shared_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline Shared Documents.
+        /// </summary>
+        public static string PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_btnBrowse_Click_Skyline_Shared_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please select a Skyline Shared file to upload..
+        /// </summary>
+        public static string PublishDocumentDlg_OkDialog_Please_select_a_Skyline_Shared_file_to_upload {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_OkDialog_Please_select_a_Skyline_Shared_file_to_upload", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Selected file is not a Skyline Shared file..
+        /// </summary>
+        public static string PublishDocumentDlg_OkDialog_Selected_file_is_not_a_Skyline_Shared_file {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_OkDialog_Selected_file_is_not_a_Skyline_Shared_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retrieving information on servers..
+        /// </summary>
+        public static string PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error attempting to retreive server information on the following servers: {0}.
+        /// </summary>
+        public static string PublishDocumentDlg_PublishDocumentDlgLoad_Error_attempting_to_retreive_server_information_on_the_following_servers__0__ {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlgLoad_Error_attempting_to_retreive_server_inf" +
+                        "ormation_on_the_following_servers__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to and {0}.
+        /// </summary>
+        public static string PublishDocumentDlg_ServersToString_and__0__ {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_ServersToString_and__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error obtaining server information..
+        /// </summary>
+        public static string PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uploading File.
+        /// </summary>
+        public static string PublishDocumentDlg_UploadSharedZipFile_Uploading_File {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_UploadSharedZipFile_Uploading_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You do not have permission to upload to the given folder..
+        /// </summary>
+        public static string PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_th" +
+                        "e_given_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Ratio{0}To{1}.
         /// </summary>
         public static string RatioPropertyAccessor_GetPeptideKey_Ratio_0_To_1_ {
@@ -8622,6 +8850,15 @@ namespace pwiz.Skyline.Properties {
         public static string ResultsGrid_ResultsGrid_Best_Retention_Time {
             get {
                 return ResourceManager.GetString("ResultsGrid_ResultsGrid_Best_Retention_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit note.
+        /// </summary>
+        public static string ResultsGrid_ResultsGrid_CellEndEdit_Edit_note {
+            get {
+                return ResourceManager.GetString("ResultsGrid_ResultsGrid_CellEndEdit_Edit_note", resourceCulture);
             }
         }
         
@@ -9207,6 +9444,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to A Panorama server must be specified..
+        /// </summary>
+        public static string Server_ReadXml_A_Panorama_server_must_be_specified {
+            get {
+                return ResourceManager.GetString("Server_ReadXml_A_Panorama_server_must_be_specified", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Server URL is corrupt..
+        /// </summary>
+        public static string Server_ReadXml_Server_URL_is_corrupt {
+            get {
+                return ResourceManager.GetString("Server_ReadXml_Server_URL_is_corrupt", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to None.
         /// </summary>
         public static string SettingsList_ELEMENT_NONE_None {
@@ -9437,6 +9692,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Accept peptides.
+        /// </summary>
+        public static string SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides {
+            get {
+                return ResourceManager.GetString("SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Show Expected.
         /// </summary>
         public static string SkylineWindow_BuildAreaGraphMenu_Show_Expected {
@@ -9451,6 +9715,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_BuildAreaGraphMenu_Show_Library {
             get {
                 return ResourceManager.GetString("SkylineWindow_BuildAreaGraphMenu_Show_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change settings.
+        /// </summary>
+        public static string SkylineWindow_ChangeSettings_Change_settings {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ChangeSettings_Change_settings", resourceCulture);
             }
         }
         
@@ -9547,12 +9820,39 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Set regression {0}.
+        /// </summary>
+        public static string SkylineWindow_CreateRegression_Set_regression__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_CreateRegression_Set_regression__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The DocumentUI property may only be accessed on the UI thread..
         /// </summary>
         public static string SkylineWindow_DocumentUI_The_DocumentUI_property_may_only_be_accessed_on_the_UI_thread {
             get {
                 return ResourceManager.GetString("SkylineWindow_DocumentUI_The_DocumentUI_property_may_only_be_accessed_on_the_UI_t" +
                         "hread", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Delete {0}.
+        /// </summary>
+        public static string SkylineWindow_EditDelete_Delete__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EditDelete_Delete__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to items.
+        /// </summary>
+        public static string SkylineWindow_EditDelete_items {
+            get {
+                return ResourceManager.GetString("SkylineWindow_EditDelete_items", resourceCulture);
             }
         }
         
@@ -9654,6 +9954,51 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existi" +
                         "ng_decoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change peak end to {0:F01}.
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change peak start to {0:F01}.
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_start_to__0_F01_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change peak to {0:F01}-{1:F01}.
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change peaks.
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pick peak {0:F01}.
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_PickedPeak_Pick_peak__0_F01_", resourceCulture);
             }
         }
         
@@ -9796,6 +10141,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Import {0}.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_Import__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_Import__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import results.
+        /// </summary>
+        public static string SkylineWindow_ImportResults_Import_results {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ImportResults_Import_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to You must add at least one target transition before importing results..
         /// </summary>
         public static string SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_ {
@@ -9811,6 +10174,24 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results {
             get {
                 return ResourceManager.GetString("SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Clear integrate all.
+        /// </summary>
+        public static string SkylineWindow_IntegrateAll_Clear_integrate_all {
+            get {
+                return ResourceManager.GetString("SkylineWindow_IntegrateAll_Clear_integrate_all", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Set integrate all.
+        /// </summary>
+        public static string SkylineWindow_IntegrateAll_Set_integrate_all {
+            get {
+                return ResourceManager.GetString("SkylineWindow_IntegrateAll_Set_integrate_all", resourceCulture);
             }
         }
         
@@ -9847,6 +10228,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document {
             get {
                 return ResourceManager.GetString("SkylineWindow_ModifyDocument_Failure_attempting_to_modify_the_document", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Modify {0}.
+        /// </summary>
+        public static string SkylineWindow_ModifyPeptide_Modify__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ModifyPeptide_Modify__0__", resourceCulture);
             }
         }
         
@@ -9925,6 +10315,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Paste {0}.
+        /// </summary>
+        public static string SkylineWindow_Paste_Paste__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Paste_Paste__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Paste FASTA.
         /// </summary>
         public static string SkylineWindow_Paste_Paste_FASTA {
@@ -9957,6 +10356,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_Paste_Paste_transition_list {
             get {
                 return ResourceManager.GetString("SkylineWindow_Paste_Paste_transition_list", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to peptides.
+        /// </summary>
+        public static string SkylineWindow_Paste_peptides {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Paste_peptides", resourceCulture);
             }
         }
         
@@ -10015,6 +10423,90 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error retrieving server information: {0}.
+        /// </summary>
+        public static string SkylineWindow_Publish_Error_retrieving_server_information__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Publish_Error_retrieving_server_information__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retrieving server information..
+        /// </summary>
+        public static string SkylineWindow_Publish_Retrieving_server_information {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Publish_Retrieving_server_information", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are no Panorama servers to publish to. Please add a server under Tools..
+        /// </summary>
+        public static string SkylineWindow_Publish_There_are_no_Panorama_servers_to_publish_to_Please_add_a_server_under_Tools {
+            get {
+                return ResourceManager.GetString("SkylineWindow_Publish_There_are_no_Panorama_servers_to_publish_to_Please_add_a_se" +
+                        "rver_under_Tools", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Skyline Shared Documents.
+        /// </summary>
+        public static string SkylineWindow_publishToolStripMenuItem_Click_Skyline_Shared_Documents {
+            get {
+                return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_Skyline_Shared_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must be fully loaded before it can be published..
+        /// </summary>
+        public static string SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published {
+            get {
+                return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_be" +
+                        "fore_it_can_be_published", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must be saved before it can be published..
+        /// </summary>
+        public static string SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published {
+            get {
+                return ResourceManager.GetString("SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it" +
+                        "_can_be_published", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove duplicate peptides.
+        /// </summary>
+        public static string SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides {
+            get {
+                return ResourceManager.GetString("SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove empty proteins.
+        /// </summary>
+        public static string SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins {
+            get {
+                return ResourceManager.GetString("SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove missing results.
+        /// </summary>
+        public static string SkylineWindow_RemoveMissingResults_Remove_missing_results {
+            get {
+                return ResourceManager.GetString("SkylineWindow_RemoveMissingResults_Remove_missing_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Remove all peaks from {0}.
         /// </summary>
         public static string SkylineWindow_RemovePeak_Remove_all_peaks_from__0__ {
@@ -10042,6 +10534,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Remove repeated peptides.
+        /// </summary>
+        public static string SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides {
+            get {
+                return ResourceManager.GetString("SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove retention time outliers.
+        /// </summary>
+        public static string SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers {
+            get {
+                return ResourceManager.GetString("SkylineWindow_RemoveRTOutliers_Remove_retention_time_outliers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed to restore document.
         /// </summary>
         public static string SkylineWindow_RestoreDocument_Failed_to_restore_document {
@@ -10060,6 +10570,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Skyline Documents.
+        /// </summary>
+        public static string SkylineWindow_SaveDocumentAs_Skyline_Documents {
+            get {
+                return ResourceManager.GetString("SkylineWindow_SaveDocumentAs_Skyline_Documents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document must be fully loaded before it can be saved to a new name..
         /// </summary>
         public static string SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name {
@@ -10070,12 +10589,57 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Name settings.
+        /// </summary>
+        public static string SkylineWindow_SaveSettings_Name_settings {
+            get {
+                return ResourceManager.GetString("SkylineWindow_SaveSettings_Name_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Would you like to use the Unimod definitions for the following modifications?.
         /// </summary>
         public static string SkylineWindow_sequenceTree_AfterLabelEdit_Would_you_like_to_use_the_Unimod_definitions_for_the_following_modifications {
             get {
                 return ResourceManager.GetString("SkylineWindow_sequenceTree_AfterLabelEdit_Would_you_like_to_use_the_Unimod_defini" +
                         "tions_for_the_following_modifications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Add {0}.
+        /// </summary>
+        public static string SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Edit name {0}.
+        /// </summary>
+        public static string SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Drag and drop.
+        /// </summary>
+        public static string SkylineWindow_sequenceTree_DragDrop_Drag_and_drop {
+            get {
+                return ResourceManager.GetString("SkylineWindow_sequenceTree_DragDrop_Drag_and_drop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pick {0}.
+        /// </summary>
+        public static string SkylineWindow_sequenceTree_PickedChildrenEvent_Pick__0__ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_sequenceTree_PickedChildrenEvent_Pick__0__", resourceCulture);
             }
         }
         
@@ -10145,6 +10709,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Update {0} calculator.
+        /// </summary>
+        public static string SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowEditCalculatorDlg_Update__0__calculator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to ESP Feature Files.
         /// </summary>
         public static string SkylineWindow_ShowExportEspFeaturesDialog_ESP_Feature_Files {
@@ -10179,6 +10752,24 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowExportEspFeaturesDialog_The_document_must_contain_peptides_for_" +
                         "which_to_export_features", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Generate Decoys.
+        /// </summary>
+        public static string SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Refine.
+        /// </summary>
+        public static string SkylineWindow_ShowRefineDlg_Refine {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowRefineDlg_Refine", resourceCulture);
             }
         }
         
@@ -10235,6 +10826,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_SkylineWindow_The_URI__0__is_not_a_file {
             get {
                 return ResourceManager.GetString("SkylineWindow_SkylineWindow_The_URI__0__is_not_a_file", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Sort proteins by name.
+        /// </summary>
+        public static string SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name {
+            get {
+                return ResourceManager.GetString("SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name", resourceCulture);
             }
         }
         
@@ -12733,6 +13333,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Exclude peptides.
+        /// </summary>
+        public static string UniquePeptidesDlg_OkDialog_Exclude_peptides {
+            get {
+                return ResourceManager.GetString("UniquePeptidesDlg_OkDialog_Exclude_peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The background proteome {0} has not yet finished being digested with {1}..
         /// </summary>
         public static string UniquePeptidesDlg_OnShown_The_background_proteome__0__has_not_yet_finished_being_digested_with__1__ {
@@ -13276,6 +13885,26 @@ namespace pwiz.Skyline.Properties {
         public static string WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_ {
             get {
                 return ResourceManager.GetString("WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failure retrieving folder information from {0}.
+        /// </summary>
+        public static string WebPanoramaPublishClient_GetInfoForFolders_Failure_retrieving_folder_information_from__0_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_GetInfoForFolders_Failure_retrieving_folder_information_" +
+                        "from__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} uploaded {1} of {2} bytes..
+        /// </summary>
+        public static string WebPanoramaPublishClient_webClient_UploadProgressChanged__0__uploaded__1__of__2__bytes {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_webClient_UploadProgressChanged__0__uploaded__1__of__2__" +
+                        "bytes", resourceCulture);
             }
         }
         

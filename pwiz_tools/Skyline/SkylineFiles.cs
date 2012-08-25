@@ -41,6 +41,7 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -683,7 +684,7 @@ namespace pwiz.Skyline
             if (string.IsNullOrEmpty(fileName))
             {
                 if (MessageBox.Show(this, Resources.SkylineWindow_shareDocumentMenuItem_Click_The_document_must_be_saved_before_it_can_be_shared, 
-                                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
 
                 if (!SaveDocumentAs())
@@ -1117,7 +1118,7 @@ namespace pwiz.Skyline
                 return;
             }
 
-            ModifyDocument("Import Skyline document data", doc => // Not L10N
+            ModifyDocument(Resources.SkylineWindow_ImportFiles_Import_Skyline_document_data, doc =>
             {
                 docNew.ValidateResults();
                 if (doc != docCurrent)
@@ -1261,9 +1262,9 @@ namespace pwiz.Skyline
 //                        throw new NullReferenceException("Unexpected null path sets in ImportResults.");
                         return;
                     }
-                    string description = "Import results"; // Not L10N
+                    string description = Resources.SkylineWindow_ImportResults_Import_results;
                     if (namedResults.Length == 1)
-                        description = string.Format("Import {0}", namedResults[0].Key); // Not L10N
+                        description = string.Format(Resources.SkylineWindow_ImportResults_Import__0__, namedResults[0].Key); // Not L10N
 
                     ModifyDocument(description,
                                    doc => ImportResults(doc, namedResults, dlg.OptimizationName));
@@ -1467,6 +1468,11 @@ namespace pwiz.Skyline
                 }
                 while (!SetDocument(docNew, docCurrent));
             }
+        }
+
+        private void publishToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPublishDlg(null);
         }
 
         private class MruChosenHandler

@@ -26,6 +26,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
@@ -981,6 +982,32 @@ namespace pwiz.SkylineTest
                 var distEnriched = enrichments.IsotopeAbundances[symDist.Key];
                 AssertEx.AreEqualDeep(distDefault.ToArray(), distEnriched.ToArray());
             }
+        }
+
+        /// <summary>
+        /// Test error handling in XML deserialization of <see cref="Server"/>.
+        /// </summary>
+        [TestMethod]
+        public void SerializeServerTest()
+        {
+            const string validPanoramaServer = "http://128.208.10.133:8070/";
+            // Valid first
+            AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" />");
+            AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" " +
+                                                "username=\"\" password=\"\" />");
+            AssertEx.DeserializeNoError<Server>("<server uri=\"" + validPanoramaServer + "\" " +
+                                                "username=\"testuser3@panorama.org\" " +
+                                                "password=\"testuser3\" />");
+
+            // Failures
+            AssertEx.DeserializeError<Server>("<server />");
+            // A server url should always be provided.
+            AssertEx.DeserializeError<Server>("<server " +
+                                                "username=\"testuser3@panorama.org\" " +
+                                                "password=\"testuser3\" />");
+            // Bad URL
+            AssertEx.DeserializeError<Server>("<server uri=\"w ww.google.com\" />");
+            AssertEx.DeserializeError<Server>("<server uri=\"http://\" />");
         }
 
         private const string VALID_ISOTOPE_ENRICHMENT_XML =

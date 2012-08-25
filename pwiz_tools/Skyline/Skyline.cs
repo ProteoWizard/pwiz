@@ -935,7 +935,7 @@ namespace pwiz.Skyline
 
                 IdentityPath selectPath = null, nextAdd;
 
-                ModifyDocument("Paste " + (pasteToPeptideList ? "peptides" : "proteins"), doc => // Not L10N
+                ModifyDocument(string.Format(Resources.SkylineWindow_Paste_Paste__0__, (pasteToPeptideList ? Resources.SkylineWindow_Paste_peptides : Resources.SkylineWindow_Paste_proteins)), doc => // Not L10N
                     doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))), // Not L10N
                         null,
                         MeasuredResults.MergeAction.remove,
@@ -1073,7 +1073,7 @@ namespace pwiz.Skyline
                         MessageDlg.Show(this, string.Format(Resources.SkylineWindow_Unexpected_character__0__found_on_line__1__, c, lineLengths.Count + 1));
                         return;
                     }
-                    if (c == '\n')
+                    if (c == '\n') // Not L10N
                     {
                         lineLengths.Add(lineLen);
                         lineLen = 0;
@@ -1211,7 +1211,7 @@ namespace pwiz.Skyline
             }
             // If the peptide is in the format K.PEPTIDER.C, then remove the periods
             // and the preceding and trailing amino acids.
-            if (sb.Length > 4 && sb[1] == '.' && sb[sb.Length - 2] == '.')
+            if (sb.Length > 4 && sb[1] == '.' && sb[sb.Length - 2] == '.') // Not L10N
             {
                 sb.Remove(0, 2);
                 sb.Remove(sb.Length - 2, 2);
@@ -1222,14 +1222,14 @@ namespace pwiz.Skyline
         private void deleteMenuItem_Click(object sender, EventArgs e) { EditDelete(); }
         public void EditDelete()
         {
-            string undoText = "items"; // Not L10N
+            string undoText = Resources.SkylineWindow_EditDelete_items;
             if (SequenceTree.SelectedNodes.Count == 1)
             {
                 SrmTreeNode node = SequenceTree.SelectedNode as SrmTreeNode;
                 if (node != null)
                     undoText = node.Text;
             }
-            ModifyDocument("Delete " + undoText, doc => // Not L10N
+            ModifyDocument(string.Format(Resources.SkylineWindow_EditDelete_Delete__0__, undoText), doc =>
                                                   {
                                                       foreach (TreeNodeMS nodeTree in SequenceTree.SelectedNodes)
                                                       {
@@ -1284,7 +1284,7 @@ namespace pwiz.Skyline
                     string resultText = dlg.GetText();
                     if (resultColorIndex != -1)
                         Settings.Default.AnnotationColor = dlg.ColorIndex;
-                    ModifyDocument("Edit note", doc => // Not L10N
+                    ModifyDocument(Resources.SkylineWindow_EditNote_Edit_Note, doc => // Not L10N
                                                     {
                                                         foreach (IdentityPath nodePath in selPaths)
                                                         {
@@ -1551,7 +1551,7 @@ namespace pwiz.Skyline
                     {
                         var listStaticMods = Settings.Default.StaticModList;
                         var listHeavyMods = Settings.Default.HeavyModList;
-                        ModifyDocument("Modify " + nodePeptideTree.Text, doc => // Not L10N
+                        ModifyDocument(string.Format(Resources.SkylineWindow_ModifyPeptide_Modify__0__, nodePeptideTree.Text), doc =>
                                                                          doc.ChangePeptideMods(nodePeptideTree.Path,
                                                                                                dlg.ExplicitMods,
                                                                                                dlg.IsCreateCopy,
@@ -1673,7 +1673,7 @@ namespace pwiz.Skyline
             {
                 if (refineDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    ModifyDocument("Refine", doc => refineDlg.RefinementSettings.Refine(doc)); // Not L10N
+                    ModifyDocument(Resources.SkylineWindow_ShowRefineDlg_Refine, doc => refineDlg.RefinementSettings.Refine(doc));
                 }
             }
         }
@@ -1681,24 +1681,24 @@ namespace pwiz.Skyline
         private void removeEmptyProteinsMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { MinPeptidesPerProtein = 1 };
-            ModifyDocument("Remove empty proteins", refinementSettings.Refine); // Not L10N
+            ModifyDocument(Resources.SkylineWindow_removeEmptyProteinsMenuItem_Click_Remove_empty_proteins, refinementSettings.Refine); 
         }
 
         private void removeDuplicatePeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { RemoveDuplicatePeptides = true };
-            ModifyDocument("Remove duplicate peptides", refinementSettings.Refine); // Not L10N
+            ModifyDocument(Resources.SkylineWindow_removeDuplicatePeptidesMenuItem_Click_Remove_duplicate_peptides, refinementSettings.Refine);
         }
 
         private void removeRepeatedPeptidesMenuItem_Click(object sender, EventArgs e)
         {
             var refinementSettings = new RefinementSettings { RemoveRepeatedPeptides = true };
-            ModifyDocument("Remove repeated peptides", refinementSettings.Refine); // Not L10N
+            ModifyDocument(Resources.SkylineWindow_removeRepeatedPeptidesMenuItem_Click_Remove_repeated_peptides, refinementSettings.Refine);
         }
 
         private void sortProteinsMenuItem_Click(object sender, EventArgs e)
         {
-            ModifyDocument("Sort proteins by name", doc => // Not L10N
+            ModifyDocument(Resources.SkylineWindow_sortProteinsMenuItem_Click_Sort_proteins_by_name, doc =>
                 {
                     var listProteins = new List<PeptideGroupDocNode>(doc.PeptideGroups);
                     listProteins.Sort(PeptideGroupDocNode.CompareNames);
@@ -1743,7 +1743,7 @@ namespace pwiz.Skyline
                     if (dlg.RemoveEmptyProteins)
                         refinementSettings.MinPeptidesPerProtein = 1;
 
-                    ModifyDocument("Accept peptides", refinementSettings.Refine); // Not L10N
+                    ModifyDocument(Resources.SkylineWindow_acceptPeptidesMenuItem_Click_Accept_peptides, refinementSettings.Refine);
                 }
             }
         }
@@ -1756,7 +1756,7 @@ namespace pwiz.Skyline
         public void RemoveMissingResults()
         {
             var refinementSettings = new RefinementSettings { RemoveMissingResults = true };
-            ModifyDocument("Remove missing results", refinementSettings.Refine); // Not L10N
+            ModifyDocument(Resources.SkylineWindow_RemoveMissingResults_Remove_missing_results, refinementSettings.Refine);
         }
         
         #endregion // Edit menu
@@ -1982,7 +1982,7 @@ namespace pwiz.Skyline
 
                 SrmSettings settingsNew = null;
 
-                ModifyDocument("Name settings", doc => // Not L10N
+                ModifyDocument(Resources.SkylineWindow_SaveSettings_Name_settings, doc =>
                                                     {
                                                         settingsNew = (SrmSettings) doc.Settings.ChangeName(ss.SaveName);
                                                         return doc.ChangeSettings(settingsNew);
@@ -2065,7 +2065,7 @@ namespace pwiz.Skyline
                     newSettings = (SrmSettings)newSettings.ChangeName(defaultName);
             }
 
-            ModifyDocument("Change settings", doc => doc.ChangeSettings(newSettings)); // Not L10N
+            ModifyDocument(Resources.SkylineWindow_ChangeSettings_Change_settings, doc => doc.ChangeSettings(newSettings));
             return true;
         }
 
@@ -2090,7 +2090,7 @@ namespace pwiz.Skyline
         public void IntegrateAll()
         {
             bool integrateAll = DocumentUI.Settings.TransitionSettings.Integration.IsIntegrateAll;
-            ModifyDocument(integrateAll ? "Set integrate all" : "Clear integrate all", // Not L10N
+            ModifyDocument(integrateAll ? Resources.SkylineWindow_IntegrateAll_Set_integrate_all : Resources.SkylineWindow_IntegrateAll_Clear_integrate_all,
                 doc => doc.ChangeSettings(doc.Settings.ChangeTransitionIntegration(i => i.ChangeIntegrateAll(!integrateAll))));
         }
 
@@ -2225,7 +2225,7 @@ namespace pwiz.Skyline
             }
 
         private void sequenceTree_BeforeNodeEdit(object sender, NodeLabelEditEventArgs e)
-        {
+            {
             if (e.Node is EmptyNode)
                 e.Node.Text = string.Empty;
             else
@@ -2276,10 +2276,10 @@ namespace pwiz.Skyline
                     if (fastaSequence != null)
                     {
                         if (peptideSequence == null)
-                            modifyMessage = "Add " + fastaSequence.Name; // Not L10N
+                            modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__, fastaSequence.Name);
                         else
                         {
-                            modifyMessage = "Add " + peptideSequence;// Not L10N
+                            modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__, peptideSequence);
                             oldPeptideGroupDocNode = document.FindPeptideGroup(fastaSequence);
                             if (oldPeptideGroupDocNode != null)
                             {
@@ -2314,7 +2314,7 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        modifyMessage = "Add " + labelText; // Not L10N
+                        modifyMessage = string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Add__0__,labelText); // Not L10N
                         bool isExSequence = FastaSequence.IsExSequence(labelText) &&
                                             FastaSequence.StripModifications(labelText).Length >= 
                                             settings.PeptideSettings.Filter.MinPeptideLength;
@@ -2419,7 +2419,7 @@ namespace pwiz.Skyline
                 PeptideGroupTreeNode nodeTree = e.Node as PeptideGroupTreeNode;
                 if (nodeTree != null && e.Label != null && !Equals(nodeTree.Text, e.Label))
                 {
-                    ModifyDocument(string.Format("Edit name {0}", e.Label), doc => (SrmDocument) // Not L10N
+                    ModifyDocument(string.Format(Resources.SkylineWindow_sequenceTree_AfterNodeEdit_Edit_name__0__, e.Label), doc => (SrmDocument) // Not L10N
                         doc.ReplaceChild(nodeTree.DocNode.ChangeName(e.Label)));
                 }
             }
@@ -2488,7 +2488,7 @@ namespace pwiz.Skyline
         private void sequenceTree_PickedChildrenEvent(object sender, PickedChildrenEventArgs e)
         {
             SrmTreeNodeParent node = e.Node;
-            ModifyDocument(string.Format("Pick {0}", node.ChildUndoHeading), // Not L10N
+            ModifyDocument(string.Format(Resources.SkylineWindow_sequenceTree_PickedChildrenEvent_Pick__0__, node.ChildUndoHeading), // Not L10N
                 doc => (SrmDocument)doc.PickChildren(doc.Settings, node.Path, e.PickedList, e.IsSynchSiblings));
         }
 
@@ -2596,7 +2596,7 @@ namespace pwiz.Skyline
             SequenceTree.SelectedPath = sourcePaths.First();
             SequenceTree.SelectedPaths = sourcePaths;
 
-            ModifyDocument("Drag and drop", doc =>
+            ModifyDocument(Resources.SkylineWindow_sequenceTree_DragDrop_Drag_and_drop, doc =>
                                                 {
                                                     foreach (IdentityPath pathSource in sourcePaths)
                                                     {
@@ -3084,7 +3084,7 @@ namespace pwiz.Skyline
                 if (decoysDlg.ShowDialog(this) == DialogResult.OK)
                 {                
                     var refinementSettings = new RefinementSettings{ NumberOfDecoys = decoysDlg.NumDecoys, DecoysLabelUsed = decoysDlg.DecoysLabelType, DecoysMethod = decoysDlg.DecoysMethod };
-                    ModifyDocument("Generate Decoys", refinementSettings.GenerateDecoys); // Not L10N
+                    ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys);
 
                     var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
                     SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.PeptideGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
@@ -3161,20 +3161,17 @@ namespace pwiz.Skyline
         #region Tools Menu
 
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
-            {
+        {
             ShowToolOptionsUI();
-            }
+        }
 
         public void ShowToolOptionsUI()
-            {
+        {
             using (var dlg = new ToolOptionsUI())
             {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                    {
-                    // At this point the dialog does everything by itself.
-                    }
-                }
-                }
+                dlg.ShowDialog(this);
+            }
+        }
 
         private void configureToolsMenuItem_Click(object sender, EventArgs e)
         {
@@ -3252,7 +3249,7 @@ namespace pwiz.Skyline
                 _tool = tool;
                 Click += HandleClick;
                 _parent = parent;
-            }
+        }
 
             private readonly SkylineWindow _parent;
             public string Title { get { return _tool.Title; } }
@@ -3343,6 +3340,65 @@ namespace pwiz.Skyline
         }
 
         #endregion
+
+        public void ShowPublishDlg(IPanoramaPublishClient publishClient)
+        {
+            var document = DocumentUI;
+            if (!document.Settings.IsLoaded)
+            {
+                MessageDlg.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published);
+                return;
+            }
+
+            string fileName = DocumentFilePath;
+            if (string.IsNullOrEmpty(fileName))
+            {
+                if (MessageBox.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published,
+                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    return;
+
+                if (!SaveDocumentAs())
+                    return;
+
+                fileName = GetFileName(DocumentFilePath);
+            }
+
+            var servers = Settings.Default.ServerList;
+            if (servers == null || servers.Count == 0)
+            {
+                MessageBox.Show(Resources.SkylineWindow_Publish_There_are_no_Panorama_servers_to_publish_to_Please_add_a_server_under_Tools);
+                return;
+            }
+
+            using (var publishDocumentDlg = new PublishDocumentDlg(servers, fileName))
+            {
+                publishDocumentDlg.PanoramaPublishClient = publishClient;
+                if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    ShareDocument(fileName, false);
+                    publishDocumentDlg.UploadSharedZipFile();
+                }
+            }
+        }
+
+        private string GetFileName(string fileName)
+        {
+            string path;
+            do
+            {
+                path = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
+                                        Path.GetFileNameWithoutExtension(fileName) + "_" + // Not L10N
+                                        GetTimeStamp(DateTime.Now) +
+                                        SrmDocumentSharing.EXT);
+            } while (File.Exists(path));
+            return path;
+        }
+
+        private string GetTimeStamp(DateTime time)
+        {
+            return time.ToString("yyyy-MM-dd_HH-mm-ss"); // Not L10N
+        }
+
     }
 }
 
