@@ -188,7 +188,6 @@ for configac in open("%s/pwiz/configure.scan"%ac.get_pwizroot()) :
 			f.write("BOOST_%s\n"%lib)
 		f.write("AC_CONFIG_FILES([Makefile])\n")
 	f.write(configac)
-f.write("AM_CONDITIONAL(BOOST_ROOT_ENV_DEFINED, test x$(BOOST_ROOT) != x)\n")
 f.close()
 
 makefileam = open('%s/Makefile.am'%logdir, 'w')
@@ -196,7 +195,7 @@ makefileam = open('%s/Makefile.am'%logdir, 'w')
 makefileam.write('AUTOMAKE_OPTIONS = subdir-objects\n')
 libname = '%s.la'%(pkgname)
 makefileam.write('lib_LTLIBRARIES = %s\n'%libname)
-makefileam.write('LDADD = %s $(LIBS)\n'%libname) # for the examples to link with
+makefileam.write('LDADD = %s $(LIBS) -L$(BOOST_LD_PATH)\n'%libname) # for the examples to link with
 
 # note using https://github.com/tsuna/boost.m4 for autoconf boost detection
 makefileam.write('ACLOCAL_AMFLAGS = -I .\n') # per https://raw.github.com/tsuna/boost.m4/master/README
@@ -204,8 +203,6 @@ makefileam.write('LIBS = $(BOOST_THREAD_LIBS)') # there's some disconnect betwee
 for lib in boostlibs :
 	makefileam.write(" $(BOOST_%s_LIBS)"%lib)
 makefileam.write('\n')
-makefileam.write('if BOOST_ROOT_ENV_DEFINED\n	BOOST_ROOT_LIB = " -L$(BOOST_ROOT)/lib"\nendif\n')
-makefileam.write('AM_LDFLAGS =$(BOOST_ROOT_LIB)')
 for lib in boostlibs :
 	makefileam.write(' $(BOOST_%s_LDFLAGS)'%lib)
 makefileam.write('\n')
