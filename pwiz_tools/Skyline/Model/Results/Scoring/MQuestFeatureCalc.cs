@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using pwiz.Skyline.Util;
@@ -161,11 +162,12 @@ namespace pwiz.Skyline.Model.Results.Scoring
     }
 
     /// <summary>
-    /// Calculates the MQuest shape score.
+    /// Calculates a MQuest cross-correlation based score on the analyte transitions.
     /// </summary>
-    class MQuestShapeCalc : DetailedPeakFeatureCalculator
+    abstract class MQuestWeightedLightCalc : DetailedPeakFeatureCalculator
     {
-        protected override double Calculate(PeakScoringContext context, IPeptidePeakData<IDetailedPeakData> summaryPeakData)
+        protected override double Calculate(PeakScoringContext context,
+                                            IPeptidePeakData<IDetailedPeakData> summaryPeakData)
         {
             var lightGroup = summaryPeakData.TransitionGroupPeakData.FirstOrDefault(
                 pd => pd.NodeGroup.TransitionGroup.LabelType.IsLight);
@@ -179,18 +181,79 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 context.AddInfo(crossCorrMatrix);
             }
 
-            var statMaxCrossCorrelations = new Statistics(crossCorrMatrix.CrossCorrelations.Select(xcorr => xcorr.MaxPeak));
-            return statMaxCrossCorrelations.Mean();
+            var statValues = crossCorrMatrix.GetStats(GetValue);
+            var statWeights = crossCorrMatrix.GetStats(GetWeight);
+            return Calculate(statValues, statWeights);
+        }
+
+        protected abstract double Calculate(Statistics statValues, Statistics statWeigths);
+        
+        protected abstract double GetValue(MQuestCrossCorrelation xcorr);
+
+        protected virtual double GetWeight(MQuestCrossCorrelation xcorr)
+        {
+            return (double)xcorr.TranPeakData1.Peak.Area + xcorr.TranPeakData2.Peak.Area;
         }
     }
 
     /// <summary>
-    /// Calculates the MQuest cross-correlation matrix used by the co elution and shape scores,
-    /// modified to remove O(n^2) algorithms:
-    /// - Rather than pairwise comparison of all transitions against eachother, transitions are compared
-    ///   against the trasition with the maximum peak area.
-    /// - Rather than calculating the dot-product of every point against every other point, dot-products
-    ///   are calculated only for points above half-max intensity.
+    /// Calculates the MQuest shape score, weighted by the sum of the transition peak areas.
+    /// </summary>
+    class MQuestWeightedShapeCalc : MQuestWeightedLightCalc
+    {
+        protected override double Calculate(Statistics statValues, Statistics statWeigths)
+        {
+            return statValues.Mean(statWeigths);
+        }
+
+        protected override double GetValue(MQuestCrossCorrelation xcorr)
+        {
+            return xcorr.MaxCorr;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest shape score.
+    /// </summary>
+    class MQuestShapeCalc : MQuestWeightedShapeCalc
+    {
+        protected override double GetWeight(MQuestCrossCorrelation xcorr)
+        {
+            // Use weights of 1.0 for unweighted mean
+            return 1.0;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest co elution score, weighted by the sum of the transition peak areas.
+    /// </summary>
+    class MQuestWeightedCoElutionCalc : MQuestWeightedLightCalc
+    {
+        protected override double Calculate(Statistics statValues, Statistics statWeigths)
+        {
+            return statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
+        }
+
+        protected override double GetValue(MQuestCrossCorrelation xcorr)
+        {
+            return Math.Abs(xcorr.MaxShift);
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest co elution score.
+    /// </summary>
+    class MQuestCoElutionCalc : MQuestWeightedCoElutionCalc
+    {
+        protected override double GetWeight(MQuestCrossCorrelation xcorr)
+        {
+            // Use weights of 1.0 for unweighted mean
+            return 1.0;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest cross-correlation matrix used by the co elution and shape scores
     /// </summary>
     class MQuestAnalyteCrossCorrelations
     {
@@ -201,8 +264,8 @@ namespace pwiz.Skyline.Model.Results.Scoring
             _xcorrMatrix = new List<MQuestCrossCorrelation>();
             foreach (var tranPeakDataPair in GetCrossCorrelationPairsAll(tranPeakDatas))
             {
-                var tranMax = tranPeakDataPair.Key;
-                var tranOther = tranPeakDataPair.Value;
+                var tranMax = tranPeakDataPair.First;
+                var tranOther = tranPeakDataPair.Second;
                 if (tranMax.Peak.Area < tranOther.Peak.Area)
                     Helpers.Swap(ref tranMax, ref tranOther);
 
@@ -213,11 +276,16 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public IEnumerable<MQuestCrossCorrelation> CrossCorrelations { get { return _xcorrMatrix; } }
 
+        public Statistics GetStats(Func<MQuestCrossCorrelation, double> getValue)
+        {
+            return new Statistics(CrossCorrelations.Select(getValue));
+        }
+
         /// <summary>
         /// Get all unique combinations of transition pairs excluding pairing transitions with themselves
         /// </summary>
-        private IEnumerable<KeyValuePair<ITransitionPeakData<IDetailedPeakData>,
-            ITransitionPeakData<IDetailedPeakData>>> GetCrossCorrelationPairsAll(IList<ITransitionPeakData<IDetailedPeakData>> tranPeakDatas)
+        private IEnumerable<TransitionPeakDataPair>
+            GetCrossCorrelationPairsAll(IList<ITransitionPeakData<IDetailedPeakData>> tranPeakDatas)
         {
             for (int i = 0; i < tranPeakDatas.Count - 1; i++)
             {
@@ -225,8 +293,7 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 for (int j = i; j < tranPeakDatas.Count; j++)
                 {
                     var tran2 = tranPeakDatas[j];
-                    yield return new KeyValuePair<ITransitionPeakData<IDetailedPeakData>,
-                        ITransitionPeakData<IDetailedPeakData>>(tran1, tran2);
+                    yield return new TransitionPeakDataPair(tran1, tran2);
                 }
             }
         }
@@ -234,8 +301,10 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// <summary>
         /// Get all transitions paired with the transition with the maximum area.
         /// </summary>
-        private IEnumerable<KeyValuePair<ITransitionPeakData<IDetailedPeakData>,
-            ITransitionPeakData<IDetailedPeakData>>> GetCrossCorrelationPairsMax(IList<ITransitionPeakData<IDetailedPeakData>> tranPeakDatas)
+// ReSharper disable UnusedMember.Local
+        private IEnumerable<TransitionPeakDataPair>
+            GetCrossCorrelationPairsMax(IList<ITransitionPeakData<IDetailedPeakData>> tranPeakDatas)
+// ReSharper restore UnusedMember.Local
         {
             // Find the peak with the maximum area.
             double maxArea = 0;
@@ -250,11 +319,165 @@ namespace pwiz.Skyline.Model.Results.Scoring
             }
             return from tranPeakData in tranPeakDatas
                    where tranMax != null && !ReferenceEquals(tranMax, tranPeakData)
-                   select new KeyValuePair<ITransitionPeakData<IDetailedPeakData>,
-                                           ITransitionPeakData<IDetailedPeakData>>(tranMax, tranPeakData);
+                   select new TransitionPeakDataPair(tranMax, tranPeakData);
         }
     }
 
+    /// <summary>
+    /// Calculates a MQuest cross-correlation based score on the correlation between analyte and standard
+    /// transitions.
+    /// </summary>
+    abstract class MQuestWeightedReferenceCalc : DetailedPeakFeatureCalculator
+    {
+        protected override double Calculate(PeakScoringContext context,
+                                            IPeptidePeakData<IDetailedPeakData> summaryPeakData)
+        {
+            MQuestReferenceCrossCorrelations crossCorrMatrix;
+            if (!context.TryGetInfo(out crossCorrMatrix))
+            {
+                crossCorrMatrix = new MQuestReferenceCrossCorrelations(summaryPeakData.TransitionGroupPeakData);
+                context.AddInfo(crossCorrMatrix);
+            }
+
+            var statValues = crossCorrMatrix.GetStats(GetValue);
+            var statWeights = crossCorrMatrix.GetStats(GetWeight);
+            return Calculate(statValues, statWeights);
+        }
+
+        protected abstract double Calculate(Statistics statValues, Statistics statWeigths);
+
+        protected abstract double GetValue(MQuestCrossCorrelation xcorr);
+
+        protected virtual double GetWeight(MQuestCrossCorrelation xcorr)
+        {
+            return (double)xcorr.TranPeakData1.Peak.Area + xcorr.TranPeakData2.Peak.Area;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest shape score, weighted by the sum of the transition peak areas.
+    /// </summary>
+    class MQuestWeightedReferenceShapeCalc : MQuestWeightedReferenceCalc
+    {
+        protected override double Calculate(Statistics statValues, Statistics statWeigths)
+        {
+            return statValues.Mean(statWeigths);
+        }
+
+        protected override double GetValue(MQuestCrossCorrelation xcorr)
+        {
+            return xcorr.MaxCorr;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest shape score.
+    /// </summary>
+    class MQuestReferenceShapeCalc : MQuestWeightedReferenceShapeCalc
+    {
+        protected override double GetWeight(MQuestCrossCorrelation xcorr)
+        {
+            // Use weights of 1.0 for unweighted mean
+            return 1.0;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest co elution score, weighted by the sum of the transition peak areas.
+    /// </summary>
+    class MQuestWeightedReferenceCoElutionCalc : MQuestWeightedReferenceCalc
+    {
+        protected override double Calculate(Statistics statValues, Statistics statWeigths)
+        {
+            return statValues.Mean(statWeigths) + statValues.StdDev(statWeigths);
+        }
+
+        protected override double GetValue(MQuestCrossCorrelation xcorr)
+        {
+            return Math.Abs(xcorr.MaxShift);
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest co elution score.
+    /// </summary>
+    class MQuestReferenceCoElutionCalc : MQuestWeightedReferenceCoElutionCalc
+    {
+        protected override double GetWeight(MQuestCrossCorrelation xcorr)
+        {
+            // Use weights of 1.0 for unweighted mean
+            return 1.0;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the MQuest cross-correlation matrix used by the co elution and shape scores
+    /// </summary>
+    class MQuestReferenceCrossCorrelations
+    {
+        private readonly IList<MQuestCrossCorrelation> _xcorrMatrix;
+
+        public MQuestReferenceCrossCorrelations(IList<ITransitionGroupPeakData<IDetailedPeakData>> tranGroupPeakDatas)
+        {
+            _xcorrMatrix = new List<MQuestCrossCorrelation>();
+            var lightGroup = tranGroupPeakDatas.FirstOrDefault(
+                pd => pd.NodeGroup.TransitionGroup.LabelType.IsLight);
+            if (lightGroup == null)
+                return;
+            foreach (var standardGroup in tranGroupPeakDatas.Where(pd => pd.IsStandard))
+            {
+                foreach (var tranPeakDataPair in GetCrossCorrelationPairs(lightGroup, standardGroup))
+                {
+                    var tranLight = tranPeakDataPair.First;
+                    var tranStandard = tranPeakDataPair.Second;
+
+                    _xcorrMatrix.Add(new MQuestCrossCorrelation(tranLight, tranStandard,
+                        tranLight.Peak.StartIndex, tranLight.Peak.EndIndex, true));
+                }
+            }
+        }
+
+        public IEnumerable<MQuestCrossCorrelation> CrossCorrelations { get { return _xcorrMatrix; } }
+
+        public Statistics GetStats(Func<MQuestCrossCorrelation, double> getValue)
+        {
+            return new Statistics(CrossCorrelations.Select(getValue));
+        }
+
+        /// <summary>
+        /// Get all unique combinations of transition pairs excluding pairing transitions with themselves
+        /// </summary>
+        private IEnumerable<TransitionPeakDataPair>
+            GetCrossCorrelationPairs(ITransitionGroupPeakData<IDetailedPeakData> lightGroup,
+                                     ITransitionGroupPeakData<IDetailedPeakData> standardGroup)
+        {
+            // Enumerate as many elements as match by position
+            int i = 0;
+            while (i < lightGroup.TranstionPeakData.Count && i < standardGroup.TranstionPeakData.Count)
+            {
+                var lightTran = lightGroup.TranstionPeakData[i];
+                var standardTran = standardGroup.TranstionPeakData[i];
+                if (!lightTran.NodeTran.Transition.Equivalent(standardTran.NodeTran.Transition))
+                    break;
+                yield return new TransitionPeakDataPair(lightTran, standardTran);
+                i++;
+            }
+            // Enumerate any remaining light transitions doing exhaustive search for a standard match
+            while (i < lightGroup.TranstionPeakData.Count)
+            {
+                var lightTran = lightGroup.TranstionPeakData[i];
+                var standardTran = standardGroup.TranstionPeakData.FirstOrDefault(
+                        p => lightTran.NodeTran.Transition.Equivalent(p.NodeTran.Transition));
+                if (standardTran != null)
+                    yield return new TransitionPeakDataPair(lightTran, standardTran);
+                i++;
+            }
+        }
+    }
+
+    /// <summary>
+    /// A single cross-correlation vector between the intensities of two different transitions.
+    /// </summary>
     class MQuestCrossCorrelation
     {
         public MQuestCrossCorrelation(ITransitionPeakData<IDetailedPeakData> tranPeakData1,
@@ -276,9 +499,38 @@ namespace pwiz.Skyline.Model.Results.Scoring
 
         public ITransitionPeakData<IDetailedPeakData> TranPeakData1 { get; private set; }
         public ITransitionPeakData<IDetailedPeakData> TranPeakData2 { get; private set; }
+
+        /// <summary>
+        /// The full vector of cross-correlation scores between the points of the first transition
+        /// and the points of the second transition shifted by some amount.  The keys in the dictionary
+        /// are the shift, and the values are the dot-products.
+        /// </summary>
         public IDictionary<int, double> XcorrDict { get; private set; }
 
-        public double MaxPeak { get { return XcorrDict.Max(p => p.Value); } }
+        /// <summary>
+        /// The maximum cross-correlation score between the points of the two transitions
+        /// </summary>
+        public double MaxCorr { get { return XcorrDict.Max(p => p.Value); } }
+
+        public int MaxShift
+        {
+            get
+            {
+                int maxShift = 0;
+                double maxCorr = 0;
+                foreach (var p in XcorrDict)
+                {
+                    int shift = p.Key;
+                    double corr = p.Value;
+                    if (corr > maxCorr || (corr == maxCorr && shift < maxShift))
+                    {
+                        maxShift = shift;
+                        maxCorr = corr;
+                    }
+                }
+                return maxShift;
+            }
+        }
 
         private static Statistics GetStatistics(float[] intensities, int startIndex, int count)
         {
@@ -287,5 +539,19 @@ namespace pwiz.Skyline.Model.Results.Scoring
                 result[i] = intensities[startIndex + i];
             return new Statistics(result);
         }
+    }
+
+    struct TransitionPeakDataPair
+    {
+        public TransitionPeakDataPair(ITransitionPeakData<IDetailedPeakData> first,
+                                      ITransitionPeakData<IDetailedPeakData> second)
+            : this()
+        {
+            First = first;
+            Second = second;
+        }
+
+        public ITransitionPeakData<IDetailedPeakData> First { get; private set; }
+        public ITransitionPeakData<IDetailedPeakData> Second { get; private set; }
     }
 }

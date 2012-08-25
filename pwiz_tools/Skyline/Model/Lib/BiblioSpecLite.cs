@@ -468,7 +468,7 @@ namespace pwiz.Skyline.Model.Lib
 
                         // Avoid creating a cache which will just report it is corrupted.
                         // Older versions of BlibBuild used to create matches with charge 0.
-                        if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                        if (charge <= 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                             continue;
                         var retentionTimesByFileId = default(IndexedRetentionTimes);
                         if (retentionTimesBySpectraIdAndFileId != null)
@@ -699,7 +699,7 @@ namespace pwiz.Skyline.Model.Lib
                         int seqKeyHash = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_hash));
                         int seqKeyLength = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_length));
                         int charge = GetInt32(specHeader, ((int) SpectrumCacheHeader.charge));
-                        if (charge == 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
+                        if (charge <= 0 || charge > TransitionGroup.MAX_PRECURSOR_CHARGE)
                             throw new InvalidDataException(string.Format(Resources.BiblioSpecLiteLibrary_Load_Invalid_precursor_charge__0__found__File_may_be_corrupted, charge));
                         int copies = GetInt32(specHeader, ((int) SpectrumCacheHeader.copies));
                         int numPeaks = GetInt32(specHeader, ((int) SpectrumCacheHeader.num_peaks));

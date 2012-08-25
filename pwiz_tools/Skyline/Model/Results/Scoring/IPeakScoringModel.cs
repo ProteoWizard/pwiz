@@ -180,9 +180,9 @@ namespace pwiz.Skyline.Model.Results.Scoring
         /// Stores information that can be used by other <see cref="IPeakFeatureCalculator"/> objects.
         /// </summary>
         /// <param name="info">An object with extra information to be stored by type</param>
-        public void AddInfo(object info)
+        public void AddInfo<TInfo>(TInfo info)
         {
-            _dictInfo.Add(info.GetType(), info);
+            _dictInfo.Add(typeof(TInfo), info);
         }
 
         /// <summary>

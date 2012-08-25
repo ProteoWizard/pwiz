@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Util
 {
@@ -45,6 +44,28 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Creates a copy of the internal list and sorts it.  O(n*log(n)) operation.
+        /// </summary>
+        /// <returns>A sorted copy of the list of numbers in this object</returns>
+        private double[] OrderedList()
+        {
+            var ordered = new double[_list.Length];
+            _list.CopyTo(ordered, 0);
+            Array.Sort(ordered);
+            return ordered;
+        }
+
+        private KeyValuePair<double, int>[] OrderedIndexedList(bool desc = false)
+        {
+            var ordered = _list.Select((v, i) => new KeyValuePair<double, int>(v, i)).ToArray();
+            if (desc)
+                Array.Sort(ordered, (p1, p2) => Comparer<double>.Default.Compare(p2.Key, p1.Key));
+            else
+                Array.Sort(ordered, (p1, p2) => Comparer<double>.Default.Compare(p1.Key, p2.Key));
+            return ordered;
+        }
+
+        /// <summary>
         /// Calculates the mode (most frequently occurring number) in the set.
         /// </summary>
         /// <returns>Mode of the set of numbers</returns>
@@ -52,32 +73,30 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                var i = new double[_list.Length];
-                _list.CopyTo(i, 0);
-                Array.Sort(i);
-                double valMode = i[0], helpValMode = i[0];
+                var ordered = OrderedList();
+                double valMode = ordered[0], helpValMode = ordered[0];
                 int oldCounter = 0, newCounter = 0;
                 int j = 0;
-                for (; j <= i.Length - 1; j++)
+                for (; j <= ordered.Length - 1; j++)
                 {
-                    if (i[j] == helpValMode)
+                    if (ordered[j] == helpValMode)
                         newCounter++;
                     else if (newCounter > oldCounter)
                     {
                         valMode = helpValMode;
                         oldCounter = newCounter;
                         newCounter = 1;
-                        helpValMode = i[j];
+                        helpValMode = ordered[j];
                     }
                     else if (newCounter == oldCounter)
                     {
                         valMode = double.NaN;
-                        helpValMode = i[j];
+                        helpValMode = ordered[j];
                         newCounter = 1;
                     }
                     else
                     {
-                        helpValMode = i[j];
+                        helpValMode = ordered[j];
                         newCounter = 1;
                     }
                 }
@@ -101,16 +120,14 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                var i = new double[_list.Length];
-                _list.CopyTo(i, 0);
-                Array.Sort(i);
+                var ordered = OrderedList();
                 List<double> listModes = new List<double>();
-                double helpValMode = i[0];
+                double helpValMode = ordered[0];
                 int oldCounter = 0, newCounter = 0;
                 int j = 0;
-                for (; j <= i.Length - 1; j++)
+                for (; j <= ordered.Length - 1; j++)
                 {
-                    if (i[j] == helpValMode)
+                    if (ordered[j] == helpValMode)
                         newCounter++;
                     else if (newCounter > oldCounter)
                     {
@@ -119,18 +136,18 @@ namespace pwiz.Skyline.Util
 
                         oldCounter = newCounter;
                         newCounter = 1;
-                        helpValMode = i[j];
+                        helpValMode = ordered[j];
                     }
                     else if (newCounter == oldCounter)
                     {
                         listModes.Add(helpValMode);
 
-                        helpValMode = i[j];
+                        helpValMode = ordered[j];
                         newCounter = 1;
                     }
                     else
                     {
-                        helpValMode = i[j];
+                        helpValMode = ordered[j];
                         newCounter = 1;
                     }
                 }
@@ -205,10 +222,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public double Sum()
         {
-            double sum = 0;
-            foreach (double value in _list)
-                sum += value;
-            return sum;
+            return _list.Sum();
         }
 
         /// <summary>
@@ -430,23 +444,211 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Computes the index standard of a given member of the set of numbers.
+        /// Computes the index standard of a given value for the set of numbers.
         /// </summary>
-        /// <param name="member">A member of the set</param>
+        /// <param name="value">An arbitrary value</param>
         /// <returns>Index standard</returns>
-        public double Z(double member)
+        public double Z(double value)
+        {
+            return Z(value, Mean(), StdDev());
+        }
+
+        /// <summary>
+        /// Computes the index standard of a given set of values for the set of numbers.
+        /// </summary>
+        /// <param name="s">Another set of numbers</param>
+        /// <returns>Index standard for each number in the new set</returns>
+        public Statistics Z(Statistics s)
+        {
+            double mean = Mean();
+            double stdev = StdDev();
+            return new Statistics(s._list.Select(v => Z(v, mean, stdev)));
+        }
+
+        private double Z(double value, double mean, double stdev)
         {
             try
             {
-                if (_list.Contains(member))
-                    return (member - Mean())/StdDev();
-                
-                return double.NaN;
+                return (value - mean) / stdev;
             }
             catch (Exception)
             {
                 return double.NaN;
             }
+        }
+
+        /// <summary>
+        /// Computes the p value of a given value using the set of numbers as a null distribution
+        /// which is assumed to be Gaussian (normal).
+        /// </summary>
+        /// <param name="value">An arbitrary value</param>
+        /// <returns>P value</returns>
+        public double PvalueNorm(double value)
+        {
+            return 1 - PNorm(Z(value));
+        }
+
+        /// <summary>
+        /// Computes the p values of a given target distribution using the set of numbers as a null distribution
+        /// which is assumed to be Gaussian (normal).
+        /// </summary>
+        /// <param name="s">Another set of numbers</param>
+        /// <returns>Index standard for each number in the new set</returns>
+        public double[] PvaluesNorm(Statistics s)
+        {
+            return Z(s)._list.Select(v => 1 - PNorm(v)).ToArray();
+        }
+
+        private const double Z_MAX = 6.0;
+        
+        /// <summary>
+        /// Adapted from a polynomial approximation in:  Ibbetson D, Algorithm 209
+        /// Collected Algorithms of the CACM 1963 p. 616
+        /// </summary>
+        /// <param name="z">Z score</param>
+        /// <returns>P value for the given z-score</returns>
+        public static double PNorm(double z)
+        {
+            double y = z != 0.0
+                ? 0.5 * Math.Abs(z)
+                : 0.0;
+
+            double x;
+            if (y > (Z_MAX * 0.5))
+            {
+                x = 1.0;
+            }
+            else if (y < 1.0)
+            {
+                double w = y * y;
+                x = ((((((((0.000124818987 * w
+                         - 0.001075204047) * w + 0.005198775019) * w
+                         - 0.019198292004) * w + 0.059054035642) * w
+                         - 0.151968751364) * w + 0.319152932694) * w
+                         - 0.531923007300) * w + 0.797884560593) * y * 2.0;
+            }
+            else
+            {
+                y -= 2.0;
+                x = (((((((((((((-0.000045255659 * y
+                               + 0.000152529290) * y - 0.000019538132) * y
+                               - 0.000676904986) * y + 0.001390604284) * y
+                               - 0.000794620820) * y - 0.002034254874) * y
+                               + 0.006549791214) * y - 0.010557625006) * y
+                               + 0.011630447319) * y - 0.009279453341) * y
+                               + 0.005353579108) * y - 0.002141268741) * y
+                               + 0.000535310849) * y + 0.999936657524;
+            }
+
+            return z > 0.0 ? ((x + 1.0) * 0.5) : ((1.0 - x) * 0.5);
+        }
+
+        /// <summary>
+        /// Computes the p value of a given value using the set of numbers as the actual
+        /// null distribution with no assumptions of distribution shape.
+        /// </summary>
+        /// <param name="value">An arbitrary value</param>
+        /// <returns>P value</returns>
+        public double PvalueNull(double value)
+        {
+            return PvalueNull(value, OrderedList());
+        }
+
+        /// <summary>
+        /// Computes the p values of a given target distribution using the set of numbers as the actual
+        /// null distribution with no assumptions of distribution shape.
+        /// </summary>
+        /// <param name="s">Another set of numbers</param>
+        /// <returns>Index standard for each number in the new set</returns>
+        public double[] PvaluesNull(Statistics s)
+        {
+            var ordered = OrderedList();
+            return s._list.Select(v => PvalueNull(v, ordered)).ToArray();
+        }
+
+        private static double PvalueNull(double value, double[] ordered)
+        {
+            int i = Array.BinarySearch(ordered, value);
+            if (i < 0)
+                i = ~i;
+            int n = ordered.Length;
+            return ((double) n - i)/n;
+        }
+
+        /// <summary>
+        /// Returns a single point Pi-zero (proportion of features that are truly null)
+        /// estimation, given a specific p value cut-off, where values in the list are
+        /// assumed to be well behaved (randomly distributed for false-postives) p values.
+        /// See Storey and Tibshirani 2003
+        /// </summary>
+        /// <param name="lambda">P value cut-off</param>
+        /// <returns>Pi-zero estimation</returns>
+        public double PiZero(double lambda)
+        {
+            return _list.Count(v => v > lambda)/(_list.Length*(1 - lambda));
+        }
+
+        public double PiZero(double? lambda)
+        {
+            if (lambda.HasValue)
+                return PiZero(lambda.Value);
+
+            // var statLambdas = new Statistics(PiZeroLambdas);
+            // var statEstimates = new Statistics(statLambdas._list.Select(PiZero));
+            // Need Cubic spline curve fitting (http://www.alglib.net/interpolation/leastsquares.php#splinefit)
+            throw new NotImplementedException();
+        }
+
+        public static IEnumerable<double> PiZeroLambdas
+        {
+            get
+            {
+                for (int i = 1; i <= 95; i++)
+                    yield return i*0.01;
+            }
+        }
+
+        /// <summary>
+        /// Returns q values for a set of p values, optionally using a p value cut-off
+        /// used for calculating Pi-zero.
+        /// See Storey and Tibshirani 2003
+        /// CONSIDER: Use spline fitting described in the paper instead of a supplied
+        ///           cut-off.
+        /// </summary>
+        /// <returns>New statistics containing q values for the p values in this set</returns>
+        public double[] Qvalues(double? lambda = null)
+        {
+            double pi0 = PiZero(lambda);
+            var ordered = OrderedIndexedList();
+            int n = _list.Length;
+            var qlist = new double[n];
+            for (int i = 0; i < n; i++)
+            {
+                double pVal = ordered[i].Key;
+                int iOrig = ordered[i].Value;
+                double qVal = pi0*n*pVal / (i + 1);
+                qlist[iOrig] = qVal;
+            }
+            // Enforce that q values are monotonically increasing and never greater than 1
+            double last = 1.0;
+            for (int i = n - 1; i >= 0; i--)
+            {
+                int iOrig = ordered[i].Value;
+                double qVal = Math.Min(qlist[iOrig], last);
+                qlist[iOrig] = qVal;
+                last = qVal;
+            }
+            return qlist;
+        }
+
+        public double[] QvaluesNorm(Statistics s)
+        {
+            return new Statistics(PvaluesNorm(s)).Qvalues();
+        }
+
+        public double[] QvaluesNull(Statistics s)
+        {
+            return new Statistics(PvaluesNull(s)).Qvalues();
         }
 
         /// <summary>
@@ -515,73 +717,73 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the Alpha coefficient (y-intercept) of the linear
-        /// regression function using the current set of numbers as Y values
+        /// Calculates the b term (y-intercept) of the linear
+        /// regression function (y = a*x + b) using the current set of numbers as Y values
         /// and another set as X values.
         /// </summary>
         /// <param name="x">X values</param>
-        /// <returns>The Alpha coefficient</returns>
-        public double Alpha(Statistics x)
+        /// <returns>The b coefficient of y = a*x + b</returns>
+        public double BTerm2(Statistics x)
         {
-            return Alpha(this, x);
+            return BTerm2(this, x);
         }
 
         /// <summary>
-        /// Calculates the Alpha coefficient (y-intercept) of the linear
-        /// regression function given the Y and X values.
+        /// Calculates the b term (y-intercept) of the linear
+        /// regression function (y = a*x + b) given the Y and X values.
         /// </summary>
         /// <param name="y">Y values</param>
         /// <param name="x">X values</param>
-        /// <returns>The Alpha coefficient</returns>
-        public static double Alpha(Statistics y, Statistics x)
+        /// <returns>The b coefficient of y = a*x + b</returns>
+        public static double BTerm2(Statistics y, Statistics x)
         {
-            return y.Mean() - Beta(y, x)*x.Mean();
+            return y.Mean() - ATerm2(y, x)*x.Mean();
         }
 
         /// <summary>
-        /// Calculates the y-intercept (Alpha coefficient) of the linear
-        /// regression function using the current set of numbers as Y values
+        /// Calculates the y-intercept (b term) of the linear
+        /// regression function (y = a*x + b) using the current set of numbers as Y values
         /// and another set as X values.
         /// </summary>
         /// <param name="x">X values</param>
         /// <returns>The y-intercept</returns>
         public double Intercept(Statistics x)
         {
-            return Alpha(x);
+            return BTerm2(x);
         }
 
         /// <summary>
-        /// Calculates the y-intercept (Alpha coefficient) of the linear
-        /// regression function given the Y and X values.
+        /// Calculates the y-intercept (Beta coefficient) of the linear
+        /// regression function (y = a*x + b) given the Y and X values.
         /// </summary>
         /// <param name="y">Y values</param>
         /// <param name="x">X values</param>
         /// <returns>The y-intercept</returns>
         public static double Intercept(Statistics y, Statistics x)
         {
-            return Alpha(y, x);
+            return BTerm2(y, x);
         }
 
         /// <summary>
-        /// Calculates the Beta coefficient (slope) of the linear regression function
+        /// Calculates the a term (slope) of the linear regression function (y = a*x + b)
         /// using the current set of numbers as Y values and another set
         /// as X values.
         /// </summary>
         /// <param name="x">X values</param>
-        /// <returns>The Beta coefficient</returns>
-        public double Beta(Statistics x)
+        /// <returns>The a term of y = a*x + b</returns>
+        public double ATerm2(Statistics x)
         {
-            return Beta(this, x);
+            return ATerm2(this, x);
         }
 
         /// <summary>
-        /// Calculates the Beta coefficient (slope) of the linear regression function
+        /// Calculates the a term (slope) of the linear regression function (y = a*x + b)
         /// given the Y and X values.
         /// </summary>
         /// <param name="y">Y values</param>
         /// <param name="x">X values</param>
-        /// <returns>The Beta coefficient</returns>
-        public static double Beta(Statistics y, Statistics x)
+        /// <returns>The a term of y = a*x + b</returns>
+        public static double ATerm2(Statistics y, Statistics x)
         {
             try
             {
@@ -594,7 +796,7 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the slope (Beta coefficient) of the linear regression function
+        /// Calculates the slope (a term) of the linear regression function (y = a*x + b)
         /// using the current set of numbers as Y values and another set
         /// as X values.
         /// </summary>
@@ -602,11 +804,11 @@ namespace pwiz.Skyline.Util
         /// <returns>The slope</returns>
         public double Slope(Statistics x)
         {
-            return Beta(x);
+            return ATerm2(x);
         }
 
         /// <summary>
-        /// Calculates the slope (Beta coefficient) of the linear regression function
+        /// Calculates the slope (a term) of the linear regression function (y = a*x + b)
         /// given the Y and X values.
         /// </summary>
         /// <param name="y">Y values</param>
@@ -614,7 +816,7 @@ namespace pwiz.Skyline.Util
         /// <returns>The slope</returns>
         public static double Slope(Statistics y, Statistics x)
         {
-            return Beta(y, x);
+            return ATerm2(y, x);
         }
 
         /// <summary>
@@ -638,13 +840,153 @@ namespace pwiz.Skyline.Util
         /// <returns>A set of residuals</returns>
         public static Statistics Residuals(Statistics y, Statistics x)
         {
-            double a = Beta(y, x);
-            double b = Alpha(y, x);
+            double a = ATerm2(y, x);
+            double b = BTerm2(y, x);
 
             List<double> residuals = new List<double>();
             for (int i = 0; i < x.Length; i++)
                 residuals.Add(y._list[i] - (a*x._list[i] + b));
             return new Statistics(residuals);
+        }
+
+
+        /// <summary>
+        /// Calculates the a term of the quadratic regression function (y = a*x^2 + b*x + c)
+        /// using the current set of numbers as Y values and another set
+        /// as X values.
+        /// see http://www.codeproject.com/Articles/63170/Least-Squares-Regression-for-Quadratic-Curve-Fitti
+        /// </summary>
+        /// <param name="x">X values</param>
+        /// <returns>The a term of y = a*x^2 + b*x + c</returns>
+        public double ATerm3(Statistics x)
+        {
+            return ATerm3(this, x);
+        }
+
+        /// <summary>
+        /// Calculates the a term of the quadratic regression function (y = a*x^2 + b*x + c)
+        /// given the Y and X values.
+        /// </summary>
+        /// <param name="y">Y values</param>
+        /// <param name="x">X values</param>
+        /// <returns>The a term of y = a*x^2 + b*x + c</returns>
+        public static double ATerm3(Statistics y, Statistics x)
+        {
+            if (x.Length < 3)
+                throw new InvalidOperationException("Insufficient pairs of co-ordinates");
+
+            //notation sjk to mean the sum of x_i^j*y_i^k. 
+            double s40 = x._list.Sum(v => v*v*v*v); //sum of x^4
+            double s30 = x._list.Sum(v => v*v*v); //sum of x^3
+            double s20 = x._list.Sum(v => v*v); //sum of x^2
+            double s10 = x.Sum();  //sum of x
+            double s00 = x.Length;
+            //sum of x^0 * y^0  ie 1 * number of entries
+
+            double s21 = x._list.Select((v, i) => v*v*y._list[i]).Sum(); //sum of x^2*y
+            double s11 = x._list.Select((v, i) => v*y._list[i]).Sum();  //sum of x*y
+            double s01 = y.Sum();   //sum of y
+
+            //a = Da/D
+            return (s21 * (s20 * s00 - s10 * s10) -
+                    s11 * (s30 * s00 - s10 * s20) +
+                    s01 * (s30 * s10 - s20 * s20))
+                    /
+                    (s40 * (s20 * s00 - s10 * s10) -
+                     s30 * (s30 * s00 - s10 * s20) +
+                     s20 * (s30 * s10 - s20 * s20));
+        }
+
+        /// <summary>
+        /// Calculates the b term of the quadratic regression function (y = a*x^2 + b*x + c)
+        /// using the current set of numbers as Y values and another set
+        /// as X values.
+        /// </summary>
+        /// <param name="x">X values</param>
+        /// <returns>The b term of y = a*x^2 + b*x + c</returns>
+        public double BTerm3(Statistics x)
+        {
+            return BTerm3(this, x);
+        }
+
+        /// <summary>
+        /// Calculates the c term of the quadratic regression function (y = a*x^2 + b*x + c)
+        /// given the Y and X values.
+        /// </summary>
+        /// <param name="y">Y values</param>
+        /// <param name="x">X values</param>
+        /// <returns>The c term of y = a*x^2 + b*x + c</returns>
+        public static double BTerm3(Statistics y, Statistics x)
+        {
+            if (x.Length < 3)
+                throw new InvalidOperationException("Insufficient pairs of co-ordinates");
+
+            //notation sjk to mean the sum of x_i^j*y_i^k.
+            double s40 = x._list.Sum(v => v*v*v*v); //sum of x^4
+            double s30 = x._list.Sum(v => v*v*v); //sum of x^3
+            double s20 = x._list.Sum(v => v*v); //sum of x^2
+            double s10 = x.Sum();  //sum of x
+            double s00 = x.Length;
+            //sum of x^0 * y^0  ie 1 * number of entries
+
+            double s21 = x._list.Select((v, i) => v*v*y._list[i]).Sum(); //sum of x^2*y
+            double s11 = x._list.Select((v, i) => v*y._list[i]).Sum();  //sum of x*y
+            double s01 = y.Sum();   //sum of y
+
+            //b = Db/D
+            return (s40 * (s11 * s00 - s01 * s10) -
+                    s30 * (s21 * s00 - s01 * s20) +
+                    s20 * (s21 * s10 - s11 * s20))
+                    /
+                    (s40 * (s20 * s00 - s10 * s10) -
+                     s30 * (s30 * s00 - s10 * s20) +
+                     s20 * (s30 * s10 - s20 * s20));
+        }
+
+        /// <summary>
+        /// Calculates the c term of the quadratic regression function (y = a*x^2 + b*x + c)
+        /// using the current set of numbers as Y values and another set
+        /// as X values.
+        /// </summary>
+        /// <param name="x">X values</param>
+        /// <returns>The c term of y = a*x^2 + b*x + c</returns>
+        public double CTerm3(Statistics x)
+        {
+            return CTerm3(this, x);
+        }
+
+        /// <summary>
+        /// Calculates the c term of the quadratic regression function (y = a*x^2 + b*x + c)
+        /// given the Y and X values.
+        /// </summary>
+        /// <param name="y">Y values</param>
+        /// <param name="x">X values</param>
+        /// <returns>The c term of y = a*x^2 + b*x + c</returns>
+        public static double CTerm3(Statistics y, Statistics x)
+        {
+            if (x.Length < 3)
+                throw new InvalidOperationException("Insufficient pairs of co-ordinates");
+
+            //notation sjk to mean the sum of x_i^j*y_i^k.
+            double s40 = x._list.Sum(v => v*v*v*v); //sum of x^4
+            double s30 = x._list.Sum(v => v*v*v); //sum of x^3
+            double s20 = x._list.Sum(v => v*v); //sum of x^2
+            double s10 = x.Sum();  //sum of x
+            double s00 = x.Length;
+            //sum of x^0 * y^0  ie 1 * number of entries
+
+            double s21 = x._list.Select((v, i) => v*v*y._list[i]).Sum(); //sum of x^2*y
+            double s11 = x._list.Select((v, i) => v*y._list[i]).Sum();  //sum of x*y
+            double s01 = y.Sum();   //sum of y
+
+            //c = Dc/D
+            return (s40 * (s20 * s01 - s10 * s11) -
+                    s30 * (s30 * s01 - s10 * s21) +
+                    s20 * (s30 * s11 - s20 * s21))
+                    /
+                    (s40 * (s20 * s00 - s10 * s10) -
+                     s30 * (s30 * s00 - s10 * s20) +
+                     s20 * (s30 * s10 - s20 * s20));
         }
 
         /// <summary>
@@ -667,20 +1009,20 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the standard error of the alpha (y-intercept) coefficient for a
-        /// linear regression function using the current set of numbers as Y values
+        /// Calculates the standard error of the b term (y-intercept) for a
+        /// linear regression function y = a*x + b using the current set of numbers as Y values
         /// and another set as X values.
         /// </summary>
         /// <param name="x">X values</param>
-        /// <returns>Standard error of alpha</returns>
-        public double StdErrAlpha(Statistics x)
+        /// <returns>Standard error of a term</returns>
+        public double StdErrBTerm2(Statistics x)
         {
-            return StdErrAlpha(this, x);
+            return StdErrBTerm2(this, x);
         }
 
         /// <summary>
         /// Standard error for the Alpha (y-intercept) coefficient of a linear
-        /// regression.
+        /// regression function y = a*x + b.
         /// <para>
         /// Described at:
         /// http://www.chem.utoronto.ca/coursenotes/analsci/StatsTutorial/ErrRegr.html
@@ -688,7 +1030,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="y">Y values</param>
         /// <param name="x">X values</param>
-        public static double StdErrAlpha(Statistics y, Statistics x)
+        public static double StdErrBTerm2(Statistics y, Statistics x)
         {
             try
             {
@@ -701,20 +1043,20 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
-        /// Calculates the standard error of the beta (slope) coefficient for a
-        /// linear regression function using the current set of numbers as Y values
+        /// Calculates the standard error of the a term (slope) for a
+        /// linear regression function y = a*x + b using the current set of numbers as Y values
         /// and another set as X values.
         /// </summary>
         /// <param name="x">X values</param>
-        /// <returns>Standard error of beta</returns>
-        public double StdErrBeta(Statistics x)
+        /// <returns>Standard error of a term</returns>
+        public double StdErrATerm2(Statistics x)
         {
-            return StdErrBeta(this, x);
+            return StdErrATerm2(this, x);
         }
 
         /// <summary>
-        /// Standard error for the Beta (slope) coefficient of a linear
-        /// regression.
+        /// Standard error for the a term (slope) of a linear
+        /// regression function y = a*x + b.
         /// <para>
         /// Described at:
         /// http://www.chem.utoronto.ca/coursenotes/analsci/StatsTutorial/ErrRegr.html
@@ -722,7 +1064,7 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <param name="y">Y values</param>
         /// <param name="x">X values</param>
-        public static double StdErrBeta(Statistics y, Statistics x)
+        public static double StdErrATerm2(Statistics y, Statistics x)
         {
             try
             {
@@ -756,12 +1098,8 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                int n = _list.Length;
-                var ordered = new double[n];
-                _list.CopyTo(ordered, 0);
-                Array.Sort(ordered);
-
-                double pos = (n - 1) * p;
+                var ordered = OrderedList();
+                double pos = (ordered.Length - 1) * p;
                 int j = (int)pos;
                 double g = pos - j;
 
@@ -783,11 +1121,8 @@ namespace pwiz.Skyline.Util
         {
             try
             {
-                int n = _list.Length;
-                var ordered = new double[n];
-                _list.CopyTo(ordered, 0);
-                Array.Sort(ordered);
-
+                var ordered = OrderedList();
+                int n = ordered.Length;
                 if (Math.Ceiling(n*p) == n*p)
                     return (ordered[(int) (n*p - 1)] + ordered[(int) (n*p)])/2;
                 
@@ -920,17 +1255,15 @@ namespace pwiz.Skyline.Util
         /// Calculates the rank orders of the values in the list.
         /// </summary>
         /// <returns>Rank order</returns>
-        public int[] Rank()
+        public int[] Rank(bool desc = false)
         {
             // Sort into rank order, storing original indices
-            var listValueIndices = new List<KeyValuePair<double, int>>();
-            for (int i = 0; i < _list.Length; i++)
-                listValueIndices.Add(new KeyValuePair<double, int>(_list[i], i));
-            listValueIndices.Sort((p1, p2) => Comparer<double>.Default.Compare(p2.Key, p1.Key));
+            var ordered = OrderedIndexedList(desc);
+            int n = _list.Length;
             // Record the sorted rank order
-            var ranks = new int[_list.Length];
-            for (int i = 0; i < _list.Length; i++)
-                ranks[listValueIndices[i].Value] = i+1;
+            var ranks = new int[n];
+            for (int i = 0; i < n; i++)
+                ranks[ordered[i].Value] = i+1;
             return ranks;
         }
 
@@ -959,8 +1292,8 @@ namespace pwiz.Skyline.Util
 
             int n = Length;
 
-            int[] a = Rank();
-            int[] b = s.Rank();
+            int[] a = Rank(true);
+            int[] b = s.Rank(true);
 
             a = FixZeroRanks(a, s, b);
             b = s.FixZeroRanks(b, this, a);
@@ -1016,7 +1349,7 @@ namespace pwiz.Skyline.Util
             for (int i = 0; i < listNewValues.Count; i++)
                 listNewValues[i] = -listNewValues[i];
             // And re-rank
-            return new Statistics(listNewValues).Rank();
+            return new Statistics(listNewValues).Rank(true);
         }
 
         public Dictionary<int, double> CrossCorrelation(Statistics s, bool normalize)

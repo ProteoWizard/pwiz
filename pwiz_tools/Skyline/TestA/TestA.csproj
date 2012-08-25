@@ -124,6 +124,7 @@
     <Compile Include="MassCalcTest.cs" />
     <Compile Include="ModEquivalentTest.cs" />
     <Compile Include="ModificationMatcherTest.cs" />
+    <Compile Include="MoreStatisticsTest.cs" />
     <Compile Include="PasteTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PwizFileInfoTest.cs" />
