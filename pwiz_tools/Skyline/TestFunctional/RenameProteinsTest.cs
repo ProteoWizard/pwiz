@@ -59,7 +59,7 @@ namespace pwiz.SkylineTestFunctional
                     renameProteinsDlg =>
                     {
                         renameProteinsDlg.Paste();
-                        Assert.IsTrue(Equals(renameProteinsDlg.NameCount(), 5));
+                        Assert.IsTrue(Equals(renameProteinsDlg.NameCount, 5));
                         renameProteinsDlg.OkDialog();
                     });
 
@@ -103,7 +103,7 @@ namespace pwiz.SkylineTestFunctional
                 RunUI(() =>
                         {
                             renameProteinsDlg.PopulateGrid();
-                            Assert.IsTrue(Equals(renameProteinsDlg.NameCount(), SkylineWindow.Document.PeptideGroupCount));
+                            Assert.IsTrue(Equals(renameProteinsDlg.NameCount, SkylineWindow.Document.PeptideGroupCount));
                             renameProteinsDlg.CancelButton.PerformClick();
                         });
 
@@ -126,7 +126,7 @@ namespace pwiz.SkylineTestFunctional
                                           renameProteinsDlg =>
                                               {
                                                   renameProteinsDlg.UseFastaFile(TestFilesDir.GetTestPath(@"RenameProteinsTest\FastaPartialRenamed.txt"));
-                                                  Assert.IsTrue(Equals(renameProteinsDlg.NameCount(), 2));
+                                                  Assert.IsTrue(Equals(renameProteinsDlg.NameCount, 2));
                                                   renameProteinsDlg.CancelButton.PerformClick();
                                               });
 
@@ -135,7 +135,7 @@ namespace pwiz.SkylineTestFunctional
                     renameProteinsDlg =>
                     {
                         renameProteinsDlg.UseFastaFile(TestFilesDir.GetTestPath(@"RenameProteinsTest\FastaRenamed.txt"));
-                        Assert.IsTrue(Equals(renameProteinsDlg.NameCount(), SkylineWindow.Document.PeptideGroupCount));
+                        Assert.IsTrue(Equals(renameProteinsDlg.NameCount, SkylineWindow.Document.PeptideGroupCount));
                         renameProteinsDlg.OkDialog();
                     });
                 var docFastaRename = WaitForDocumentChange(docOrig);

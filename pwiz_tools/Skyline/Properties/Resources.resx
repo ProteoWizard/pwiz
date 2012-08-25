@@ -4526,4 +4526,7 @@ Are you sure you want to continue?</value>
   <data name="RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences">
     <value xml:space="preserve">The document contains a naming conflict.  The name {0} is currently used by multiple protein sequences.</value>
   </data>
+  <data name="RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_">
+    <value xml:space="preserve">No protein sequence matches found between the current document and the FASTA file {0}</value>
+  </data>
 </root>

@@ -49,6 +49,11 @@ namespace pwiz.Skyline.EditUI
 
         public IDictionary<string, string> DictNameToName { get; private set; }
 
+        public int NameCount
+        {
+            get { return _gridViewDriver.RowCount - 1; } // Extra row is for adding more proteins
+        }
+
         private void btnOK_Click(object sender, EventArgs e)
         {
             OkDialog();
@@ -176,6 +181,11 @@ namespace pwiz.Skyline.EditUI
                         CurrentName = nodePepGroup.Name,
                         NewName = dictExistToNewName[nodePepGroup.Name]
                     }));
+                if (NameCount == 0)
+                {
+                    MessageDlg.Show(this, string.Format(Resources.RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_,
+                                                        fastaFile));
+                }
             }
             catch (IOException x)
             {
@@ -248,17 +258,14 @@ namespace pwiz.Skyline.EditUI
 
         #region Functional test support
 
-        public void Paste()
-        {
-            _gridViewDriver.OnPaste();
-        }
-        public int NameCount()
-        {
-            return _gridViewDriver.RowCount - 1;  // Extra row is for adding more proteins
-        }
         public void Clear()
         {
             _gridViewDriver.Items.Clear();
+        }
+
+        public void Paste()
+        {
+            _gridViewDriver.OnPaste();
         }
 
         #endregion

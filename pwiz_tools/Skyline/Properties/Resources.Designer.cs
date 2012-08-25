@@ -8396,6 +8396,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No protein sequence matches found between the current document and the FASTA file {0}.
+        /// </summary>
+        public static string RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_ {
+            get {
+                return ResourceManager.GetString("RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_curr" +
+                        "ent_document_and_the_FASTA_file__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The document contains a naming conflict.  The name {0} is currently used by multiple protein sequences..
         /// </summary>
         public static string RenameProteinsDlg_UseFastaFile_The_document_contains_a_naming_conflict_The_name__0__is_currently_used_by_multiple_protein_sequences {
