@@ -128,13 +128,23 @@ namespace pwiz.SkylineTestA
         public void QValueTest()
         {
             var statPvalues = new Statistics(STOREY_P_VALUES);
-            var qvalues = statPvalues.Qvalues(0.5);
 
+            Assert.AreEqual(0.676341, statPvalues.PiZero(0.5), 1e-6);
+            Assert.AreEqual(0.671857, statPvalues.PiZero(), 1e-6);
+
+            // First try q values with 0.5 lambda from the paper
+            var qvalues = statPvalues.Qvalues(0.5);
             Assert.AreEqual(STOREY_P_VALUES.Length, qvalues.Length);
             Assert.AreEqual(STOREY_Q_VALUES.Length, qvalues.Length);
             var deltas = new Statistics(qvalues.Select((v, i) => Math.Abs(v - STOREY_Q_VALUES[i])));
             Assert.IsTrue(deltas.Mean() < 1.1e-5);
             Assert.IsTrue(deltas.Max() < 4e-4);
+
+            // Then try it with automated lambda calculation
+            qvalues = statPvalues.Qvalues();
+            deltas = new Statistics(qvalues.Select((v, i) => Math.Abs(v - STOREY_Q_VALUES[i])));
+            Assert.IsTrue(deltas.Mean() < 2.6e-3);
+            Assert.IsTrue(deltas.Max() < 4.5e-3);
         }
 
         private static readonly double[] STOREY_P_VALUES = new[]

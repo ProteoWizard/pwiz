@@ -588,15 +588,53 @@ namespace pwiz.Skyline.Util
             return _list.Count(v => v > lambda)/(_list.Length*(1 - lambda));
         }
 
-        public double PiZero(double? lambda)
+        private const int RANDOM_CYCLE_COUNT = 100;
+        private const int RANDOM_DRAWS_MAX = 1000;
+
+        public double PiZero(double? lambda = null)
         {
             if (lambda.HasValue)
                 return PiZero(lambda.Value);
 
-            // var statLambdas = new Statistics(PiZeroLambdas);
-            // var statEstimates = new Statistics(statLambdas._list.Select(PiZero));
-            // Need Cubic spline curve fitting (http://www.alglib.net/interpolation/leastsquares.php#splinefit)
-            throw new NotImplementedException();
+            // As in Storey and Tibshirani 2003 calculate Pi-zero across a range of
+            // p value cut-offs.
+            var lambdas = PiZeroLambdas.ToArray();
+            double minPi0 = lambdas.Select(PiZero).Min();
+
+            // Because the spline fitting described in Storey and Tibshirani 2003
+            // is non-trivial to implement in C#, the method in use in Percolator
+            // is used instead.
+
+            // Find the lambda level closest to the minimum with enough precision
+            // by testing sets of p values drawn at random from the current set.
+            double[] arrayMse = new double[lambdas.Length];
+            int numDraw = Math.Min(Length, RANDOM_DRAWS_MAX);
+            var rand = new Random(0);   // Use a fixed random seed value for reproducible results
+            for (int r = 0; r < RANDOM_CYCLE_COUNT; r++)
+            {
+                // Create an array of p-values randomly drawn from the current set
+                var statBoot = new Statistics(RandomDraw(rand).Take(numDraw));
+                for (int i = 0; i < lambdas.Length; ++i)
+                {
+                    double pi0Boot = statBoot.PiZero(lambdas[i]);
+                    // Estimated mean-squared error.
+                    arrayMse[i] += (pi0Boot - minPi0)*(pi0Boot - minPi0);
+                }
+            }
+
+            // Use the original estimate for the lambda that produced
+            // the minimum mean-squared error for the random draw iterations
+            int iMin = arrayMse.IndexOf(v => v == arrayMse.Min());
+            double pi0 = Math.Max(0.0, Math.Min(1.0, PiZero(lambdas[iMin])));
+
+            return pi0;
+        }
+
+        private IEnumerable<double> RandomDraw(Random rand)
+        {
+            int n = Length;
+            for (int i = 0; i < n; i++)
+                yield return _list[rand.Next(n-1)];
         }
 
         public static IEnumerable<double> PiZeroLambdas
