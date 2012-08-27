@@ -413,6 +413,7 @@ struct ParserImpl
                       "CREATE TABLE IF NOT EXISTS ProteinQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
 
                       "DELETE FROM SpectrumSource;"
+                      "DELETE FROM SpectrumSourceMetadata;"
                       "DELETE FROM SpectrumSourceGroup;"
                       "DELETE FROM SpectrumSourceGroupLink;"
                       "DELETE FROM Spectrum;"
