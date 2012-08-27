@@ -203,7 +203,7 @@ makefileam.write('LIBS = $(BOOST_THREAD_LIBS)') # there's some disconnect betwee
 for lib in boostlibs :
 	makefileam.write(" $(BOOST_%s_LIBS)"%lib)
 makefileam.write('\n')
-makefileam.write('AM_LDFLAGS = -L$(BOOST_LD_PATH)')
+makefileam.write('AM_LDFLAGS = -L$(BOOST_LDPATH)')
 for lib in boostlibs :
 	makefileam.write(' $(BOOST_%s_LDFLAGS)'%lib)
 makefileam.write('\n')
@@ -221,7 +221,7 @@ makefileam.write('%s_SOURCES = '%la_name)
 for src in srcs :
 	makefileam.write(' %s'%relname(src))
 makefileam.write('\n')
-makefileam.write('%s_LDFLAGS = -L$(BOOST_LD_PATH) -version-info %s:%s:0\n'%(la_name,version[0],version[1]))
+makefileam.write('%s_LDFLAGS = -L$(BOOST_LDPATH) -version-info %s:%s:0\n'%(la_name,version[0],version[1]))
 
 # write the test programs
 makefileam.write("#\n# here are some programs that test the pwiz library.\n#\n")
