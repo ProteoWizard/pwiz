@@ -221,7 +221,7 @@ makefileam.write('%s_SOURCES = '%la_name)
 for src in srcs :
 	makefileam.write(' %s'%relname(src))
 makefileam.write('\n')
-makefileam.write('%s_LDFLAGS = -version-info %s:%s:0\n'%(la_name,version[0],version[1]))
+makefileam.write('%s_LDFLAGS = -L$(BOOST_LD_PATH) -version-info %s:%s:0\n'%(la_name,version[0],version[1]))
 
 # write the test programs
 makefileam.write("#\n# here are some programs that test the pwiz library.\n#\n")
