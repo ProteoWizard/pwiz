@@ -1,13 +1,13 @@
 format-version: 1.2
-data-version: 3.25.0
-date: 09:05:2012 16:37
+data-version: 3.30.0
+date: 06:08:2012 08:01
 saved-by: Gerhard Mayer
-auto-generated-by: OBO-Edit 2.1
+auto-generated-by: OBO-Edit 2.2
 import: http://unit-ontology.googlecode.com/svn/trunk/unit.obo
 default-namespace: MS
 remark: namespace: MS
-remark: version: 3.25.0
-remark: release date: 2012-05-09
+remark: version: 3.30.0
+remark: release date: 2012-08-06
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -6817,7 +6817,7 @@ is_a: MS:1001116 ! single protein result details
 
 [Term]
 id: MS:1001100
-name: confident peptide
+name: confident peptide sequence number
 def: "This counts the number of peptide sequences without regard to whether they are distinct. Multiple charges states and multiple modification states DO count as multiple peptides. The definition of 'confident' must be qualified elsewhere." [PSI:PI]
 xref: value-type:xsd\:nonNegativeInteger "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
@@ -9139,7 +9139,7 @@ is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001493
-name: percolaror:PEP
+name: percolator:PEP
 def: "Posterior error probability." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001143 ! search engine specific score for peptides
@@ -9698,6 +9698,7 @@ name: Scaffold:Protein Probability
 def: "Scaffold protein probability score." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001116 ! single protein result details
+is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001580
@@ -9867,7 +9868,7 @@ is_obsolete: true
 id: MS:1001603
 name: ProteomeDiscoverer:Spectrum Selector:Ionization Source
 def: "OBSOLETE Ionization source (electro-, nano-, thermospray, electron impact, APCI, MALDI, FAB etc)." [PSI:MS]
-comment: This term was made obsolete because it's recommended to use one of the 'inlet type' (MS:1000007)or 'ionization type' (MS:1000008) terms  instead.
+comment: This term was made obsolete because it's recommended to use one of the 'inlet type' (MS:1000007) or 'ionization type' (MS:1000008) terms  instead.
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 is_obsolete: true
@@ -11485,7 +11486,7 @@ is_a: MS:1001833 ! quantitation analysis summary
 id: MS:1001837
 name: iTRAQ quantitation analysis
 def: "Quantification analysis using the AB SCIEX iTRAQ isobaric labeling workflow, wherein 2-8 reporter ions are measured in MS/MS spectra near 114 m/z." [PSI:PI]
-is_a: MS:1002009 ! isobaric label quantification analysis
+is_a: MS:1002009 ! isobaric label quantitation analysis
 
 [Term]
 id: MS:1001838
@@ -11782,14 +11783,14 @@ id: MS:1001883
 name: coefficient of variation
 def: "Variation of a set of signal measurements calculated as the standard deviation relative to the mean." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1001881 ! mz5 file
+is_a: MS:1001882 ! transition validation attribute
 
 [Term]
 id: MS:1001884
 name: signal-to-noise ratio
 def: "Unitless number providing the ratio of the total measured intensity of a signal relative to the estimated noise level for that signal." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1001881 ! mz5 file
+is_a: MS:1001882 ! transition validation attribute
 
 [Term]
 id: MS:1001885
@@ -12206,6 +12207,7 @@ is_a: MS:1001457 ! data processing software
 
 [Term]
 id: MS:1001948
+name: PEAKS Node
 def: "PEAKS Node software for high throughput data analysis." [PSI:MS]
 is_a: MS:1001139 ! quantitation software name
 is_a: MS:1001456 ! analysis software
@@ -12569,32 +12571,32 @@ is_a: MS:1000044 ! dissociation method
 
 [Term]
 id: MS:1002001
-name: MS1 Label-based raw feature quantitation
-def: "MS1 Label-based raw feature quantitation." [PSI:PI]
-is_a: MS:1001833 ! quantitation analysis summary
+name: MS1 label-based raw feature quantitation
+def: "MS1 label-based raw feature quantitation." [PSI:PI]
+is_a: MS:1002018 ! MS1 label-based analysis
 
 [Term]
 id: MS:1002002
-name: MS1 Label-based peptide level quantitation
-def: "MS1 Label-based peptide level quantitation." [PSI:PI]
-is_a: MS:1001833 ! quantitation analysis summary
+name: MS1 label-based peptide level quantitation
+def: "MS1 label-based peptide level quantitation." [PSI:PI]
+is_a: MS:1002018 ! MS1 label-based analysis
 
 [Term]
 id: MS:1002003
-name: MS1 Label-based protein level quantitation
-def: "MS1 Label-based protein level quantitation." [PSI:PI]
-is_a: MS:1001833 ! quantitation analysis summary
+name: MS1 label-based protein level quantitation
+def: "MS1 label-based protein level quantitation." [PSI:PI]
+is_a: MS:1002018 ! MS1 label-based analysis
 
 [Term]
 id: MS:1002004
-name: MS1 Label-based proteinGroup level quantitation
-def: "MS1 Label-based proteinGroup level quantitation." [PSI:PI]
-is_a: MS:1001833 ! quantitation analysis summary
+name: MS1 label-based proteingroup level quantitation
+def: "MS1 label-based proteingroup level quantitation." [PSI:PI]
+is_a: MS:1002018 ! MS1 label-based analysis
 
 [Term]
 id: MS:1002005
 name: iRT retention time normalization standard
-def: "A de facto standard providing the retention times at which a specific set of 10 reference peptides exit the reference chromatographic column. The kit may be obtain from Biognosys." [http://www.biognosys.ch/products/rt-kit.html ""]
+def: "A de facto standard providing the retention times at which a specific set of 10 reference peptides exit the reference chromatographic column. The kit may be obtain from Biognosys." [DOI:10.1002/pmic.201100463, http://www.biognosys.ch/products/rt-kit.html ""]
 is_a: MS:1000901 ! retention time normalization standard
 
 [Term]
@@ -12620,14 +12622,14 @@ is_a: MS:1002006 ! MRM transition type
 
 [Term]
 id: MS:1002009
-name: isobaric label quantification analysis
-def: "Quantification analysis using an isobaric labeling workflow." [PSI:PI]
+name: isobaric label quantitation analysis
+def: "Quantitation analysis using an isobaric labeling workflow." [PSI:PI]
 is_a: MS:1001833 ! quantitation analysis summary
 
 [Term]
 id: MS:1002010
-name: TMT quantification analysis
-def: "Quantification analysis using the Thermo Fisher tandem mass tag (TMT) labeling workflow." [PSI:PI]
+name: TMT quantitation analysis
+def: "Quantitation analysis using the Thermo Fisher tandem mass tag (TMT) labeling workflow." [PSI:PI]
 is_a: MS:1001833 ! quantitation analysis summary
 
 [Term]
@@ -12646,6 +12648,7 @@ is_a: MS:1001153 ! search engine specific score
 is_a: MS:1001143 ! search engine specific score for peptides
 is_a: MS:1001405 ! spectrum identification result details
 is_a: MS:1001968 ! PTM localization score
+relationship: has_units UO:0000187 ! percent
 
 [Term]
 id: MS:1002013
@@ -12662,3 +12665,294 @@ def: "Collision energy at the end of the collision energy ramp." [PSI:PI]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000045 ! collision energy
 relationship: has_units UO:0000266 ! electronvolt
+
+[Term]
+id: MS:1002015
+name: spectral count peptide level quantitation
+def: "Spectral count peptide level quantitation." [PSI:PI]
+is_a: MS:1001836 ! spectral counting quantitation analysis
+
+[Term]
+id: MS:1002016
+name: spectral count protein level quantitation
+def: "Spectral count protein level quantitation." [PSI:PI]
+is_a: MS:1001836 ! spectral counting quantitation analysis
+
+[Term]
+id: MS:1002017
+name: spectral count proteingroup level quantitation
+def: "Spectral count proteingroup level quantitation." [PSI:PI]
+is_a: MS:1001836 ! spectral counting quantitation analysis
+
+[Term]
+id: MS:1002018
+name: MS1 label-based analysis
+def: "MS1 label-based analysis." [PSI:PI]
+is_a: MS:1001833 ! quantitation analysis summary
+
+[Term]
+id: MS:1002019
+name: label-free raw feature quantitation
+def: "Label-free raw feature quantitation." [PSI:PI]
+is_a: MS:1001834 ! LC-MS label-free quantitation analysis
+
+[Term]
+id: MS:1002020
+name: label-free peptide level quantitation
+def: "Label-free peptide level quantitation." [PSI:PI]
+is_a: MS:1001834 ! LC-MS label-free quantitation analysis
+
+[Term]
+id: MS:1002021
+name: label-free protein level quantitation
+def: "Label-free protein level quantitation." [PSI:PI]
+is_a: MS:1001834 ! LC-MS label-free quantitation analysis
+
+[Term]
+id: MS:1002022
+name: label-free proteingroup level quantitation
+def: "Label-free proteingroup level quantitation." [PSI:PI]
+is_a: MS:1001834 ! LC-MS label-free quantitation analysis
+
+[Term]
+id: MS:1002023
+name: MS2 tag-based analysis
+def: "MS2 tag-based analysis." [PSI:PI]
+is_a: MS:1001833 ! quantitation analysis summary
+
+[Term]
+id: MS:1002024
+name: MS2 tag-based feature level quantitation
+def: "MS2 tag-based feature level quantitation." [PSI:PI]
+is_a: MS:1002023 ! MS2 tag-based analysis
+
+[Term]
+id: MS:1002025
+name: MS2 tag-based peptide level quantitation
+def: "MS2 tag-based peptide level quantitation." [PSI:PI]
+is_a: MS:1002023 ! MS2 tag-based analysis
+
+[Term]
+id: MS:1002026
+name: MS2 tag-based protein level quantitation
+def: "MS2 tag-based protein level quantitation." [PSI:PI]
+is_a: MS:1002023 ! MS2 tag-based analysis
+
+[Term]
+id: MS:1002027
+name: MS2 tag-based proteingroup level quantitation
+def: "MS2 tag-based proteingroup level quantitation." [PSI:PI]
+is_a: MS:1002023 ! MS2 tag-based analysis
+
+[Term]
+id: MS:1002028
+name: nucleic acid base modification
+def: "Nucleic acid base modification (substitution, insertion or deletion)." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001471 ! peptide modification details
+
+[Term]
+id: MS:1002029
+name: original nucleic acid sequence
+def: "Original nucleic acid sequence before a nucleic acid base modification." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001471 ! peptide modification details
+
+[Term]
+id: MS:1002030
+name: modified nucleic acid sequence
+def: "Modified nucleic acid sequence after a nucleic acid base modification." [PSI:PI]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001471 ! peptide modification details
+
+[Term]
+id: MS:1002031
+name: PASSEL transition group browser URI
+def: "URI to retrieve transition group data for a PASSEL (PeptideAtlas SRM Experiment Library) experiment." [PSI:PI]
+is_a: MS:1000878 ! external reference identifier
+
+[Term]
+id: MS:1002032
+name: PeptideAtlas dataset URI
+def: "URI that allows access to a PeptideAtlas dataset." [PSI:PI]
+is_a: MS:1000878 ! external reference identifier
+
+[Term]
+id: MS:1002033
+name: contact role
+def: "Role of the contact person." [PSI:PI]
+is_a: MS:1000585 ! contact attribute
+
+[Term]
+id: MS:1002034
+name: first author
+def: "The first of a set of authors associated with a publication or release. There may be more than one first author in cases where several authors share primary attribution." [PSI:MS]
+is_a: MS:1002033 ! contact role
+
+[Term]
+id: MS:1002035
+name: senior author
+def: "The last of a set of authors associated with a publication or release. There may be more than one senior author in cases where several authors share senior attribution." [PSI:MS]
+is_a: MS:1002033 ! contact role
+
+[Term]
+id: MS:1002036
+name: co-author
+def: "One of a set of authors associated with a publication or release." [PSI:MS]
+is_a: MS:1002033 ! contact role
+
+[Term]
+id: MS:1002037
+name: dataset submitter
+def: "A person who submits a dataset to a repository." [PSI:MS]
+is_a: MS:1002033 ! contact role
+
+[Term]
+id: MS:1002038
+name: unlabeled sample
+def: "A sample that has not been labelled or modified. This is often referred to as \"light\" to distinguish from \"heavy\"." [PSI:PI]
+synonym: "light labeled sample" EXACT []
+is_a: MS:1000548 ! sample attribute
+
+[Term]
+id: MS:1002039
+name: inlet attribute
+def: "Inlet properties that are associated with a value." [PSI:MS]
+is_a: MS:1000547 ! object attribute
+relationship: part_of MS:1000458 ! source
+
+[Term]
+id: MS:1002040
+name: inlet temperature
+def: "The temperature of the inlet of a mass spectrometer." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000482 ! source attribute
+is_a: MS:1002039 ! inlet attribute
+relationship: has_units UO:0000012 ! kelvin
+relationship: has_units UO:0000027 ! degree Celsius
+
+[Term]
+id: MS:1002041
+name: source temperature
+def: "The temperature of the source of a mass spectrometer." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1000482 ! source attribute
+relationship: has_units UO:0000012 ! kelvin
+relationship: has_units UO:0000027 ! degree Celsius
+
+[Term]
+id: MS:1002042
+name: modulation time
+def: "The duration of a complete cycle of modulation in a comprehensive two-dimensional separation system, equals the length of a second dimension chromatogram, i.e., the time between two successive injections into the second column." [http://chromatographyonline.findanalytichem.com/lcgc/Column:+Coupling+Matters/Nomenclature-and-Conventions-in-Comprehensive-Mult/ArticleStandard/Article/detail/58429 ""]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000857 ! run attribute
+relationship: has_units UO:0000010 ! second
+relationship: has_units UO:0000031 ! minute
+
+[Term]
+id: MS:1002043
+name: ProteinProspector
+def: "ProteinProspector software for data acquisition and analysis." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002044
+name: ProteinProspector:score
+def: "The ProteinProspector result 'Score'." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+
+[Term]
+id: MS:1002045
+name: ProteinProspector:expectation value
+def: "The ProteinProspector result 'Expectation value'." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+
+[Term]
+id: MS:1002046
+name: native source path
+def: "The original source path used for directory-based sources." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001458 ! spectrum generation information
+
+[Term]
+id: MS:1002047
+name: MS-GF
+def: "MS-GF software used to re-score the peptide-spectrum matches." [DOI:10.1021/pr8001244, PMID:18597511]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002048
+name: MS-GF+
+def: "MS-GF+ software used to analyze the spectra." [PSI:PI]
+is_a: MS:1001456 ! analysis software
+
+[Term]
+id: MS:1002049
+name: MS-GF:RawScore
+def: "MS-GF raw score." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+
+[Term]
+id: MS:1002050
+name: MS-GF:DeNovoScore
+def: "MS-GF de novo score." [PSI:PI]
+xref: value-type:xsd\:integer "The allowed value-type for this CV term."
+is_a: MS:1001153 ! search engine specific score
+
+[Term]
+id: MS:1002051
+name: MS-GF:Energy
+def: "MS-GF energy score." [PSI:PI]
+xref: value-type:xsd\:nonNegativeInteger "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+
+[Term]
+id: MS:1002052
+name: MS-GF:SpecEValue
+def: "MS-GF spectral E-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001872 ! E-value for peptides
+
+[Term]
+id: MS:1002053
+name: MS-GF:EValue
+def: "MS-GF E-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001872 ! E-value for peptides
+
+[Term]
+id: MS:1002054
+name: MS-GF:QValue
+def: "MS-GF Q-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001868 ! q-value for peptides
+
+[Term]
+id: MS:1002055
+name: MS-GF:PepQValue
+def: "MS-GF peptide-level Q-value." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
+is_a: MS:1001868 ! q-value for peptides
+
+[Term]
+id: MS:1002056
+name: MS-GF:PEP
+def: "MS-GF posterior error probability." [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score

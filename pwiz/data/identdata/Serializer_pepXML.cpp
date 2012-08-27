@@ -94,6 +94,7 @@ const AnalysisSoftwareTranslation analysisSoftwareTranslationTable[] =
     {MS_X_Tandem, "X! Tandem;X!Tandem;xtandem;X! Tandem (k-score)"},
     {MS_Spectrum_Mill_for_MassHunter_Workstation, "Spectrum Mill;SpectrumMill"},
     {MS_Proteios, "Proteios"},
+    {MS_MS_GF_, "MS-GF+"}
     // TODO: Comet, PROBID, InsPecT, Crux, Tide need CV terms
 };
 
@@ -176,6 +177,22 @@ const ScoreTranslation scoreTranslationTable[] =
     //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_Discriminant_Score, "??"},
     //{MS_Spectrum_Mill_for_MassHunter_Workstation, MS_SpectrumMill_SPI, "??"},
     //{MS_Proteios, MS_Proteios_??, "??"},
+    {MS_MS_GF, MS_MS_GF_RawScore, "raw"},
+    {MS_MS_GF, MS_MS_GF_DeNovoScore, "denovo"},
+    {MS_MS_GF, MS_MS_GF_Energy, "energy"},
+    {MS_MS_GF, MS_MS_GF_EValue, "EValue"},
+    {MS_MS_GF, MS_MS_GF_QValue, "QValue"},
+    {MS_MS_GF, MS_MS_GF_SpecEValue, "SpecEValue"},
+    {MS_MS_GF, MS_MS_GF_PepQValue, "PepQValue"},
+    {MS_MS_GF, MS_MS_GF_PEP, "PEP"},
+    {MS_MS_GF_, MS_MS_GF_RawScore, "raw"},
+    {MS_MS_GF_, MS_MS_GF_DeNovoScore, "denovo"},
+    {MS_MS_GF_, MS_MS_GF_Energy, "energy"},
+    {MS_MS_GF_, MS_MS_GF_EValue, "EValue"},
+    {MS_MS_GF_, MS_MS_GF_QValue, "QValue"},
+    {MS_MS_GF_, MS_MS_GF_SpecEValue, "SpecEValue"},
+    {MS_MS_GF_, MS_MS_GF_PepQValue, "PepQValue"},
+    {MS_MS_GF_, MS_MS_GF_PEP, "PEP"},
 };
 
 const size_t scoreTranslationTableSize = sizeof(scoreTranslationTable)/sizeof(ScoreTranslation);

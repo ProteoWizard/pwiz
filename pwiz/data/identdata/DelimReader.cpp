@@ -472,8 +472,8 @@ CVID DelimReader::Impl::mapScore(const string& value)
     
     //{MS_percolaror_PEP_,
     //MS_search_engine_specific_score_for_peptides},
-    else if (value == "MS:1001493" || value == "percolaror:PEP ")
-        return MS_percolaror_PEP;
+    else if (value == "MS:1001493" || value == "percolator:PEP ")
+        return MS_percolator_PEP;
     
     //{MS_ProteinScape_SearchResultId,
     //MS_search_engine_specific_score_for_peptides},

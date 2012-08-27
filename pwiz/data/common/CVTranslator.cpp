@@ -95,8 +95,8 @@ namespace {
 
 inline char alnum_lower(char c)
 {
-    // c -> lower-case or whitespace 
-    return isalnum(c) ? static_cast<char>(tolower(c)) : ' ';
+    // c -> lower-case, whitespace, or +
+    return isalnum(c) ? static_cast<char>(tolower(c)) : c == '+' ? c : ' ';
 }
 
 

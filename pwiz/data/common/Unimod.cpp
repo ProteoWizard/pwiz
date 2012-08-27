@@ -157,8 +157,7 @@ struct UnimodData : public boost::singleton<UnimodData>
                 itr = term.propertyValues.lower_bound("spec_");
                 while (true)
                 {
-                    mod.specificities.push_back(Modification::Specificity());
-                    Modification::Specificity& spec = mod.specificities.back();
+                    Modification::Specificity spec;
 
                     map<string, Classification>::const_iterator itr2 = classificationMap.find(itr->second);
                     if (itr2 == classificationMap.end())
@@ -189,17 +188,19 @@ struct UnimodData : public boost::singleton<UnimodData>
                         throw runtime_error("unknown site \"" + itr->second + "\" for term \"" + term.id + "\"");
                     spec.site = itr4->second;
 
+                    mod.specificities.push_back(spec);
+
                     // add copies of the currently specificity for each site, e.g.
                     // spec_1_site = S
                     // spec_1_site = T
                     ++itr;
                     while (itr != end && bal::ends_with(itr->first, "site"))
                     {
-                        mod.specificities.push_back(spec);
                         itr4 = siteMap.find(itr->second);
                         if (itr4 == siteMap.end())
                             throw runtime_error("unknown site \"" + itr->second + "\" for term \"" + term.id + "\"");
-                        mod.specificities.back().site = itr4->second;
+                        spec.site = itr4->second;
+                        mod.specificities.push_back(spec);
                         ++itr;
                     }
 

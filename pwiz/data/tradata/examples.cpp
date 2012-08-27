@@ -127,7 +127,7 @@ PWIZ_API_DECL void addMIAPEExampleMetadata(TraData& td)
     peptide1Ptr->retentionTimes.push_back(RetentionTime());
     peptide1Ptr->retentionTimes.back().set(MS_predicted_retention_time, 42, UO_minute);
     peptide1Ptr->retentionTimes.back().softwarePtr = softwareMaRiMba;
-    peptide1Ptr->evidence.set(MS_confident_peptide, 6);
+    peptide1Ptr->evidence.set(MS_confident_peptide_sequence_number, 6);
     td.peptidePtrs.push_back(peptide1Ptr);
 
 
