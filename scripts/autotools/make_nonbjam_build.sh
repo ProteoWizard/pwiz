@@ -53,6 +53,7 @@ echo "It leaves out support for vendor formats and MZ5 due to their extra build 
 echo "If you need those, you'll want to learn the bjam system (and you'll need to be on windows, for vendor DLLs). " >> BUILDING 
 echo "To use this GNU autotools build, from the pwiz directory just run:" >> BUILDING 
 echo "   autotools/configure; make " >> BUILDING 
+echo "Have a look at the autotools/README file if this does not go smoothly." >> BUILDING 
 echo "Please visit http://proteowizard.sourceforge.net for the full official bjam build system, or to obtain updates to this GNU build system." >> BUILDING
 echo "grab the boost autotools support stuff..."
 # sigh... which version of wget is present?

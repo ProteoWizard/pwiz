@@ -203,6 +203,7 @@ makefileam.write('LIBS = $(BOOST_THREAD_LIBS)') # there's some disconnect betwee
 for lib in boostlibs :
 	makefileam.write(" $(BOOST_%s_LIBS)"%lib)
 makefileam.write('\n')
+makefileam.write('AM_LDFLAGS =')
 for lib in boostlibs :
 	makefileam.write(' $(BOOST_%s_LDFLAGS)'%lib)
 makefileam.write('\n')
