@@ -195,7 +195,7 @@ makefileam = open('%s/Makefile.am'%logdir, 'w')
 makefileam.write('AUTOMAKE_OPTIONS = subdir-objects\n')
 libname = '%s.la'%(pkgname)
 makefileam.write('lib_LTLIBRARIES = %s\n'%libname)
-makefileam.write('LDADD = %s $(LIBS) -L$(BOOST_LD_PATH)\n'%libname) # for the examples to link with
+makefileam.write('LDADD = %s $(LIBS)\n'%libname) # for the examples to link with
 
 # note using https://github.com/tsuna/boost.m4 for autoconf boost detection
 makefileam.write('ACLOCAL_AMFLAGS = -I .\n') # per https://raw.github.com/tsuna/boost.m4/master/README
@@ -203,7 +203,7 @@ makefileam.write('LIBS = $(BOOST_THREAD_LIBS)') # there's some disconnect betwee
 for lib in boostlibs :
 	makefileam.write(" $(BOOST_%s_LIBS)"%lib)
 makefileam.write('\n')
-makefileam.write('AM_LDFLAGS =')
+makefileam.write('AM_LDFLAGS = -L$(BOOST_LD_PATH)')
 for lib in boostlibs :
 	makefileam.write(' $(BOOST_%s_LDFLAGS)'%lib)
 makefileam.write('\n')
