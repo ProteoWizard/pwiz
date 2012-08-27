@@ -269,15 +269,18 @@ if (not dryrun) :
 	z = tarfile.open(fz,"w:gz")
 	exts = ["h","hpp","c","cpp","cxx","am","inl",""]
 
+	unwanted = ["pwiz/BUILDING"]  # misleading docs for the bjam build
+
 	for shipdir in shipdirs :
 		for file in os.listdir(shipdir) :
 			f = shipdir+"/"+file
 			ext = file.partition(".")[2]
 			if (os.path.exists(f) and (not os.path.isdir(f)) and (ext in exts)) :
 				tarname = ac.replace_pwizroot(f,"pwiz")
-				if dbug :
-					print "add "+f+" as "+tarname
-				z.add(f,tarname)
+				if (not tarname in unwanted) :
+					if dbug :
+						print "add "+f+" as "+tarname
+					z.add(f,tarname)
 	for file in os.listdir(logdir) : # assume we also did the autoconf stuff in this dir
 		f = logdir+"/"+file
 		ext = file.partition(".")[2]
@@ -286,6 +289,8 @@ if (not dryrun) :
 			if dbug :
 				print "add "+f+" as "+tarname
 			z.add(f,tarname)
+			if ("pwiz/autotools/BUILDING" == tarname) :
+				z.add(f,"pwiz/README") # put it where user will notice
 	testfiles = set()
 	for test in testargs : # grab data files
 		f = absname(testargs[test])

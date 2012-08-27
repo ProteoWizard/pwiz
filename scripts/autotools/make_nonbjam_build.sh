@@ -48,6 +48,12 @@ cat $HERE/FAQ >> README
 echo "Please visit http://proteowizard.sourceforge.net/team.shtml for a list of authors" > AUTHORS
 echo "Please visit http://proteowizard.sourceforge.net/news.shtml for ProteoWizard news" > NEWS
 echo "Please visit http://proteowizard.svn.sourceforge.net/viewvc/proteowizard/trunk/pwiz/ for change histories" >ChangeLog 
+echo "This is a semi-official ProteoWizard build system that uses GNU autotools instead of bjam. " > BUILDING 
+echo "It leaves out support for vendor formats and MZ5 due to their extra build complexity. " >> BUILDING 
+echo "If you need those, you'll want to learn the bjam system (and you'll need to be on windows, for vendor DLLs). " >> BUILDING 
+echo "To use this GNU autotools build, from the pwiz directory just run:" >> BUILDING 
+echo "   autotools/configure; make " >> BUILDING 
+echo "Please visit http://proteowizard.sourceforge.net for the full official bjam build system, or to obtain updates to this GNU build system." >> BUILDING
 echo "grab the boost autotools support stuff..."
 # sigh... which version of wget is present?
 wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4 --no-check-certificate
@@ -81,8 +87,6 @@ echo "bash autotools/configure"
 bash autotools/configure
 echo "ls -l"
 ls -l
-echo "cat Makefile"
-cat Makefile
 echo "make check"
 make check
 rm -rf $TMPDIR
