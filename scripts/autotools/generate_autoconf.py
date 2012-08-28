@@ -34,6 +34,7 @@ min_autotools_ver="2.60"
 # any compiler -D stuff we might need (we add the actual -D below)
 compiler_defines = []
 compiler_defines.append("WITHOUT_MZ5") # let's not worry about the mz5 thing at this point
+compiler_defines.append("BOOST_DISABLE_ASSERTS") # otherwise we have to provide boost::assertion_failed_msg()
 
 import os
 import sys
