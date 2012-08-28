@@ -544,7 +544,7 @@ void testDecoding()
 {
     string id1("_x0031_invalid_x0020_ID");
     unit_assert_operator_equal("1invalid ID", decode_xml_id_copy(id1));
-    unit_assert_operator_equal(&id1, &decode_xml_id(id1));
+    unit_assert_operator_equal((void *)&id1, (void *)&decode_xml_id(id1)); // should return reference to id1
     unit_assert_operator_equal("1invalid ID", id1);
 
     string id2("_invalid-ID__x0023_2__x003c_3_x003e_");
