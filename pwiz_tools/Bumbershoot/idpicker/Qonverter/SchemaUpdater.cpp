@@ -36,12 +36,21 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 4;
+const int CURRENT_SCHEMA_REVISION = 5;
 
 namespace SchemaUpdater {
 
 
 namespace {
+
+void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    db.execute("UPDATE SpectrumSource SET QuantitationMethod = IFNULL(QuantitationMethod, 0),"
+               "                          TotalSpectraMS1 = IFNULL(TotalSpectraMS1, 0),"
+               "                          TotalSpectraMS2 = IFNULL(TotalSpectraMS2, 0),"
+               "                          TotalIonCurrentMS1 = IFNULL(TotalIonCurrentMS1, 0),"
+               "                          TotalIonCurrentMS2 = IFNULL(TotalIonCurrentMS2, 0)");
+}
 
 void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr)
 {
@@ -61,6 +70,8 @@ void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr)
         if (!bal::contains(e.what(), "exists")) // table already exists
             throw runtime_error(e.what());
     }
+
+    update_4_to_5(db, ilr);
 }
 
 void update_2_to_3(sqlite::database& db, IterationListenerRegistry* ilr)
@@ -198,6 +209,8 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
         update_2_to_3(db, ilr);
     else if (schemaRevision == 3)
         update_3_to_4(db, ilr);
+    else if (schemaRevision == 4)
+        update_4_to_5(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +
