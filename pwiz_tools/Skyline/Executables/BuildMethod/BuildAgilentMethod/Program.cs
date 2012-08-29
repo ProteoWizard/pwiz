@@ -47,15 +47,23 @@ namespace BuildAgilentMethod
             }
             catch (IOException x)
             {
-                Console.Error.WriteLine("ERROR: {0}", x.Message);
+                WriteError(x.Message);
             }
             catch (Exception x)
             {
-                Console.Error.WriteLine("ERROR: {0}", x.Message);
+                WriteError(x.Message);
             }
 
 //            Console.WriteLine("Press any key to continue...");
 //            Console.In.ReadLine();
+        }
+
+        static void WriteError(string message)
+        {
+            var reader = new StringReader(message);
+            string line;
+            while ((line = reader.ReadLine()) != null)
+                Console.Error.WriteLine("ERROR: {0}", line);
         }
 
         static void Usage()

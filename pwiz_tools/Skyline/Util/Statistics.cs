@@ -572,7 +572,7 @@ namespace pwiz.Skyline.Util
             if (i < 0)
                 i = ~i;
             int n = ordered.Length;
-            return ((double) n - i)/n;
+            return ((double) i)/n;
         }
 
         /// <summary>

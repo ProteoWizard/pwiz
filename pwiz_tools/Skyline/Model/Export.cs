@@ -1068,9 +1068,10 @@ namespace pwiz.Skyline.Model
         {
             writer.Write(nodePep.Peptide.Sequence);
             writer.Write(FieldSeparator);
-            writer.Write(nodeTranGroup.TransitionGroup.LabelType.IsLight
-                             ? "FALSE" // Not L10N
-                             : "TRUE"); // Not L10N
+            var istdTypes = Document.Settings.PeptideSettings.Modifications.InternalStandardTypes;
+            writer.Write(istdTypes.Contains(nodeTranGroup.TransitionGroup.LabelType)
+                             ? "TRUE" // Not L10N
+                             : "FALSE"); // Not L10N
             writer.Write(FieldSeparator);
             writer.Write(SequenceMassCalc.PersistentMZ(nodeTranGroup.PrecursorMz).ToString(CultureInfo));
             writer.Write(FieldSeparator);
