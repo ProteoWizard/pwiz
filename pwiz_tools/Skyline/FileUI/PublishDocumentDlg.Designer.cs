@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.FileUI
 {
     partial class PublishDocumentDlg
     {
