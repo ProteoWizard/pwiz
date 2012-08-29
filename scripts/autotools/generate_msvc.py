@@ -33,6 +33,8 @@ files_not_to_be_shipped=["pwiz\\pwiz.vcproj","pwiz\\pwiz.sln"] # these are just 
 
 dbug = False
 
+buildversion="" # until we find it in the log file
+
 args = sys.argv
 
 if "-d" in args :
@@ -287,6 +289,8 @@ for line in buildlog_lines:
 	line = line.rstrip('\r\n')
 	if dbug :
 		print line
+	if ("ProteoWizard " in line and "last committed" in line) :
+		buildversion = line.split(" ")[1].replace(".","_")
 	if ("file " in line and "obj.rsp" in line) : # beginning of a repsonse file
 		in_rsp = True
 	elif ("call " in line) : # end of a response file
@@ -490,7 +494,7 @@ readmeMSVC = open("%s\\README_MSVC.txt"%(ac.get_pwizroot()),"w")
 readmeMSVC.write(faq)
 readmeMSVC.close()
 
-fz="%s\\build-nt-x86\\libpwiz_msvc.zip"%ac.get_pwizroot()
+fz="%s\\build-nt-x86\\libpwiz_msvc_%s.zip"%(ac.get_pwizroot(),buildversion)
 print "creating MSVC source build distribution kit %s"%(fz)
 z = zipfile.ZipFile(fz,"w",zipfile.ZIP_DEFLATED)
 exts = ["h","hpp","c","cpp","cxx","sln","vcproj.user","vcxproj.user","vcproj","vcxproj","txt","inl"]

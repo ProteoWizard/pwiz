@@ -63,10 +63,11 @@ if [ ! -e boost.m4 ]; then
 wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4
 fi
 echo "do autoconf stuff..."
+export PWIZ_VER=`grep "ProteoWizard " $TMPDIR/build.log | cut -f 2 -d " " | sed s/\\\\./_/g`
 # assume this as a directory where we can drop the tarball
 export TARBALLDIR=$PWIZROOT/build-linux-x86
 mkdir -p $TARBALLDIR
-export TARBALL=$TARBALLDIR/libpwiz_src.tgz
+export TARBALL=$TARBALLDIR/libpwiz_src_$PWIZ_VER.tgz
 libtoolize --copy &>/dev/null; aclocal  &>/dev/null; autoscan $PWIZROOT/pwiz  &>/dev/null ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR &>/dev/null
 # yes, doing this twice, solves a chicken vs egg problem that first invocation barks about
 libtoolize  --copy ; aclocal ; cat boost.m4 >> aclocal.m4 ; autoscan $PWIZROOT/pwiz ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR $TARBALL
