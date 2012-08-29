@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3828</ApplicationRevision>
-    <ApplicationVersion>1.3.1.3828</ApplicationVersion>
+    <ApplicationRevision>3911</ApplicationRevision>
+    <ApplicationVersion>1.3.1.3911</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -411,6 +411,12 @@
     </Compile>
     <Compile Include="FileUI\MinimizeResultsDlg.Designer.cs">
       <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\PublishDocumentDlg.Designer.cs">
+      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="FileUI\RenameResultDlg.cs">
       <SubType>Form</SubType>
@@ -812,12 +818,6 @@
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
-    <Compile Include="SettingsUI\PublishDocumentDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\PublishDocumentDlg.Designer.cs">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\SimpleGridViewDriver.cs" />
     <Compile Include="SettingsUI\ToolOptionsUI.cs">
       <SubType>Form</SubType>
@@ -947,6 +947,9 @@
       <DependentUpon>OpenDataSourceDialog.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\PublishDocumentDlg.resx">
+      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\CalculateIsolationSchemeDlg.resx">
       <DependentUpon>CalculateIsolationSchemeDlg.cs</DependentUpon>
     </EmbeddedResource>
@@ -989,9 +992,6 @@
       <Generator>PublicResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\PublishDocumentDlg.resx">
-      <DependentUpon>PublishDocumentDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\RTDetails.resx">
       <DependentUpon>RTDetails.cs</DependentUpon>
