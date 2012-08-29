@@ -833,9 +833,9 @@ namespace pwiz.Skyline.Properties
             return null;
         }
 
-        public override bool ExcludeDefaults
+        public override int ExcludeDefaults
         {
-            get { return true; }
+            get { return 1; }
         }
     }
 
@@ -1117,7 +1117,7 @@ namespace pwiz.Skyline.Properties
 
         public override string Label { get { return Resources.DeclusterPotentialList_Label_Declustering_Potential_Regressions; } }
 
-        public override bool ExcludeDefaults { get { return true; } }
+        public override int ExcludeDefaults { get { return 1; } }
     }
     
     public sealed class RTScoreCalculatorList : SettingsListNotifying<RetentionScoreCalculatorSpec>
@@ -1249,7 +1249,7 @@ namespace pwiz.Skyline.Properties
 
         public override string Label { get { return Resources.RTScoreCalculatorList_Label_Retention_Time_Calculators; } }
 
-        public override bool ExcludeDefaults { get { return true; } }
+        public override int ExcludeDefaults { get { return DEFAULTS.Length; } }
 
         public bool CanEditItem(RetentionScoreCalculatorSpec item)
         {
@@ -1301,7 +1301,7 @@ namespace pwiz.Skyline.Properties
 
         public override string Label { get { return Resources.RetentionTimeList_Label_Retention_Time_Regression; } }
 
-        public override bool ExcludeDefaults { get { return true; } }
+        public override int ExcludeDefaults { get { return 1; } }
     }
 
     public sealed class MeasuredIonList : SettingsList<MeasuredIon>
@@ -1384,7 +1384,7 @@ namespace pwiz.Skyline.Properties
             return new[] { new IsolationScheme("MSe", new IsolationWindow[0], IsolationScheme.SpecialHandlingType.MS_E), }; // Not L10N
         }
 
-        public override bool ExcludeDefaults { get { return true; } }
+        public override int ExcludeDefaults { get { return 1; } }
 
         public override IsolationScheme EditItem(Control owner, IsolationScheme item,
             IEnumerable<IsolationScheme> existing, object tag)
@@ -1865,7 +1865,7 @@ namespace pwiz.Skyline.Properties
             return true;
         }
 
-        public virtual bool ExcludeDefaults { get { return false; } }
+        public virtual int ExcludeDefaults { get { return 0; } }
 
         #endregion
 

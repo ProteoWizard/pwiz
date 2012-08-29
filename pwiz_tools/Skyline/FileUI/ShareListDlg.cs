@@ -95,10 +95,10 @@ namespace pwiz.Skyline.FileUI
             ListBox.BeginUpdate();
             ListBox.Items.Clear();
             int index = 0;
-            int countDefaults = List.ExcludeDefaults ? List.GetDefaults(List.RevisionIndexCurrent).Count() : 0;
+            int countExclude = List.ExcludeDefaults;
             foreach (TItem item in List)
             {
-                if (index < countDefaults)
+                if (index < countExclude)
                     continue;
                 ListBox.Items.Add(item.GetKey());
                 index++;

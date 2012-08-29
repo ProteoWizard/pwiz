@@ -80,8 +80,8 @@ namespace pwiz.Skyline.SettingsUI
         private void ReloadList()
         {
             // Remove the default settings item before reloading.
-            int countDefaults = _model.ExcludeDefaults ? _model.GetDefaults(_model.RevisionIndexCurrent).Count() : 0;
-            for (int i = 0; i < countDefaults; i++)
+            int countExclude = _model.ExcludeDefaults;
+            for (int i = 0; i < countExclude; i++)
                 _list.RemoveAt(0);
 
             listBox.BeginUpdate();
@@ -101,11 +101,9 @@ namespace pwiz.Skyline.SettingsUI
         /// </summary>
         public IEnumerable<TItem> GetAll()
         {
-            if (_model.ExcludeDefaults)
-            {
-                foreach (var item in _model.GetDefaults(_model.RevisionIndexCurrent))
-                    yield return item;
-            }
+            var arrayDefaults = _model.GetDefaults(_model.RevisionIndexCurrent).ToArray();
+            for (int i = 0; i < _model.ExcludeDefaults; i++)
+                yield return arrayDefaults[i];
 
             foreach (var item in _list)
                 yield return item;

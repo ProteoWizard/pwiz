@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Skyline.Properties;
@@ -166,7 +165,9 @@ namespace pwiz.Skyline.SettingsUI
         public void EditCurrent()
         {
             int i = _selectedIndexLast;
-            TItem itemNew = List.EditItem(Combo.TopLevelControl, List[i], List, null);
+            TItem itemNew = default(TItem);
+            if (i >= List.ExcludeDefaults)
+                itemNew = List.EditItem(Combo.TopLevelControl, List[i], List, null);
             if (!Equals(itemNew, default(TItem)) && !Equals(itemNew, List[i]))
             {
                 List[i] = itemNew;
@@ -189,15 +190,15 @@ namespace pwiz.Skyline.SettingsUI
                     selectedItemLast = null;
                 else
                     selectedItemLast = Combo.Items[_selectedIndexLast].ToString();
-                if (!List.ExcludeDefaults)
+                if (List.ExcludeDefaults < 1)
                     List.Clear();
                 else
                 {
                     // If default items were excluded from editing,
                     // then make sure they are preserved as the first items.
                     List<TItem> tmpList = new List<TItem>();
-                    int countDefaults = List.ExcludeDefaults ? List.GetDefaults(List.RevisionIndexCurrent).Count() : 0;
-                    for (int i = 0; i < countDefaults; i++)
+                    int countExclude = List.ExcludeDefaults;
+                    for (int i = 0; i < countExclude; i++)
                         tmpList.Add(List[i]);
                     List.Clear();
                     List.AddRange(tmpList);

@@ -129,11 +129,11 @@ namespace pwiz.Skyline.Util
         bool AllowReset { get; }
 
         /// <summary>
-        /// True if default item should be exclude when editing
-        /// the list.  Useful when the default item cannot be edited
+        /// The number of default items that should be exclude when editing
+        /// the list.  Useful when some default items cannot be edited
         /// or removed from the list.
         /// </summary>
-        bool ExcludeDefaults { get; }
+        int ExcludeDefaults { get; }
     }
 
     /// <summary>
