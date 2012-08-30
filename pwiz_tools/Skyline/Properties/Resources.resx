@@ -1522,36 +1522,6 @@ Are you sure you want to continue?</value>
   <data name="TransitionFilter_FragmentStartFinders_ion_4" xml:space="preserve">
     <value>ion 4</value>
   </data>
-  <data name="TransitionFilter_FragmentStartFinders_y1" xml:space="preserve">
-    <value>y1</value>
-  </data>
-  <data name="TransitionFilter_FragmentStartFinders_y2" xml:space="preserve">
-    <value>y2</value>
-  </data>
-  <data name="TransitionFilter_FragmentStartFinders_y3" xml:space="preserve">
-    <value>y3</value>
-  </data>
-  <data name="TransitionFilter_FragmentStartFinders_y4" xml:space="preserve">
-    <value>y4</value>
-  </data>
-  <data name="TransitionFilter_FragmentEndFinders_last_y_ion_minus_2" xml:space="preserve">
-    <value>last y-ion - 2</value>
-  </data>
-  <data name="TransitionFilter_FragmentEndFinders_last_y_ion_minus_3" xml:space="preserve">
-    <value>last y-ion - 3</value>
-  </data>
-  <data name="TransitionFilter_FragmentEndFinders_start_plus_3" xml:space="preserve">
-    <value>start + 3</value>
-  </data>
-  <data name="TransitionFilter_FragmentEndFinders_start_plus_4" xml:space="preserve">
-    <value>start + 4</value>
-  </data>
-  <data name="TransitionFilter_FragmentEndFinders_start_plus_5" xml:space="preserve">
-    <value>start + 5</value>
-  </data>
-  <data name="TransitionFilter_FragmentEndFinders_start_plus_6" xml:space="preserve">
-    <value>start + 6</value>
-  </data>
   <data name="MzFragmentFinder_FindStartFragment_Invalid_attempt_to_find_a_fragment_in_a_peptide_without_fragment_ions" xml:space="preserve">
     <value>Invalid attempt to find a fragment in a peptide without fragment ions.</value>
   </data>
@@ -4013,9 +3983,6 @@ Are you sure you want to continue?</value>
   <data name="BookmarkEnumerator_GetNodeTypeName_Protein" xml:space="preserve">
     <value>Protein</value>
   </data>
-  <data name="TransitionFilter_FragmentEndFinders_2_ions" xml:space="preserve">
-    <value>2 ions</value>
-  </data>
   <data name="TransitionFilter_FragmentEndFinders_3_ions" xml:space="preserve">
     <value>3 ions</value>
   </data>
@@ -4735,5 +4702,8 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SerializableSettingsList_ImportFile_Failure_loading__0__">
     <value xml:space="preserve">Failure loading {0}.</value>
+  </data>
+  <data name="TransitionFilter_FragmentEndFinders_2_ions">
+    <value xml:space="preserve">2 ions</value>
   </data>
 </root>

@@ -12146,60 +12146,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to last y-ion - 2.
-        /// </summary>
-        public static string TransitionFilter_FragmentEndFinders_last_y_ion_minus_2 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentEndFinders_last_y_ion_minus_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to last y-ion - 3.
-        /// </summary>
-        public static string TransitionFilter_FragmentEndFinders_last_y_ion_minus_3 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentEndFinders_last_y_ion_minus_3", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to start + 3.
-        /// </summary>
-        public static string TransitionFilter_FragmentEndFinders_start_plus_3 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentEndFinders_start_plus_3", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to start + 4.
-        /// </summary>
-        public static string TransitionFilter_FragmentEndFinders_start_plus_4 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentEndFinders_start_plus_4", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to start + 5.
-        /// </summary>
-        public static string TransitionFilter_FragmentEndFinders_start_plus_5 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentEndFinders_start_plus_5", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to start + 6.
-        /// </summary>
-        public static string TransitionFilter_FragmentEndFinders_start_plus_6 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentEndFinders_start_plus_6", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unsupported first fragment name {0}..
         /// </summary>
         public static string TransitionFilter_FragmentRangeFirstName_Unsupported_first_fragment_name__0__ {
@@ -12295,42 +12241,6 @@ namespace pwiz.Skyline.Properties {
         public static string TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2 {
             get {
                 return ResourceManager.GetString("TransitionFilter_FragmentStartFinders_m_z_precursor_plus_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to y1.
-        /// </summary>
-        public static string TransitionFilter_FragmentStartFinders_y1 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentStartFinders_y1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to y2.
-        /// </summary>
-        public static string TransitionFilter_FragmentStartFinders_y2 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentStartFinders_y2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to y3.
-        /// </summary>
-        public static string TransitionFilter_FragmentStartFinders_y3 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentStartFinders_y3", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to y4.
-        /// </summary>
-        public static string TransitionFilter_FragmentStartFinders_y4 {
-            get {
-                return ResourceManager.GetString("TransitionFilter_FragmentStartFinders_y4", resourceCulture);
             }
         }
         

@@ -51,9 +51,9 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             // Populate the fragment finder combo boxes
-            foreach (string item in TransitionFilter.GetStartFragmentFinderNames())
+            foreach (string item in TransitionFilter.GetStartFragmentFinderLabels())
                 comboRangeFrom.Items.Add(item);
-            foreach (string item in TransitionFilter.GetEndFragmentFinderNames())
+            foreach (string item in TransitionFilter.GetEndFragmentFinderLabels())
                 comboRangeTo.Items.Add(item);
 
             _parent = parent;
@@ -85,8 +85,8 @@ namespace pwiz.Skyline.SettingsUI
             textPrecursorCharges.Text = Filter.PrecursorCharges.ToArray().ToString(", "); // Not L10N
             textIonCharges.Text = Filter.ProductCharges.ToArray().ToString(", ");
             textIonTypes.Text = Filter.ToStringIonTypes(true);
-            comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.GetKey();
-            comboRangeTo.SelectedItem = Filter.FragmentRangeLast.GetKey();
+            comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.Label;
+            comboRangeTo.SelectedItem = Filter.FragmentRangeLast.Label;
             textExclusionWindow.Text = Filter.PrecursorMzWindow != 0
                                            ? Filter.PrecursorMzWindow.ToString(CultureInfo.CurrentCulture)
                                            : string.Empty;
