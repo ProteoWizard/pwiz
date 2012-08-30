@@ -1758,7 +1758,37 @@ namespace pwiz.Skyline
             var refinementSettings = new RefinementSettings { RemoveMissingResults = true };
             ModifyDocument(Resources.SkylineWindow_RemoveMissingResults_Remove_missing_results, refinementSettings.Refine);
         }
-        
+
+        private void generateDecoysMenuItem_Click(object sender, EventArgs e)
+        {
+            if (DocumentUI.PeptideGroups.Any(nodePeptideGroup => nodePeptideGroup.IsDecoy))
+            {
+                var message = TextUtil.LineSeparate(Resources.SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existing_decoys,
+                                                    Resources.SkylineWindow_generateDecoysMenuItem_Click_Are_you_sure_you_want_to_continue);
+                // Warn about removing existing decoys
+                var result = MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel);
+                if (result == DialogResult.Cancel)
+                    return;
+            }
+
+            ShowGenerateDecoysDlg();
+        }
+
+        public void ShowGenerateDecoysDlg()
+        {
+            using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
+            {
+                if (decoysDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var refinementSettings = new RefinementSettings { NumberOfDecoys = decoysDlg.NumDecoys, DecoysLabelUsed = decoysDlg.DecoysLabelType, DecoysMethod = decoysDlg.DecoysMethod };
+                    ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys);
+
+                    var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
+                    SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.PeptideGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
+                }
+            }
+        }
+
         #endregion // Edit menu
 
         #region Context menu
@@ -1824,6 +1854,85 @@ namespace pwiz.Skyline
         #region View menu
 
         // See SkylineGraphs.cs
+
+        private void spectralLibrariesToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ViewSpectralLibraries();
+        }
+
+        public void ViewSpectralLibraries()
+        {
+            if (Settings.Default.SpectralLibraryList.Count == 0)
+            {
+                var result = MessageBox.Show(this,
+                                             Resources.
+                                                 SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library,
+                                             Program.Name, MessageBoxButtons.OKCancel);
+                if (result == DialogResult.Cancel)
+                    return;
+                ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Library);
+            }
+            else
+            {
+                var index = OwnedForms.IndexOf(form => form is ViewLibraryDlg);
+                if (index != -1)
+                    OwnedForms[index].Activate();
+                else
+                {
+                    var libraries = Document.Settings.PeptideSettings.Libraries;
+                    string libraryName = string.Empty;
+                    for (int i = 0; i < libraries.Libraries.Count && string.IsNullOrEmpty(libraryName); i++)
+                    {
+                        if (libraries.Libraries[i] != null)
+                            libraryName = libraries.Libraries[i].Name;
+                        else if (libraries.LibrarySpecs[i] != null)
+                            libraryName = libraries.LibrarySpecs[i].Name;
+                    }
+                    OpenLibraryExplorer(libraryName);
+                }
+            }
+        }
+
+        private void defaultToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            defaultTextToolStripMenuItem.Checked = true;
+            largeToolStripMenuItem.Checked = extraLargeToolStripMenuItem.Checked = false;
+            ChangeTextSize();
+        }
+
+        private void largeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            largeToolStripMenuItem.Checked = true;
+            defaultTextToolStripMenuItem.Checked = extraLargeToolStripMenuItem.Checked = false;
+            ChangeTextSize();
+        }
+
+        private void extraLargeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            extraLargeToolStripMenuItem.Checked = true;
+            defaultTextToolStripMenuItem.Checked = largeToolStripMenuItem.Checked = false;
+            ChangeTextSize();
+        }
+
+        private void ChangeTextSize()
+        {
+            if (largeToolStripMenuItem.Checked)
+                Settings.Default.TextZoom = TreeViewMS.LRG_TEXT_FACTOR;
+            else if (extraLargeToolStripMenuItem.Checked)
+                Settings.Default.TextZoom = TreeViewMS.XLRG_TEXT_FACTOR;
+            else
+            {
+                defaultTextToolStripMenuItem.Checked = true;
+                Settings.Default.TextZoom = TreeViewMS.DEFAULT_TEXT_FACTOR;
+            }
+            SequenceTree.OnTextZoomChanged();
+        }
+
+        public void OpenLibraryExplorer(string libraryName)
+        {
+            var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) { Owner = this };
+            viewLibraryDlg.Show();
+        }
 
         private void statusToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -2095,6 +2204,172 @@ namespace pwiz.Skyline
         }
 
         #endregion // Settings menu
+
+        #region Tools Menu
+
+        private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowToolOptionsUI();
+        }
+
+        public void ShowToolOptionsUI()
+        {
+            using (var dlg = new ToolOptionsUI())
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
+        private void configureToolsMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowConfigureToolsDlg();
+        }
+
+        public void ShowConfigureToolsDlg()
+        {
+            using (var dlg = new ConfigureToolsDlg())
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
+        private void toolsMenu_DropDownOpening(object sender, EventArgs e)
+        {
+            PopulateToolsMenu();
+        }
+
+        public void PopulateToolsMenu()
+        {
+            // Remove all items from the toolToolStripMenuItem.
+            while (!ReferenceEquals(toolsMenu.DropDownItems[0], configureToolsMenuItem))
+            {
+                toolsMenu.DropDownItems.RemoveAt(0);
+            }
+
+            int lastInsertIndex = 0;
+            var toolList = Settings.Default.ToolList;
+            foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t, this) { Text = t.Title }))
+                toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
+        }
+
+        /// <summary>
+        /// Runs a tool by index from the tools menu. (for testing) make sure to SkylineWindow.PopulateToolsMenu() first
+        /// </summary>
+        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
+        public void RunTool(int i)
+        {
+            GetToolMenuItem(i).DoClick();
+        }
+
+        /// <summary>
+        /// Returns the title of a tool by index from the tools menu. (for testing) make sure to run SkylineWindow.PopulateToolsMenu() first
+        /// </summary>
+        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
+        /// <returns></returns>
+        public string GetToolText(int i)
+        {
+            return GetToolMenuItem(i).Text;
+        }
+
+        public bool ConfigMenuPresent()
+        {
+            return toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
+        }
+
+        public ToolMenuItem GetToolMenuItem(int i)
+        {
+            foreach (var item in toolsMenu.DropDownItems)
+            {
+                var toolMenuItem = item as ToolMenuItem;
+                if (toolMenuItem != null && i-- == 0)
+                    return toolMenuItem;
+            }
+            return null;
+        }
+
+        public class ToolMenuItem : ToolStripMenuItem
+        {
+            public readonly ToolDescription _tool;
+
+            public ToolMenuItem(ToolDescription tool, SkylineWindow parent)
+            {
+                _tool = tool;
+                Click += HandleClick;
+                _parent = parent;
+            }
+
+            private readonly SkylineWindow _parent;
+            public string Title { get { return _tool.Title; } }
+            public string Command { get { return _tool.Command; } }
+
+            private void HandleClick(object sender, EventArgs e)
+            {
+                DoClick();
+            }
+
+            public void DoClick()
+            {
+                // Run the tool and catch all errors.
+                try
+                {
+                    if (_tool.OutputToImmediateWindow)
+                    {
+                        _parent.ShowImmediateWindow();
+                        _tool.RunTool(_parent.Document, _parent, _parent.ImmediateWindow.Writer, _parent);
+                    }
+                    else
+                    {
+                        _tool.RunTool(_parent.Document, _parent, null, _parent);
+                    }
+                }
+                catch (WebToolException e)
+                {
+                    AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, e.Link, e.Link, false);
+                }
+                catch (Exception e)
+                {
+                    MessageDlg.Show(_parent, e.Message);
+                }
+            }
+        }
+
+        private void immediateWindowToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImmediateWindow();
+        }
+
+        public void ShowImmediateWindow()
+        {
+            if (_immediateWindow != null)
+            {
+                _immediateWindow.Activate();
+            }
+            else
+            {
+                _immediateWindow = CreateImmediateWindow();
+                _immediateWindow.Activate();
+                _immediateWindow.Focus();
+                _immediateWindow.Show(dockPanel, DockState.DockBottom);
+                //                ActiveDocumentChanged();
+            }
+        }
+
+        private ImmediateWindow CreateImmediateWindow()
+        {
+            _immediateWindow = new ImmediateWindow(this);
+            return _immediateWindow;
+        }
+
+        private void DestroyImmediateWindow()
+        {
+            if (_immediateWindow != null)
+            {
+                _immediateWindow.Close();
+                _immediateWindow = null;
+            }
+        }
+
+        #endregion
 
         #region Help menu
 
@@ -2983,135 +3258,6 @@ namespace pwiz.Skyline
             deleteMenuItem.Enabled = enabled;
         }
 
-        private void spectralLibrariesToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ViewSpectralLibraries();
-        }
-
-        public void ViewSpectralLibraries()
-        {
-            if (Settings.Default.SpectralLibraryList.Count == 0)
-            {
-                var result = MessageBox.Show(this,
-                                             Resources.
-                                                 SkylineWindow_ViewSpectralLibraries_No_libraries_to_show_Would_you_like_to_add_a_library,
-                                             Program.Name, MessageBoxButtons.OKCancel);
-                if (result == DialogResult.Cancel)
-                    return;
-                ShowPeptideSettingsUI(PeptideSettingsUI.TABS.Library);
-            }
-            else
-            {
-                var index = OwnedForms.IndexOf(form => form is ViewLibraryDlg);
-                if (index != -1)
-                    OwnedForms[index].Activate();
-                else
-                {
-                    var libraries = Document.Settings.PeptideSettings.Libraries;
-                    string libraryName = string.Empty;
-                    for (int i = 0; i < libraries.Libraries.Count && string.IsNullOrEmpty(libraryName); i++)
-                    {
-                        if (libraries.Libraries[i] != null)
-                            libraryName = libraries.Libraries[i].Name;
-                        else if (libraries.LibrarySpecs[i] != null)
-                            libraryName = libraries.LibrarySpecs[i].Name;
-                    }
-                    OpenLibraryExplorer(libraryName);
-                }
-            }
-        }
-
-        public void OpenLibraryExplorer(string libraryName)
-        {
-            var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) { Owner = this };
-            viewLibraryDlg.Show();
-        }
-
-        private void defaultToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            defaultTextToolStripMenuItem.Checked = true;
-            largeToolStripMenuItem.Checked = extraLargeToolStripMenuItem.Checked = false;
-            ChangeTextSize();
-        }
-
-        private void largeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            largeToolStripMenuItem.Checked = true;
-            defaultTextToolStripMenuItem.Checked = extraLargeToolStripMenuItem.Checked = false;
-            ChangeTextSize();
-        }
-
-        private void extraLargeToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            extraLargeToolStripMenuItem.Checked = true;
-            defaultTextToolStripMenuItem.Checked = largeToolStripMenuItem.Checked = false;
-            ChangeTextSize();
-        }
-
-        private void ChangeTextSize()
-        {
-            if (largeToolStripMenuItem.Checked)
-                Settings.Default.TextZoom = TreeViewMS.LRG_TEXT_FACTOR;
-            else if (extraLargeToolStripMenuItem.Checked)
-                Settings.Default.TextZoom = TreeViewMS.XLRG_TEXT_FACTOR;
-            else
-            {
-                defaultTextToolStripMenuItem.Checked = true;
-                Settings.Default.TextZoom = TreeViewMS.DEFAULT_TEXT_FACTOR; 
-            }
-            SequenceTree.OnTextZoomChanged();
-        }
-
-        private void generateDecoysMenuItem_Click(object sender, EventArgs e)
-        {
-            if (DocumentUI.PeptideGroups.Any(nodePeptideGroup => nodePeptideGroup.IsDecoy))
-            {
-                var message = TextUtil.LineSeparate(Resources.SkylineWindow_generateDecoysMenuItem_Click_This_operation_will_replace_the_existing_decoys,
-                                                    Resources.SkylineWindow_generateDecoysMenuItem_Click_Are_you_sure_you_want_to_continue);
-                // Warn about removing existing decoys
-                var result = MessageBox.Show(this,message,Program.Name, MessageBoxButtons.OKCancel);
-                if (result == DialogResult.Cancel)
-                    return;
-            }
-
-            ShowGenerateDecoysDlg();                    
-        }
-
-        public void ShowGenerateDecoysDlg()
-        {
-            using (var decoysDlg = new GenerateDecoysDlg(DocumentUI))
-            {
-                if (decoysDlg.ShowDialog(this) == DialogResult.OK)
-                {                
-                    var refinementSettings = new RefinementSettings{ NumberOfDecoys = decoysDlg.NumDecoys, DecoysLabelUsed = decoysDlg.DecoysLabelType, DecoysMethod = decoysDlg.DecoysMethod };
-                    ModifyDocument(Resources.SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys, refinementSettings.GenerateDecoys);
-
-                    var nodePepGroup = DocumentUI.PeptideGroups.First(nodePeptideGroup => nodePeptideGroup.IsDecoy);
-                    SelectedPath = DocumentUI.GetPathTo((int)SrmDocument.Level.PeptideGroups, DocumentUI.FindNodeIndex(nodePepGroup.Id));
-                }
-            }
-        }
-
-        private void retentionTimeAlignmentToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowRetentionTimeAlignmentForm();
-        }
-
-        public AlignmentForm ShowRetentionTimeAlignmentForm()
-        {
-            var form = Application.OpenForms.OfType<AlignmentForm>().FirstOrDefault();
-            if (form == null)
-            {
-                form = new AlignmentForm(this);
-                form.Show(this);
-            }
-            else
-            {
-                form.Activate();
-            }
-            return form;
-        }
-
         #region Implementation of IToolMacroProvider
 
         public string SelectedPrecursor
@@ -3158,176 +3304,6 @@ namespace pwiz.Skyline
 
         #endregion
 
-        #region Tools Menu
-
-        private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowToolOptionsUI();
-        }
-
-        public void ShowToolOptionsUI()
-        {
-            using (var dlg = new ToolOptionsUI())
-            {
-                dlg.ShowDialog(this);
-            }
-        }
-
-        private void configureToolsMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowConfigureToolsDlg();
-        }
-
-        public void ShowConfigureToolsDlg()
-        {
-            using (var dlg = new ConfigureToolsDlg())
-            {
-                dlg.ShowDialog(this);
-            }
-        }
-
-        private void toolsMenu_DropDownOpening(object sender, EventArgs e)
-        {
-            PopulateToolsMenu();
-        }
-
-        public void PopulateToolsMenu()
-        {
-            // Remove all items from the toolToolStripMenuItem.
-            while (!ReferenceEquals(toolsMenu.DropDownItems[0], configureToolsMenuItem))
-            {
-                toolsMenu.DropDownItems.RemoveAt(0);
-            }
-
-            int lastInsertIndex = 0;
-            List<ToolDescription> toolList = Settings.Default.ToolList;
-                foreach (ToolMenuItem menuItem in toolList.Select(t => new ToolMenuItem(t, this) {Text = t.Title}))
-                    toolsMenu.DropDownItems.Insert(lastInsertIndex++, menuItem);
-            }            
-
-        /// <summary>
-        /// Runs a tool by index from the tools menu. (for testing) make sure to SkylineWindow.PopulateToolsMenu() first
-        /// </summary>
-        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
-        public void RunTool(int i)
-        {
-            GetToolMenuItem(i).DoClick();
-        }
-
-        /// <summary>
-        /// Returns the title of a tool by index from the tools menu. (for testing) make sure to run SkylineWindow.PopulateToolsMenu() first
-        /// </summary>
-        /// <param name="i">Index of tool in the menu. Zero indexed.</param>
-        /// <returns></returns>
-        public string GetToolText(int i)
-        {
-            return GetToolMenuItem(i).Text;
-        }
-
-        public bool ConfigMenuPresent()
-        {
-            return toolsMenu.DropDownItems.Contains(configureToolsMenuItem);
-        }
-
-        public ToolMenuItem GetToolMenuItem(int i)
-        {
-            foreach (var item in toolsMenu.DropDownItems)
-            {
-                var toolMenuItem = item as ToolMenuItem;
-                if (toolMenuItem != null && i-- == 0)
-                    return toolMenuItem;
-            }
-            return null;
-        }
-
-        public class ToolMenuItem : ToolStripMenuItem
-        {
-            public readonly ToolDescription _tool;
-
-            public ToolMenuItem(ToolDescription tool, SkylineWindow parent)
-            {
-                _tool = tool;
-                Click += HandleClick;
-                _parent = parent;
-        }
-
-            private readonly SkylineWindow _parent;
-            public string Title { get { return _tool.Title; } }
-            public string Command { get { return _tool.Command; } }
-
-            private void HandleClick(object sender, EventArgs e)
-            {
-                DoClick();
-            }
-
-            public void DoClick()
-            {
-                // Run the tool and catch all errors.
-                try
-                {
-                    if (_tool.OutputToImmediateWindow)
-                    {
-                        _parent.ShowImmediateWindow();
-                        _tool.RunTool(_parent.Document, _parent, _parent.ImmediateWindow.Writer, _parent);
-                    }
-                    else
-                    {
-                        _tool.RunTool(_parent.Document, _parent, null, _parent);
-                    }
-                }
-                catch (WebToolException e)
-                {
-                    AlertLinkDlg.Show(_parent, Resources.Could_not_open_web_Browser_to_show_link_, e.Link, e.Link, false);
-                }
-                catch (Exception e)
-                {
-                    MessageDlg.Show(_parent, e.Message);
-                }
-            }
-        }
-
-        #endregion
-
-        #region ImmediateWindow
-
-        private void immediateWindowToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            ShowImmediateWindow();
-        }
-
-        public void ShowImmediateWindow()
-        {
-            if (_immediateWindow != null)
-            {
-                _immediateWindow.Activate();
-            }
-            else
-            {
-                _immediateWindow = CreateImmediateWindow();
-                _immediateWindow.Activate();
-                _immediateWindow.Focus();
-                _immediateWindow.Show(dockPanel, DockState.DockBottom);
-//                ActiveDocumentChanged();
-            }
-        }
-
-        private ImmediateWindow CreateImmediateWindow()
-        {
-            _immediateWindow = new ImmediateWindow(this);       
-            return _immediateWindow;
-        }
-        
-        private void DestroyImmediateWindow()
-        {
-            if (_immediateWindow != null)
-            {                
-                _immediateWindow.Close();
-                _immediateWindow = null;
-            }
-        }
-
-        #endregion 
-
         #region Implementation of IExceptionHandler
 
         /// <summary>
@@ -3340,65 +3316,6 @@ namespace pwiz.Skyline
         }
 
         #endregion
-
-        public void ShowPublishDlg(IPanoramaPublishClient publishClient)
-        {
-            var document = DocumentUI;
-            if (!document.Settings.IsLoaded)
-            {
-                MessageDlg.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published);
-                return;
-            }
-
-            string fileName = DocumentFilePath;
-            if (string.IsNullOrEmpty(fileName))
-            {
-                if (MessageBox.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published,
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
-                    return;
-
-                if (!SaveDocumentAs())
-                    return;
-
-                fileName = GetFileName(DocumentFilePath);
-            }
-
-            var servers = Settings.Default.ServerList;
-            if (servers == null || servers.Count == 0)
-            {
-                MessageBox.Show(Resources.SkylineWindow_Publish_There_are_no_Panorama_servers_to_publish_to_Please_add_a_server_under_Tools);
-                return;
-            }
-
-            using (var publishDocumentDlg = new PublishDocumentDlg(servers, fileName))
-            {
-                publishDocumentDlg.PanoramaPublishClient = publishClient;
-                if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    ShareDocument(fileName, false);
-                    publishDocumentDlg.UploadSharedZipFile();
-                }
-            }
-        }
-
-        private string GetFileName(string fileName)
-        {
-            string path;
-            do
-            {
-                path = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
-                                        Path.GetFileNameWithoutExtension(fileName) + "_" + // Not L10N
-                                        GetTimeStamp(DateTime.Now) +
-                                        SrmDocumentSharing.EXT);
-            } while (File.Exists(path));
-            return path;
-        }
-
-        private string GetTimeStamp(DateTime time)
-        {
-            return time.ToString("yyyy-MM-dd_HH-mm-ss"); // Not L10N
-        }
-
     }
 }
 

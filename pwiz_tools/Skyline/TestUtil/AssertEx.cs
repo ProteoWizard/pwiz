@@ -29,6 +29,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -86,11 +87,9 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
-        private const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";
-
         public static TObj Deserialize<TObj>(string s)
         {
-            s = XML_DIRECTIVE + s;
+            s = XmlUtil.XML_DIRECTIVE + s;
 
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (TextReader reader = new StringReader(s))
@@ -124,7 +123,7 @@ namespace pwiz.SkylineTestUtil
         public static void DeserializeError<TObj, TEx>(string s, bool expectError)
             where TEx : Exception
         {
-            s = XML_DIRECTIVE + s;
+            s = XmlUtil.XML_DIRECTIVE + s;
 
             XmlSerializer ser = new XmlSerializer(typeof(TObj));
             using (TextReader reader = new StringReader(s))

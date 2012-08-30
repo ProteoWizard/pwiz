@@ -148,6 +148,8 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public static class XmlUtil
     {
+        public const string XML_DIRECTIVE = "<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n";  // Not L10N
+
         public static string ToAttr<TStruct>(TStruct? value)
             where TStruct : struct
         {

@@ -50,7 +50,23 @@ namespace pwiz.Skyline.FileUI
             Icon = Resources.Skyline;
 
             _panoramaServers = servers;
-            tbFilePath.Text = fileName;
+            tbFilePath.Text = GetTimeStampedFileName(fileName);
+        }
+
+        public string FileName { get { return tbFilePath.Text; } }
+
+        private string GetTimeStampedFileName(string fileName)
+        {
+            string path;
+            do
+            {
+                path = Path.Combine(Path.GetDirectoryName(fileName) ?? string.Empty,
+                                        Path.GetFileNameWithoutExtension(fileName) + "_" + // Not L10N
+                                        DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + // Not L10N
+                                        SrmDocumentSharing.EXT);
+            }
+            while (File.Exists(path));
+            return path;
         }
 
         private void PublishDocumentDlg_Load(object sender, EventArgs e)
@@ -78,7 +94,7 @@ namespace pwiz.Skyline.FileUI
                 TreeNode treeNode = new TreeNode(server.URI.ToString()) {Tag = new FolderInformation(server, false)};
                 treeViewFolders.Nodes.Add(treeNode);
                 if (serverFolder.Value != null)
-                    addSubFolders(server, treeNode, serverFolder.Value);
+                    AddSubFolders(server, treeNode, serverFolder.Value);
             }
             IsLoaded = true;
         }
@@ -152,7 +168,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private void addSubFolders(Server server, TreeNode node, JToken folder)
+        private void AddSubFolders(Server server, TreeNode node, JToken folder)
         {
             try
             {
@@ -178,7 +194,7 @@ namespace pwiz.Skyline.FileUI
                         folderNode.ForeColor = Color.Gray;
 
                     folderNode.Tag = new FolderInformation(server, canUpload);
-                    addSubFolders(server, folderNode, subFolder);
+                    AddSubFolders(server, folderNode, subFolder);
                 }
             }
             catch (Exception x)
@@ -226,7 +242,7 @@ namespace pwiz.Skyline.FileUI
 
         public void UploadSharedZipFile()
         {
-            var folderPath = getFolderPath(treeViewFolders.SelectedNode);
+            var folderPath = GetFolderPath(treeViewFolders.SelectedNode);
             var zipFilePath = tbFilePath.Text;
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
             if (folderInfo == null)
@@ -245,11 +261,10 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private string getFolderPath(TreeNode folderNode)
+        private string GetFolderPath(TreeNode folderNode)
         {
             string nodePath = folderNode.FullPath;
-            string[] folderPathSegments = nodePath.Split(new[] {"\\"}, StringSplitOptions.RemoveEmptyEntries);
-                // Not L10N
+            string[] folderPathSegments = nodePath.Split(new[] {"\\"}, StringSplitOptions.RemoveEmptyEntries); // Not L10N
 
             string folderPath = string.Empty;
             // First segment is server name. 

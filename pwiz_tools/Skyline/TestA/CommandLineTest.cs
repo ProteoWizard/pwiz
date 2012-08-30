@@ -47,35 +47,11 @@ namespace pwiz.SkylineTestA
         ///</summary>
         public TestContext TestContext { get; set; }
 
-        #region Additional test attributes
-
-        //
-        // You can use the following additional attributes as you write your tests:
-        //
-        // Use ClassInitialize to run code before running the first test in the class
-        // [ClassInitialize()]
-        // public static void MyClassInitialize(TestContext testContext) { }
-        //
-        // Use ClassCleanup to run code after all tests in a class have run
-        // [ClassCleanup()]
-        // public static void MyClassCleanup() { }
-        //
-        // Use TestInitialize to run code before running each test 
-        // [TestInitialize()]
-        // public void MyTestInitialize() { }
-        //
-        // Use TestCleanup to run code after each test has run
-         [TestCleanup]
-         public void MyTestCleanup()
-         {
-             if (Settings.Default.ToolList.Count > 0)
-             {
-                 Settings.Default.ToolList.RemoveAll(t => true);
-             }
-         }
-        
-
-        #endregion
+        [TestCleanup]
+        public void MyTestCleanup()
+        {
+            Settings.Default.ToolList.Clear();
+        }        
 
         private const string ZIP_FILE = @"TestA\Results\FullScan.zip";
         private const string COMMAND_FILE = @"TestA\CommandLineTest.zip";
@@ -1058,10 +1034,10 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(output.Contains("iHope was added to the Tools Menu"));
             Assert.IsTrue(output.Contains("thisWorks was added to the Tools Menu"));
             Assert.IsTrue(output.Contains("FirstTry was added to the Tools Menu"));
-            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
-            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
-            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "thisWorks"));
-            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "FirstTry"));
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "thisWorks"));
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "FirstTry"));
             Assert.AreEqual(toolListCount+4, Settings.Default.ToolList.Count);
 
             // run the same command again. this time each should be skipped.
@@ -1070,10 +1046,10 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(output2.Contains("iHope was added to the Tools Menu"));
             Assert.IsFalse(output2.Contains("thisWorks was added to the Tools Menu"));
             Assert.IsFalse(output2.Contains("FirstTry was added to the Tools Menu"));
-            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
-            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
-            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "thisWorks"));
-            Assert.IsTrue(Settings.Default.ToolList.Exists(t => t.Title == "FirstTry"));
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "NeWtOOl" && t.Command == @"C:\Windows\Notepad.exe" && t.Arguments == "$(DocumentDir)" && t.InitialDirectory == @"C:\"));
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "iHope" && t.Command == @"C:\Windows\Notepad.exe"));
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "thisWorks"));
+            Assert.IsTrue(Settings.Default.ToolList.Any(t => t.Title == "FirstTry"));
             // the number of tools is unchanged.
             Assert.AreEqual(toolListCount + 4, Settings.Default.ToolList.Count);
 

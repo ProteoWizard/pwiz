@@ -20,6 +20,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -35,7 +36,6 @@ namespace pwiz.Skyline.ToolsUI
     public partial class ConfigureToolsDlg : FormEx
     {
         private readonly SettingsListComboDriver<ReportSpec> _driverReportSpec;
-
 
         public ConfigureToolsDlg()
         {
@@ -57,8 +57,10 @@ namespace pwiz.Skyline.ToolsUI
             // Value for keeping track of the previously selected tool 
             // Used to check if the tool meets requirements before allowing you to navigate away from it.
             _previouslySelectedIndex = -1;
-            
-            ToolList = CopyTools(Settings.Default.ToolList);
+
+            ToolList = Settings.Default.ToolList
+                       .Select(t => new ToolDescription(t))
+                       .ToList();
 
             RefreshListBox();
             Unsaved = false;
@@ -84,13 +86,14 @@ namespace pwiz.Skyline.ToolsUI
 
         public List<ToolDescription> ToolList { get; private set; }
 
-        public static List<ToolDescription> CopyTools(IEnumerable<ToolDescription> list)
+        private static ToolList CopyTools(IEnumerable<ToolDescription> list)
         {
-            return list.Where(t => !Equals(t, ToolDescription.EMPTY))
-                       .Select(t => new ToolDescription(t))
-                       .ToList();
+            var listCopy = new ToolList();
+            listCopy.AddRange(from t in list
+                              where !Equals(t, ToolDescription.EMPTY)
+                              select new ToolDescription(t));
+            return listCopy;
         }
-
 
         private bool _unsaved;
 
@@ -206,7 +209,7 @@ namespace pwiz.Skyline.ToolsUI
 
         public static bool checkExtension(string path)
         {
-            string s = System.IO.Path.GetExtension(path);
+            string s = Path.GetExtension(path);
             return EXTENSIONS.Any(extension => s != null && extension == s.ToLower());
         }
 
@@ -268,7 +271,7 @@ namespace pwiz.Skyline.ToolsUI
                 return false;                
             }  
            
-            if (!System.IO.File.Exists(tool.Command))
+            if (!File.Exists(tool.Command))
             {
                 var dlg =
                 new MultiButtonMsgDlg(

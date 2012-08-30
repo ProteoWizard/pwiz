@@ -190,7 +190,7 @@ namespace pwiz.SkylineTest.Reporting
                 database.AddSrmDocument(srmDocument);
 
                 ReportSpecList reportSpecList = new ReportSpecList();
-                var xmlSerializer = new XmlSerializer(reportSpecList.SerialType);
+                var xmlSerializer = new XmlSerializer(reportSpecList.DeserialType);
                 reportSpecList = (ReportSpecList)xmlSerializer.Deserialize(streamR);
                 Report report = Report.Load(reportSpecList["Study 9p_0721_2009_v6"]);
                 ResultSet resultSet = report.Execute(database);

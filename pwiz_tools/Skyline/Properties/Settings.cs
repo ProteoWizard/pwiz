@@ -68,13 +68,17 @@ namespace pwiz.Skyline.Properties
         }
 
         [System.Configuration.UserScopedSettingAttribute]
-        public List<ToolDescription> ToolList
+        public ToolList ToolList
         {
             get
             {
                 if (this["ToolList"] == null)
-                    ToolList = new List<ToolDescription>();
-                return (List<ToolDescription>)(this["ToolList"]);
+                {
+                    var list = new ToolList();
+                    list.AddDefaults();
+                    ToolList = list;
+                }
+                return (ToolList)(this["ToolList"]);
             }
             set
             {
@@ -608,6 +612,29 @@ namespace pwiz.Skyline.Properties
     /// </summary>
     public sealed class MethodTemplateList : XmlMappedList<string, MethodTemplateFile>
     {        
+    }
+
+    public sealed class ToolList : SettingsList<ToolDescription>
+    {
+        public override IEnumerable<ToolDescription> GetDefaults(int revisionIndex)
+        {
+            return new[]
+                       {
+                           new ToolDescription("SRM Collider",
+                               "http://www.srmcollider.org/srmcollider/srmcollider.py",
+                               ReportSpecList.SRM_COLLIDER_REPORT_NAME),
+                           new ToolDescription("QuaSAR",
+                               "http://genepattern.broadinstitute.org/gp/pages/index.jsf?lsid=QuaSAR"), 
+                       };
+        }
+
+        // All list editing for tools is handled by the ConfigureToolsDlg
+        public override string Title { get { throw new InvalidOperationException(); } }
+        public override string Label { get { throw new InvalidOperationException(); } }
+        public override ToolDescription EditItem(Control owner, ToolDescription item, IEnumerable<ToolDescription> existing, object tag)
+        {   throw new InvalidOperationException(); }
+        public override ToolDescription CopyItem(ToolDescription item)
+        {   throw new InvalidOperationException(); }
     }
 
     public sealed class EnzymeList : SettingsList<Enzyme>
@@ -1547,9 +1574,34 @@ namespace pwiz.Skyline.Properties
         Database GetDatabase(Control owner);
     }
 
-    public sealed class ReportSpecList : SerializableSettingsList<ReportSpec>
+    /// <summary>
+    /// This class exists to keep serialized shared .skyr files from adding
+    /// defaults changing with revisionIndex intended for only the user.config file.
+    /// </summary>
+    [XmlRoot("ReportSpecList")]
+    public class SkyrFileList : ReportSpecList
+    {
+        public override IEnumerable<ReportSpec> GetDefaults(int revisionIndex)
+        {
+            return new ReportSpec[0];
+        }
+    }
+
+    public class ReportSpecList : SerializableSettingsList<ReportSpec>
     {
         public const string EXT_REPORTS = ".skyr"; // Not L10N
+
+        public static string SRM_COLLIDER_REPORT_NAME
+        {
+            get { return "SRM Collider Input"; }
+        }
+
+        public static string QUASAR_REPORT_NAME
+        {
+            get { return "QuaSAR Input"; }
+        }
+
+        public override int RevisionIndexCurrent { get { return 1; } }
 
         public override IEnumerable<ReportSpec> GetDefaults(int revisionIndex)
         {
@@ -1558,7 +1610,7 @@ namespace pwiz.Skyline.Properties
             Type tableTran = typeof (DbTransition);
             Type tableTranRes = typeof (DbTransitionResult);
 
-            return new[]
+            var listDefaults = new List<ReportSpec>(new[]
                        { // Not L10N
                     new ReportSpec(
                         Resources.ReportSpecList_GetDefaults_Peptide_Ratio_Results,
@@ -1608,7 +1660,59 @@ namespace pwiz.Skyline.Properties
                                         new ReportColumn(tableTranRes, "PeakRank"),
                                                                }
                                               })
-                       };
+                       });
+
+            if (revisionIndex < 1)
+                return listDefaults;
+
+            listDefaults.AddRange(new[]
+                                    {
+                                        (ReportSpec) DeserializeItem(
+@"<report name=""SRM Collider Input"">
+    <table name=""T1"">DbTransition</table>
+    <select>
+      <column name=""T1"">Precursor.Peptide.Sequence</column>
+      <column name=""T1"">Precursor.ModifiedSequence</column>
+      <column name=""T1"">Precursor.Charge</column>
+      <column name=""T1"">Precursor.Mz</column>
+      <column name=""T1"">ProductMz</column>
+      <column name=""T1"">LibraryIntensity</column>
+      <column name=""T1"">ProductCharge</column>
+      <column name=""T1"">FragmentIon</column>
+    </select>
+  </report>").ChangeName(SRM_COLLIDER_REPORT_NAME),
+                                        (ReportSpec) DeserializeItem(
+@"<report name=""QuaSAR Input"">
+    <table name=""T1"">DbTransitionResult</table>
+    <table name=""T2"">DbTransition</table>
+    <select>
+      <column name=""T1"">PrecursorResult.PeptideResult.ProteinResult.FileName</column>
+      <column name=""T1"">PrecursorResult.PeptideResult.ProteinResult.SampleName</column>
+      <column name=""T1"">PrecursorResult.PeptideResult.ProteinResult.ReplicateName</column>
+      <column name=""T2"">Precursor.Peptide.Protein.Name</column>
+      <column name=""T2"">Precursor.Peptide.Sequence</column>
+      <column name=""T2"">Precursor.Charge</column>
+      <column name=""T2"">ProductCharge</column>
+      <column name=""T2"">FragmentIon</column>
+      <column name=""T2"">Precursor.Peptide.AverageMeasuredRetentionTime</column>
+    </select>
+    <group_by>
+      <column name=""T2"">ProductCharge</column>
+      <column name=""T2"">FragmentIon</column>
+      <column name=""T2"">Precursor.Peptide</column>
+      <column name=""T2"">Precursor.Charge</column>
+      <column name=""T1"">ResultFile.Replicate.Replicate</column>
+      <column name=""T1"">PrecursorResult.OptStep</column>
+    </group_by>
+    <cross_tab_headers>
+      <column name=""T2"">Precursor.IsotopeLabelType</column>
+    </cross_tab_headers>
+    <cross_tab_values>
+      <column name=""T1"">Area</column>
+    </cross_tab_values>
+  </report>").ChangeName(QUASAR_REPORT_NAME),
+                                    });
+            return listDefaults;
         }
 
         public override ReportSpec EditItem(Control owner, ReportSpec item,
@@ -1648,6 +1752,12 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return Resources.ReportSpecList_Label_Report; } }
 
         public override Type SerialType { get { return typeof(ReportSpecList); } }
+
+        /// <summary>
+        /// Returns the Type <see cref="SkyrFileList"/> to keep from adding changing
+        /// defaults to exported .skyr files.
+        /// </summary>
+        public override Type DeserialType { get { return typeof(SkyrFileList); } }
 
         public override ICollection<ReportSpec> CreateEmptyList()
         {
@@ -1692,6 +1802,8 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return Resources.AnnotationDefList_Label_Annotations; } }
 
         public Type SerialType { get { return typeof(AnnotationDef); } }
+
+        public Type DeserialType { get { return SerialType; } }
 
         public ICollection<AnnotationDef> CreateEmptyList()
         {
@@ -1742,6 +1854,8 @@ namespace pwiz.Skyline.Properties
 
         public abstract Type SerialType { get; }
 
+        public virtual Type DeserialType { get { return SerialType; } }
+
         public abstract ICollection<TItem> CreateEmptyList();
 
         #endregion
@@ -1751,7 +1865,7 @@ namespace pwiz.Skyline.Properties
             if (String.IsNullOrEmpty(fileName))
                 return false;
 
-            XmlSerializer xmlSerializer = new XmlSerializer(SerialType);
+            XmlSerializer xmlSerializer = new XmlSerializer(DeserialType);
             SerializableSettingsList<TItem> loadedItems;
             try
             {
@@ -1762,7 +1876,7 @@ namespace pwiz.Skyline.Properties
             }
             catch (Exception exception)
             {
-                throw new IOException(String.Format(Resources.SerializableSettingsList_ImportSkyrFile_Failure_loading__0__, fileName), exception);
+                throw new IOException(String.Format(Resources.SerializableSettingsList_ImportFile_Failure_loading__0__, fileName), exception);
             }
             // Check for and warn about existing reports.
             var existing = (from item in loadedItems
@@ -1796,6 +1910,17 @@ namespace pwiz.Skyline.Properties
                     RemoveAt(i);
                     break;
                 }
+            }
+        }
+
+        public static TItem DeserializeItem(string s)
+        {
+            s = XmlUtil.XML_DIRECTIVE + s;
+
+            XmlSerializer ser = new XmlSerializer(typeof(TItem));
+            using (TextReader reader = new StringReader(s))
+            {
+                return (TItem)ser.Deserialize(reader);
             }
         }
     }

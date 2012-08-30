@@ -49,13 +49,13 @@ namespace pwiz.Skyline.Model
     }
 
     [XmlRoot("ToolDescription")]
-    public class ToolDescription : IXmlSerializable
+    public class ToolDescription : IXmlSerializable, IKeyContainer<string>
     {
-        public static readonly ToolDescription EMPTY = new ToolDescription("", "", "", "");
+        public static readonly ToolDescription EMPTY = new ToolDescription(string.Empty, string.Empty, string.Empty, string.Empty);
 
         public static bool IsWebPageCommand(string command)
         {
-            return command.StartsWith("http:") || command.StartsWith("https:");
+            return command.StartsWith("http:") || command.StartsWith("https:"); // Not L10N
         }
 
         public ToolDescription(ToolDescription t)
@@ -63,12 +63,23 @@ namespace pwiz.Skyline.Model
         {            
         }
 
-        public ToolDescription(string title, string command, string arguments, string initialDirectory)
-            : this(title, command, arguments, initialDirectory, false, "")
+        public ToolDescription(string title, string command)
+            : this(title, command, string.Empty, string.Empty, false, string.Empty)
         {
         }
 
-        public ToolDescription(string title, string command, string arguments, string initialDirectory, bool outputToImmediateWindow,string reportTitle)
+        public ToolDescription(string title, string command, string reportTitle)
+            : this(title, command, string.Empty, string.Empty, false, reportTitle)
+        {
+        }
+
+        public ToolDescription(string title, string command, string arguments, string initialDirectory)
+            : this(title, command, arguments, initialDirectory, false, string.Empty)
+        {
+        }
+
+        public ToolDescription(string title, string command, string arguments, string initialDirectory,
+                               bool outputToImmediateWindow, string reportTitle)
         {
             Title = title;
             Command = command;
@@ -76,6 +87,11 @@ namespace pwiz.Skyline.Model
             InitialDirectory = initialDirectory;
             OutputToImmediateWindow = outputToImmediateWindow;
             ReportTitle = reportTitle;
+        }
+
+        public string GetKey()
+        {
+            return Title;
         }
 
         public string Title { get; set; }

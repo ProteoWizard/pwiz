@@ -206,6 +206,7 @@ namespace pwiz.Skyline
             this.saveMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.saveAsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.shareDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.publishMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -350,11 +351,11 @@ namespace pwiz.Skyline
             this.integrateAllMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsMenu = new System.Windows.Forms.ToolStripMenuItem();
             this.placeholderToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator46 = new System.Windows.Forms.ToolStripSeparator();
-            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator47 = new System.Windows.Forms.ToolStripSeparator();
             this.configureToolsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator46 = new System.Windows.Forms.ToolStripSeparator();
             this.immediateWindowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator47 = new System.Windows.Forms.ToolStripSeparator();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.homeMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.videosMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -363,7 +364,6 @@ namespace pwiz.Skyline
             this.issuesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator29 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.publishToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.contextMenuTreeNode.SuspendLayout();
             this.contextMenuSpectrum.SuspendLayout();
             this.contextMenuChromatogram.SuspendLayout();
@@ -1578,7 +1578,7 @@ namespace pwiz.Skyline
             this.saveMenuItem,
             this.saveAsMenuItem,
             this.shareDocumentMenuItem,
-            this.publishToolStripMenuItem,
+            this.publishMenuItem,
             this.toolStripSeparator2,
             this.importToolStripMenuItem,
             this.exportToolStripMenuItem,
@@ -1621,6 +1621,12 @@ namespace pwiz.Skyline
             this.shareDocumentMenuItem.Name = "shareDocumentMenuItem";
             resources.ApplyResources(this.shareDocumentMenuItem, "shareDocumentMenuItem");
             this.shareDocumentMenuItem.Click += new System.EventHandler(this.shareDocumentMenuItem_Click);
+            // 
+            // publishMenuItem
+            // 
+            this.publishMenuItem.Name = "publishMenuItem";
+            resources.ApplyResources(this.publishMenuItem, "publishMenuItem");
+            this.publishMenuItem.Click += new System.EventHandler(this.publishMenuItem_Click);
             // 
             // toolStripSeparator2
             // 
@@ -2635,33 +2641,33 @@ namespace pwiz.Skyline
             this.placeholderToolsMenuItem.Name = "placeholderToolsMenuItem";
             resources.ApplyResources(this.placeholderToolsMenuItem, "placeholderToolsMenuItem");
             // 
-            // toolStripSeparator46
-            // 
-            this.toolStripSeparator46.Name = "toolStripSeparator46";
-            resources.ApplyResources(this.toolStripSeparator46, "toolStripSeparator46");
-            // 
-            // optionsToolStripMenuItem
-            // 
-            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            resources.ApplyResources(this.optionsToolStripMenuItem, "optionsToolStripMenuItem");
-            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
-            // 
-            // toolStripSeparator47
-            // 
-            this.toolStripSeparator47.Name = "toolStripSeparator47";
-            resources.ApplyResources(this.toolStripSeparator47, "toolStripSeparator47");
-            // 
             // configureToolsMenuItem
             // 
             this.configureToolsMenuItem.Name = "configureToolsMenuItem";
             resources.ApplyResources(this.configureToolsMenuItem, "configureToolsMenuItem");
             this.configureToolsMenuItem.Click += new System.EventHandler(this.configureToolsMenuItem_Click);
             // 
+            // toolStripSeparator46
+            // 
+            this.toolStripSeparator46.Name = "toolStripSeparator46";
+            resources.ApplyResources(this.toolStripSeparator46, "toolStripSeparator46");
+            // 
             // immediateWindowToolStripMenuItem
             // 
             this.immediateWindowToolStripMenuItem.Name = "immediateWindowToolStripMenuItem";
             resources.ApplyResources(this.immediateWindowToolStripMenuItem, "immediateWindowToolStripMenuItem");
             this.immediateWindowToolStripMenuItem.Click += new System.EventHandler(this.immediateWindowToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator47
+            // 
+            this.toolStripSeparator47.Name = "toolStripSeparator47";
+            resources.ApplyResources(this.toolStripSeparator47, "toolStripSeparator47");
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            resources.ApplyResources(this.optionsToolStripMenuItem, "optionsToolStripMenuItem");
+            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
             // 
             // helpToolStripMenuItem
             // 
@@ -2716,12 +2722,6 @@ namespace pwiz.Skyline
             this.aboutMenuItem.Name = "aboutMenuItem";
             resources.ApplyResources(this.aboutMenuItem, "aboutMenuItem");
             this.aboutMenuItem.Click += new System.EventHandler(this.aboutMenuItem_Click);
-            // 
-            // publishToolStripMenuItem
-            // 
-            this.publishToolStripMenuItem.Name = "publishToolStripMenuItem";
-            resources.ApplyResources(this.publishToolStripMenuItem, "publishToolStripMenuItem");
-            this.publishToolStripMenuItem.Click += new System.EventHandler(this.publishToolStripMenuItem_Click);
             // 
             // SkylineWindow
             // 
@@ -3083,7 +3083,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator46;
         private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem publishToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem publishMenuItem;
         private System.Windows.Forms.ToolStripMenuItem renameProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem immediateWindowToolStripMenuItem;
     }

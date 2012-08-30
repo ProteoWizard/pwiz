@@ -4700,9 +4700,6 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_CheckPassToolInternal_Please_select_a_report_or_remove__0__from_arguments_" xml:space="preserve">
     <value>Please select a report or remove {0} from arguments.</value>
   </data>
-  <data name="SerializableSettingsList_ImportSkyrFile_Failure_loading__0__" xml:space="preserve">
-    <value>Failure loading {0}.</value>
-  </data>
   <data name="WebHelpers_PostToLink_Failure_saving_temporary_post_data_to_disk_" xml:space="preserve">
     <value>Failure saving temporary post data to disk.</value>
   </data>
@@ -4735,5 +4732,8 @@ Are you sure you want to continue?</value>
   </data>
   <data name="RenameProteinsDlg_UseFastaFile_No_protein_sequence_matches_found_between_the_current_document_and_the_FASTA_file__0_">
     <value xml:space="preserve">No protein sequence matches found between the current document and the FASTA file {0}</value>
+  </data>
+  <data name="SerializableSettingsList_ImportFile_Failure_loading__0__">
+    <value xml:space="preserve">Failure loading {0}.</value>
   </data>
 </root>

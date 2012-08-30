@@ -41,7 +41,6 @@ using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
@@ -83,6 +82,25 @@ namespace pwiz.Skyline
             if (index < 9)
                 name = string.Format("&{0} {1}", index, name); // Not L10N
             return name;
+        }
+
+        private class MruChosenHandler
+        {
+            private readonly SkylineWindow _skyline;
+            private readonly string _path;
+
+            public MruChosenHandler(SkylineWindow skyline, string path)
+            {
+                _skyline = skyline;
+                _path = path;
+            }
+
+            public void ToolStripMenuItemClick(object sender, EventArgs e)
+            {
+                if (!_skyline.CheckSaveDocument())
+                    return;
+                _skyline.OpenFile(_path);
+            }
         }
 
         private void newMenuItem_Click(object sender, EventArgs e) { NewDocument(); }
@@ -1470,27 +1488,48 @@ namespace pwiz.Skyline
             }
         }
 
-        private void publishToolStripMenuItem_Click(object sender, EventArgs e)
+        private void publishMenuItem_Click(object sender, EventArgs e)
         {
             ShowPublishDlg(null);
         }
 
-        private class MruChosenHandler
+        public void ShowPublishDlg(IPanoramaPublishClient publishClient)
         {
-            private readonly SkylineWindow _skyline;
-            private readonly string _path;
-
-            public MruChosenHandler(SkylineWindow skyline, string path)
+            var document = DocumentUI;
+            if (!document.Settings.IsLoaded)
             {
-                _skyline = skyline;
-                _path = path;
+                MessageDlg.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_fully_loaded_before_it_can_be_published);
+                return;
             }
 
-            public void ToolStripMenuItemClick(object sender, EventArgs e)
+            string fileName = DocumentFilePath;
+            if (string.IsNullOrEmpty(fileName))
             {
-                if (!_skyline.CheckSaveDocument())
+                if (MessageBox.Show(this, Resources.SkylineWindow_publishToolStripMenuItem_Click_The_document_must_be_saved_before_it_can_be_published,
+                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
                     return;
-                _skyline.OpenFile(_path);
+
+                if (!SaveDocumentAs())
+                    return;
+
+                fileName = DocumentFilePath;
+            }
+
+            var servers = Settings.Default.ServerList;
+            if (servers == null || servers.Count == 0)
+            {
+                MessageBox.Show(Resources.SkylineWindow_Publish_There_are_no_Panorama_servers_to_publish_to_Please_add_a_server_under_Tools);
+                return;
+            }
+
+            using (var publishDocumentDlg = new PublishDocumentDlg(servers, fileName))
+            {
+                publishDocumentDlg.PanoramaPublishClient = publishClient;
+                if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    ShareDocument(publishDocumentDlg.FileName, false);
+                    publishDocumentDlg.UploadSharedZipFile();
+                }
             }
         }
 

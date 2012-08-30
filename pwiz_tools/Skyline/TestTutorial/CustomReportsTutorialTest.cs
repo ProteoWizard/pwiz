@@ -141,8 +141,7 @@ namespace pwiz.SkylineTestTutorial
                 editReportListDlg0.MoveItemDown();
                 editReportListDlg0.MoveItemDown();
                 var listReportSpecs = new List<ReportSpec>(editReportListDlg0.GetAllEdited());
-                Assert.AreEqual(listReportSpecs.Count - 1,
-                              listReportSpecs.IndexOf(spec => spec.Name == "Overview")); // Not L10N
+                Assert.AreEqual(3, listReportSpecs.IndexOf(spec => spec.Name == "Overview")); // Not L10N
                 editReportListDlg0.MoveItemUp();
                 editReportListDlg0.MoveItemUp();
                 editReportListDlg0.MoveItemUp();

@@ -162,6 +162,8 @@ namespace pwiz.Skyline.Util
     {
         Type SerialType { get; }
 
+        Type DeserialType { get; }
+
         ICollection<TItem> CreateEmptyList();
 
         bool ContainsKey(string key);

@@ -2634,6 +2634,26 @@ namespace pwiz.Skyline
             }
         }
 
+        private void retentionTimeAlignmentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowRetentionTimeAlignmentForm();
+        }
+
+        public AlignmentForm ShowRetentionTimeAlignmentForm()
+        {
+            var form = Application.OpenForms.OfType<AlignmentForm>().FirstOrDefault();
+            if (form == null)
+            {
+                form = new AlignmentForm(this);
+                form.Show(this);
+            }
+            else
+            {
+                form.Activate();
+            }
+            return form;
+        }
+
         #endregion
 
         #region Peak area graph

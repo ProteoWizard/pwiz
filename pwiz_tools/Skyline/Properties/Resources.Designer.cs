@@ -9437,9 +9437,9 @@ namespace pwiz.Skyline.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Failure loading {0}..
         /// </summary>
-        public static string SerializableSettingsList_ImportSkyrFile_Failure_loading__0__ {
+        public static string SerializableSettingsList_ImportFile_Failure_loading__0__ {
             get {
-                return ResourceManager.GetString("SerializableSettingsList_ImportSkyrFile_Failure_loading__0__", resourceCulture);
+                return ResourceManager.GetString("SerializableSettingsList_ImportFile_Failure_loading__0__", resourceCulture);
             }
         }
         
