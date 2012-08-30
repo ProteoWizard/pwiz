@@ -71,7 +71,7 @@ export TARBALLDIR=$PWIZROOT/build-linux-x86
 mkdir -p $TARBALLDIR
 # capturing stdout may interfere with VERSION file creation, make it now if needed
 if [ ! -e $TARBALLDIR/VERSION ]; then
-echo $PWIZ_VER_DOTTED > $TARBALLDIR/VERSION
+echo -n $PWIZ_VER_DOTTED > $TARBALLDIR/VERSION
 fi
 export TARBALL=$TARBALLDIR/libpwiz_src_$PWIZ_VER.tgz
 libtoolize --copy &>/dev/null; aclocal  &>/dev/null; autoscan $PWIZROOT/pwiz  &>/dev/null ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR &>/dev/null
