@@ -82,6 +82,7 @@ namespace IDPicker.DataModel
 
     public class DistinctMatchKey : IComparable<DistinctMatchKey>, IComparable
     {
+        public long? Id { get; private set; }
         public Peptide Peptide { get; private set; }
         public string Key { get; private set; } // e.g. "<peptide> <charge?> <analysis?> <mods?>"
         public int? Charge { get; private set; }
@@ -89,11 +90,12 @@ namespace IDPicker.DataModel
 
         private DistinctMatchFormat Format { get; set; }
 
-        public DistinctMatchKey (Peptide peptide, PeptideSpectrumMatch psm, DistinctMatchFormat format, string key)
+        public DistinctMatchKey (Peptide peptide, PeptideSpectrumMatch psm, DistinctMatchFormat format, string key, long? id)
         {
             Peptide = peptide;
             Key = key;
             Format = format;
+            Id = id;
 
             if (format.IsChargeDistinct)
                 Charge = psm.Charge;
@@ -104,6 +106,9 @@ namespace IDPicker.DataModel
 
         public int CompareTo (DistinctMatchKey other)
         {
+            if (Id.HasValue && other.Id.HasValue)
+                return Id.Value.CompareTo(other.Id.Value);
+
             int compare = Peptide.Sequence.CompareTo(other.Peptide.Sequence);
             if (compare != 0)
                 return compare;

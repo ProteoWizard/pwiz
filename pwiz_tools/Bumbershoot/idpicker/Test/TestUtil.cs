@@ -166,11 +166,15 @@ namespace Test
         [TestMethod]
         public void TestSchemaUpdater()
         {
-            Assert.AreEqual(4, SchemaUpdater.CurrentSchemaRevision);
+            Assert.AreEqual(6, SchemaUpdater.CurrentSchemaRevision);
 
             var testModel = new TestModel();
             TestModel.ClassInitialize(null);
             testModelFile(testModel, "testModel.idpDB");
+
+            // we don't need to test upgrade from 5 to 6; it simply forces reapplication of the basic filters
+
+            // we don't need to test upgrade from 4 to 5; it's a simple null value fix
 
             File.Copy("testModel.idpDB", "testModel-v3.idpDB");
             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel-v3.idpDB"))

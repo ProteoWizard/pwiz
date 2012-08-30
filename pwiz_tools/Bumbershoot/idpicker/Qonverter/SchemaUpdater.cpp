@@ -36,12 +36,18 @@ namespace sqlite = sqlite3pp;
 
 BEGIN_IDPICKER_NAMESPACE
 
-const int CURRENT_SCHEMA_REVISION = 5;
+const int CURRENT_SCHEMA_REVISION = 6;
 
 namespace SchemaUpdater {
 
 
 namespace {
+
+void update_5_to_6(sqlite::database& db, IterationListenerRegistry* ilr)
+{
+    // force the basic filters to be reapplied
+    db.execute("DROP TABLE IF EXISTS FilteringCriteria");
+}
 
 void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr)
 {
@@ -50,6 +56,8 @@ void update_4_to_5(sqlite::database& db, IterationListenerRegistry* ilr)
                "                          TotalSpectraMS2 = IFNULL(TotalSpectraMS2, 0),"
                "                          TotalIonCurrentMS1 = IFNULL(TotalIonCurrentMS1, 0),"
                "                          TotalIonCurrentMS2 = IFNULL(TotalIonCurrentMS2, 0)");
+
+    update_5_to_6(db, ilr);
 }
 
 void update_3_to_4(sqlite::database& db, IterationListenerRegistry* ilr)
@@ -211,6 +219,8 @@ bool update(const string& idpDbFilepath, IterationListenerRegistry* ilr)
         update_3_to_4(db, ilr);
     else if (schemaRevision == 4)
         update_4_to_5(db, ilr);
+    else if (schemaRevision == 5)
+        update_5_to_6(db, ilr);
     else if (schemaRevision > CURRENT_SCHEMA_REVISION)
         throw runtime_error("[SchemaUpdater::update] unable to update schema revision " +
                             lexical_cast<string>(schemaRevision) +

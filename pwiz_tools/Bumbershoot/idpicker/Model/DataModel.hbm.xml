@@ -218,7 +218,8 @@
 				DROP TABLE PsmScore
 			</sql-insert>-->
 		</map>
-		<property name="DistinctMatchKey" lazy="true" access="nosetter.camelcase" formula="(SELECT dm.DistinctMatchKey FROM DistinctMatch dm WHERE Id=dm.PsmId)"/>
+		<property name="DistinctMatchKey" lazy="false" access="nosetter.camelcase" formula="(SELECT dm.DistinctMatchKey FROM DistinctMatch dm WHERE Id=dm.PsmId)"/>
+        <property name="DistinctMatchId" lazy="false" access="nosetter.camelcase" formula="(SELECT dm.DistinctMatchId FROM DistinctMatch dm WHERE Id=dm.PsmId)"/>
 	</class>
 
 	<class name="PeptideModification">

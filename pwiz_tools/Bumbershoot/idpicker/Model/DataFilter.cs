@@ -872,10 +872,15 @@ namespace IDPicker.DataModel
             if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling distinct matches...", ++stepsCompleted, null)))
                 return true;
             string sql = String.Format(@"DROP TABLE IF EXISTS DistinctMatch;
-                                         CREATE TABLE DistinctMatch (PsmId INTEGER PRIMARY KEY, DistinctMatchKey TEXT);
+                                         CREATE TABLE DistinctMatch (PsmId INTEGER PRIMARY KEY, DistinctMatchId INT, DistinctMatchKey TEXT);
                                          INSERT INTO DistinctMatch (PsmId, DistinctMatchKey)
-                                         SELECT DISTINCT psm.Id, {0}
-                                         FROM PeptideSpectrumMatch psm;
+                                            SELECT DISTINCT psm.Id, {0} FROM PeptideSpectrumMatch psm;
+                                         CREATE TEMP TABLE GroupedDistinctMatch AS
+                                            SELECT MIN(PsmId) AS RepresentativePsmId, DistinctMatchKey AS UniqueDistinctMatchKey FROM DistinctMatch GROUP BY DistinctMatchKey;
+                                         CREATE UNIQUE INDEX GroupedDistinctMatch_DistinctMatchKey ON GroupedDistinctMatch (UniqueDistinctMatchKey);
+                                         UPDATE DistinctMatch SET DistinctMatchId = (SELECT RepresentativePsmId FROM GroupedDistinctMatch WHERE UniqueDistinctMatchKey=DistinctMatchKey);
+                                         DROP TABLE GroupedDistinctMatch;
+                                         CREATE INDEX DistinctMatch_DistinctMatchId ON DistinctMatch (DistinctMatchId);
                                         ", DistinctMatchFormat.SqlExpression);
             session.CreateSQLQuery(sql).ExecuteUpdate();
             return false;

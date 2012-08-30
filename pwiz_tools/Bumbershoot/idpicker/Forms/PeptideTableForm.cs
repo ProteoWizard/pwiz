@@ -57,7 +57,7 @@ namespace IDPicker.Forms
             public static int ColumnCount = 3;
             public static string Selection = "SELECT " +
                                              "COUNT(DISTINCT psm.Spectrum.id), " +
-                                             "COUNT(DISTINCT psm.DistinctMatchKey), " +
+                                             "COUNT(DISTINCT psm.DistinctMatchId), " +
                                              "COUNT(DISTINCT psm.Peptide.id)";
 
             protected static IDictionary<TKey, object[]> GetDetailedColumnsByKey<TKey> (NHibernate.ISession session, DataFilter dataFilter, string keyColumn)
@@ -167,18 +167,18 @@ namespace IDPicker.Forms
             public static IList<DistinctMatchRow> GetRows (NHibernate.ISession session, DataFilter dataFilter)
             {
                 IList<object[]> basicColumns;
-                IDictionary<string, object[]> detailedColumnsByKey;
+                IDictionary<long, object[]> detailedColumnsByKey;
                 lock (session)
                 {
-                    basicColumns = session.CreateQuery(AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
+                    basicColumns = session.CreateQuery(AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey, psm.DistinctMatchId " +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
-                                                       "GROUP BY psm.DistinctMatchKey").List<object[]>();
-                    detailedColumnsByKey = AggregateRow.GetDetailedColumnsByKey<string>(session, dataFilter, "psm.DistinctMatchKey");
+                                                       "GROUP BY psm.DistinctMatchId").List<object[]>();
+                    detailedColumnsByKey = AggregateRow.GetDetailedColumnsByKey<long>(session, dataFilter, "psm.DistinctMatchId");
                 }
 
                 var rows = new List<DistinctMatchRow>(basicColumns.Count);
                 for (int i = 0; i < basicColumns.Count; ++i)
-                    rows.Add(new DistinctMatchRow(basicColumns[i], detailedColumnsByKey[(string) basicColumns[i].Last()], dataFilter));
+                    rows.Add(new DistinctMatchRow(basicColumns[i], detailedColumnsByKey[(long) basicColumns[i].Last()], dataFilter));
                 return rows;
             }
 
@@ -191,7 +191,8 @@ namespace IDPicker.Forms
                 PeptideSpectrumMatch = (PeptideSpectrumMatch) basicColumns[++column];
                 DistinctMatch = new DistinctMatchKey(Peptide, PeptideSpectrumMatch,
                                                      dataFilter.DistinctMatchFormat,
-                                                     (string) basicColumns[++column]);
+                                                     (string) basicColumns[++column],
+                                                     (long) basicColumns[++column]);
             }
 
             #endregion
@@ -207,9 +208,9 @@ namespace IDPicker.Forms
             public PivotData () { }
             public PivotData (object[] queryRow)
             {
-                Spectra = Convert.ToInt32(queryRow[3]);
-                DistinctMatches = Convert.ToInt32(queryRow[4]);
-                DistinctPeptides = Convert.ToInt32(queryRow[5]);
+                Spectra = Convert.ToInt32(queryRow[2]);
+                DistinctMatches = Convert.ToInt32(queryRow[3]);
+                DistinctPeptides = Convert.ToInt32(queryRow[4]);
             }
             #endregion
         }
@@ -228,7 +229,7 @@ namespace IDPicker.Forms
                     var total = session.CreateQuery("SELECT " +
                                                     "COUNT(DISTINCT psm.Peptide.PeptideGroup), " +
                                                     "COUNT(DISTINCT psm.Peptide.id), " +
-                                                    "COUNT(DISTINCT psm.DistinctMatchKey) " +
+                                                    "COUNT(DISTINCT psm.DistinctMatchId) " +
                                                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch))
                         .UniqueResult<object[]>();
 
@@ -294,18 +295,18 @@ namespace IDPicker.Forms
             return parentRow.ChildRows;
         }
 
-        static string pivotHqlFormat = @"SELECT {0}, {1}, {2},
+        static string pivotHqlFormat = @"SELECT {0}, {1},
                                                 COUNT(DISTINCT psm.Spectrum.id),
-                                                COUNT(DISTINCT psm.DistinctMatchKey),
+                                                COUNT(DISTINCT psm.DistinctMatchId),
                                                 COUNT(DISTINCT psm.Peptide.id)
-                                         {3}
+                                         {2}
                                          GROUP BY {0}, {1}
                                          ORDER BY {0}
                                         ";
         Map<long, Map<long, PivotData>> getPivotData (Grouping<GroupBy> group, Pivot<PivotBy> pivot, DataFilter parentFilter)
         {
             // ProteinGroup and Cluster are consecutive, 1-based series
-            string groupColumn = "psm.DistinctMatchKey";
+            string groupColumn = "psm.DistinctMatchId";
             if (group != null)
             {
                 if (group.Mode == GroupBy.PeptideGroup) groupColumn = "pep.PeptideGroup";
@@ -313,10 +314,9 @@ namespace IDPicker.Forms
                 else throw new ArgumentException();
             }
             var pivotColumn = pivot.Text.Contains("Group") ? "ssgl.Group.id" : "s.Source.id";
-            var rowIdColumn = groupColumn == "psm.DistinctMatchKey" ? "psm.id" : groupColumn;
 
             var pivotHql = String.Format(pivotHqlFormat,
-                                         groupColumn, pivotColumn, rowIdColumn,
+                                         groupColumn, pivotColumn,
                                          parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                              DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink,
                                                                              DataFilter.PeptideSpectrumMatchToPeptide));
@@ -325,7 +325,7 @@ namespace IDPicker.Forms
 
             IList<object[]> pivotRows; lock (session) pivotRows = query.List<object[]>();
             foreach (var queryRow in pivotRows)
-                pivotData[Convert.ToInt64(queryRow[1])][Convert.ToInt64(queryRow[2])] = new PivotData(queryRow);
+                pivotData[Convert.ToInt64(queryRow[1])][Convert.ToInt64(queryRow[0])] = new PivotData(queryRow);
             return pivotData;
         }
 
@@ -437,7 +437,7 @@ namespace IDPicker.Forms
                 else if (baseRow is DistinctPeptideRow)
                     rowId = (baseRow as DistinctPeptideRow).Peptide.Id.Value;
                 else if (baseRow is DistinctMatchRow)
-                    rowId = (baseRow as DistinctMatchRow).PeptideSpectrumMatch.Id.Value;
+                    rowId = (baseRow as DistinctMatchRow).PeptideSpectrumMatch.DistinctMatchId;
                 else
                     throw new NotImplementedException();
                 var itr = stats.Find(rowId);

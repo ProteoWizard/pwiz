@@ -601,7 +601,6 @@ namespace IDPicker.Forms
             return exportTable;
         }
 
-        private List<List<string>> tempTable;
         protected void ExportTable(object sender, EventArgs e)
         {
             var selected = sender == copyToClipboardSelectedToolStripMenuItem ||
@@ -623,12 +622,16 @@ namespace IDPicker.Forms
             progressWindow.Controls.Add(progressBar);
             progressWindow.Show();
 
-            tempTable = new List<List<string>>();
             var bg = new BackgroundWorker();
+            bg.DoWork += (x, y) =>
+            {
+                y.Result = GetFormTable(selected);
+            };
             bg.RunWorkerCompleted += (x, y) =>
                                          {
                                              if (y.Error != null) Program.HandleException(y.Error);
                                              progressWindow.Close();
+                                             var tempTable = y.Result as List<List<string>>;
                                              if (sender == clipboardToolStripMenuItem ||
                                                  sender == copyToClipboardSelectedToolStripMenuItem)
                                                  TableExporter.CopyToClipboard(tempTable);
@@ -643,10 +646,6 @@ namespace IDPicker.Forms
                                                  TableExporter.ShowInExcel(exportWrapper, false);
                                              }
                                          };
-            bg.DoWork += (x, y) =>
-                             {
-                                 tempTable = GetFormTable(selected);
-                             };
             bg.RunWorkerAsync();
         }
 
