@@ -63,10 +63,16 @@ if [ ! -e boost.m4 ]; then
 wget -N http://github.com/tsuna/boost.m4/raw/master/build-aux/boost.m4
 fi
 echo "do autoconf stuff..."
-export PWIZ_VER=`grep "ProteoWizard " $TMPDIR/build.log | cut -f 2 -d " " | sed s/\\\\./_/g`
+export PWIZ_VER_DOTTED=`grep "ProteoWizard " $TMPDIR/build.log | cut -f 2 -d " "`
+export PWIZ_VER=`echo $PWIZ_VER_DOTTED | sed s/\\\\./_/g`
 # assume this as a directory where we can drop the tarball
+# TODO this assumes a particular TC build config, could pull from log if needed
 export TARBALLDIR=$PWIZROOT/build-linux-x86
 mkdir -p $TARBALLDIR
+# capturing stdout may interfere with VERSION file creation, make it now if needed
+if [ ! -e $TARBALLDIR/VERSION ]; then
+echo $PWIZ_VER_DOTTED > $TARBALLDIR/VERSION
+fi
 export TARBALL=$TARBALLDIR/libpwiz_src_$PWIZ_VER.tgz
 libtoolize --copy &>/dev/null; aclocal  &>/dev/null; autoscan $PWIZROOT/pwiz  &>/dev/null ; python $PWIZROOT/scripts/autotools/generate_autoconf.py $PWIZROOT $TMPDIR &>/dev/null
 # yes, doing this twice, solves a chicken vs egg problem that first invocation barks about
