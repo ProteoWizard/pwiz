@@ -24,6 +24,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing.Imaging;
 using System.Text;
 using System.IO;
 using System.Linq;
@@ -239,6 +240,11 @@ namespace IDPicker
             SetData(session, protein, viewFilter);
 
             surface.SequenceCoverageFilter += (s, e) => OnSequenceCoverageFilter(e);
+
+            ContextMenuStrip = new ContextMenuStrip();
+            ContextMenuStrip.Items.Add("Save image", null, (s, e) => bitmapSave());
+            ContextMenuStrip.Items.Add("Copy image", null, (s, e) => bitmapCopyToClipboard());
+            ContextMenuStrip.Items.Add("Copy sequence", null, (s, e) => sequenceCopyToClipboard());
         }
 
         public void SetData(NHibernate.ISession session, DataModel.Protein protein, DataFilter viewFilter)
@@ -349,6 +355,64 @@ namespace IDPicker
         {
             if (SequenceCoverageFilter != null)
                 SequenceCoverageFilter(this, sequenceCoverageFilter);
+        }
+
+        void bitmapSave()
+        {
+            using (var sfd = new SaveFileDialog {Filter = "PNG file|*.png", OverwritePrompt = true})
+            {
+                if (sfd.ShowDialog(Parent) == DialogResult.Cancel)
+                    return;
+
+                using (var img = new Bitmap(ClientSize.Width, ClientSize.Height, PixelFormat.Format32bppArgb))
+                {
+                    DrawToBitmap(img, ClientRectangle);
+                    img.Save(sfd.FileName, ImageFormat.Png);
+                }
+            }
+        }
+
+        void bitmapCopyToClipboard()
+        {
+            using (var img = new Bitmap(ClientSize.Width, ClientSize.Height, PixelFormat.Format32bppArgb))
+            {
+                DrawToBitmap(img, ClientRectangle);
+                Clipboard.SetImage(img);
+            }
+        }
+
+        void sequenceCopyToClipboard()
+        {
+            var formattedSequence = new StringBuilder(10 * ResidueGroupSize);
+            var formattedCoverage = new StringBuilder(10 * ResidueGroupSize);
+            var formattedText = new StringBuilder(Protein.Length * 2);
+            int residuesPerLine = 10 * ResidueGroupSize;
+            for (int i = 0; i < Protein.Length; ++i)
+            {
+                if (i > 0 && (i % residuesPerLine) == 0)
+                {
+                    formattedText.AppendFormat("{0}\r\n{1}\r\n\r\n", formattedSequence.ToString(), formattedCoverage.ToString());
+                    formattedSequence.Clear();
+                    formattedCoverage.Clear();
+                }
+                else if (i > 0 && (i % ResidueGroupSize) == 0)
+                {
+                    formattedSequence.Append(' ');
+                    formattedCoverage.Append(' ');
+                }
+
+                formattedSequence.Append(Protein.Sequence[i]);
+                switch (Protein.CoverageMask[i])
+                {
+                    case 0: formattedCoverage.Append(' '); break;
+                    case 1: formattedCoverage.Append('-'); break;
+                    case 2: formattedCoverage.Append('='); break;
+                    default: case 3: formattedCoverage.Append('≡'); break;
+                }
+            }
+
+            formattedText.AppendFormat("{0}\r\n{1}", formattedSequence.ToString(), formattedCoverage.ToString());
+            Clipboard.SetText(formattedText.ToString().TrimEnd('\r', '\n'));
         }
     }
 
