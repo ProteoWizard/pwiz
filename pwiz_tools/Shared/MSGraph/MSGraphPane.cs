@@ -343,18 +343,8 @@ namespace pwiz.MSGraph
 
         protected bool detectLabelOverlap( GraphPane pane, Graphics g, TextObj text, out Region textBoundsRegion, IPointList points, int pointIndex, bool pointsAreSticks )
         {
-            string shape, coords;
-            text.GetCoords( pane, g, 1.0f, out shape, out coords );
-            if( shape != "poly" ) throw new InvalidOperationException( "shape must be 'poly'" );
-            string[] textBoundsPointStrings = coords.Split( ",".ToCharArray() );
-            if( textBoundsPointStrings.Length != 9 ) throw new InvalidOperationException( "coords length must be 8" );
-            Point[] textBoundsPoints = new[]
-                        {
-                            new Point( Convert.ToInt32(textBoundsPointStrings[0]), Convert.ToInt32(textBoundsPointStrings[1])),
-                            new Point( Convert.ToInt32(textBoundsPointStrings[2]), Convert.ToInt32(textBoundsPointStrings[3])),
-                            new Point( Convert.ToInt32(textBoundsPointStrings[4]), Convert.ToInt32(textBoundsPointStrings[5])),
-                            new Point( Convert.ToInt32(textBoundsPointStrings[6]), Convert.ToInt32(textBoundsPointStrings[7]))
-                        };
+            PointF[] coords = GetCoords( pane, g, text );
+            if( coords.Length != 4 ) throw new InvalidOperationException( "coords length must be 4" );
             byte[] textBoundsPointTypes = new[]
                         {
                             (byte) PathPointType.Start,
@@ -362,13 +352,29 @@ namespace pwiz.MSGraph
                             (byte) PathPointType.Line,
                             (byte) PathPointType.Line
                         };
-            GraphicsPath textBoundsPath = new GraphicsPath( textBoundsPoints, textBoundsPointTypes );
+            GraphicsPath textBoundsPath = new GraphicsPath( coords, textBoundsPointTypes );
             textBoundsPath.CloseFigure();
             textBoundsRegion = new Region( textBoundsPath );
             textBoundsRegion.Intersect( pane.Chart.Rect );
             RectangleF[] textBoundsRectangles = textBoundsRegion.GetRegionScans( g.Transform );
 
             return textBoundsRectangles.Any(t => IsVisibleToClip(g, t));
+        }
+
+        /// <summary>
+        /// Returns the 4 points of the rectangle surrounding a text obj.
+        /// This code was copied from <see cref="TextObj.GetCoords"/>
+        /// but avoids the conversion of floats to strings.
+        /// </summary>
+        protected PointF[] GetCoords(GraphPane graphPane, Graphics graphics, TextObj textObj)
+        {
+            const float scaleFactor = 1.0f;
+            // transform the x,y location from the user-defined
+            // coordinate frame to the screen pixel location
+            PointF pix = textObj.Location.Transform(graphPane);
+
+            return textObj.FontSpec.GetBox(graphics, textObj.Text, pix.X, pix.Y, textObj.Location.AlignH,
+                textObj.Location.AlignV, scaleFactor, new SizeF());
         }
 
         /// <summary>
