@@ -271,17 +271,30 @@ void testPepXMLSpecificity()
     unit_assert_operator_equal("KR", result.cut);
     unit_assert_operator_equal("", result.no_cut);
 
-    ez.siteRegexp = proteome::Digestion::getCleavageAgentRegex(MS_Arg_C);
-    result = pepXMLSpecificity(ez);
-    unit_assert_operator_equal("C", result.sense);
-    unit_assert_operator_equal("R", result.cut);
-    unit_assert_operator_equal("P", result.no_cut);
-
     ez.siteRegexp = proteome::Digestion::getCleavageAgentRegex(MS_Asp_N);
     result = pepXMLSpecificity(ez);
     unit_assert_operator_equal("N", result.sense);
     unit_assert_operator_equal("BD", result.cut);
     unit_assert_operator_equal("", result.no_cut);
+
+
+    // REMEMBER: update the pepXMLSpecificity function when new CV enzymes are added
+    bool allCleavageAgentsHandled = true;
+    ez.siteRegexp.clear();
+    BOOST_FOREACH(CVID cleavageAgent, proteome::Digestion::getCleavageAgents())
+        try
+        {
+            ez.enzymeName.clear();
+            ez.enzymeName.set(cleavageAgent);
+            result = pepXMLSpecificity(ez);
+        }
+        catch (exception& e)
+        {
+            cerr << e.what() << endl;
+            allCleavageAgentsHandled = false;
+        }
+    unit_assert(allCleavageAgentsHandled);
+
 
     ez.siteRegexp = "(?<=[QWERTY])(?=[QWERTY])";
     result = pepXMLSpecificity(ez);

@@ -1892,22 +1892,28 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
 
         switch (cleavageAgent)
         {
-            case MS_Trypsin:        cut="KR"; nocut="P"; sense="C"; break;
-            case MS_Arg_C:          cut="R"; nocut="P"; sense="C"; break;
-            case MS_Asp_N:          cut="BD"; nocut=""; sense="N"; break;
-            case MS_Asp_N_ambic:    cut="DE"; nocut=""; sense="N"; break;
-            case MS_Chymotrypsin:   cut="FYWL"; nocut="P"; sense="C"; break;
-            case MS_CNBr:           cut="M"; nocut=""; sense="C"; break;
-            case MS_Formic_acid:    cut="D"; nocut=""; sense="C"; break;
-            case MS_Lys_C:          cut="K"; nocut="P"; sense="C"; break;
-            case MS_Lys_C_P:        cut="K"; nocut=""; sense="C"; break;
-            case MS_PepsinA:        cut="FL"; nocut=""; sense="C"; break;
-            case MS_TrypChymo:      cut="KRFYWL"; nocut="P"; sense="C"; break;
-            case MS_Trypsin_P:      cut="KR"; nocut=""; sense="C"; break;
-            case MS_V8_DE:          cut="BDEZ"; nocut="P"; sense="C"; break;
-            case MS_V8_E:           cut="EZ"; nocut="P"; sense="C"; break;
+            case MS_Trypsin:                cut="KR"; nocut="P"; sense="C"; break;
+            case MS_Arg_C:                  cut="R"; nocut="P"; sense="C"; break;
+            case MS_Asp_N:                  cut="BD"; nocut=""; sense="N"; break;
+            case MS_Asp_N_ambic:            cut="DE"; nocut=""; sense="N"; break;
+            case MS_Chymotrypsin:           cut="FYWL"; nocut="P"; sense="C"; break;
+            case MS_CNBr:                   cut="M"; nocut=""; sense="C"; break;
+            case MS_Formic_acid:            cut="D"; nocut=""; sense="C"; break;
+            case MS_Lys_C:                  cut="K"; nocut="P"; sense="C"; break;
+            case MS_Lys_C_P:                cut="K"; nocut=""; sense="C"; break;
+            case MS_PepsinA:                cut="FL"; nocut=""; sense="C"; break;
+            case MS_TrypChymo:              cut="KRFYWL"; nocut="P"; sense="C"; break;
+            case MS_Trypsin_P:              cut="KR"; nocut=""; sense="C"; break;
+            case MS_V8_DE:                  cut="BDEZ"; nocut="P"; sense="C"; break;
+            case MS_V8_E:                   cut="EZ"; nocut="P"; sense="C"; break;
+            case MS_proline_endopeptidase:  cut="P"; nocut="P"; sense="C"; break;
+            case MS_glutamyl_endopeptidase: cut="E"; nocut=""; sense="C"; break;
+            case MS_leukocyte_elastase:     cut="ALIV"; nocut="P"; sense="C"; break;
+            case MS_2_iodobenzoate:         cut="W"; nocut=""; sense="C"; break;
+            case MS_unspecific_cleavage:    cut="X"; nocut=""; sense="C"; break;
+            case MS_no_cleavage:            cut=""; nocut=""; sense="C"; break;
             default:
-                throw runtime_error("[pepXMLSpecificity] Unable to parse regular expression \"" + ez.siteRegexp + "\"");
+                throw runtime_error("[pepXMLSpecificity] No case supporting enzyme \"" + cvTermInfo(cleavageAgent).name + "\"");
         }
     }
     else

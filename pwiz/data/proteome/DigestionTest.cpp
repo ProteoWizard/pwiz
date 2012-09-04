@@ -65,6 +65,8 @@ void testCleavageAgents()
     unit_assert(cleavageAgents.size() >= 14);
     unit_assert(*cleavageAgents.begin() == MS_Trypsin);
     unit_assert(!cleavageAgents.count(MS_NoEnzyme_OBSOLETE));
+    unit_assert(cleavageAgents.count(MS_no_cleavage));
+    unit_assert(cleavageAgents.count(MS_unspecific_cleavage));
 
     unit_assert(Digestion::getCleavageAgentByName("TRYPSIN") == MS_Trypsin);
     unit_assert(Digestion::getCleavageAgentByName("trypsin") == MS_Trypsin);
@@ -507,6 +509,22 @@ void testBSADigestion()
     unit_assert_operator_equal("MKWVTFISLLLLFSSAYSRGVFRRDTHKSEIAHRFKDLGEEHFKGLVLIAFSQYLQQCPFDEHVKLVNELTEFAKTCVADESHAGCEKSLHTLFGDELCKVASLRETYGDMADCCEKQEPERNECFLSHKDDSPDLPKLKPDPNTLCDEFKADEKKFWGKYLYEIARRHPYFYAPELLYYANKYNGVFQECCQAEDKGACLLPKIETMREKVLASSARQRLRCASIQKFGERALKAWSVARLSQKFPKAE", funkyPeptides[0].sequence());
     unit_assert_operator_equal("FVEVTKLVTDLTKVHKECCHGDLLECADDRADLAKYICDNQDTISSKLKECCDKPLLEKSHCIAEVEKDAIPENLPPLTAD", funkyPeptides[1].sequence());
     unit_assert_operator_equal("FAEDKDVCKNYQEAKDAFLGSFLYEYSRRHPEYAVSVLLRLAKEYEATLEECCAKDDPHACYSTVFDKLKHLVDEPQNLIKQNCDQFEKLGEYGFQNALIVRYTRKVPQVSTPTLVEVSRSLGKVGTRCCTKPESERMPCTEDYLSLILNRLCVLHEKTPVSEKVTKCCTESLVNRRPCFSALTPDETYVPKAFDEKLFTFHADICTLPDTEKQIKKQTALVELLKHKPKATEEQLKTVMENFVAFVDKCCAADDKEACFAVEGPKLVVSTQTALA", funkyPeptides[2].sequence());
+
+    // test no cleavage "digestion"
+    Digestion noCleavageDigestion(Peptide("ELVISLIVESK"), MS_no_cleavage, Digestion::Config(0, 5, 100000, Digestion::FullySpecific, false));
+    vector<Peptide> noCleavagePeptides(noCleavageDigestion.begin(), noCleavageDigestion.end());
+
+    unit_assert_operator_equal(1, noCleavagePeptides.size());
+    unit_assert_operator_equal("ELVISLIVESK", noCleavagePeptides[0].sequence());
+
+    // test unspecific cleavage digestion
+    Digestion unspecificCleavageDigestion("ELVISLK", MS_unspecific_cleavage, Digestion::Config(0, 5, 5, Digestion::FullySpecific, false));
+    vector<Peptide> unspecificCleavagePeptides(unspecificCleavageDigestion.begin(), unspecificCleavageDigestion.end());
+
+    unit_assert_operator_equal(3, unspecificCleavagePeptides.size());
+    unit_assert_operator_equal("ELVIS", unspecificCleavagePeptides[0].sequence());
+    unit_assert_operator_equal("LVISL", unspecificCleavagePeptides[1].sequence());
+    unit_assert_operator_equal("VISLK", unspecificCleavagePeptides[2].sequence());
 }
 
 

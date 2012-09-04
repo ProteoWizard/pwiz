@@ -213,6 +213,12 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
                 cleavageAgentRegexToCvidMap_[cleavageAgentRegexTerm.name] = *itr;
                 cleavageAgentToRegexMap_[*itr] = &cleavageAgentRegexTerm;
             }
+            else if (*itr == MS_unspecific_cleavage || *itr == MS_no_cleavage)
+            {
+                cleavageAgents_.insert(*itr);
+                cleavageAgentNames_.push_back(cvTermInfo.name);
+                cleavageAgentNameToCvidMap_[bal::to_lower_copy(cvTermInfo.name)] = *itr;
+            }
         }
     }
 
@@ -243,13 +249,13 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
     const std::string& getCleavageAgentRegex(CVID agentCvid) const
     {
         if (!pwiz::cv::cvIsA(agentCvid, MS_cleavage_agent_name))
-            throw invalid_argument("[getRegexForCleavageAgent] CVID is not a cleavage agent.");
+            throw invalid_argument("[getCleavageAgentRegex] CVID is not a cleavage agent.");
 
         map<CVID, const CVTermInfo*>::const_iterator regexTermItr =
             cleavageAgentToRegexMap_.find(agentCvid);
 
         if (regexTermItr == cleavageAgentToRegexMap_.end())
-            throw runtime_error("[getRegexForCleavageAgent] No regex relation for cleavage agent " + cvTermInfo(agentCvid).name);
+            throw runtime_error("[getCleavageAgentRegex] No regex relation for cleavage agent " + cvTermInfo(agentCvid).name);
 
         return regexTermItr->second->name;
     }
@@ -299,7 +305,11 @@ class Digestion::Impl
     {
         if (cleavageAgents.size() == 1)
         {
-            cleavageAgentRegex_ = getCleavageAgentRegex(cleavageAgents[0]);
+            cleavageAgent_ = cleavageAgents[0];
+            if (cleavageAgent_ == MS_unspecific_cleavage)
+                config_.minimumSpecificity = Digestion::NonSpecific;
+            else if (cleavageAgent_ != MS_no_cleavage)
+                cleavageAgentRegex_ = getCleavageAgentRegex(cleavageAgent_);
             return;
         }
 
@@ -334,10 +344,26 @@ class Digestion::Impl
         {
             try
             {
+                const string& sequence = peptide_.sequence();
+                
+                if (cleavageAgent_ == MS_unspecific_cleavage)
+                {
+                    for (int i=-1, end=(int) sequence.size()-1; i < end; ++i)
+                        sites_.push_back(i);
+                    sitesSet_.insert(sites_.begin(), sites_.end());
+                    return;
+                }
+                else if (cleavageAgent_ == MS_no_cleavage)
+                {
+                    sites_.push_back(-1);
+                    sites_.push_back(sequence.length()-1);
+                    sitesSet_.insert(sites_.begin(), sites_.end());
+                    return;
+                }
+
                 if (cleavageAgentRegex_.empty())
                     throw runtime_error("empty cleavage regex");
 
-                const string& sequence = peptide_.sequence();
                 std::string::const_iterator start = sequence.begin();
                 std::string::const_iterator end = sequence.end();
                 boost::smatch what;
@@ -402,9 +428,10 @@ class Digestion::Impl
                 continue;
 
             size_t missedCleavages = 0;
-            for (size_t i = beginOffset; i < endOffset; ++i)
-                if (sitesSet_.count((int) i) > 0)
-                    ++missedCleavages;
+            if (cleavageAgent_ != MS_unspecific_cleavage && cleavageAgent_ != MS_no_cleavage)
+                for (size_t i = beginOffset; i < endOffset; ++i)
+                    if (sitesSet_.count((int) i) > 0)
+                        ++missedCleavages;
 
             if (missedCleavages > (size_t) config_.maximumMissedCleavages)
                 continue;
@@ -449,9 +476,10 @@ class Digestion::Impl
         size_t endOffset = beginOffset + peptide.sequence().length() - 1;
 
         size_t missedCleavages = 0;
-        for (size_t i = beginOffset; i < endOffset; ++i)
-            if (sitesSet_.count((int) i) > 0)
-                ++missedCleavages;
+        if (cleavageAgent_ != MS_unspecific_cleavage && cleavageAgent_ != MS_no_cleavage)
+            for (size_t i = beginOffset; i < endOffset; ++i)
+                if (sitesSet_.count((int) i) > 0)
+                    ++missedCleavages;
 
         if (missedCleavages > (size_t) config_.maximumMissedCleavages)
             throw runtime_error("[Digestion::find_first()] Peptide \"" + peptide.sequence() + "\" not found in \"" + sequence_ + "\"");
@@ -492,6 +520,7 @@ class Digestion::Impl
     private:
     Peptide peptide_;
     Config config_;
+    CVID cleavageAgent_;
     boost::regex cleavageAgentRegex_;
     friend class Digestion::const_iterator::Impl;
 
@@ -611,7 +640,7 @@ class Digestion::const_iterator::Impl
             {
                 int testEnd = sites_[j];
 
-                int curMissedCleavages = int(end_ - begin_)-1;
+                int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
                 if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                     --curMissedCleavages;
                 if (curMissedCleavages > config_.maximumMissedCleavages)
@@ -664,7 +693,7 @@ class Digestion::const_iterator::Impl
                 }
 
                 // end offset is too far, start again with a new begin offset
-                int curMissedCleavages = int(end_ - begin_)-1;
+                int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
                 if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                     --curMissedCleavages;
                 if (curMissedCleavages > config_.maximumMissedCleavages)
@@ -813,7 +842,7 @@ class Digestion::const_iterator::Impl
                 while (end_ != sites_.end() && *end_ < endNonSpecific_)
                     ++end_;
 
-                int curMissedCleavages = int(end_ - begin_)-1;
+                int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
                 if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                     --curMissedCleavages;
                 if (curMissedCleavages > config_.maximumMissedCleavages)
@@ -848,7 +877,7 @@ class Digestion::const_iterator::Impl
                     while (end_ != sites_.end() && *end_ < endNonSpecific_)
                         ++end_;
 
-                    int curMissedCleavages = int(end_ - begin_)-1;
+                    int curMissedCleavages = digestionImpl_.cleavageAgent_ == MS_unspecific_cleavage ? 0 : int(end_ - begin_)-1;
                     if (config_.clipNTerminalMethionine && begin_ != sites_.end() && *begin_ < 0 && sequence_[0] == 'M')
                         --curMissedCleavages;
                     if (curMissedCleavages > config_.maximumMissedCleavages)
