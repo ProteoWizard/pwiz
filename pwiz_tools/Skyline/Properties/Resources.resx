@@ -4313,9 +4313,6 @@ Are you sure you want to continue?</value>
   <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file" xml:space="preserve">
     <value>Calculating hash of input file</value>
   </data>
-  <data name="WebPanoramaPublishClient_webClient_UploadProgressChanged__0__uploaded__1__of__2__bytes">
-    <value xml:space="preserve">{0} uploaded {1} of {2} bytes.</value>
-  </data>
   <data name="PublishDocumentDlg_btnBrowse_Click_Shared_Files">
     <value xml:space="preserve">Shared Files</value>
   </data>
@@ -4497,16 +4494,10 @@ Are you sure you want to continue?</value>
     <value xml:space="preserve">Error retrieving server information: {0}</value>
   </data>
   <data name="PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers">
-    <value xml:space="preserve">Retrieving information on servers.</value>
+    <value xml:space="preserve">Retrieving information from servers</value>
   </data>
   <data name="WebPanoramaPublishClient_GetInfoForFolders_Failure_retrieving_folder_information_from__0_">
     <value xml:space="preserve">Failure retrieving folder information from {0}</value>
-  </data>
-  <data name="PublishDocumentDlg_ServersToString_and__0__">
-    <value xml:space="preserve">and {0}</value>
-  </data>
-  <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Error_attempting_to_retreive_server_information_on_the_following_servers__0__">
-    <value xml:space="preserve">Error attempting to retreive server information on the following servers: {0}</value>
   </data>
   <data name="ToolMacros__listArguments_This_tool_requires_a_Document_Path_to_run" xml:space="preserve">
     <value>This tool requires a Document Path to run</value>
@@ -4705,5 +4696,17 @@ Are you sure you want to continue?</value>
   </data>
   <data name="TransitionFilter_FragmentEndFinders_2_ions">
     <value xml:space="preserve">2 ions</value>
+  </data>
+  <data name="PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_">
+    <value xml:space="preserve">Failed attempting to retrieve information from the following servers:</value>
+  </data>
+  <data name="WebPanoramaPublishClient_ImportDataOnServer_Error_importing_Skyline_file_on_Panorama_server__0_">
+    <value xml:space="preserve">Error importing Skyline file on Panorama server {0}</value>
+  </data>
+  <data name="WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___">
+    <value xml:space="preserve">Waiting for data import completion...</value>
+  </data>
+  <data name="WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_">
+    <value xml:space="preserve">Uploaded {0:fs} of {1:fs}</value>
   </data>
 </root>

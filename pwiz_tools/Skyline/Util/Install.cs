@@ -67,7 +67,17 @@ namespace pwiz.Skyline.Util
 
         public static string Version
         {
-            get { return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString(); }
+            get
+            {
+                try
+                {
+                    return ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+                }
+                catch (Exception)
+                {
+                    return string.Empty;
+                }
+            }
         }
 
         private static int VersionPart(int index)

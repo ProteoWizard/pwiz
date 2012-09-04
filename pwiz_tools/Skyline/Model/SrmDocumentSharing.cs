@@ -63,6 +63,8 @@ namespace pwiz.Skyline.Model
 
         private ILongWaitBroker WaitBroker { get; set; }
         private int CountEntries { get; set; }
+        private int EntriesSaved { get; set; }
+        private string CurrentEntry { get; set; }
         private long ExpectedSize { get; set; }
         private long ExtractedSize { get; set; }
 
@@ -241,6 +243,9 @@ namespace pwiz.Skyline.Model
                     Document = BlibDb.MinimizeLibraries(Document, tempDir.DirPath, 
                                                         Path.GetFileNameWithoutExtension(DocumentPath),
                                                         WaitBroker);
+                    if (WaitBroker != null && WaitBroker.IsCanceled)
+                        return;
+
                     foreach (var librarySpec in Document.Settings.PeptideSettings.Libraries.LibrarySpecs)
                     {
                         var tempLibPath = Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath) ?? string.Empty);
@@ -358,15 +363,24 @@ namespace pwiz.Skyline.Model
                 // TODO: More accurate total byte progress
                 double percentCompressed = (e.TotalBytesToTransfer > 0 ?
                     1.0 * e.BytesTransferred / e.TotalBytesToTransfer : 0);
-                int progressValue = (int)Math.Round((e.EntriesSaved + percentCompressed) * 100 / CountEntries);
+                int progressValue = (int)Math.Round((EntriesSaved + percentCompressed) * 100 / CountEntries);
 
                 if (progressValue != WaitBroker.ProgressValue)
                 {
                     WaitBroker.ProgressValue = progressValue;
-                    WaitBroker.Message = (e.CurrentEntry != null
-                                              ? string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
-                                                              e.CurrentEntry.FileName)
-                                              : DefaultMessage);
+                    if (e.CurrentEntry == null)
+                        WaitBroker.Message = DefaultMessage;
+                    else
+                    {
+                        if (!Equals(CurrentEntry, e.CurrentEntry.FileName))
+                        {
+                            if (CurrentEntry != null)
+                                EntriesSaved++;
+                            CurrentEntry = e.CurrentEntry.FileName;
+                        }
+                        WaitBroker.Message = string.Format(Resources.SrmDocumentSharing_SrmDocumentSharing_SaveProgress_Compressing__0__,
+                                                           e.CurrentEntry.FileName);
+                    }
                 }
             }
         }

@@ -48,7 +48,7 @@
             this.PanaramaTabControl.Location = new System.Drawing.Point(12, 12);
             this.PanaramaTabControl.Name = "PanaramaTabControl";
             this.PanaramaTabControl.SelectedIndex = 0;
-            this.PanaramaTabControl.Size = new System.Drawing.Size(271, 249);
+            this.PanaramaTabControl.Size = new System.Drawing.Size(397, 274);
             this.PanaramaTabControl.TabIndex = 0;
             // 
             // tabPanorama
@@ -59,7 +59,7 @@
             this.tabPanorama.Location = new System.Drawing.Point(4, 22);
             this.tabPanorama.Name = "tabPanorama";
             this.tabPanorama.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPanorama.Size = new System.Drawing.Size(263, 223);
+            this.tabPanorama.Size = new System.Drawing.Size(389, 248);
             this.tabPanorama.TabIndex = 0;
             this.tabPanorama.Text = "Panorama";
             this.tabPanorama.UseVisualStyleBackColor = true;
@@ -73,8 +73,8 @@
             this.listboxServers.Location = new System.Drawing.Point(9, 22);
             this.listboxServers.Name = "listboxServers";
             this.listboxServers.SelectionMode = System.Windows.Forms.SelectionMode.None;
-            this.listboxServers.Size = new System.Drawing.Size(167, 186);
-            this.listboxServers.TabIndex = 4;
+            this.listboxServers.Size = new System.Drawing.Size(293, 199);
+            this.listboxServers.TabIndex = 1;
             // 
             // lblServers
             // 
@@ -82,16 +82,16 @@
             this.lblServers.Location = new System.Drawing.Point(6, 6);
             this.lblServers.Name = "lblServers";
             this.lblServers.Size = new System.Drawing.Size(46, 13);
-            this.lblServers.TabIndex = 2;
+            this.lblServers.TabIndex = 0;
             this.lblServers.Text = "Servers:";
             // 
             // btnEditServers
             // 
             this.btnEditServers.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnEditServers.Location = new System.Drawing.Point(182, 22);
+            this.btnEditServers.Location = new System.Drawing.Point(308, 22);
             this.btnEditServers.Name = "btnEditServers";
             this.btnEditServers.Size = new System.Drawing.Size(75, 23);
-            this.btnEditServers.TabIndex = 1;
+            this.btnEditServers.TabIndex = 2;
             this.btnEditServers.Text = "E&dit list...";
             this.btnEditServers.UseVisualStyleBackColor = true;
             this.btnEditServers.Click += new System.EventHandler(this.btnEditServers_Click);
@@ -100,10 +100,10 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(208, 267);
+            this.btnCancel.Location = new System.Drawing.Point(334, 292);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 1;
+            this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -111,10 +111,10 @@
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(127, 267);
+            this.btnOK.Location = new System.Drawing.Point(253, 292);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 2;
+            this.btnOK.TabIndex = 1;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             // 
@@ -124,7 +124,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(295, 295);
+            this.ClientSize = new System.Drawing.Size(421, 320);
             this.Controls.Add(this.btnOK);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.PanaramaTabControl);

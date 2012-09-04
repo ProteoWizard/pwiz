@@ -746,18 +746,21 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ShareDocument(string fileDest, bool completeSharing)
+        public bool ShareDocument(string fileDest, bool completeSharing)
         {
             try
             {
+                bool success = false;
                 Helpers.TryTwice(() =>
                 {
                     using (var longWaitDlg = new LongWaitDlg { Text = Resources.SkylineWindow_ShareDocument_Compressing_Files, })
                     {
                         var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest,  completeSharing);
                         longWaitDlg.PerformWork(this, 1000, sharing.Share);
+                        success = !longWaitDlg.IsCanceled;
                     }
                 });
+                return success;
             }
             catch (Exception x)
             {
@@ -765,6 +768,7 @@ namespace pwiz.Skyline
                                                     x.Message); 
                 MessageDlg.Show(this, message);
             }
+            return false;
         }
 
         private void exportTransitionListMenuItem_Click(object sender, EventArgs e)
@@ -1518,17 +1522,20 @@ namespace pwiz.Skyline
             var servers = Settings.Default.ServerList;
             if (servers == null || servers.Count == 0)
             {
-                MessageBox.Show(Resources.SkylineWindow_Publish_There_are_no_Panorama_servers_to_publish_to_Please_add_a_server_under_Tools);
+                MessageDlg.Show(this, Resources.SkylineWindow_Publish_There_are_no_Panorama_servers_to_publish_to_Please_add_a_server_under_Tools);
                 return;
             }
+
+            if (!SaveDocument())
+                return;
 
             using (var publishDocumentDlg = new PublishDocumentDlg(servers, fileName))
             {
                 publishDocumentDlg.PanoramaPublishClient = publishClient;
                 if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    ShareDocument(publishDocumentDlg.FileName, false);
-                    publishDocumentDlg.UploadSharedZipFile();
+                    if (ShareDocument(publishDocumentDlg.FileName, false))
+                        publishDocumentDlg.UploadSharedZipFile();
                 }
             }
         }

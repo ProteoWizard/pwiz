@@ -8234,7 +8234,7 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Retrieving information on servers..
+        ///   Looks up a localized string similar to Retrieving information from servers.
         /// </summary>
         public static string PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers {
             get {
@@ -8243,21 +8243,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Error attempting to retreive server information on the following servers: {0}.
+        ///   Looks up a localized string similar to Failed attempting to retrieve information from the following servers:.
         /// </summary>
-        public static string PublishDocumentDlg_PublishDocumentDlgLoad_Error_attempting_to_retreive_server_information_on_the_following_servers__0__ {
+        public static string PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_ {
             get {
-                return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlgLoad_Error_attempting_to_retreive_server_inf" +
-                        "ormation_on_the_following_servers__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to and {0}.
-        /// </summary>
-        public static string PublishDocumentDlg_ServersToString_and__0__ {
-            get {
-                return ResourceManager.GetString("PublishDocumentDlg_ServersToString_and__0__", resourceCulture);
+                return ResourceManager.GetString("PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_informati" +
+                        "on_from_the_following_servers_", resourceCulture);
             }
         }
         
@@ -13809,12 +13800,31 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to {0} uploaded {1} of {2} bytes..
+        ///   Looks up a localized string similar to Error importing Skyline file on Panorama server {0}.
         /// </summary>
-        public static string WebPanoramaPublishClient_webClient_UploadProgressChanged__0__uploaded__1__of__2__bytes {
+        public static string WebPanoramaPublishClient_ImportDataOnServer_Error_importing_Skyline_file_on_Panorama_server__0_ {
             get {
-                return ResourceManager.GetString("WebPanoramaPublishClient_webClient_UploadProgressChanged__0__uploaded__1__of__2__" +
-                        "bytes", resourceCulture);
+                return ResourceManager.GetString("WebPanoramaPublishClient_ImportDataOnServer_Error_importing_Skyline_file_on_Panor" +
+                        "ama_server__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Waiting for data import completion....
+        /// </summary>
+        public static string WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Uploaded {0:fs} of {1:fs}.
+        /// </summary>
+        public static string WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs" +
+                        "_", resourceCulture);
             }
         }
         

@@ -22,6 +22,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 using Newtonsoft.Json.Linq;
 
@@ -244,9 +245,8 @@ namespace pwiz.SkylineTestFunctional
                 return testFolders;
             }
 
-            public void SendZipFile(Server server, string folderPath, string zipFilePath)
-            {
-
+            public void SendZipFile(Server server, string folderPath, string zipFilePath, ILongWaitBroker longWaitBroker)
+            {                
             }
         }
     }

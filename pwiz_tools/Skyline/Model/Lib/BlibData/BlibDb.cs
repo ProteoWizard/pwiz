@@ -123,7 +123,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public BiblioSpecLiteLibrary MinimizeLibrary(BiblioSpecLiteSpec librarySpec,
             Library library, SrmDocument document)
         {
-            UpdateProgressMessage(string.Format(Resources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name));
+            if (!UpdateProgressMessage(string.Format(Resources.BlibDb_MinimizeLibrary_Minimizing_library__0__, library.Name)))
+                return null;
 
             string libAuthority = "unknown.org"; // Not L10N
             string libId = library.Name;
@@ -297,7 +298,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                         }
 
                         savedCount++;
-                        UpdateProgress(peptideCount, savedCount);
+                        if (!UpdateProgress(peptideCount, savedCount))
+                            return null;
                     }
 
                     // Simulate ctime(d), which is what BlibBuild uses.
@@ -354,26 +356,25 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 libraryEntries, FileStreamManager.Default);
         }
 
-        private void UpdateProgressMessage(string message)
+        private bool UpdateProgressMessage(string message)
         {
             if (WaitBroker != null)
             {
                 if (WaitBroker.IsCanceled)
-                {
-                    return;
-                }
+                    return false;
+
                 WaitBroker.Message = message;
             }
+            return true;
         }
 
-        private void UpdateProgress(int totalPeptideCount, int doneCount)
+        private bool UpdateProgress(int totalPeptideCount, int doneCount)
         {
             if (WaitBroker != null)
             {
                 if (WaitBroker.IsCanceled)
-                {
-                    return;
-                }
+                    return false;
+
                 int progressValue = (doneCount) * 100 / totalPeptideCount;
 
                 if (progressValue != WaitBroker.ProgressValue)
@@ -381,6 +382,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     WaitBroker.ProgressValue = progressValue;
                 }
             }
+            return true;
         }
 
         private static void SaveRedundantSpectra(ISession sessionRedundant, IEnumerable<SpectrumLiteKey> redundantSpectraIds, 
@@ -657,6 +659,11 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
                         listLibraries.Add(blibDb.MinimizeLibrary(librarySpecMin,
                             pepLibraries.Libraries[i], document));
+                        
+                        // Terminate if user canceled
+                        if (waitBroker != null && waitBroker.IsCanceled)
+                            return document;
+
                         listLibrarySpecs.Add(librarySpecMin);
                         dictOldNameToNew.Add(librarySpec.Name, librarySpecMin.Name);
                     }

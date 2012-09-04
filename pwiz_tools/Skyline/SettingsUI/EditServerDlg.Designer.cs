@@ -47,7 +47,7 @@
             this.btnCancel.Location = new System.Drawing.Point(242, 162);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 2;
+            this.btnCancel.TabIndex = 9;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -57,7 +57,7 @@
             this.btnOK.Location = new System.Drawing.Point(161, 162);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 3;
+            this.btnOK.TabIndex = 8;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -68,16 +68,16 @@
             this.lblProjectInfo.Location = new System.Drawing.Point(12, 9);
             this.lblProjectInfo.Name = "lblProjectInfo";
             this.lblProjectInfo.Size = new System.Drawing.Size(237, 13);
-            this.lblProjectInfo.TabIndex = 4;
+            this.lblProjectInfo.TabIndex = 0;
             this.lblProjectInfo.Text = "&URL (e.g. https://panorama.gs.washington.edu):";
             // 
-            // textServerName
+            // textServerURL
             // 
             this.textServerURL.Location = new System.Drawing.Point(12, 25);
             this.textServerURL.Name = "textServerURL";
             this.textServerURL.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.textServerURL.Size = new System.Drawing.Size(303, 20);
-            this.textServerURL.TabIndex = 5;
+            this.textServerURL.TabIndex = 1;
             // 
             // textPassword
             // 
@@ -85,7 +85,7 @@
             this.textPassword.Name = "textPassword";
             this.textPassword.PasswordChar = '*';
             this.textPassword.Size = new System.Drawing.Size(207, 20);
-            this.textPassword.TabIndex = 9;
+            this.textPassword.TabIndex = 6;
             this.textPassword.UseSystemPasswordChar = true;
             // 
             // textUsername
@@ -93,7 +93,7 @@
             this.textUsername.Location = new System.Drawing.Point(12, 73);
             this.textUsername.Name = "textUsername";
             this.textUsername.Size = new System.Drawing.Size(207, 20);
-            this.textUsername.TabIndex = 8;
+            this.textUsername.TabIndex = 3;
             // 
             // lblPassword
             // 
@@ -101,7 +101,7 @@
             this.lblPassword.Location = new System.Drawing.Point(9, 105);
             this.lblPassword.Name = "lblPassword";
             this.lblPassword.Size = new System.Drawing.Size(56, 13);
-            this.lblPassword.TabIndex = 6;
+            this.lblPassword.TabIndex = 5;
             this.lblPassword.Text = "Password:";
             // 
             // lblUsername
@@ -110,7 +110,7 @@
             this.lblUsername.Location = new System.Drawing.Point(9, 57);
             this.lblUsername.Name = "lblUsername";
             this.lblUsername.Size = new System.Drawing.Size(61, 13);
-            this.lblUsername.TabIndex = 7;
+            this.lblUsername.TabIndex = 2;
             this.lblUsername.Text = "Username: ";
             // 
             // label1
@@ -119,7 +119,7 @@
             this.label1.Location = new System.Drawing.Point(225, 76);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(50, 13);
-            this.label1.TabIndex = 10;
+            this.label1.TabIndex = 4;
             this.label1.Text = "(optional)";
             // 
             // label2
@@ -128,7 +128,7 @@
             this.label2.Location = new System.Drawing.Point(225, 124);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(50, 13);
-            this.label2.TabIndex = 11;
+            this.label2.TabIndex = 7;
             this.label2.Text = "(optional)";
             // 
             // EditServerDlg

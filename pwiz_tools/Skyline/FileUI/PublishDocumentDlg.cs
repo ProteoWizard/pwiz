@@ -22,8 +22,10 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading;
 using System.Windows.Forms;
 using Newtonsoft.Json.Linq;
 using pwiz.Skyline.Alerts;
@@ -39,7 +41,6 @@ namespace pwiz.Skyline.FileUI
     public partial class PublishDocumentDlg : FormEx
     {
         private readonly SettingsList<Server> _panoramaServers;
-        public static LongWaitDlg WaitDlg { get; set; }
         public IPanoramaPublishClient PanoramaPublishClient { get; set; }
         public bool IsLoaded { get; set; }
 
@@ -75,13 +76,11 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                WaitDlg = new LongWaitDlg
+                var waitDlg = new LongWaitDlg
                               {
-                                  Text =
-                                      Resources.
-                                      PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
+                                  Text = Resources.PublishDocumentDlg_PublishDocumentDlg_Load_Retrieving_information_on_servers
                               };
-                WaitDlg.PerformWork(this, 1000, () => PublishDocumentDlgLoad(listServerFolders));
+                waitDlg.PerformWork(this, 1000, () => PublishDocumentDlgLoad(listServerFolders));
             }
             catch (Exception x)
             {
@@ -120,30 +119,15 @@ namespace pwiz.Skyline.FileUI
             }
             if (listErrorServers.Count > 0)
             {
-                throw new Exception(string.Format(
-                    Resources.
-                        PublishDocumentDlg_PublishDocumentDlgLoad_Error_attempting_to_retreive_server_information_on_the_following_servers__0__,
-                    ServersToString(listErrorServers)));
+                throw new Exception(TextUtil.LineSeparate(Resources.PublishDocumentDlg_PublishDocumentDlgLoad_Failed_attempting_to_retrieve_information_from_the_following_servers_,
+                                                          string.Empty,
+                                                          ServersToString(listErrorServers)));
             }
         }
 
-        private string ServersToString(List<Server> servers)
+        private string ServersToString(IEnumerable<Server> servers)
         {
-            string message = string.Empty;
-            if (servers.Count == 0)
-                return string.Empty;
-            else if (servers.Count == 1)
-                return servers[0].URI.ToString();
-            else
-            {
-                for (int i = 0; i < servers.Count - 1; i++)
-                {
-                    message += servers[i].URI + ", "; // Not L10N
-                }
-                message += string.Format(Resources.PublishDocumentDlg_ServersToString_and__0__,
-                                         servers[servers.Count - 1].URI);
-            }
-            return message;
+            return TextUtil.LineSeparate(servers.Select(s => s.URI.ToString()));
         }
 
         private class FolderInformation
@@ -199,10 +183,8 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this,
-                                TextUtil.LineSeparate(
-                                    Resources.PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders,
-                                    x.Message));
+                MessageDlg.Show(this, TextUtil.LineSeparate(Resources.PublishDocumentDlg_addSubFolders_Error_retrieving_server_folders,
+                                                            x.Message));
             }
         }
 
@@ -226,15 +208,12 @@ namespace pwiz.Skyline.FileUI
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
             if (folderInfo == null)
             {
-                MessageDlg.Show(this,
-                                Resources.PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information);
+                MessageDlg.Show(this, Resources.PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information);
                 return;
             }
             if (!folderInfo.HasWritePermission)
             {
-                MessageDlg.Show(this,
-                                Resources.
-                                    PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
+                MessageDlg.Show(this, Resources.PublishDocumentDlg_UploadSharedZipFile_You_do_not_have_permission_to_upload_to_the_given_folder);
                 return;
             }
             DialogResult = DialogResult.OK;
@@ -250,10 +229,9 @@ namespace pwiz.Skyline.FileUI
 
             try
             {
-                WaitDlg = new LongWaitDlg {Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File};
-                WaitDlg.PerformWork(this, 1000, () =>
-                                                PanoramaPublishClient.SendZipFile(folderInfo.Server, folderPath,
-                                                                                  zipFilePath));
+                var waitDlg = new LongWaitDlg {Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File};
+                waitDlg.PerformWork(this, 1000, longWaitBroker => PanoramaPublishClient.SendZipFile(folderInfo.Server, folderPath,
+                                                                                        zipFilePath, longWaitBroker));
             }
             catch (Exception x)
             {
@@ -331,115 +309,136 @@ namespace pwiz.Skyline.FileUI
     public interface IPanoramaPublishClient
     {
         JToken GetInfoForFolders(Server server);
-        void SendZipFile(Server server, string folderPath, string zipFilePath);
+        void SendZipFile(Server server, string folderPath, string zipFilePath, ILongWaitBroker longWaitBroker);
     }
 
     class WebPanoramaPublishClient : IPanoramaPublishClient
     {
-        private static NameValueCollection DataImportInformation { get; set; }
-        private static Server Server { get; set; }
-        private static string FolderPath { get; set; }
+        private WebClient _webClient;
+        private ILongWaitBroker _longWaitBroker;
+
+        private const string FORM_POST = "POST";
+
+        private Uri Call(Uri serverUri, string module, string folderPath, string method, bool isApi = false)
+        {
+            return Call(serverUri, module, folderPath, method, null, isApi);
+        }
+
+        private Uri Call(Uri serverUri, string module, string folderPath, string method, string query, bool isApi = false)
+        {
+            string relativeUri = "labkey/" + module + "/" + (folderPath ?? string.Empty) +
+                method + (isApi ? ".api" : ".view");
+            if (!string.IsNullOrEmpty(query))
+                relativeUri += "?" + query;
+            return new Uri(serverUri, relativeUri);
+        }
 
         public JToken GetInfoForFolders(Server server)
         {
             // Retrieve folders from server.
-            Uri uri = new Uri(server.URI, "labkey/project/getContainers.view?includeSubfolders=true"); // Not L10N
+            Uri uri = Call(server.URI, "project", null, "getContainers", "includeSubfolders=true"); // Not L10N
 
             using (WebClient webClient = new WebClient())
             {
                 webClient.Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
-                string folderInfo = webClient.UploadString(uri, "POST", string.Empty); // Not L10N
+                string folderInfo = webClient.UploadString(uri, FORM_POST, string.Empty);
                 return JObject.Parse(folderInfo);
             }
         }
 
-        public void SendZipFile(Server server, string folderPath, string zipFilePath)
+        public void SendZipFile(Server server, string folderPath, string zipFilePath, ILongWaitBroker longWaitBroker)
         {
-            Server = server;
-            FolderPath = folderPath;
+            _longWaitBroker = longWaitBroker;
             var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
-            Uri webDav = new Uri(Server.URI, String.Format("labkey/pipeline/{0}getPipelineContainer.api", FolderPath)); // Not L10N
-
-            DataImportInformation = new NameValueCollection
-                                                     {
-                                                         // For now, we only have one root that user can upload to
-                                                         {"path", "./"}, // Not L10N 
-                                                         {"file", zipFileName} // Not L10N
-                                                     };
-            using (WebClient webClient = new WebClient())
+            using (_webClient = new WebClient())
             {
-                webClient.UploadProgressChanged += webClient_UploadProgressChanged;
-                webClient.UploadFileCompleted += webClient_UploadFileCompleted;
+                _webClient.UploadProgressChanged += webClient_UploadProgressChanged;
+                _webClient.UploadFileCompleted += webClient_UploadFileCompleted;
 
-                webClient.Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
-                var webDavInfo = webClient.UploadString(webDav, "POST", string.Empty); // Not L10N
+                _webClient.Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
+                var webDav = Call(server.URI, "pipeline", folderPath, "getPipelineContainer", true); // Not L10N
+                var webDavInfo = _webClient.UploadString(webDav, FORM_POST, string.Empty);
                 JObject jsonWebDavInfo = JObject.Parse(webDavInfo);
 
-                string webDavUrl = (string)jsonWebDavInfo["webDavURL"]; // Not L10N
+                string webDavUrl = (string) jsonWebDavInfo["webDavURL"]; // Not L10N
 
                 // Must include the name of the zip file in the destination path. 
                 Uri uploadUri = new Uri(server.URI, webDavUrl + Uri.EscapeUriString(zipFileName));
 
-                webClient.UploadFileAsync(uploadUri, "PUT", zipFilePath); // Not L10N
-            }
-        }
+                _webClient.UploadFileAsync(uploadUri, "PUT", zipFilePath); // Not L10N
 
-        public static void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
-        {
-            PublishDocumentDlg.WaitDlg.ProgressValue = (int)(e.BytesSent / (1.0 * e.TotalBytesToSend)) * 100;
+                // Wait for the upload to complete
+                lock (this)
+                {
+                    Monitor.Wait(this);
+                }
 
-            PublishDocumentDlg.WaitDlg.Message = String.Format(Resources.WebPanoramaPublishClient_webClient_UploadProgressChanged__0__uploaded__1__of__2__bytes,
-                                                               e.UserState, e.BytesSent, e.TotalBytesToSend);
-        }
+                if (longWaitBroker.IsCanceled)
+                    return;
 
-        private static void webClient_UploadFileCompleted(object sender, UploadFileCompletedEventArgs e)
-        {
-            // We need the data to be completely uploaded before we can import. 
-            importDataOnServer();
-        }
+                longWaitBroker.ProgressValue = -1;
+                longWaitBroker.Message = string.Format(Resources.WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___);
 
-        public static void importDataOnServer()
-        {
-            Uri importUrl = new Uri(Server.URI, string.Format("labkey/targetedms/{0}skylineDocUploadApi.view", FolderPath)); // Not L10N
-            using (WebClient webClient = new WebClient())
-            {
-                webClient.Headers.Add(HttpRequestHeader.Authorization, Server.AuthHeader);
+                // Data must be completely uploaded before we can import.
+                Uri importUrl = Call(server.URI, "targetedms", folderPath, "skylineDocUploadApi"); // Not L10N
+                _webClient.Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
                 // Need to tell server which uploaded file to import.
-                byte[] responseBytes = webClient.UploadValues(importUrl, "POST", DataImportInformation); // Not L10N
+                var dataImportInformation = new NameValueCollection
+                                                {
+                                                    // For now, we only have one root that user can upload to
+                                                    {"path", "./"}, // Not L10N 
+                                                    {"file", zipFileName} // Not L10N
+                                                };
+                byte[] responseBytes = _webClient.UploadValues(importUrl, FORM_POST, dataImportInformation); // Not L10N
                 string response = Encoding.UTF8.GetString(responseBytes);
                 JToken importResponse = JObject.Parse(response);
 
                 // ID to check import status.
                 var details = importResponse["UploadedJobDetails"]; // Not L10N
-                int rowId = (int)details[0]["RowId"]; // Not L10N
-                Uri statusUri = new Uri(Server.URI,
-                                        string.Format(
-                                            "labkey/query/{0}selectRows.view?query.queryName=job&schemaName=pipeline&query.rowId)~eq={1}", FolderPath, // Not L10N
-                                            rowId));
+                int rowId = (int) details[0]["RowId"]; // Not L10N
+                Uri statusUri = Call(server.URI, "query", folderPath, "selectRows",
+                                     "query.queryName=job&schemaName=pipeline&query.rowId~eq=" + rowId);
                 bool complete = false;
                 // Wait for import to finish before returning.
                 while (!complete)
                 {
-                    string statusResponse = webClient.UploadString(statusUri, "POST", String.Empty); // Not L10N
+                    if (longWaitBroker.IsCanceled)
+                        return;
+
+                    string statusResponse = _webClient.UploadString(statusUri, FORM_POST, string.Empty);
                     JToken jStatusResponse = JObject.Parse(statusResponse);
                     JToken rows = jStatusResponse["rows"]; // Not L10N
-                    foreach (var row in rows)
-                    {
-                        if ((int)row["RowId"] == rowId) // Not L10N
-                        {
-                            string status = (string)row["Status"]; // Not L10N
-                            if (string.Equals(status, "ERROR"))
-                            {
-                                throw new WebException(string.Format("Error importing Skyline file to Panorama server {0}", Server.URI));
-                            }
-                            complete = string.Equals(status, "COMPLETE"); // Not L10N
-                            break;
-                        }
-                    }
+                    var row = rows.FirstOrDefault(r => (int) r["RowId"] == rowId);
+                    if (row == null)
+                        continue;
+
+                    string status = (string) row["Status"]; // Not L10N
+                    if (string.Equals(status, "ERROR"))
+                        throw new WebException(string.Format(Resources.WebPanoramaPublishClient_ImportDataOnServer_Error_importing_Skyline_file_on_Panorama_server__0_,
+                                                             server.URI));
+
+                    complete = string.Equals(status, "COMPLETE"); // Not L10N
                 }
             }
-        }  
+        }
+
+        public void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
+        {
+            _longWaitBroker.ProgressValue = e.ProgressPercentage;
+            _longWaitBroker.Message = string.Format(FileSize.FormatProvider, Resources.WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_,
+                                                    e.BytesSent, e.TotalBytesToSend);
+            if (_longWaitBroker.IsCanceled)
+                _webClient.CancelAsync();
+        }
+
+        private void webClient_UploadFileCompleted(object sender, UploadFileCompletedEventArgs e)
+        {
+            lock (this)
+            {
+                Monitor.PulseAll(this);
+            }
+        }
     }
 }
