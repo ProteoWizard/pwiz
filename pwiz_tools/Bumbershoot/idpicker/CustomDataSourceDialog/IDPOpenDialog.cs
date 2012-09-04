@@ -305,20 +305,17 @@ namespace CustomDataSourceDialog
 				}
 				unorderedGroupNodes.Add(groupNode);
 			}
-			var rootNode = (from node in unorderedGroupNodes
-			                where node.Text == "/"
-			                select node).SingleOrDefault();
+			var rootNode = unorderedGroupNodes.SingleOrDefault(o => o.Text == "/");
 			unorderedGroupNodes.Remove(rootNode);
 			return FillNode(rootNode, ref unorderedGroupNodes);
 		}
 
     	private TreeNode FillNode(TreeNode rootNode, ref List<TreeNode> unorderedGroupNodes)
     	{
-    		var children = (from node in unorderedGroupNodes
-    		                where node.Text == rootNode.Text
-    		                      + (rootNode.Text == "/" ? string.Empty : "/")
-    		                      + Path.GetFileName(node.Text)
-    		                select node).ToList();
+    		var children = unorderedGroupNodes.Where(o => o.Text == rootNode.Text
+    		                                                        + (rootNode.Text == "/" ? string.Empty : "/")
+    		                                                        + Path.GetFileName(o.Text))
+                                              .ToList();
 			foreach (var child in children)
 			{
 				unorderedGroupNodes.Remove(child);
@@ -864,9 +861,7 @@ namespace CustomDataSourceDialog
             else
                 regexConversion = new Regex("^" + SearchBox.Text.ToLower().Replace("+", "\\+")
                                                       .Replace(".", "\\.").Replace('?', '.').Replace("*", ".*") + "$");
-            var errorNode = (from TreeNode node in FileTreeView.Nodes
-                             where node.Name == "IDPDBErrorNode"
-                             select node).SingleOrDefault();
+            var errorNode = FileTreeView.Nodes.Cast<TreeNode>().SingleOrDefault(o => o.Name == "IDPDBErrorNode");
             FileTreeView.Nodes.Clear();
             FileTreeView.Nodes.Add(FilterNode(_unfilteredNode, regexConversion));
             if (errorNode != null)
@@ -1019,9 +1014,7 @@ namespace CustomDataSourceDialog
         private void PlaceNode(TreeNode newNode)
         {
             //remove filters
-            var errorNode = (from TreeNode node in FileTreeView.Nodes
-                             where node.Name == "IDPDBErrorNode"
-                             select node).SingleOrDefault();
+            var errorNode = FileTreeView.Nodes.Cast<TreeNode>().SingleOrDefault(o => o.Name == "IDPDBErrorNode");
             FileTreeView.Nodes.Clear();
             FileTreeView.Nodes.Add(_unfilteredNode);
             if (errorNode != null)
@@ -1101,10 +1094,7 @@ namespace CustomDataSourceDialog
                 if (firstLayer)
                 {
                     if (InvokeRequired)
-                    {
-                        var action = new Action(() => VertSplit.Enabled = false);
-                        Invoke(action);
-                    }
+                        Invoke(new MethodInvoker(() => VertSplit.Enabled = false));
                     else
                         VertSplit.Enabled = false;
                 }
@@ -1127,14 +1117,12 @@ namespace CustomDataSourceDialog
                 if (firstLayer)
                 {
                     if (InvokeRequired)
-                    {
-                        var action = new Action(() => VertSplit.Enabled = true);
-                        Invoke(action);
-                    }
+                        Invoke(new MethodInvoker(() => VertSplit.Enabled = true));
                     else
                         VertSplit.Enabled = true;
                 }
             }
+
             //Here is what takes the most time
             foreach (var file in di.GetFiles())
             {
@@ -1145,7 +1133,7 @@ namespace CustomDataSourceDialog
                         _extensionList[sourceType].Count(o => file.Name.EndsWith(o)) == 0)
                         continue;
 
-                    HandleItemToAdd(ref newNode, file);
+                    HandleItemToAdd(newNode, file);
                 }
                 catch (Exception e)
                 {
@@ -1157,6 +1145,7 @@ namespace CustomDataSourceDialog
                     updateStatus.ReportProgress(0);
                 }
             }
+
             foreach (var source in newNode.Nodes.Cast<TreeNode>()
                      .Where(node => (string)node.Tag == "Source"))
             {
@@ -1181,22 +1170,22 @@ namespace CustomDataSourceDialog
             return newNode.Nodes.Count == 0 || canceled ? null : newNode;
         }
 
-        private void HandleItemToAdd(ref TreeNode newNode, FileInfo file)
+        private void HandleItemToAdd(TreeNode newNode, FileInfo file)
         {
             List<string> sourceList;
             var rootNode = newNode;
             while (rootNode.Parent != null)
                 rootNode = rootNode.Parent;
 
-                try
-                {
+            try
+            {
                 sourceList = GetSources(file);
-                }
-                catch (Exception e)
+            }
+            catch (Exception e)
+            {
+                Invoke(new MethodInvoker(() =>
                 {
-                    var errorNode = (from TreeNode node in FileTreeView.Nodes
-                                     where node.Name == "IDPDBErrorNode"
-                                     select node).SingleOrDefault();
+                    var errorNode = FileTreeView.Nodes.Cast<TreeNode>().SingleOrDefault(o => o.Name == "IDPDBErrorNode");
                     if (errorNode == null)
                     {
                         errorNode = new TreeNode
@@ -1217,8 +1206,9 @@ namespace CustomDataSourceDialog
                                             Tag = "Uncheckable"
                                         };
                     errorNode.Nodes.Add(thisError);
-                    return;
-                }
+                }));
+                return;
+            }
 
 
             var mergedFile = sourceList.Count > 1;
@@ -1245,20 +1235,21 @@ namespace CustomDataSourceDialog
                 if (target == null)
                 {
                     var spectraNode = new TreeNode
-                                          {
-                                              Text = item,
-                                              ToolTipText = item,
-                                              Tag = "Source",
-                                              Checked = true,
-                                              ImageIndex = 10,
-                                              SelectedImageIndex = 10
-                                          };
+                                            {
+                                                Text = item,
+                                                ToolTipText = item,
+                                                Tag = "Source",
+                                                Checked = true,
+                                                ImageIndex = 10,
+                                                SelectedImageIndex = 10
+                                            };
                     spectraNode.Nodes.Add(subNode);
                     newNode.Nodes.Add(spectraNode);
                 }
                 else
                     target.Nodes.Add(subNode);
             }
+
             foreach (var node in relatedNodes)
             {
                 _relatedNodes.Add(node, new List<TreeNode>());
