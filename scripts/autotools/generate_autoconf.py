@@ -268,7 +268,8 @@ if (not dryrun) :
 
 	fz = args[3]
 	print "creating autotools source build distribution kit %s"%(fz)
-	z = tarfile.open(fz,"w:gz")
+	fztmp = fz.replace("tgz","tar")
+	z = tarfile.open(fztmp,"w") # do the gzip as a final step
 	exts = ["h","hpp","c","cpp","cxx","am","inl",""]
 
 	unwanted = ["pwiz/BUILDING"]  # misleading docs for the bjam build
@@ -291,8 +292,6 @@ if (not dryrun) :
 			if dbug :
 				print "add "+f+" as "+tarname
 			z.add(f,tarname)
-			if ("pwiz/autotools/BUILDING" == tarname) :
-				z.add(f,"pwiz/README") # put it where user will notice
 	testfiles = set()
 	for test in testargs : # grab data files
 		f = absname(testargs[test])
@@ -303,11 +302,21 @@ if (not dryrun) :
 				ff = d+"/"+file
 				ext2 = ff.rpartition(".")[2]
 				if (ext==ext2 and not stat.S_ISDIR(os.stat(ff).st_mode)):
-					testfiles.add(ff)
+					tarname=ac.replace_pwizroot(ff,"pwiz")
+					if dbug:
+						print "add "+ff+" as "+tarname				
+					testfiles.add(ff,tarname)
 	for f in testfiles :
 		tarname = ac.replace_pwizroot(f,"pwiz")
 		if dbug:
 			print "add test "+f+" as "+tarname
 		z.add(f,tarname)
 	z.close()
+	# now gzip it (doing it pythonically creates a tarfile with the tarfile in it, why?)
+	os.system("rm -f "+fz);
+	os.system("gzip -9 "+fztmp);
+	os.system("mv -f "+fztmp+".gz "+fz);
+
+
+
 
