@@ -226,6 +226,7 @@ void testIDParsing()
 
     id = "scan=123";
     unit_assert(id::translateNativeIDToScanNumber(MS_scan_number_only_nativeID_format, id) == "123");
+    unit_assert(id::translateNativeIDToScanNumber(CVID_Unknown, id) == "123");
     unit_assert(id::translateScanNumberToNativeID(MS_scan_number_only_nativeID_format, "123") == id);
     unit_assert(id::translateScanNumberToNativeID(MS_Bruker_Agilent_YEP_nativeID_format, "123") == id);
     unit_assert(id::translateScanNumberToNativeID(MS_Bruker_BAF_nativeID_format, "123") == id);

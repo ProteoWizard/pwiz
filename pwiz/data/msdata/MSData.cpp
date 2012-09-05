@@ -576,6 +576,8 @@ PWIZ_API_DECL string translateNativeIDToScanNumber(CVID nativeIdFormat, const st
             return value(id, "scan");
 
         default:
+            if (bal::starts_with(id, "scan=")) return value(id, "scan");
+            else if (bal::starts_with(id, "index=")) return value(id, "index");
             return "";
     }
 }
