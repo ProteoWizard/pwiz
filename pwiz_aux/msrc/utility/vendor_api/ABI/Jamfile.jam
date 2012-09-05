@@ -62,6 +62,7 @@ rule vendor-api-requirements ( properties * )
         }
         result += <include>$(dll_location) ;
         result += <define>PWIZ_READER_ABI ;
+        result += <cxxflags>/wd4564 ; # warning C4564: method 'x' defines unsupported default parameter 'y'
     }
     else
     {
