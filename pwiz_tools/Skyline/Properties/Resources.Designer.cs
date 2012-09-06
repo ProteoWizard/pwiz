@@ -8253,6 +8253,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Click here to view the error details..
+        /// </summary>
+        public static string PublishDocumentDlg_UploadSharedZipFile_Click_here_to_view_the_error_details_ {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_UploadSharedZipFile_Click_here_to_view_the_error_details_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Error obtaining server information..
         /// </summary>
         public static string PublishDocumentDlg_UploadSharedZipFile_Error_obtaining_server_information {

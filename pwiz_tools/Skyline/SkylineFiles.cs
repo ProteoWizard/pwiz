@@ -1535,7 +1535,7 @@ namespace pwiz.Skyline
                 if (publishDocumentDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     if (ShareDocument(publishDocumentDlg.FileName, false))
-                        publishDocumentDlg.UploadSharedZipFile();
+                        publishDocumentDlg.UploadSharedZipFile(this);
                 }
             }
         }

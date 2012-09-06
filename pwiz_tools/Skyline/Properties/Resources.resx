@@ -4709,4 +4709,7 @@ Are you sure you want to continue?</value>
   <data name="WebPanoramaPublishClient_webClient_UploadProgressChanged_Uploaded__0_fs__of__1_fs_">
     <value xml:space="preserve">Uploaded {0:fs} of {1:fs}</value>
   </data>
+  <data name="PublishDocumentDlg_UploadSharedZipFile_Click_here_to_view_the_error_details_">
+    <value xml:space="preserve">Click here to view the error details.</value>
+  </data>
 </root>

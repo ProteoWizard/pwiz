@@ -171,7 +171,7 @@ namespace pwiz.Skyline.FileUI
 
                     // User can only upload to folders where TargetedMS is an active module.
                     JToken modules = subFolder["activeModules"]; // Not L10N
-                    bool canUpload = ContainsMS2Module(modules) && Equals(userPermissions & 2, 2);
+                    bool canUpload = ContainsTargetedMSModule(modules) && Equals(userPermissions & 2, 2);
 
                     // User cannot upload files to folder
                     if (!canUpload)
@@ -188,7 +188,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private bool ContainsMS2Module(IEnumerable<JToken> modules)
+        private bool ContainsTargetedMSModule(IEnumerable<JToken> modules)
         {
             foreach (var module in modules)
             {
@@ -219,7 +219,7 @@ namespace pwiz.Skyline.FileUI
             DialogResult = DialogResult.OK;
         }
 
-        public void UploadSharedZipFile()
+        public void UploadSharedZipFile(Control parent)
         {
             var folderPath = GetFolderPath(treeViewFolders.SelectedNode);
             var zipFilePath = tbFilePath.Text;
@@ -230,12 +230,24 @@ namespace pwiz.Skyline.FileUI
             try
             {
                 var waitDlg = new LongWaitDlg {Text = Resources.PublishDocumentDlg_UploadSharedZipFile_Uploading_File};
-                waitDlg.PerformWork(this, 1000, longWaitBroker => PanoramaPublishClient.SendZipFile(folderInfo.Server, folderPath,
+                waitDlg.PerformWork(parent, 1000, longWaitBroker => PanoramaPublishClient.SendZipFile(folderInfo.Server, folderPath,
                                                                                         zipFilePath, longWaitBroker));
             }
             catch (Exception x)
             {
-                MessageDlg.Show(this, x.Message);
+                var panoramaEx = x.InnerException as PanoramaImportErrorException;
+                if(panoramaEx == null)
+                {
+                    MessageDlg.Show(parent, x.Message);
+                }
+                else
+                {
+                    var message = string.Format(Resources.WebPanoramaPublishClient_ImportDataOnServer_Error_importing_Skyline_file_on_Panorama_server__0_,
+                                                panoramaEx.ServerUrl);
+                    AlertLinkDlg.Show(parent, message,
+                        Resources.PublishDocumentDlg_UploadSharedZipFile_Click_here_to_view_the_error_details_,
+                        new Uri(panoramaEx.ServerUrl, panoramaEx.JobUrlPart).ToString());
+                }
             }
         }
 
@@ -319,14 +331,14 @@ namespace pwiz.Skyline.FileUI
 
         private const string FORM_POST = "POST";
 
-        private Uri Call(Uri serverUri, string module, string folderPath, string method, bool isApi = false)
+        private Uri Call(Uri serverUri, string controller, string folderPath, string method, bool isApi = false)
         {
-            return Call(serverUri, module, folderPath, method, null, isApi);
+            return Call(serverUri, controller, folderPath, method, null, isApi);
         }
 
-        private Uri Call(Uri serverUri, string module, string folderPath, string method, string query, bool isApi = false)
+        private Uri Call(Uri serverUri, string controller, string folderPath, string method, string query, bool isApi = false)
         {
-            string relativeUri = "labkey/" + module + "/" + (folderPath ?? string.Empty) +
+            string relativeUri = "labkey/" + controller + "/" + (folderPath ?? string.Empty) +
                 method + (isApi ? ".api" : ".view");
             if (!string.IsNullOrEmpty(query))
                 relativeUri += "?" + query;
@@ -367,11 +379,11 @@ namespace pwiz.Skyline.FileUI
                 // Must include the name of the zip file in the destination path. 
                 Uri uploadUri = new Uri(server.URI, webDavUrl + Uri.EscapeUriString(zipFileName));
 
-                _webClient.UploadFileAsync(uploadUri, "PUT", zipFilePath); // Not L10N
-
-                // Wait for the upload to complete
                 lock (this)
                 {
+                    _webClient.UploadFileAsync(uploadUri, "PUT", zipFilePath); // Not L10N
+
+                    // Wait for the upload to complete
                     Monitor.Wait(this);
                 }
 
@@ -416,9 +428,10 @@ namespace pwiz.Skyline.FileUI
 
                     string status = (string) row["Status"]; // Not L10N
                     if (string.Equals(status, "ERROR"))
-                        throw new WebException(string.Format(Resources.WebPanoramaPublishClient_ImportDataOnServer_Error_importing_Skyline_file_on_Panorama_server__0_,
-                                                             server.URI));
-
+                    {
+                        throw new PanoramaImportErrorException(server.URI, (string)row["_labkeyurl_RowId"]);
+                    }
+                   
                     complete = string.Equals(status, "COMPLETE"); // Not L10N
                 }
             }
@@ -440,5 +453,17 @@ namespace pwiz.Skyline.FileUI
                 Monitor.PulseAll(this);
             }
         }
+    }
+
+    public class PanoramaImportErrorException : Exception
+    {
+       public PanoramaImportErrorException(Uri serverUrl, string jobUrlPart  )
+       {
+           ServerUrl = serverUrl;
+           JobUrlPart = jobUrlPart;
+       }
+
+        public Uri ServerUrl { get; private set; }
+        public string JobUrlPart { get; private set; }
     }
 }
