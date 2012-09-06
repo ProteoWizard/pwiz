@@ -358,20 +358,24 @@ void ExperimentImpl::initialize() const
     if (initialized_)
         return;
 
-    TotalIonChromatogram^ tic = msExperiment->GetTotalIonChromatogram();
-    ToStdVector(tic->GetActualXValues(), cycleTimes_);
-    ToStdVector(tic->GetActualYValues(), cycleIntensities_);
+    try
+    {
+        TotalIonChromatogram^ tic = msExperiment->GetTotalIonChromatogram();
+        ToStdVector(tic->GetActualXValues(), cycleTimes_);
+        ToStdVector(tic->GetActualYValues(), cycleIntensities_);
 
-    BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, 0, gcnew array<double>(0), gcnew array<double>(0));
-    BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
-    BasePeakChromatogramInfo^ bpci = bpc->Info;
-    ToStdVector(bpc->GetActualYValues(), basePeakIntensities_);
+        BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, 0, gcnew array<double>(0), gcnew array<double>(0));
+        BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
+        BasePeakChromatogramInfo^ bpci = bpc->Info;
+        ToStdVector(bpc->GetActualYValues(), basePeakIntensities_);
 
-    basePeakMZs_.resize(cycleTimes_.size());
-    for (size_t i=0; i < cycleTimes_.size(); ++i)
-        basePeakMZs_[i] = bpci->GetBasePeakMass(i);
+        basePeakMZs_.resize(cycleTimes_.size());
+        for (size_t i=0; i < cycleTimes_.size(); ++i)
+            basePeakMZs_[i] = bpci->GetBasePeakMass(i);
 
-    initialized_ = true;
+        initialized_ = true;
+    }
+    CATCH_AND_FORWARD
 }
 
 size_t ExperimentImpl::getSRMSize() const
