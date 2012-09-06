@@ -932,6 +932,74 @@ bool hasValidFlankingSymbols(const PeptideEvidence& pe)
            ((pe.post >= 'A' && pe.post <= 'Z') || pe.post == '-');
 }
 
+// uses cleavageAgent or cleavageAgentRegex to find the most specific peptide evidence;
+// returns true iff it is possible to get a better result with another call on the same peptide
+bool findPeptideEvidenceWithRegex(const PeptideEvidence& pe,
+                                  const Peptide& peptide,
+                                  const string& peptideSequenceInContext,
+                                  CVID cleavageAgent,
+                                  const boost::regex* cleavageAgentRegex,
+                                  bool independent,
+                                  int& nTerminusIsSpecific,
+                                  int& cTerminusIsSpecific,
+                                  int& bestSpecificity,
+                                  shared_ptr<proteome::DigestedPeptide>& bestResult)
+{
+    using namespace proteome;
+
+    if (cleavageAgent == MS_unspecific_cleavage)
+    {
+        bestSpecificity = 0;
+        bestResult.reset(new DigestedPeptide(peptide.peptideSequence, pe.start-1, 0, false, false, string(1, pe.pre), string(1, pe.post)));
+        return false;
+    }
+    else if (cleavageAgent == MS_no_cleavage)
+    {
+        bestSpecificity = 2;
+        bestResult.reset(new DigestedPeptide(peptide.peptideSequence, pe.start-1, 0, true, true, string(1, pe.pre), string(1, pe.post)));
+        return false;
+    }
+
+    Digestion::Config config;
+    config.minimumSpecificity = Digestion::NonSpecific;
+    scoped_ptr<Digestion> peptideInContextPtr;
+    if (cleavageAgent != CVID_Unknown)
+        peptideInContextPtr.reset(new Digestion(peptideSequenceInContext, cleavageAgent, config));
+    else
+        peptideInContextPtr.reset(new Digestion(peptideSequenceInContext, *cleavageAgentRegex, config));
+    const Digestion& peptideInContext = *peptideInContextPtr;
+
+    // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
+    if (independent)
+    {
+        nTerminusIsSpecific = pe.pre == '-' ? 1 : 0;
+        cTerminusIsSpecific = pe.post == '-' ? 1 : 0;
+    }
+
+    try
+    {
+        DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
+        nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
+        cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
+
+        if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
+        {
+            bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
+            bestResult.reset(new DigestedPeptide(result,
+                                                 pe.start-1, // offset is 0-based
+                                                 result.missedCleavages(),
+                                                 nTerminusIsSpecific == 1,
+                                                 cTerminusIsSpecific == 1,
+                                                 string(1, pe.pre),
+                                                 string(1, pe.post)));
+        }
+    }
+    catch (runtime_error&)
+    {}
+
+    return bestSpecificity < 2;
+}
+
 } // namespace
 
 
@@ -946,10 +1014,16 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
 
     const Peptide& peptide = *pe.peptidePtr;
 
-    vector<boost::regex> cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
+    vector<CVID> cleavageAgents = identdata::cleavageAgents(sip.enzymes);
 
-    if (cleavageAgentRegexes.empty())
-        throw runtime_error("[identdata::digestedPeptide] unknown cleavage agent");
+    vector<boost::regex> cleavageAgentRegexes;
+    if (cleavageAgents.empty())
+    {
+        cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
+
+        if (cleavageAgentRegexes.empty())
+            throw runtime_error("[identdata::digestedPeptide] unknown cleavage agent");
+    }
 
     if (!hasValidFlankingSymbols(pe))
         throw runtime_error("[identdata::digestedPeptide] invalid pre/post on PeptideEvidence element");
@@ -964,39 +1038,20 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
     int bestSpecificity = -1;
     boost::shared_ptr<DigestedPeptide> bestResult;
 
+    BOOST_FOREACH(CVID cleavageAgent, cleavageAgents)
+    {
+        if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, cleavageAgent, NULL,
+                                          sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
+                                          bestSpecificity, bestResult))
+            break;
+    }
+
     BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
     {
-        Digestion::Config config;
-        config.minimumSpecificity = Digestion::NonSpecific;
-        Digestion peptideInContext(peptideSequenceInContext, regex, config);
-
-        // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
-        if (sip.enzymes.independent)
-        {
-            nTerminusIsSpecific = pe.pre == '-' ? 1 : 0;
-            cTerminusIsSpecific = pe.post == '-' ? 1 : 0;
-        }
-
-        try
-        {
-            DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
-            nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
-            cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
-
-            if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
-            {
-                bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
-                bestResult.reset(new DigestedPeptide(result,
-                                                     pe.start-1, // offset is 0-based
-                                                     result.missedCleavages(),
-                                                     nTerminusIsSpecific == 1,
-                                                     cTerminusIsSpecific == 1,
-                                                     string(1, pe.pre),
-                                                     string(1, pe.post)));
-            }
-        }
-        catch (runtime_error&)
-        {}
+        if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, CVID_Unknown, &regex,
+                                          sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
+                                          bestSpecificity, bestResult))
+            break;
     }
 
     if (!bestResult.get())
@@ -1015,10 +1070,16 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumI
 
     const Peptide& peptide = *sii.peptidePtr;
 
-    vector<boost::regex> cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
+    vector<CVID> cleavageAgents = identdata::cleavageAgents(sip.enzymes);
 
-    if (cleavageAgentRegexes.empty())
-        throw runtime_error("[identdata::digestedPeptides] unknown cleavage agent");
+    vector<boost::regex> cleavageAgentRegexes;
+    if (cleavageAgents.empty())
+    {
+        cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
+
+        if (cleavageAgentRegexes.empty())
+            throw runtime_error("[identdata::digestedPeptides] unknown cleavage agent");
+    }
 
     vector<proteome::DigestedPeptide> results;
 
@@ -1039,39 +1100,20 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumI
         int bestSpecificity = -1;
         boost::shared_ptr<DigestedPeptide> bestResult;
 
+        BOOST_FOREACH(CVID cleavageAgent, cleavageAgents)
+        {
+            if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, cleavageAgent, NULL,
+                                              sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
+                                              bestSpecificity, bestResult))
+                break;
+        }
+
         BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
         {
-            Digestion::Config config;
-            config.minimumSpecificity = Digestion::NonSpecific;
-            Digestion peptideInContext(peptideSequenceInContext, regex, config);
-
-            // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
-            if (sip.enzymes.independent)
-            {
-                nTerminusIsSpecific = pe.pre == '-' ? 1 : 0;
-                cTerminusIsSpecific = pe.post == '-' ? 1 : 0;
-            }
-
-            try
-            {
-                DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
-                nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
-                cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
-
-                if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
-                {
-                    bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
-                    bestResult.reset(new DigestedPeptide(result,
-                                                         pe.start-1, // offset is 0-based
-                                                         result.missedCleavages(),
-                                                         nTerminusIsSpecific == 1,
-                                                         cTerminusIsSpecific == 1,
-                                                         string(1, pe.pre),
-                                                         string(1, pe.post)));
-                }
-            }
-            catch (runtime_error&)
-            {}
+            if (!findPeptideEvidenceWithRegex(pe, peptide, peptideSequenceInContext, CVID_Unknown, &regex,
+                                              sip.enzymes.independent, nTerminusIsSpecific, cTerminusIsSpecific,
+                                              bestSpecificity, bestResult))
+                break;
         }
 
         if (bestResult.get())
@@ -1119,6 +1161,22 @@ PWIZ_API_DECL CVID cleavageAgent(const Enzyme& ez)
         result = proteome::Digestion::getCleavageAgentByRegex(ez.siteRegexp);
     return result;
 }
+
+PWIZ_API_DECL std::vector<CVID> cleavageAgents(const Enzymes& enzymes)
+{
+    vector<CVID> result;
+    BOOST_FOREACH(const EnzymePtr& enzymePtr, enzymes.enzymes)
+        try
+        {
+            CVID ca = cleavageAgent(*enzymePtr);
+            if (ca != CVID_Unknown)
+                result.push_back(ca);
+        }
+        catch (exception&) {}
+
+    return result;
+}
+
 
 PWIZ_API_DECL boost::regex cleavageAgentRegex(const Enzyme& ez)
 {
