@@ -230,7 +230,7 @@ namespace myrimatch
             avgPrecursorHypotheses += avgSpectraByChargeState[z].size();
         }
 
-		if( !g_numChildren )
+		if( g_numChildren == 0 || g_pid == 0 )
             cout << "Monoisotopic mass precursor hypotheses: " << monoPrecursorHypotheses << endl
                  << "Average mass precursor hypotheses: " << avgPrecursorHypotheses << endl;
 
@@ -285,7 +285,7 @@ namespace myrimatch
 		g_lnFactorialTable.resize( maxPeakBins );
 		//cout << g_hostString << " finished precaching factorials." << endl;
 
-		if( !g_numChildren )
+		if( g_numChildren == 0 || g_pid == 0 )
 		{
 			//cout << "Smallest observed precursor is " << g_rtConfig->curMinPeptideMass << " Da." << endl;
 			//cout << "Largest observed precursor is " << g_rtConfig->curMaxPeptideMass << " Da." << endl;

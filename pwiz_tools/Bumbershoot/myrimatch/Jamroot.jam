@@ -96,6 +96,8 @@ project bumbershoot
 	: requirements
 	    <include>freicore/pwiz_src
 	    <include>freicore/libraries/boost_aux
+        <include>$(boost_src)
+        <include>$(zlib_src)
 
         <toolset>gcc,<link>shared:<runtime-link>shared
         <toolset>darwin,<link>shared:<runtime-link>shared
