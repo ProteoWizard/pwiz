@@ -34,6 +34,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.RetentionTimes;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
+using pwiz.Skyline.ToolsUI;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
 using pwiz.Skyline.Util.Extensions;
@@ -1408,7 +1409,7 @@ namespace pwiz.Skyline.Properties
     {
         public override IEnumerable<IsolationScheme> GetDefaults(int revisionIndex)
         {
-            return new[] { new IsolationScheme("MSe", new IsolationWindow[0], IsolationScheme.SpecialHandlingType.MS_E), }; // Not L10N
+            return new[] { new IsolationScheme(null, new IsolationWindow[0], IsolationScheme.SpecialHandlingType.ALL_IONS), }; // Not L10N
         }
 
         public override int ExcludeDefaults { get { return 1; } }

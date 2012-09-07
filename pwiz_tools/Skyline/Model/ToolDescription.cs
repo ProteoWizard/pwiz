@@ -83,10 +83,12 @@ namespace pwiz.Skyline.Model
         {
             Title = title;
             Command = command;
-            Arguments = arguments;
-            InitialDirectory = initialDirectory;
+            Arguments = arguments ?? string.Empty;
+            InitialDirectory = initialDirectory ?? string.Empty;
             OutputToImmediateWindow = outputToImmediateWindow;
             ReportTitle = reportTitle;
+
+//            Validate();
         }
 
         public string GetKey()
@@ -94,6 +96,7 @@ namespace pwiz.Skyline.Model
             return Title;
         }
 
+        // CONSIDER: These properties get changed without being validated, which could result in an invalid ToolDescription
         public string Title { get; set; }
         public string Command { get; set; }
         public string Arguments { get; set; }
@@ -250,7 +253,7 @@ namespace pwiz.Skyline.Model
         {
         }
 
-        public static ToolDescription Deserializer(XmlReader reader)
+        public static ToolDescription Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new ToolDescription());
         }
@@ -265,6 +268,14 @@ namespace pwiz.Skyline.Model
             report_title
         }
 
+        private void Validate()
+        {
+            if (string.IsNullOrEmpty(Title))
+                throw new InvalidDataException(Resources.ToolDescription_Validate_Tools_must_have_a_title);
+            if (string.IsNullOrEmpty(Command))
+                throw new InvalidDataException(Resources.ToolDescription_Validate_Tools_must_have_a_command_line);
+        }
+
         public XmlSchema GetSchema()
         {
             return null;
@@ -274,21 +285,22 @@ namespace pwiz.Skyline.Model
         {
             Title = reader.GetAttribute(ATTR.title);
             Command = reader.GetAttribute(ATTR.command);
-            Arguments = reader.GetAttribute(ATTR.arguments);
-            InitialDirectory = reader.GetAttribute(ATTR.initial_directory);
+            Arguments = reader.GetAttribute(ATTR.arguments) ?? string.Empty;
+            InitialDirectory = reader.GetAttribute(ATTR.initial_directory) ?? string.Empty;
             OutputToImmediateWindow = reader.GetBoolAttribute(ATTR.output_to_immediate_window);
             ReportTitle = reader.GetAttribute(ATTR.report_title);
             reader.Read();
+            Validate();
         }
 
         public void WriteXml(XmlWriter writer)
         {
             writer.WriteAttribute(ATTR.title, Title);
             writer.WriteAttribute(ATTR.command, Command);
-            writer.WriteAttribute(ATTR.arguments, Arguments);
-            writer.WriteAttribute(ATTR.initial_directory, InitialDirectory);
+            writer.WriteAttributeIfString(ATTR.arguments, Arguments);
+            writer.WriteAttributeIfString(ATTR.initial_directory, InitialDirectory);
             writer.WriteAttribute(ATTR.output_to_immediate_window, OutputToImmediateWindow);
-            writer.WriteAttribute(ATTR.report_title, ReportTitle);
+            writer.WriteAttributeIfString(ATTR.report_title, ReportTitle);
         }
         #endregion
         

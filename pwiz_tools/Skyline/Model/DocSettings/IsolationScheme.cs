@@ -35,20 +35,26 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static class SpecialHandlingType
         {
-            public static string NONE { get { return Resources.SpecialHandlingType_NONE_None; } }
-            public static string MULTIPLEXED { get { return Resources.SpecialHandlingType_MULTIPLEXED_Multiplexed; } }
+            public static string NONE { get { return "None"; } }    // Not L10N : Used only in XML and in memory
+            public static string MULTIPLEXED { get { return "Multiplexed"; } }  // Not L10N : Used only in XML and in memory
             public const string MS_E = "MSe"; // Not L10N : This is a Waters trademark, and probably not localizable
+            public const string ALL_IONS = "All Ions";    // TODO: Need to come up with a way of localizing XmlNamedElement names that appear in UI
 
             public static void Validate(string specialHandling)
             {
                 if (!Equals(specialHandling, NONE) &&
                     !Equals(specialHandling, MULTIPLEXED) &&
-                    !Equals(specialHandling, MS_E))
+                    !Equals(specialHandling, MS_E) &&
+                    !Equals(specialHandling, ALL_IONS))
                 {
                     throw new InvalidDataException(string.Format(
                         Resources.SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling, specialHandling));
-                }
-                    
+                }                    
+            }
+
+            public static bool IsAllIons(string specialHandling)
+            {
+                return Equals(specialHandling, MS_E) || Equals(specialHandling, ALL_IONS);
             }
         };
 
@@ -75,20 +81,26 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public IsolationScheme(string name, IList<IsolationWindow> isolationWindows, string specialHandling, int? windowsPerScan = null)
-            : base(name)
+            : base(SpecialHandlingType.IsAllIons(specialHandling) ? SpecialHandlingType.ALL_IONS : name)
         {
             PrespecifiedIsolationWindows = isolationWindows;
             SpecialHandling = specialHandling;
             WindowsPerScan = windowsPerScan;
             DoValidate();
         }
-
-        // Returns true if target is determined from results.
+        
+        /// <summary>
+        /// Returns true if target is determined from results.
+        /// </summary>
         public bool FromResults
         {
             get { return _prespecifiedIsolationWindows.Count == 0; }
         }
 
+        public bool IsAllIons
+        {
+            get { return SpecialHandlingType.IsAllIons(SpecialHandling); }
+        }
 
         public IList<IsolationWindow> PrespecifiedIsolationWindows
         {
@@ -151,14 +163,14 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 if (PrespecifiedIsolationWindows.Count == 0)
                 {
-                    if (!Equals(SpecialHandling, SpecialHandlingType.MS_E))
+                    if (!IsAllIons)
                     {
                         throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Isolation_scheme_must_have_a_filter_or_a_prespecifed_isolation_window);
                     }
                 }
-                else if (Equals(SpecialHandling, SpecialHandlingType.MS_E))
+                else if (IsAllIons)
                 {
-                    throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Isolation_scheme_for_MSe_cannot_contain_isolation_windows);
+                    throw new InvalidDataException(Resources.IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation_windows);
                 }
 
                 if (Equals(SpecialHandling, SpecialHandlingType.MULTIPLEXED))
@@ -199,7 +211,15 @@ namespace pwiz.Skyline.Model.DocSettings
         public override void ReadXml(XmlReader reader)
         {
             // Read tag attributes.
-            base.ReadXml(reader);
+            SpecialHandling = reader.GetAttribute(ATTR.special_handling) ?? SpecialHandlingType.NONE;
+            // Backward compatibility with v1.3: force all ions name to all ions (may be MSe)
+            if (!SpecialHandlingType.IsAllIons(SpecialHandling))
+                base.ReadXml(reader);
+            else
+            {
+                ReadXmlName(SpecialHandlingType.ALL_IONS);
+                SpecialHandling = SpecialHandlingType.ALL_IONS;
+            }
 
             PrecursorFilter = reader.GetNullableDoubleAttribute(ATTR.precursor_filter);
             if (!PrecursorFilter.HasValue)
@@ -208,7 +228,6 @@ namespace pwiz.Skyline.Model.DocSettings
                 PrecursorRightFilter = reader.GetNullableDoubleAttribute(ATTR.precursor_right_filter);
             }
 
-            SpecialHandling = reader.GetAttribute(ATTR.special_handling) ?? SpecialHandlingType.NONE;
             WindowsPerScan = reader.GetNullableIntAttribute(ATTR.windows_per_scan);
 
             if (reader.IsEmptyElement)

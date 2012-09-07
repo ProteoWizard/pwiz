@@ -5580,12 +5580,12 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Isolation scheme for MSe cannot contain isolation windows.
+        ///   Looks up a localized string similar to Isolation scheme for all ions cannot contain isolation windows.
         /// </summary>
-        public static string IsolationScheme_DoValidate_Isolation_scheme_for_MSe_cannot_contain_isolation_windows {
+        public static string IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation_windows {
             get {
-                return ResourceManager.GetString("IsolationScheme_DoValidate_Isolation_scheme_for_MSe_cannot_contain_isolation_wind" +
-                        "ows", resourceCulture);
+                return ResourceManager.GetString("IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation" +
+                        "_windows", resourceCulture);
             }
         }
         
@@ -5635,6 +5635,15 @@ namespace pwiz.Skyline.Properties {
         public static string IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_ {
             get {
                 return ResourceManager.GetString("IsolationScheme_DoValidate_The_precursor_m_z_filter_must_be_between__0__and__1_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unexpected name &apos;{0}&apos; for {1} isolation scheme.
+        /// </summary>
+        public static string IsolationScheme_DoValidate_Unexpected_name___0___for__1__isolation_scheme {
+            get {
+                return ResourceManager.GetString("IsolationScheme_DoValidate_Unexpected_name___0___for__1__isolation_scheme", resourceCulture);
             }
         }
         
@@ -10896,24 +10905,6 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Multiplexed.
-        /// </summary>
-        public static string SpecialHandlingType_MULTIPLEXED_Multiplexed {
-            get {
-                return ResourceManager.GetString("SpecialHandlingType_MULTIPLEXED_Multiplexed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to None.
-        /// </summary>
-        public static string SpecialHandlingType_NONE_None {
-            get {
-                return ResourceManager.GetString("SpecialHandlingType_NONE_None", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &quot;{0}&quot; is not a valid setting for full scan special handling.
         /// </summary>
         public static string SpecialHandlingType_Validate___0___is_not_a_valid_setting_for_full_scan_special_handling {
@@ -11719,6 +11710,24 @@ namespace pwiz.Skyline.Properties {
         public static string ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__ {
             get {
                 return ResourceManager.GetString("ToolDescription_RunTool_Please_reconfigure_that_tool__it_failed_to_execute__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tools must have a command line.
+        /// </summary>
+        public static string ToolDescription_Validate_Tools_must_have_a_command_line {
+            get {
+                return ResourceManager.GetString("ToolDescription_Validate_Tools_must_have_a_command_line", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tools must have a title.
+        /// </summary>
+        public static string ToolDescription_Validate_Tools_must_have_a_title {
+            get {
+                return ResourceManager.GetString("ToolDescription_Validate_Tools_must_have_a_title", resourceCulture);
             }
         }
         
@@ -13324,15 +13333,6 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("VendorIssueHelper_ConvertWiffToMzxml_To_work_around_this_issue_requires_Analyst_t" +
                         "o_be_installed_on_the_computer_running__0__", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Convert to mzML work-around for {0}.
-        /// </summary>
-        public static string VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzML_work_around_for__0_ {
-            get {
-                return ResourceManager.GetString("VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzML_work_around_for__0_", resourceCulture);
             }
         }
         

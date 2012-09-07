@@ -671,7 +671,7 @@ namespace pwiz.Skyline.Model.Results
                                                       FullScanMassAnalyzerType.qit);
 
                     if (_fullScan.AcquisitionMethod == FullScanAcquisitionMethod.DIA &&
-                             Equals(_fullScan.IsolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MS_E))
+                            _fullScan.IsolationScheme.IsAllIons)
                     {
                         _isWatersMse = dataFile.IsWatersFile;
                         _mseLevel = 1;
@@ -1073,8 +1073,7 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // MSe just uses the instrument isolation window
-            else if (isolationWidth.HasValue &&
-                     Equals(isolationScheme.SpecialHandling, IsolationScheme.SpecialHandlingType.MS_E))
+            else if (isolationWidth.HasValue && isolationScheme.IsAllIons)
             {
                 isolationWidthValue = isolationWidth.Value;
             }

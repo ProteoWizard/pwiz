@@ -695,9 +695,7 @@ namespace pwiz.Skyline
                 }
                 catch (Exception)
                 {
-                    MessageDlg.Show(this,
-                                    Resources.
-                                        SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved);
+                    MessageDlg.Show(this, Resources.SkylineWindow_OnClosing_An_unexpected_error_has_prevented_global_settings_changes_from_this_session_from_being_saved);
                 }
             }
 
@@ -943,7 +941,7 @@ namespace pwiz.Skyline
                         FindSpectralLibrary,
                         Settings.Default.StaticModList,
                         Settings.Default.HeavyModList,
-                        nodePaste == null ? null : nodePaste.Path,
+                        nodePaste != null ? nodePaste.Path : null,
                         out selectPath,
                         out nextAdd,
                         pasteToPeptideList));

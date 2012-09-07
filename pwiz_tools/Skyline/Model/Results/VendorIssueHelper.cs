@@ -61,8 +61,8 @@ namespace pwiz.Skyline.Model.Results
                     case LoadingTooSlowlyException.Solution.bruker_conversion:
                         ConvertBrukerToMzml(filePath, tempFileSubsitute, loader, status);
                         loader.UpdateProgress(status = status.ChangeMessage(
-                            string.Format(Resources.VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzML_work_around_for__0_,
-                            filePath)));
+                            string.Format(Resources.SkylineWindow_ImportResults_Import__0__,    // Bruker prefers the conversion go unnoted
+                                          filePath)));
                         break;
                     // This is a legacy solution that should no longer ever be invoked.  The mzWiff.exe has
                     // been removed from the installation.

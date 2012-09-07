@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Shannon Joyner <saj9191 .at. gmail.com>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -33,7 +33,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.ToolsUI
 {
     public partial class EditServerDlg : FormEx
     {
@@ -400,6 +400,4 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
     }
-
-    
 }

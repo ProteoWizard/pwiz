@@ -102,11 +102,16 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="reader">The XML reader from which the element is being read</param>
         public virtual void ReadXml(XmlReader reader)
         {
+            ReadXmlName(reader.GetAttribute(ATTR.name));
+        }
+
+        protected void ReadXmlName(string name)
+        {
             if (null != Name)
             {
                 throw new InvalidOperationException();
             }
-            Name = reader.GetAttribute(ATTR.name);
+            Name = name;
 
             Validate();
         }

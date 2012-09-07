@@ -1264,9 +1264,6 @@ Are you sure you want to continue?</value>
   <data name="IsolationScheme_DoValidate_Isolation_scheme_must_have_a_filter_or_a_prespecifed_isolation_window" xml:space="preserve">
     <value>Isolation scheme must have a filter or a prespecifed isolation window</value>
   </data>
-  <data name="IsolationScheme_DoValidate_Isolation_scheme_for_MSe_cannot_contain_isolation_windows" xml:space="preserve">
-    <value>Isolation scheme for MSe cannot contain isolation windows</value>
-  </data>
   <data name="IsolationScheme_DoValidate_Multiplexed_windows_require_at_least_one_window_per_scan" xml:space="preserve">
     <value>Multiplexed windows require at least one window per scan</value>
   </data>
@@ -4013,12 +4010,6 @@ Are you sure you want to continue?</value>
   <data name="TransitionFilter_GetEndFragmentFinder_Unknown_fragment_name_in_Transition_Settings__0__" xml:space="preserve">
     <value>Unknown fragment name in Transition Settings '{0}'</value>
   </data>
-  <data name="SpecialHandlingType_NONE_None" xml:space="preserve">
-    <value>None</value>
-  </data>
-  <data name="SpecialHandlingType_MULTIPLEXED_Multiplexed" xml:space="preserve">
-    <value>Multiplexed</value>
-  </data>
   <data name="ExportOptimize_CE_Collision_Energy" xml:space="preserve">
     <value>Collision Energy</value>
   </data>
@@ -4306,9 +4297,6 @@ Are you sure you want to continue?</value>
   </data>
   <data name="SkylineWindow_FindBackgroundProteome_Background_Proteome" xml:space="preserve">
     <value>Background Proteome</value>
-  </data>
-  <data name="VendorIssueHelper_CreateTempFileSubstitute_Convert_to_mzML_work_around_for__0_" xml:space="preserve">
-    <value>Convert to mzML work-around for {0}</value>
   </data>
   <data name="VendorIssueHelper_ConvertBrukerToMzml_Calculating_hash_of_input_file" xml:space="preserve">
     <value>Calculating hash of input file</value>
@@ -4711,5 +4699,17 @@ Are you sure you want to continue?</value>
   </data>
   <data name="PublishDocumentDlg_UploadSharedZipFile_Click_here_to_view_the_error_details_">
     <value xml:space="preserve">Click here to view the error details.</value>
+  </data>
+  <data name="ToolDescription_Validate_Tools_must_have_a_title">
+    <value xml:space="preserve">Tools must have a title</value>
+  </data>
+  <data name="ToolDescription_Validate_Tools_must_have_a_command_line">
+    <value xml:space="preserve">Tools must have a command line</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Unexpected_name___0___for__1__isolation_scheme">
+    <value xml:space="preserve">Unexpected name '{0}' for {1} isolation scheme</value>
+  </data>
+  <data name="IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation_windows">
+    <value xml:space="preserve">Isolation scheme for all ions cannot contain isolation windows</value>
   </data>
 </root>

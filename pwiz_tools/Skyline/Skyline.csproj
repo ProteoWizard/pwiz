@@ -703,12 +703,6 @@
     <Compile Include="SettingsUI\EditIsolationSchemeDlg.Designer.cs">
       <DependentUpon>EditIsolationSchemeDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\EditServerDlg.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\EditServerDlg.Designer.cs">
-      <DependentUpon>EditServerDlg.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\Irt\AddIrtCalculatorDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -819,12 +813,6 @@
     </Compile>
     <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
     <Compile Include="SettingsUI\SimpleGridViewDriver.cs" />
-    <Compile Include="SettingsUI\ToolOptionsUI.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="SettingsUI\ToolOptionsUI.Designer.cs">
-      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
-    </Compile>
     <Compile Include="SettingsUI\ViewLibraryPepInfo.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepMatching.cs" />
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
@@ -977,9 +965,6 @@
       <DependentUpon>EditRTDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\EditServerDlg.resx">
-      <DependentUpon>EditServerDlg.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\EditStaticModDlg.resx">
       <DependentUpon>EditStaticModDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1001,9 +986,6 @@
       <DependentUpon>SaveSettingsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\ToolOptionsUI.resx">
-      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\TransitionSettingsUI.resx">
       <DependentUpon>TransitionSettingsUI.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1015,6 +997,12 @@
     <EmbeddedResource Include="ToolsUI\ConfigureToolsDlg.resx">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\EditServerDlg.resx">
+      <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
+      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="app.config" />
     <None Include="Properties\Settings.settings">
@@ -1058,6 +1046,18 @@
     </Compile>
     <Compile Include="ToolsUI\ConfigureToolsDlg.designer.cs">
       <DependentUpon>ConfigureToolsDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\EditServerDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\EditServerDlg.Designer.cs">
+      <DependentUpon>EditServerDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ToolsUI\ToolOptionsUI.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ToolsUI\ToolOptionsUI.Designer.cs">
+      <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
     <Compile Include="Util\DataSourceUtil.cs" />
