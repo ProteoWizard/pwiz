@@ -249,7 +249,7 @@ namespace pwiz.Skyline.Util.Extensions
         {
             var listFilters = filters.ToList();
             listFilters.Add(FileDialogFilter(Resources.TextUtil_FileDialogFiltersAll_All_Files, ".*")); // Not L10N
-            return string.Join("|", filters);
+            return string.Join("|", listFilters);
         }
     }
 }
