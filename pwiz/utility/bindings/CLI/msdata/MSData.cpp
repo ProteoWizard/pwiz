@@ -608,12 +608,12 @@ bool Chromatogram::empty()
 
 int SpectrumList::size()
 {
-    return (int) (*base_)->size();
+    try{return (int) (*base_)->size();} CATCH_AND_FORWARD
 }
 
 bool SpectrumList::empty()
 {
-    return (*base_)->empty();
+    try{return (*base_)->empty();} CATCH_AND_FORWARD
 }
 
 SpectrumIdentity^ SpectrumList::spectrumIdentity(int index)
@@ -679,17 +679,17 @@ void SpectrumListSimple::spectra::set(Spectra^ value) {(*base_)->spectra = *valu
 
 int SpectrumListSimple::size()
 {
-    return (*base_)->size();
+    try {return (*base_)->size();} CATCH_AND_FORWARD
 }
 
 bool SpectrumListSimple::empty()
 {
-    return (*base_)->empty();
+    try {return (*base_)->empty();} CATCH_AND_FORWARD
 }
 
 SpectrumIdentity^ SpectrumListSimple::spectrumIdentity(int index)
 {
-    return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)), this);
+    try {return gcnew SpectrumIdentity(&const_cast<b::SpectrumIdentity&>((*base_)->spectrumIdentity((size_t) index)), this);} CATCH_AND_FORWARD
 }
 
 Spectrum^ SpectrumListSimple::spectrum(int index)
@@ -705,12 +705,12 @@ Spectrum^ SpectrumListSimple::spectrum(int index, bool getBinaryData)
 
 int ChromatogramList::size()
 {
-    return (int) (*base_)->size();
+    try {return (int) (*base_)->size();} CATCH_AND_FORWARD
 }
 
 bool ChromatogramList::empty()
 {
-    return (*base_)->empty();
+    try {return (*base_)->empty();} CATCH_AND_FORWARD
 }
 
 ChromatogramIdentity^ ChromatogramList::chromatogramIdentity(int index)
@@ -758,12 +758,12 @@ void ChromatogramListSimple::chromatograms::set(Chromatograms^ value) {(*base_)-
 
 int ChromatogramListSimple::size()
 {
-    return (*base_)->size();
+    try {return (*base_)->size();} CATCH_AND_FORWARD
 }
 
 bool ChromatogramListSimple::empty()
 {
-    return (*base_)->empty();
+    try {return (*base_)->empty();} CATCH_AND_FORWARD
 }
 
 ChromatogramIdentity^ ChromatogramListSimple::chromatogramIdentity(int index)
