@@ -97,6 +97,7 @@ void ToAutomationVector(cli::array<managed_value_type>^ managedArray, automation
 /// prepends function with a single level of scope,
 /// e.g. "Reader::read()" instead of "pwiz::data::msdata::Reader::read()"
 #define CATCH_AND_FORWARD \
+    catch (std::exception&) {throw;} \
     catch (System::Exception^ e) \
     { \
         std::vector<boost::iterator_range<std::string::const_iterator> > tokens; \
