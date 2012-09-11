@@ -1398,6 +1398,7 @@ struct HandlerOrganization : public HandlerContact
         {
             org->parent.reset(new Organization);
             getAttribute(attributes, organization_ref(version), org->parent->id);
+            return Status::Ok;
         }
 
         return HandlerContact::startElement(name, attributes, position);
