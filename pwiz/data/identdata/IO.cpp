@@ -4156,6 +4156,19 @@ struct HandlerSpectrumIdentificationList : public HandlerIdentifiable
 
         return Status::Ok;
     }
+
+    virtual Status endElement(const string& name,
+                              stream_offset position)
+    {
+        // handle final iteration update once final count is known
+        if (name == "SpectrumIdentificationList")
+        {
+            if (ilr_ && ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(silp->spectrumIdentificationResult.size()-1, silp->spectrumIdentificationResult.size(), "reading spectrum identification results")) == IterationListener::Status_Cancel)
+                return Status::Done;
+        }
+        return Status::Ok;
+    }
+
     private:
     const IterationListenerRegistry* ilr_;
     HandlerMeasure handlerMeasure_;
