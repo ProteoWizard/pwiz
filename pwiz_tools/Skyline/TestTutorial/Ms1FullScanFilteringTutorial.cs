@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestTutorial
                 dlg.ReimportResults();
                 dlg.OkDialog();
             });
-            SrmDocument docAfter = WaitForDocumentChangeLoaded(doc);
+            SrmDocument docAfter = WaitForDocumentChangeLoaded(doc, 5*60*1000); // 5 minutes
             AssertEx.IsDocumentState(docAfter, null, 11, 40, 40, 120);
 
             RunUI(SkylineWindow.AutoZoomNone);

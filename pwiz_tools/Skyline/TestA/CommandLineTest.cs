@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -412,6 +413,72 @@ namespace pwiz.SkylineTestA
             output = RunCommand("--in=" + invalidFile);
             Assert.AreEqual(1, CountInstances("Error", output));
             AssertEx.Contains(output, new[] {"line", "column"});
+
+            //Test unexpected parameter formats
+            //CONSIDER: Maybe some more automatic way to keep these lists up to date.
+            TestMissingValueFailures(new[]
+                                    {
+                                        "in",
+                                        "out",
+                                        "import-file",
+                                        "import-replicate-name",
+                                        "import-all",
+                                        "import-naming-pattern",
+                                        "report-name",
+                                        "report-file",
+                                        "report-format",
+//                                        "exp-translist-format",
+                                        "exp-dwell-time",
+                                        "exp-run-length",
+                                        "exp-method-instrument",
+                                        "exp-template",
+                                        "exp-file",
+                                        "exp-strategy",
+                                        "exp-method-type",
+                                        "exp-max-trans",
+                                        "exp-optimizing",
+                                        "exp-scheduling-replicate",
+                                        "tool-add",
+                                        "tool-command",
+                                        "tool-arguments",
+                                        "tool-initial-dir",
+                                        "tool-conflict-resolution",
+                                        "tool-report",
+                                        "report-add",
+                                        "report-conflict-resolution",
+                                        "batch-commands",
+                                    });
+            TestUnexpectedValueFailures(new[]
+                                            {
+                                                "save",
+                                                "import-append",
+                                                "exp-ignore-proteins",
+                                                "exp-add-energy-ramp",
+//                                                "exp-full-scans",
+                                                "tool-output-to-immediate-window",
+                                            });
+        }
+
+        private void TestMissingValueFailures(string[] names)
+        {
+            TestNameValueFailures(names, arg => arg);
+            TestNameValueFailures(names, arg => string.Format("{0}=", arg));
+        }
+
+        private void TestUnexpectedValueFailures(IEnumerable<string> names)
+        {
+            TestNameValueFailures(names, arg => string.Format("{0}=true", arg));
+        }
+
+        private void TestNameValueFailures(IEnumerable<string> names, Func<string, string> getCommandLineForArg)
+        {
+            foreach (var name in names)
+            {
+                string arg = string.Format("--{0}", name);
+                string output = RunCommand(getCommandLineForArg(arg));
+                Assert.AreEqual(1, CountInstances("Error", output), string.Format("No error for argument {0}", arg));
+                Assert.AreEqual(1, CountInstances(arg, output), string.Format("Missing expected argument {0}", arg));
+            }
         }
 
         private static string RunCommand(params string[] inputArgs)
@@ -701,11 +768,11 @@ namespace pwiz.SkylineTestA
             // Test: invalid regular expression (1)
             msg = RunCommand("--in=" + docPath,
                                  "--import-all=" + testFilesDir.FullPath,
-                                 "--import-naming-pattern=",
+                                 "--import-naming-pattern=A",
                                  "--out=" + outPath1);
             // output file should not exist
             Assert.IsFalse(File.Exists(outPath1));
-            Assert.IsTrue(msg.Contains("Error: Regular expression '' does not have any groups."), msg);
+            Assert.IsTrue(msg.Contains("Error: Regular expression 'A' does not have any groups."), msg);
 
 
 

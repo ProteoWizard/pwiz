@@ -275,7 +275,7 @@ namespace pwiz.Skyline
             ResolveSkyrConflictsBySkipping = null;
             _out = output;
 
-            ReportColumnSeparator = ',';
+            ReportColumnSeparator = TextUtil.CsvSeparator;
             MaxTransitionsPerInjection = AbstractMassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             OptimizeType = ExportOptimize.NONE;
             ExportStrategy = ExportStrategy.Single;
@@ -303,26 +303,45 @@ namespace pwiz.Skyline
             public int ValueInt { get { return int.Parse(Value); } }
         }
 
-
         public bool ParseArgs(string[] args)
         {
+            try
+            {
+                return ParseArgsInternal(args);
+            }
+            catch (UsageException x)
+            {
+                _out.WriteLine("Error: {0}", x.Message);
+                return false;
+            }
+            catch (Exception x)
+            {
+                // Unexpected behavior, but better to output the error then appear to crash, and
+                // have Windows write it to the application event log.
+                _out.WriteLine("Error: {0}", x.Message);
+                _out.WriteLine(x.StackTrace);
+                return false;
+            }
+        }
 
+        private bool ParseArgsInternal(IEnumerable<string> args)
+        {
             foreach (string s in args)
             {
                 var pair = new NameValuePair(s);
                 if (string.IsNullOrEmpty(pair.Name))
                     continue;
 
-                if (pair.Name.Equals("in"))
+                if (IsNameValue(pair, "in"))
                 {
-                    SkylineFile = Path.GetFullPath(pair.Value);
+                    SkylineFile = GetFullPath(pair.Value);
                     // Set requiresInCommand to be true so if SkylineFile is null or empty it still complains.
                     RequiresSkylineDocument = true;
                 }
 
                 // A command that exports all the tools to a text file in a SkylineRunner form for --batch-commands
                 // Not advertised.
-                else if (pair.Name.Equals("tool-list-export"))
+                else if (IsNameValue(pair, "tool-list-export"))
                 {
                     string pathToOutputFile = pair.Value;
                     using (StreamWriter sw = new StreamWriter(pathToOutputFile))
@@ -345,13 +364,13 @@ namespace pwiz.Skyline
                 }
 
                  // Import a skyr file.
-                else if (pair.Name.Equals("report-add"))
+                else if (IsNameValue(pair, "report-add"))
                 {
                     ImportingSkyr = true;
                     SkyrPath = pair.Value;
                 }
 
-                else if (pair.Name.Equals("report-conflict-resolution"))
+                else if (IsNameValue(pair, "report-conflict-resolution"))
                 {
                     string input = pair.Value.ToLower();
                     if (input == "overwrite")
@@ -364,41 +383,41 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (pair.Name.Equals("tool-add"))
+                else if (IsNameValue(pair, "tool-add"))
                 {
                     ImportingTool = true;
                     ToolName = pair.Value;
                 }
 
-                else if (pair.Name.Equals("tool-command"))
+                else if (IsNameValue(pair, "tool-command"))
                 {
                     ImportingTool = true;
                     ToolCommand = pair.Value;
                 }
 
-                else if (pair.Name.Equals("tool-arguments"))
+                else if (IsNameValue(pair, "tool-arguments"))
                 {
                     ImportingTool = true;
                     ToolArguments = pair.Value;
                 }
 
-                else if (pair.Name.Equals("tool-initial-dir"))
+                else if (IsNameValue(pair, "tool-initial-dir"))
                 {
                     ImportingTool = true;
                     ToolInitialDirectory = pair.Value;
                 }
-                else if (pair.Name.Equals("tool-report"))
+                else if (IsNameValue(pair, "tool-report"))
                 {
                     ImportingTool = true;
                     ToolReportTitle = pair.Value;
                 }
-                else if (pair.Name.Equals("tool-output-to-immediate-window"))
+                else if (IsNameOnly(pair, "tool-output-to-immediate-window"))
                 {
                     ImportingTool = true;
                     ToolOutputToImmediateWindow = true;
                 }
 
-                else if (pair.Name.Equals("tool-conflict-resolution"))
+                else if (IsNameValue(pair, "tool-conflict-resolution"))
                 {
                     string input = pair.Value.ToLower();
                     if (input == "overwrite")
@@ -412,49 +431,49 @@ namespace pwiz.Skyline
                 }
 
                 // Run each line of a text file like a SkylineRunner command
-                else if (pair.Name.Equals("batch-commands"))
+                else if (IsNameValue(pair, "batch-commands"))
                 {
-                    BatchCommandsPath = pair.Value;
+                    BatchCommandsPath = GetFullPath(pair.Value);
                     RunningBatchCommands = true;
                 }
 
-                else if (pair.Name.Equals("save"))
+                else if (IsNameOnly(pair, "save"))
                 {
                     Saving = true;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("out"))
+                else if (IsNameValue(pair, "out"))
                 {
-                    SaveFile = Path.GetFullPath(pair.Value);
+                    SaveFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("import-file"))
+                else if (IsNameValue(pair, "import-file"))
                 {
-                    ReplicateFile = Path.GetFullPath(pair.Value);
+                    ReplicateFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("import-replicate-name"))
+                else if (IsNameValue(pair, "import-replicate-name"))
                 {
                     ReplicateName = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("import-append"))
+                else if (IsNameOnly(pair, "import-append"))
                 {
                     ImportAppend = true;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("import-all"))
+                else if (IsNameValue(pair, "import-all"))
                 {
-                    ImportSourceDirectory = Path.GetFullPath(pair.Value);
+                    ImportSourceDirectory = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("import-naming-pattern"))
+                else if (IsNameValue(pair, "import-naming-pattern"))
                 {
                     var importNamingPatternVal = pair.Value;
                     RequiresSkylineDocument = true;
@@ -486,35 +505,35 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (pair.Name.Equals("report-name"))
+                else if (IsNameValue(pair, "report-name"))
                 {
                     ReportName = pair.Value;
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("report-file"))
+                else if (IsNameValue(pair, "report-file"))
                 {
-                    ReportFile = Path.GetFullPath(pair.Value);
+                    ReportFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("report-format"))
+                else if (IsNameValue(pair, "report-format"))
                 {
                     if (pair.Value.Equals("TSV", StringComparison.CurrentCultureIgnoreCase))
-                        ReportColumnSeparator = '\t';
+                        ReportColumnSeparator = TextUtil.SEPARATOR_TSV;
                     else if (pair.Value.Equals("CSV", StringComparison.CurrentCultureIgnoreCase))
-                        ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
+                        ReportColumnSeparator = TextUtil.CsvSeparator;
                     else
                     {
                         _out.WriteLine(
                             "Warning: The report format {0} is invalid. It must be either \"CSV\" or \"TSV\".",
                             pair.Value);
                         _out.WriteLine("Defaulting to CSV.");
-                        ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
+                        ReportColumnSeparator = TextUtil.CsvSeparator;
                     }
                 }
 
-                else if (pair.Name.Equals("exp-translist-instrument"))
+                else if (IsNameValue(pair, "exp-translist-instrument"))
                 {
                     try
                     {
@@ -532,7 +551,7 @@ namespace pwiz.Skyline
                         _out.WriteLine("No transition list will be exported.");
                     }
                 }
-                else if (pair.Name.Equals("exp-method-instrument"))
+                else if (IsNameValue(pair, "exp-method-instrument"))
                 {
                     try
                     {
@@ -550,12 +569,12 @@ namespace pwiz.Skyline
                         _out.WriteLine("No method will be exported.");
                     }
                 }
-                else if (pair.Name.Equals("exp-file"))
+                else if (IsNameValue(pair, "exp-file"))
                 {
-                    ExportPath = Path.GetFullPath(pair.Value);
+                    ExportPath = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
-                else if (pair.Name.Equals("exp-strategy"))
+                else if (IsNameValue(pair, "exp-strategy"))
                 {
                     ExportStrategySet = true;
                     RequiresSkylineDocument = true;
@@ -579,7 +598,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (pair.Name.Equals("exp-method-type"))
+                else if (IsNameValue(pair, "exp-method-type"))
                 {
                     var type = pair.Value;
                     RequiresSkylineDocument = true;
@@ -600,7 +619,7 @@ namespace pwiz.Skyline
                     }
                 }
 
-                else if (pair.Name.Equals("exp-max-trans"))
+                else if (IsNameValue(pair, "exp-max-trans"))
                 {
                     //This one can't be kept within bounds because the bounds depend on the instrument
                     //and the document. 
@@ -618,7 +637,7 @@ namespace pwiz.Skyline
                     RequiresSkylineDocument = true;
                 }
 
-                else if (pair.Name.Equals("exp-optimizing"))
+                else if (IsNameValue(pair, "exp-optimizing"))
                 {
                     try
                     {
@@ -633,22 +652,22 @@ namespace pwiz.Skyline
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (pair.Name.Equals("exp-scheduling-replicate"))
+                else if (IsNameValue(pair, "exp-scheduling-replicate"))
                 {
                     SchedulingReplicate = pair.Value;
                     RequiresSkylineDocument = true;
                 }
-                else if (pair.Name.Equals("exp-template"))
+                else if (IsNameValue(pair, "exp-template"))
                 {
-                    TemplateFile = Path.GetFullPath(pair.Value);
+                    TemplateFile = GetFullPath(pair.Value);
                     RequiresSkylineDocument = true;
                 }
-                else if (pair.Name.Equals("exp-ignore-proteins"))
+                else if (IsNameOnly(pair, "exp-ignore-proteins"))
                 {
                     IgnoreProteins = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (pair.Name.Equals("exp-dwell-time"))
+                else if (IsNameValue(pair, "exp-dwell-time"))
                 {
                     try
                     {
@@ -664,12 +683,12 @@ namespace pwiz.Skyline
                     }
                     RequiresSkylineDocument = true;
                 }
-                else if (pair.Name.Equals("exp-add-energy-ramp"))
+                else if (IsNameOnly(pair, "exp-add-energy-ramp"))
                 {
                     AddEnergyRamp = true;
                     RequiresSkylineDocument = true;
                 }
-                else if (pair.Name.Equals("exp-run-length"))
+                else if (IsNameValue(pair, "exp-run-length"))
                 {
                     try
                     {
@@ -718,6 +737,51 @@ namespace pwiz.Skyline
             return true;
         }
 
+        private static string GetFullPath(string path)
+        {
+            return Path.GetFullPath(path);
+        }
+
+        private bool IsNameOnly(NameValuePair pair, string name)
+        {
+            if (!pair.Name.Equals(name))
+                return false;
+            if (!string.IsNullOrEmpty(pair.Value))
+                throw new ValueUnexpectedException(name);
+            return true;
+        }
+
+        private static bool IsNameValue(NameValuePair pair, string name)
+        {
+            if (!pair.Name.Equals(name))
+                return false;
+            if (string.IsNullOrEmpty(pair.Value))
+                throw new ValueMissingException(name);
+            return true;
+        }
+
+        private class ValueMissingException : UsageException
+        {
+            public ValueMissingException(string name)
+                : base(string.Format("The argument --{0} requires a value and must be specified in the format --name=value",  name))
+            {
+            }
+        }
+
+        private class ValueUnexpectedException : UsageException
+        {
+            public ValueUnexpectedException(string name)
+                : base(string.Format("The argument --{0} should not have a value specified", name))
+            {
+            }
+        }
+
+        private class UsageException : ArgumentException
+        {
+            protected UsageException(string message) : base(message)
+            {
+            }
+        }
     }
 
     public class CommandLine : IDisposable
