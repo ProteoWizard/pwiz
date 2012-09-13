@@ -36,6 +36,17 @@
 using namespace std;
 using namespace BiblioSpec;
 
+static void WriteErrorLines(string s)
+{
+    istringstream iss(s);
+    char buffer[4096];
+    while(iss)
+    {
+        iss.getline(buffer, sizeof(buffer));
+        cerr << "ERROR: " << buffer << endl;
+    }
+}
+
 int main(int argc, char* argv[])
 {
 #ifdef _MSC_VER
@@ -130,14 +141,14 @@ int main(int argc, char* argv[])
                 throw errorMsg;
             }
         } catch(BlibException& e){
-            cerr << "ERROR: " << e.what() << endl;
+            WriteErrorLines(e.what());
             if( ! e.hasFilename() ){
                 cerr << "ERROR: reading file " << inFiles.at(i) << endl;
             }
             success = false;
         } catch(std::exception& e){
-            cerr << "ERROR: " << e.what() 
-                 << " in file '" << inFiles.at(i) << "'." << endl;
+            WriteErrorLines(e.what());
+            cerr << "ERROR: reading file " << inFiles.at(i) << endl;
             success = false;
         } catch(string s){ // in case a throwParseError is not caught
             cerr << "ERROR: " << s << endl;
