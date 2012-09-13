@@ -378,6 +378,7 @@ namespace tagrecon
 		mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
 		result.mvh = 0.0;
 		result.mzFidelity = 0.0;
+        result.rankScore = 0.0;
 		//result.mzSSE = 0.0;
 		//result.newMZFidelity = 0.0;
 		//result.mzMAE = 0.0;

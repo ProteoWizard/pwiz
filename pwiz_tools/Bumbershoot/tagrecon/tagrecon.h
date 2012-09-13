@@ -104,26 +104,34 @@ namespace tagrecon
             modificationMass = modMass;
             nTermMatch = nTerm;
             cTermMatch = cTerm;
+            // Set later for modification localization.
+            lowIndex = 0;
+            highIndex = 0;
+            modMassTolerance = 0.0f;
         }
 
         bool operator < (const TagMatchInfo& rhs) const
         {
-            if(spectrum->id==rhs.spectrum->id)
+            if(modificationMass == rhs.modificationMass)
                 if(nTermMatch == rhs.nTermMatch)
                     if(cTermMatch == rhs.cTermMatch)
-                        return modificationMass < rhs.modificationMass;
+                        return spectrum->id < rhs.spectrum->id;
                     else
                         return cTermMatch < rhs.cTermMatch;
                 else
                     return nTermMatch < rhs.nTermMatch;
             else
-                return spectrum->id < rhs.spectrum->id;
+                return modificationMass < rhs.modificationMass;
         }
 
         Spectrum* spectrum;
         float modificationMass;
         TermMassMatch nTermMatch;
         TermMassMatch cTermMatch;
+        // Mod localization variables
+        size_t lowIndex;
+        size_t highIndex;
+        float modMassTolerance;
     };
 
     struct AATagToSpectraMap

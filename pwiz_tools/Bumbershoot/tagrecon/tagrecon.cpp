@@ -346,7 +346,8 @@ namespace tagrecon
             g_rtConfig->untaggedSpectraPrecMassTolerance.push_back(MZTolerance(g_rtConfig->UntaggedSpectraPrecMZTol.value * z,
                                                                           g_rtConfig->UntaggedSpectraPrecMZTol.units) );
         }
-
+        //for(size_t index = 0; index < g_rtConfig->PrecursorMassTolerance.size(); ++index)
+        //    cout << index << "," << g_rtConfig->PrecursorMassTolerance[index];
    		// Locate all tags with same amino acid sequence to a single location.        
         typedef set< shared_ptr<AATagToSpectraMap>, AATagToSpectraMapCompare > UniqueTags;
         UniqueTags  uniqueTags;
@@ -696,33 +697,40 @@ namespace tagrecon
 
 		boost::int64_t numComparisonsDone = 0;
 		//cout << "\t\t\t\t\t" << candidate.sequence() << "," << modMass << "," << locStart << "," << locEnd << endl;
-		// Get all possible amino acid substitutions that fit the modification mass with in the mass tolerance
-		DynamicModSet possibleModifications;
+		
+        // Get all possible amino acid substitutions that fit the modification mass with in the mass tolerance
+		// Generate variants of the current peptide using the possible substitutions/modifications
+        vector <DigestedPeptide> possibleVariants;
         size_t numDynamicMods = candidate.modifications().size();
         // Get all possible amino acid substitutions or preferred mass shifts 
         // that fit the mod mass within the tolerance
         size_t maxCombin = 1 , minCombin = 1;
         if(g_rtConfig->unknownMassShiftSearchMode == MUTATIONS)
-            possibleModifications = deltaMasses->getPossibleSubstitutions(modMass, massTol);
+        {
+            DynamicModSet possibleModifications = deltaMasses->getPossibleSubstitutions(modMass, massTol);
+            MakePeptideVariants(candidate, possibleVariants, 1, 1, possibleModifications, locStart, locEnd);
+        }
         else if(g_rtConfig->unknownMassShiftSearchMode == PREFERRED_DELTA_MASSES)
-            possibleModifications = g_rtConfig->preferredDeltaMasses.getMatchingMassShifts(modMass, massTol, maxCombin, minCombin);
-            
-		if(possibleModifications.size() == 0)
+        {
+            vector<DynamicModSet> modSets = g_rtConfig->preferredDeltaMasses.getMatchingMassShifts(modMass, massTol);
+            BOOST_FOREACH(const DynamicModSet& possibleModifications, modSets)
+                MakePeptideVariants(candidate, possibleVariants, 1, 1, possibleModifications, locStart, locEnd);
+        }
+        //cout << candidate.sequence() << "," << candidate.modifications().size() << "," << possibleVariants.size() << endl;    
+		if(possibleVariants.size() == 0)
             return numComparisonsDone;
-
-        // Generate variants of the current peptide using the possible substitutions
-        vector <DigestedPeptide> possibleVariants;
-        MakePeptideVariants(candidate, possibleVariants, minCombin, maxCombin, possibleModifications, locStart, locEnd);
+        
         // For each variant
         for(size_t aVariantIndex = 0; aVariantIndex < possibleVariants.size(); aVariantIndex++)
         {
             const DigestedPeptide& variant = possibleVariants[aVariantIndex];
+            //cout << "\t\t" << variant.sequence() << "," << variant.modifications().size() << endl;
             // Check to make sure that the insertion of sub or preferred PTM doesn't put the mass 
             // of the peptide over the precursor mass tolerance.
-            float neutralMass = g_rtConfig->UseAvgMassOfSequences ? ((float) variant.molecularWeight(0,true))
-                : (float) variant.monoisotopicMass(0,true);
-            float massDiff = fabs(neutralMass - spectrum->mOfPrecursor);
-            if(massDiff > g_rtConfig->PrecursorMassTolerance[spectrum->id.charge-1])
+            double neutralMass = g_rtConfig->UseAvgMassOfSequences ? variant.molecularWeight() : variant.monoisotopicMass();
+            double massError = spectrum->mOfPrecursor-neutralMass;
+            //cout << "\t\t" << massDiff << ","  << (spectrum->id.charge-1) << "," << g_rtConfig->PrecursorMassTolerance[spectrum->id.charge-1] << endl;
+            if(fabs(massError) > g_rtConfig->PrecursorMassTolerance[spectrum->id.charge-1])
                 continue;
 
             string variantSequence = PEPTIDE_N_TERMINUS_SYMBOL + variant.sequence() + PEPTIDE_C_TERMINUS_SYMBOL;
@@ -739,33 +747,34 @@ namespace tagrecon
             // Compute the predicted spectrum and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
             spectrum->ScoreSequenceVsSpectrum( result, sequenceIons, NTT );
-
-            // Compute the true modification mass. The modMass of in the arguments is used to look up
-            // the canidate mods with a certain tolerance. It's not the true modification mass of the
-            // peptide.
-            float trueModificationMass = g_rtConfig->UseAvgMassOfSequences ? variant.modifications().averageDeltaMass()-candidate.modifications().averageDeltaMass() : variant.modifications().monoisotopicDeltaMass() - candidate.modifications().monoisotopicDeltaMass();
-
-            result.massError = spectrum->mOfPrecursor-(mass+trueModificationMass);
+            result.massError = massError;
+            //cout << "\t\t" << result.mvh << "," << result.massError << endl;
             // Assign the peptide identification to the protein by loci
-            result.proteins.insert(proteinId);
-            result._isDecoy = isDecoy;
+            if( result.mvh >= g_rtConfig->MinResultScore )
+            {
+                result.proteins.insert(proteinId);
+                result._isDecoy = isDecoy;
+            }
             // cout << "\t\t\t\t\t" << result.mvh << "," << result.mzFidelity << endl;
 
             ++ numComparisonsDone;
 
             // Update some search stats and add the result to the spectrum
-            boost::mutex::scoped_lock lock(*spectrum->mutex);
-            if( isDecoy ) 
             {
-                ++ spectrum->numDecoyComparisons;
-                ++ spectrum->detailedCompStats.numDecoyModComparisons;
+                boost::mutex::scoped_lock guard(*spectrum->mutex);
+                if( isDecoy ) 
+                {
+                    ++ spectrum->numDecoyComparisons;
+                    ++ spectrum->detailedCompStats.numDecoyModComparisons;
+                }
+                else
+                {
+                    ++ spectrum->numTargetComparisons;
+                    ++ spectrum->detailedCompStats.numTargetModComparisons;
+                }
+                if( result.mvh >= g_rtConfig->MinResultScore )
+                    spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
             }
-            else
-            {
-                ++ spectrum->numTargetComparisons;
-                ++ spectrum->detailedCompStats.numTargetModComparisons;
-            }
-            spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
         }
 		return numComparisonsDone;
 	}
@@ -816,7 +825,7 @@ namespace tagrecon
 		for(size_t variantIndex = 0; variantIndex < modificationVariants.size(); variantIndex++)
         {
 			const DigestedPeptide& variant = modificationVariants[variantIndex];
-
+            double neutralMass = g_rtConfig->UseAvgMassOfSequences ? variant.molecularWeight() : variant.monoisotopicMass();
 			// Initialize search result
             SearchResultPtr resultPtr(new SearchResult(variant));
             SearchResult& result = *resultPtr;
@@ -829,29 +838,24 @@ namespace tagrecon
 			// Compute the predicted spectru;m and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
 			spectrum->ScoreSequenceVsSpectrum( result, sequenceIons, NTT );
-			// Assign the modification mass and the mass error
-			// Compute the true modification mass. The modMass in the arguments is used to look up
-			// the canidate mods with a certain tolerance. It's not the true modification mass of the
-			// peptide.
-			float trueModificationMass = g_rtConfig->UseAvgMassOfSequences ? variant.modifications().averageDeltaMass()-candidate.modifications().averageDeltaMass() : variant.modifications().monoisotopicDeltaMass() - candidate.modifications().monoisotopicDeltaMass();
+			result.massError = spectrum->mOfPrecursor-neutralMass;
+            ++numComparisonsDone;
 
-			result.massError = spectrum->mOfPrecursor-(mass+trueModificationMass);
-			// Assign the peptide identification to the protein by loci
-			result.proteins.insert(proteinId);
+            if(result.mvh < g_rtConfig->MinResultScore)
+                continue;
+            // Assign the peptide identification to the protein by loci
+            result.proteins.insert(proteinId);
             result._isDecoy = isDecoy;
             // Score to beat
-            if(topMVHScore<result.mvh)
-                topMVHScore = result.mvh;
+            topMVHScore = max(topMVHScore, result.mvh);
             //if(debug)
             //    cout << tagrecon::getInterpretation(const_cast <DigestedPeptide&>(variant)) << "->" << result.mvh << endl;
             // Save the localization result
             localizationPossibilities.insert(make_pair(result.mvh, resultPtr));
-
-            ++ numComparisonsDone;
 		}
 
         {
-            boost::mutex::scoped_lock lock(*spectrum->mutex);
+            boost::mutex::scoped_lock guard(*spectrum->mutex);
             if( isDecoy ) 
             {
                 spectrum->numDecoyComparisons += numComparisonsDone;
@@ -1100,9 +1104,6 @@ namespace tagrecon
         
         // Store all tag matches and their modification specific attributes
         flat_set<TagMatchInfo> tagMatches;
-        flat_map<TagMatchInfo,size_t> lowIndex;
-        flat_map<TagMatchInfo,size_t> highIndex;
-        flat_map<TagMatchInfo,float> substitutionLookupTolerance;
         
         // For each of the tag matched index
         for(;tagMatchesBegin != tagMatchesEnd; ++tagMatchesBegin)
@@ -1113,15 +1114,15 @@ namespace tagrecon
             const shared_ptr<AATagToSpectraMap>& matchedTags = (*tagMatchesBegin).second;
             double peptidePrefixMass = candidateTags[tagMatchStart].nTerminusMass;
             double peptideSuffixMass = candidateTags[tagMatchStart].cTerminusMass;
+            //cout << "\t" << candidateTags[tagMatchStart].tag << "," << candidateTags[tagMatchStart].nTerminusMass << "," << candidateTags[tagMatchStart].cTerminusMass << "," << tagMatchStart << endl;
             
             BOOST_FOREACH(const TagSpectrumInfo& tag, matchedTags->tags)
             {
                 float nTerminusDeviation = fabs( tag.nTerminusMass - peptidePrefixMass );
 				float cTerminusDeviation = fabs( tag.cTerminusMass - peptideSuffixMass );
-                
+                //cout << "\t\t" << (nTerminusDeviation+cTerminusDeviation) << "," << tag.candidateTag << endl;               
 				if(nTerminusDeviation+cTerminusDeviation >= g_rtConfig->MaxModificationMassPlus) 
 					continue;
-               
                 // Get the charge state of the fragment ions that gave rise to the tag
                 int tagCharge = tag.tagChargeState;
                 // Figure out if the termini matched
@@ -1142,7 +1143,7 @@ namespace tagrecon
                 // Don't bother interpreting the mod mass if it's outside the user-set limits.
 				if( modMass < -1.0*g_rtConfig->MaxModificationMassMinus || modMass > g_rtConfig->MaxModificationMassPlus )
 					continue;
-                
+                //cout << "\t\t" << spectrum->id << "," << modMass << "," << nTermMatch << "," << cTermMatch << endl;
                 // Make a tag match and remember some mod related attributes
                 TagMatchInfo tagMatch(spectrum, modMass, nTermMatch, cTermMatch);
                 size_t tagMisMatchLowIndex = 0;
@@ -1162,20 +1163,18 @@ namespace tagrecon
                     subMassTol = g_rtConfig->CTerminalMassTolerance[tagCharge-1];
                 }
 
-                // Store the mod movement indices and also the tag match
-                lowIndex[tagMatch] = min(tagMisMatchLowIndex, lowIndex[tagMatch]);
-                highIndex[tagMatch] = max(tagMisMatchHighIndex, highIndex[tagMatch]);
-                substitutionLookupTolerance[tagMatch] = max(subMassTol, substitutionLookupTolerance[tagMatch]);
+                tagMatch.lowIndex = tagMisMatchLowIndex;
+                tagMatch.highIndex = tagMisMatchHighIndex;
+                tagMatch.modMassTolerance = subMassTol;
+                //cout << "\t\t" << tagMatch.lowIndex << "," << tagMatch.highIndex << "," << tagMatch.modMassTolerance << endl;
                 tagMatches.insert(tagMatch);
 
                 // Score the peptide without the PTM if the modificaiton mass is less than 5.0 daltons.
                 // This would catch all parent mass errors.
-                if(g_rtConfig->unknownMassShiftSearchMode != INACTIVE && fabs(modMass) <= 5.0)
+                if(g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS && fabs(modMass) <= 5.0)
                 {
                     TagMatchInfo unmodTagMatch(spectrum, 0.0f, MASS_MATCH, MASS_MATCH);
                     tagMatches.insert(unmodTagMatch);
-                    lowIndex[unmodTagMatch] = 0;
-                    highIndex[unmodTagMatch] = 0;
                 }
             }
         }
@@ -1183,13 +1182,13 @@ namespace tagrecon
         // For each unique tag match
         for(flat_set<TagMatchInfo>::const_iterator mItr = tagMatches.begin(); mItr != tagMatches.end(); ++mItr)
         {
-            TagMatchInfo tagMatch = (*mItr);
+            const TagMatchInfo& tagMatch = (*mItr);
 
             Spectrum* spectrum = tagMatch.spectrum;
             int spectrumCharge = spectrum->id.charge;
-
+            //cout << "\t\t" << (spectrumCharge-1) << "," << g_rtConfig->PrecursorMassTolerance[spectrumCharge-1] << endl;
             if(tagMatch.nTermMatch == MASS_MATCH && tagMatch.cTermMatch == MASS_MATCH && 
-                fabs(tagMatch.modificationMass) <=g_rtConfig->PrecursorMassTolerance[spectrumCharge-1])
+                fabs(tagMatch.modificationMass) <= g_rtConfig->PrecursorMassTolerance[spectrumCharge-1])
             {
                 // If there are no n-terminal and c-terminal delta mass differences then
                 // score the match as an unmodified sequence.
@@ -1200,13 +1199,16 @@ namespace tagrecon
                 result.precursorMassHypothesis.mass = spectrum->mOfPrecursor;
                 result.precursorMassHypothesis.massType = g_rtConfig->UseAvgMassOfSequences ? MassType_Average : MassType_Monoisotopic;
                 result.precursorMassHypothesis.charge = spectrum->id.charge;
+                result.massError = spectrum->mOfPrecursor - neutralMass;
                 if(fragmentIonsByChargeState[spectrumCharge-1].empty())
                     CalculateSequenceIons( candidate, spectrumCharge, &fragmentIonsByChargeState[spectrumCharge-1], spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
                 spectrum->ScoreSequenceVsSpectrum( result, fragmentIonsByChargeState[spectrumCharge-1], NTT );
 
-                result.massError = spectrum->mOfPrecursor - neutralMass;
-				result.proteins.insert(proteinId);
-                result._isDecoy = isDecoy;
+                if( result.mvh >= g_rtConfig->MinResultScore )
+                {
+				    result.proteins.insert(proteinId);
+                    result._isDecoy = isDecoy;
+                }
 
                 ++numComparisonsDone;
 
@@ -1223,7 +1225,8 @@ namespace tagrecon
                     else
                         ++ spectrum->numTargetComparisons;
 
-                    spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
+                    if( result.mvh >= g_rtConfig->MinResultScore )
+                        spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
                 }
             } 
             else if(g_rtConfig->unknownMassShiftSearchMode !=  INACTIVE)
@@ -1235,44 +1238,38 @@ namespace tagrecon
                 
                 // Which terminal is a mass mismatch?
                 TermType misMatchTerm = NONE;
-                misMatchTerm = (tagMatch.nTermMatch == MASS_MISMATCH && tagMatch.cTermMatch == MASS_MATCH) ? NTERM : misMatchTerm;
-                misMatchTerm = (tagMatch.nTermMatch == MASS_MATCH && tagMatch.cTermMatch == MASS_MISMATCH) ? CTERM : misMatchTerm;
+                if(tagMatch.nTermMatch == MASS_MISMATCH && tagMatch.cTermMatch == MASS_MATCH)
+                    misMatchTerm = NTERM;
+                else if(tagMatch.nTermMatch == MASS_MATCH && tagMatch.cTermMatch == MASS_MISMATCH)
+                    misMatchTerm = CTERM;
                 
-                // Check to remove unfeasible modification decorations
-                // If we are configured to reconcile the modificaitons 
-                // against a small list, check to make sure that the 
-                // current mod mass is in that list.
+                // Check to remove unfeasible modification decorations. If we are configured to reconcile the modificaitons 
+                // against a small list, check to make sure that the current mod mass is in that list. If we are in the blind 
+                // or mutation mode, make sure we are not picking any irregular mods like -16 on M+16 or terminal.
                 bool legitimateModMass = true;
                 if(g_rtConfig->unknownMassShiftSearchMode == PREFERRED_DELTA_MASSES) 
-                   legitimateModMass &= g_rtConfig->preferredDeltaMasses.containsMassShift(tagMatch.modificationMass, modMassTolerance);
-                
-                // If we are in the blind or mutation mode, make sure we are not picking any
-                // irregular mods like -16 on M+16 or terminal.
-                if(g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS ||
-                    g_rtConfig->unknownMassShiftSearchMode == MUTATIONS)
+                   legitimateModMass = g_rtConfig->preferredDeltaMasses.containsMassShift(tagMatch.modificationMass, modMassTolerance);
+                else if(g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS || g_rtConfig->unknownMassShiftSearchMode == MUTATIONS)
                     legitimateModMass = checkForModificationSanity(candidate, tagMatch.modificationMass, modMassTolerance);
-                
-                int modLowIndex = lowIndex[tagMatch];
-                int modHighIndex = highIndex[tagMatch];
-                float lookupTol = substitutionLookupTolerance[tagMatch];
+
+                if(!legitimateModMass)
+                    continue;
+                //cout << "\t\t" << legitimateModMass << "," << misMatchTerm << endl;
+                int modLowIndex = tagMatch.lowIndex;
+                int modHighIndex = tagMatch.highIndex;
+                float lookupTol = tagMatch.modMassTolerance;
                 // Try to explain away this modification
                 if( legitimateModMass && misMatchTerm != NONE) 
                 {
-
                     // If the user configured the search for either substitutions or preferred mass shifts
-                    if(g_rtConfig->unknownMassShiftSearchMode ==  MUTATIONS||
-                        g_rtConfig->unknownMassShiftSearchMode == PREFERRED_DELTA_MASSES) 
+                    if(g_rtConfig->unknownMassShiftSearchMode ==  MUTATIONS || g_rtConfig->unknownMassShiftSearchMode == PREFERRED_DELTA_MASSES) 
                     {
                         // Find the substitutions or PDMs that fit the mass, generate variants and score them.
                         numComparisonsDone += 
                             ScoreKnownModification(candidate, neutralMass, tagMatch.modificationMass, modLowIndex, 
                                                    modHighIndex,spectrum, proteinId, lookupTol, NTT, isDecoy );
-                    }
-
-                    // If the user wants us to find unknown modifications perform some sanity checks before scoring.
-                    // First, check to see if the mod can be explained away by either growing or shrinking the peptide terminal.
-                    if(g_rtConfig->unknownMassShiftSearchMode ==  BLIND_PTMS && 
-                        checkForTerminalErrors(protein, candidate, tagMatch.modificationMass, 
+                    } else if (g_rtConfig->unknownMassShiftSearchMode ==  BLIND_PTMS && 
+                               checkForTerminalErrors(protein, candidate, tagMatch.modificationMass, 
                                                         max(lookupTol,(float) NEUTRON), misMatchTerm) ) 
                     {
 
@@ -1321,8 +1318,11 @@ namespace tagrecon
                         CalculateSequenceIons( candidate, z+1, &fragmentIonsByChargeState[z], spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
                     spectrum->ScoreSequenceVsSpectrum( result, fragmentIonsByChargeState[z], NTT );
                     result.massError = spectrum->mOfPrecursor - neutralMass;
-                    result.proteins.insert(proteinId);
-                    result._isDecoy = isDecoy;
+                    if(result.mvh >= g_rtConfig->MinResultScore)
+                    {
+                        result.proteins.insert(proteinId);
+                        result._isDecoy = isDecoy;
+                    }
                     // Insert the result.
                     {
                         boost::mutex::scoped_lock lock(*spectrum->mutex);
@@ -1331,14 +1331,13 @@ namespace tagrecon
                         else
                             ++ spectrum->numTargetComparisons;
 
-                        if(result.mvh > g_rtConfig->MinResultScore)
+                        if(result.mvh >= g_rtConfig->MinResultScore)
                             spectrum->resultsByCharge[z].add( resultPtr );         
                     }
                 }
             }
         }
 		return numComparisonsDone;
-
     }
 
     void QueryProteinTagReconMode(const proteinData& protein)
@@ -1381,6 +1380,7 @@ namespace tagrecon
             TagMatches::const_iterator tIterEnd = tagMatches.upper_bound(cTerminalOffset - 1);
             BOOST_FOREACH(const DigestedPeptide& variant, peptideVariants)
             {
+                //cout << variant.sequence() << "," << variant.modifications().size() << endl;
                 boost::int64_t queryComparisonCount = QueryPeptideTagRecon( protein, variant, protein.getName(),
                                                                             isDecoy, tIterBegin, tIterEnd,
                                                                             g_rtConfig->EstimateSearchTimeOnly );
@@ -1517,8 +1517,6 @@ namespace tagrecon
     {
         g_rtConfig->NETRewardVector.resize(3);
         fill(g_rtConfig->NETRewardVector.begin(), g_rtConfig->NETRewardVector.end(), 0);
-        if(!g_rtConfig->UseNETAdjustment)
-            return;
         
         cout << "Computing NET probabilities." << endl;
         Timer timer;
@@ -1552,7 +1550,7 @@ namespace tagrecon
             for(size_t net=0; net < 3; ++net)
                 g_rtConfig->NETRewardVector[net] += NETStatsByThread[i][net];
 
-        // Normalize and compute the log probability of findind a peptide in each class by random chance
+        // Normalize and compute the log probability of finding a peptide in each class by random chance
         double sum = accumulate(g_rtConfig->NETRewardVector.begin(), g_rtConfig->NETRewardVector.end(), 0.0);
         for(size_t index=0; index < g_rtConfig->NETRewardVector.size(); ++index) 
             if(g_rtConfig->NETRewardVector[index] > 0)
@@ -1679,7 +1677,8 @@ namespace tagrecon
 			cout << "Read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
 
 			proteins.random_shuffle(); // randomize order to optimize work distribution
-            ComputeNETProbabilities(); // Compute the penalties for a peptide's enzymatic status
+            if(g_rtConfig->UseNETAdjustment)
+                ComputeNETProbabilities(); // Compute the penalties for a peptide's enzymatic status
 			// Split the database into multiple parts to distrubute it over the cluster
 			#ifdef USE_MPI
 				if( g_numChildren > 0 )

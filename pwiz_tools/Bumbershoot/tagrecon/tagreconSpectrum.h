@@ -137,25 +137,16 @@ namespace tagrecon
             return (value-minScore)/div;
         }
 
-		/*** 
-			Operator to sort the search scores based on total scores (MVH)
-			This function sorts search results based on mvh, sequence and 
-			followed by modification location in that sequence. 
-		*/
+		/// Search results are sorted based on MVH. 
 		bool operator< ( const SearchResult& rhs ) const
 		{
-			if( rankScore == rhs.rankScore ) {
-				return (static_cast<const Peptide&>(*this)) < (static_cast<const Peptide&>(rhs));
-			} else {
-				return rankScore < rhs.rankScore;
-			}
+			return mvh < rhs.mvh;
 		}
 
 		/// Operator to compare the equality of two search scores (MVH)
 		bool operator== ( const SearchResult& rhs ) const
 		{
-			return ( rankScore == rhs.rankScore && comparePWIZPeptides(static_cast <const Peptide&> (*this), 
-														  static_cast<const Peptide&>(rhs)));
+			return mvh == rhs.mvh;
 		}
 
 		template< class Archive >

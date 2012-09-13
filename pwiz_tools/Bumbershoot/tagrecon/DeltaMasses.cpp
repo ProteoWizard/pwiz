@@ -131,7 +131,8 @@ namespace tagrecon {
             }
 		}
 
-		vector<UnimodModification> DeltaMasses::getPossibleModifications(string aminoAcid, float deltaMass) {
+		vector<UnimodModification> DeltaMasses::getPossibleModifications(string aminoAcid, float deltaMass) 
+        {
 
 			vector <UnimodModification> modificationInterpretation;
 
@@ -140,11 +141,13 @@ namespace tagrecon {
 			InterpretationMap::const_iterator lowEnd = range.first;
 			InterpretationMap::const_iterator highEnd = range.second;
 
-			while(lowEnd != highEnd && lowEnd != interpretationMap.end()) {
+			while(lowEnd != highEnd && lowEnd != interpretationMap.end()) 
+            {
 				modificationInterpretation.push_back((*lowEnd).second);
 				lowEnd++;
 			}
-			if(modificationInterpretation.size()==0 && g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS) {
+			if(modificationInterpretation.size()==0 && g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS) 
+            {
 				UnimodModification unknown("unknown "+lexical_cast<string>(deltaMass)+ " on " + aminoAcid,"unknown");
 				unknown.setModificationMasses(deltaMass, deltaMass);
 				unknown.addASpecificity(aminoAcid,"Any where","Post-translational");
@@ -158,7 +161,8 @@ namespace tagrecon {
 			substitutions. The mod set is then used to generate all possible peptide candidates
 			that contain the each of the substitution.
 		*/
-		DynamicModSet DeltaMasses::getPossibleSubstitutions(float deltaMass) {
+		DynamicModSet DeltaMasses::getPossibleSubstitutions(float deltaMass) 
+        {
 
 			// Create a new dynamic mod set
 			DynamicModSet candidateSubs;
@@ -168,11 +172,13 @@ namespace tagrecon {
 			// For each of the substitution create a new dynamic mod and add it to the
 			// mod set. We only add substitutions that have log odds above user defined
 			// threshold.
-			while(cur != range.second) {
+			while(cur != range.second) 
+            {
 				SubstitutionLogOddsKey key((*cur).first,(*cur).second);
 				SubstitutionLogOddsMap::iterator iter = substitutionLogOddsMap.find(key);
 				//cout << (*iter).first.first << "," << (*iter).first.second << "->" << (*iter).second << endl;
-				if((*iter).second >= g_rtConfig->BlosumThreshold) {
+				if((*iter).second >= g_rtConfig->BlosumThreshold) 
+                {
 					DynamicMod sub((*cur).second[0],(*cur).second[0], (float) (*cur).first);
 					candidateSubs.insert(sub);
 				}
@@ -190,7 +196,8 @@ namespace tagrecon {
 			that contain the each of the substitution. The function uses a defined massTolerance
 			while it is looking up the candidate subs.
 		*/
-		DynamicModSet DeltaMasses::getPossibleSubstitutions(float deltaMass, float massTol) {
+		DynamicModSet DeltaMasses::getPossibleSubstitutions(float deltaMass, float massTol) 
+        {
 
 			// Create a new dynamic mod set
 			DynamicModSet candidateSubs;
@@ -200,11 +207,13 @@ namespace tagrecon {
 			// For each of the substitution create a new dynamic mod and add it to the
 			// mod set. We only add substitutions that have log odds above user defined
 			// threshold.
-			while(low != high) {
+			while(low != high) 
+            {
 				SubstitutionLogOddsKey key((*low).first,(*low).second);
 				SubstitutionLogOddsMap::iterator iter = substitutionLogOddsMap.find(key);
 				//cout << (*iter).first.first << "," << (*iter).first.second << "->" << (*iter).second << endl;
-				if((*iter).second >= g_rtConfig->BlosumThreshold) {
+				if((*iter).second >= g_rtConfig->BlosumThreshold) 
+                {
 					DynamicMod sub((*low).second[0],(*low).second[0], (float) (*low).first);
 					candidateSubs.insert(sub);
 				}
@@ -217,22 +226,25 @@ namespace tagrecon {
 
 
 		/// Print function to print out the contents of the delta masses to amino acid map.
-		void DeltaMasses::printMassToAminoAcidMap() {
+		void DeltaMasses::printMassToAminoAcidMap() 
+        {
 			// Print out the modification mass map
-			for(MassToAminoAcidMap::iterator itr = modificationMassToAminoAcidMap.begin(); itr != modificationMassToAminoAcidMap.end(); ++itr) {
+			for(MassToAminoAcidMap::iterator itr = modificationMassToAminoAcidMap.begin(); itr != modificationMassToAminoAcidMap.end(); ++itr) 
+            {
 				cout << (*itr).first << "->" << (*itr).second << endl;
 			}
 			// Print out the substitution mass map
-			for(MassToAminoAcidMap::iterator itr = substitutionMassToAminoAcidMap.begin(); itr != substitutionMassToAminoAcidMap.end(); ++itr) {
+			for(MassToAminoAcidMap::iterator itr = substitutionMassToAminoAcidMap.begin(); itr != substitutionMassToAminoAcidMap.end(); ++itr) 
+            {
 				cout << (*itr).first << "->" << (*itr).second << endl;
 			}
 		}
 
 		/// Print function to print out the contents of the interpretation map
-		void DeltaMasses::printInterpretationMap() {
-			for(InterpretationMap::iterator itr = interpretationMap.begin(); itr != interpretationMap.end(); ++itr) {
+		void DeltaMasses::printInterpretationMap() 
+        {
+			for(InterpretationMap::iterator itr = interpretationMap.begin(); itr != interpretationMap.end(); ++itr) 
 				cout << "<" << (*itr).first.first << "," << (*itr).first.second << "> ->" << (*itr).second << endl;
-			}
 		}
 	}
 }

@@ -85,7 +85,7 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( int,			    MaxAmbResultsForBlindMods,  2   		    ) \
     RTCONFIG_VARIABLE( int,			    MaxPeakCount,               200   		    ) \
     RTCONFIG_VARIABLE( bool,			ComputeXCorr,               true  		    ) \
-    RTCONFIG_VARIABLE( bool,			UseNETAdjustment,           true  		    ) \
+    RTCONFIG_VARIABLE( bool,			UseNETAdjustment,           false  		    ) \
     RTCONFIG_VARIABLE( bool,			PenalizeUnknownMods,        false  		    ) \
     RTCONFIG_VARIABLE( string,          SpectrumListFilters,        "peakPicking true 2-"   ) \
     RTCONFIG_VARIABLE( string,          ProteinListFilters,         ""              ) \
