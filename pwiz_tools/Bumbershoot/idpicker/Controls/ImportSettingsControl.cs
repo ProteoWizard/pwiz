@@ -130,6 +130,8 @@ namespace IDPicker.Controls
 
                 if (a.parameters.ContainsKey("Config: DecoyPrefix"))
                     row.DecoyPrefix = a.parameters["Config: DecoyPrefix"];
+                else if (a.parameters.ContainsKey("DecoyPrefix"))
+                    row.DecoyPrefix = a.parameters["DecoyPrefix"];
 
                 row.ImportSettings.qonverterSettings.DecoyPrefix = row.DecoyPrefix;
 

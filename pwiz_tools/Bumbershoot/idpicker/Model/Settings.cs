@@ -175,7 +175,7 @@ namespace IDPicker.DataModel
                 if (string.IsNullOrEmpty(scoreInfoString))
                     continue;
 
-                string[] scoreInfoTokens = scoreInfoString.Split(' ');
+                string[] scoreInfoTokens = scoreInfoString.Trim().Split(' ');
                 var weight = Convert.ToDouble(scoreInfoTokens[0]);
                 var order = (Qonverter.Settings.Order) Enum.Parse(typeof(Qonverter.Settings.Order), scoreInfoTokens[1]);
                 var normalizationMethod = (Qonverter.Settings.NormalizationMethod) Enum.Parse(typeof(Qonverter.Settings.NormalizationMethod), scoreInfoTokens[2]);

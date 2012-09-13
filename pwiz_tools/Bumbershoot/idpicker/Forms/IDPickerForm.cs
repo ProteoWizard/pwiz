@@ -309,9 +309,10 @@ namespace IDPicker
             {
                 var fileTypeList = new List<string>
                 {
-                    "IDPicker files|*.idpDB;*.mzid;*.pepXML;*.pep.xml",
-                    "MzIdentML files|*.mzid",
-                    "PepXML files|*.pepXML;*.pep.xml",
+                    "IDPicker files|*.idpDB;*.mzid;*.pepXML;*.pep.xml;*.xml",
+                    "Importable files|*.mzid;*.pepXML;*.pep.xml;*.xml",
+                    "MzIdentML files|*.mzid;*.xml",
+                    "PepXML files|*.pepXML;*.pep.xml;*.xml",
                     //"IDPicker XML|*.idpXML",
                     "IDPicker DB|*.idpDB",
                     "All files|*.*"
@@ -678,6 +679,9 @@ namespace IDPicker
                 lock (this)
                 {
                     --mainViewsLoaded;
+
+                    if (mainViewsLoaded < 0)
+                        throw new Exception("mainViewsLoaded < 0 after update from " + sender.ToString());
 
                     breadCrumbControl.Enabled = dataFiltersToolStripMenuRoot.Enabled = false;
                     progressMonitor_ProgressUpdate(this, new ProgressUpdateEventArgs()
@@ -1089,7 +1093,7 @@ namespace IDPicker
                     //breadCrumbControl.BreadCrumbs.Clear();
 
                     // pick a default RoundToNearest based on number of distinct modifications
-                    modificationTableForm.RoundToNearest = 1m;
+                    decimal roundToNearest = 1m;
                     var distinctModificationFormat = new DistinctMatchFormat();
                     var modMasses = session.CreateQuery("SELECT DISTINCT mod.MonoMassDelta FROM Modification mod").List<double>();
                     for (int i = 4; i > 0; --i)
@@ -1097,10 +1101,11 @@ namespace IDPicker
                         distinctModificationFormat.ModificationMassRoundToNearest = (decimal) (1.0 / Math.Pow(10, i));
                         if (modMasses.Select(o => distinctModificationFormat.Round(o)).Distinct().Count() < 30)
                         {
-                            modificationTableForm.RoundToNearest = distinctModificationFormat.ModificationMassRoundToNearest.Value;
+                            roundToNearest = distinctModificationFormat.ModificationMassRoundToNearest.Value;
                             break;
                         }
                     }
+                    modificationTableForm.RoundToNearest = roundToNearest;
 
                     basicFilter = DataFilter.LoadFilter(session);
 
@@ -1374,7 +1379,6 @@ namespace IDPicker
 
             lock (session)
             {
-                var databaseAnalysis = session.QueryOver<Analysis>().List();
                 var oldSettings = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
 
                 bool cancel;
@@ -1386,26 +1390,12 @@ namespace IDPicker
                 qonverter.QonversionProgress += progressMonitor.UpdateProgress;
                 qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
                 foreach (var item in qonverterSettings)
-                {
-                    // TODO: move updating of QonverterSettings to native Qonverter?
                     qonverter.SettingsByAnalysis[(int) item.Key.Id] = item.Value.ToQonverterSettings();
-                    qonverterSettingsByAnalysis[item.Key].DecoyPrefix = item.Value.DecoyPrefix;
-                    qonverterSettingsByAnalysis[item.Key].ScoreInfoByName = item.Value.ScoreInfoByName;
-                    qonverterSettingsByAnalysis[item.Key].QonverterMethod = item.Value.QonverterMethod;
-                    qonverterSettingsByAnalysis[item.Key].Kernel = item.Value.Kernel;
-                    qonverterSettingsByAnalysis[item.Key].MassErrorHandling = item.Value.MassErrorHandling;
-                    qonverterSettingsByAnalysis[item.Key].MissedCleavagesHandling = item.Value.MissedCleavagesHandling;
-                    qonverterSettingsByAnalysis[item.Key].TerminalSpecificityHandling = item.Value.TerminalSpecificityHandling;
-                    qonverterSettingsByAnalysis[item.Key].ChargeStateHandling = item.Value.ChargeStateHandling;
-                    qonverterSettingsByAnalysis[item.Key].RerankMatches = item.Value.RerankMatches;
-                    session.Save(qonverterSettingsByAnalysis[item.Key]);
-                }
-                session.Flush();
-                session.Close();
 
                 //qonverter.LogQonversionDetails = true;
                 try
                 {
+                    clearData();
                     qonverter.Reset(Text);
                     qonverter.Qonvert(Text);
                 }

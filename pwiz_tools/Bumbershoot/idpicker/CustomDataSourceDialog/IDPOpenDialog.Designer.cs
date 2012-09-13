@@ -1,5 +1,5 @@
 ﻿//
-// $Id: TableExporter.cs 287 2011-08-05 16:41:22Z holmanjd $
+// $Id$
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 

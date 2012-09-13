@@ -229,13 +229,19 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             // replace backslashes with forward slashes (will work with POSIX or Windows parsers)
             bal::replace_all(analysis.importSettings.proteinDatabaseFilepath, "\\", "/");
 
-            if (!bal::iequals(bfs::path(analysis.importSettings.proteinDatabaseFilepath).replace_extension("").filename(),
-                              bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename()))
-                cerr << "Warning: ProteinDatabase " << bfs::path(g_rtConfig->ProteinDatabase).filename()
-                     << " does not match " << bfs::path(analysis.importSettings.proteinDatabaseFilepath).filename();
+            bfs::path proteinDatabaseFilepath = analysis.importSettings.proteinDatabaseFilepath;
+            if (!g_rtConfig->ProteinDatabase.empty())
+            {
+                if (!bal::iequals(proteinDatabaseFilepath.replace_extension("").filename(),
+                                  bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename()))
+                   cerr << "\nWarning: ProteinDatabase " << bfs::path(g_rtConfig->ProteinDatabase).filename()
+                        << " does not match " << proteinDatabaseFilepath.filename();
+                analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
+            }
+            else if (!proteinDatabaseFilepath.has_parent_path())
+                analysis.importSettings.proteinDatabaseFilepath = (bfs::path(analysis.filepaths[0]).parent_path() / proteinDatabaseFilepath).string();
 
             analysis.importSettings.analysisName = analysis.name;
-            analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
             analysis.importSettings.maxQValue = g_rtConfig->MaxImportFDR;
             analysis.importSettings.maxResultRank = g_rtConfig->MaxResultRank;
             analysis.importSettings.qonverterSettings = g_rtConfig->getQonverterSettings();

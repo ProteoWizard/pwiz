@@ -100,12 +100,12 @@ struct IsNotAnalysisParameter
                bal::starts_with(parameter.first, "PeakCounts:") ||
                bal::starts_with(parameter.first, "SearchStats:") ||
                bal::starts_with(parameter.first, "SearchTime:") ||
-               parameter.first == "Config: WorkingDirectory" ||
-               parameter.first == "Config: StatusUpdateFrequency" ||
-               parameter.first == "Config: UseMultipleProcessors" ||
-               bal::starts_with(parameter.first, "Config: MaxResult") ||
-               parameter.first == "Config: OutputSuffix" ||
-               parameter.first == "Config: OutputFormat" ||
+               parameter.first == "WorkingDirectory" ||
+               parameter.first == "StatusUpdateFrequency" ||
+               parameter.first == "UseMultipleProcessors" ||
+               bal::starts_with(parameter.first, "MaxResult") ||
+               parameter.first == "OutputSuffix" ||
+               parameter.first == "OutputFormat" ||
                bal::contains(parameter.first, "Batch") ||
 
                // Mascot
@@ -217,7 +217,12 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
 
     // userParams are assumed to be uniquely keyed on name
     BOOST_FOREACH(const UserParam& userParam, userParams)
-        analysis.parameters[userParam.name] = userParam.value;
+    {
+        string name = userParam.name;
+        if (bal::starts_with(name, "Config: "))
+            name.erase(0, 8);
+        analysis.parameters[name] = userParam.value;
+    }
     
     // set analysis name
     analysis.name = analysis.softwareName;
@@ -328,7 +333,8 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths,
         {
             vector<string> differingParametersWithValues;
             BOOST_FOREACH(const string& key, differingParameters)
-                differingParametersWithValues.push_back(key + "=" + analysis->parameters[key]);
+                if (!analysis->parameters[key].empty())
+                    differingParametersWithValues.push_back(key + "=" + analysis->parameters[key]);
             analysis->name += " (" + bal::join(differingParametersWithValues, ", ") + ")";
         }
 
@@ -411,6 +417,7 @@ struct ParserImpl
                       "CREATE TABLE IF NOT EXISTS DistinctMatchQuantitation (Id TEXT PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                       "CREATE TABLE IF NOT EXISTS PeptideQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
                       "CREATE TABLE IF NOT EXISTS ProteinQuantitation (Id INTEGER PRIMARY KEY, iTRAQ_ReporterIonIntensities BLOB, TMT_ReporterIonIntensities BLOB, PrecursorIonIntensity NUMERIC);"
+                      "CREATE TABLE IF NOT EXISTS QonverterSettings (Id INTEGER PRIMARY KEY, QonverterMethod INT, DecoyPrefix TEXT, RerankMatches INT, Kernel INT, MassErrorHandling INT, MissedCleavagesHandling INT, TerminalSpecificityHandling INT, ChargeStateHandling INT, ScoreInfoByName TEXT);"
 
                       "DELETE FROM SpectrumSource;"
                       "DELETE FROM SpectrumSourceMetadata;"
@@ -430,8 +437,7 @@ struct ParserImpl
                       "DELETE FROM PeptideSpectrumMatchScore;"
                       "DELETE FROM PeptideSpectrumMatchScoreName;"
                       "DELETE FROM IntegerSet;"
-                      "DELETE FROM LayoutProperty;"
-                      "DELETE FROM ProteinCoverage;"
+                      "DELETE FROM QonverterSettings;"
                      );
         transaction.commit();
     }
@@ -467,6 +473,8 @@ struct ParserImpl
             if (spectraDataName.empty())
                 throw runtime_error("no spectrum source name or location");
         }
+        else
+            spectraDataName = Parser::sourceNameFromFilename(bfs::path(spectraDataName).filename());
 
         // insert file-level metadata into the database
         insertSpectrumSource.binder() << 1
@@ -788,44 +796,6 @@ struct ParserImpl
     void applyQValueFilter(const Analysis& analysis)
     {
         const Qonverter::Settings& settings = analysis.importSettings.qonverterSettings;
-
-        // write QonverterSettings for preqonvert;
-        // assemble scoreInfo string ("Weight Order NormalizationMethod ScoreName")
-        vector<string> scoreInfoStrings;
-        BOOST_FOREACH_FIELD((const string& name)(const Qonverter::Settings::ScoreInfo& scoreInfo), settings.scoreInfoByName)
-        {
-            ostringstream ss;
-            ss << scoreInfo.weight << " "
-               << scoreInfo.order << " "
-               << scoreInfo.normalizationMethod << " "
-               << name;
-            scoreInfoStrings.push_back(ss.str());
-        }
-        string scoreInfo = bal::join(scoreInfoStrings, ";");
-
-        idpDb.execute("DROP TABLE IF EXISTS QonverterSettings;"
-                      "CREATE TABLE QonverterSettings (Id INTEGER PRIMARY KEY,"
-                      "                                QonverterMethod INT,"
-                      "                                DecoyPrefix TEXT,"
-                      "                                RerankMatches INT,"
-                      "                                Kernel INT,"
-                      "                                MassErrorHandling INT,"
-                      "                                MissedCleavagesHandling INT,"
-                      "                                TerminalSpecificityHandling INT,"
-                      "                                ChargeStateHandling INT,"
-                      "                                ScoreInfoByName TEXT);");
-
-        sqlite::command insertQonverterSettings(idpDb, "INSERT INTO QonverterSettings VALUES (1,?,?,?,?,?,?,?,?,?)");
-        insertQonverterSettings.binder() << (int) settings.qonverterMethod.index()
-                                         << settings.decoyPrefix
-                                         << (settings.rerankMatches ? 1 : 0)
-                                         << (int) settings.kernel.index()
-                                         << (int) settings.massErrorHandling.index()
-                                         << (int) settings.missedCleavagesHandling.index()
-                                         << (int) settings.terminalSpecificityHandling.value()
-                                         << (int) settings.chargeStateHandling.value()
-                                         << scoreInfo;
-        insertQonverterSettings.execute();
 
         Qonverter qonverter;
         //qonverter.logQonversionDetails = true;
@@ -1422,8 +1392,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
         catch (exception& e)
         {
             // failure during qonversion is not fatal
-			ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*[QonverterError]*" + lexical_cast<string>(e.what()));
-            cerr << "\n[executePeptideFinderTask] thread " << boost::this_thread::get_id() << " failed to apply Q value filter: " << e.what() << endl;
+			ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*failed to apply Q value filter: " + e.what());
         }
 
         ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*waiting");
@@ -1664,6 +1633,8 @@ string Parser::parseSource(const string& inputFilepath)
         if (spectraDataName.empty())
             throw runtime_error("no spectrum source name or location");
     }
+    else
+        spectraDataName = Parser::sourceNameFromFilename(bfs::path(spectraDataName).filename());
 
     return spectraDataName;
 }

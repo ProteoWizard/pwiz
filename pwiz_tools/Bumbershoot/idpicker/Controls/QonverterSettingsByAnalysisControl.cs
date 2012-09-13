@@ -80,7 +80,7 @@ namespace IDPicker.Controls
                 foreach (var p in diffParameters)
                     key += String.Format("; {0}={1}", p.Name, p.Value);
 
-                string defaultDecoyPrefix = a.Parameters.Where(o => o.Name == "Config: DecoyPrefix").Select(o => o.Value).FirstOrDefault() ??
+                string defaultDecoyPrefix = a.Parameters.Where(o => o.Name.Contains("DecoyPrefix")).Select(o => o.Value).FirstOrDefault() ??
                                             Properties.Settings.Default.DefaultDecoyPrefix;
 
                 row.Tag = a;

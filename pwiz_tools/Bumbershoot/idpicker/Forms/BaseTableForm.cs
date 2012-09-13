@@ -267,7 +267,14 @@ namespace IDPicker.Forms
 
         protected virtual void OnPivotChanged(object sender, EventArgs e) { resetData(); }
 
-        protected virtual void OnGroupingChanged(object sender, EventArgs e) { ClearData(true); resetData(); }
+        protected virtual void OnGroupingChanged(object sender, EventArgs e)
+        {
+            // don't try to save selection, since a different grouping would invalidate it
+            treeDataGridView.ClearSelection();
+
+            ClearData(true);
+            resetData();
+        }
 
         public void Sort(int columnIndex)
         {

@@ -1,5 +1,5 @@
 ﻿//
-// $Id: TableExporter.cs 287 2011-08-05 16:41:22Z holmanjd $
+// $Id$
 //
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
@@ -82,7 +82,7 @@ namespace CustomDataSourceDialog
                     continue;
                 var key = String.Format("{0} ({1})", twoSides[0], twoSides[1]);
                 sourceTypeComboBox.Items.Add(key);
-                var extensionList = twoSides[1].Replace("*.", ".").Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                var extensionList = twoSides[1].Replace("*.", ".").ToLower().Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 _extensionList.Add(key, extensionList);
 
                 if (twoSides[0] == "IDPicker Files")
@@ -902,6 +902,7 @@ namespace CustomDataSourceDialog
                                             ImageIndex = 10,
                                             SelectedImageIndex = 10
                                         };
+
                 foreach (var fileNode in sourceNode.Nodes.Cast<TreeNode>().Where(node => (string) node.Tag == "File"))
                 {
                     if (!File.Exists(fileNode.ToolTipText)
@@ -911,7 +912,7 @@ namespace CustomDataSourceDialog
                     var info = new FileInfo(fileNode.ToolTipText);
 
                     if (!_extensionList[sourceTypeComboBox.Text].Contains(".*") &&
-                        _extensionList[sourceTypeComboBox.Text].Count(o => info.Name.EndsWith(o)) == 0)
+                        _extensionList[sourceTypeComboBox.Text].Count(o => info.Name.ToLower().EndsWith(o)) == 0)
                         continue;
 
                     if (regexConversion.IsMatch(fileNode.Text.ToLower()))
@@ -1129,8 +1130,8 @@ namespace CustomDataSourceDialog
                 if (canceled) return null;
                 try
                 {
-                    if (_allExtensions.Count(o => file.Name.EndsWith(o)) == 0 ||
-                        _extensionList[sourceType].Count(o => file.Name.EndsWith(o)) == 0)
+                    if (_allExtensions.Count(o => file.Name.ToLower().EndsWith(o)) == 0 ||
+                        _extensionList[sourceType].Count(o => file.Name.ToLower().EndsWith(o)) == 0)
                         continue;
 
                     HandleItemToAdd(newNode, file);

@@ -68,7 +68,7 @@ void MonteCarloQonverter::Qonvert(PSMList& psmRows,
             throw runtime_error("insufficient number of score permutations in Monte Carlo optimization");
     }
     else
-        validScorePermutations.push_back(vector<double>(1, 1));
+        validScorePermutations.push_back(vector<double>(1, scoreWeights[0] > 0 ? 1 : -1));
 
     PSMIteratorRange fullRange(psmRows.end(), psmRows.end());
 

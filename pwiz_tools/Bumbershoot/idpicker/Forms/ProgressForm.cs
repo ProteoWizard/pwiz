@@ -74,10 +74,9 @@ namespace IDPicker
             int count = updateMessage.iterationCount;
 
             //Check for Qonverter failure
-            if (message == "[QonverterError]" && parts.Length > 2)
+            if (message.StartsWith("failed to apply"))
             {
-                var errorMessage = parts[2];
-                NonFatalErrorCaught(new[]{"Non-fatal qonverter error: " + errorMessage,taskName}, null);
+                NonFatalErrorCaught(new[] { message, taskName }, null);
                 return IterationListener.Status.Ok;
             }
 

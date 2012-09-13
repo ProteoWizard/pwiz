@@ -290,6 +290,8 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
             validateSettings(settingsByAnalysis[analysis]);
     }
 
+    set<string> handledAnalyses;
+
     // qonvert each analysis/source pair independently
     BOOST_FOREACH(const AnalysisSourcePair& analysisSourcePair, analysisSourcePairs)
     {
@@ -476,6 +478,29 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
         // update the database with the new Q values
         updatePsmRows(db, logQonversionDetails, psmRowReader.psmRows);
 
+        vector<string> scoreInfoTuples;
+        BOOST_FOREACH_FIELD((const string& name)(const Qonverter::Settings::ScoreInfo& scoreInfo), qonverterSettings.scoreInfoByName)
+            scoreInfoTuples.push_back(lexical_cast<string>(scoreInfo.weight) + " " + scoreInfo.order.str() + " " + scoreInfo.normalizationMethod.str() + " " + name);
+        string scoreInfoByNameString = bal::join(scoreInfoTuples, "; ");
+
+        if (handledAnalyses.count(analysisId) == 0)
+        {
+            sqlite::command insertQonverterSettings(db, "INSERT INTO QonverterSettings (Id, QonverterMethod, DecoyPrefix, RerankMatches, Kernel, MassErrorHandling, MissedCleavagesHandling, TerminalSpecificityHandling, ChargeStateHandling, ScoreInfoByName) VALUES (?,?,?,?,?,?,?,?,?,?)");
+            insertQonverterSettings.binder() << lexical_cast<sqlite3_int64>(analysisId)
+                                             << (int) qonverterSettings.qonverterMethod.index()
+                                             << qonverterSettings.decoyPrefix
+                                             << (qonverterSettings.rerankMatches ? 1 : 0)
+                                             << (int) qonverterSettings.kernel.index()
+                                             << (int) qonverterSettings.massErrorHandling.index()
+                                             << (int) qonverterSettings.missedCleavagesHandling.index()
+                                             << (int) qonverterSettings.terminalSpecificityHandling.value()
+                                             << (int) qonverterSettings.chargeStateHandling.value()
+                                             << scoreInfoByNameString;
+            insertQonverterSettings.execute();
+        }
+
+        handledAnalyses.insert(analysisId);
+
         ++updateMessage.qonvertedAnalyses;
         progressMonitor(updateMessage);
         if (updateMessage.cancel)
@@ -536,6 +561,9 @@ void Qonverter::reset(sqlite3* idpDb)
 
     // reset Q values
     CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "UPDATE PeptideSpectrumMatch SET QValue = 2", NULL, NULL, &errorBuf));
+
+    // delete QonverterSettings
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DELETE FROM QonverterSettings", NULL, NULL, &errorBuf));
 }
 
 
