@@ -773,7 +773,7 @@ ScanFilter::parse(const string& filterLine)
                             ActivationType currentType = parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1));
 
                             // CONSIDER: does detector set always mean CID is really HCD?
-                            if (detectorSet_ &&
+                            if (detectorSet_ == TriBool_True &&
                                 massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS &&
                                 currentType == ActivationType_CID)
                                 currentType = ActivationType_HCD;
@@ -808,7 +808,7 @@ ScanFilter::parse(const string& filterLine)
 		    activationType_ = parseActivationType(w);
 
             // CONSIDER: does detector set always mean CID is really HCD?
-            if (detectorSet_ &&
+            if (detectorSet_ == TriBool_True &&
                 massAnalyzerType_ == ScanFilterMassAnalyzerType_FTMS &&
                 activationType_ == ActivationType_CID)
                 activationType_ = ActivationType_HCD;
