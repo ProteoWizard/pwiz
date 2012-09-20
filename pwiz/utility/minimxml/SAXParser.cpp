@@ -222,7 +222,7 @@ class HandlerWrangler : public SAXParser::Handler
 
         // element start/end validation
         if (top.names.empty() || top.names.top()!=name) 
-            throw runtime_error(("[SAXParser::ParserWrangler::elementEnd()] Illegal end tag: " + name).c_str()); 
+            throw runtime_error("[SAXParser::ParserWrangler::elementEnd()] Illegal end tag \"" + name + "\" at offset " + lexical_cast<string>(position) + "."); 
 
         top.names.pop();
 
@@ -335,7 +335,7 @@ void unescapeXML(char *str)
 
         // there must be at least three characters after '&' (&lt; or &gt;)
         if (i+3 >= end)
-            throw runtime_error("[SAXParser::unescapeXML] Invalid escape sequence.");
+            throw runtime_error("[SAXParser::unescapeXML] Invalid escape sequence \"" + string(str) + "\".");
 
         int adjustlen=0;
 
@@ -485,7 +485,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
         // remove trailing ws
         buffer.trim_trail_ws();
         if (!buffer.length())
-            throw runtime_error("[SAXParser::parse()] Empty tag."); 
+            throw runtime_error("[SAXParser::parse()] Empty tag at offset " + lexical_cast<string>(position) + "."); 
 
         // switch on tag type
 
@@ -513,7 +513,7 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
                     if (status.flag == Handler::Status::Done) return;
                 }
                 else if (!buffer.starts_with( "!--") || !buffer.ends_with("--"))
-                    throw runtime_error(("[SAXParser::parse()] Illegal comment: " + std::string(buffer.c_str())).c_str());
+                    throw runtime_error("[SAXParser::parse()] Illegal comment \"" + string(buffer.c_str()) + "\" at offset " + lexical_cast<string>(position) + ".");
                 break;
             }
             default: 
