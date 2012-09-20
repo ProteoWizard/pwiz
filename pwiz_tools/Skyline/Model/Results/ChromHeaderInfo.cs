@@ -537,22 +537,38 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromCachedFile : IPathContainer
     {
+        [Flags]
+        public enum FlagValues
+        {
+            single_match_mz_known = 0x01,
+            single_match_mz = 0x02,
+        }
+
         public static DateTime GetLastWriteTime(string filePath)
         {
             return File.GetLastWriteTime(SampleHelp.GetPathFilePart(filePath));
         }
 
-        public ChromCachedFile(string filePath, DateTime fileWriteTime, DateTime? runStartTime, 
+        public static bool? IsSingleMatchMzFlags(FlagValues flags)
+        {
+            if ((flags & FlagValues.single_match_mz_known) == 0)
+                return null;
+            return (flags & FlagValues.single_match_mz) != 0;            
+        }
+
+        public ChromCachedFile(string filePath, FlagValues flags, DateTime fileWriteTime, DateTime? runStartTime, 
                                IEnumerable<MsInstrumentConfigInfo> instrumentInfoList)
             : this()
         {
             FilePath = filePath;
+            Flags = flags;
             FileWriteTime = fileWriteTime;
             RunStartTime = runStartTime;
             InstrumentInfoList = instrumentInfoList;
         }
 
         public string FilePath { get; private set; }
+        public FlagValues Flags { get; private set; }
         public DateTime FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
         public IEnumerable<MsInstrumentConfigInfo> InstrumentInfoList { get; private set; } 
@@ -560,6 +576,11 @@ namespace pwiz.Skyline.Model.Results
         public bool IsCurrent
         {
             get { return Equals(FileWriteTime, GetLastWriteTime(FilePath)); }
+        }
+
+        public bool? IsSingleMatchMz
+        {
+            get { return IsSingleMatchMzFlags(Flags); }
         }
     }
 
@@ -859,6 +880,12 @@ namespace pwiz.Skyline.Model.Results
                         _allFiles, _allTransitions, _allPeaks, Times, IntensityArray);
                 }
             }
+        }
+
+        public ChromatogramInfo GetTransitionInfo(int index)
+        {
+            return new ChromatogramInfo(_groupHeaderInfo, index,
+                                        _allFiles, _allTransitions, _allPeaks, Times, IntensityArray);
         }
 
         public ChromatogramInfo GetTransitionInfo(float productMz, float tolerance)

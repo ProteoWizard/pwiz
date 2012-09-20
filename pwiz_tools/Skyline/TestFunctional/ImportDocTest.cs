@@ -111,8 +111,9 @@ namespace pwiz.SkylineTestFunctional
             // The cache version of the original test file is 3.
 			// The cache file just created is version 4 or higher.
             // Cache version 4 stores instrument information, and is bigger in size.
+            // Cache version 5 adds an int for flags for each file
             // Allow for a difference in sizes due to the extra information.
-            int instrumentInfoSize = sizeof(int) * docInitial.Settings.MeasuredResults.MSDataFileInfos.Count();
+            int instrumentInfoSize = (sizeof(int) + sizeof(int)) * docInitial.Settings.MeasuredResults.MSDataFileInfos.Count();
             Assert.AreEqual(cacheSizes[1], new FileInfo(cachePersistPath).Length, instrumentInfoSize);
 
             RunUI(() =>

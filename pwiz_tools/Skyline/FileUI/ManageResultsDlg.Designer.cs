@@ -40,6 +40,7 @@
             this.listResults = new System.Windows.Forms.ListBox();
             this.btnReimport = new System.Windows.Forms.Button();
             this.btnMinimize = new System.Windows.Forms.Button();
+            this.btnRescore = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -119,12 +120,20 @@
             this.btnMinimize.UseVisualStyleBackColor = true;
             this.btnMinimize.Click += new System.EventHandler(this.btnMinimize_Click);
             // 
+            // btnRescore
+            // 
+            resources.ApplyResources(this.btnRescore, "btnRescore");
+            this.btnRescore.Name = "btnRescore";
+            this.btnRescore.UseVisualStyleBackColor = true;
+            this.btnRescore.Click += new System.EventHandler(this.btnRescore_Click);
+            // 
             // ManageResultsDlg
             // 
             this.AcceptButton = this.btnOk;
             resources.ApplyResources(this, "$this");
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
+            this.Controls.Add(this.btnRescore);
             this.Controls.Add(this.btnMinimize);
             this.Controls.Add(this.btnReimport);
             this.Controls.Add(this.listResults);
@@ -158,5 +167,6 @@
         private System.Windows.Forms.ListBox listResults;
         private System.Windows.Forms.Button btnReimport;
         private System.Windows.Forms.Button btnMinimize;
+        private System.Windows.Forms.Button btnRescore;
     }
 }

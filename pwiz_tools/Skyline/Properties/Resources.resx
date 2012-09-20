@@ -4712,4 +4712,10 @@ Are you sure you want to continue?</value>
   <data name="IsolationScheme_DoValidate_Isolation_scheme_for_all_ions_cannot_contain_isolation_windows">
     <value xml:space="preserve">Isolation scheme for all ions cannot contain isolation windows</value>
   </data>
+  <data name="ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_">
+    <value xml:space="preserve">The path '{0}' was not found among previously imported results.</value>
+  </data>
+  <data name="MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_">
+    <value xml:space="preserve">Attempting to recalculate peak integration without first completing raw data import.</value>
+  </data>
 </root>

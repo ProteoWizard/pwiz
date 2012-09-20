@@ -27,7 +27,6 @@ using NHibernate;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Util
 {

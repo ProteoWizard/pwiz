@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Model.Results
         private ReadOnlyCollection<ChromatogramSet> _chromatograms;
 
         private ChromatogramCache _cacheFinal;
+        private ChromatogramCache _cacheRecalc;
         private ReadOnlyCollection<ChromatogramCache> _listPartialCaches;
         private ReadOnlyCollection<string> _listSharedCachePaths;
         private ProgressStatus _statusLoading;
@@ -144,6 +145,29 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public ChromFileInfo GetChromFileInfo<TChromInfo>(Results<TChromInfo> results, int replicateIndex)
+            where TChromInfo : ChromInfo
+        {
+            OneOrManyList<TChromInfo> replicateChromInfos = null;
+            if (results != null && replicateIndex >= 0 && replicateIndex < results.Count)
+            {
+                replicateChromInfos = results[replicateIndex];
+            }
+            if (replicateChromInfos != null)
+            {
+                var chromatograms = Chromatograms[replicateIndex];
+                foreach (var replicateChromInfo in replicateChromInfos)
+                {
+                    ChromFileInfo chromFileInfo = chromatograms.GetFileInfo(replicateChromInfo.FileId);
+                    if (chromFileInfo != null)
+                    {
+                        return chromFileInfo;
+                    }
+                }
+            }
+            return null;
+        }
+        
         private class RefCompareChromFileInfo : IEqualityComparer<ChromFileInfo>
         {
             public bool Equals(ChromFileInfo x, ChromFileInfo y)
@@ -657,6 +681,20 @@ namespace pwiz.Skyline.Model.Results
                 chromatogramSet = (ChromatogramSet) chromatogramSet.ChangeName(replicateName);
             return chromatogramSet;
         }
+
+
+        public MeasuredResults ChangeRecalcStatus()
+        {
+            if (_cacheFinal == null)
+                throw new InvalidOperationException(Resources.MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_);
+
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im._cacheRecalc = im._cacheFinal;
+                                                     im._cacheFinal = null;
+                                                 });
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -782,16 +820,13 @@ namespace pwiz.Skyline.Model.Results
                         _resultsClone._listPartialCaches = null;
                     }
                 }
-                if (_resultsClone._listPartialCaches == null)
+                if (_resultsClone._listPartialCaches == null && _resultsClone._cacheRecalc == null)
                 {
                     if (cacheExists)
                     {
                         try
                         {
                             var cache = ChromatogramCache.Load(cachePath, _status, _loader);
-                            // If it is valid, add it to the list of partial caches.  If it
-                            // turns out that this cache covers all necessary paths, it will
-                            // be moved to _cacheFinal later in this function.
                             if (_resultsClone.IsValidCache(cache, false))
                                 _resultsClone._listPartialCaches = new ReadOnlyCollection<ChromatogramCache>(new[] {cache});
                             else
@@ -978,8 +1013,13 @@ namespace pwiz.Skyline.Model.Results
                     //           tests, however, expose issues with coordinating progress status
                     //           and even successful completion.
                     var uncached = uncachedPaths[0];
-                    ChromatogramCache.Build(_document, uncached.Value, new[] { uncached.Key }, _status, _loader,
-                        FinishCacheBuild);
+                    ChromatogramCache.Build(_document,
+                                            _resultsClone._cacheRecalc,
+                                            uncached.Value,
+                                            new[] {uncached.Key},
+                                            _status,
+                                            _loader,
+                                            FinishCacheBuild);
                     return;
                 }
 
@@ -995,6 +1035,7 @@ namespace pwiz.Skyline.Model.Results
                         !_resultsClone.IsSharedCache(_resultsClone._listPartialCaches[0]))
                 {
                     _resultsClone._cacheFinal = _resultsClone._listPartialCaches[0];
+                    _resultsClone._cacheRecalc = null;
                     _resultsClone._listPartialCaches = null;
 
                     _loader.UpdateProgress(_status.ChangeSegments(0, 0).Complete());
@@ -1071,13 +1112,16 @@ namespace pwiz.Skyline.Model.Results
                 {
                     foreach (var cachePartial in _resultsClone._listPartialCaches)
                     {
+                        string cachePath = cachePartial.CachePath;
+                        bool isSharedCache = _resultsClone.IsSharedCache(cachePartial);
+
                         // Close partial cache file
                         try { cachePartial.Dispose(); }
                         catch (IOException) { }
 
                         // Remove from disk if not shared and not the final cache
-                        if (!_resultsClone.IsSharedCache(cachePartial) && !Equals(cache.CachePath, cachePartial.CachePath))
-                            File.Delete(cachePartial.CachePath);
+                        if (!isSharedCache && !Equals(cache.CachePath, cachePath))
+                            _loader.StreamManager.Delete(cachePartial.CachePath);
                     }
 
                     _resultsClone._listPartialCaches = null;
@@ -1088,28 +1132,6 @@ namespace pwiz.Skyline.Model.Results
 
                 Complete(true);
             }
-        }
-
-        public ChromFileInfo GetChromFileInfo<TChromInfo>(Results<TChromInfo> results, int replicateIndex) where TChromInfo:ChromInfo
-        {
-            OneOrManyList<TChromInfo> replicateChromInfos = null;
-            if (results != null && replicateIndex >= 0 && replicateIndex < results.Count)
-            {
-                replicateChromInfos = results[replicateIndex];
-            }
-            if (replicateChromInfos != null)
-            {
-                var chromatograms = Chromatograms[replicateIndex];
-                foreach (var replicateChromInfo in replicateChromInfos)
-                {
-                    ChromFileInfo chromFileInfo = chromatograms.GetFileInfo(replicateChromInfo.FileId);
-                    if (chromFileInfo != null)
-                    {
-                        return chromFileInfo;
-                    }
-                }
-            }
-            return null;
         }
     }
 

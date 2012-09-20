@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
@@ -252,7 +253,38 @@ namespace pwiz.SkylineTestFunctional
             }
             Assert.AreEqual(2, countVisible);
 
-            // Remove the last 2 replicates
+            // Remove all but the replicate that was reimported
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                var chromatograms = docRename.Settings.MeasuredResults.Chromatograms;
+                dlg.SelectedChromatograms = new[] { chromatograms[0] };
+                dlg.Remove();
+                dlg.OkDialog();
+            });
+
+            long cacheLen = 0;
+            string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
+            RunUI(() =>
+                      {
+                          SkylineWindow.SaveDocument();
+                          cacheLen = new FileInfo(cachePath).Length;
+                      });
+
+            // Now rescore the remaining replicate.
+            docRemoved = SkylineWindow.Document;
+            var manageResultsDlg3 = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+            RunDlg<RescoreResultsDlg>(manageResultsDlg3.Rescore, dlg =>
+            {
+                dlg.Rescore(false);
+                Assert.IsFalse(SkylineWindow.Document.Settings.IsLoaded);
+            });
+            WaitForDocumentLoaded();
+            var docRescore = SkylineWindow.Document;
+            // Roundtrip to get rid of different revision indexes
+            AssertEx.DocumentCloned(AssertEx.RoundTrip(docRemoved), AssertEx.RoundTrip(docRescore));
+            Assert.AreEqual(cacheLen, new FileInfo(cachePath).Length);
+
+            // Remove the last replicate
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {
                 dlg.RemoveAll();
@@ -260,7 +292,7 @@ namespace pwiz.SkylineTestFunctional
             });
 
             // Wait for the document to be different from what it was before
-            WaitForDocumentChange(docRemoved);
+            WaitForDocumentChange(docRescore);
 
             var docClear = SkylineWindow.Document;
 

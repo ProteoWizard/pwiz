@@ -32,11 +32,18 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
-        public const int FORMAT_VERSION_CACHE = 4;
+        public const int FORMAT_VERSION_CACHE_5 = 5;
+        public const int FORMAT_VERSION_CACHE_4 = 4;
         public const int FORMAT_VERSION_CACHE_3 = 3;
         public const int FORMAT_VERSION_CACHE_2 = 2;
 
         public const string EXT = ".skyd"; // Not L10N
+
+        public static int FORMAT_VERSION_CACHE
+        {
+            // TODO: Switch to FORMAT_VERSION_5 after mProphet scores are integrated.
+            get { return FORMAT_VERSION_CACHE_4; }
+        }
 
         /// <summary>
         /// Construct path to a final data cache from the document path.
@@ -115,11 +122,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<string> CachedFilePaths
         {
-            get
-            {
-                foreach (var cachedFile in CachedFiles)
-                    yield return cachedFile.FilePath;
-            }
+            get { return CachedFiles.Select(cachedFile => cachedFile.FilePath); }
         }
 
         /// <summary>
@@ -127,23 +130,18 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsSupportedVersion
         {
-            get
-            {
-                return (Version >= FORMAT_VERSION_CACHE_2);
-            }
+            get { return (Version >= FORMAT_VERSION_CACHE_2); }
         }
 
         public bool IsCurrentVersion
         {
-            get
-            {
-                return IsVersionCurrent(Version);
-            }
+            get { return IsVersionCurrent(Version); }
         }
 
         public static bool IsVersionCurrent(int version)
         {
-            return (version == FORMAT_VERSION_CACHE ||
+            return (version == FORMAT_VERSION_CACHE_5 ||
+                    version == FORMAT_VERSION_CACHE_4 ||
                     version == FORMAT_VERSION_CACHE_3);
         }
 
@@ -201,6 +199,12 @@ namespace pwiz.Skyline.Model.Results
             infoSet = new ChromatogramGroupInfo[0];
             return false;            
         }
+
+        public ChromatogramGroupInfo LoadChromatogramInfo(int index)
+        {
+            return LoadChromatogramInfo(_chromatogramEntries[index]);
+        }
+
         public ChromatogramGroupInfo LoadChromatogramInfo(ChromGroupHeaderInfo chromGroupHeaderInfo)
         {
             return new ChromatogramGroupInfo(chromGroupHeaderInfo, _cachedFiles, _chromTransitions, _chromatogramPeaks);
@@ -316,10 +320,13 @@ namespace pwiz.Skyline.Model.Results
             runstart_hi,
             // Version 4 file header addition
             len_instrument_info,
+            // Version 5 file header addition
+            flags,
 
             count,
             count2 = runstart_lo,
 			count3 = len_instrument_info,
+            count4 = flags
         }
         // ReSharper restore UnusedMember.Local
 
@@ -384,12 +391,13 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public static void Build(SrmDocument document, string cachePath, IList<string> listResultPaths,
-            ProgressStatus status, ILoadMonitor loader, Action<ChromatogramCache, Exception> complete)
+        public static void Build(SrmDocument document, ChromatogramCache cacheRecalc,
+            string cachePath, IList<string> listResultPaths, ProgressStatus status, ILoadMonitor loader,
+            Action<ChromatogramCache, Exception> complete)
         {
             try
             {
-                var builder = new ChromCacheBuilder(document, cachePath, listResultPaths, loader, status, complete);
+                var builder = new ChromCacheBuilder(document, cacheRecalc, cachePath, listResultPaths, loader, status, complete);
                 builder.BuildCache();
             }
             catch (Exception x)
@@ -451,6 +459,9 @@ namespace pwiz.Skyline.Model.Results
                                            : 0);
                 string filePath = Encoding.Default.GetString(filePathBuffer, 0, lenPath);
 
+                ChromCachedFile.FlagValues fileFlags = 0;
+                if (formatVersion > FORMAT_VERSION_CACHE_4)
+                    fileFlags = (ChromCachedFile.FlagValues) GetInt32(fileHeader, (int) FileHeader.flags);
                 string instrumentInfoStr = null;
                 if (formatVersion > FORMAT_VERSION_CACHE_3)
                 {
@@ -463,7 +474,8 @@ namespace pwiz.Skyline.Model.Results
                 DateTime modifiedTime = DateTime.FromBinary(modifiedBinary);
                 DateTime? runstartTime = runstartBinary != 0 ? DateTime.FromBinary(runstartBinary) : (DateTime?) null;
                 var instrumentInfoList = InstrumentInfoUtil.GetInstrumentInfo(instrumentInfoStr);
-                chromCacheFiles[i] = new ChromCachedFile(filePath, modifiedTime, runstartTime, instrumentInfoList);
+                chromCacheFiles[i] = new ChromCachedFile(filePath, fileFlags,
+                    modifiedTime, runstartTime, instrumentInfoList);
             }
 
             // Read list of chromatogram group headers
@@ -483,12 +495,14 @@ namespace pwiz.Skyline.Model.Results
         {
             switch (formatVersion)
             {
-                case (FORMAT_VERSION_CACHE):
-                    return (int) (FileHeader.count)*4;
-                case (FORMAT_VERSION_CACHE_3):
-                    return (int) (FileHeader.count3)*4;
-                default:
+                case FORMAT_VERSION_CACHE_2:
                     return (int) (FileHeader.count2)*4;
+                case FORMAT_VERSION_CACHE_3:
+                    return (int) (FileHeader.count3)*4;
+                case FORMAT_VERSION_CACHE_4:
+                    return (int) (FileHeader.count4)*4;
+                default:
+                    return (int) (FileHeader.count)*4;
             }
         }
 
@@ -587,6 +601,11 @@ namespace pwiz.Skyline.Model.Results
                 Encoding.UTF8.GetBytes(instrumentInfo, 0, instrumentInfo.Length, instrumentInfoBuffer, 0);
                 outStream.Write(BitConverter.GetBytes(instrumentInfoLen), 0, sizeof(int));
 
+                // Version 5 write flags
+                if (FORMAT_VERSION_CACHE > FORMAT_VERSION_CACHE_4)
+                    outStream.Write(BitConverter.GetBytes((int) cachedFile.Flags), 0, sizeof(int));
+
+                // Write variable length buffers
                 outStream.Write(pathBuffer, 0, len);
                 outStream.Write(instrumentInfoBuffer, 0, instrumentInfoLen);
             }
@@ -634,6 +653,27 @@ namespace pwiz.Skyline.Model.Results
                 Buffer.BlockCopy(intensities[i], 0, points, offsetTran, sizeArray);
             }
             return points;
+        }
+
+        public IEnumerable<ChromKeyIndices> GetChromKeys(string msDataFilePath)
+        {
+            int fileIndex = CachedFiles.IndexOf(f => Equals(f.FilePath, msDataFilePath));
+            if (fileIndex == -1)
+                yield break;
+
+            for (int i = 0; i < _chromatogramEntries.Length; i++)
+            {
+                var groupInfo = _chromatogramEntries[i];
+                if (groupInfo.FileIndex != fileIndex)
+                    continue;
+
+                for (int j = 0; j < groupInfo.NumTransitions; j++)
+                {
+                    var tranInfo = _chromTransitions[groupInfo.StartTransitionIndex + j];
+                    yield return new ChromKeyIndices(new ChromKey(groupInfo.Precursor, tranInfo.Product),
+                        groupInfo.LocationPoints, i, j);
+                }
+            }
         }
 
         public ChromatogramCache Optimize(string documentPath, IEnumerable<string> msDataFilePaths, IStreamManager streamManager)
@@ -784,5 +824,22 @@ namespace pwiz.Skyline.Model.Results
         {
             PathComparer = new PathEqualityComparer();
         }
+    }
+    
+    public struct ChromKeyIndices
+    {
+        public ChromKeyIndices(ChromKey key, long locationPoints, int groupIndex, int tranIndex)
+            : this()
+        {
+            Key = key;
+            LocationPoints = locationPoints;
+            GroupIndex = groupIndex;
+            TranIndex = tranIndex;
+        }
+
+        public ChromKey Key { get; private set; }
+        public long LocationPoints { get; private set; }
+        public int GroupIndex { get; private set; }
+        public int TranIndex { get; private set; }
     }
 }

@@ -296,6 +296,23 @@ namespace pwiz.Skyline.FileUI
             listResults.Focus();
         }
 
+        private void btnRescore_Click(object sender, EventArgs e)
+        {
+            Rescore();
+        }
+
+        public void Rescore()
+        {
+            using (var dlg = new RescoreResultsDlg(DocumentUIContainer))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // If the RescoreResultsDlg did work then cancel out of this dialog
+                    DialogResult = DialogResult.Cancel;
+                }
+            }
+        }
+
         private void btnMinimize_Click(object sender, EventArgs e)
         {
             MinimizeResults();

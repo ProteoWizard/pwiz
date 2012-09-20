@@ -22,7 +22,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Crawdad;
 using pwiz.Skyline.Model.Results.Scoring;
-using pwiz.Skyline.Properties;
+
 namespace pwiz.Skyline.Model.Results
 {
     internal sealed class ChromData

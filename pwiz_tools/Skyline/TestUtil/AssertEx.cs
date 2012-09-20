@@ -182,6 +182,13 @@ namespace pwiz.SkylineTestUtil
                 validate(target, RoundTrip(target, ref expected));
         }
 
+        public static TObj RoundTrip<TObj>(TObj target)
+            where TObj : class
+        {
+            string dummy = null;
+            return RoundTrip(target, ref dummy);
+        }
+
         public static TObj RoundTrip<TObj>(TObj target, ref string expected)
             where TObj : class
         {

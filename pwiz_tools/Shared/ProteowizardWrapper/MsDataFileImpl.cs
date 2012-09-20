@@ -32,7 +32,7 @@ namespace pwiz.ProteowizardWrapper
 
         // Cached disposable objects
         private MSData _msDataFile;
-        private ReaderConfig _config;
+        private readonly ReaderConfig _config;
         private SpectrumList _spectrumList;
         private SpectrumList _spectrumListCentroided;
         private ChromatogramList _chromatogramList;

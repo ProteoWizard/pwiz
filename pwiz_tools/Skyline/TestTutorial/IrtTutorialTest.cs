@@ -28,6 +28,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util.Extensions;
@@ -587,17 +588,18 @@ namespace pwiz.SkylineTestTutorial
             }
 
             // Inspect MS1 filtered Skyline file created from library DDA data, p. 29
-            RunUI(() =>
-                      {
-                          SkylineWindow.OpenFile(GetTestPath(Path.Combine("Yeast+Standard", // Not L10N
-                                                                          "Yeast+Standard (refined) - 2min.sky"))); // Not L10N
-                          SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Peptides, 0);
-                      });
+            RunUI(() => SkylineWindow.OpenFile(GetTestPath(Path.Combine("Yeast+Standard", // Not L10N
+                                                                        "Yeast+Standard (refined) - 2min.sky"))));
+            WaitForDocumentLoaded();
+            RunUI(() =>  SkylineWindow.SelectedPath = SkylineWindow.DocumentUI.GetPathTo((int) SrmDocument.Level.Peptides, 0));
             WaitForGraphs();
 
             // Verify numbers that show up in the screenshot
             RunUI(() =>
                       {
+                          // If the cache gets rebuilt, then because the chromatograms
+                          // were minimized, the peak picking is not exactly the same
+                          // using the minimized chromatograms.
                           VerifyRTRegression(0.3, 19.47, 0.9998);
                           var graphChrom = SkylineWindow.GetGraphChrom("Velos_2011_1110_RJ_16"); // Not L10N
                           Assert.AreEqual(37.6, graphChrom.RetentionMsMs[0], 0.05);

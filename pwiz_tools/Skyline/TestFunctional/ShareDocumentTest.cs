@@ -145,15 +145,15 @@ namespace pwiz.SkylineTestFunctional
 //                          newFileSet[blibName].UncompressedSize);
             WaitForLibraries();
 
-
             // Open the original .sky file
             RunUI(() => SkylineWindow.OpenFile(documentPath));
+            WaitForDocumentLoaded();
 
             // Disable MS1 filtering
             // Share the complete document.
             // The zip file should not contain the redundant library.
-            origFileSet.Remove(redundantBlibName);
             DisableMS1Filtering();
+            origFileSet.Remove(redundantBlibName);
             shareDocPath = TestFilesDirs[1].GetTestPath(zipNameCompleteNoMS1);
             Share(shareDocPath, true, origFileSet, newFileSet, docName);
             WaitForLibraries();
@@ -353,20 +353,21 @@ namespace pwiz.SkylineTestFunctional
             }
         }
 
-        private static void SetDocument(Func<SrmDocument, SrmDocument> changeDoc)
+        private static void DisableMS1Filtering()
         {
             var doc = SkylineWindow.Document;
-            var docNew = changeDoc(doc);
-            Assert.IsTrue(SkylineWindow.SetDocument(docNew, doc));
+            var docNew = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null)));
+            bool setSuccess = SkylineWindow.SetDocument(docNew, doc);
+            if (!setSuccess)
+            {
+                Assert.IsTrue(doc.Settings.IsLoaded);
+                Assert.AreEqual(doc.RevisionIndex, SkylineWindow.Document.RevisionIndex);
+                Assert.AreNotSame(doc, SkylineWindow.Document);
+                Assert.IsTrue(setSuccess);                
+            }
             Assert.IsFalse(ReferenceEquals(SkylineWindow.Document, doc));
             Assert.IsTrue(ReferenceEquals(SkylineWindow.Document, docNew));
         }
-
-        private static void DisableMS1Filtering()
-        {
-            SetDocument(doc => doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.None, null, null))));
-        }
-
     }
 }

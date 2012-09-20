@@ -205,7 +205,7 @@ namespace pwiz.Skyline.ToolsUI
             return comboReport.Items.Cast<string>().Any(item => item == reportTitle);
         }
 
-        public static readonly string[] EXTENSIONS = new[]{".exe", ".com", ".pif", ".cmd", ".bat"};
+        public static readonly string[] EXTENSIONS = new[]{".exe", ".com", ".pif", ".cmd", ".bat", ".py", ".pl"};
 
         public static bool checkExtension(string path)
         {

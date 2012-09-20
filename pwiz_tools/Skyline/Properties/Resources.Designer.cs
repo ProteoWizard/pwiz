@@ -1646,6 +1646,16 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The path &apos;{0}&apos; was not found among previously imported results..
+        /// </summary>
+        public static string ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previously_imported_results_ {
+            get {
+                return ResourceManager.GetString("ChromCacheBuilder_GetRecalcFileBuildInfo_The_path___0___was_not_found_among_previ" +
+                        "ously_imported_results_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Existing write threads: {0}.
         /// </summary>
         public static string ChromCacheBuilder_WriteLoop_Existing_write_threads___0_ {
@@ -6405,6 +6415,16 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("MeasuredPeptide_ValidateSequence_The_sequence__0__is_not_a_valid_modified_peptide" +
                         "_sequence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attempting to recalculate peak integration without first completing raw data import..
+        /// </summary>
+        public static string MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_ {
+            get {
+                return ResourceManager.GetString("MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_wit" +
+                        "hout_first_completing_raw_data_import_", resourceCulture);
             }
         }
         
