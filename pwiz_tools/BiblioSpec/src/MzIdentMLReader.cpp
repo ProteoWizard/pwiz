@@ -150,7 +150,7 @@ void MzIdentMLReader::collectPsms(){
                 curPSM_->specName = idStr;
                 curPSM_->score = score;
                 curPSM_->charge = item.chargeState;
-                extractModifications(item.peptidePtr->id, curPSM_);
+                extractModifications(item.peptidePtr, curPSM_);
                 
                 // add the psm to the map
                 Verbosity::comment(V_DETAIL, "For file %s adding PSM: "
@@ -176,23 +176,32 @@ void MzIdentMLReader::collectPsms(){
  * Using the modified peptide sequence, with modifications of the form
  * +mass or -mass, set the unmodSeq and mods fields of the psm.
  */
-void MzIdentMLReader::extractModifications(string modPepSeq, PSM* psm){
+void MzIdentMLReader::extractModifications(PeptidePtr peptide, PSM* psm){
 
-    size_t modPos = modPepSeq.find_first_of("+-");
-    while( modPos < modPepSeq.size() ){
-        // parse and save the mod
-        double mass = atof(modPepSeq.c_str() + modPos);
-        psm->mods.push_back(SeqMod(modPos, mass));
+    vector<ModificationPtr>::const_iterator itMod=peptide->modification.begin(); 
+    vector<SubstitutionModificationPtr>::const_iterator itSubst=peptide->substitutionModification.begin(); 
+    while (itMod!=peptide->modification.end() || itSubst!=peptide->substitutionModification.end()){
 
-        // delete the mod from the sequence
-        size_t modEnd = modPepSeq.find_first_of("ACDEFGHIKLMNPQRSTVWY", modPos);
-        modPepSeq.erase(modPos, modEnd - modPos);
-
-        // find next mod
-        modPos = modPepSeq.find_first_of("+-", modPos + 1);
+        int location;
+        double massDelta;
+        if (itMod!=peptide->modification.end() && (itSubst==peptide->substitutionModification.end() ||
+                                                   (*itMod)->location < (*itSubst)->location)) {
+            ModificationPtr mod = *itMod++;
+            location = mod->location;
+            massDelta = mod->monoisotopicMassDelta != 0 ? mod->monoisotopicMassDelta : mod->avgMassDelta;
+        } else {
+            SubstitutionModificationPtr mod = *itSubst++;
+            location = mod->location;
+            massDelta = mod->monoisotopicMassDelta != 0 ? mod->monoisotopicMassDelta : mod->avgMassDelta;
+        }
+        // N-terminal modifications can be set to location zero, which is not supported
+        // in BiblioSpec.  Instead, N-terminal modifications are treated as modifictions
+        // to the first amino acid residue, as in X! Tandem.
+        location = max(location, 1);
+        psm->mods.push_back(SeqMod(location, massDelta));
     }
 
-    psm->unmodSeq = modPepSeq;
+    psm->unmodSeq = peptide->peptideSequence;
 }
 
 /**

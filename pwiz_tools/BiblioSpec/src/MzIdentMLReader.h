@@ -53,7 +53,7 @@ namespace BiblioSpec{
 
 
         void collectPsms();
-        void extractModifications(string modPepSeq, PSM* psm);
+        void extractModifications(pwiz::identdata::PeptidePtr peptide, PSM* psm);
         double getScore(const pwiz::identdata::SpectrumIdentificationItem& item);
     };
 } // namespace

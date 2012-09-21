@@ -1,8 +1,8 @@
 libLSID	numSpecs	majorVersion	minorVersion
 urn:lsid:proteome.gs.washington.edu:spectral_library:bibliospec:redundant:scaffold.blib	4	1	1
 id	RefSpectraID	position	mass
-1	2	2	57.0
-2	2	8	57.0
+1	2	2	57.021465
+2	2	8	57.021465
 id	peptideSeq	precursorMZ	precursorCharge	peptideModSeq	prevAA	nextAA	copies	numPeaks	retentionTime	fileID	SpecIDinFile	score	scoreType
 1	GEQYVLEK	483.228638	2	GEQYVLEK	-	-	1	85	0.0	1	ScaffoldIDNumber_126_bovine_spot_06.252.252.2.dta	0.990266	8
 2	RCELTAECPNLTESLLEK	1082.203638	2	RC[+57.0]ELTAEC[+57.0]PNLTESLLEK	-	-	1	256	0.0	1	ScaffoldIDNumber_177_bovine_spot_06.532.532.2.dta	1.0	8
