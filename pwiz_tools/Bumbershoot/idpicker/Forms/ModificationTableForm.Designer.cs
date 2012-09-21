@@ -53,9 +53,9 @@ namespace IDPicker.Forms
         private void InitializeComponent ()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle13 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle14 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle15 = new System.Windows.Forms.DataGridViewCellStyle();
             this.exportButton = new System.Windows.Forms.Button();
             this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.copyToClipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -95,9 +95,9 @@ namespace IDPicker.Forms
             this.showSelectedCellsInExcelDetailToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.siteColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.massColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.spectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.matchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.peptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.matchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.spectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.unimodColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.exportMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.roundToNearestUpDown)).BeginInit();
@@ -301,17 +301,17 @@ namespace IDPicker.Forms
             // 
             // GridPanel
             // 
+            this.GridPanel.Controls.Add(this.label1);
             this.GridPanel.Controls.Add(this.switchtoTableButton);
-            this.GridPanel.Controls.Add(this.dataGridView);
             this.GridPanel.Controls.Add(this.pivotModeComboBox);
             this.GridPanel.Controls.Add(this.exportButton);
-            this.GridPanel.Controls.Add(this.label1);
             this.GridPanel.Controls.Add(this.MinRowLabel);
             this.GridPanel.Controls.Add(this.roundToNearestUpDown);
             this.GridPanel.Controls.Add(this.MinRowBox);
             this.GridPanel.Controls.Add(this.MinColumnBox);
             this.GridPanel.Controls.Add(this.MinColumnLabel);
             this.GridPanel.Controls.Add(this.unimodButton);
+            this.GridPanel.Controls.Add(this.dataGridView);
             this.GridPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.GridPanel.Location = new System.Drawing.Point(0, 0);
             this.GridPanel.Name = "GridPanel";
@@ -329,35 +329,35 @@ namespace IDPicker.Forms
             | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.AllCells;
             this.dataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle13.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle13.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle13.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle13.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle13.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle13.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle13.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle13;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle14.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle14.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle14.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle14.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle14.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle14.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle14.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView.DefaultCellStyle = dataGridViewCellStyle14;
             this.dataGridView.GridColor = System.Drawing.SystemColors.Control;
             this.dataGridView.Location = new System.Drawing.Point(2, 28);
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.ReadOnly = true;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle15.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle15.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle15.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle15.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle15.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle15.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle15.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView.RowHeadersDefaultCellStyle = dataGridViewCellStyle15;
             this.dataGridView.RowHeadersWidth = 80;
             this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
             this.dataGridView.Size = new System.Drawing.Size(749, 235);
@@ -365,11 +365,11 @@ namespace IDPicker.Forms
             // 
             // TablePanel
             // 
+            this.TablePanel.Controls.Add(this.detailDataGridView);
             this.TablePanel.Controls.Add(this.label3);
             this.TablePanel.Controls.Add(this.roundToNearestTableUpDown);
             this.TablePanel.Controls.Add(this.tablePeptidesFilterBox);
             this.TablePanel.Controls.Add(this.label2);
-            this.TablePanel.Controls.Add(this.detailDataGridView);
             this.TablePanel.Controls.Add(this.switchToGridButton);
             this.TablePanel.Controls.Add(this.exportTableButton);
             this.TablePanel.Controls.Add(this.unimodTableButton);
@@ -435,11 +435,11 @@ namespace IDPicker.Forms
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(405, 8);
+            this.label2.Location = new System.Drawing.Point(408, 8);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(95, 13);
             this.label2.TabIndex = 18;
-            this.label2.Text = "Minimum Peptides:";
+            this.label2.Text = "Minimum Matches:";
             // 
             // detailDataGridView
             // 
@@ -452,9 +452,9 @@ namespace IDPicker.Forms
             this.detailDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.siteColumn,
             this.massColumn,
-            this.spectraColumn,
-            this.matchesColumn,
             this.peptidesColumn,
+            this.matchesColumn,
+            this.spectraColumn,
             this.unimodColumn});
             this.detailDataGridView.Location = new System.Drawing.Point(2, 28);
             this.detailDataGridView.Name = "detailDataGridView";
@@ -557,46 +557,51 @@ namespace IDPicker.Forms
             // 
             // siteColumn
             // 
-            this.siteColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.siteColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
             this.siteColumn.FillWeight = 50F;
             this.siteColumn.HeaderText = "Site";
             this.siteColumn.MinimumWidth = 20;
             this.siteColumn.Name = "siteColumn";
+            this.siteColumn.Width = 50;
             // 
             // massColumn
             // 
-            this.massColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.massColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             this.massColumn.FillWeight = 50F;
-            this.massColumn.HeaderText = "Mass";
+            this.massColumn.HeaderText = "ΔMass";
             this.massColumn.MinimumWidth = 20;
             this.massColumn.Name = "massColumn";
-            // 
-            // spectraColumn
-            // 
-            this.spectraColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.spectraColumn.HeaderText = "Filtered Spectra";
-            this.spectraColumn.MinimumWidth = 20;
-            this.spectraColumn.Name = "spectraColumn";
-            // 
-            // matchesColumn
-            // 
-            this.matchesColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.matchesColumn.HeaderText = "Distinct Matches";
-            this.matchesColumn.MinimumWidth = 20;
-            this.matchesColumn.Name = "matchesColumn";
+            this.massColumn.Width = 70;
             // 
             // peptidesColumn
             // 
-            this.peptidesColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.peptidesColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
             this.peptidesColumn.HeaderText = "Distinct Peptides";
             this.peptidesColumn.MinimumWidth = 20;
             this.peptidesColumn.Name = "peptidesColumn";
+            this.peptidesColumn.Width = 110;
+            // 
+            // matchesColumn
+            // 
+            this.matchesColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.matchesColumn.HeaderText = "Distinct Matches";
+            this.matchesColumn.MinimumWidth = 20;
+            this.matchesColumn.Name = "matchesColumn";
+            this.matchesColumn.Width = 110;
+            // 
+            // spectraColumn
+            // 
+            this.spectraColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.spectraColumn.HeaderText = "Filtered Spectra";
+            this.spectraColumn.MinimumWidth = 20;
+            this.spectraColumn.Name = "spectraColumn";
+            this.spectraColumn.Width = 110;
             // 
             // unimodColumn
             // 
             this.unimodColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.unimodColumn.FillWeight = 200F;
-            this.unimodColumn.HeaderText = "Unimod";
+            this.unimodColumn.HeaderText = "Description";
             this.unimodColumn.MinimumWidth = 20;
             this.unimodColumn.Name = "unimodColumn";
             this.unimodColumn.ReadOnly = true;
@@ -671,9 +676,9 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem showSelectedCellsInExcelDetailToolStripMenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn siteColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn massColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn spectraColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn matchesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn peptidesColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn matchesColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn spectraColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn unimodColumn;
 
     }

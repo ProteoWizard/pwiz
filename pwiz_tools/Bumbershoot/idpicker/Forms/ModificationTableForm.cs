@@ -619,15 +619,15 @@ namespace IDPicker.Forms
                 {
                     var mod = (tuple[1] as DataModel.Modification);
                     var roundedMass = DistinctModificationFormat.Round(mod.MonoMassDelta);
-                    var explanations = _unimodControl.GetPossibleDescriptions((char)tuple[0], roundedMass);
+                    var explanations = _unimodControl.GetPossibleDescriptions((char)tuple[0], roundedMass).Distinct();
 
                     var newRow = new object[6];
                     newRow[0] = tuple[0];
                     newRow[1] = roundedMass;
-                    newRow[2] = tuple[2];
-                    newRow[3] = tuple[3];
-                    newRow[4] = tuple[4];
-                    newRow[5] = string.Join("; ", explanations.ToArray());
+                    newRow[2] = Convert.ToInt32(tuple[2]);
+                    newRow[3] = Convert.ToInt32(tuple[3]);
+                    newRow[4] = Convert.ToInt32(tuple[4]);
+                    newRow[5] = String.Join("; ", explanations);
 
                     var rowIndex = detailDataGridView.Rows.Add(newRow);
                 }
@@ -720,16 +720,19 @@ namespace IDPicker.Forms
         {
             if (_unimodControl == null || detailDataGridView == null || detailDataGridView.Rows.Count == 0)
                 return;
+
             var pairs = _unimodControl.GetUnimodPairs();
+            var minMatches = Int32.Parse(tablePeptidesFilterBox.Text);
 
             if (!pairs.Any())
             {
+                detailDataGridView.SuspendLayout();
                 foreach (DataGridViewRow row in detailDataGridView.Rows)
                 {
-                    var peptides = int.Parse(row.Cells[2].Value.ToString());
-                    var minPeptides = int.Parse(tablePeptidesFilterBox.Text);
-                    row.Visible = peptides >= minPeptides; 
+                    int matches = (int) row.Cells[matchesColumn.Index].Value;
+                    row.Visible = matches >= minMatches;
                 }
+                detailDataGridView.ResumeLayout();
                 return;
             }
 
@@ -738,9 +741,8 @@ namespace IDPicker.Forms
             {
                 var residue = (char)row.Cells[0].Value;
                 var mass = (double)row.Cells[1].Value;
-                var peptides = int.Parse(row.Cells[2].Value.ToString());
-                var minPeptides = int.Parse(tablePeptidesFilterBox.Text);
-                if (!pairs.ContainsKey(residue) || !pairs[residue].Contains(mass) || peptides < minPeptides)
+                int matches = (int)row.Cells[matchesColumn.Index].Value;
+                if (!pairs.ContainsKey(residue) || !pairs[residue].Contains(mass) || matches < minMatches)
                     row.Visible = false;
                 else
                     row.Visible = true;

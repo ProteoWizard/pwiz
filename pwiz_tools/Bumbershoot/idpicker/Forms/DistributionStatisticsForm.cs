@@ -85,12 +85,9 @@ namespace IDPicker.Forms
             chargeStatesForm = new DockableGraphForm { Text = "Charge States" };
             chargeStatesForm.ZedGraphControl.GraphPane.YAxis.Title.Text = "Spectra";
             chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Title.Text = "Charge State";
-            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Scale.MajorStepAuto = false;
-            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Scale.MajorStep = 1;
-            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Scale.Format = "f0";
-            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Scale.IsSkipFirstLabel = true;
-            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Scale.IsSkipLastLabel = true;
-            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.MajorTic.IsAllTics = false;
+            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Type = AxisType.Text;
+            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.MajorTic.IsOpposite = false;
+            chargeStatesForm.ZedGraphControl.GraphPane.XAxis.MajorTic.IsInside = false;
             chargeStatesForm.ZedGraphControl.GraphPane.XAxis.MinorTic.IsAllTics = false;
             chargeStatesForm.ZedGraphControl.GraphPane.Legend.IsVisible = false;
             chargeStatesForm.ZedGraphControl.GraphPane.Border.IsVisible = false;
@@ -140,9 +137,16 @@ namespace IDPicker.Forms
             {
                 e.DataTable = new DataTable();
                 e.DataTable.Columns.Add("Mass Error", typeof(double));
+                e.DataTable.Columns.Add("Charge", typeof(int));
+
+                // the grass plots, with a symbol type, hold the real data; the tag is the charge state
                 e.DataTable.BeginLoadData();
-                foreach (var point in precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList[1].Points as PointPairList)
-                    e.DataTable.Rows.Add(point.X);
+                foreach (var curve in precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Where(o => (o as LineItem).Symbol.Type != SymbolType.None))
+                {
+                    int charge = (int) curve.Tag;
+                    foreach (var point in curve.Points as PointPairList)
+                        e.DataTable.Rows.Add(point.X, charge);
+                }
                 e.DataTable.EndLoadData();
             };
 
@@ -152,8 +156,9 @@ namespace IDPicker.Forms
                 e.DataTable.Columns.Add("Charge State", typeof(int));
                 e.DataTable.Columns.Add("Spectra", typeof(int));
                 e.DataTable.BeginLoadData();
-                foreach (BarItem item in chargeStatesForm.ZedGraphControl.GraphPane.CurveList)
-                    e.DataTable.Rows.Add((int) item.Points[0].X, (int) item.Points[0].Y);
+                var points = chargeStatesForm.ZedGraphControl.GraphPane.CurveList[0].Points;
+                for (int i = 0; i < points.Count; ++i)
+                    e.DataTable.Rows.Add((int)points[i].X, (int)points[i].Y);
                 e.DataTable.EndLoadData();
             };
 
@@ -325,7 +330,7 @@ namespace IDPicker.Forms
                             var precursorMassErrors = precursorMassErrorCluster;
                             var precursorMassErrorValues = precursorMassErrors.Select(o => o.MassError).ToArray();
                             var densityCurve = new LineItem(firstCluster ? kvp.Key.ToString() : "", getDensityCurve(precursorMassErrorValues, 0), color, SymbolType.None);
-                            var grassPlot = new LineItem("", precursorMassErrorValues, Enumerable.Repeat(0.0, precursorMassErrorValues.Length).ToArray(), color.Interpolate(Color.Gray, 0.5f), SymbolType.VDash);
+                            var grassPlot = new LineItem("", precursorMassErrorValues, Enumerable.Repeat(0.0, precursorMassErrorValues.Length).ToArray(), color.Interpolate(Color.Gray, 0.5f), SymbolType.VDash) { Tag = kvp.Key };
                             densityCurve.Line.IsAntiAlias = true;
                             precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
                             precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
@@ -354,19 +359,22 @@ namespace IDPicker.Forms
                 }
 
                 var colorRotator = new ColorSymbolRotator();
-                var colors = new Dictionary<int, Color[]>();
+                var colors = new List<Color>();
                 foreach (var kvp in spectralCountByChargeState)
-                {
-                    var color = colorRotator.NextColor;
-                    colors[kvp.Key] = new Color[3] { color, Color.White, color };
-                }
+                    colors.Add(colorRotator.NextColor);
 
                 chargeStatesForm.ZedGraphControl.GraphPane.CurveList.Clear();
-                foreach (var kvp in spectralCountByChargeState)
+                chargeStatesForm.ZedGraphControl.GraphPane.BarSettings.MinClusterGap = 8;
+                var barItem = chargeStatesForm.ZedGraphControl.GraphPane.AddBar("", spectralCountByChargeState.Keys.Select(o => (double)o).ToArray(), spectralCountByChargeState.Values.Select(o => (double)o).ToArray(), Color.White) as BarItem;
+                for (int i = 0; i < barItem.Points.Count; ++i)
+                    barItem.Points[i].ColorValue = (double) i+1;
+                barItem.Bar.Fill = new Fill(colors.ToArray())
                 {
-                    var barItem = chargeStatesForm.ZedGraphControl.GraphPane.AddBar("", new double[] { kvp.Key }, new double[] { kvp.Value }, Color.White) as BarItem;
-                    barItem.Bar.Fill = new Fill(colors[kvp.Key]);
-                }
+                    Type = FillType.GradientByColorValue,
+                    RangeMin = 1,
+                    RangeMax = colors.Count
+                };
+                chargeStatesForm.ZedGraphControl.GraphPane.XAxis.Scale.TextLabels = spectralCountByChargeState.Keys.Select(o => o.ToString()).ToArray();
             }
             catch (Exception ex)
             {
