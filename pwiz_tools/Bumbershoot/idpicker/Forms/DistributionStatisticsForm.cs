@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -66,7 +67,6 @@ namespace IDPicker.Forms
             precursorMassErrorForm.ZedGraphControl.GraphPane.XAxis.Title.Text = "Observed - Expected Mass";
             precursorMassErrorForm.ZedGraphControl.GraphPane.XAxis.MajorTic.IsInside = false;
             precursorMassErrorForm.ZedGraphControl.GraphPane.XAxis.MinorTic.IsInside = false;
-            precursorMassErrorForm.ZedGraphControl.GraphPane.Legend.IsVisible = false;
             precursorMassErrorForm.ZedGraphControl.GraphPane.Border.IsVisible = false;
             precursorMassErrorForm.ZedGraphControl.GraphPane.IsFontsScaled = false;
             precursorMassErrorForm.ZedGraphControl.GraphPane.IsPenWidthScaled = false;
@@ -77,7 +77,6 @@ namespace IDPicker.Forms
             scanTimeDistributionForm.ZedGraphControl.GraphPane.XAxis.Title.Text = "Scan Time (minutes)";
             scanTimeDistributionForm.ZedGraphControl.GraphPane.XAxis.MajorTic.IsInside = false;
             scanTimeDistributionForm.ZedGraphControl.GraphPane.XAxis.MinorTic.IsInside = false;
-            scanTimeDistributionForm.ZedGraphControl.GraphPane.Legend.IsVisible = false;
             scanTimeDistributionForm.ZedGraphControl.GraphPane.Border.IsVisible = false;
             scanTimeDistributionForm.ZedGraphControl.GraphPane.IsFontsScaled = false;
             scanTimeDistributionForm.ZedGraphControl.GraphPane.IsPenWidthScaled = false;
@@ -257,23 +256,50 @@ namespace IDPicker.Forms
             public double ObservedNeutralMass { get; set; }
             public double MassError { get; set; }
             public double ScanTime { get; set; }
+            public int Charge { get; set; }
+        }
+
+        Map<int, List<List<PSMRow>>> clusterMassErrors(Map<int, List<PSMRow>> massErrorsByCharge)
+        {
+            Map<int, List<List<PSMRow>>> result = new Map<int, List<List<PSMRow>>>();
+            foreach (var kvp in massErrorsByCharge)
+            {
+                var massErrors = kvp.Value.OrderBy(o => o.MassError).ToList();
+                List<PSMRow> currentCluster = null;
+                foreach (var psm in massErrors)
+                {
+                    if (currentCluster.IsNullOrEmpty() || psm.MassError - currentCluster.Last().MassError > 0.9)
+                    {
+                        if (currentCluster != null)
+                            result[kvp.Key].Add(currentCluster);
+                        currentCluster = new List<PSMRow>();
+                    }
+                    currentCluster.Add(psm);
+                }
+
+                if (currentCluster != null)
+                    result[kvp.Key].Add(currentCluster);
+            }
+            return result;
         }
 
         void setData (object sender, DoWorkEventArgs e)
         {
             try
             {
-                IList<PSMRow> precursorMassErrors;
+                Map<int, List<PSMRow>> precursorMassErrorsByCharge = new Map<int, List<PSMRow>>(); ;
                 IDictionary<int, int> spectralCountByChargeState;
                 lock (session)
                 {
-                    var query = session.CreateQuery("SELECT psm.ObservedNeutralMass, psm.MonoisotopicMassError, psm.MolecularWeightError, s.ScanTimeInSeconds" + dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToSpectrum));
-                    precursorMassErrors = query.List<object[]>().Select(o => new PSMRow
-                    {
-                        ObservedNeutralMass = (double)o[0],
-                        MassError = PeptideSpectrumMatch.GetSmallerMassError((double)o[1], (double)o[2]),
-                        ScanTime = (double)o[3] / 60 // convert to minutes
-                    }).ToList();
+                    var query = session.CreateQuery("SELECT psm.ObservedNeutralMass, psm.MonoisotopicMassError, psm.MolecularWeightError, s.ScanTimeInSeconds, psm.Charge " + dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToSpectrum));
+                    query.List<object[]>().ForEach(o =>
+                        precursorMassErrorsByCharge[(int)o[4]].Add(new PSMRow
+                        {
+                            ObservedNeutralMass = (double)o[0],
+                            MassError = PeptideSpectrumMatch.GetSmallerMassError((double)o[1], (double)o[2]),
+                            ScanTime = (double)o[3] / 60, // convert to minutes
+                            Charge = (int)o[4]
+                        }));
 
                     query = session.CreateQuery("SELECT psm.Charge, COUNT(DISTINCT psm.Spectrum.id) " +
                                                 dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
@@ -281,30 +307,49 @@ namespace IDPicker.Forms
                     spectralCountByChargeState = query.List<object[]>().ToDictionary(o => Convert.ToInt32(o[0]), o => Convert.ToInt32(o[1]));
                 }
 
+                Map<int, List<List<PSMRow>>> clusteredPrecursorMassErrorsByCharge = clusterMassErrors(precursorMassErrorsByCharge);
+
                 // convert to PPM if the user requested it
                 if (!ppmMassErrorMenuItem.Text.Contains("PPM"))
-                    precursorMassErrors.ForEach(o => o.MassError = o.MassError / o.ObservedNeutralMass * 1e6);
+                    clusteredPrecursorMassErrorsByCharge.Values.ForEach(o3 => o3.ForEach(o2 => o2.ForEach(o => o.MassError = o.MassError / o.ObservedNeutralMass * 1e6)));
 
                 {
+                    var csr = new ColorSymbolRotator();
                     precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Clear();
-                    var precursorMassErrorValues = precursorMassErrors.Select(o => o.MassError).ToList();
-                    var densityCurve = new LineItem("", getDensityCurve(precursorMassErrorValues, 0), Color.Red, SymbolType.None);
-                    var grassPlot = new LineItem("", precursorMassErrorValues.ToArray(), Enumerable.Repeat(0.0, precursorMassErrors.Count).ToArray(), Color.Gray, SymbolType.VDash);
-                    densityCurve.Line.IsAntiAlias = true;
-                    precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
-                    precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                    foreach (var kvp in clusteredPrecursorMassErrorsByCharge)
+                    {
+                        bool firstCluster = true;
+                        var color = csr.NextColor;
+                        foreach (var precursorMassErrorCluster in kvp.Value)
+                        {
+                            var precursorMassErrors = precursorMassErrorCluster;
+                            var precursorMassErrorValues = precursorMassErrors.Select(o => o.MassError).ToArray();
+                            var densityCurve = new LineItem(firstCluster ? kvp.Key.ToString() : "", getDensityCurve(precursorMassErrorValues, 0), color, SymbolType.None);
+                            var grassPlot = new LineItem("", precursorMassErrorValues, Enumerable.Repeat(0.0, precursorMassErrorValues.Length).ToArray(), color.Interpolate(Color.Gray, 0.5f), SymbolType.VDash);
+                            densityCurve.Line.IsAntiAlias = true;
+                            precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
+                            precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                            firstCluster = false;
+                        }
+                    }
                 }
 
                 {
+                    var csr = new ColorSymbolRotator();
                     scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Clear();
-                    var scanTimeValues = precursorMassErrors.Select(o => o.ScanTime).ToList();
-                    if (scanTimeValues.Max() > 0)
+                    foreach (var kvp in precursorMassErrorsByCharge)
                     {
-                        var densityCurve = new LineItem("", getDensityCurve(scanTimeValues, 0), Color.Red, SymbolType.None);
-                        var grassPlot = new LineItem("", scanTimeValues.ToArray(), Enumerable.Repeat(0.0, scanTimeValues.Count).ToArray(), Color.Gray, SymbolType.VDash);
-                        densityCurve.Line.IsAntiAlias = true;
-                        scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
-                        scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                        var precursorMassErrors = kvp.Value;
+                        var scanTimeValues = precursorMassErrors.Select(o => o.ScanTime).ToList();
+                        var color = csr.NextColor;
+                        if (scanTimeValues.Max() > 0)
+                        {
+                            var densityCurve = new LineItem(kvp.Key.ToString(), getDensityCurve(scanTimeValues, 0), color, SymbolType.None);
+                            var grassPlot = new LineItem("", scanTimeValues.ToArray(), Enumerable.Repeat(0.0, scanTimeValues.Count).ToArray(), color.Interpolate(Color.Gray, 0.5f), SymbolType.VDash);
+                            densityCurve.Line.IsAntiAlias = true;
+                            scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
+                            scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
+                        }
                     }
                 }
 

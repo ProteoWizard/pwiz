@@ -71,6 +71,8 @@
   &lt;string&gt;MyriMatch optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh;1 Ascending Off xcorr&lt;/string&gt;
   &lt;string&gt;MyriMatch MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh&lt;/string&gt;
   &lt;string&gt;MyriMatch XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off xcorr&lt;/string&gt;
+  &lt;string&gt;MS-GFDB;StaticWeighted;False;Linear;Ignore;Ignore;Ignore;Ignore;0.02;1 Descending Off msgfspecprob&lt;/string&gt;
+  &lt;string&gt;MS-GF+;StaticWeighted;False;Linear;Ignore;Ignore;Ignore;Ignore;0.02;1 Descending Off ms-gf:specevalue&lt;/string&gt;
   &lt;string&gt;OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off expect&lt;/string&gt;
   &lt;string&gt;Pepitome optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off hgt;1 Ascending Off kendallpval&lt;/string&gt;
   &lt;string&gt;Pepitome MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh&lt;/string&gt;

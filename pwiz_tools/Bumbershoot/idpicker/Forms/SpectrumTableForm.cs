@@ -167,7 +167,7 @@ namespace IDPicker.Forms
             public double[] TMT_ReporterIonIntensities { get; private set; }
 
             #region Constructor
-            public SpectrumRow(object[] queryRow, DataFilter dataFilter, IList<Grouping<GroupBy>> checkedGroupings)
+            public SpectrumRow(object[] queryRow, DataFilter dataFilter, IList<Grouping<GroupBy>> checkedGroupings, bool singleSource)
                 : base(queryRow, dataFilter)
             {
                 int column = AggregateRow.ColumnCount - 1;
@@ -184,8 +184,8 @@ namespace IDPicker.Forms
                 try { Key = pwiz.CLI.msdata.id.abbreviate(Key); }
                 catch { }
 
-                // if not grouping by Source, prepend Spectrum.Source to the NativeID
-                if (checkedGroupings.Count(o => o.Mode == GroupBy.Source) == 0)
+                // if there are at least 2 sources and not grouping by Source, prepend Spectrum.Source to the NativeID
+                if (!singleSource && checkedGroupings.Count(o => o.Mode == GroupBy.Source) == 0)
                     Key = (Group.Name + "/" + Source.Name + "/" + Key).Replace("//", "/");
             }
             #endregion
@@ -536,18 +536,21 @@ namespace IDPicker.Forms
         IList<Row> getSpectrumRows (DataFilter parentFilter)
         {
             lock (session)
-            return session.CreateQuery(AggregateRow.Selection +
-                                       ", s, ss, ssg, MIN(psm.QValue)" +
-                                       ", s.iTRAQ_ReporterIonIntensities" +
-                                       ", s.TMT_ReporterIonIntensities" +
-                                       parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                           DataFilter.PeptideSpectrumMatchToProtein,
-                                                                           DataFilter.PeptideSpectrumMatchToSpectrumSourceGroup) +
-                                       "GROUP BY s.id " +
-                                       "ORDER BY ss.Name, s.Index")
-                          .List<object[]>()
-                          .Select(o => new SpectrumRow(o, parentFilter, checkedGroupings) as Row)
-                          .ToList();
+            {
+                bool singleSource = session.Query<SpectrumSource>().Count() == 1;
+                return session.CreateQuery(AggregateRow.Selection +
+                                           ", s, ss, ssg, MIN(psm.QValue)" +
+                                           ", s.iTRAQ_ReporterIonIntensities" +
+                                           ", s.TMT_ReporterIonIntensities" +
+                                           parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                               DataFilter.PeptideSpectrumMatchToProtein,
+                                                                               DataFilter.PeptideSpectrumMatchToSpectrumSourceGroup) +
+                                           "GROUP BY s.id " +
+                                           "ORDER BY ss.Name, s.Index")
+                              .List<object[]>()
+                              .Select(o => new SpectrumRow(o, parentFilter, checkedGroupings, singleSource) as Row)
+                              .ToList();
+            }
         }
 
         IList<Row> getPeptideSpectrumMatchRows (DataFilter parentFilter)
@@ -946,7 +949,7 @@ namespace IDPicker.Forms
                 else if (columnIndex == observedMassColumn.Index) return row.ObservedMass;
                 else if (columnIndex == exactMassColumn.Index) return row.ExactMass;
                 else if (columnIndex == massErrorColumn.Index) return row.ObservedMass - row.ExactMass;
-                else if (columnIndex == analysisColumn.Index) return String.Format("{0} {1}", row.Analysis.Id, row.Analysis.Name);
+                else if (columnIndex == analysisColumn.Index) return row.Analysis.Name;
                 else if (columnIndex == chargeColumn.Index) return row.Charge;
                 else if (columnIndex == qvalueColumn.Index) return row.QValue > 1 ? Double.PositiveInfinity : row.QValue;
                 else if (columnIndex == sequenceColumn.Index) return row.ModifiedSequence;

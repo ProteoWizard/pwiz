@@ -764,7 +764,7 @@ namespace IDPicker
 
             var missingFiles = expandedFilepaths.Where(o => !File.Exists(o));
             if (missingFiles.Any())
-                throw new ArgumentException("some files do not exist: " + String.Join(" ", missingFiles.ToArray()));
+                Program.HandleUserError(new ArgumentException("some files do not exist: " + String.Join(" ", missingFiles.ToArray())));
 
             new Thread(() => { OpenFiles(expandedFilepaths, null); }).Start();
         }

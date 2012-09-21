@@ -569,7 +569,7 @@ struct ParserImpl
             nextSpectrumId = distinctSpectra.size() + 1;
             bool spectrumInserted = distinctSpectra.insert(make_pair(sir->spectrumID, nextSpectrumId)).second;
             if (!spectrumInserted)
-                throw runtime_error("non-unique spectrumIDs not supported");
+                throw runtime_error("non-unique spectrumIDs not supported (" + sir->spectrumID + ")");
 
             double firstPrecursorMZ = sir->spectrumIdentificationItem[0]->experimentalMassToCharge;
             double scanTimeInSeconds = sir->cvParam(MS_scan_start_time).timeInSeconds();
@@ -580,7 +580,7 @@ struct ParserImpl
             BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
             {
                 if (!sii->peptidePtr.get() || sii->peptidePtr->empty())
-                    throw runtime_error("SII with a missing or empty peptide reference");
+                    throw runtime_error("SII with a missing or empty peptide reference (" + sii->id + ")");
 
                 // skip low ranking results according to import settings
                 if (analysis.importSettings.maxResultRank > 0 &&

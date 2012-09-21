@@ -390,8 +390,6 @@ namespace CustomDataSourceDialog
             this.Name = "IDPOpenDialog";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Open Data Source";
-            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.OpenDataSourceDialogue_FormClosing);
-            this.Load += new System.EventHandler(this.IDPOpenDialog_Load);
             this.MenuPanel.ResumeLayout(false);
             this.MenuPanel.PerformLayout();
             this.VertSplit.Panel1.ResumeLayout(false);

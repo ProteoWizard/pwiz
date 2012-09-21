@@ -112,7 +112,12 @@ namespace CustomDataSourceDialog
             _spectraFolders = new Dictionary<string, List<string[]>>();
             _spectraFiles = new Dictionary<string, List<string[]>>();
             DataSources = new List<string>();
-            sourceTypeComboBox.SelectedIndex = 0;
+
+            SubfolderBox.Checked = Properties.Settings.Default.CheckSubdirectories;
+            if (!Properties.Settings.Default.FileType.IsNullOrEmpty())
+                sourceTypeComboBox.SelectedIndex = Math.Max(0, sourceTypeComboBox.Items.IndexOf(Properties.Settings.Default.FileType));
+            else
+                sourceTypeComboBox.SelectedIndex = 0;
             
             var folderNames = new List<string>();
 
@@ -204,7 +209,7 @@ namespace CustomDataSourceDialog
                                           };
         }
 
-        private void IDPOpenDialog_Load(object sender, EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
             //if FileType is not defined try to get type from the registry
             if (FileType == null)
@@ -237,7 +242,23 @@ namespace CustomDataSourceDialog
             if (Directory.Exists(_startLocation))
                 NavigateToFolder(_startLocation, null);
 
+            base.OnLoad(e);
+        }
 
+        protected override void OnClosing(CancelEventArgs e)
+        {
+            if (SearchBox.Focused)
+                e.Cancel = true;
+            if (DialogResult == DialogResult.OK && DataSources.Any())
+            {
+                foreach (var item in DataSources)
+                    FolderHistoryInterface.AddFolderToHistory(item);
+            }
+
+            Properties.Settings.Default.CheckSubdirectories = SubfolderBox.Checked;
+            Properties.Settings.Default.Save();
+
+            base.OnClosing(e);
         }
 
      #endregion
@@ -587,6 +608,8 @@ namespace CustomDataSourceDialog
         private void sourceTypeComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             sourceType = sourceTypeComboBox.Text;
+            Properties.Settings.Default.FileType = sourceType;
+            Properties.Settings.Default.Save();
             ApplyFilters();
         }
 
@@ -938,17 +961,6 @@ namespace CustomDataSourceDialog
                     return newNode.Nodes[0];
             }
             return newNode;
-        }
-
-        private void OpenDataSourceDialogue_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            if (SearchBox.Focused)
-                e.Cancel = true;
-            if (DialogResult == DialogResult.OK && DataSources.Any())
-            {
-                foreach (var item in DataSources)
-                FolderHistoryInterface.AddFolderToHistory(item);
-            }
         }
 
         private void BreadCrumbPanel_Resize(object sender, EventArgs e)
