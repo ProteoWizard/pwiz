@@ -128,7 +128,7 @@ project bumbershoot
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
       <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
-      <toolset>msvc:<linkflags>/OPT:REF,ICF
+      <toolset>msvc,<debug-symbols>off:<linkflags>/OPT:REF,ICF
 
       # warning: _SECURE_SCL_THROWS is deprecated
       <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
@@ -214,19 +214,15 @@ if ! $(.has-boost)
     using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
 }
 
-
 rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    if <link>shared in $(properties)
-    {
-        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
-    }
-    else
-    {
-    return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
-    }
+    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    if <link>shared in $(properties) { location = $(location)-shared ; }
+    if <address-model>64 in $(properties) { location = $(location)-x86_64 ; }
+
+    return <location>$(location) ;
 }
 
 rule install-type ( properties * )

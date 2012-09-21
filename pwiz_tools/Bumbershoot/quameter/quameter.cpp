@@ -763,7 +763,7 @@ namespace quameter
                             ++missingPrecursorIntensities;
 
                             // fall back on MS2 TIC
-                            scanInfo.precursorIntensity = si.cvParam(MS_total_ion_current).valueAs<double>();
+                            scanInfo.precursorIntensity = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
                         }
 
                         CVParam chargeState = si.cvParam(MS_charge_state);
@@ -1394,7 +1394,7 @@ namespace quameter
                         ++missingPrecursorIntensities;
 
                         // fall back on MS2 TIC
-                        scanInfo.precursorIntensity = si.cvParam(MS_total_ion_current).valueAs<double>();
+                        scanInfo.precursorIntensity = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
                     }
 
                     if (precursor.spectrumID.empty())
