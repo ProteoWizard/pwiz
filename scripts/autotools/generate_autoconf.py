@@ -287,8 +287,11 @@ if (not dryrun) :
 	for file in os.listdir(logdir) : # assume we also did the autoconf stuff in this dir
 		f = logdir+"/"+file
 		ext = file.partition(".")[2]
-		if (os.path.exists(f) and (not os.path.isdir(f))) :
+		if (os.path.exists(f) and (not os.path.isdir(f)) and (not "build.log" in f)) :
 			tarname = f.replace(logdir,"pwiz/autotools")
+			if ("pwiz/autotools/BUILDING" == tarname) :
+				# we need this in the root, actually
+				tarname = "pwiz/BUILDING"
 			if dbug :
 				print "add "+f+" as "+tarname
 			z.add(f,tarname)
