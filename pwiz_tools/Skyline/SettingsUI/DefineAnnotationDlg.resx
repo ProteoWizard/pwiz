@@ -288,24 +288,6 @@
   <data name="checkedListBoxAppliesTo.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
     <value>Bottom, Left, Right</value>
   </data>
-  <data name="checkedListBoxAppliesTo.Items" xml:space="preserve">
-    <value>Proteins</value>
-  </data>
-  <data name="checkedListBoxAppliesTo.Items1" xml:space="preserve">
-    <value>Peptides</value>
-  </data>
-  <data name="checkedListBoxAppliesTo.Items2" xml:space="preserve">
-    <value>Precursors</value>
-  </data>
-  <data name="checkedListBoxAppliesTo.Items3" xml:space="preserve">
-    <value>Transitions</value>
-  </data>
-  <data name="checkedListBoxAppliesTo.Items4" xml:space="preserve">
-    <value>Precursor Results</value>
-  </data>
-  <data name="checkedListBoxAppliesTo.Items5" xml:space="preserve">
-    <value>Transition Results</value>
-  </data>
   <data name="checkedListBoxAppliesTo.Location" type="System.Drawing.Point, System.Drawing">
     <value>12, 230</value>
   </data>

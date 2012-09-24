@@ -1341,7 +1341,7 @@ namespace pwiz.Skyline
                     Debug.Assert(true); // Ignore
                 }
 
-                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, optimizationFunction));
+                listChrom.Add(new ChromatogramSet(nameResult, namedResult.Value, Annotations.EMPTY, optimizationFunction));
             }
 
             var arrayChrom = listChrom.ToArray();
@@ -1366,7 +1366,7 @@ namespace pwiz.Skyline
                 {
                     // Ignore failure
                 }
-                chrom = new ChromatogramSet(nameResult, dataSources, optimizationFunction);
+                chrom = new ChromatogramSet(nameResult, dataSources, Annotations.EMPTY, optimizationFunction);
 
                 if (results == null)
                     results = new MeasuredResults(new[] {chrom});

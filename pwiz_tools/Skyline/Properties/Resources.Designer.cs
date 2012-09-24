@@ -551,6 +551,69 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Peptides.
+        /// </summary>
+        public static string AnnotationDef_AnnotationTarget_Peptides {
+            get {
+                return ResourceManager.GetString("AnnotationDef_AnnotationTarget_Peptides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursor Results.
+        /// </summary>
+        public static string AnnotationDef_AnnotationTarget_PrecursorResults {
+            get {
+                return ResourceManager.GetString("AnnotationDef_AnnotationTarget_PrecursorResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Precursors.
+        /// </summary>
+        public static string AnnotationDef_AnnotationTarget_Precursors {
+            get {
+                return ResourceManager.GetString("AnnotationDef_AnnotationTarget_Precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Proteins.
+        /// </summary>
+        public static string AnnotationDef_AnnotationTarget_Proteins {
+            get {
+                return ResourceManager.GetString("AnnotationDef_AnnotationTarget_Proteins", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Replicates.
+        /// </summary>
+        public static string AnnotationDef_AnnotationTarget_Replicates {
+            get {
+                return ResourceManager.GetString("AnnotationDef_AnnotationTarget_Replicates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transition Results.
+        /// </summary>
+        public static string AnnotationDef_AnnotationTarget_TransitionResults {
+            get {
+                return ResourceManager.GetString("AnnotationDef_AnnotationTarget_TransitionResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transitions.
+        /// </summary>
+        public static string AnnotationDef_AnnotationTarget_Transitions {
+            get {
+                return ResourceManager.GetString("AnnotationDef_AnnotationTarget_Transitions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to &amp;Annotations:.
         /// </summary>
         public static string AnnotationDefList_Label_Annotations {

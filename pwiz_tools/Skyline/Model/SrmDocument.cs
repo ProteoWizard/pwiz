@@ -1854,7 +1854,7 @@ namespace pwiz.Skyline.Model
                 massH, isotopeDistInfo, info.LibInfo, info.Results);
         }
 
-        private static Annotations ReadAnnotations(XmlReader reader)
+        public static Annotations ReadAnnotations(XmlReader reader)
         {
             string note = null;
             int color = 0;
@@ -2664,7 +2664,7 @@ namespace pwiz.Skyline.Model
             WriteAnnotations(writer, chromInfo.Annotations);
         }
 
-        private static void WriteAnnotations(XmlWriter writer, Annotations annotations)
+        public static void WriteAnnotations(XmlWriter writer, Annotations annotations)
         {
             if (annotations.IsEmpty)
                 return;

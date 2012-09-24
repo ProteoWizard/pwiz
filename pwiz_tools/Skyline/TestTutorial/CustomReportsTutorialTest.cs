@@ -291,7 +291,7 @@ namespace pwiz.SkylineTestTutorial
             {
                 defineAnnotationDlg.AnnotationName = "Trailing"; // Not L10N
                 defineAnnotationDlg.AnnotationType = AnnotationDef.AnnotationType.true_false;
-                defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTarget.precursor_result;
+                defineAnnotationDlg.AnnotationTargets = AnnotationDef.AnnotationTargetSet.Singleton(AnnotationDef.AnnotationTarget.precursor_result);
                 defineAnnotationDlg.OkDialog();
             });
             RunUI(editListDlg.OkDialog);

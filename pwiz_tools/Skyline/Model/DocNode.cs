@@ -271,6 +271,31 @@ namespace pwiz.Skyline.Model
         }
         
         /// <summary>
+        /// Returns the DocNodes that are in an IdentityPath.
+        /// </summary>
+        public DocNode[] ToNodeArray(IdentityPath identityPath)
+        {
+            DocNode[] result = new DocNode[identityPath.Length];
+            DocNodeParent current = this;
+            for (int pathIndex = 0; pathIndex < identityPath.Length; pathIndex++)
+            {
+                var identity = identityPath.GetIdentity(pathIndex);
+                if (null == current)
+                {
+                    throw new IdentityNotFoundException(identity);
+                }
+                DocNode next = current.FindNode(identityPath.GetIdentity(pathIndex));
+                if (null == next)
+                {
+                    throw new IdentityNotFoundException(identity);
+                }
+                result[pathIndex] = next;
+                current = next as DocNodeParent;
+            }
+            return result;
+        }
+        
+        /// <summary>
         /// Find a child of the current node by <see cref="Identity"/>.
         /// </summary>
         /// <param name="id">The <see cref="Identity"/> of the child to find</param>

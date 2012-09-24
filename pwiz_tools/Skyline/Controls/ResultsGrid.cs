@@ -389,7 +389,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-        public static SrmDocument UpdateDocument(SrmDocument doc, List<IdentityPath> selectedPaths, DataGridViewRow row, 
+        public static SrmDocument UpdateDocument(SrmDocument doc, IList<IdentityPath> selectedPaths, DataGridViewRow row, 
             DataGridViewColumnCollection columns, int columnIndex, int precursorNoteColumnIndex, int transitionNoteColumnIndex)
         {
             var rowIdentifier = row.Tag as RowIdentifier;
@@ -399,55 +399,200 @@ namespace pwiz.Skyline.Controls
             }
 
             bool updateAllSteps = selectedPaths.Count > 1;
-            bool isNote = columnIndex == precursorNoteColumnIndex || columnIndex == transitionNoteColumnIndex;
-            string noteNew = Convert.ToString(row.Cells[columnIndex].Value);
-            var annotationDef = columns[columnIndex].Tag as AnnotationDef;
+            AnnotationDef.AnnotationTarget? noteTarget = null;
+            AnnotationDef annotationDef = null;
+            if (columnIndex == precursorNoteColumnIndex)
+            {
+                noteTarget = AnnotationDef.AnnotationTarget.precursor_result;
+            }
+            else if (columnIndex == transitionNoteColumnIndex)
+            {
+                noteTarget = AnnotationDef.AnnotationTarget.transition_result;
+            }
+            else
+            {
+                annotationDef = columns[columnIndex].Tag as AnnotationDef;
+            }
+            bool isNote = noteTarget.HasValue;
+            if (!isNote && null == annotationDef)
+            {
+                return doc;
+            }
             var value = row.Cells[columnIndex].Value;
-
+            string strValueNew = Convert.ToString(row.Cells[columnIndex].Value);
             foreach (IdentityPath selPath in selectedPaths)
             {
-                var path = selPath;
-                var nodeDoc = doc.FindNode(path);
-                var transitionGroupDocNode = nodeDoc as TransitionGroupDocNode;
-                var transitionDocNode = nodeDoc as TransitionDocNode;
-                if (isNote || annotationDef != null)
+                var selTarget = noteTarget ?? GetAnnotationTargetForNode(annotationDef, doc, selPath);
+                if (!selTarget.HasValue)
                 {
-                    IEnumerable<ChromInfo> chromInfos = new List<ChromInfo>();
-                    if (transitionDocNode != null)
-                        chromInfos = GetChromInfos(transitionDocNode.Results, rowIdentifier, updateAllSteps);
-                    if (transitionGroupDocNode != null)
-                        chromInfos = GetChromInfos(transitionGroupDocNode.Results, rowIdentifier, updateAllSteps);
-                    foreach (var chromInfo in chromInfos)
+                    continue;
+                }
+                if (AnnotationDef.AnnotationTarget.replicate == selTarget)
+                {
+                    var chromatograms = doc.Settings.MeasuredResults.Chromatograms.ToArray();
+                    var chromatogramSet = chromatograms[rowIdentifier.ReplicateIndex];
+                    chromatogramSet =
+                        chromatogramSet.ChangeAnnotations(chromatogramSet.Annotations.ChangeAnnotation(annotationDef, value));
+                    chromatograms[rowIdentifier.ReplicateIndex] = chromatogramSet;
+                    doc = doc.ChangeMeasuredResults(doc.Settings.MeasuredResults.ChangeChromatograms(chromatograms));
+                    continue;
+                }
+                var nodeArray = doc.ToNodeArray(selPath);
+                if (AnnotationDef.AnnotationTarget.transition_result == selTarget)
+                {
+                    var transitionDocNode = nodeArray.OfType<TransitionDocNode>().FirstOrDefault();
+                    if (null == transitionDocNode)
                     {
-                        TransitionChromInfo chromInfoTrans = chromInfo as TransitionChromInfo;
-                        TransitionGroupChromInfo chromInfoTransGroup = chromInfo as TransitionGroupChromInfo;
-                        if(chromInfoTrans != null && transitionDocNode != null)
-                        {
-                            Annotations newAnnotations = isNote
-                                                 ? chromInfoTrans.Annotations.ChangeNote(noteNew)
-                                                 : chromInfoTrans.Annotations.ChangeAnnotation(annotationDef, value);
-                            var chromInfoNew = chromInfoTrans.ChangeAnnotations(newAnnotations);
-                            transitionDocNode = transitionDocNode.ChangeResults(ChangeChromInfo(
-                                transitionDocNode.Results, rowIdentifier, chromInfoTrans, chromInfoNew));
-                            doc = (SrmDocument)doc.ReplaceChild(path.Parent, transitionDocNode);
-                        }
-                        else if(chromInfoTransGroup != null && transitionGroupDocNode != null)
-                        {
-                            Annotations newAnnotations = isNote
-                                                 ? chromInfoTransGroup.Annotations.ChangeNote(noteNew)
-                                                 : chromInfoTransGroup.Annotations.ChangeAnnotation(annotationDef, value);
-                           var chromInfoNew = chromInfoTransGroup.ChangeAnnotations(newAnnotations);
-                           transitionGroupDocNode = transitionGroupDocNode.ChangeResults(
-                               ChangeChromInfo(transitionGroupDocNode.Results, rowIdentifier, chromInfoTransGroup,
-                                   chromInfoNew));
-                           doc = (SrmDocument)doc.ReplaceChild(path.Parent, transitionGroupDocNode);
-                        }
+                        continue;
                     }
+                    var nodePath = selPath.GetPathTo(Array.IndexOf(nodeArray, transitionDocNode));
+                    foreach (var chromInfo in GetChromInfos(transitionDocNode.Results, rowIdentifier, updateAllSteps))
+                    {
+                        TransitionChromInfo chromInfoNew;
+                        if (isNote)
+                        {
+                            chromInfoNew = chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(strValueNew));
+                        }
+                        else
+                        {
+                            chromInfoNew =
+                                chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeAnnotation(annotationDef, value));
+                        }
+                        transitionDocNode = transitionDocNode.ChangeResults(
+                            ChangeChromInfo(transitionDocNode.Results, rowIdentifier, chromInfo, chromInfoNew));
+                    }
+                    doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent, transitionDocNode);
+                }
+                else if (AnnotationDef.AnnotationTarget.precursor_result == selTarget)
+                {
+                    var transitionGroupDocNode = nodeArray.OfType<TransitionGroupDocNode>().FirstOrDefault();
+                    if (null == transitionGroupDocNode)
+                    {
+                        continue;
+                    }
+                    var nodePath = selPath.GetPathTo(Array.IndexOf(nodeArray, transitionGroupDocNode));
+                    foreach (var chromInfo in GetChromInfos(transitionGroupDocNode.Results, rowIdentifier, updateAllSteps))
+                    {
+                        TransitionGroupChromInfo chromInfoNew;
+                        if (isNote)
+                        {
+                            chromInfoNew = chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeNote(strValueNew));
+                        }
+                        else
+                        {
+                            chromInfoNew =
+                                chromInfo.ChangeAnnotations(chromInfo.Annotations.ChangeAnnotation(annotationDef, value));
+                        }
+                        transitionGroupDocNode =
+                            transitionGroupDocNode.ChangeResults(ChangeChromInfo(transitionGroupDocNode.Results,
+                                                                                 rowIdentifier, chromInfo, chromInfoNew));
+                    }
+                    doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent, transitionGroupDocNode);
                 }
             }
             return doc;
         }
 
+        /// <summary>
+        /// Returns the set of <see cref="AnnotationDef.AnnotationTarget"/> that the particular
+        /// annotation column will be getting its values from.  If there is any node selected
+        /// to which the annotation does not apply, then this returns an empty set.
+        /// </summary>
+        private AnnotationDef.AnnotationTargetSet GetAnnotationTargetSet(AnnotationDef annotationDef)
+        {
+            var targets = SelectedPaths
+                .Select(path => GetAnnotationTargetForNode(annotationDef, path))
+                .ToArray();
+            if (targets.Contains(null))
+            {
+                return AnnotationDef.AnnotationTargetSet.EMPTY;
+            }
+            return AnnotationDef.AnnotationTargetSet.OfValues(targets.Cast<AnnotationDef.AnnotationTarget>());
+        }
+        
+        private AnnotationDef.AnnotationTarget? GetAnnotationTargetForNode(AnnotationDef annotationDef, IdentityPath selectedPath)
+        {
+            return GetAnnotationTargetForNode(annotationDef, Document, selectedPath);
+        }
+
+        private static AnnotationDef.AnnotationTarget? GetAnnotationTargetForNode(AnnotationDef annotationDef, SrmDocument document, IdentityPath selectedPath)
+        {
+            var resultTargets = annotationDef.AnnotationTargets.Intersect(new[]
+                                                                             {
+                                                                                 AnnotationDef.AnnotationTarget.
+                                                                                     transition_result,
+                                                                                 AnnotationDef.AnnotationTarget.
+                                                                                     precursor_result,
+                                                                                 AnnotationDef.AnnotationTarget.
+                                                                                     replicate
+                                                                             });
+            if (resultTargets.IsEmpty)
+            {
+                return null;
+            }
+            if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.transition_result))
+            {
+                if (document.ToNodeArray(selectedPath).OfType<TransitionDocNode>().Any())
+                {
+                    return AnnotationDef.AnnotationTarget.transition_result;                    
+                }  
+            }
+            if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.precursor_result))
+            {
+                if (document.ToNodeArray(selectedPath).OfType<TransitionGroupDocNode>().Any())
+                {
+                    return AnnotationDef.AnnotationTarget.precursor_result;
+                }
+            }
+            if (annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
+            {
+                return AnnotationDef.AnnotationTarget.replicate;
+            }
+            return null;
+        }
+
+        private bool AnyTransitionsSelected()
+        {
+            return SelectedPaths.Any(path => Document.ToNodeArray(path).OfType<TransitionDocNode>().Any());
+        }
+
+        private bool OnlyTransitionsSelected()
+        {
+            return OnlyTransitionsSelected(Document, SelectedPaths);
+        }
+
+        private static bool OnlyTransitionsSelected(SrmDocument document, IList<IdentityPath> selectedPaths)
+        {
+            return selectedPaths.All(
+                path =>
+                    {
+                        var nodeArray = document.ToNodeArray(path);
+                        return nodeArray.OfType<TransitionDocNode>().Any();
+                    }
+                );
+        }
+
+        private bool AnyPrecursorsSelected()
+        {
+            return SelectedPaths.Any(path => Document.ToNodeArray(path).OfType<TransitionGroupDocNode>().Any());
+        }
+
+        private bool OnlyPrecursorsSelected()
+        {
+            return OnlyPrecursorsSelected(Document, SelectedPaths);
+        }
+        
+        private static bool OnlyPrecursorsSelected(SrmDocument document, IList<IdentityPath> selectedPaths)
+        {
+            return selectedPaths.All(
+                path =>
+                    {
+                        var nodeArray = document.ToNodeArray(path);
+                        return !nodeArray.OfType<TransitionDocNode>().Any() &&
+                               nodeArray.OfType<TransitionGroupDocNode>().Any();
+                    });
+        }
+        
         private void ResultsGrid_CurrentCellChanged(object sender, EventArgs e)
         {
             if (_inReplicateChange || !ResultsGridForm.SynchronizeSelection)
@@ -468,24 +613,22 @@ namespace pwiz.Skyline.Controls
         }
 
 
-        private static IEnumerable<ChromInfo> GetChromInfos(DocNode nodeDoc, AnnotationDef.AnnotationTarget annotationTarget, RowIdentifier rowIdentifier, bool allOptimizationSteps)
+        private static IEnumerable<ChromInfo> GetChromInfos(DocNode nodeDoc, RowIdentifier rowIdentifier, bool allOptimizationSteps)
         {
             var transitionDocNode = nodeDoc as TransitionDocNode;
             var transitionGroupDocNode = nodeDoc as TransitionGroupDocNode;
-            if (transitionDocNode != null && 0 != (annotationTarget & AnnotationDef.AnnotationTarget.transition_result))
+            if (transitionDocNode != null)
             {
                 return GetChromInfos(transitionDocNode.Results, rowIdentifier, allOptimizationSteps); 
             }
-            if (transitionGroupDocNode != null && 0 != (annotationTarget & AnnotationDef.AnnotationTarget.precursor_result))
+            if (transitionGroupDocNode != null)
             {
                 return GetChromInfos(transitionGroupDocNode.Results, rowIdentifier, allOptimizationSteps);
             }
             return new ChromInfo[0];
         }
         
-// ReSharper disable SuggestBaseTypeForParameter
-        private static IEnumerable<ChromInfo> GetChromInfos(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
-// ReSharper restore SuggestBaseTypeForParameter
+        private static IEnumerable<TransitionGroupChromInfo> GetChromInfos(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
         {
             var chromInfoList = results[rowIdentifier.ReplicateIndex];
             if (chromInfoList == null)
@@ -501,9 +644,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-// ReSharper disable SuggestBaseTypeForParameter
-        private static IEnumerable<ChromInfo> GetChromInfos(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
-// ReSharper restore SuggestBaseTypeForParameter
+        private static IEnumerable<TransitionChromInfo> GetChromInfos(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
         {
             var chromInfoList = results[rowIdentifier.ReplicateIndex];
             if (chromInfoList == null)
@@ -519,9 +660,7 @@ namespace pwiz.Skyline.Controls
             }
         }
 
-// ReSharper disable SuggestBaseTypeForParameter
         private static Results<TItem> ChangeChromInfo<TItem>(Results<TItem> results, RowIdentifier rowIdentifier, TItem chromInfoOld, TItem chromInfoNew) where TItem: ChromInfo
-// ReSharper restore SuggestBaseTypeForParameter
         {
             var elements = new List<ChromInfoList<TItem>>();
             bool found = false;
@@ -537,7 +676,7 @@ namespace pwiz.Skyline.Controls
                     var chromInfoList = new List<TItem>();
                     foreach (var chromInfo in replicate)
                     {
-                        if (chromInfo != chromInfoOld)
+                        if (!ReferenceEquals(chromInfo, chromInfoOld))
                         {
                             chromInfoList.Add(chromInfo);
                         }
@@ -753,8 +892,6 @@ namespace pwiz.Skyline.Controls
             // nodes collected in different results files.
             if (_inCommitEdit)
                 return;
-
-            AnnotationTarget = AnnotationDef.AnnotationTarget.none;
             SelectedPaths = new List<IdentityPath>();
 
             ClearAllRows();
@@ -775,18 +912,11 @@ namespace pwiz.Skyline.Controls
                     break;
                 }
                 SelectedPaths.Add(nodeTree.Path);
-                if (srmTreNode is TransitionTreeNode)
-                    AnnotationTarget = AnnotationTarget | AnnotationDef.AnnotationTarget.transition_result;
-                else if (srmTreNode is TransitionGroupTreeNode)
-                    AnnotationTarget = AnnotationTarget | AnnotationDef.AnnotationTarget.precursor_result;
-                else
-                    AnnotationTarget = AnnotationTarget | nodeTree.Model.AnnotationTarget;
             }
 
             if(noResults)
             {
-                AnnotationTarget = AnnotationDef.AnnotationTarget.none;
-                SelectedPaths = new List<IdentityPath>();
+                SelectedPaths = new List<IdentityPath>(){IdentityPath.ROOT};
             }
            
             // If we have more than one node selected, or if the selected node is not a tree node, 
@@ -814,6 +944,18 @@ namespace pwiz.Skyline.Controls
             SelectedPeptideDocNode = srmTreeNode.Model as PeptideDocNode;
         }
 
+        /// <summary>
+        /// Ensures that there is a DataGridViewColumn in the grid for each annotation whose value
+        /// can be displayed in this grid.  An annotation can be displayed in this grid if, for
+        /// each of the paths in <see cref="SelectedPaths"/>, an AnnotationTarget can be found
+        /// in <see cref="AnnotationDef.AnnotationTargets"/> which is one of 
+        /// <see cref="AnnotationDef.AnnotationTarget.replicate"/>,
+        /// <see cref="AnnotationDef.AnnotationTarget.precursor_result"/>,
+        /// <see cref="AnnotationDef.AnnotationTarget.transition_result"/>,
+        /// and that AnnotationTarget applies to the selected node, or one of its ancestors.
+        /// 
+        /// 
+        /// </summary>
         private void UpdateAnnotationColumns()
         {
             var newAnnotationColumns = new Dictionary<string, DataGridViewColumn>();
@@ -821,8 +963,7 @@ namespace pwiz.Skyline.Controls
                                          
             foreach (var annotationDef in listAnnotationDefs)
             {
-                if (0 == (annotationDef.AnnotationTargets 
-                    & (AnnotationDef.AnnotationTarget.precursor_result | AnnotationDef.AnnotationTarget.transition_result)))
+                if (GetAnnotationTargetSet(annotationDef).IsEmpty)
                 {
                     continue;
                 }
@@ -1142,6 +1283,15 @@ namespace pwiz.Skyline.Controls
                         row.Cells[SampleNameColumn.Index].Value = sampleName;
                         row.Cells[ModifiedTimeColumn.Index].Value = fileInfo.FileWriteTime;
                         row.Cells[AcquiredTimeColumn.Index].Value = fileInfo.RunStartTime;
+                        foreach (var annotationColumn in _annotationColumns.Values)
+                        {
+                            var annotationDef = (AnnotationDef) annotationColumn.Tag;
+                            if (GetAnnotationTargetSet(annotationDef).IsSingleton(AnnotationDef.AnnotationTarget.replicate))
+                            {
+                                row.Cells[annotationColumn.Index].Value =
+                                    results.Annotations.GetAnnotation(annotationDef);
+                            }
+                        }
                     }
                 }
             }
@@ -1198,9 +1348,11 @@ namespace pwiz.Skyline.Controls
                 Settings.Default.GridColumnsList.TryGetValue(gridColumnsKey, out gridColumns);
             }
             var visibleColumnNameSet = new HashSet<string>(from col in GetDefaultColumns() select col.Name);
+            // Visibility is decided as whether or not the saved columns make the
+            // column visible, or any default column that was not part of the
+            // saved set.
             if (gridColumns != null)
             {
-                var availableColumnSet = new HashSet<DataGridViewColumn>(GetAvailableColumns());
                 int displayIndex = 0;
                 foreach (var gridColumn in gridColumns.Columns)
                 {
@@ -1210,18 +1362,16 @@ namespace pwiz.Skyline.Controls
                     }
                     column.Width = gridColumn.Width;
                     column.DisplayIndex = displayIndex++;
-                    if (gridColumn.Visible && availableColumnSet.Contains(column))
+                    if (gridColumn.Visible)
                         visibleColumnNameSet.Add(column.Name);
                     else 
                         visibleColumnNameSet.Remove(column.Name);
                 }
             }
-            // Visibility is decided as whether or not the saved columns make the
-            // column visible, or any default column that was not part of the
-            // saved set.
+            var availableColumnSet = new HashSet<DataGridViewColumn>(GetAvailableColumns());
             foreach (DataGridViewColumn column in Columns)
             {
-                ShowColumn(column, visibleColumnNameSet.Contains(column.Name));
+                ShowColumn(column, visibleColumnNameSet.Contains(column.Name) && availableColumnSet.Contains(column));
             }
         }
 
@@ -1326,15 +1476,10 @@ namespace pwiz.Skyline.Controls
             foreach (var column in _annotationColumns.Values)
             {
                 var annotationDef = (AnnotationDef)column.Tag;
-                var mask = AnnotationDef.AnnotationTarget.precursor_result;
-                if (SelectedTransitionDocNode != null)
+                if (GetAnnotationTargetSet(annotationDef).IsSingleton(AnnotationDef.AnnotationTarget.precursor_result))
                 {
-                    mask |= AnnotationDef.AnnotationTarget.transition_result;
-                }
-                if (AnnotationDef.AnnotationTarget.precursor_result == (annotationDef.AnnotationTargets & mask))
-                {
-                    row.Cells[column.Index].Value = 
-                        chromInfo == null ? null : 
+                    row.Cells[column.Index].Value =
+                        chromInfo == null ? null :
                         chromInfo.Annotations.GetAnnotation(annotationDef);
                 }
             }
@@ -1384,10 +1529,10 @@ namespace pwiz.Skyline.Controls
             }
             foreach (var column in _annotationColumns.Values)
             {
-                var annotationDef = (AnnotationDef) column.Tag;
-                if (0 != (annotationDef.AnnotationTargets & AnnotationDef.AnnotationTarget.transition_result))
+                var annotationDef = (AnnotationDef)column.Tag;
+                if (GetAnnotationTargetSet(annotationDef).IsSingleton(AnnotationDef.AnnotationTarget.transition_result))
                 {
-                    row.Cells[column.Index].Value = 
+                    row.Cells[column.Index].Value =
                         chromInfo == null ? null :
                         chromInfo.Annotations.GetAnnotation(annotationDef);
                 }
@@ -1396,59 +1541,100 @@ namespace pwiz.Skyline.Controls
 
         /// <summary>
         /// Sets the values for the given row using the given replicate index. Based on the nodes we selected, 
-        /// annotation values must be merged. Only annotation values that match for all nodes will be displayed
-        /// in the ResultsGrid.
+        /// annotation values must be merged. Annotation values that do not match for all nodes will be displayed
+        /// as null in the result grid.
         /// </summary>
         public void FillMultiSelectRow(DataGridViewRow row, int replicateIndex)
         {
-            bool first  = true;
-            foreach (IdentityPath selPath in SelectedPaths)
+            var transitionNotes = new List<object>();
+            var precursorNotes = new List<object>();
+            var rowIdentifier = new RowIdentifier(replicateIndex, 0, null);
+            foreach (var selPath in SelectedPaths)
             {
-                var nodeDoc = Document.FindNode(selPath);
-                const AnnotationDef.AnnotationTarget annotationTarget =
-                    AnnotationDef.AnnotationTarget.precursor_result |
-                    AnnotationDef.AnnotationTarget.transition_result;
-
-                IEnumerable<ChromInfo> chromInfos = GetChromInfos(nodeDoc, annotationTarget,
-                    new RowIdentifier(replicateIndex, 0, null), true);
-
-                foreach (var chromInfo in chromInfos)
+                var nodePath = Document.ToNodeArray(selPath);
+                var transitionDocNode = nodePath.OfType<TransitionDocNode>().FirstOrDefault();
+                var precursorDocNode = nodePath.OfType<TransitionGroupDocNode>().FirstOrDefault();
+                if (transitionDocNode == null)
                 {
-                    // All ChromInfos returned from GetChromInfos must be either TransitionChromInfos
-                    // or TransitionGroupChromInfos.
-                    var transitionChromInfo = chromInfo as TransitionChromInfo;
-                    var transitionGroupChromInfo = chromInfo as TransitionGroupChromInfo;
-                    bool transition = transitionChromInfo != null;
-                    var target = transition
-                                     ? AnnotationDef.AnnotationTarget.transition_result
-                                     : AnnotationDef.AnnotationTarget.precursor_result;
-                    var noteIndex = transition
-                                        ? TransitionNoteColumn.Index
-                                        : PrecursorNoteColumn.Index;
-                     // Update all of the annotation columns.
-// ReSharper disable PossibleNullReferenceException
-                    Annotations annotations = transition ? transitionChromInfo.Annotations
-                        : transitionGroupChromInfo.Annotations;
-// ReSharper restore PossibleNullReferenceException
-
-                    foreach (var column in _annotationColumns.Values)
+                    transitionNotes.Add(null);
+                }
+                else
+                {
+                    var chromInfos = GetChromInfos(transitionDocNode.Results, rowIdentifier, true);
+                    transitionNotes.AddRange(chromInfos.Select(chromInfo=>chromInfo.Annotations.Note));
+                }
+                if (precursorDocNode == null)
+                {
+                    precursorNotes.Add(null);
+                }
+                else
+                {
+                    var chromInfos = GetChromInfos(precursorDocNode.Results, rowIdentifier, true);
+                    precursorNotes.AddRange(chromInfos.Select(chromInfo=>chromInfo.Annotations.Note));
+                }
+            }
+            var distinctTransitionNotes = transitionNotes.Distinct().ToArray();
+            if (distinctTransitionNotes.Length == 1)
+            {
+                row.Cells[TransitionNoteColumn.Index].Value = distinctTransitionNotes[0];
+            }
+            else
+            {
+                row.Cells[TransitionNoteColumn.Index].Value = null;
+            }
+            var distinctPrecursorNotes = precursorNotes.Distinct().ToArray();
+            if (distinctPrecursorNotes.Length == 1)
+            {
+                row.Cells[PrecursorNoteColumn.Index].Value = distinctPrecursorNotes[0];
+            }
+            else
+            {
+                row.Cells[PrecursorNoteColumn.Index].Value = null;
+            }
+            foreach (var annotationColumn in _annotationColumns.Values)
+            {
+                var annotationDef = (AnnotationDef) annotationColumn.Tag;
+                var values = new List<object>();
+                foreach (IdentityPath selPath in SelectedPaths)
+                {
+                    var annotationTarget = GetAnnotationTargetForNode(annotationDef, selPath);
+                    if (AnnotationDef.AnnotationTarget.transition_result == annotationTarget)
                     {
-                        var annotationDef = (AnnotationDef) column.Tag;
-                        if (0 != (annotationDef.AnnotationTargets & target))
+                        var transitionDocNode =
+                            Document.ToNodeArray(selPath).OfType<TransitionDocNode>().FirstOrDefault();
+                        if (transitionDocNode != null)
                         {
-                            var annotation = annotations.GetAnnotation(annotationDef);
-                            if (first)
-                                row.Cells[column.Index].Value = annotation;
-                            if (!Equals(row.Cells[column.Index].Value, annotation))
-                                row.Cells[column.Index].Value = null;
+                            values.AddRange(
+                                GetChromInfos(transitionDocNode.Results, rowIdentifier, true).Select(
+                                    chromInfo => chromInfo.Annotations.GetAnnotation(annotationDef)));
                         }
                     }
-                    // Update the note_ column.
-                    if (first)
-                        row.Cells[noteIndex].Value = annotations.Note;
-                    if (!Equals(row.Cells[TransitionNoteColumn.Index].Value, annotations.Note))
-                        row.Cells[TransitionNoteColumn.Index].Value = null;
-                    first = false;
+                    else if (AnnotationDef.AnnotationTarget.precursor_result == annotationTarget)
+                    {
+                        var transitionGroupDocNode =
+                            Document.ToNodeArray(selPath).OfType<TransitionGroupDocNode>().FirstOrDefault();
+                        if (transitionGroupDocNode != null)
+                        {
+                            values.AddRange(
+                                GetChromInfos(transitionGroupDocNode.Results, rowIdentifier, true).Select(
+                                    chromInfo => chromInfo.Annotations.GetAnnotation(annotationDef)));
+                        }
+                    }
+                    else if (AnnotationDef.AnnotationTarget.replicate == annotationTarget)
+                    {
+                        values.Add(
+                            Document.Settings.MeasuredResults.Chromatograms[replicateIndex].Annotations.GetAnnotation(
+                                annotationDef));
+                    }
+                }
+                var distinctValues = values.Distinct().ToArray();
+                if (distinctValues.Length == 1)
+                {
+                    row.Cells[annotationColumn.Index].Value = distinctValues[0];
+                }
+                else
+                {
+                    row.Cells[annotationColumn.Index].Value = null;
                 }
             }
         }
@@ -1517,50 +1703,54 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Returns the set of columns that should be displayed by default, based on
         /// the current tree node selected.
-        /// The default order of the columns is controlled by GetAvailableColumns()
+        /// The default order of the columns is controlled by GetAvailableColumns().
+        /// This list is also always intersected with GetAvailableColumns().
         /// </summary>
         public ICollection<DataGridViewColumn> GetDefaultColumns()
         {
-            var result = new HashSet<DataGridViewColumn> {ReplicateNameColumn};
+            var result = new HashSet<DataGridViewColumn> { ReplicateNameColumn };
             if (SelectedTransitionDocNode != null)
             {
-                result.UnionWith(from column in TransitionColumns
-                                     where !ReferenceEquals(column, TruncatedColumn) &&
-                                           !ReferenceEquals(column, UserSetColumn)
-                                     select column);
+                result.UnionWith(TransitionColumns.Except(new[] {TruncatedColumn, UserSetColumn}));
             }
-            // If only transition nodes are selected, the TransitionNoteColumn should be 
-            // available.
-            else if(Equals(AnnotationTarget, AnnotationDef.AnnotationTarget.transition_result))
-                result.Add(TransitionColumns[0]);
+            else if (OnlyTransitionsSelected())
+            {
+                // Every selected node is a TransitionDocNode. The TransitionNoteColumn should be 
+                // available.
+                result.Add(TransitionNoteColumn);
+            }
             else if (SelectedTransitionGroupDocNode != null)
             {
-                result.UnionWith(from column in PrecursorColumns
-                                     where !ReferenceEquals(column, IsotopeDotProductColumn) &&
-                                           !ReferenceEquals(column, CountTruncatedColumn) &&
-                                           !ReferenceEquals(column, IdentifiedColumn) &&
-                                           !ReferenceEquals(column, UserSetTotalColumn) &&
-                                           !ReferenceEquals(column, OptCollisionEnergyColumn) &&
-                                           !ReferenceEquals(column, OptDeclusteringPotentialColumn)
-                                     select column);
+                result.UnionWith(
+                    PrecursorColumns.Except(new[]
+                                                {
+                                                    IsotopeDotProductColumn, CountTruncatedColumn, IdentifiedColumn,
+                                                    UserSetTotalColumn, OptCollisionEnergyColumn,
+                                                    OptDeclusteringPotentialColumn
+                                                }));
             }
-            // If only precursors are selected, the PrecursorNoteColumn should be available.
-            else if (Equals(AnnotationTarget, AnnotationDef.AnnotationTarget.precursor_result))
-                result.Add(PrecursorColumns[0]);
-            else if (SelectedPeptideDocNode != null)
+            else if (OnlyPrecursorsSelected())
             {
-                result.UnionWith(PeptideColumns);
+                // Only precursors are selected. The PrecursorNoteColumn should be available.
+                result.Add(PrecursorNoteColumn);
             }
-            // Only allow each annotation column if the annotation target applies to all nodes that are 
-            // currently selected.
-            foreach (var column in _annotationColumns.Values)
+            else 
             {
-                var annotationDef = (AnnotationDef) column.Tag;
-                if (AnnotationTarget > 0 && AnnotationTarget == (annotationDef.AnnotationTargets & AnnotationTarget))
+                if (SelectedPeptideDocNode != null)
                 {
-                    result.Add(column);
+                    result.UnionWith(PeptideColumns);
                 }
             }
+            var mostSpecificAnnotationTarget = AnnotationDef.AnnotationTarget.replicate;
+            if (AnyTransitionsSelected())
+            {
+                mostSpecificAnnotationTarget = AnnotationDef.AnnotationTarget.transition_result;
+            } 
+            else if (AnyPrecursorsSelected())
+            {
+                mostSpecificAnnotationTarget = AnnotationDef.AnnotationTarget.precursor_result;
+            }
+            result.UnionWith(_annotationColumns.Values.Where(col => ((AnnotationDef)col.Tag).AnnotationTargets.Contains(mostSpecificAnnotationTarget)));
             return result;
         }
 
@@ -1572,40 +1762,38 @@ namespace pwiz.Skyline.Controls
         {
             var result = new List<DataGridViewColumn>();
             result.AddRange(ReplicateColumns);
-            if (Equals(AnnotationTarget, AnnotationDef.AnnotationTarget.precursor_result))
-                result.Add(PrecursorColumns[0]);
-            if (Equals(AnnotationTarget, AnnotationDef.AnnotationTarget.transition_result))
-                result.Add(TransitionColumns[0]);
-            AnnotationDef.AnnotationTarget targets = 0;
             if (SelectedPeptideDocNode != null)
             {
                 result.AddRange(PeptideColumns);
                 InsertRatioColumns(result, RatioToStandardColumn,
                     RatioPropertyAccessor.RatioTarget.peptide_result);
             }
+
             if (SelectedTransitionGroupDocNode != null)
             {
                 result.AddRange(PrecursorColumns);
                 InsertRatioColumns(result, TotalAreaRatioColumn,
                     RatioPropertyAccessor.RatioTarget.precursor_result);
-                targets |= AnnotationDef.AnnotationTarget.precursor_result;
             }
+            else if (OnlyPrecursorsSelected())
+            {
+                result.Add(PrecursorNoteColumn);
+            }
+
             if (SelectedTransitionDocNode != null)
             {
                 result.AddRange(TransitionColumns);
                 InsertRatioColumns(result, AreaRatioColumn,
                     RatioPropertyAccessor.RatioTarget.transition_result);
-                targets |= AnnotationDef.AnnotationTarget.transition_result;
             }
-            targets |= AnnotationTarget;
-            foreach (var column in _annotationColumns.Values)
+            else if (OnlyTransitionsSelected())
             {
-                var annotationDef = (AnnotationDef) column.Tag;
-                if (0 != (annotationDef.AnnotationTargets & targets))
-                {
-                    result.Add(column);
-                }
+                result.Add(TransitionNoteColumn);
             }
+            var comparator = StringComparer.CurrentCultureIgnoreCase;
+            var sortedAnnotationColumns = _annotationColumns.Values.ToArray();
+            Array.Sort(sortedAnnotationColumns, (col1, col2)=>comparator.Compare(col1.Name, col2.Name));
+            result.AddRange(sortedAnnotationColumns);
             return result;
         }
 
@@ -1716,9 +1904,7 @@ namespace pwiz.Skyline.Controls
             {
                 return null;
             }
-            var chromInfo =
-                GetChromInfos(currentTreeNode.Model, (AnnotationDef.AnnotationTarget) ~0, rowIdentifier, false)
-                .FirstOrDefault();
+            var chromInfo = GetChromInfos(currentTreeNode.Model, rowIdentifier, false).FirstOrDefault();
             if (chromInfo == null)
             {
                 return null;
@@ -1850,7 +2036,6 @@ namespace pwiz.Skyline.Controls
         private TransitionDocNode SelectedTransitionDocNode { get; set; }
         private TransitionGroupDocNode SelectedTransitionGroupDocNode { get; set; }
         private PeptideDocNode SelectedPeptideDocNode { get; set; }
-        private AnnotationDef.AnnotationTarget AnnotationTarget { get; set; }
         
         /// <summary>
         /// Identifies which result a row in the grid refers to.

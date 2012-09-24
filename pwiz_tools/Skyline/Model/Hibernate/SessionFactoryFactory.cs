@@ -59,6 +59,7 @@ namespace pwiz.Skyline.Model.Hibernate
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.peptide, typeof(DbPeptide));
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.precursor, typeof(DbPrecursor));
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.transition, typeof(DbTransition));
+            AddAnnotations(configuration, AnnotationDef.AnnotationTarget.replicate, typeof(DbProteinResult));
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.precursor_result, typeof(DbPrecursorResult));
             AddAnnotations(configuration, AnnotationDef.AnnotationTarget.transition_result, typeof(DbTransitionResult));
             return configuration;
@@ -117,7 +118,7 @@ namespace pwiz.Skyline.Model.Hibernate
             var mapping = configuration.GetClassMapping(persistentClass);
             foreach (var annotationDef in Properties.Settings.Default.AnnotationDefList)
             {
-                if (0 == (annotationDef.AnnotationTargets & annotationTarget))
+                if (!annotationDef.AnnotationTargets.Contains(annotationTarget))
                 {
                     continue;
                 }

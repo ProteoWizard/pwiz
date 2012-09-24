@@ -42,6 +42,20 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             Icon = Resources.Skyline;
+            checkedListBoxAppliesTo.Items.Clear();
+            foreach (var annotationTarget in new[]
+                                                 {
+                                                     AnnotationDef.AnnotationTarget.protein,
+                                                     AnnotationDef.AnnotationTarget.peptide,
+                                                     AnnotationDef.AnnotationTarget.precursor,
+                                                     AnnotationDef.AnnotationTarget.transition,
+                                                     AnnotationDef.AnnotationTarget.replicate, 
+                                                     AnnotationDef.AnnotationTarget.precursor_result,
+                                                     AnnotationDef.AnnotationTarget.transition_result,
+                                                 })
+            {
+                checkedListBoxAppliesTo.Items.Add(new AnnotationTargetItem(annotationTarget));
+            }
 
             _existing = existing;
         }
@@ -53,7 +67,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 AnnotationName = string.Empty;
                 AnnotationType = AnnotationDef.AnnotationType.text;
-                AnnotationTargets = 0;
+                AnnotationTargets = AnnotationDef.AnnotationTargetSet.EMPTY;
                 Items = new string[0];
             }
             else
@@ -89,25 +103,27 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public AnnotationDef.AnnotationTarget AnnotationTargets
+        public AnnotationDef.AnnotationTargetSet AnnotationTargets
         {
             get
             {
-                AnnotationDef.AnnotationTarget targets = 0;
+                var targets = new List<AnnotationDef.AnnotationTarget>();
                 for (int i = 0; i < checkedListBoxAppliesTo.Items.Count; i++)
                 {
                     if (checkedListBoxAppliesTo.GetItemChecked(i))
                     {
-                        targets |= (AnnotationDef.AnnotationTarget)(1 << i);
+                        targets.Add(((AnnotationTargetItem)checkedListBoxAppliesTo.Items[i]).AnnotationTarget);
                     }
                 }
-                return targets;
+                return AnnotationDef.AnnotationTargetSet.OfValues(targets);
             }
             set
             {
                 for (int i = 0; i < checkedListBoxAppliesTo.Items.Count; i++)
                 {
-                    checkedListBoxAppliesTo.SetItemChecked(i, ((int)value & (1 << i)) != 0);
+                    AnnotationDef.AnnotationTarget annotationTarget =
+                        ((AnnotationTargetItem) checkedListBoxAppliesTo.Items[i]).AnnotationTarget;
+                    checkedListBoxAppliesTo.SetItemChecked(i, value.Contains(annotationTarget));
                 }
             }
         }
@@ -169,6 +185,20 @@ namespace pwiz.Skyline.SettingsUI
             }
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        internal class AnnotationTargetItem
+        {
+            public AnnotationTargetItem(AnnotationDef.AnnotationTarget annotationTarget)
+            {
+                AnnotationTarget = annotationTarget;
+            }
+
+            public AnnotationDef.AnnotationTarget AnnotationTarget { get; private set; }
+            public override string ToString()
+            {
+                return AnnotationDef.AnnotationTargetPluralName(AnnotationTarget);
+            }
         }
     }
 }

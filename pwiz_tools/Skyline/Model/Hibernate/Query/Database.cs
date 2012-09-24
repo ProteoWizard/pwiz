@@ -219,9 +219,9 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     Dictionary<DbResultFile, DbProteinResult> proteinResults = new Dictionary<DbResultFile, DbProteinResult>();
                     if (srmDocument.Settings.HasResults)
                     {
-                        foreach (var replicateFiles in docInfo.ReplicateResultFiles)
+                        foreach (var replicateFiles in docInfo.ReplicateResultFileMaps)
                         {
-                            foreach (var replicateFile in replicateFiles.Select(fi => fi.ResultFile))
+                            foreach (var replicateFile in replicateFiles.ResultFiles.Select(fi => fi.ResultFile))
                             {
                                 DbProteinResult proteinResult = new DbProteinResult
                                 {
@@ -234,6 +234,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                     ReplicateName = replicateFile.Replicate.Replicate,
                                     ReplicatePath = replicateFile.Replicate.ReplicatePath
                                 };
+                                AddAnnotations(docInfo, proteinResult, replicateFiles.ChromatogramSet.Annotations);
                                 _session.Save(proteinResult);
                                 proteinResults.Add(replicateFile, proteinResult);
                             }
@@ -276,8 +277,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 DbReplicate dbReplicate = new DbReplicate {Replicate = chromatogramSet.Name, ReplicatePath = "/"};
                 session.Save(dbReplicate);
 
-                var listResultFiles = new MappedList<int, ResultFileAndIndex>();
-                docInfo.ReplicateResultFiles.Add(listResultFiles);
+                var replicateResultFileMap = new ReplicateResultFileMap(chromatogramSet, new MappedList<int, ResultFileAndIndex>());
+                docInfo.ReplicateResultFileMaps.Add(replicateResultFileMap);
 
                 foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
                 {
@@ -292,7 +293,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                                     };
                     session.Save(dbResultFile);
                     
-                    listResultFiles.Add(new ResultFileAndIndex(dbResultFile, fileInfo.FileIndex));
+                    replicateResultFileMap.ResultFiles.Add(new ResultFileAndIndex(dbResultFile, fileInfo.FileIndex));
                 }
             }
             session.Flush();
@@ -342,14 +343,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                     if (results == null)
                         continue;
 
-                    var resultFiles = docInfo.ReplicateResultFiles[i];
+                    var replicateResultFileMap = docInfo.ReplicateResultFileMaps[i];
 
                     foreach (var chromInfo in results)
                     {
                         if (chromInfo == null)
                             continue;
 
-                        var resultFile = resultFiles[chromInfo.FileIndex].ResultFile;
+                        var resultFile = replicateResultFileMap.ResultFiles[chromInfo.FileIndex].ResultFile;
                         DbPeptideResult dbPeptideResult = new DbPeptideResult
                         {
                             Peptide = dbPeptide,
@@ -505,14 +506,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
 
                     var optFunction = docInfo.MeasuredResults.Chromatograms[i].OptimizationFunction;
                     var replicateSummary = docInfo.ReplicateSummaries[i];
-                    var resultFiles = docInfo.ReplicateResultFiles[i];
+                    var replicateResultFileMap = docInfo.ReplicateResultFileMaps[i];
 
                     foreach (var chromInfo in results)
                     {
                         if (chromInfo == null)
                             continue;
 
-                        var resultFile = resultFiles[chromInfo.FileIndex].ResultFile;
+                        var resultFile = replicateResultFileMap.ResultFiles[chromInfo.FileIndex].ResultFile;
                         DbPrecursorResult precursorResult = new DbPrecursorResult
                         {
                             Precursor = dbPrecursor,
@@ -667,14 +668,14 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         continue;
 
                     var replicateSummary = docInfo.ReplicateSummaries[i];
-                    var resultFiles = docInfo.ReplicateResultFiles[i];
+                    var replicateResultFileMap = docInfo.ReplicateResultFileMaps[i];
 
                     foreach (var chromInfo in results)
                     {
                         if (chromInfo == null)
                             continue;
 
-                        var resultFile = resultFiles[chromInfo.FileIndex].ResultFile;
+                        var resultFile = replicateResultFileMap.ResultFiles[chromInfo.FileIndex].ResultFile;
                         DbTransitionResult transitionResult = new DbTransitionResult
                         {
                             Transition = dbTransition,
@@ -779,7 +780,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                         ReplicateSummaries.Add(new ReplicateSummaryValues(dictTotalAreas));
                     }
                 }
-                ReplicateResultFiles = new List<MappedList<int, ResultFileAndIndex>>();
+                ReplicateResultFileMaps = new List<ReplicateResultFileMap>();
                 ProteinResults = new Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>>();
                 PeptideResults = new Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>>();
                 PrecursorResults = new Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>>();
@@ -790,7 +791,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             public PeptidePrediction PeptidePrediction { get { return Settings.PeptideSettings.Prediction; } }
             public MeasuredResults MeasuredResults { get { return Settings.MeasuredResults; } }
             public List<ReplicateSummaryValues> ReplicateSummaries { get; private set; }
-            public List<MappedList<int, ResultFileAndIndex>> ReplicateResultFiles { get; private set; }
+            public List<ReplicateResultFileMap> ReplicateResultFileMaps { get; private set; }
             public Dictionary<DbProtein, Dictionary<DbResultFile, DbProteinResult>> ProteinResults { get; private set; }
             public Dictionary<DbPeptide, Dictionary<DbResultFile, DbPeptideResult>> PeptideResults { get; private set; }
             public Dictionary<DbPrecursor, Dictionary<ResultKey, DbPrecursorResult>> PrecursorResults { get; private set; }
@@ -825,6 +826,18 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 return _globalIndex;
             }
+        }
+
+        class ReplicateResultFileMap
+        {
+            public ReplicateResultFileMap(ChromatogramSet chromatogramSet, MappedList<int, ResultFileAndIndex> resultFiles)
+            {
+                ChromatogramSet = chromatogramSet;
+                ResultFiles = resultFiles;
+            }
+
+            public ChromatogramSet ChromatogramSet { get; private set; }
+            public MappedList<int, ResultFileAndIndex> ResultFiles { get; private set; }
         }
 
         class ReplicateSummaryValues

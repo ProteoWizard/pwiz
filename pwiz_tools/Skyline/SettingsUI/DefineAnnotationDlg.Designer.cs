@@ -84,13 +84,6 @@ namespace pwiz.Skyline.SettingsUI
             resources.ApplyResources(this.checkedListBoxAppliesTo, "checkedListBoxAppliesTo");
             this.checkedListBoxAppliesTo.CheckOnClick = true;
             this.checkedListBoxAppliesTo.FormattingEnabled = true;
-            this.checkedListBoxAppliesTo.Items.AddRange(new object[] {
-            resources.GetString("checkedListBoxAppliesTo.Items"),
-            resources.GetString("checkedListBoxAppliesTo.Items1"),
-            resources.GetString("checkedListBoxAppliesTo.Items2"),
-            resources.GetString("checkedListBoxAppliesTo.Items3"),
-            resources.GetString("checkedListBoxAppliesTo.Items4"),
-            resources.GetString("checkedListBoxAppliesTo.Items5")});
             this.checkedListBoxAppliesTo.Name = "checkedListBoxAppliesTo";
             // 
             // btnOK

@@ -191,18 +191,19 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         private string[] _fileLoadIds;
 
-        public ChromatogramSet(string name, IEnumerable<string> msDataFileNames)
-            : this(name, msDataFileNames, null)
-        {            
+        public ChromatogramSet(string name, IEnumerable<string> msDataFileNames) : this(name, msDataFileNames, Annotations.EMPTY, null)
+        {
         }
 
         public ChromatogramSet(string name, IEnumerable<string> msDataFileNames,
+                Annotations annotations,
                 OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
             MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path));
 
             OptimizationFunction = optimizationFunction;
+            Annotations = annotations;
         }
 
         public IList<ChromFileInfo> MSDataFileInfos
@@ -220,6 +221,8 @@ namespace pwiz.Skyline.Model.Results
         public IEnumerable<string> MSDataFilePaths { get { return MSDataFileInfos.Select(info => info.FilePath); } }
 
         public bool IsLoaded { get { return !MSDataFileInfos.Contains(info => !info.FileWriteTime.HasValue); } }
+
+        public Annotations Annotations { get; private set; }
 
         public OptimizableRegression OptimizationFunction { get; private set; }
 
@@ -340,7 +343,12 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramSet ChangeOptimizationFunction(OptimizableRegression prop)
         {
             return ChangeProp(ImClone(this), (im, v) => im.OptimizationFunction = v, prop);
-        }        
+        }
+
+        public ChromatogramSet ChangeAnnotations(Annotations prop)
+        {
+            return ChangeProp(ImClone(this), (im, v) => im.Annotations = v, prop);
+        }
 
         #endregion
 
@@ -454,6 +462,7 @@ namespace pwiz.Skyline.Model.Results
                     reader.Read();
                 } 
             }
+            Annotations = SrmDocument.ReadAnnotations(reader);
 
             MSDataFileInfos = msDataFilePaths.ConvertAll(path => new ChromFileInfo(path));
             _fileLoadIds = fileLoadIds.ToArray();
@@ -498,6 +507,7 @@ namespace pwiz.Skyline.Model.Results
 
                 writer.WriteEndElement();
             }
+            SrmDocument.WriteAnnotations(writer, Annotations);
         }
 
         private void WriteInstrumentConfigList(XmlWriter writer, IList<MsInstrumentConfigInfo> instrumentInfoList)
@@ -550,7 +560,10 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && ArrayUtil.EqualsDeep(obj.MSDataFileInfos, MSDataFileInfos);
+            // Why isn't "OptimizationFunction" included in "Equals"?
+            return base.Equals(obj) 
+                && ArrayUtil.EqualsDeep(obj.MSDataFileInfos, MSDataFileInfos) 
+                && Equals(obj.Annotations, Annotations);
         }
 
         public override bool Equals(object obj)
@@ -564,10 +577,12 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                return (base.GetHashCode()*397) ^ MSDataFileInfos.GetHashCodeDeep();
+                int result = base.GetHashCode();
+                result = result*397 + MSDataFileInfos.GetHashCodeDeep();
+                result = result*397 + Annotations.GetHashCode();
+                return result;
             }
         }
-
         #endregion
     }
 
@@ -603,7 +618,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override AnnotationDef.AnnotationTarget AnnotationTarget
         {
-            get { return AnnotationDef.AnnotationTarget.result_file; }
+            get { throw new InvalidOperationException(); }
         }
 
         public IList<KeyValuePair<ChromFileInfoId, RegressionLineElement>> RetentionTimeAlignments { get; private set; }

@@ -17,12 +17,17 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Remotion.Linq.Collections;
+using pwiz.Common.Collections;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -43,7 +48,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public const string ANNOTATION_PREFIX = "annotation_"; // Not L10N
 
-        public AnnotationDef(String name, AnnotationTarget annotationTargets, AnnotationType type, IList<String> items) : base(name)
+        public AnnotationDef(String name, AnnotationTargetSet annotationTargets, AnnotationType type, IList<String> items) : base(name)
         {
             AnnotationTargets = annotationTargets;
             Type = type;
@@ -53,7 +58,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
         
-        public AnnotationTarget AnnotationTargets { get; private set; }
+        public AnnotationTargetSet AnnotationTargets { get; private set; }
         public AnnotationType Type { get; private set; }
         public IList<String> Items { get; private set; }
 
@@ -75,7 +80,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public override void ReadXml(XmlReader reader)
         {
             base.ReadXml(reader);
-            AnnotationTargets = reader.GetEnumAttribute(Attr.targets, (AnnotationTarget) 0);
+            AnnotationTargets = AnnotationTargetSet.Parse(reader.GetAttribute(Attr.targets));
             Type = reader.GetEnumAttribute(Attr.type, AnnotationType.text);
             var items = new List<string>();
             if (reader.IsEmptyElement)
@@ -135,18 +140,53 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        [Flags]
         public enum AnnotationTarget
         {
-            none = 0x00,
-            protein = 0x01,
-            peptide = 0x02,
-            precursor = 0x04,
-            transition = 0x08,
-            precursor_result = 0x10,
-            transition_result = 0x20,
+            protein,
+            peptide,
+            precursor,
+            transition,
+            replicate,
+            precursor_result,
+            transition_result,
+        }
 
-            result_file = 0x40,
+        public class AnnotationTargetSet : ValueSet<AnnotationTargetSet, AnnotationTarget>
+        {
+            protected override IEnumerable<AnnotationTarget> ParseElements(string stringValue)
+            {
+                if ("none" == stringValue)
+                {
+                    // AnnotationTarget used to have the [Flags] attribute, and "none" is what
+                    // was written out for an empty set.  Handle "none" here just in case
+                    // that value was ever persisted.
+                    return new AnnotationTarget[0];
+                }
+                return base.ParseElements(stringValue);
+            }
+        }
+
+        public static string AnnotationTargetPluralName(AnnotationTarget annotationTarget)
+        {
+            switch (annotationTarget)
+            {
+                case AnnotationTarget.protein:
+                    return Resources.AnnotationDef_AnnotationTarget_Proteins;
+                case AnnotationTarget.peptide:
+                    return Resources.AnnotationDef_AnnotationTarget_Peptides;
+                case AnnotationTarget.precursor:
+                    return Resources.AnnotationDef_AnnotationTarget_Precursors;
+                case AnnotationTarget.transition:
+                    return Resources.AnnotationDef_AnnotationTarget_Transitions;
+                case AnnotationTarget.replicate:
+                    return Resources.AnnotationDef_AnnotationTarget_Replicates;
+                case AnnotationTarget.precursor_result:
+                    return Resources.AnnotationDef_AnnotationTarget_PrecursorResults;
+                case AnnotationTarget.transition_result:
+                    return Resources.AnnotationDef_AnnotationTarget_TransitionResults;
+                default:
+                    throw new ArgumentException(string.Format("Invalid annotation target: {0}", annotationTarget), "annotationTarget");
+            }
         }
 
         public enum AnnotationType

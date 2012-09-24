@@ -42,7 +42,7 @@ namespace pwiz.Skyline.EditUI
 
         public void Init(SrmDocument document, IList<IdentityPath> selPaths)
         {
-            AnnotationDef.AnnotationTarget annotationTarget;
+            AnnotationDef.AnnotationTargetSet annotationTarget;
             var annotations = MergeAnnotations(document, selPaths, out annotationTarget);
 
             textNote.Text = _originalText = annotations.Note ?? string.Empty;
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.EditUI
             foreach (var annotationDef in document.Settings.DataSettings.AnnotationDefs)
             {
                 // Definition must apply to all targets.
-                if (annotationTarget != (annotationDef.AnnotationTargets & annotationTarget))
+                if (!annotationTarget.Intersect(annotationDef.AnnotationTargets).Equals(annotationTarget))
                 {
                     continue;
                 }
@@ -96,9 +96,9 @@ namespace pwiz.Skyline.EditUI
         }
 
         public static Annotations MergeAnnotations(SrmDocument document, IEnumerable<IdentityPath> selPaths, 
-            out AnnotationDef.AnnotationTarget annotationTarget)
+            out AnnotationDef.AnnotationTargetSet annotationTarget)
         {
-            annotationTarget = 0x0;
+            annotationTarget = AnnotationDef.AnnotationTargetSet.EMPTY;
 
             // If the nodes have matching text, colors, or annotations, then we should display these values
             // in the EditNodeDlg. Otherwise, we should not display any value for that variable.
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.EditUI
                 allEmpty = allEmpty && nodeAnnotations.IsEmpty;
 
                 // Update annotation target to include this type of node.
-                annotationTarget = annotationTarget | nodeDoc.AnnotationTarget;
+                annotationTarget = annotationTarget.Union(nodeDoc.AnnotationTarget);
             }
             if (!matchingText)
                 text = string.Empty;
