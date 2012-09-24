@@ -31,6 +31,9 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class ReportErrorDlg : FormEx
     {
+        private readonly Exception _exception;
+        private readonly List<string> _stackTraceList;
+
         public ReportErrorDlg(Exception e, List<string> stackTraceList)
         {
             _exception = e;
@@ -53,8 +56,9 @@ namespace pwiz.Skyline.Alerts
                 btnOK.Visible = false;
                 btnOK.DialogResult = DialogResult.None;
 
-                btnCancel.Text = Resources.ReportErrorDlg_ReportErrorDlg_Close;
+                btnCancel.Text = btnOK.Text;
                 btnCancel.DialogResult = DialogResult.OK;
+                btnCancel.Click += btnOK_Click;
                 AcceptButton = btnCancel;
 
                 lblReportError.Text = new StringBuilder()
@@ -99,9 +103,6 @@ namespace pwiz.Skyline.Alerts
 
             webClient.UploadValues(address, form);
         }
-
-        private readonly Exception _exception;
-        private readonly List<string> _stackTraceList;
 
         private string StackTraceText
         {
