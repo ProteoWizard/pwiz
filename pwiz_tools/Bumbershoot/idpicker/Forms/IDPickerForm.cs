@@ -93,6 +93,15 @@ namespace IDPicker
 
         IList<string> args;
 
+        /// <summary>The default settings from either user settings or the command-line.</summary>
+        private DataFilter defaultDataFilter { get; set; }
+
+        /// <summary>
+        /// The default filepath of the idpDB to merge the input idpDBs to.
+        /// If null, a sensible default filepath will be calculated but the user will be able to override it.
+        /// </summary>
+        private string defaultMergedOutputFilepath = null;
+
         public IDPickerForm (IList<string> args)
         {
             InitializeComponent();
@@ -100,6 +109,8 @@ namespace IDPicker
             Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
 
             this.args = args;
+
+            defaultDataFilter = new DataFilter();
 
             manager = new Manager(dockPanel)
             {
@@ -738,23 +749,91 @@ namespace IDPicker
             }
         }
 
+        void showCommandLineHelp(object sender, EventArgs e)
+        {
+            string usage = "IDPicker.exe <idpDB/mzIdentML/pepXML import filemask>\r\n" +
+                           "             [more import filemasks] ...\r\n" +
+                           "             -MaxQValue <real>\r\n" +
+                           "             -MinDistinctPeptidesPerProtein <integer>\r\n" +
+                           "             -MinSpectraPerProtein <integer>\r\n" +
+                           "             -MinAdditionalPeptidesPerProtein <integer>\r\n" +
+                           "             -MinSpectraPerDistinctMatch <integer>\r\n" +
+                           "             -MinSpectraPerDistinctPeptide <integer>\r\n" +
+                           "             -MaxProteinGroupsPerPeptide <integer>\r\n" +
+                           "             -MergedOutputFilepath <string>\r\n";
+            if (Program.IsHeadless)
+                Console.Error.WriteLine("\r\nUsage:\r\n" + usage);
+            else
+                MessageBox.Show(usage, "Command-line Help");
+        }
+
         void IDPickerForm_Load (object sender, EventArgs e)
         {
-            //System.Data.SQLite.SQLiteConnection.SetConfigOption(SQLiteConnection.SQLITE_CONFIG.MULTITHREAD);
-            //var filepaths = Directory.GetFiles(@"c:\test\Goldenring_gastric\Metaplasia", "klc*FFPE*.pepXML", SearchOption.AllDirectories);
-            //OpenFiles(filepaths);//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
-            //return;
-
             checkForUpdatesAutomaticallyToolStripMenuItem.Checked = Properties.GUI.Settings.Default.AutomaticCheckForUpdates;
 
             //Get user layout profiles
             _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
 
-            if (args.IsNullOrEmpty())
+            if (!Program.IsHeadless && args.IsNullOrEmpty())
                 return;
 
+            var filemasks = new List<string>();
+
+            for (int i = 0; i < args.Count; ++i)
+            {
+                string arg = args[i];
+
+                if (!arg.StartsWith("-"))
+                {
+                    filemasks.Add(arg);
+                    continue;
+                }
+
+                if (arg == "--help")
+                {
+                    showCommandLineHelp(this, EventArgs.Empty);
+                    Close();
+                }
+
+                try
+                {
+                    if (arg == "-MaxQValue")
+                        defaultDataFilter.MaximumQValue = Convert.ToDouble(args[i + 1]);
+                    else if (arg == "-MinDistinctPeptidesPerProtein")
+                        defaultDataFilter.MinimumDistinctPeptidesPerProtein = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MinSpectraPerProtein")
+                        defaultDataFilter.MinimumSpectraPerProtein = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MinAdditionalPeptidesPerProtein")
+                        defaultDataFilter.MinimumAdditionalPeptidesPerProtein = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MinSpectraPerDistinctMatch")
+                        defaultDataFilter.MinimumSpectraPerDistinctMatch = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MinSpectraPerDistinctPeptide")
+                        defaultDataFilter.MinimumSpectraPerDistinctPeptide = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MaxProteinGroupsPerPeptide")
+                        defaultDataFilter.MaximumProteinGroupsPerPeptide = Convert.ToInt32(args[i + 1]);
+                    else if (arg == "-MergedOutputFilepath")
+                        defaultMergedOutputFilepath = args[i + 1];
+                    else
+                    {
+                        Program.HandleUserError(new Exception("unsupported parameter \"" + arg + "\""));
+                        return;
+                    }
+                }
+                catch (ArgumentOutOfRangeException)
+                {
+                    Program.HandleUserError(new Exception("parameter \"" + arg + "\" requires an argument, e.g. \"" + arg + " 42\""));
+                    return;
+                }
+                catch (FormatException)
+                {
+                    Program.HandleUserError(new Exception("unable to parse value \"" + args[i + 1] + "\" for parameter \"" + arg + "\""));
+                }
+
+                ++i; // skip the next argument
+            }
+
             var expandedFilepaths = new List<string>();
-            foreach (string filemask in args)
+            foreach (string filemask in filemasks)
             {
                 if (filemask.IndexOfAny("*?".ToCharArray()) != -1)
                     expandedFilepaths.AddRange(Directory.GetFiles(Path.GetDirectoryName(filemask), Path.GetFileName(filemask)));
@@ -833,12 +912,18 @@ namespace IDPicker
 
                 if (xml_filepaths.Count() + idpDB_filepaths.Count() == 0)
                 {
-                    MessageBox.Show("Select one or more idpDB, mzIdentML, pepXML, or idpXML files to create an IDPicker report.", "No IDPicker files selected");
+                    if (Program.IsHeadless)
+                    {
+                        Console.Error.WriteLine("Headless mode must be passed some idpDB files to merge.");
+                        Close();
+                    }
+                    else
+                        MessageBox.Show("Select one or more idpDB, mzIdentML, pepXML, or idpXML files to create an IDPicker report.", "No IDPicker files selected");
                     return;
                 }
 
                 if (Program.IsHeadless && xml_filepaths.Any())
-                    MessageBox.Show("Headless mode only supports merging idpDB files.");
+                    Program.HandleUserError(new Exception("headless mode only supports merging idpDB files"));
 
                 // warn if idpDBs already exist
                 bool warnOnce = false, skipReconvert = false;
@@ -875,7 +960,7 @@ namespace IDPicker
                 string commonFilepath = Util.GetCommonFilename(filepaths);
                 if (!openSingleFile && potentialPaths.Contains(commonFilepath))
                     commonFilepath = commonFilepath.Replace(".idpDB", " (merged).idpDB");
-                string mergeTargetFilepath = commonFilepath;
+                string mergeTargetFilepath = defaultMergedOutputFilepath ?? commonFilepath;
                 if (File.Exists(mergeTargetFilepath) && Program.IsHeadless)
                     File.Delete(mergeTargetFilepath);
                 else
@@ -905,8 +990,11 @@ namespace IDPicker
                     }
                     else
                     {
-                        // give the user a chance to override the merge target location
-                        if (!saveFileDialog(ref mergeTargetFilepath, "Choose where to create the merged idpDB."))
+                        // if not headless and MergedOutputFilepath is unset,
+                        // then give the user a chance to override the merge target location
+                        if (!Program.IsHeadless &&
+                            defaultMergedOutputFilepath == null &&
+                            !saveFileDialog(ref mergeTargetFilepath, "Choose where to create the merged idpDB."))
                             return;
 
                         while (true)
@@ -915,7 +1003,7 @@ namespace IDPicker
                             {
                                 MessageBox.Show("IDPicker files cannot be merged to a read-only location, pick a writable path.");
 
-                                if (!saveFileDialog(ref mergeTargetFilepath, "Pick a writable path in which to create the merged idpDB."))
+                                if (Program.IsHeadless || !saveFileDialog(ref mergeTargetFilepath, "Pick a writable path in which to create the merged idpDB."))
                                     return;
 
                                 continue;
@@ -1111,7 +1199,7 @@ namespace IDPicker
 
                     if (basicFilter == null)
                     {
-                        basicFilter = new DataFilter();
+                        basicFilter = new DataFilter(defaultDataFilter);
                         basicFilterControl.DataFilter = basicFilter;
 
                         viewFilter = basicFilter;

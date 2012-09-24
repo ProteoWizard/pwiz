@@ -330,7 +330,7 @@ namespace IDPicker.Forms
                             var precursorMassErrors = precursorMassErrorCluster;
                             var precursorMassErrorValues = precursorMassErrors.Select(o => o.MassError).ToArray();
                             var densityCurve = new LineItem(firstCluster ? kvp.Key.ToString() : "", getDensityCurve(precursorMassErrorValues, 0), color, SymbolType.None);
-                            var grassPlot = new LineItem("", precursorMassErrorValues, Enumerable.Repeat(0.0, precursorMassErrorValues.Length).ToArray(), color.Interpolate(Color.Gray, 0.5f), SymbolType.VDash) { Tag = kvp.Key };
+                            var grassPlot = new LineItem("", precursorMassErrorValues, Enumerable.Repeat(0.0, precursorMassErrorValues.Length).ToArray(), color, SymbolType.VDash) { Tag = kvp.Key };
                             densityCurve.Line.IsAntiAlias = true;
                             precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
                             precursorMassErrorForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
@@ -350,12 +350,18 @@ namespace IDPicker.Forms
                         if (scanTimeValues.Max() > 0)
                         {
                             var densityCurve = new LineItem(kvp.Key.ToString(), getDensityCurve(scanTimeValues, 0), color, SymbolType.None);
-                            var grassPlot = new LineItem("", scanTimeValues.ToArray(), Enumerable.Repeat(0.0, scanTimeValues.Count).ToArray(), color.Interpolate(Color.Gray, 0.5f), SymbolType.VDash);
+                            var grassPlot = new LineItem("", scanTimeValues.ToArray(), Enumerable.Repeat(0.0, scanTimeValues.Count).ToArray(), color, SymbolType.VDash);
                             densityCurve.Line.IsAntiAlias = true;
                             scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(densityCurve);
                             scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.Add(grassPlot);
                         }
                     }
+
+                    if (scanTimeDistributionForm.ZedGraphControl.GraphPane.CurveList.IsNullOrEmpty())
+                        scanTimeDistributionForm.ZedGraphControl.GraphPane.GraphObjList.Add(
+                            new TextObj("No scan time information present.\r\nUse File/Embed to import scan times from raw data.",
+                                        0.5, 0.5, CoordType.ChartFraction, AlignH.Center, AlignV.Center)
+                                        { FontSpec = new FontSpec("monospace", 18.0f, Color.Black, true, false, false) });
                 }
 
                 var colorRotator = new ColorSymbolRotator();

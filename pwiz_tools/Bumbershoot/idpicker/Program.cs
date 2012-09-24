@@ -27,6 +27,7 @@ using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using System.Threading;
 using System.Net;
@@ -39,6 +40,10 @@ namespace IDPicker
 {
     static class Program
     {
+        [DllImport("kernel32.dll")]
+        static extern bool AttachConsole(int dwProcessId);
+        private const int ATTACH_PARENT_PROCESS = -1;
+
         public static bool IsHeadless { get; private set; }
         public static IDPickerForm MainWindow { get; private set; }
 
@@ -48,6 +53,10 @@ namespace IDPicker
         [STAThread]
         static void Main (string[] args)
         {
+            // redirect console output to parent process;
+            // must be before any calls to Console.WriteLine()
+            AttachConsole(ATTACH_PARENT_PROCESS);
+
             // Add the event handler for handling UI thread exceptions to the event.
             Application.ThreadException += new ThreadExceptionEventHandler(UIThread_UnhandledException);
 
@@ -67,7 +76,7 @@ namespace IDPicker
                 var singleInstanceArgs = e.Args.ToList();
                 IsHeadless = singleInstanceArgs.Contains("--headless");
                 if (IsHeadless)
-                    singleInstanceArgs.Remove("--headless");
+                    singleInstanceArgs.RemoveAll(o => o == "--headless");
 
                 // initialize webClient asynchronously
                 initializeWebClient();
@@ -95,7 +104,7 @@ namespace IDPicker
         {
             if (IsHeadless)
             {
-                Console.Error.WriteLine("Error: {0}\r\n\r\nDetails:\r\n{1}", e.Message, e.ToString());
+                Console.Error.WriteLine("\r\nProbable user error: {0}\r\n\r\nIf you suspect it's not a user error, please send the error to:\r\nbumbershoot-support@googlegroups.com", e.Message);
                 System.Diagnostics.Process.GetCurrentProcess().Kill();
             }
 
@@ -124,7 +133,7 @@ namespace IDPicker
             {
                 if (IsHeadless)
                 {
-                    Console.Error.WriteLine("Error: {0}\r\n\r\nDetails:\r\n{1}", e.Message, e.ToString());
+                    Console.Error.WriteLine("\r\nError: {0}\r\n\r\nDetails:\r\n{1}", e.Message, e.ToString());
                     System.Diagnostics.Process.GetCurrentProcess().Kill();
                 }
                 else
@@ -150,7 +159,7 @@ namespace IDPicker
 
                 if (IsHeadless)
                 {
-                    Console.Error.WriteLine("Error: {0}\r\n\r\nDetails:\r\n{1}", reportForm.ExceptionType, reportForm.MessageBody);
+                    Console.Error.WriteLine("\r\nError: {0}\r\n\r\nDetails:\r\n{1}", reportForm.ExceptionType, reportForm.MessageBody);
                     System.Diagnostics.Process.GetCurrentProcess().Kill();
                 }
 
