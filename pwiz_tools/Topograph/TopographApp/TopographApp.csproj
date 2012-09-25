@@ -50,8 +50,8 @@
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>B7819BCE89E3A3A6502DEEC1880A1216E17CA9D6</ManifestCertificateThumbprint>
-    <ManifestKeyFile>topograph_2_TemporaryKey.pfx</ManifestKeyFile>
+    <ManifestCertificateThumbprint>27BD7FEB06BDFFE53FBDA13C6D127DF8B5BDEFE9</ManifestCertificateThumbprint>
+    <ManifestKeyFile>TopographApp_TemporaryKey.pfx</ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <SignManifests>true</SignManifests>
@@ -79,7 +79,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>258</ApplicationRevision>
+    <ApplicationRevision>259</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -789,6 +789,7 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="TopographApp_TemporaryKey.pfx" />
     <None Include="topograph_2_TemporaryKey.pfx" />
     <Compile Include="Properties\Settings.Designer.cs">
       <AutoGen>True</AutoGen>

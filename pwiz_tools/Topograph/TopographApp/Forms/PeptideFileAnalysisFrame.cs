@@ -39,7 +39,6 @@ namespace pwiz.Topograph.ui.Forms
         private ChromatogramForm _chromatogramForm;
         private TracerChromatogramForm _tracerChromatogramForm;
         private PrecursorPoolForm _precursorPoolForm;
-        private RelexForm _relexForm;
         private PeptideFileAnalysisFrame(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
         {
             InitializeComponent();
@@ -175,14 +174,6 @@ namespace pwiz.Topograph.ui.Forms
                                             CloseButton = false
                                         };
                 _chromatogramForm.Show(dockPanel, DockState.Document);
-            }
-            if (_relexForm == null)
-            {
-                _relexForm = new RelexForm(PeptideFileAnalysis)
-                                 {
-                                     CloseButton = false
-                                 };
-                _relexForm.Show(dockPanel, DockState.Document);
             }
             if (_precursorPoolForm == null)
             {

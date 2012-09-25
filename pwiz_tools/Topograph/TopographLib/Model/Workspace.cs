@@ -1001,7 +1001,7 @@ namespace pwiz.Topograph.Model
             {
                 return null;
             }
-            foreach (var ext in new[] { ".RAW", ".raw", ".mzML", ".mzXML" })
+            foreach (var ext in new[] { ".RAW", ".raw", ".wiff", ".mzML", ".mzXML" })
             {
                 var path = Path.Combine(dataDirectory, msDataFileName + ext);
                 if (File.Exists(path))

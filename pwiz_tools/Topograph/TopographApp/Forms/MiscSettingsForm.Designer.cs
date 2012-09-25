@@ -86,9 +86,9 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // label2
             // 
-            this.label2.Location = new System.Drawing.Point(20, 97);
+            this.label2.Location = new System.Drawing.Point(20, 86);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(503, 74);
+            this.label2.Size = new System.Drawing.Size(503, 85);
             this.label2.TabIndex = 3;
             this.label2.Text = resources.GetString("label2.Text");
             // 

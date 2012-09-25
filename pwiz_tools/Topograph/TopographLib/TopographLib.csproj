@@ -147,6 +147,7 @@
     <Compile Include="Data\DbChangeLog.cs" />
     <Compile Include="Data\DbChromatogramSet.cs" />
     <Compile Include="Data\DbInstanceStatus.cs" />
+    <Compile Include="Data\DbPeptideSpectrumMatch.cs" />
     <Compile Include="Data\DbProtein.cs" />
     <Compile Include="Data\DbProteinName.cs" />
     <Compile Include="Data\DbProteinSet.cs" />

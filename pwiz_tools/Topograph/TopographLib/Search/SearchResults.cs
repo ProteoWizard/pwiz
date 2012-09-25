@@ -314,7 +314,7 @@ namespace pwiz.Topograph.Search
                         results.Add(new SearchResult(rs.GetString(0))
                                        {
                                            Charge = rs.GetInt32(1),
-                                           ScanIndex = Convert.ToInt32(rs.GetValue(2)),
+                                           ScanIndex = ParseScanNumber(rs.GetValue(2)),
                                            Filename = name, 
                                        });
                     }
@@ -328,6 +328,23 @@ namespace pwiz.Topograph.Search
                 }
             }
             return results;
+        }
+
+        private static int ParseScanNumber(object value)
+        {
+            try
+            {
+                return Convert.ToInt32(value);
+            }
+            catch(Exception)
+            {
+                var values = Convert.ToString(value).Split(new[] {'.'});
+                if (values.Length > 3)
+                {
+                    return Convert.ToInt32(values[3]);
+                }
+            }
+            throw new InvalidDataException(string.Format("Unable to determine scan number from value {0}", value));
         }
     }
 
