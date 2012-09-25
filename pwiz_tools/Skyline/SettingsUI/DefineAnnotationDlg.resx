@@ -151,7 +151,7 @@
     <value>Top, Left, Right</value>
   </data>
   <data name="tbxName.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 32</value>
+    <value>12, 25</value>
   </data>
   <data name="tbxName.Size" type="System.Drawing.Size, System.Drawing">
     <value>336, 20</value>
@@ -205,7 +205,7 @@
     <value>True</value>
   </data>
   <data name="label2.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 58</value>
+    <value>12, 63</value>
   </data>
   <data name="label2.Size" type="System.Drawing.Size, System.Drawing">
     <value>34, 13</value>
@@ -262,7 +262,7 @@
     <value>True</value>
   </data>
   <data name="label3.Location" type="System.Drawing.Point, System.Drawing">
-    <value>15, 105</value>
+    <value>12, 110</value>
   </data>
   <data name="label3.Size" type="System.Drawing.Size, System.Drawing">
     <value>42, 13</value>
@@ -292,7 +292,7 @@
     <value>12, 230</value>
   </data>
   <data name="checkedListBoxAppliesTo.Size" type="System.Drawing.Size, System.Drawing">
-    <value>333, 94</value>
+    <value>333, 109</value>
   </data>
   <data name="checkedListBoxAppliesTo.TabIndex" type="System.Int32, mscorlib">
     <value>6</value>
@@ -313,7 +313,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnOK.Location" type="System.Drawing.Point, System.Drawing">
-    <value>189, 330</value>
+    <value>189, 347</value>
   </data>
   <data name="btnOK.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -340,7 +340,7 @@
     <value>Bottom, Right</value>
   </data>
   <data name="btnCancel.Location" type="System.Drawing.Point, System.Drawing">
-    <value>270, 330</value>
+    <value>270, 347</value>
   </data>
   <data name="btnCancel.Size" type="System.Drawing.Size, System.Drawing">
     <value>75, 23</value>
@@ -363,11 +363,14 @@
   <data name="&gt;&gt;btnCancel.ZOrder" xml:space="preserve">
     <value>1</value>
   </data>
+  <data name="label4.Anchor" type="System.Windows.Forms.AnchorStyles, System.Windows.Forms">
+    <value>Bottom, Left</value>
+  </data>
   <data name="label4.AutoSize" type="System.Boolean, mscorlib">
     <value>True</value>
   </data>
   <data name="label4.Location" type="System.Drawing.Point, System.Drawing">
-    <value>12, 214</value>
+    <value>9, 214</value>
   </data>
   <data name="label4.Size" type="System.Drawing.Size, System.Drawing">
     <value>60, 13</value>
@@ -397,7 +400,7 @@
     <value>6, 13</value>
   </data>
   <data name="$this.ClientSize" type="System.Drawing.Size, System.Drawing">
-    <value>360, 365</value>
+    <value>360, 382</value>
   </data>
   <data name="$this.StartPosition" type="System.Windows.Forms.FormStartPosition, System.Windows.Forms">
     <value>CenterParent</value>
