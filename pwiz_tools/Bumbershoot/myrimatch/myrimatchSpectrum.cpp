@@ -622,41 +622,44 @@ namespace myrimatch
             int fragmentsPredicted = accumulate( mvhKey.begin(), mvhKey.end(), 0 );
 			result.fragmentsMatched = fragmentsPredicted - result.fragmentsUnmatched;
 
-			//int numHits = accumulate( intenClassCounts.begin(), intenClassCounts.end()-1, 0 );
-			int numVoids = intenClassCounts.back();
-			int totalPeakBins = numVoids + peakCount;
+            if( result.fragmentsMatched >= g_rtConfig->MinMatchedFragments )
+            {
+			    //int numHits = accumulate( intenClassCounts.begin(), intenClassCounts.end()-1, 0 );
+			    int numVoids = intenClassCounts.back();
+			    int totalPeakBins = numVoids + peakCount;
 
-			for( size_t i=0; i < intenClassCounts.size(); ++i ) {
-				mvh += lnCombin( intenClassCounts[i], mvhKey[i] );
-			}
-			mvh -= lnCombin( totalPeakBins, fragmentsPredicted );
+			    for( size_t i=0; i < intenClassCounts.size(); ++i ) {
+				    mvh += lnCombin( intenClassCounts[i], mvhKey[i] );
+			    }
+			    mvh -= lnCombin( totalPeakBins, fragmentsPredicted );
 
-			result.mvh = -mvh;
+			    result.mvh = -mvh;
 
 
-			int N;
-			double sum1 = 0, sum2 = 0;
-			int totalPeakSpace = numVoids + fragmentsPredicted;
-			double pHits = (double) fragmentsPredicted / (double) totalPeakSpace;
-			double pMisses = 1.0 - pHits;
+			    int N;
+			    double sum1 = 0, sum2 = 0;
+			    int totalPeakSpace = numVoids + fragmentsPredicted;
+			    double pHits = (double) fragmentsPredicted / (double) totalPeakSpace;
+			    double pMisses = 1.0 - pHits;
 
-			N = accumulate( mzFidelityKey.begin(), mzFidelityKey.end(), 0 );
-			int p = 0;
+			    N = accumulate( mzFidelityKey.begin(), mzFidelityKey.end(), 0 );
+			    int p = 0;
 
-			//cout << id << ": " << mzFidelityKey << endl;
+			    //cout << id << ": " << mzFidelityKey << endl;
 
-			//if( id == 2347 ) cout << pHits << " " << totalPeakSpace << " " << peakData.size() << endl;
-			for( int i=0; i < g_rtConfig->NumMzFidelityClasses; ++i )
-			{
-				p = 1 << i;
-				double pKey = pHits * ( (double) p / (double) g_rtConfig->minMzFidelityClassCount );
-				//if( id == 2347 ) cout << " " << pKey << " " << mzFidelityKey[i] << endl;
-				sum1 += log( pow( pKey, mzFidelityKey[i] ) );
-				sum2 += g_lnFactorialTable[ mzFidelityKey[i] ];
-			}
-			sum1 += log( pow( pMisses, mzFidelityKey.back() ) );
-			sum2 += g_lnFactorialTable[ mzFidelityKey.back() ];
-			result.mzFidelity = -1.0 * double( ( g_lnFactorialTable[ N ] - sum2 ) + sum1 );
+			    //if( id == 2347 ) cout << pHits << " " << totalPeakSpace << " " << peakData.size() << endl;
+			    for( int i=0; i < g_rtConfig->NumMzFidelityClasses; ++i )
+			    {
+				    p = 1 << i;
+				    double pKey = pHits * ( (double) p / (double) g_rtConfig->minMzFidelityClassCount );
+				    //if( id == 2347 ) cout << " " << pKey << " " << mzFidelityKey[i] << endl;
+				    sum1 += log( pow( pKey, mzFidelityKey[i] ) );
+				    sum2 += g_lnFactorialTable[ mzFidelityKey[i] ];
+			    }
+			    sum1 += log( pow( pMisses, mzFidelityKey.back() ) );
+			    sum2 += g_lnFactorialTable[ mzFidelityKey.back() ];
+			    result.mzFidelity = -1.0 * double( ( g_lnFactorialTable[ N ] - sum2 ) + sum1 );
+            }
 		}
 
 		STOP_PROFILER(8);

@@ -54,6 +54,7 @@ using namespace freicore;
     RTCONFIG_VARIABLE( double,          TicCutoffPercentage,            0.98                    ) \
     RTCONFIG_VARIABLE( double,          ClassSizeMultiplier,            2.0                     ) \
     RTCONFIG_VARIABLE( double,          MinResultScore,                 1e-7                    ) \
+    RTCONFIG_VARIABLE( int,             MinMatchedFragments,            5                       ) \
     RTCONFIG_VARIABLE( double,          MinPeptideMass,                 0.0                     ) \
     RTCONFIG_VARIABLE( double,          MaxPeptideMass,                 10000.0                 ) \
     RTCONFIG_VARIABLE( int,             MinPeptideLength,               5                       ) \
@@ -94,6 +95,7 @@ namespace myrimatch
         string decoyPrefix;
         bool automaticDecoys;
 
+        CVID cleavageAgent;
         boost::regex cleavageAgentRegex;
         Digestion::Config digestionConfig;
 
@@ -143,16 +145,31 @@ namespace myrimatch
 
             // TODO: move CleavageRules parsing to its own class
             trim(CleavageRules); // trim flanking whitespace
-            if( CleavageRules.find(' ') == string::npos )
+
+            if (bal::iequals(CleavageRules, "NoEnzyme"))
+                throw runtime_error("NoEnzyme is not supported. If you want non-specific digestion, set CleavageRules to the enzyme that digested your sample and set MinTerminiCleavages to 0.");
+
+            // first try to parse the token as the name of an agent
+            cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
+            cleavageAgentRegex = boost::regex();
+
+            if (cleavageAgent != CVID_Unknown || CleavageRules.find(' ') == string::npos)
             {
                 // a single token must be either a cleavage agent name or regex
+                // multiple tokens could be a cleavage agent or an old-style cleavage rule set
 
-                if (bal::iequals(CleavageRules, "NoEnzyme"))
-                    throw runtime_error("NoEnzyme is not supported. If you want non-specific digestion, set CleavageRules to the enzyme that digested your sample and set MinTerminiCleavages to 0.");
+                if (bal::iequals(CleavageRules, "unspecific cleavage"))
+                {
+                    cerr << "Warning: unspecific cleavage is not recommended. For a non-specific search, you should almost always set CleavageRules to the enzyme that digested your sample and set MinTerminiCleavages to 0." << endl;
+                    MinTerminiCleavages = 0;
 
-                // first try to parse the token as the name of an agent
-                CVID cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
-                if( cleavageAgent == CVID_Unknown )
+                    // there is no regex
+                }
+                else if (bal::iequals(CleavageRules, "no cleavage"))
+                {
+                    // there is no regex
+                }
+                else if (cleavageAgent == CVID_Unknown)
                 {
                     // next try to parse the token as a Perl regex
                     try
@@ -175,7 +192,7 @@ namespace myrimatch
                     cleavageAgentRegex = boost::regex(Digestion::getCleavageAgentRegex(cleavageAgent));
                 }
             }
-            else
+            else if (cleavageAgent == CVID_Unknown)
             {
                 // multiple tokens must be a CleavageRuleSet
                 CleavageRuleSet tmpRuleSet;

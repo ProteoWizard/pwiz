@@ -375,6 +375,7 @@ namespace myrimatch
                       Version::str(),
                       "http://forge.fenchurch.mc.vanderbilt.edu/projects/myrimatch/",
                       g_dbPath + g_dbFilename,
+                      g_rtConfig->cleavageAgent,
                       g_rtConfig->cleavageAgentRegex,
                       g_rtConfig->decoyPrefix,
                       fileParams);
@@ -579,7 +580,13 @@ namespace myrimatch
                 string validSequenceResidues("ACDEFGHIKLMNPQRSTUVWY");
                 string validResidues = validSequenceResidues + "BXZ";
 
-                Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
+                scoped_ptr<Digestion> digestionPtr;
+                if (g_rtConfig->cleavageAgent != CVID_Unknown)
+                    digestionPtr.reset(new Digestion(protein, g_rtConfig->cleavageAgent, g_rtConfig->digestionConfig));
+                else
+                    digestionPtr.reset(new Digestion(protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig));
+
+                const Digestion& digestion = *digestionPtr;
                 for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); )
                 {
                     ++searchStatistics.numPeptidesGenerated;
