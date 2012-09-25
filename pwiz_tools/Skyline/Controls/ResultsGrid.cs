@@ -855,10 +855,9 @@ namespace pwiz.Skyline.Controls
 
         private void HideColumns()
         {
-            foreach (DataGridViewColumn column in Columns)
+            foreach (DataGridViewColumn column in Columns.Cast<DataGridViewColumn>().Except(GetAvailableColumns()))
             {
-                if (!ReferenceEquals(column, ReplicateNameColumn))
-                    ShowColumn(column, false);
+                ShowColumn(column, false);
             }
         }
 
