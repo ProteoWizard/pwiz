@@ -4739,4 +4739,19 @@ Are you sure you want to continue?</value>
   <data name="MeasuredResults_ChangeRecalcStatus_Attempting_to_recalculate_peak_integration_without_first_completing_raw_data_import_">
     <value xml:space="preserve">Attempting to recalculate peak integration without first completing raw data import.</value>
   </data>
+  <data name="WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__">
+    <value xml:space="preserve">Error renaming temporary zip file: </value>
+  </data>
+  <data name="WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__">
+    <value xml:space="preserve">Error deleting temporary zip file: </value>
+  </data>
+  <data name="PublishDocumentDlg_OkDialog_Please_select_a_folder">
+    <value xml:space="preserve">Please select a folder</value>
+  </data>
+  <data name="WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server">
+    <value xml:space="preserve">Deleting temporary file on server</value>
+  </data>
+  <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server">
+    <value xml:space="preserve">Renaming temporary file on server</value>
+  </data>
 </root>

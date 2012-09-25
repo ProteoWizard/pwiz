@@ -8308,6 +8308,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Please select a folder.
+        /// </summary>
+        public static string PublishDocumentDlg_OkDialog_Please_select_a_folder {
+            get {
+                return ResourceManager.GetString("PublishDocumentDlg_OkDialog_Please_select_a_folder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Please select a Skyline Shared file to upload..
         /// </summary>
         public static string PublishDocumentDlg_OkDialog_Please_select_a_Skyline_Shared_file_to_upload {
@@ -13882,6 +13891,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Error deleting temporary zip file: .
+        /// </summary>
+        public static string WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failure retrieving folder information from {0}.
         /// </summary>
         public static string WebPanoramaPublishClient_GetInfoForFolders_Failure_retrieving_folder_information_from__0_ {
@@ -13898,6 +13916,33 @@ namespace pwiz.Skyline.Properties {
             get {
                 return ResourceManager.GetString("WebPanoramaPublishClient_ImportDataOnServer_Error_importing_Skyline_file_on_Panor" +
                         "ama_server__0_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error renaming temporary zip file: .
+        /// </summary>
+        public static string WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__ {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Deleting temporary file on server.
+        /// </summary>
+        public static string WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Renaming temporary file on server.
+        /// </summary>
+        public static string WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server {
+            get {
+                return ResourceManager.GetString("WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server", resourceCulture);
             }
         }
         

@@ -187,10 +187,8 @@ namespace pwiz.Skyline.ToolsUI
     public sealed class Server : Immutable, IKeyContainer<string>, IXmlSerializable
     {
         public Server(string uriText, string username, string password)
+            : this(new Uri(uriText), username, password)
         {
-            Username = username;
-            Password = password;
-            URI = new Uri(uriText);
         }
 
         public Server(Uri uri, string username, string password)

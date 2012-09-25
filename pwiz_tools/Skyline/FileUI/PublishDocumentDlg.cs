@@ -205,6 +205,12 @@ namespace pwiz.Skyline.FileUI
 
         public void OkDialog()
         {
+            if(treeViewFolders.SelectedNode == null)
+            {
+                MessageDlg.Show(this, Resources.PublishDocumentDlg_OkDialog_Please_select_a_folder);
+                return;
+            }
+
             FolderInformation folderInfo = treeViewFolders.SelectedNode.Tag as FolderInformation;
             if (folderInfo == null)
             {
@@ -364,7 +370,7 @@ namespace pwiz.Skyline.FileUI
             var zipFileName = Path.GetFileName(zipFilePath) ?? string.Empty;
 
             // Upload zip file to pipeline folder.
-            using (_webClient = new WebClient())
+            using (_webClient = new NonStreamBufferingWebClient())
             {
                 _webClient.UploadProgressChanged += webClient_UploadProgressChanged;
                 _webClient.UploadFileCompleted += webClient_UploadFileCompleted;
@@ -376,26 +382,38 @@ namespace pwiz.Skyline.FileUI
 
                 string webDavUrl = (string) jsonWebDavInfo["webDavURL"]; // Not L10N
 
-                // Must include the name of the zip file in the destination path. 
-                Uri uploadUri = new Uri(server.URI, webDavUrl + Uri.EscapeUriString(zipFileName));
+                // Upload Url minus the name of the zip file.
+                var baseUploadUri = new Uri(server.URI, webDavUrl);
+                var tmpUploadUri = new Uri(baseUploadUri, Uri.EscapeUriString(zipFileName) + ".part");
+                var uploadUri = new Uri(baseUploadUri, Uri.EscapeUriString(zipFileName));
 
                 lock (this)
                 {
-                    _webClient.UploadFileAsync(uploadUri, "PUT", zipFilePath); // Not L10N
+                    // Write to a temp file first. This will be renamed after a successful upload or deleted if the upload is canceled.
+                    _webClient.UploadFileAsync(tmpUploadUri, "PUT", zipFilePath); // Not L10N
 
                     // Wait for the upload to complete
                     Monitor.Wait(this);
                 }
 
                 if (longWaitBroker.IsCanceled)
+                {
+                    // Delete the temporary file on the server
+                    longWaitBroker.Message = Resources.WebPanoramaPublishClient_SendZipFile_Deleting_temporary_file_on_server;
+                    DeleteTempZipFile(tmpUploadUri, server.AuthHeader);
                     return;
-
+                }
+                
+                // Rename the temporary file
+                longWaitBroker.Message = Resources.WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server;
+                RenameTempZipFile(tmpUploadUri, uploadUri, server.AuthHeader);
+                
                 longWaitBroker.ProgressValue = -1;
                 longWaitBroker.Message = string.Format(Resources.WebPanoramaPublishClient_SendZipFile_Waiting_for_data_import_completion___);
 
                 // Data must be completely uploaded before we can import.
                 Uri importUrl = Call(server.URI, "targetedms", folderPath, "skylineDocUploadApi"); // Not L10N
-                _webClient.Headers.Add(HttpRequestHeader.Authorization, server.AuthHeader);
+                
                 // Need to tell server which uploaded file to import.
                 var dataImportInformation = new NameValueCollection
                                                 {
@@ -435,6 +453,81 @@ namespace pwiz.Skyline.FileUI
                     complete = string.Equals(status, "COMPLETE"); // Not L10N
                 }
             }
+        }
+
+        private class NonStreamBufferingWebClient: WebClient
+        {
+            protected override WebRequest GetWebRequest(Uri address)
+            {
+                var request =  base.GetWebRequest(address);
+
+                var httpWebRequest = request as HttpWebRequest;
+                if (httpWebRequest != null)
+                {
+                    httpWebRequest.Timeout = Timeout.Infinite;
+                    httpWebRequest.AllowWriteStreamBuffering = false;
+                }
+                return request;
+            }
+        }
+ 
+
+        private void RenameTempZipFile(Uri sourceUri, Uri destUri, string authHeader)
+        {
+            var request = (HttpWebRequest) WebRequest.Create(sourceUri.ToString());
+            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+            // Specify the method.
+            request.Method = "MOVE";
+
+            // Destination URI.
+            request.Headers.Add("Destination", destUri.ToString());
+
+            // If a file already exists at the destination URI, it will not be overwritten.  
+            // The server would return a 412 Precondition Failed status code.
+            request.Headers.Add("Overwrite", "F");
+
+            WebResponse response = null;
+            try
+            {
+                response = request.GetResponse();
+            }
+            // An exception will be thrown if the response code is not 200 (Success).
+            catch (WebException x)
+            {
+                var msg = x.Message;
+                if(x.InnerException != null)
+                {
+                    msg += ". Inner Exception: " + x.InnerException.Message;
+                }
+                throw new Exception(TextUtil.LineSeparate(Resources.WebPanoramaPublishClient_RenameTempZipFile_Error_renaming_temporary_zip_file__, msg), x);
+            }
+            finally
+            {
+                if (response != null) response.Close();
+            } 
+        }
+
+        private void DeleteTempZipFile(Uri sourceUri, string authHeader)
+        {
+            var request = (HttpWebRequest)WebRequest.Create(sourceUri.ToString());
+            request.Headers.Add(HttpRequestHeader.Authorization, authHeader);
+            // Specify the method.
+            request.Method = "DELETE";
+
+            WebResponse response = null;
+            try
+            {
+                response = request.GetResponse();
+            }
+            // An exception will be thrown if the response code is not 200 (Success).
+            catch (WebException x)
+            {
+                throw new Exception(TextUtil.LineSeparate(Resources.WebPanoramaPublishClient_DeleteTempZipFile_Error_deleting_temporary_zip_file__, x.Message), x);
+            }
+            finally
+            {
+                if (response != null) response.Close();
+            }  
         }
 
         public void webClient_UploadProgressChanged(object sender, UploadProgressChangedEventArgs e)
