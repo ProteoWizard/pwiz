@@ -30,6 +30,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.Skyline.Util;
@@ -166,8 +167,12 @@ namespace pwiz.SkylineTestTutorial
                 var graphChrom = SkylineWindow.GraphChromatograms.ToList()[0];
                 var listChanges = new List<ChangedPeakBoundsEventArgs>
                 {
-                    new ChangedPeakBoundsEventArgs(pathGroup, null, graphChrom.NameSet, 
-                        graphChrom.ChromGroupInfos[0].FilePath, new ScaledRetentionTime(29.8, 29.8), new ScaledRetentionTime(30.4, 30.4), false, PeakBoundsChangeType.both)
+                    new ChangedPeakBoundsEventArgs(pathGroup, null, graphChrom.NameSet,
+                                                    graphChrom.ChromGroupInfos[0].FilePath,
+                                                    new ScaledRetentionTime(29.8, 29.8),
+                                                    new ScaledRetentionTime(30.4, 30.4),
+                                                    ChromPeak.Identification.FALSE,
+                                                    PeakBoundsChangeType.both)
                 };
                 graphChrom.SimulateChangedPeakBounds(listChanges);
                 foreach(TransitionTreeNode node in SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Nodes)
@@ -327,16 +332,6 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
         }
 
-        private static void FindNode(string searchText)
-        {
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-            {
-                findPeptideDlg.SearchString = searchText;
-                findPeptideDlg.FindNext();
-                findPeptideDlg.Close();
-            });
-        }
-
         private static void NormalizeGraphToHeavy()
         {
             AreaGraphController.AreaView = AreaNormalizeToView.area_ratio_view;
@@ -344,7 +339,7 @@ namespace pwiz.SkylineTestTutorial
             SkylineWindow.UpdatePeakAreaGraph();
         }
 
-        private static void AdjustModifications(string peptideSeq, bool removeCTerminalMod, char aa13C, double expectedPrecursorMz)
+        private void AdjustModifications(string peptideSeq, bool removeCTerminalMod, char aa13C, double expectedPrecursorMz)
         {
             FindNode(peptideSeq);
             var editPepModsDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);

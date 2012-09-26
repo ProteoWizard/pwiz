@@ -510,7 +510,7 @@ namespace pwiz.SkylineTestUtil
                     RunTest();
                 }
             }
-             catch (Exception x)
+            catch (Exception x)
             {
                 // An exception occurred outside RunTest
                 _testExceptions.Add(x);

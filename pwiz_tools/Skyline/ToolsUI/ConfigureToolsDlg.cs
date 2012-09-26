@@ -205,6 +205,10 @@ namespace pwiz.Skyline.ToolsUI
             return comboReport.Items.Cast<string>().Any(item => item == reportTitle);
         }
 
+        /// <summary>
+        /// Supported extensions
+        /// <para>Changes to this array require corresponding changes to the FileDialogFiltersAll call below</para>
+        /// </summary>
         public static readonly string[] EXTENSIONS = new[]{".exe", ".com", ".pif", ".cmd", ".bat", ".py", ".pl"};
 
         public static bool checkExtension(string path)
@@ -597,7 +601,10 @@ namespace pwiz.Skyline.ToolsUI
                                TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_All_Executables, EXTENSIONS[i++]),
                                TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Command_Files, EXTENSIONS[i++]),
                                TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Information_Files, EXTENSIONS[i++]),
-                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, EXTENSIONS[i++], EXTENSIONS[i])),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Batch_Files, EXTENSIONS[i++], EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts, EXTENSIONS[i++]),
+                               TextUtil.FileDialogFilter(Resources.ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts, EXTENSIONS[i])
+                               ),
                 FilterIndex = 1,
                 Multiselect = false
             };

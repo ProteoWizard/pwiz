@@ -265,7 +265,7 @@ namespace pwiz.Skyline.Model.Results
         /// Do initial grouping of and ranking of peaks using the Crawdad
         /// peak detector.
         /// </summary>
-        public void PickChromatogramPeaks(double[] retentionTimes)
+        public void PickChromatogramPeaks(double[] retentionTimes, bool isAlignedTimes)
         {
             // Make sure chromatograms are in sorted order
             _listChromData.Sort((c1, c2) => c1.Key.CompareTo(c2.Key));
@@ -299,7 +299,7 @@ namespace pwiz.Skyline.Model.Results
                     continue;
 
                 ChromDataPeakList peakSet = FindCoelutingPeaks(peak, allPeaks);
-                peakSet.SetIdentified(retentionTimes);
+                peakSet.SetIdentified(retentionTimes, isAlignedTimes);
 
                 _listPeakSets.Add(peakSet);
                 listRank.Add(i);
@@ -367,7 +367,7 @@ namespace pwiz.Skyline.Model.Results
             // them wider.
             // This does not handle reintegration, because peaks get reintegrated
             // before they are stored, taking the entire peptide into account.
-            _listPeakSets = ExtendPeaks(_listPeakSets, retentionTimes);
+            _listPeakSets = ExtendPeaks(_listPeakSets, retentionTimes, isAlignedTimes);
 
             // Sort by whether a peak contains an ID and then product score
             // This has to be done after peak extending, since extending may
@@ -444,19 +444,22 @@ namespace pwiz.Skyline.Model.Results
                         flags |= ChromPeak.FlagValues.time_normalized;
                     if (peakSet.IsIdentified)
                         flags |= ChromPeak.FlagValues.contains_id;
+                    if (peakSet.IsAlignedIdentified)
+                        flags |= ChromPeak.FlagValues.used_id_alignment;
                     peak.Data.Peaks.Add(peak.CalcChromPeak(peakMax, flags));
                 }
             }
         }
 
         private static List<ChromDataPeakList> ExtendPeaks(IEnumerable<ChromDataPeakList> listPeakSets,
-                                                           double[] retentionTimes)
+                                                           double[] retentionTimes,
+                                                           bool isAlignedTimes)
         {
             var listExtendedSets = new List<ChromDataPeakList>();
             foreach (var peakSet in listPeakSets)
             {
                 peakSet.Extend();
-                peakSet.SetIdentified(retentionTimes);
+                peakSet.SetIdentified(retentionTimes, isAlignedTimes);
                 if (!PeaksRedundant(peakSet, listExtendedSets))
                     listExtendedSets.Add(peakSet);
             }

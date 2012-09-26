@@ -854,7 +854,7 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
-            Transition transition, double startTime, double endTime, bool identified)
+            Transition transition, double startTime, double endTime, ChromPeak.Identification identified)
         {
             return ChangePeak(groupPath, nameSet, filePath, true,
                 (node, info, tol, iSet, fileId, reg) =>
@@ -1697,7 +1697,8 @@ namespace pwiz.Skyline.Model
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
             int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
-            bool identified = reader.GetBoolAttribute(ATTR.identified);
+            ChromPeak.Identification identified = reader.GetEnumAttribute(ATTR.identified,
+                ChromPeak.Identification.FALSE, XmlUtil.EnumCase.upper);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
             float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
             var annotations = Annotations.EMPTY;
@@ -1901,7 +1902,7 @@ namespace pwiz.Skyline.Model
             public void ReadXml(XmlReader reader, SrmSettings settings)
             {
                 // Accept uppercase and lowercase for backward compatibility with v0.1
-                IonType = reader.GetEnumAttribute(ATTR.fragment_type, IonType.y, true);
+                IonType = reader.GetEnumAttribute(ATTR.fragment_type, IonType.y, XmlUtil.EnumCase.lower);
                 Ordinal = reader.GetIntAttribute(ATTR.fragment_ordinal);
                 MassIndex = reader.GetIntAttribute(ATTR.mass_index);
                 // NOTE: PrecursorCharge is used only in TransitionInfo.ReadUngroupedTransitionListXml()
@@ -2015,7 +2016,8 @@ namespace pwiz.Skyline.Model
                 float fwhm = reader.GetFloatAttribute(ATTR.fwhm);
                 bool fwhmDegenerate = reader.GetBoolAttribute(ATTR.fwhm_degenerate);
                 bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
-                bool identified = reader.GetBoolAttribute(ATTR.identified);
+                var identified = reader.GetEnumAttribute(ATTR.identified,
+                    ChromPeak.Identification.FALSE, XmlUtil.EnumCase.upper);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
                 var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
@@ -2465,7 +2467,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
             writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
-            writer.WriteAttributeNullable(ATTR.identified, chromInfo.Identified);
+            writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLower());
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
             writer.WriteAttributeNullable(ATTR.isotope_dotp, chromInfo.IsotopeDotProduct);
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);
@@ -2657,7 +2659,7 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.fwhm, chromInfo.Fwhm);
                 writer.WriteAttribute(ATTR.fwhm_degenerate, chromInfo.IsFwhmDegenerate);
                 writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
-                writer.WriteAttribute(ATTR.identified, chromInfo.IsIdentified);
+                writer.WriteAttribute(ATTR.identified, chromInfo.Identified.ToString().ToLower());
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);

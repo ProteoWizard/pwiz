@@ -17,9 +17,7 @@
  * limitations under the License.
  */
 
-using System;
 using System.Linq;
-using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.Graphs;
@@ -72,10 +70,11 @@ namespace pwiz.SkylineTestFunctional
                 document.Peptides.First(
                     peptideDocNode => seqWithTwoIds.Equals(peptideDocNode.Peptide.Sequence));
             var precursorWithTwoIds = peptideWithTwoIds.TransitionGroups.First();
-            Assert.IsTrue(precursorWithOneId.Results[0][0].Identified);
-            Assert.IsFalse(precursorWithOneId.Results[1][0].Identified);
-            Assert.IsTrue(precursorWithTwoIds.Results[0][0].Identified);
-            Assert.IsTrue(precursorWithTwoIds.Results[1][0].Identified);
+            Assert.IsTrue(precursorWithOneId.Results[0][0].IsIdentified);
+            Assert.IsFalse(precursorWithOneId.Results[1][0].Identified == ChromPeak.Identification.TRUE);
+            Assert.IsTrue(precursorWithOneId.Results[1][0].Identified == ChromPeak.Identification.ALIGNED);
+            Assert.IsTrue(precursorWithTwoIds.Results[0][0].IsIdentified);
+            Assert.IsTrue(precursorWithTwoIds.Results[1][0].IsIdentified);
 
             var documentRetentionTimes = document.Settings.DocumentRetentionTimes;
             var alignedTo1 = documentRetentionTimes.FileAlignments.Find("S_1");

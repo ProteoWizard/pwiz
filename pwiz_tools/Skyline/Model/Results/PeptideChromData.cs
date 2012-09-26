@@ -39,16 +39,18 @@ namespace pwiz.Skyline.Model.Results
 
         private readonly List<ChromDataSet> _dataSets = new List<ChromDataSet>();
         private readonly double[] _retentionTimes;
+        private readonly bool _isAlignedTimes;
         private readonly bool _isProcessedScans;
 
-        public PeptideChromDataSets(double[] retentionTimes, bool isProcessedScans)
+        public PeptideChromDataSets(double[] retentionTimes, bool isAlignedTimes, bool isProcessedScans)
         {
             _retentionTimes = retentionTimes;
+            _isAlignedTimes = isAlignedTimes;
             _isProcessedScans = isProcessedScans;
         }
 
-        public PeptideChromDataSets(double[] retentionTimes, bool isProcessedScans, ChromDataSet chromDataSet)
-            : this(retentionTimes, isProcessedScans)
+        public PeptideChromDataSets(double[] retentionTimes, bool isAlignedTimes, bool isProcessedScans, ChromDataSet chromDataSet)
+            : this(retentionTimes, isAlignedTimes, isProcessedScans)
         {
             DataSets.Add(chromDataSet);
         }
@@ -89,7 +91,7 @@ namespace pwiz.Skyline.Model.Results
             EvenlySpaceTimes();
 
             foreach (var chromDataSet in _dataSets)
-                chromDataSet.PickChromatogramPeaks(_retentionTimes);
+                chromDataSet.PickChromatogramPeaks(_retentionTimes, _isAlignedTimes);
 
             PickPeptidePeaks();
 
@@ -410,32 +412,29 @@ namespace pwiz.Skyline.Model.Results
                     if (Math.Min(endPeak, endMax) - Math.Max(startPeak, startMax) <= 0)
                         continue;
 
-                    if (nodeGroup.TransitionGroup.PrecursorCharge == nodeGroupMax.TransitionGroup.PrecursorCharge)
+                    int timeIndex = peak.Peak.TimeIndex + offset;
+                    if (nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Matching)
                     {
-                        int timeIndex = peak.Peak.TimeIndex + offset;
-                        if (nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Matching)
-                        {
-                            // If the peaks are supposed to have the same elution time,
-                            // then be more strict about how they overlap
-                            if (startMax >= timeIndex || timeIndex >= endMax)
-                                continue;
-                        }
-                        else if (nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Preceding)
-                        {
-                            // If the maximum is supposed to precede this, look for any
-                            // indication that this relationship holds, by testing the peak apex
-                            // and the peak center.
-                            if (timeIndex < timeMax && (startPeak + endPeak) / 2 < (startMax + endMax) / 2)
-                                continue;
-                        }
-                        else if (nodeGroup.RelativeRT == RelativeRT.Preceding && nodeGroupMax.RelativeRT == RelativeRT.Matching)
-                        {
-                            // If this peak is supposed to precede the maximum, look for any
-                            // indication that this relationship holds, by testing the peak apex
-                            // and the peak center.
-                            if (timeIndex > timeMax && (startPeak + endPeak) / 2 > (startMax + endMax) / 2)
-                                continue;
-                        }
+                        // If the peaks are supposed to have the same elution time,
+                        // then be more strict about how they overlap
+                        if (startMax >= timeIndex || timeIndex >= endMax)
+                            continue;
+                    }
+                    else if (nodeGroup.RelativeRT == RelativeRT.Matching && nodeGroupMax.RelativeRT == RelativeRT.Preceding)
+                    {
+                        // If the maximum is supposed to precede this, look for any
+                        // indication that this relationship holds, by testing the peak apex
+                        // and the peak center.
+                        if (timeIndex < timeMax && (startPeak + endPeak) / 2 < (startMax + endMax) / 2)
+                            continue;
+                    }
+                    else if (nodeGroup.RelativeRT == RelativeRT.Preceding && nodeGroupMax.RelativeRT == RelativeRT.Matching)
+                    {
+                        // If this peak is supposed to precede the maximum, look for any
+                        // indication that this relationship holds, by testing the peak apex
+                        // and the peak center.
+                        if (timeIndex > timeMax && (startPeak + endPeak) / 2 > (startMax + endMax) / 2)
+                            continue;
                     }
 
                     // Choose the next best peak that overlaps
@@ -543,17 +542,6 @@ namespace pwiz.Skyline.Model.Results
         public double CombinedScore { get; private set; }
 
         public bool IsIdentified { get { return IdentifiedCount > 0; } }
-
-        public IEnumerable<IGrouping<int, PeptideChromDataPeak>> ChargeGroups
-        {
-            get
-            {
-                return from peak in this
-                       orderby peak.PeakGroup != null ? peak.PeakGroup.CombinedScore : 0 descending
-                       group peak by peak.Data.DocNode.TransitionGroup.PrecursorCharge into g
-                       select g;
-            }
-        }
 
         public IEnumerable<PeptideChromDataPeak> OrderedPeaks
         {

@@ -1439,7 +1439,7 @@ namespace pwiz.Skyline
                 return;
 
             ModifyDocument(message,
-                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, false));            
+                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, ChromPeak.Identification.FALSE));            
         }
 
         private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup, int iResults)
@@ -1846,7 +1846,7 @@ namespace pwiz.Skyline
                     string message;
                     ChangedPeakBoundsEventArgs e = eMulti.Changes[0];
                     if (Equals(e.StartTime, e.EndTime))
-                        message = "Remove peak"; // Not L10N
+                        message = Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak;
                     else if (e.ChangeType == PeakBoundsChangeType.both)
                         message = string.Format(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_to__0_F01___1_F01_, e.StartTime, e.EndTime); 
                     else if (e.ChangeType == PeakBoundsChangeType.start)
@@ -1854,7 +1854,7 @@ namespace pwiz.Skyline
                     else
                         message = string.Format(Resources.SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peak_end_to__0_F01_, e.EndTime); 
                     ModifyDocument(message, doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition,
-                                                                  e.StartTime.MeasuredTime, e.EndTime.MeasuredTime, e.IsIndentified));
+                                                                  e.StartTime.MeasuredTime, e.EndTime.MeasuredTime, e.Identified));
                 }
                 else
                 {
@@ -1864,7 +1864,7 @@ namespace pwiz.Skyline
                                 foreach (var e in eMulti.Changes)
                                 {
                                     doc = doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition,
-                                        e.StartTime.MeasuredTime, e.EndTime.MeasuredTime, e.IsIndentified);                                    
+                                        e.StartTime.MeasuredTime, e.EndTime.MeasuredTime, e.Identified);                                    
                                 }
                                 return doc;
                             });

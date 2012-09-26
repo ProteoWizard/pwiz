@@ -300,7 +300,10 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsIdentified { get; set; }
 
+        public bool IsAlignedIdentified { get; set; }
+
         public int PeakCount { get; set; }
+
         /// <summary>
         /// Use proportion of total peaks found to avoid picking super small peaks
         /// in unrefined data
@@ -316,9 +319,10 @@ namespace pwiz.Skyline.Model.Results
         private const float DESCENT_TOL = 0.005f;
         private const float ASCENT_TOL = 0.50f;
 
-        public void SetIdentified(double[] retentionTimes)
+        public void SetIdentified(double[] retentionTimes, bool isAlignedTimes)
         {
             IsIdentified = Count > 0 && this[0].IsIdentified(retentionTimes);
+            IsAlignedIdentified = IsIdentified && isAlignedTimes;
             UpdateCombinedScore();
         }
 

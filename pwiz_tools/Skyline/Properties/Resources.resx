@@ -4754,4 +4754,13 @@ Are you sure you want to continue?</value>
   <data name="WebPanoramaPublishClient_SendZipFile_Renaming_temporary_file_on_server">
     <value xml:space="preserve">Renaming temporary file on server</value>
   </data>
+  <data name="SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak">
+    <value xml:space="preserve">Remove peak</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts">
+    <value xml:space="preserve">Python Scripts</value>
+  </data>
+  <data name="ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts">
+    <value xml:space="preserve">Perl Scripts</value>
+  </data>
 </root>

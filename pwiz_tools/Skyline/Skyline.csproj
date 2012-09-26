@@ -43,8 +43,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>3947</ApplicationRevision>
-    <ApplicationVersion>1.3.1.3947</ApplicationVersion>
+    <ApplicationRevision>3967</ApplicationRevision>
+    <ApplicationVersion>1.3.1.3967</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1677,6 +1677,8 @@
     <EmbeddedResource Include="Resources\PeptideDecoy.bmp" />
     <EmbeddedResource Include="Resources\ProteinDecoy.bmp" />
     <EmbeddedResource Include="Resources\TransitionGroupDecoy.bmp" />
+    <EmbeddedResource Include="Resources\FindResults.ico" />
+    <EmbeddedResource Include="Resources\Immediate.ico" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

@@ -617,19 +617,21 @@ namespace pwiz.Skyline.Util
             return reader.GetNullableFloatAttribute(name) ?? defaultValue;
         }
 
+        public enum EnumCase { unkown, lower, upper }
+
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue)
         {
-            return reader.GetEnumAttribute(name, defaultValue, false);
+            return reader.GetEnumAttribute(name, defaultValue, EnumCase.unkown);
         }
 
-        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue, bool lower)
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue, EnumCase enumCase)
         {
             string value = reader.GetAttribute(name);
             if (!string.IsNullOrEmpty(value))
             {
                 try
                 {
-                    return (TAttr)Enum.Parse(typeof(TAttr), (lower ? value.ToLower() : value));
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
                 }
                 catch (ArgumentException x)
                 {
@@ -641,17 +643,17 @@ namespace pwiz.Skyline.Util
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue)
         {
-            return reader.GetEnumAttribute(name, defaultValue, false);
+            return reader.GetEnumAttribute(name, defaultValue, EnumCase.unkown);
         }
 
-        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue, bool lower)
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue, EnumCase enumCase)
         {
             string value = reader.GetAttribute(name);
             if (!string.IsNullOrEmpty(value))
             {
                 try
                 {
-                    return (TAttr)Enum.Parse(typeof(TAttr), (lower ? value.ToLower() : value));
+                    return (TAttr)Enum.Parse(typeof(TAttr), GetEnumString(value, enumCase));
                 }
                 catch (ArgumentException x)
                 {
@@ -659,6 +661,19 @@ namespace pwiz.Skyline.Util
                 }
             }
             return defaultValue;
+        }
+
+        private static string GetEnumString(string value, EnumCase enumCase)
+        {
+            switch (enumCase)
+            {
+                case EnumCase.lower:
+                    return value.ToLower();
+                case EnumCase.upper:
+                    return value.ToUpper();
+                default:
+                    return value;
+            }
         }
 
         public static bool IsStartElement(this XmlReader reader, string[] names)

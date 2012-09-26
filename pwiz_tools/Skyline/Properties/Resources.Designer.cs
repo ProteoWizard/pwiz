@@ -2072,6 +2072,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Perl Scripts.
+        /// </summary>
+        public static string ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Python Scripts.
+        /// </summary>
+        public static string ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts {
+            get {
+                return ResourceManager.GetString("ConfigureToolsDlg_btnFindCommand_Click_Python_Scripts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Do you wish to Save changes?.
         /// </summary>
         public static string ConfigureToolsDlg_Cancel_Do_you_wish_to_Save_changes_ {
@@ -10091,6 +10109,15 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks {
             get {
                 return ResourceManager.GetString("SkylineWindow_graphChromatogram_ChangedPeakBounds_Change_peaks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Remove peak.
+        /// </summary>
+        public static string SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak {
+            get {
+                return ResourceManager.GetString("SkylineWindow_graphChromatogram_ChangedPeakBounds_Remove_peak", resourceCulture);
             }
         }
         

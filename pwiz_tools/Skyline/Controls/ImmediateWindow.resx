@@ -117,4 +117,33 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <metadata name="contextMenuStrip1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>17, 17</value>
+  </metadata>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        AAABAAIAEBAQAAAABAAoAQAAJgAAABAQAAAAABgAaAMAAE4BAAAoAAAAEAAAACAAAAABAAQAAAAAAIAA
+        AAAAAAAAAAAAABAAAAAQAAAAAAAAAAAAgAAAgAAAAICAAIAAAACAAIAAgIAAAICAgADAwMAAAAD/AAD/
+        AAAA//8A/wAAAP8A/wD//wAA////AAAAAAAAAAAAARAAAAAAAAAJkWZmZmZmZgCAiIiIiIiGB5D/////
+        /4YJkYiI+I//homR//////+GiZGIiP///4aBkf//////hgifiIiPiP+GAI///////3YAiIiMzMzMxgCO
+        7u7u7u7GAIiIiIzMzMYAAAAAAAAAAAAAAAAAAAAA//8AAJ//AACAAAAA0AAAAJAAAACAAAAAAAAAAAAA
+        AAAAAAAAgAAAAMAAAADAAAAAwAAAAMAAAAD//wAA//8AACgAAAAQAAAAIAAAAAEAGAAAAAAAAAMAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAABcaeFFRagAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATGfwCHtxQ
+        QmFjSTVjSTVjSTVjSTVjSTVjSTVjSTVjSTVjSTVjSTVjSTVjSTUAAAAAAACWkL3u8Pzd3djd29Xf187f
+        08jg0MHgzL7jyLbjx7PjxK7jw6zjw6xjSTUAAACKisoMEtvj4un7+fX79/L79e768ur67+b57OL56t75
+        6Nv45tj45NXjw6xjSTUAAAANHNEEC9PMzfjCubG4qqK2qKC2qKD69O22qKC2qKD57OH56d345dfjw6xj
+        STW9w/InResECeODhuf8/Pn7+vf7+PP7+PP79vD68+z68ej67uT56+D559rkxa9jSTWbsPRJWegDDuV8
+        f+/UzsfFubK2qKC2qKD7+PP79e/68+v68Of67eP56NzlybNjSTWpvfpvgPAbNOKEh/P8/vz8/fv8+/j8
+        +/j7+fX79/L79e768ur67+b56t7nybRjSTUAAACIlOYcPtjg6PjOxL+5rKS2qKC2qKC2qKD7+fS2qKC2
+        qKD68en57OHp1chkSjYAAAAAAADOuav8/vz8/vz8/vz8/vz8/Pn7+vf7+PP79vD68+z68ej67uT55NRk
+        SjYAAAAAAADqqovqqovppYTpn3rnl27mjmLlhlbjfUrjdkDicjnicjnicjnicjnIYi8AAAAAAADqqov/
+        wqL9vZr8uZb7tZD6sIv5q4T4p332onf1nXH1mWrzlWXzlWXNZTEAAAAAAADqqovqqovqqovqpobpoX/o
+        m3bnlGzmjmLlh1jkgU7ke0bjdj7jdj7icjkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+        AAD//wAAn/8AAIAAAADAAAAAgAAAAIAAAAAAAAAAAAAAAAAAAACAAAAAwAAAAMAAAADAAAAAwAAAAP//
+        AAD//wAA
+</value>
+  </data>
 </root>

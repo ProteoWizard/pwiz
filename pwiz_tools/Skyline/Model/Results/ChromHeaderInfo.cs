@@ -317,6 +317,10 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromPeak
     {
+// ReSharper disable InconsistentNaming
+        public enum Identification { FALSE, TRUE, ALIGNED }
+// ReSharper restore InconsistentNaming
+
         [Flags]
         public enum FlagValues
         {
@@ -325,7 +329,8 @@ namespace pwiz.Skyline.Model.Results
             time_normalized =       0x04,
             peak_truncation_known = 0x08,
             peak_truncated =        0x10,
-            contains_id =           0x20
+            contains_id =           0x20,
+            used_id_alignment =     0x40,
         }
 
 // ReSharper disable InconsistentNaming
@@ -401,9 +406,16 @@ namespace pwiz.Skyline.Model.Results
             get { return (Flags & FlagValues.forced_integration) != 0; }
         }
 
-        public bool IsIdentified
+        public Identification IsIdentified
         {
-            get { return (Flags & FlagValues.contains_id) != 0; }
+            get
+            {
+                if ((Flags & FlagValues.contains_id) == 0)
+                    return Identification.FALSE;
+                else if ((Flags & FlagValues.used_id_alignment) == 0)
+                    return Identification.TRUE;
+                return Identification.ALIGNED;
+            }
         }
 
         public bool? IsTruncated

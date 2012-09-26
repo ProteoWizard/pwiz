@@ -465,7 +465,7 @@ namespace pwiz.Skyline.Model.Results
             // If there was no matching precursor, just add this as a stand-alone set
             if (peptidePrecursorMz == null)
             {
-                listChromData.Add(new PeptideChromDataSets(new double[0], isProcessedScans, chromDataSet));
+                listChromData.Add(new PeptideChromDataSets(new double[0], false, isProcessedScans, chromDataSet));
                 return;
             }
 
@@ -476,10 +476,17 @@ namespace pwiz.Skyline.Model.Results
             PeptideChromDataSets pepDataSets;
             if (!dictPeptideChromData.TryGetValue(id, out pepDataSets))
             {
-                double[] retentionTimes = _document.Settings.GetRetentionTimes(SampleHelp.GetPathFilePart(MSDataFilePaths[_currentFileIndex]),
+                string filePath = SampleHelp.GetPathFilePart(MSDataFilePaths[_currentFileIndex]);
+                double[] retentionTimes = _document.Settings.GetRetentionTimes(filePath,
                         nodePep.Peptide.Sequence, nodePep.ExplicitMods);
+                bool isAlignedTimes = (retentionTimes.Length == 0);
+                if (isAlignedTimes)
+                {
+                    retentionTimes = _document.Settings.GetAlignedRetentionTimes(filePath,
+                        nodePep.Peptide.Sequence, nodePep.ExplicitMods);
+                }
 
-                pepDataSets = new PeptideChromDataSets(retentionTimes, isProcessedScans);
+                pepDataSets = new PeptideChromDataSets(retentionTimes, isAlignedTimes, isProcessedScans);
                 dictPeptideChromData.Add(id, pepDataSets);
             }
             chromDataSet.DocNode = peptidePrecursorMz.NodeGroup;

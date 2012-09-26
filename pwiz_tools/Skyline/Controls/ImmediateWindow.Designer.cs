@@ -29,6 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ImmediateWindow));
             this.textImWindow = new System.Windows.Forms.TextBox();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.SuspendLayout();
@@ -42,6 +43,7 @@
             this.textImWindow.Location = new System.Drawing.Point(-2, -1);
             this.textImWindow.Multiline = true;
             this.textImWindow.Name = "textImWindow";
+            this.textImWindow.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             this.textImWindow.Size = new System.Drawing.Size(406, 282);
             this.textImWindow.TabIndex = 0;
             this.textImWindow.WordWrap = false;
@@ -61,10 +63,10 @@
             this.ClientSize = new System.Drawing.Size(404, 280);
             this.Controls.Add(this.textImWindow);
             this.HideOnClose = true;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ImmediateWindow";
-            this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.TabText = "Immediate Window";
             this.Text = "Immediate Window";

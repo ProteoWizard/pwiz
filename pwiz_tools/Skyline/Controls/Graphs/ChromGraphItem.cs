@@ -614,7 +614,9 @@ namespace pwiz.Skyline.Controls.Graphs
         
         enum GraphObjType
         {
+// ReSharper disable UnusedMember.Local
             invalid,
+// ReSharper restore UnusedMember.Local
             ms_ms_id,
             predicted_rt_window,
             aligned_ms_id,

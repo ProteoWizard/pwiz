@@ -1530,7 +1530,7 @@ namespace pwiz.Skyline.Model
             private float? Area { get; set; }
             private float? BackgroundArea { get; set; }
             private int? Truncated { get; set; }
-            private bool Identified { get; set; }
+            private ChromPeak.Identification Identified { get; set; }
             private float? LibraryDotProduct { get; set; }
             private float? IsotopeDotProduct { get; set; }
             private IList<float?> Ratios { get; set; }
@@ -1578,8 +1578,11 @@ namespace pwiz.Skyline.Model
                         if (info.IsTruncated.Value)
                             Truncated++;
                     }
-                    if (info.IsIdentified)
-                        Identified = true;
+                    if (info.IsIdentified &&
+                        (info.Identified == ChromPeak.Identification.TRUE || Identified == ChromPeak.Identification.FALSE))
+                    {
+                        Identified = info.Identified;
+                    }
                 }
 
                 if (info.UserSet)
@@ -1774,7 +1777,7 @@ namespace pwiz.Skyline.Model
                                   Transition transition,
                                   double startTime,
                                   double endTime,
-                                  bool identified)
+                                  ChromPeak.Identification identified)
         {
             int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
 
@@ -1785,8 +1788,10 @@ namespace pwiz.Skyline.Model
             ChromPeak.FlagValues flags = 0;
             if (settings.MeasuredResults.IsTimeNormalArea)
                 flags |= ChromPeak.FlagValues.time_normalized;
-            if (identified)
+            if (identified != ChromPeak.Identification.FALSE)
                 flags |= ChromPeak.FlagValues.contains_id;
+            if (identified == ChromPeak.Identification.ALIGNED)
+                flags |= ChromPeak.FlagValues.used_id_alignment;
             foreach (TransitionDocNode nodeTran in Children)
             {
                 if (transition != null && !ReferenceEquals(transition, nodeTran.Transition))

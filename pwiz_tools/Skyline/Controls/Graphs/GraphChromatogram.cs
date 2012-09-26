@@ -281,6 +281,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If node no longer exists, give up
                     if (iGroup == -1)
                         return;
+                    
+                    var identified = dragInfo.IsIdentified
+                                         ? (dragInfo.IsAlignedTimes
+                                                ? ChromPeak.Identification.ALIGNED
+                                                : ChromPeak.Identification.TRUE)
+                                         : ChromPeak.Identification.FALSE;
+
                     var e = new ChangedPeakBoundsEventArgs(_groupPaths[iGroup],
                                                            nodeTran != null ? nodeTran.Transition : null,
                                                            _nameChromatogramSet,
@@ -288,7 +295,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                            filePath,
                                                            dragInfo.StartTime,
                                                            dragInfo.EndTime,
-                                                           dragInfo.IsIdentified,
+                                                           identified,
                                                            dragInfo.ChangeType);
                     listChanges.Add(e);
                 }
@@ -1854,6 +1861,16 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public double[] AlignedRetentionMsMs
+        {
+            get
+            {
+                return (from graphItem in GraphItems
+                        where graphItem.AlignedRetentionMsMs != null
+                        select graphItem.AlignedRetentionMsMs).FirstOrDefault();
+            }
+        }
+
         private PeakBoundsDragInfo[] _peakBoundDragInfos;
 
         private bool graphControl_MouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -1967,7 +1984,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             ScaledRetentionTime time = FindBestPeakBoundary(pt, out graphItem);
                             if (!time.IsZero)
                             {
-                                _peakBoundDragInfos = new[] {StartDrag(graphItem, RetentionMsMs, pt, time, false)};
+                                _peakBoundDragInfos = new[] {StartDrag(graphItem, pt, time, false)};
                                 graphControl.Cursor = Cursors.VSplit; // ZedGraph changes to crosshair without this
                                 return true;
                             }
@@ -1991,7 +2008,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                 ChromGraphItem graphItem;
                                 var time = FindBestPeakTime(curveItem, pt, out graphItem);
                                 if (!time.IsZero)
-                                    listDragInfos.Add(StartDrag(graphItem, RetentionMsMs, pt, time, true));
+                                    listDragInfos.Add(StartDrag(graphItem, pt, time, true));
                             }
                             _peakBoundDragInfos = listDragInfos.ToArray();
                             graphControl.Cursor = Cursors.VSplit; // ZedGraph changes to crosshair without this
@@ -2030,8 +2047,8 @@ namespace pwiz.Skyline.Controls.Graphs
             return false;
         }
 
-        private static PeakBoundsDragInfo StartDrag(ChromGraphItem graphItem, double[] retentionTimesMsMs,
-                                                    PointF pt, ScaledRetentionTime time, bool bothBoundaries)
+        private PeakBoundsDragInfo StartDrag(ChromGraphItem graphItem, PointF pt,
+            ScaledRetentionTime time, bool bothBoundaries)
         {
             var tranPeakInfo = graphItem.TransitionChromInfo;
             var startTime = time;
@@ -2057,9 +2074,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 anchorTime = endTime;
                 caretTime = startTime;
             }
+            var retentionMsMs = RetentionMsMs;
+            bool alignedTimes = false;
+            if (retentionMsMs == null)
+            {
+                retentionMsMs = AlignedRetentionMsMs;
+                alignedTimes = true;
+            }
             var dragType = (draggingEnd ? PeakBoundsChangeType.end : PeakBoundsChangeType.start);
             var changeType = bothBoundaries ? PeakBoundsChangeType.both : dragType;
-            var peakBoundDragInfo = new PeakBoundsDragInfo(graphItem, retentionTimesMsMs, pt, dragType, changeType)
+            var peakBoundDragInfo = new PeakBoundsDragInfo(graphItem, retentionMsMs, alignedTimes,
+                                                           pt, dragType, changeType)
                                         {
                                             AnchorTime = anchorTime,
                                             CaretTime = caretTime
@@ -2216,12 +2241,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
     internal sealed class PeakBoundsDragInfo
     {
-        public PeakBoundsDragInfo(ChromGraphItem graphItem, double[] retentionTimesMsMs, PointF startPoint,
-                                  PeakBoundsChangeType dragType, PeakBoundsChangeType changeType)
+        public PeakBoundsDragInfo(ChromGraphItem graphItem, double[] retentionTimesMsMs, bool alignedTimes,
+                                  PointF startPoint, PeakBoundsChangeType dragType, PeakBoundsChangeType changeType)
         {
             GraphItem = GraphItemBest = graphItem;
             GraphItemBest.HideBest = true;
             RetentionTimesMsMs = retentionTimesMsMs;
+            IsAlignedTimes = alignedTimes;
             StartPoint = startPoint;
             DragType = dragType;
             ChangeType = changeType;
@@ -2230,6 +2256,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public ChromGraphItem GraphItem { get; set; }
         public ChromGraphItem GraphItemBest { get; private set; }
         public double[] RetentionTimesMsMs { get; private set; }
+        public bool IsAlignedTimes { get; private set; }
 
         public PointF StartPoint { get; private set; }
         public PeakBoundsChangeType DragType { get; private set; }
@@ -2344,21 +2371,22 @@ namespace pwiz.Skyline.Controls.Graphs
                                           string filePath,
                                           ScaledRetentionTime startTime,
                                           ScaledRetentionTime endTime,
-                                          bool identified,
+                                          ChromPeak.Identification identified,
                                           PeakBoundsChangeType changeType)
             : base(groupPath, nameSet, filePath)
         {
             Transition = transition;
             StartTime = startTime;
             EndTime = endTime;
-            IsIndentified = identified;
+            Identified = identified;
             ChangeType = changeType;
         }
 
         public Transition Transition { get; private set; }
         public ScaledRetentionTime StartTime { get; private set; }
         public ScaledRetentionTime EndTime { get; private set; }
-        public bool IsIndentified { get; private set; }
+        public ChromPeak.Identification Identified { get; private set; }
+        public bool IsIdentified { get { return Identified != ChromPeak.Identification.FALSE; } }
         public PeakBoundsChangeType ChangeType { get; private set; }
     }
 
