@@ -179,23 +179,24 @@ namespace IDPicker.Properties {
             "d;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off" +
             " hgt;1 Ascending Off kendallpval</string>\r\n  <string>Pepitome MVH;StaticWeighted" +
             ";False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:m" +
-            "vh</string>\r\n  <string>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;P" +
-            "artition;Partition;0.02;1 Ascending Off zscore</string>\r\n  <string>Sequest optim" +
-            "ized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending " +
-            "Off sequest:xcorr;1 Ascending Off sequest:deltacn</string>\r\n  <string>Sequest XC" +
-            "orr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascendi" +
-            "ng Off sequest:xcorr</string>\r\n  <string>TagRecon optimized;MonteCarlo;False;Lin" +
-            "ear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh;1 Ascen" +
-            "ding Off xcorr</string>\r\n  <string>TagRecon MVH;StaticWeighted;False;Linear;Igno" +
-            "re;Ignore;Partition;Partition;0.02;1 Ascending Off myrimatch:mvh</string>\r\n  <st" +
-            "ring>TagRecon XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partitio" +
-            "n;0.02;1 Ascending Off xcorr</string>\r\n  <string>X!Tandem optimized;MonteCarlo;F" +
-            "alse;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off x!tandem:exp" +
-            "ect;1 Ascending Off x!tandem:hyperscore</string>\r\n  <string>X!Tandem expect;Stat" +
-            "icWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Descending Off " +
-            "x!tandem:expect</string>\r\n  <string>X!Tandem hyperscore;StaticWeighted;False;Lin" +
-            "ear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off x!tandem:hyperscore</" +
-            "string>\r\n</ArrayOfString>")]
+            "vh</string>\r\n  <string>pFind evalue;StaticWeighted;False;Linear;Ignore;Ignore;Pa" +
+            "rtition;Partition;0.02;1 Descending Off evalue</string>\r\n  <string>Phenyx zscore" +
+            ";StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending " +
+            "Off zscore</string>\r\n  <string>Sequest optimized;MonteCarlo;False;Linear;Ignore;" +
+            "Ignore;Partition;Partition;0.02;1 Ascending Off sequest:xcorr;1 Ascending Off se" +
+            "quest:deltacn</string>\r\n  <string>Sequest XCorr;StaticWeighted;False;Linear;Igno" +
+            "re;Ignore;Partition;Partition;0.02;1 Ascending Off sequest:xcorr</string>\r\n  <st" +
+            "ring>TagRecon optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;Partitio" +
+            "n;0.02;1 Ascending Off myrimatch:mvh;1 Ascending Off xcorr</string>\r\n  <string>T" +
+            "agRecon MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;0.02;1" +
+            " Ascending Off myrimatch:mvh</string>\r\n  <string>TagRecon XCorr;StaticWeighted;F" +
+            "alse;Linear;Ignore;Ignore;Partition;Partition;0.02;1 Ascending Off xcorr</string" +
+            ">\r\n  <string>X!Tandem optimized;MonteCarlo;False;Linear;Ignore;Ignore;Partition;" +
+            "Partition;0.02;1 Descending Off x!tandem:expect;1 Ascending Off x!tandem:hypersc" +
+            "ore</string>\r\n  <string>X!Tandem expect;StaticWeighted;False;Linear;Ignore;Ignor" +
+            "e;Partition;Partition;0.02;1 Descending Off x!tandem:expect</string>\r\n  <string>" +
+            "X!Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partitio" +
+            "n;0.02;1 Ascending Off x!tandem:hyperscore</string>\r\n</ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));

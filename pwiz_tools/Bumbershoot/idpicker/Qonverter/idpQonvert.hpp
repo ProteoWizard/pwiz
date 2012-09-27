@@ -52,7 +52,7 @@
     RTCONFIG_VARIABLE( double,   Gamma,                      5      ) \
     RTCONFIG_VARIABLE( double,   Nu,                         0.5    ) \
     RTCONFIG_VARIABLE( int,      PolynomialDegree,           3      ) \
-    RTCONFIG_VARIABLE( string,   ScoreInfo,                  "1 off myrimatch:mvh; 1 off xcorr; 1 off sequest:xcorr; 1 off sequest:deltacn; 1 off mascot:score; -1 off x!tandem:expect; 1 off x!tandem:hyperscore; -1 off ms-gf:specevalue" ) \
+    RTCONFIG_VARIABLE( string,   ScoreInfo,                  "1 off myrimatch:mvh; 1 off xcorr; 1 off sequest:xcorr; 1 off sequest:deltacn; 1 off mascot:score; -1 off x!tandem:expect; 1 off x!tandem:hyperscore; -1 off ms-gf:specevalue; -1 off evalue" ) \
     RTCONFIG_VARIABLE( Qonverter::QonverterMethod, QonverterMethod, "MonteCarlo" ) \
     RTCONFIG_VARIABLE( Qonverter::SVMType, SVMType, "CSVC" ) \
     RTCONFIG_VARIABLE( Qonverter::Kernel, Kernel, "Linear" ) \

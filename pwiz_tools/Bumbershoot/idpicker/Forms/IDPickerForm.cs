@@ -827,6 +827,7 @@ namespace IDPicker
                 catch (FormatException)
                 {
                     Program.HandleUserError(new Exception("unable to parse value \"" + args[i + 1] + "\" for parameter \"" + arg + "\""));
+                    return;
                 }
 
                 ++i; // skip the next argument
@@ -843,7 +844,10 @@ namespace IDPicker
 
             var missingFiles = expandedFilepaths.Where(o => !File.Exists(o));
             if (missingFiles.Any())
+            {
                 Program.HandleUserError(new ArgumentException("some files do not exist: " + String.Join(" ", missingFiles.ToArray())));
+                return;
+            }
 
             new Thread(() => { OpenFiles(expandedFilepaths, null); }).Start();
         }

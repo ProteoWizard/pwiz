@@ -238,7 +238,7 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
                         << " does not match " << proteinDatabaseFilepath.filename();
                 analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
             }
-            else if (!proteinDatabaseFilepath.has_parent_path())
+            else if (!proteinDatabaseFilepath.is_complete())
                 analysis.importSettings.proteinDatabaseFilepath = (bfs::path(analysis.filepaths[0]).parent_path() / proteinDatabaseFilepath).string();
 
             analysis.importSettings.analysisName = analysis.name;

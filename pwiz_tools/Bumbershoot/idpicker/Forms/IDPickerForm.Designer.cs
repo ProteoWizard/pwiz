@@ -81,12 +81,12 @@ namespace IDPicker
             this.dataFiltersToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.helpToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.helpContentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.commandLineHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.checkForUpdatesAutomaticallyToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.checkForUpdatesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.commandLineHelpMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -331,6 +331,13 @@ namespace IDPicker
             this.helpContentsToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
             this.helpContentsToolStripMenuItem.Text = "Contents (TODO)";
             // 
+            // commandLineHelpMenuItem
+            // 
+            this.commandLineHelpMenuItem.Name = "commandLineHelpMenuItem";
+            this.commandLineHelpMenuItem.Size = new System.Drawing.Size(248, 22);
+            this.commandLineHelpMenuItem.Text = "Command-line Help";
+            this.commandLineHelpMenuItem.Click += new System.EventHandler(this.showCommandLineHelp);
+            // 
             // toolStripSeparator2
             // 
             this.toolStripSeparator2.Name = "toolStripSeparator2";
@@ -362,13 +369,6 @@ namespace IDPicker
             this.aboutToolStripMenuItem.Size = new System.Drawing.Size(248, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
-            // 
-            // commandLineHelpMenuItem
-            // 
-            this.commandLineHelpMenuItem.Name = "commandLineHelpMenuItem";
-            this.commandLineHelpMenuItem.Size = new System.Drawing.Size(248, 22);
-            this.commandLineHelpMenuItem.Text = "Command-line Help";
-            this.commandLineHelpMenuItem.Click += new System.EventHandler(this.showCommandLineHelp);
             // 
             // IDPickerForm
             // 
