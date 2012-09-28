@@ -297,6 +297,56 @@ const string& Digestion::getCleavageAgentRegex(CVID agentCvid)
 }
 
 
+namespace {
+    
+// match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
+// followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
+// 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
+const boost::regex cutNoCutRegex("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
+
+} // namespace
+
+
+string Digestion::disambiguateCleavageAgentRegex(const string& cleavageAgentRegex)
+{
+    if (cleavageAgentRegex.find_first_of("BJXZ") == string::npos)
+        return cleavageAgentRegex;
+
+    // expand ambiguous residues, i.e. B->[ND], Z->[EQ], J->[IL], X->[A-Z]
+    boost::smatch what;
+    boost::regex_match(cleavageAgentRegex, what, cutNoCutRegex);
+
+    bool hasLookbehind = what[1].matched && what[2].matched;
+    bool hasLookahead = what[3].matched && what[4].matched;
+    bool lookbehindIsPositive = hasLookbehind && what[1] == "=";
+    bool lookaheadIsPositive = hasLookahead && what[3] == "=";
+    string lookbehindResidues = hasLookbehind ? bal::trim_copy_if(what[2].str(), bal::is_any_of("[]")) : string();
+    string lookaheadResidues = hasLookahead ? bal::trim_copy_if(what[4].str(), bal::is_any_of("[]")) : string();
+
+    // if both looks are empty, throw an exception
+    if (!hasLookbehind && !hasLookahead)
+        throw runtime_error("[Digestion::disambiguateCleavageAgentRegex()] No lookbehind or lookahead expressions found in \"" + cleavageAgentRegex + "\"");
+
+    // add the ambiguous choices to each B/Z/J;
+    // ambiguous choices might be listed twice ([BD] becomes [BNDD]), but that's not a problem
+    bal::replace_all(lookbehindResidues, "B", "BND");
+    bal::replace_all(lookbehindResidues, "Z", "ZEQ");
+    bal::replace_all(lookbehindResidues, "J", "JIL");
+    bal::replace_all(lookbehindResidues, "X", "A-Z");
+
+    bal::replace_all(lookaheadResidues, "B", "BND");
+    bal::replace_all(lookaheadResidues, "Z", "ZEQ");
+    bal::replace_all(lookaheadResidues, "J", "JIL");
+    bal::replace_all(lookaheadResidues, "X", "A-Z");
+
+    string& lb = lookbehindResidues;
+    string& la = lookaheadResidues;
+
+    return (lb.empty() ? "" : string("(?<") + (lookbehindIsPositive ? "=" : "!") + (lb.length() > 1 ? "[" : "") + lb + (lb.length() > 1 ? "])" : ")")) +
+           (la.empty() ? "" : string("(?") + (lookaheadIsPositive ? "=" : "!")  + (la.length() > 1 ? "[" : "") + la + (la.length() > 1 ? "])" : ")"));
+}
+
+
 class Digestion::Impl
 {
     public:
@@ -309,13 +359,13 @@ class Digestion::Impl
             if (cleavageAgent_ == MS_unspecific_cleavage)
                 config_.minimumSpecificity = Digestion::NonSpecific;
             else if (cleavageAgent_ != MS_no_cleavage)
-                cleavageAgentRegex_ = getCleavageAgentRegex(cleavageAgent_);
+                cleavageAgentRegex_ = disambiguateCleavageAgentRegex(getCleavageAgentRegex(cleavageAgent_));
             return;
         }
 
-        string mergedRegex = "((" + getCleavageAgentRegex(cleavageAgents[0]);
+        string mergedRegex = "((" + disambiguateCleavageAgentRegex(getCleavageAgentRegex(cleavageAgents[0]));
         for (size_t i=1; i < cleavageAgents.size(); ++i)
-            mergedRegex += ")|(" + getCleavageAgentRegex(cleavageAgents[i]);
+            mergedRegex += ")|(" + disambiguateCleavageAgentRegex(getCleavageAgentRegex(cleavageAgents[i]));
         mergedRegex += "))";
 
         cleavageAgentRegex_ = mergedRegex;
@@ -326,13 +376,13 @@ class Digestion::Impl
     {
         if (cleavageAgentRegexes.size() == 1)
         {
-            cleavageAgentRegex_ = cleavageAgentRegexes[0];
+            cleavageAgentRegex_ = cleavageAgentRegexes[0]; //disambiguateCleavageAgentRegex(cleavageAgentRegexes[0].str());
             return;
         }
 
-        string mergedRegex = "((" + cleavageAgentRegexes[0].str();
+        string mergedRegex = "((" + disambiguateCleavageAgentRegex(cleavageAgentRegexes[0].str());
         for (size_t i=1; i < cleavageAgentRegexes.size(); ++i)
-            mergedRegex += ")|(" + cleavageAgentRegexes[i].str();
+            mergedRegex += ")|(" + disambiguateCleavageAgentRegex(cleavageAgentRegexes[i].str());
         mergedRegex += "))";
 
         cleavageAgentRegex_ = mergedRegex;

@@ -203,6 +203,29 @@ void testSerialize()
     testSerializeReally(mzid, Serializer_pepXML::Config());
 
 
+    // test sense="N" enzymes
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes.clear();
+    EnzymePtr aspN(new Enzyme);
+    aspN->id = "ENZ_1";
+    aspN->cTermGain = "OH";
+    aspN->nTermGain = "H";
+    aspN->missedCleavages = 2;
+    aspN->minDistance = 1;
+    aspN->terminalSpecificity = proteome::Digestion::FullySpecific;
+    aspN->siteRegexp = "(?=[BD])";
+    aspN->enzymeName.set(MS_Asp_N);
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes.push_back(aspN);
+    testSerializeReally(mzid, Serializer_pepXML::Config());
+
+    aspN->missedCleavages = 4;
+    aspN->minDistance = 2;
+    aspN->terminalSpecificity = proteome::Digestion::SemiSpecific;
+    aspN->siteRegexp = "(?=[BND])";
+    aspN->enzymeName.clear();
+    aspN->enzymeName.userParams.push_back(UserParam("custom"));
+    testSerializeReally(mzid, Serializer_pepXML::Config());
+
+
     // test with readSpectrumQueries == false
 
     // clear the original SequenceCollection

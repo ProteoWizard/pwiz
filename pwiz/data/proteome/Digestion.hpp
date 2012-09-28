@@ -160,9 +160,13 @@ class PWIZ_API_DECL Digestion
     /// or CVID_Unknown if the agent is not found (the regex pattern must match exactly)
     static CVID getCleavageAgentByRegex(const std::string& agentRegex);
 
-    /// returns the Perl regular expression defining the places in a
+    /// returns the official PSI Perl regular expression defining the places in a
     /// polypeptide or protein that the agent will cut.
     static const std::string& getCleavageAgentRegex(CVID agentCvid);
+
+    /// returns a modified version of a cleavage agent regex where any ambiguous AA symbols (BJXZ)
+    /// are augmented with their unambiguous counterparts (e.g. B -> [BND])
+    static std::string disambiguateCleavageAgentRegex(const std::string& cleavageAgentRegex);
 
     /// specifies digestion occurs by a commonly used cleavage agent
     Digestion(const Peptide& polypeptide,

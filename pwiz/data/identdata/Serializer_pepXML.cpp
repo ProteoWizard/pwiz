@@ -684,8 +684,10 @@ void write_search_hit(XMLWriter& xmlWriter,
 
         BOOST_FOREACH(const CVParam& cvParam, sii.cvParams)
         {
-            if (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_peptides) ||
-                regex_match(cvParam.value, what, numericRegex))
+            if (cvParam.cvid != MS_number_of_matched_peaks &&
+                cvParam.cvid != MS_number_of_unmatched_peaks &&
+                (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_peptides) ||
+                 regex_match(cvParam.value, what, numericRegex)))
             {
                 const string& preferredScoreName = ScoreTranslator::instance->translate(analysisSoftwareCVID, cvParam.cvid);
 
@@ -897,12 +899,13 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
                 throw runtime_error("[HandlerSampleEnzyme] Empty cut attribute");
 
             if (sense == "n")
-                std::swap(cut, noCut);
-            else if (sense != "c")
+                enzyme->siteRegexp = (noCut.empty() ? "" : string("(?<!") + (noCut.length() > 1 ? "[" : "") + noCut + (noCut.length() > 1 ? "]" : "") + (noCut.empty() ? "" : ")")) +
+                                     (cut.empty() ? "" : string("(?=") + (cut.length() > 1 ? "[" : "") + cut + (cut.length() > 1 ? "])" : ")"));
+            else if (sense == "c")
+                enzyme->siteRegexp = (cut.empty() ? "" : string("(?<=") + (cut.length() > 1 ? "[" : "") + cut + (cut.length() > 1 ? "])" : ")")) +
+                                     (noCut.empty() ? "" : "(?!") + (noCut.length() > 1 ? "[" : "") + noCut + (noCut.length() > 1 ? "]" : "") + (noCut.empty() ? "" : ")");
+            else
                 throw runtime_error("[HandlerSampleEnzyme] Invalid specificity sense: " + sense);
-
-            enzyme->siteRegexp = string("(?<=") + (cut.length() > 1 ? "[" : "") + cut + (cut.length() > 1 ? "])" : ")") +
-                                (noCut.empty() ? "" : "(?!") + (noCut.length() > 1 ? "[" : "") + noCut + (noCut.length() > 1 ? "]" : "") + (noCut.empty() ? "" : ")");
 
             getAttribute(attributes, "min_spacing", enzyme->minDistance, 1);
 
