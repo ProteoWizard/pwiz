@@ -301,8 +301,7 @@ rule binary-tarball-requirements ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = [ install-location $(properties) ] ;
-    location = $(location:G=) ;
+    local location = [ feature.get-values <location> : [ install-location $(properties) ] ] ;
 
     local non-redistributables = pwiz_bindings_cli.xml ; # .NET documentation
 
@@ -313,7 +312,12 @@ rule binary-tarball-requirements ( properties * )
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
     local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
-    if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
+    if ! <architecture> in $(properties:G)
+    {
+        if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
+        else if $(.platform:L) = "x86" && <address-model>64 in $(properties) { properties += <architecture>x86_64 ; } 
+        else { properties += <architecture>$(.platform:L) ; }
+    }
     local linkage ;
     if <link>shared in $(properties) { linkage = "-shared" ; }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
