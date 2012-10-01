@@ -38,6 +38,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private static readonly Color COLOR_RETENTION_TIME = Color.Gray;
         private static readonly Color COLOR_MSMSID_TIME = Color.Navy;
         private static readonly Color COLOR_ALIGNED_MSMSID_TIME = Color.LightBlue;
+        private static readonly Color COLOR_UNALIGNED_MSMSID_TIME = Color.Cyan;
         private static readonly Color COLOR_RETENTION_WINDOW = Color.LightGoldenrodYellow;
         private static readonly Color COLOR_BOUNDARIES = Color.Gray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
@@ -165,6 +166,7 @@ namespace pwiz.Skyline.Controls.Graphs
         public double? SelectedRetentionMsMs { get; set; }
 
         public double[] AlignedRetentionMsMs { get; set; }
+        public double[] UnalignedRetentionMsMs { get; set; }
 
         public bool HideBest { get; set; }
 
@@ -282,6 +284,21 @@ namespace pwiz.Skyline.Controls.Graphs
                             IsClippedToChartRect = true,
                             Tag = new GraphObjTag(this, GraphObjType.aligned_ms_id, scaledTime),
                         };
+                        annotations.Add(line);
+                    }
+                }
+                if (UnalignedRetentionMsMs != null)
+                {
+                    foreach (var time in UnalignedRetentionMsMs)
+                    {
+                        var scaledTime = ScaleRetentionTime(time);
+                        var line = new LineObj(COLOR_UNALIGNED_MSMSID_TIME, scaledTime.DisplayTime, yMax,
+                                               scaledTime.DisplayTime, 0)
+                                       {
+                                           ZOrder = ZOrder.E_BehindCurves,
+                                           IsClippedToChartRect = true,
+                                           Tag = new GraphObjTag(this, GraphObjType.unaligned_ms_id, scaledTime),
+                                       };
                         annotations.Add(line);
                     }
                 }
@@ -620,6 +637,7 @@ namespace pwiz.Skyline.Controls.Graphs
             ms_ms_id,
             predicted_rt_window,
             aligned_ms_id,
+            unaligned_ms_id,
             best_peak,
             peak,
         }

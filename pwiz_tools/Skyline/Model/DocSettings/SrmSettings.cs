@@ -549,6 +549,23 @@ namespace pwiz.Skyline.Model.DocSettings
             return times.ToArray();
         }
 
+        public double[] GetUnalignedRetentionTimes(string peptideSequence, ExplicitMods explicitMods)
+        {
+            var times = new List<double>();
+            foreach (var source in DocumentRetentionTimes.RetentionTimeSources.Values)
+            {
+                var library = PeptideSettings.Libraries.GetLibrary(source.Library);
+                if (null == library)
+                {
+                    continue;
+                }
+                var modifiedSequences = GetTypedSequences(peptideSequence, explicitMods)
+                    .Select(typedSequence => typedSequence.ModifiedSequence);
+                times.AddRange(library.GetRetentionTimesWithSequences(source.Name, modifiedSequences));
+            }
+            return times.ToArray();
+        }
+
         public double[] GetAllRetentionTimes(string filePath, string peptideSequence, ExplicitMods explicitMods)
         {
             var times = new List<double>();
@@ -991,6 +1008,53 @@ namespace pwiz.Skyline.Model.DocSettings
             foreach(StaticMod mod in newHeavyMods)
                 defSet.HeavyModList.Add(mod);
          }
+
+        /// <summary>
+        /// Returns true if any of the runs in this Document have been successfully aligned 
+        /// with any other run which has peptide ID times.
+        /// </summary>
+        public bool HasAlignedTimes()
+        {
+            return
+                DocumentRetentionTimes.FileAlignments.Values.Any(
+                    fileRetentionTimeAlignments => fileRetentionTimeAlignments.RetentionTimeAlignments.Count > 0);
+        }
+
+        /// <summary>
+        /// Returns true if there are any runs in this Document that have not been aligned against
+        /// all of the runs in the Libraries in this Document.
+        /// </summary>
+        public bool HasUnalignedTimes()
+        {
+            if (!HasResults)
+            {
+                return false;
+            }
+            foreach (var chromatogramSet in MeasuredResults.Chromatograms)
+            {
+                foreach (var msDataFileInfo in chromatogramSet.MSDataFileInfos)
+                {
+                    var fileAlignments = DocumentRetentionTimes.FileAlignments.Find(msDataFileInfo);
+                    if (fileAlignments == null)
+                    {
+                        return true;
+                    }
+                    foreach (var source in DocumentRetentionTimes.RetentionTimeSources.Values)
+                    {
+                        if (source.Name == fileAlignments.Name)
+                        {
+                            continue;
+                        }
+                        if (null == fileAlignments.RetentionTimeAlignments.Find(source.Name))
+                        {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
 
         #region Implementation of IXmlSerializable
 

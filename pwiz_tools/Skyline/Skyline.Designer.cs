@@ -92,6 +92,7 @@ namespace pwiz.Skyline
             this.retentionTimePredContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideIDTimesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.alignedPeptideIDTimesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.peptideIDTimesFromOtherRunsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.transitionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -696,6 +697,7 @@ namespace pwiz.Skyline
             this.retentionTimePredContextMenuItem,
             this.peptideIDTimesContextMenuItem,
             this.alignedPeptideIDTimesToolStripMenuItem,
+            this.peptideIDTimesFromOtherRunsToolStripMenuItem,
             this.toolStripSeparator16,
             this.transitionsContextMenuItem,
             this.transformChromContextMenuItem,
@@ -805,6 +807,13 @@ namespace pwiz.Skyline
             this.alignedPeptideIDTimesToolStripMenuItem.Name = "alignedPeptideIDTimesToolStripMenuItem";
             resources.ApplyResources(this.alignedPeptideIDTimesToolStripMenuItem, "alignedPeptideIDTimesToolStripMenuItem");
             this.alignedPeptideIDTimesToolStripMenuItem.Click += new System.EventHandler(this.alignedPeptideIDTimesToolStripMenuItem_Click);
+            // 
+            // peptideIDTimesFromOtherRunsToolStripMenuItem
+            // 
+            this.peptideIDTimesFromOtherRunsToolStripMenuItem.CheckOnClick = true;
+            this.peptideIDTimesFromOtherRunsToolStripMenuItem.Name = "peptideIDTimesFromOtherRunsToolStripMenuItem";
+            resources.ApplyResources(this.peptideIDTimesFromOtherRunsToolStripMenuItem, "peptideIDTimesFromOtherRunsToolStripMenuItem");
+            this.peptideIDTimesFromOtherRunsToolStripMenuItem.Click += new System.EventHandler(this.peptideIDTimesFromOtherRunsToolStripMenuItem_Click);
             // 
             // toolStripSeparator16
             // 
@@ -3086,6 +3095,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem publishMenuItem;
         private System.Windows.Forms.ToolStripMenuItem renameProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem immediateWindowToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem peptideIDTimesFromOtherRunsToolStripMenuItem;
     }
 }
 

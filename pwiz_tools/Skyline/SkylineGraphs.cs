@@ -1107,8 +1107,16 @@ namespace pwiz.Skyline
             {
                 peptideIDTimesContextMenuItem.Checked = set.ShowPeptideIdTimes;
                 menuStrip.Items.Insert(iInsert++, peptideIDTimesContextMenuItem);
+            }
+            if (settings.HasAlignedTimes())
+            {
                 alignedPeptideIDTimesToolStripMenuItem.Checked = set.ShowAlignedPeptideIdTimes;
                 menuStrip.Items.Insert(iInsert++, alignedPeptideIDTimesToolStripMenuItem);
+            }
+            if (settings.HasUnalignedTimes())
+            {
+                peptideIDTimesFromOtherRunsToolStripMenuItem.Checked = set.ShowUnalignedPeptideIdTimes;
+                menuStrip.Items.Insert(iInsert++, peptideIDTimesFromOtherRunsToolStripMenuItem);
             }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
             menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
@@ -1263,6 +1271,12 @@ namespace pwiz.Skyline
         private void alignedPeptideIDTimesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowAlignedPeptideIdTimes = alignedPeptideIDTimesToolStripMenuItem.Checked;
+            UpdateChromGraphs();
+        }
+
+        private void peptideIDTimesFromOtherRunsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowUnalignedPeptideIdTimes = peptideIDTimesFromOtherRunsToolStripMenuItem.Checked;
             UpdateChromGraphs();
         }
 

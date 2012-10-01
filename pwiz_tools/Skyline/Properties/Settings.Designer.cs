@@ -1566,7 +1566,22 @@ namespace pwiz.Skyline.Properties {
                 this["ShowAlignedPeptideIdTimes"] = value;
             }
         }
-        
+
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowUnalignedPeptideIdTimes
+        {
+            get
+            {
+                return ((bool)(this["ShowUnalignedPeptideIdTimes"]));
+            }
+            set
+            {
+                this["ShowUnalignedPeptideIdTimes"] = value;
+            }
+        }
+
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("False")]

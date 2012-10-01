@@ -1370,9 +1370,23 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     if (listTimes.Count > 0)
                     {
-                        var sortedTimes = new HashSet<double>(listTimes).ToArray();
+                        var sortedTimes = listTimes.Distinct().ToArray();
                         Array.Sort(sortedTimes);
                         chromGraphPrimary.AlignedRetentionMsMs = sortedTimes;
+                    }
+                }
+                if (Settings.Default.ShowUnalignedPeptideIdTimes)
+                {
+                    var listTimes = new List<double>();
+                    foreach (var group in transitionGroups)
+                    {
+                        listTimes.AddRange(settings.GetUnalignedRetentionTimes(group.Peptide.Sequence, mods));
+                    }
+                    if (listTimes.Count > 0)
+                    {
+                        var sortedTimes = listTimes.Distinct().ToArray();
+                        Array.Sort(sortedTimes);
+                        chromGraphPrimary.UnalignedRetentionMsMs = sortedTimes;
                     }
                 }
             }
