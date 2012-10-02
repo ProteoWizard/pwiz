@@ -257,6 +257,9 @@ struct double12_policy : boost::spirit::karma::real_policies<T>
 {
     //  we want to generate up to 12 fractional digits
     static unsigned int precision(T) { return 12; }
+    //  we want the numbers always to be in fixed format,
+    //  since some parsers can't handle scientific
+    static int floatfield(T) { return fmtflags::fixed; }
 };
 
 
