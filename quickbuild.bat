@@ -17,8 +17,13 @@ set ADDRESS_MODEL=32
 set ALL_ARGS= %*
 REM # remove pesky '=' character for subsequent string substitution
 for /f "usebackq tokens=*" %%a in ('%ALL_ARGS%') do set ALL_ARGS=%%~a
-if "%ALL_ARGS: address-model 64=%" neq "%ALL_ARGS%" set ADDRESS_MODEL=64
 
+REM # need to check if no arguments were passed, or else batch will complain
+REM # about a comparison with an empty string
+if "%ALL_ARGS%"=="" GOTO SKIP_ADDRESS_CHECK
+if "%ALL_ARGS:address-model 64=%" neq "%ALL_ARGS%" set ADDRESS_MODEL=64
+
+:SKIP_ADDRESS_CHECK
 REM # Build local copy of bjam
 IF EXIST %PWIZ_BJAM% GOTO SKIP_BJAM
 echo Building bjam x86 for %ADDRESS_MODEL%-bit build...
