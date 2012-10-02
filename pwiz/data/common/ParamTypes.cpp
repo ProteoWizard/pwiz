@@ -259,7 +259,7 @@ struct double12_policy : boost::spirit::karma::real_policies<T>
     static unsigned int precision(T) { return 12; }
     //  we want the numbers always to be in fixed format,
     //  since some parsers can't handle scientific
-    static int floatfield(T) { return fmtflags::fixed; }
+    static int floatfield(T) { return boost::spirit::karma::real_policies<T>::fmtflags::fixed; }
 };
 
 
