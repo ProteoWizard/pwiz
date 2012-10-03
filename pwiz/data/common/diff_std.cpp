@@ -152,23 +152,33 @@ void diff(const CVParam& a,
     } 
     else
     {
-        try
-        {
-            // compare as ints if possible
-            int ia = lexical_cast<int>(a.value);
-            int ib = lexical_cast<int>(b.value);
-            if (ia != ib) 
+        bool asString = false;
+        // lexical_cast<int> is happy to read "1.1" as "1" - and "1.9" the same way
+        if ((std::string::npos == a.value.find_first_of(".eE")) &&
+            (std::string::npos == b.value.find_first_of(".eE")))  // any float-like chars?
+        {   
+            try
             {
-                a_b.value = lexical_cast<string>(ia);
-                b_a.value = lexical_cast<string>(ib);
+                // compare as ints if possible
+                int ia = lexical_cast<int>(a.value);
+                int ib = lexical_cast<int>(b.value);
+                if (ia != ib) 
+                {
+                    a_b.value = lexical_cast<string>(ia);
+                    b_a.value = lexical_cast<string>(ib);
+                }
+                else
+                {
+                    a_b.value.clear();
+                    b_a.value.clear();
+                }
             }
-            else
+            catch (boost::bad_lexical_cast&)
             {
-                a_b.value.clear();
-                b_a.value.clear();
+                asString = true;
             }
         }
-        catch (boost::bad_lexical_cast&)
+        else
         {
             // use precision to compare floating point values
             try
@@ -177,13 +187,25 @@ void diff(const CVParam& a,
                 double bValue = lexical_cast<double>(b.value);
                 double a_bValue, b_aValue;
                 diff_floating<double>(aValue, bValue, a_bValue, b_aValue, config);
-                a_b.value = lexical_cast<string>(a_bValue);
-                b_a.value = lexical_cast<string>(b_aValue);
+                if (a_bValue || b_aValue)
+                {
+                    a_b.value = lexical_cast<string>(a_bValue);
+                    b_a.value = lexical_cast<string>(b_aValue);
+                }
+                else
+                {
+                    a_b.value.clear();
+                    b_a.value.clear();
+                }
             }
             catch (boost::bad_lexical_cast&)
             {
-                diff_string(a.value, b.value, a_b.value, b_a.value);
+                asString = true;
             }
+        }
+        if (asString)
+        {
+             diff_string(a.value, b.value, a_b.value, b_a.value);
         }
     }
     diff(a.units, b.units, a_b.units, b_a.units, config);

@@ -178,6 +178,17 @@ void testCVParam()
     unit_assert(diff.a_b.value == "420");
     unit_assert(diff.b_a.value == "421");
 
+    a.value = "4.1e5"; // make sure we handle scientific notation properly
+    c.value = "4.1"; 
+    diff(a,c);
+    unit_assert(diff);
+    if (os_) *os_ << diff << endl;
+
+    a.value = "4.1e5"; // make sure we handle scientific notation properly
+    c.value = "410000.0"; 
+    diff(a,c);
+    unit_assert(!diff);
+
 
 }
 
