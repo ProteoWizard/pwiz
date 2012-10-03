@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
@@ -35,7 +36,7 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class BuildLibraryDlg : FormEx
     {
-        private static readonly string[] RESULTS_EXTS = new[]
+        public static readonly string[] RESULTS_EXTS = new[]
             {
                 BiblioSpecLiteBuilder.EXT_DAT,
                 BiblioSpecLiteBuilder.EXT_PEP_XML,
@@ -283,6 +284,15 @@ namespace pwiz.Skyline.SettingsUI
 
         private void btnAddFile_Click(object sender, EventArgs e)
         {
+            string[] addFiles = ShowAddFile(this);
+            if (addFiles != null)
+            {
+                AddInputFiles(addFiles);
+            }
+        }
+
+        public static string[] ShowAddFile(Form parent)
+        {
             var wildExts = new string[RESULTS_EXTS.Length];
             for (int i = 0; i < wildExts.Length; i++)
                 wildExts[i] = "*" + RESULTS_EXTS[i]; // Not L10N
@@ -299,12 +309,13 @@ namespace pwiz.Skyline.SettingsUI
                     Resources.BuildLibraryDlg_btnAddFile_Click_Matched_Peptides + string.Join(",", wildExts) + ")|" + string.Join(";", wildExts), // Not L10N
                     BiblioSpecLiteSpec.FILTER_BLIB)
             };
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            if (dlg.ShowDialog(parent) == DialogResult.OK)
             {
                 Settings.Default.LibraryResultsDirectory = Path.GetDirectoryName(dlg.FileName);
 
-                AddInputFiles(dlg.FileNames);
+                return dlg.FileNames;
             }
+            return null;
         }
 
         private void btnAddDirectory_Click(object sender, EventArgs e)
@@ -341,7 +352,7 @@ namespace pwiz.Skyline.SettingsUI
                 var message = TextUtil.LineSeparate(string.Format(Resources.BuildLibraryDlg_AddDirectory_An_error_occurred_reading_files_in_the_directory__0__,
                                                                   dirPath),
                                                     x.Message);
-                MessageBox.Show(this, message, Program.Name);
+                MessageDlg.Show(this, message);
             }            
         }
 
@@ -397,7 +408,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddInputFiles(IEnumerable<string> fileNames)
         {
-            var filesNew = new List<string>(InputFileNames);
+            InputFileNames = AddInputFiles(this, InputFileNames, fileNames);
+        }
+
+        public static string[] AddInputFiles(Form parent, IEnumerable<string> inputFileNames, IEnumerable<string> fileNames)
+        {
+            var filesNew = new List<string>(inputFileNames);
             var filesError = new List<string>();
             foreach (var fileName in fileNames)
             {
@@ -410,21 +426,20 @@ namespace pwiz.Skyline.SettingsUI
                     filesError.Add(fileName);
             }
 
-            InputFileNames = filesNew.ToArray();
-
             if (filesError.Count > 0)
             {
                 if (filesError.Count == 1)
-                    MessageBox.Show(this, string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]), Program.Name);
+                    MessageDlg.Show(parent, string.Format(Resources.BuildLibraryDlg_AddInputFiles_The_file__0__is_not_a_valid_library_input_file, filesError[0]));
                 else
                 {
                     var message = TextUtil.SpaceSeparate(Resources.BuildLibraryDlg_AddInputFiles_The_following_files_are_not_valid_library_input_files,
                                   string.Empty,
-                                  "\t" + string.Join("\n\t", filesError.ToArray())); // Not L10N
-                    
-                    MessageBox.Show(this,message);
+                                  "\t" + string.Join("\n\t", filesError.ToArray())); // Not L10N                    
+                    MessageDlg.Show(parent, message);
                 }
             }
+
+            return filesNew.ToArray();
         }
 
         private static bool IsValidInputFile(string fileName)

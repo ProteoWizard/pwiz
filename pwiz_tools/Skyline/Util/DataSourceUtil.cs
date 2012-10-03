@@ -48,6 +48,17 @@ namespace pwiz.Skyline.Util
         public const string FOLDER_TYPE = "File Folder";
         public const string UNKNOWN_TYPE = "unknown";
 
+        public static bool IsDataSource(String path)
+        {
+            if (Path.HasExtension(path))
+            {
+                return IsDataSource(new FileInfo(path));
+            }
+            else
+            {
+                return IsDataSource(new FileInfo(path));
+            }
+        }
 
         public static bool IsDataSource(DirectoryInfo dirInfo)
         {

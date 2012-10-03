@@ -1494,6 +1494,55 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Add document spectral library.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_" +
+                        "library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Building document library for peptide search..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_libr" +
+                        "ary_for_peptide_search_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Building Peptide Search Library.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Searc" +
+                        "h_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred attempting to import the {0} library..
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_ {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attem" +
+                        "pting_to_import_the__0__library_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Loading Library.
+        /// </summary>
+        public static string BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library {
+            get {
+                return ResourceManager.GetString("BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed reading block from file..
         /// </summary>
         public static string BulkReadException_BulkReadException_Failed_reading_block_from_file {
@@ -5342,6 +5391,197 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Open FASTA.
+        /// </summary>
+        public static string ImportFastaControl_browseFastaBtn_Click_Open_FASTA {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_browseFastaBtn_Click_Open_FASTA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Failed reading the file {0}..
+        /// </summary>
+        public static string ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change settings.
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Change_settings {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Change_settings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Change settings to add precursors.
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Change_settings_to_add_precursors {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Change_settings_to_add_precursors", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Insert FASTA.
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Insert_FASTA {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Insert_FASTA", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please import FASTA to add peptides to the document..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Please_import_FASTA_to_add_peptides_to_the_document_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Please_import_FASTA_to_add_peptides_to_the_documen" +
+                        "t_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document does not contain any peptides..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document does not contain any precursor transitions..
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transi" +
+                        "tions_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Would you like to change the document settings to automatically pick the precursor transitions specified in the full-scan settings?.
+        /// </summary>
+        public static string ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_" +
+                        "automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document must contain at least one precursor transition in order to proceed..
+        /// </summary>
+        public static string ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_ {
+            get {
+                return ResourceManager.GetString("ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_" +
+                        "at_least_one_precursor_transition_in_order_to_proceed_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Next.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finish.
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Finish {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Finish", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Please check your peptide search pipeline or contact Skyline support to ensure retention times appear in your spectral libraries..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_cont" +
+                        "act_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The document specific spectral library does not have valid retention times..
+        /// </summary>
+        public static string ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_ {
+            get {
+                return ResourceManager.GetString("ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_h" +
+                        "ave_valid_retention_times_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error occurred attempting to find results files..
+        /// </summary>
+        public static string ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_ {
+            get {
+                return ResourceManager.GetString("ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_result" +
+                        "s_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for matching results files in {0}..
+        /// </summary>
+        public static string ImportResultsControl_FindResultsFiles_Searching_for_matching_results_files_in__0__ {
+            get {
+                return ResourceManager.GetString("ImportResultsControl_FindResultsFiles_Searching_for_matching_results_files_in__0_" +
+                        "_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Searching for Results Files.
+        /// </summary>
+        public static string ImportResultsControl_FindResultsFiles_Searching_for_Results_Files {
+            get {
+                return ResourceManager.GetString("ImportResultsControl_FindResultsFiles_Searching_for_Results_Files", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find all the missing results files..
+        /// </summary>
+        public static string ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_ {
+            get {
+                return ResourceManager.GetString("ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_" +
+                        "results_files_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Results Directory.
+        /// </summary>
+        public static string ImportResultsControl_findResultsFilesButton_Click_Results_Directory {
+            get {
+                return ResourceManager.GetString("ImportResultsControl_findResultsFilesButton_Click_Results_Directory", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Import results.
+        /// </summary>
+        public static string ImportResultsControl_GetPeptideSearchChromatograms_Import_results {
+            get {
+                return ResourceManager.GetString("ImportResultsControl_GetPeptideSearchChromatograms_Import_results", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The current document does not appear to have enough transitions to require multiple injections.
         ///Are you sure you want to continue?.
         /// </summary>
@@ -7884,6 +8124,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Libraries and library specifications do not match..
+        /// </summary>
+        public static string PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_ {
+            get {
+                return ResourceManager.GetString("PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Library picked peptide count {0} must be between {1} and {2}..
         /// </summary>
         public static string PeptideLibraries_DoValidate_Library_picked_peptide_count__0__must_be_between__1__and__2__ {
@@ -9903,6 +10152,17 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not find the document specific library {0} for this document. Without the document specific library, you will not be able to perform peptide searches..
+        /// </summary>
+        public static string SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0__for_this_document__Without_the_document_specific_library__you_will_not_be_able_to_perform_peptide_searches_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0" +
+                        "__for_this_document__Without_the_document_specific_library__you_will_not_be_able" +
+                        "_to_perform_peptide_searches_", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Find Spectral Library.
         /// </summary>
         public static string SkylineWindow_ConnectLibrarySpecs_Find_Spectral_Library {
@@ -10889,6 +11149,16 @@ namespace pwiz.Skyline.Properties {
         public static string SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys {
             get {
                 return ResourceManager.GetString("SkylineWindow_ShowGenerateDecoysDlg_Generate_Decoys", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to You must save this document before importing a peptide search..
+        /// </summary>
+        public static string SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_ {
+            get {
+                return ResourceManager.GetString("SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_impor" +
+                        "ting_a_peptide_search_", resourceCulture);
             }
         }
         

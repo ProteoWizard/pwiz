@@ -1,5 +1,5 @@
 /*
- * Original author: Tahmina Baker <tabaker .at. u.washington.edu>,
+ * Original author: Tahmina Jahan <tabaker .at. u.washington.edu>,
  *                  Alana Killeen <killea .at. u.washington.edu>,
  *                  UWPR, Department of Genome Sciences, UW
  *

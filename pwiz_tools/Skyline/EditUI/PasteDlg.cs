@@ -208,8 +208,10 @@ namespace pwiz.Skyline.EditUI
 
         private SrmDocument GetNewDocument(SrmDocument document, bool validating, ref IdentityPath selectedPath)
         {
-            if ((document = AddFasta(document, ref selectedPath)) == null)
+            var fastaHelper = new ImportFastaHelper(tbxFasta, tbxError, panelError);
+            if ((document = fastaHelper.AddFasta(document, ref selectedPath)) == null)
             {
+                tabControl1.SelectedTab = tabPageFasta;  // To show fasta errors
                 return null;
             }
             if ((document = AddProteins(document, ref selectedPath)) == null)
@@ -503,112 +505,6 @@ namespace pwiz.Skyline.EditUI
             return document;
         }
 
-        private SrmDocument AddFasta(SrmDocument document, ref IdentityPath selectedPath)
-        {
-            var text = tbxFasta.Text;
-            if (text.Length == 0)
-            {
-                return document;
-            }
-            if (!text.StartsWith(">")) // Not L10N
-            {
-                ShowFastaError(new PasteError
-                {
-                    Message = Resources.PasteDlg_AddFasta_This_must_start_with,
-                    Column = 0,
-                    Length = 1,
-                    Line = 0,
-                });
-                return null;
-            }
-            string[] lines = text.Split('\n'); // Not L10N
-            int lastNameLine = -1;
-            int aa = 0;
-            for (int i = 0; i < lines.Length; i++)
-            {
-                string line = lines[i];
-                if (line.StartsWith(">")) // Not L10N
-                {
-                    if (line.Trim().Length == 1)
-                    {
-                        ShowFastaError(new PasteError
-                        {
-                            Message = Resources.PasteDlg_AddFasta_There_is_no_name_for_this_protein,
-                            Column = 0,
-                            Line = i,
-                            Length = 1
-                        });
-                        return null;
-                    }
-                    if (!CheckSequence(aa, lastNameLine, lines))
-                        return null;
-                    lastNameLine = i;
-                    aa = 0;
-                    continue;
-                }
-
-                for (int column = 0; column < line.Length; column++)
-                {
-                    char c = line[column];
-                    if (AminoAcid.IsExAA(c))
-                        aa++;
-                    else if (!char.IsWhiteSpace(c) && c != '*') // Not L10N
-                    {
-                        ShowFastaError(new PasteError
-                        {
-                                               Message = string.Format(Resources.PasteDlg_AddFasta__0__is_not_a_capital_letter_that_corresponds_to_an_amino_acid, c),
-                            Column = column,
-                            Line = i,
-                            Length = 1,
-                        });
-                        return null;
-                    }
-                }
-            }
-
-            if (!CheckSequence(aa, lastNameLine, lines))
-                return null;
-
-            var importer = new FastaImporter(document, false);
-            try
-            {
-                var reader = new StringReader(tbxFasta.Text);
-                IdentityPath to = selectedPath;
-                IdentityPath firstAdded, nextAdd;
-                // TODO: support long-wait broker
-                document = document.AddPeptideGroups(importer.Import(reader, null, -1), false,
-                    to, out firstAdded, out nextAdd);
-                selectedPath = firstAdded;
-            }
-            catch (Exception exception)
-            {
-                Console.Out.WriteLine(exception);
-                ShowFastaError(new PasteError
-                              {
-                                       Message = string.Format(Resources.PasteDlg_AddFasta_An_unexpected_error_occurred__0__1__,
-                                                               exception.Message, exception.GetType())
-                              });
-                return null;
-            }
-            return document;
-        }
-
-        private bool CheckSequence(int aa, int lastNameLine, string[] lines)
-        {
-            if (aa == 0 && lastNameLine >= 0)
-            {
-                ShowFastaError(new PasteError
-                {
-                    Message = Resources.PasteDlg_CheckSequence_There_is_no_sequence_for_this_protein,
-                    Column = 0,
-                    Line = lastNameLine,
-                    Length = lines[lastNameLine].Length
-                });
-                return false;
-            }
-            return true;
-        }
-
         private const char TRANSITION_LIST_SEPARATOR = TextUtil.SEPARATOR_TSV;
         private static readonly ColumnIndices TRANSITION_LIST_COL_INDICES = new ColumnIndices(
             0, 1, 2, 3);
@@ -800,15 +696,6 @@ namespace pwiz.Skyline.EditUI
                 lastPeptideGroupDocuNode = peptideGroupDocNode;
             }
             return lastPeptideGroupDocuNode;
-        }
-
-        private void ShowFastaError(PasteError pasteError)
-        {
-            ShowError(pasteError);
-            tabControl1.SelectedTab = tabPageFasta;
-            tbxFasta.SelectionStart = Math.Max(0, tbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
-            tbxFasta.SelectionLength = Math.Min(pasteError.Length, tbxFasta.Text.Length - tbxFasta.SelectionStart);
-            tbxFasta.Focus();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
@@ -1465,5 +1352,157 @@ namespace pwiz.Skyline.EditUI
         public int Line { get; set; }
         public int Column { get; set; }
         public int Length { get; set; }
+    }
+
+    public class ImportFastaHelper
+    {
+        public ImportFastaHelper(TextBox tbxFasta, TextBox tbxError, Panel panelError)
+        {
+            _tbxFasta = tbxFasta;
+            _tbxError = tbxError;
+            _panelError = panelError;
+        }
+
+        public IdentityPath SelectedPath { get; set; }
+
+        private readonly TextBox _tbxFasta;
+        private TextBox TbxFasta { get { return _tbxFasta; } }
+
+        private readonly TextBox _tbxError;
+        private TextBox TbxError { get { return _tbxError; } }
+
+        private readonly Panel _panelError;
+        private Panel PanelError { get { return _panelError; } }
+
+        public SrmDocument AddFasta(SrmDocument document, ref IdentityPath selectedPath)
+        {
+            var text = TbxFasta.Text;
+            if (text.Length == 0)
+            {
+                return document;
+            }
+            if (!text.StartsWith(">"))
+            {
+                ShowFastaError(new PasteError
+                {
+                    Message = "This must start with '>'",
+                    Column = 0,
+                    Length = 1,
+                    Line = 0,
+                });
+                return null;
+            }
+            string[] lines = text.Split('\n');
+            int lastNameLine = -1;
+            int aa = 0;
+            for (int i = 0; i < lines.Length; i++)
+            {
+                string line = lines[i];
+                if (line.StartsWith(">"))
+                {
+                    if (line.Trim().Length == 1)
+                    {
+                        ShowFastaError(new PasteError
+                        {
+                            Message = "There is no name for this protein",
+                            Column = 0,
+                            Line = i,
+                            Length = 1
+                        });
+                        return null;
+                    }
+                    if (!CheckSequence(aa, lastNameLine, lines))
+                        return null;
+                    lastNameLine = i;
+                    aa = 0;
+                    continue;
+                }
+
+                for (int column = 0; column < line.Length; column++)
+                {
+                    char c = line[column];
+                    if (AminoAcid.IsExAA(c))
+                        aa++;
+                    else if (!char.IsWhiteSpace(c) && c != '*')
+                    {
+                        ShowFastaError(new PasteError
+                        {
+                            Message =
+                                string.Format("'{0}' is not a capital letter that corresponds to an amino acid.", c),
+                            Column = column,
+                            Line = i,
+                            Length = 1,
+                        });
+                        return null;
+                    }
+                }
+            }
+
+            if (!CheckSequence(aa, lastNameLine, lines))
+                return null;
+
+            var importer = new FastaImporter(document, false);
+            try
+            {
+                var reader = new StringReader(TbxFasta.Text);
+                IdentityPath to = selectedPath;
+                IdentityPath firstAdded, nextAdd;
+                // TODO: support long-wait broker
+                document = document.AddPeptideGroups(importer.Import(reader, null, -1), false,
+                    to, out firstAdded, out nextAdd);
+                selectedPath = firstAdded;
+            }
+            catch (Exception exception)
+            {
+                Console.Out.WriteLine(exception);
+                ShowFastaError(new PasteError
+                {
+                    Message = "An unexpected error occurred: " + exception.Message + " (" + exception.GetType() + ")"
+                });
+                return null;
+            }
+            return document;
+        }
+
+        private void ShowFastaError(PasteError pasteError)
+        {
+            PanelError.Visible = true;
+            if (pasteError == null)
+            {
+                TbxError.Text = "";
+                TbxError.Visible = false;
+                return;
+            }
+            TbxError.BackColor = Color.Red;
+            TbxError.Text = pasteError.Message;
+            TbxError.Visible = true;
+
+            TbxFasta.SelectionStart = Math.Max(0, TbxFasta.GetFirstCharIndexFromLine(pasteError.Line) + pasteError.Column);
+            TbxFasta.SelectionLength = Math.Min(pasteError.Length, TbxFasta.Text.Length - TbxFasta.SelectionStart);
+            TbxFasta.Focus();
+        }
+
+        public void ClearFastaError()
+        {
+            TbxError.Text = "";
+            TbxError.Visible = false;
+            PanelError.Visible = false;
+        }
+
+        private bool CheckSequence(int aa, int lastNameLine, string[] lines)
+        {
+            if (aa == 0 && lastNameLine >= 0)
+            {
+                ShowFastaError(new PasteError
+                {
+                    Message = "There is no sequence for this protein",
+                    Column = 0,
+                    Line = lastNameLine,
+                    Length = lines[lastNameLine].Length
+                });
+                return false;
+            }
+            return true;
+        }
     }
 }

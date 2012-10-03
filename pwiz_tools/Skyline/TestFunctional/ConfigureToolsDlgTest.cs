@@ -176,8 +176,8 @@ namespace pwiz.SkylineTestFunctional
             Thread.Sleep(1000); // The tool is run on a different thread, without a pause it has touble writing across in time.
             RunUI(()=>
             {
-                const string reportText =
-                              "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio"; // Not L10N
+                string reportText = "PeptideSequence,ProteinName,ReplicateName,PredictedRetentionTime,PeptideRetentionTime,PeptidePeakFoundRatio" // Not L10N
+                    .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
                 Assert.IsTrue(SkylineWindow.ImmediateWindow.TextContent.Contains(reportText));
                 SkylineWindow.ImmediateWindow.Clear();
                 SkylineWindow.RunTool(1);
@@ -185,7 +185,8 @@ namespace pwiz.SkylineTestFunctional
             Thread.Sleep(1000); // The tool is run on a different thread, without a pause it has touble writing across in time.
             RunUI(() =>
             {
-                const string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank"; //Not L10N
+                string reportText1 = "PeptideSequence,ProteinName,ReplicateName,PrecursorMz,PrecursorCharge,ProductMz,ProductCharge,FragmentIon,RetentionTime,Area,Background,PeakRank" //Not L10N
+                    .Replace(TextUtil.SEPARATOR_CSV, TextUtil.CsvSeparator);
                 Assert.IsTrue(SkylineWindow.ImmediateWindow.TextContent.Contains(reportText1));              
                 SkylineWindow.ImmediateWindow.Clear();
                 SkylineWindow.ImmediateWindow.Close();

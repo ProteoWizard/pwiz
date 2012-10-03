@@ -774,7 +774,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #endregion
 
-        public void UpdateLists()
+        public void UpdateLists(string documentFilePath)
         {
             Settings defSet = Settings.Default;
 
@@ -811,6 +811,22 @@ namespace pwiz.Skyline.Model.DocSettings
                         defSet.SpectralLibraryList.Add(librarySpec);
                 }
             }
+
+            // If this document has a document library, add it to the specs list
+            if (PeptideSettings.Libraries.DocumentLibrary)
+            {
+                string outputPath = Path.ChangeExtension(documentFilePath, BiblioSpecLiteSpec.EXT);
+                if (File.Exists(outputPath))
+                {
+                    string docFileName = Path.GetFileNameWithoutExtension(documentFilePath);
+                    var documentLibSpec = new BiblioSpecLibSpec(docFileName, outputPath);
+                    if (!defSet.SpectralLibraryList.Contains(documentLibSpec))
+                    {
+                        defSet.SpectralLibraryList.Add(documentLibSpec.ChangeDocumentLocal(true));
+                    }
+                }
+            }
+
             UpdateDefaultModifications(true);
             if (TransitionSettings.Prediction != null)
             {

@@ -138,7 +138,7 @@ namespace pwiz.Skyline.Model.Lib
             return true;
         }
 
-        private Library LoadLibrary(IDocumentContainer container, LibrarySpec spec)
+        public Library LoadLibrary(LibrarySpec spec, Func<ILoadMonitor> getMonitor)
         {
             // TODO: Something better than locking for the entire load
             lock (_loadedLibraries)
@@ -147,11 +147,16 @@ namespace pwiz.Skyline.Model.Lib
                 if (_loadedLibraries.TryGetValue(spec.Name, out library))
                     return library;
 
-                library = spec.LoadLibrary(new LoadMonitor(this, container, spec));
+                library = spec.LoadLibrary(getMonitor());
                 if (library != null)
                     _loadedLibraries.Add(spec.Name, library);
                 return library;
             }
+        }
+
+        private Library LoadLibrary(IDocumentContainer container, LibrarySpec spec)
+        {
+            return LoadLibrary(spec, () => new LoadMonitor(this, container, spec));
         }
 
         public Library TryGetLibrary(LibrarySpec spec)

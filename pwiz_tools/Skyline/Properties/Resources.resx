@@ -4763,4 +4763,88 @@ Are you sure you want to continue?</value>
   <data name="ConfigureToolsDlg_btnFindCommand_Click_Perl_Scripts">
     <value xml:space="preserve">Perl Scripts</value>
   </data>
+  <data name="SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0__for_this_document__Without_the_document_specific_library__you_will_not_be_able_to_perform_peptide_searches_">
+    <value xml:space="preserve">Could not find the document specific library {0} for this document. Without the document specific library, you will not be able to perform peptide searches.</value>
+  </data>
+  <data name="SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_">
+    <value xml:space="preserve">You must save this document before importing a peptide search.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_ImportPeptideSearchDlg_Next">
+    <value xml:space="preserve">Next</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_The_document_specific_spectral_library_does_not_have_valid_retention_times_">
+    <value xml:space="preserve">The document specific spectral library does not have valid retention times.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Please_check_your_peptide_search_pipeline_or_contact_Skyline_support_to_ensure_retention_times_appear_in_your_spectral_libraries_">
+    <value xml:space="preserve">Please check your peptide search pipeline or contact Skyline support to ensure retention times appear in your spectral libraries.</value>
+  </data>
+  <data name="ImportPeptideSearchDlg_NextPage_Finish">
+    <value xml:space="preserve">Finish</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_An_error_occurred_attempting_to_import_the__0__library_">
+    <value xml:space="preserve">An error occurred attempting to import the {0} library.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_LoadPeptideSearchLibrary_Loading_Library">
+    <value xml:space="preserve">Loading Library</value>
+  </data>
+  <data name="PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_">
+    <value xml:space="preserve">Libraries and library specifications do not match.</value>
+  </data>
+  <data name="ImportResultsControl_GetPeptideSearchChromatograms_Import_results">
+    <value xml:space="preserve">Import results</value>
+  </data>
+  <data name="ImportResultsControl_findResultsFilesButton_Click_Results_Directory">
+    <value xml:space="preserve">Results Directory</value>
+  </data>
+  <data name="ImportResultsControl_findResultsFilesButton_Click_Could_not_find_all_the_missing_results_files_">
+    <value xml:space="preserve">Could not find all the missing results files.</value>
+  </data>
+  <data name="ImportResultsControl_FindResultsFiles_Searching_for_Results_Files">
+    <value xml:space="preserve">Searching for Results Files</value>
+  </data>
+  <data name="ImportResultsControl_FindResultsFiles_Searching_for_matching_results_files_in__0__">
+    <value xml:space="preserve">Searching for matching results files in {0}.</value>
+  </data>
+  <data name="ImportResultsControl_FindResultsFiles_An_error_occurred_attempting_to_find_results_files_">
+    <value xml:space="preserve">An error occurred attempting to find results files.</value>
+  </data>
+  <data name="ImportFastaControl_browseFastaBtn_Click_Open_FASTA">
+    <value xml:space="preserve">Open FASTA</value>
+  </data>
+  <data name="ImportFastaControl_GetFastaFileContent_Failed_reading_the_file__0__">
+    <value xml:space="preserve">Failed reading the file {0}.</value>
+  </data>
+  <data name="ImportFastaControl_VerifyAtLeastOnePrecursorTransition_The_document_must_contain_at_least_one_precursor_transition_in_order_to_proceed_">
+    <value xml:space="preserve">The document must contain at least one precursor transition in order to proceed.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_peptides_">
+    <value xml:space="preserve">The document does not contain any peptides.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Please_import_FASTA_to_add_peptides_to_the_document_">
+    <value xml:space="preserve">Please import FASTA to add peptides to the document.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_The_document_does_not_contain_any_precursor_transitions_">
+    <value xml:space="preserve">The document does not contain any precursor transitions.</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Would_you_like_to_change_the_document_settings_to_automatically_pick_the_precursor_transitions_specified_in_the_full_scan_settings_">
+    <value xml:space="preserve">Would you like to change the document settings to automatically pick the precursor transitions specified in the full-scan settings?</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Change_settings_to_add_precursors">
+    <value xml:space="preserve">Change settings to add precursors</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Change_settings">
+    <value xml:space="preserve">Change settings</value>
+  </data>
+  <data name="ImportFastaControl_ImportFasta_Insert_FASTA">
+    <value xml:space="preserve">Insert FASTA</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_Peptide_Search_Library">
+    <value xml:space="preserve">Building Peptide Search Library</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Building_document_library_for_peptide_search_">
+    <value xml:space="preserve">Building document library for peptide search.</value>
+  </data>
+  <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library">
+    <value xml:space="preserve">Add document spectral library</value>
+  </data>
 </root>

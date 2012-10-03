@@ -34,7 +34,9 @@ namespace pwiz.Skyline.Model
     {
         peptides = 0x1,
         precursors = 0x2,
-        transitions = 0x4
+        transitions = 0x4,
+
+        all = peptides | precursors | transitions
     }
 
     public static class DecoyGeneration
@@ -87,6 +89,7 @@ namespace pwiz.Skyline.Model
         public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
         public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
         public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
+        public bool AutoPickChildrenOff { get; set; }
         public int NumberOfDecoys { get; set; }
         public IsotopeLabelType DecoysLabelUsed { get; set; }
         public string DecoysMethod { get; set; }
@@ -118,11 +121,11 @@ namespace pwiz.Skyline.Model
                 PeptideGroupDocNode nodePepGroupRefined = nodePepGroup;
                 // If auto-managing all peptides, make sure this flag is set correctly,
                 // and update the peptides list, if necessary.
-                if (AutoPickPeptidesAll && !nodePepGroup.AutoManageChildren)
+                if (AutoPickPeptidesAll && nodePepGroup.AutoManageChildren == AutoPickChildrenOff)
                 {
-                    nodePepGroupRefined = (PeptideGroupDocNode) nodePepGroupRefined.ChangeAutoManageChildren(true);
+                    nodePepGroupRefined = (PeptideGroupDocNode) nodePepGroupRefined.ChangeAutoManageChildren(!AutoPickChildrenOff);
                     var settings = document.Settings;
-                    if (!settings.PeptideSettings.Filter.AutoSelect)
+                    if (!AutoPickChildrenOff && !settings.PeptideSettings.Filter.AutoSelect)
                         settings = settings.ChangePeptideFilter(filter => filter.ChangeAutoSelect(true));
                     nodePepGroupRefined = nodePepGroupRefined.ChangeSettings(settings,
                         new SrmSettingsDiff(true, false, false, false, false, false));
@@ -209,12 +212,12 @@ namespace pwiz.Skyline.Model
                 }
 
                 PeptideDocNode nodePepRefined = nodePep;
-                if (AutoPickPrecursorsAll && !nodePep.AutoManageChildren)
+                if (AutoPickPrecursorsAll && nodePep.AutoManageChildren == AutoPickChildrenOff)
                 {
-                    nodePepRefined = (PeptideDocNode) nodePepRefined.ChangeAutoManageChildren(true);
+                    nodePepRefined = (PeptideDocNode) nodePepRefined.ChangeAutoManageChildren(!AutoPickChildrenOff);
                     var settings = document.Settings;
-                    if (!settings.TransitionSettings.Filter.AutoSelect)
-                        settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true));
+                    if (!settings.TransitionSettings.Filter.AutoSelect && !AutoPickChildrenOff)
+                        settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(!AutoPickChildrenOff));
                     nodePepRefined = nodePepRefined.ChangeSettings(settings,
                         new SrmSettingsDiff(false, false, true, false, false, false));
                 }
@@ -321,12 +324,12 @@ namespace pwiz.Skyline.Model
                 }
 
                 TransitionGroupDocNode nodeGroupRefined = nodeGroup;
-                if (AutoPickTransitionsAll && !nodeGroup.AutoManageChildren)
+                if (AutoPickTransitionsAll && nodeGroup.AutoManageChildren == AutoPickChildrenOff)
                 {
-                    nodeGroupRefined = (TransitionGroupDocNode) nodeGroupRefined.ChangeAutoManageChildren(true);
+                    nodeGroupRefined = (TransitionGroupDocNode) nodeGroupRefined.ChangeAutoManageChildren(!AutoPickChildrenOff);
                     var settings = document.Settings;
-                    if (!settings.TransitionSettings.Filter.AutoSelect)
-                        settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true));
+                    if (!settings.TransitionSettings.Filter.AutoSelect && !AutoPickChildrenOff)
+                        settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(!AutoPickChildrenOff));
                     nodeGroupRefined = nodeGroupRefined.ChangeSettings(settings, nodePep.ExplicitMods,
                         new SrmSettingsDiff(false, false, false, false, true, false));
                 }

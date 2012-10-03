@@ -111,6 +111,7 @@
     <Compile Include="CEOptimizationTutorialTest.cs" />
     <Compile Include="CustomReportsTutorialTest.cs" />
     <Compile Include="ExistingExperimentsTutorialTest.cs" />
+    <Compile Include="ImportPeptideSearchWizardTest.cs" />
     <Compile Include="IrtTutorialTest.cs" />
     <Compile Include="LibraryExplorerTutorialTest.cs" />
     <Compile Include="MethodEditTutorialTest.cs" />

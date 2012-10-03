@@ -1282,25 +1282,34 @@
     <value>190, 6</value>
   </data>
   <data name="importResultsMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>161, 22</value>
   </data>
   <data name="importResultsMenuItem.Text" xml:space="preserve">
     <value>&amp;Results...</value>
   </data>
+  <data name="importPeptideSearchMenuItem.Size" type="System.Drawing.Size, System.Drawing">
+    <value>161, 22</value>
+  </data>
+  <data name="importPeptideSearchMenuItem.Text" xml:space="preserve">
+    <value>&amp;Peptide Search...</value>
+  </data>
+  <data name="importPeptideSearchMenuItem.Visible" type="System.Boolean, mscorlib">
+    <value>False</value>
+  </data>
   <data name="importFASTAMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>161, 22</value>
   </data>
   <data name="importFASTAMenuItem.Text" xml:space="preserve">
     <value>&amp;FASTA...</value>
   </data>
   <data name="importMassListMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>161, 22</value>
   </data>
   <data name="importMassListMenuItem.Text" xml:space="preserve">
     <value>&amp;Transition List...</value>
   </data>
   <data name="importDocumentMenuItem.Size" type="System.Drawing.Size, System.Drawing">
-    <value>157, 22</value>
+    <value>161, 22</value>
   </data>
   <data name="importDocumentMenuItem.Text" xml:space="preserve">
     <value>&amp;Document...</value>
@@ -3382,6 +3391,12 @@
     <value>importResultsMenuItem</value>
   </data>
   <data name="&gt;&gt;importResultsMenuItem.Type" xml:space="preserve">
+    <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="&gt;&gt;importPeptideSearchMenuItem.Name" xml:space="preserve">
+    <value>importPeptideSearchMenuItem</value>
+  </data>
+  <data name="&gt;&gt;importPeptideSearchMenuItem.Type" xml:space="preserve">
     <value>System.Windows.Forms.ToolStripMenuItem, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="&gt;&gt;importFASTAMenuItem.Name" xml:space="preserve">

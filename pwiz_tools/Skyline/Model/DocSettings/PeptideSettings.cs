@@ -1431,11 +1431,12 @@ namespace pwiz.Skyline.Model.DocSettings
         private ReadOnlyCollection<Library> _disconnectedLibraries;
 
         public PeptideLibraries(PeptidePick pick, PeptideRankId rankId, int? peptideCount,
-            IList<LibrarySpec> librarySpecs, IList<Library> libraries)
+            bool docLib, IList<LibrarySpec> librarySpecs, IList<Library> libraries)
         {
             Pick = pick;
             RankId = rankId;
             PeptideCount = peptideCount;
+            DocumentLibrary = docLib;
             LibrarySpecs = librarySpecs;
             Libraries = libraries;
 
@@ -1445,6 +1446,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public PeptidePick Pick { get; private set; }
         public PeptideRankId RankId { get; private set; }
         public int? PeptideCount { get; private set; }
+        public bool DocumentLibrary { get; private set; }
 
         public bool HasLibraries { get { return _librarySpecs.Count > 0; } }
 
@@ -1624,6 +1626,11 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.PeptideCount = prop);
         }
 
+        public PeptideLibraries ChangeDocumentLibrary(bool prop)
+        {
+            return ChangeProp(ImClone(this), im => im.DocumentLibrary = prop);
+        }
+
         public PeptideLibraries ChangeLibrarySpecs(IList<LibrarySpec> prop)
         {
             return ChangeProp(ImClone(this),
@@ -1795,7 +1802,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             pick,
             rank_type,
-            peptide_count
+            peptide_count,
+            document_library
         }
 
         void IValidating.Validate()
@@ -1820,7 +1828,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Libraries and library specs must match.  If they do not, then
             // there was a coding error.
-            Helpers.Assume(LibrariesMatch(), "Libraries and library specifications do not match.");
+            Helpers.Assume(LibrariesMatch(), Resources.PeptideLibraries_DoValidate_Libraries_and_library_specifications_do_not_match_);
 
             // Leave connecting the libraries to the LibrarySpecs in the
             // SpectralLibraryList until the root settings object is validated.
@@ -1890,6 +1898,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             Pick = reader.GetEnumAttribute(ATTR.pick, PeptidePick.library);
             PeptideCount = reader.GetNullableIntAttribute(ATTR.peptide_count);
+            DocumentLibrary = reader.GetBoolAttribute(ATTR.document_library);
 
             _rankIdName = reader.GetAttribute(ATTR.rank_type);
 
@@ -1938,6 +1947,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (RankId != null)
                 writer.WriteAttribute(ATTR.rank_type, RankId.Value);
             writer.WriteAttributeNullable(ATTR.peptide_count, PeptideCount);
+            writer.WriteAttribute(ATTR.document_library, DocumentLibrary);
 
             // Write child elements
             var libraries = (_libraries.Count > 0 || _disconnectedLibraries == null ?

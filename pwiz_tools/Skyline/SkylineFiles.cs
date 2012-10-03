@@ -32,6 +32,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.FileUI;
+using pwiz.Skyline.FileUI.PeptideSearch;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -115,7 +116,7 @@ namespace pwiz.Skyline
 
             // Make sure settings lists contain correct values for
             // this document.
-            document.Settings.UpdateLists();
+            document.Settings.UpdateLists(null);
 
             // Switch over to the new document
             SwitchDocument(document, null);
@@ -204,7 +205,7 @@ namespace pwiz.Skyline
 
                     // Make sure settings lists contain correct values for
                     // this document.
-                    document.Settings.UpdateLists();
+                    document.Settings.UpdateLists(path);
 
                     using (new SequenceTreeForm.LockDoc(_sequenceTreeForm))
                     {
@@ -240,6 +241,15 @@ namespace pwiz.Skyline
 
         private SrmDocument ConnectLibrarySpecs(SrmDocument document, string path)
         {
+            if (!string.IsNullOrEmpty(path) && document.Settings.PeptideSettings.Libraries.DocumentLibrary)
+            {
+                string docLibFile = BiblioSpecLiteSpec.GetLibraryFileName(path);
+                if (!File.Exists(docLibFile))
+                {
+                    MessageDlg.Show(this, string.Format(Resources.SkylineWindow_ConnectLibrarySpecs_Could_not_find_the_document_specific_library__0__for_this_document__Without_the_document_specific_library__you_will_not_be_able_to_perform_peptide_searches_, docLibFile));
+                }
+            }
+
             var settings = document.Settings.ConnectLibrarySpecs(library =>
                 {
                     LibrarySpec spec;
@@ -532,9 +542,7 @@ namespace pwiz.Skyline
             // since the results cache must be copied to the new location.
             if (!DocumentUI.Settings.IsLoaded)
             {
-                MessageDlg.Show(this,
-                                Resources.
-                                    SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name);
+                MessageDlg.Show(this, Resources.SkylineWindow_SaveDocumentAs_The_document_must_be_fully_loaded_before_it_can_be_saved_to_a_new_name);
                 return false;
             }
 
@@ -582,11 +590,24 @@ namespace pwiz.Skyline
                         writer.Flush();
                         writer.Close();
 
+                        // If the user has chosen "Save As", and the document has a
+                        // document specific spectral library, copy this library to 
+                        // the new name.
+                        if (!Equals(DocumentFilePath, fileName))
+                        {
+                            if (!SaveDocumentLibraryAs(fileName))
+                                return false;
+                        }
+
                         saver.Commit();
 
                         DocumentFilePath = fileName;
                         _savedVersion = document.RevisionIndex;
                         SetActiveFile(fileName);
+
+
+                        // Make sure settings lists contain correct values for this document.
+                        document.Settings.UpdateLists(DocumentFilePath);
                     }
                 }
             }
@@ -599,6 +620,7 @@ namespace pwiz.Skyline
 
             try
             {
+                // CONSIDER: Is this really optional?
                 if (includingCacheFile)
                 {
                     OptimizeCache(fileName);
@@ -646,6 +668,44 @@ namespace pwiz.Skyline
                 if (File.Exists(cachePath))
                     File.Delete(cachePath);
             }
+        }
+
+        private bool SaveDocumentLibraryAs(string newDocFilePath)
+        {
+            string oldDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(DocumentFilePath);
+            string oldRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(oldDocLibFile);
+            // If the document has a document-specific library, and the files for it
+            // exist on disk
+            var document = DocumentUI;
+            if (document.Settings.PeptideSettings.Libraries.DocumentLibrary
+                && File.Exists(oldDocLibFile) && File.Exists(oldRedundantDocLibFile))
+            {
+                string newDocLibFile = BiblioSpecLiteSpec.GetLibraryFileName(newDocFilePath);
+                string newRedundantDocLibFile = BiblioSpecLiteSpec.GetRedundantName(newDocFilePath);
+                using (var saverLib = new FileSaver(newDocLibFile))
+                using (var saverRedundant = new FileSaver(newRedundantDocLibFile))
+                {
+                    if (!CopyFile(oldDocLibFile, saverLib))
+                        return false;
+
+                    if (!CopyFile(oldRedundantDocLibFile, saverRedundant))
+                        return false;
+                    saverLib.Commit();
+                    saverRedundant.Commit();
+                }
+            }
+
+            return true;
+        }
+
+        private bool CopyFile(string source, FileSaver destSaver)
+        {
+            // Copy the specified file to the new name using a FileSaver
+            if (!destSaver.CanSave(true))
+                return false;
+
+            File.Copy(source, destSaver.SafeName, true);
+            return true;
         }
 
         private void SaveLayout(string fileName)
@@ -1263,13 +1323,9 @@ namespace pwiz.Skyline
                 MessageDlg.Show(this, Resources.SkylineWindow_ImportResults_You_must_add_at_least_one_target_transition_before_importing_results_);
                 return;
             }
-            if (string.IsNullOrEmpty(DocumentFilePath))
+            if (!CheckDocumentExists(Resources.SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results))
             {
-                if (MessageBox.Show(this, Resources.SkylineWindow_ImportResults_You_must_save_this_document_before_importing_results, 
-                    Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
-                    return;
-                if (!SaveDocument())
-                    return;
+                return;
             }
 
             using (ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath))
@@ -1298,7 +1354,7 @@ namespace pwiz.Skyline
             }
         }
 
-        private SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, string[]>[] namedResults, string optimize)
+        public SrmDocument ImportResults(SrmDocument doc, KeyValuePair<string, string[]>[] namedResults, string optimize)
         {
             OptimizableRegression optimizationFunction = null;
             var prediction = doc.Settings.TransitionSettings.Prediction;
@@ -1490,6 +1546,38 @@ namespace pwiz.Skyline
                 }
                 while (!SetDocument(docNew, docCurrent));
             }
+        }
+
+        private void importPeptideSearchMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowImportPeptideSearchDlg();
+        }
+
+        public void ShowImportPeptideSearchDlg()
+        {
+            if (!CheckDocumentExists(Resources.SkylineWindow_ShowImportPeptideSearchDlg_You_must_save_this_document_before_importing_a_peptide_search_))
+            {
+                return;
+            }
+
+            var dlg = new ImportPeptideSearchDlg(this, _libraryManager);
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                // Nothing to do; the dialog does all the work.
+            }
+        }
+
+        private bool CheckDocumentExists(String errorMsg)
+        {
+            if (string.IsNullOrEmpty(DocumentFilePath))
+            {
+                if (MessageBox.Show(errorMsg, Program.Name, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    return false;
+                if (!SaveDocument())
+                    return false;
+            }
+
+            return true;
         }
 
         private void publishMenuItem_Click(object sender, EventArgs e)

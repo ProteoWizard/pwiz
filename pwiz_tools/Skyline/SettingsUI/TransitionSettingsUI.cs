@@ -180,6 +180,7 @@ namespace pwiz.Skyline.SettingsUI
         public TransitionLibraries Libraries { get { return _transitionSettings.Libraries; } }
         public TransitionInstrument Instrument { get { return _transitionSettings.Instrument; } }
         public TransitionFullScan FullScan { get { return _transitionSettings.FullScan; } }
+        public TABS? TabControlSel { get; set; }
 
         public FullScanAcquisitionMethod AcquisitionMethod
         {
@@ -225,6 +226,8 @@ namespace pwiz.Skyline.SettingsUI
 
         protected override void OnShown(EventArgs e)
         {
+            if (TabControlSel != null)
+                tabControl1.SelectedIndex = (int)TabControlSel;
             tabControl1.FocusFirstTabStop();
         }
 
@@ -821,7 +824,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
+        public static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
                                             FullScanMassAnalyzerType analyzerTypeCurrent,
                                             double? resCurrent,
                                             double? resMzCurrent,
@@ -876,6 +879,11 @@ namespace pwiz.Skyline.SettingsUI
                     labelTh.Left = textMz.Right;
             }
             label.Text = labelText;
+        }
+
+        private void RadioNoiseAroundMs2IdsCheckedChanged(object sender, EventArgs e)
+        {
+            tbxTimeAroundMs2Ids.Enabled = radioTimeAroundMs2Ids.Checked;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -1102,10 +1110,5 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #endregion
-
-        private void RadioNoiseAroundMs2IdsCheckedChanged(object sender, EventArgs e)
-        {
-            tbxTimeAroundMs2Ids.Enabled = radioTimeAroundMs2Ids.Checked;
-        }
     }
 }

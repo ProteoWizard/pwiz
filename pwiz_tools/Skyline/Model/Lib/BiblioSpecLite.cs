@@ -51,11 +51,14 @@ namespace pwiz.Skyline.Model.Lib
 
         public const string EXT_REDUNDANT = ".redundant.blib"; // Not L10N
 
+        public static string GetLibraryFileName(string documentPath)
+        {
+            return Path.ChangeExtension(documentPath, EXT);
+        }
+
         public static string GetRedundantName(string libraryPath)
         {
-            string libraryDir = Path.GetDirectoryName(libraryPath);
-            string libraryBasename = Path.GetFileNameWithoutExtension(libraryPath);
-            return Path.Combine(libraryDir ?? string.Empty, libraryBasename + EXT_REDUNDANT);            
+            return Path.ChangeExtension(libraryPath, EXT_REDUNDANT);
         }
 
         private static readonly PeptideRankId[] RANK_IDS = new[] { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };

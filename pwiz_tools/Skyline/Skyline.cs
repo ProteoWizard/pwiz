@@ -2025,7 +2025,12 @@ namespace pwiz.Skyline
 
         public void ShowTransitionSettingsUI()
         {
-            using (TransitionSettingsUI ts = new TransitionSettingsUI(this))
+            ShowTransitionSettingsUI(null);
+        }
+
+        public void ShowTransitionSettingsUI(TransitionSettingsUI.TABS? tab)
+        {
+            using (TransitionSettingsUI ts = new TransitionSettingsUI(this) { TabControlSel = tab })
             {
                 if (ts.ShowDialog(this) == DialogResult.OK)
                 {
@@ -2153,7 +2158,7 @@ namespace pwiz.Skyline
                     }
                 }
                 if (_skyline.ChangeSettings(settingsNew, false))
-                    settingsNew.UpdateLists();
+                    settingsNew.UpdateLists(_skyline.DocumentFilePath);
             }
         }
 

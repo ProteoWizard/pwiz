@@ -247,7 +247,7 @@ namespace pwiz.Skyline.SettingsUI
             PeptideLibraries libraries;
             IList<LibrarySpec> librarySpecs = _driverLibrary.Chosen;
             if (librarySpecs.Count == 0)
-                libraries = new PeptideLibraries(PeptidePick.library, null, null, librarySpecs, new Library[0]);
+                libraries = new PeptideLibraries(PeptidePick.library, null, null, false, librarySpecs, new Library[0]);
             else
             {
                 int? peptideCount = null;
@@ -262,6 +262,7 @@ namespace pwiz.Skyline.SettingsUI
                 PeptidePick pick = (PeptidePick) comboMatching.SelectedIndex;
 
                 IList<Library> librariesLoaded = new Library[librarySpecs.Count];
+                bool documentLibrary = false;
                 if (Libraries != null)
                 {
                     // Use existing library spec's, if nothing was changed.
@@ -272,6 +273,8 @@ namespace pwiz.Skyline.SettingsUI
                         librarySpecs = Libraries.LibrarySpecs;
                         librariesLoaded = Libraries.Libraries;
                     }
+
+                    documentLibrary = Libraries.DocumentLibrary;
                     // Otherwise, leave the list of loaded libraries empty,
                     // and let the LibraryManager refill it.  This ensures a
                     // clean save of library specs only in the user config, rather
@@ -282,7 +285,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (comboRank.SelectedIndex == 0)
                     rankId = null;
 
-                libraries = new PeptideLibraries(pick, rankId, peptideCount, librarySpecs, librariesLoaded);
+                libraries = new PeptideLibraries(pick, rankId, peptideCount, documentLibrary, librarySpecs, librariesLoaded);
             }
             Helpers.AssignIfEquals(ref libraries, Libraries);
 

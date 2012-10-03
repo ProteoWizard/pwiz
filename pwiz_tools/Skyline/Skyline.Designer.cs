@@ -211,6 +211,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importPeptideSearchMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importFASTAMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importMassListMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.importDocumentMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1646,6 +1647,7 @@ namespace pwiz.Skyline
             // 
             this.importToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.importResultsMenuItem,
+            this.importPeptideSearchMenuItem,
             this.importFASTAMenuItem,
             this.importMassListMenuItem,
             this.importDocumentMenuItem});
@@ -1657,6 +1659,12 @@ namespace pwiz.Skyline
             this.importResultsMenuItem.Name = "importResultsMenuItem";
             resources.ApplyResources(this.importResultsMenuItem, "importResultsMenuItem");
             this.importResultsMenuItem.Click += new System.EventHandler(this.importResultsMenuItem_Click);
+            // 
+            // importPeptideSearchMenuItem
+            // 
+            this.importPeptideSearchMenuItem.Name = "importPeptideSearchMenuItem";
+            resources.ApplyResources(this.importPeptideSearchMenuItem, "importPeptideSearchMenuItem");
+            this.importPeptideSearchMenuItem.Click += new System.EventHandler(this.importPeptideSearchMenuItem_Click);
             // 
             // importFASTAMenuItem
             // 
@@ -3096,6 +3104,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem renameProteinsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem immediateWindowToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem peptideIDTimesFromOtherRunsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importPeptideSearchMenuItem;
     }
 }
 
