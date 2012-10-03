@@ -82,6 +82,7 @@ namespace quameter
         string nativeID;
         double scanStartTime;
         bool identified;
+        int msLevel; // levels higher than 2 are currently ignored
         size_t distinctModifiedPeptideID;
         string precursorNativeID;
         double precursorMZ;

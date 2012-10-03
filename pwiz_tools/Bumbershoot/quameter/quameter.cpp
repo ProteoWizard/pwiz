@@ -1312,7 +1312,7 @@ namespace quameter
             string startTimeStamp = msd.run.startTimeStamp;
 
             // Spectral counts
-            int MS1Count = 0, MS2Count = 0;
+            int MS1Count = 0, MS2Count = 0, MS3OrGreaterCount = 0;
 
             accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::percentile> > ms1IonInjectionTimes;
             accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::percentile> > ms2IonInjectionTimes;
@@ -1379,6 +1379,7 @@ namespace quameter
                 {
                     MS2ScanInfo scanInfo;
                     scanInfo.nativeID = spectrum->id;
+                    scanInfo.msLevel = 2;
 
                     if (spectrum->precursors.empty() || spectrum->precursors[0].selectedIons.empty())
                         throw runtime_error("No selected ion found for MS2 " + spectrum->id);
@@ -1454,17 +1455,43 @@ namespace quameter
                     }
                     ms2ScanMap.push_back(scanInfo);
                 }
+                else if (msLevel > 2) 
+                {
+                    MS2ScanInfo scanInfo;
+                    scanInfo.nativeID = spectrum->id;
+                    scanInfo.msLevel = msLevel;
+                    scanInfo.distinctModifiedPeptideID = 0;
+                    scanInfo.identified = true;
+
+                    if (spectrum->scanList.scans.empty())
+                        throw runtime_error("No scan start time for " + spectrum->id);
+
+                    Scan& scan = spectrum->scanList.scans[0];
+                    CVParam scanTime = scan.cvParam(MS_scan_start_time);
+                    if (scanTime.empty())
+                        throw runtime_error("No scan start time for " + spectrum->id);
+                    scanInfo.scanStartTime = scanTime.timeInSeconds();
+
+                    ms2ScanMap.push_back(scanInfo);
+
+                    ++MS3OrGreaterCount;
+                }
 
             } // finished cycling through all spectra
 
+            if (g_numWorkers == 1) cout << endl;
+
             if (missingPrecursorIntensities)
-                cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;
+                cerr << "Warning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity; MS2 TIC will be used as a substitute." << endl;
 
             if (MS1Count == 0)
                 throw runtime_error("no MS1 spectra found in \"" + sourceFilename + "\". Is the file incorrectly filtered?");
-            
+
             if (MS2Count == 0)
                 throw runtime_error("no MS2 spectra found in \"" + sourceFilename + "\". Is the file incorrectly filtered?");
+
+            if (MS3OrGreaterCount)
+                cerr << "Warning: " << MS3OrGreaterCount << " spectra have MS levels higher than 2 but will be ignored." << endl;
 
             accs::accumulator_set<double, accs::stats<accs::tag::percentile> > firstScanTimeOfDistinctModifiedPeptides;
             BOOST_FOREACH_FIELD((size_t id)(double firstScanTime), firstScanTimeOfDistinctModifiedPeptide)
@@ -1601,7 +1628,6 @@ namespace quameter
 
             if (g_rtConfig->MetricsType == "nistms")
             {
-                if (g_numWorkers == 1) cout << endl;
                 accs::accumulator_set<double, accs::stats<accs::tag::percentile> > sigNoisMS1;
                 accs::accumulator_set<double, accs::stats<accs::tag::percentile> > sigNoisMS2;
 

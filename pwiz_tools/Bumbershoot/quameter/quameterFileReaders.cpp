@@ -330,6 +330,12 @@ XICWindowList IDPDBReader::MZRTWindows(MS2ScanMap& ms2ScanMap)
         row.getter() >> peptide >> id >> precursorMZ >> charge >> modif >> score >> exactMZ >> peptideSequence;
 
         MS2ScanMap::index<nativeID>::type::const_iterator itr = ms2ScanMap.get<nativeID>().find(id);
+        if (itr == ms2ScanMap.get<nativeID>().end())
+            throw runtime_error(string("PSM identified to spectrum \"") + id + "\" is not in the scan map");
+
+        if (itr->msLevel > 2)
+            continue;
+
         ms2ScanMap.get<nativeID>().modify(itr, ModifyPrecursorMZ(precursorMZ)); // prefer corrected monoisotopic m/z
         const MS2ScanInfo& scanInfo = *itr;
 
@@ -362,11 +368,11 @@ XICWindowList IDPDBReader::MZRTWindows(MS2ScanMap& ms2ScanMap)
             }
 
             if (!scanInfo.identified)
-                throw runtime_error("PSM is not identified (should never happen)");
+                throw runtime_error("PSM for spectrum \"" + scanInfo.nativeID + "\" is not identified (should never happen)");
 
             if (!boost::icl::contains(tmpWindow.preMZ, scanInfo.precursorMZ))
             {
-                cerr << "\nWarning: PSM for spectrum \"" << scanInfo.nativeID << "\" with observed m/z " << scanInfo.precursorMZ << " is disjoint with the exact m/z " << tmpPSM.exactMZ << endl;
+                cerr << "Warning: PSM for spectrum \"" << scanInfo.nativeID << "\" with observed m/z " << scanInfo.precursorMZ << " is disjoint with the exact m/z " << tmpPSM.exactMZ << endl;
                 continue;
             }
         }
