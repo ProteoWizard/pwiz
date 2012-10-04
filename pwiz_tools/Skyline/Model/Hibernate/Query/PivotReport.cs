@@ -98,25 +98,35 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 ICollection<RowKey> pivotNameSet = new HashSet<RowKey>();
                 for (int i = 0; i < plainResultSet.RowCount; i++)
                 {
-                    RowKey groupByKey = new RowKey();
+                    RowKey unqualifiedGroupByKey = new RowKey();
                     foreach(var reportColumn in _groupByColumns)
                     {
-                        groupByKey.Add(plainResultSet.GetValue(i, reportColumn));
+                        unqualifiedGroupByKey.Add(plainResultSet.GetValue(i, reportColumn));
                     }
                     RowKey crossTabKey = new RowKey();
                     foreach (var reportColumn in _crosstabColumns)
                     {
                         crossTabKey.Add(plainResultSet.GetValue(i, reportColumn));
                     }
+
+                    // Add the data from the row into the spot for the GroupByKey and CrossTabKey.
+                    // In case that spot is already taken, an integer is appended to the GroupByKey
+                    // until a vacant spot to hold the data is found.
                     Dictionary<RowKey, int> pivotNameDict;
-                    if (!rowsById.TryGetValue(groupByKey, out pivotNameDict))
+                    for (int iQualifier = 0; ; iQualifier++)
                     {
-                        pivotNameDict = new Dictionary<RowKey, int>();
-                        rowsById.Add(groupByKey, pivotNameDict);
-                    }
-                    if (pivotNameDict.ContainsKey(crossTabKey))
-                    {
-                        continue;
+                        var qualifiedGroupByKey = new RowKey();
+                        qualifiedGroupByKey.AddRange(unqualifiedGroupByKey);
+                        qualifiedGroupByKey.Add(iQualifier);
+                        if (!rowsById.TryGetValue(qualifiedGroupByKey, out pivotNameDict))
+                        {
+                            pivotNameDict = new Dictionary<RowKey, int>();
+                            rowsById.Add(qualifiedGroupByKey, pivotNameDict);
+                        }
+                        if (!pivotNameDict.ContainsKey(crossTabKey))
+                        {
+                            break;
+                        }
                     }
                     pivotNameDict.Add(crossTabKey, i);
                     pivotNameSet.Add(crossTabKey);

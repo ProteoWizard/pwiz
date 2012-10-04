@@ -218,6 +218,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 result.Add(new ReportColumn(typeof (DbTransition), "ProductCharge"));
                 result.Add(new ReportColumn(typeof (DbTransition), "FragmentIon"));
+                result.Add(new ReportColumn(typeof (DbTransition), "Losses"));
                 result.Add(new ReportColumn(typeof (DbTransition), "Precursor", "Peptide"));
                 result.Add(new ReportColumn(typeof (DbTransition), "Precursor", "Charge"));
             } 
