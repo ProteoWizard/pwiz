@@ -167,10 +167,18 @@ void diff(const CVParam& a,
                     a_b.value = lexical_cast<string>(ia);
                     b_a.value = lexical_cast<string>(ib);
                 }
-                else
+                else // watch for something like "1a" vs "1b"
                 {
-                    a_b.value.clear();
-                    b_a.value.clear();
+                    if ((std::string::npos == a.value.find_first_not_of("0123456789")) &&
+                        (std::string::npos == b.value.find_first_not_of("0123456789")))
+                    { 
+                        a_b.value.clear();
+                        b_a.value.clear();
+                    }
+                    else
+                    {
+                        asString = true;
+                    }
                 }
             }
             catch (boost::bad_lexical_cast&)
@@ -242,8 +250,8 @@ void diff(const ParamContainer& a,
           const BaseDiffConfig& config)
 {
     vector_diff_deep(a.paramGroupPtrs, b.paramGroupPtrs, a_b.paramGroupPtrs, b_a.paramGroupPtrs, config);
-    vector_diff(a.cvParams, b.cvParams, a_b.cvParams, b_a.cvParams);
-    vector_diff(a.userParams, b.userParams, a_b.userParams, b_a.userParams);
+    vector_diff_diff(a.cvParams, b.cvParams, a_b.cvParams, b_a.cvParams, config);
+    vector_diff_diff(a.userParams, b.userParams, a_b.userParams, b_a.userParams, config);
 }
 
 

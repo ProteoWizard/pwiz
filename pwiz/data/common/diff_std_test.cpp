@@ -188,6 +188,13 @@ void testCVParam()
     c.value = "410000.0"; 
     diff(a,c);
     unit_assert(!diff);
+    if (os_) *os_ << diff << endl;
+
+    a.value = "1a"; // make sure we aren't naive about things that start out as ints
+    c.value = "1b"; 
+    diff(a,c);
+    unit_assert(diff);
+    if (os_) *os_ << diff << endl;
 
 
 }
