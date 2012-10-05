@@ -68,7 +68,7 @@ namespace BuildQTRAPMethod
                     "   Takes template QTRAP method file and a Skyline generated QTRAP\n" +
                     "   transition list as inputs, to generate a new QTRAP method file\n" +
                     "   as output.\n" +
-                    "   -w <RT window>   Retention time window for schedule [unscheduled otherwise]\n" +
+                    "   -w <RT window>   Retention time window in seconds for schedule [unscheduled otherwise]\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -s               Transition list is read from stdin.\n" +
                     "                    e.g. cat TranList.csv | BuildWatersMethod -s -o new.ext temp.ext\n" +
@@ -86,9 +86,7 @@ namespace BuildQTRAPMethod
 
 
     class BuildQtrapMethod : BuildAnalystMethod.BuildAnalystMethod
-    {
-
-        private int? RTWindow { get; set; }
+    {        
 
         protected override string FileExtension
         {
@@ -247,19 +245,12 @@ namespace BuildQTRAPMethod
             var msExperiment7 = (IExperiment7)msExperiment;
             if (RTWindow.HasValue)
             {
-                if (msExperiment7.KnownRetentionTimes == 0)
-                {
-                    throw new IOException(string.Format("Invalid template method {0}.  Template does not support scheduled MRM.",
-                                                        TemplateMethod));
-                }
+                msExperiment7.LCPeakWidth = RTWindow.Value * 60;
+                msExperiment7.KnownRetentionTimes = 1;
             }
             else
             {
-                if (msExperiment7.KnownRetentionTimes != 0)
-                {
-                    throw new IOException(string.Format("Invalid template method {0}.  Template is for scheduled MRM.",
-                                                        TemplateMethod));
-                }
+                msExperiment7.KnownRetentionTimes = 0;
             }
         }
 

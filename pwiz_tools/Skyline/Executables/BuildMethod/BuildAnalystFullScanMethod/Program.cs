@@ -71,8 +71,9 @@ namespace BuildAnalystFullScanMethod
                 "   -1               Do an MS1 scan each cycle" +
                 "   -i               Generate method for Information Dependent Acquisition (IDA)" +
                 "   -r               Add retention time information to inclusion list (requires -i)\n" +
-                "   -o <output file> New method is written to the specified output file\n" +
+                "   -w <RT window>   Retention time window in minutes for schedule (requires -r)\n" +
                 "   -mq              Create a MultiQuant text method (with same name as generated method but with .txt extension)\n" +
+                "   -o <output file> New method is written to the specified output file\n" +
                 "   -s               Transition list is read from stdin.\n" +
                 "                    e.g. cat TranList.csv | BuildWatersMethod -s -o new.ext temp.ext\n" +
                 "\n" +
@@ -129,6 +130,22 @@ namespace BuildAnalystFullScanMethod
                     case "r":
                         {
                             ScheduledMethod = true;
+                        }
+                        break;
+                    case "w":
+                        i++;
+                        if (i < args.Length)
+                            arg = args[i];
+                        else
+                            Usage("Retention time expected after -w.");
+
+                        try
+                        {
+                            RTWindow = (int)Math.Round(double.Parse(arg, CultureInfo.InvariantCulture));
+                        }
+                        catch (Exception)
+                        {
+                            Usage(string.Format("The value {0} is not a retention time window.", arg));
                         }
                         break;
                     case "1":
@@ -373,8 +390,8 @@ namespace BuildAnalystFullScanMethod
                 ((IDDEMethodObj)idaServer).putExceedCountSwitch(2000000);
                 ((IDDEMethodObj)idaServer).putIntensityThreshold(0);
 
-                int windowInSec = 60;
-                ((IDDEMethodObj3)idaServer).getIncludeForSecs(ref windowInSec);
+                int windowInSec = RTWindow.HasValue ? RTWindow.Value * 60 : 60;
+                ((IDDEMethodObj3)idaServer).putIncludeForSecs(windowInSec);
                 int maxConcurrentCount = MaxConcurrentCount(assignedCandidateMassToRT, windowInSec);
                 ((IDDEMethodObj)idaServer).putSpectraSwitch(maxConcurrentCount);
                 var period = (Period)method.GetPeriod(0);
@@ -680,9 +697,9 @@ namespace BuildAnalystFullScanMethod
         {
             if (transition.ProductMz < 5)
                 return true;
-            if(transition.Label.ToLower().Contains("precursor"))
+            if(transition.Label.ToLower().Contains("prec"))
                 return true;
-				
+
             return Math.Abs(transition.PrecursorMz - transition.ProductMz) < 0.01;
         }
 

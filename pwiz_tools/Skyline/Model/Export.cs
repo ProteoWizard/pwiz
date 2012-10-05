@@ -807,7 +807,14 @@ namespace pwiz.Skyline.Model
 
         private static string GetTransitionName(int precursorCharge, Transition transition)
         {
-            return GetTransitionName(precursorCharge, transition.FragmentIonName, transition.Charge);
+            if (transition.IsPrecursor())
+            {
+                return GetPrecursorTransitionName(precursorCharge, transition.FragmentIonName, transition.MassIndex);
+            }
+            else
+            {
+                return GetTransitionName(precursorCharge, transition.FragmentIonName, transition.Charge);
+            }
         }
 
         public static string GetTransitionName(int precursorCharge, string fragmentIonName, int fragmentCharge)
@@ -816,6 +823,15 @@ namespace pwiz.Skyline.Model
                                  fragmentIonName,
                                  fragmentCharge > 1
                                      ? string.Format("+{0}", fragmentCharge) // Not L10N
+                                     : string.Empty); // Not L10N
+        }
+
+        public static string GetPrecursorTransitionName(int precursorCharge, string fragmentIonName, int isotopeIndex)
+        {
+            return string.Format("+{0}{1}{2}", precursorCharge, // Not L10N
+                                 fragmentIonName,
+                                 isotopeIndex > 0
+                                     ? string.Format("[M+{0}]", isotopeIndex) // Not L10N
                                      : string.Empty); // Not L10N
         }
     }
@@ -833,7 +849,7 @@ namespace pwiz.Skyline.Model
 
         protected abstract string GetExeName();
 
-        protected abstract List<string> getArgs();
+        protected abstract List<string> GetArgs();
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
@@ -844,7 +860,7 @@ namespace pwiz.Skyline.Model
                 return;
 
             MethodExporter.ExportMethod(GetExeName(),
-                getArgs(), fileName, templateName, MemoryOutput, progressMonitor);
+                GetArgs(), fileName, templateName, MemoryOutput, progressMonitor);
         }
 
         private void EnsureAnalyst(IProgressMonitor progressMonitor)
@@ -939,7 +955,7 @@ namespace pwiz.Skyline.Model
             return @"Method\AbSciex\TQ\BuildQTRAPMethod"; // Not L10N
         }
 
-        protected override List<string> getArgs()
+        protected override List<string> GetArgs()
         {
             var argv = new List<string>();
             if (RTWindow.HasValue)
@@ -971,13 +987,15 @@ namespace pwiz.Skyline.Model
             return @"Method\AbSciex\TOF\BuildAnalystFullScanMethod"; // Not L10N
         }
 
-        protected override List<string> getArgs()
+        protected override List<string> GetArgs()
         {
             /*
             *  These are the command-line options specific to ABI TOF method builders
-               "   -1               Do an MS1 scan each cycle" +
-               "   -i               Generate method for Information Dependent Acquisition (IDA)" +
-               "   -r               Add retention time information to inclusion list (requires -i)\n" +
+                  -1               Do an MS1 scan each cycle
+                  -i               Generate method for Information Dependent Acquisition (IDA)
+                  -r               Add retention time information to inclusion list (requires -i)
+                  -w <RT window>   Retention time window in seconds for schedule (requires -r)
+                  -mq              Create a MultiQuant text method (with same name as generated method but with .txt extension)
             */
             var argv = new List<string>();
             if (Ms1Scan)
@@ -986,6 +1004,11 @@ namespace pwiz.Skyline.Model
                 argv.Add("-i"); // Not L10N
             if (MethodType == ExportMethodType.Scheduled)
                 argv.Add("-r"); // Not L10N
+            if (RTWindow.HasValue)
+            {
+                argv.Add("-w"); // Not L10N
+                argv.Add(RTWindow.Value.ToString(CultureInfo.InvariantCulture));
+            }
             if (ExportMultiQuant)
                 argv.Add("-mq"); // Not L10N
 
