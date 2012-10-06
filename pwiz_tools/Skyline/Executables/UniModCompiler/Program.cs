@@ -18,6 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.IO;
 using System.Xml.Serialization;
 
@@ -67,7 +69,30 @@ namespace UniModCompiler
                         && CheckTrueIsotopeMod(mod.delta.element))
                         _dictIsotopeMods.Add(mod.title, mod);
                     else
+                    {
+                        // If the title contains a colon, see if it references a root structural modification
+                        int iColon = mod.title.IndexOf(':');
+                        if (iColon != -1)
+                        {
+                            string rootTitle = mod.title.Remove(iColon);
+                            mod_t modParent;
+                            if (_dictStructuralMods.TryGetValue(rootTitle, out modParent))
+                            {
+                                var elNew = DiffMod(mod.delta.element, modParent.delta.element);
+                                if (IsIsotopicDiff(elNew))
+                                {
+                                    mod.delta.element = elNew;
+                                    // Isotope modifications don't have neutral losses.  They get them
+                                    // from their structural parent.
+                                    foreach (var specificity in mod.specificity)
+                                        specificity.NeutralLoss = null;
+                                    _dictIsotopeMods.Add(mod.title, mod);
+                                    continue;
+                                }
+                            }
+                        }
                         _dictStructuralMods.Add(mod.title, mod);
+                    }
                 }
 
                 _listedMods = new List<Mod>();
@@ -131,6 +156,78 @@ namespace UniModCompiler
             }
         }
 
+        private static elem_ref_t[] DiffMod(elem_ref_t[] element, elem_ref_t[] elementParent)
+        {
+            var listDiffRef = new List<elem_ref_t>();
+            Array.Sort(element, (el1, el2) => string.CompareOrdinal(el1.symbol, el2.symbol));
+            Array.Sort(elementParent, (el1, el2) => string.CompareOrdinal(el1.symbol, el2.symbol));
+            int i = 0, j = 0;
+            while (i < element.Length && j < elementParent.Length)
+            {
+                var el = element[i];
+                int numEl = int.Parse(el.number, CultureInfo.InvariantCulture);
+                var elParent = elementParent[j];
+                int numParent = int.Parse(elParent.number);
+                int orderEl = string.CompareOrdinal(el.symbol, elParent.symbol);
+                string sym, num;
+                if (orderEl == 0)
+                {
+                    i++;
+                    j++;
+                    int numTotal = numEl - numParent;
+                    if (numTotal == 0)
+                        continue;
+                    sym = el.symbol;
+                    num = numTotal.ToString(CultureInfo.InvariantCulture);
+                }
+                else if (orderEl < 0)
+                {
+                    i++;
+                    sym = el.symbol;
+                    num = el.number;
+                }
+                else
+                {
+                    j++;
+                    sym = elParent.symbol;
+                    num = (-numParent).ToString(CultureInfo.InvariantCulture);
+                }
+                listDiffRef.Add(new elem_ref_t { symbol = sym, number = num });
+            }
+            return listDiffRef.ToArray();
+        }
+
+        /// <summary>
+        /// Returns true if the given element is a balanced isotopic label, where the only
+        /// thing changing is the isotopes of the atoms in question.
+        /// </summary>
+        private static bool IsIsotopicDiff(IEnumerable<elem_ref_t> element)
+        {
+            var dictSymToCount = element.ToDictionary(el => el.symbol, el => int.Parse(el.number));
+            foreach (var pair in dictSymToCount.ToArray())
+            {
+                string labelSym = pair.Key;
+                int labelCount = pair.Value;
+                char monoChar;
+                if (DICT_HEAVY_LABELS.TryGetValue(labelSym, out monoChar))
+                {
+                    // Must be adding labeled atoms and removing unlabeled atoms
+                    if (labelCount < 0)
+                        return false;
+
+                    string monoSym = monoChar.ToString(CultureInfo.InvariantCulture);
+                    int monoCount;
+                    if (!dictSymToCount.TryGetValue(monoSym, out monoCount))
+                        return false;
+                    if (labelCount + monoCount != 0)
+                        return false;
+                    dictSymToCount.Remove(monoSym);
+                    dictSymToCount.Remove(labelSym);
+                }
+            }
+            return dictSymToCount.Count == 0;
+        }
+
         /// <summary>
         /// Check if the given sequence is an isotope modification.
         /// </summary>
@@ -175,7 +272,7 @@ namespace UniModCompiler
             string line;
             while ((line = reader.ReadLine()) != null)
             {
-                if (Equals("", line))
+                if (string.IsNullOrEmpty(line))
                     return listedMods;
                 var splitLine = line.Split(new[] { ' ' }, 2);
                 var title = splitLine[0];
@@ -195,7 +292,7 @@ namespace UniModCompiler
                         aas = s.ToCharArray();
                     }
                 }
-                listedMods.Add(new Mod { Name = line, Title = title, AAs = aas ?? new char[0], Terminal = terminal });
+                listedMods.Add(new Mod { Name = line, Title = title, AAs = aas ?? new char[0], Terminus = terminal });
             }
             return listedMods;
         }
@@ -215,13 +312,13 @@ namespace UniModCompiler
                 if (!dict.TryGetValue(mod.Title, out dictMod))
                     continue;
 
-                // For each AA in the listed modifcation, make sure the dictionary mod contains it.
+                // For each AA in the listed modification, make sure the dictionary mod contains it.
                 bool foundAllAAs = true;
                 List<String> losses = null;
                 List<String> aaLosses = null;
                 foreach (char aa in mod.AAs)
                 {
-                    foundAllAAs = foundAllAAs && ContainsSite(dictMod, aa.ToString(), out aaLosses);
+                    foundAllAAs = foundAllAAs && ContainsSite(dictMod, aa.ToString(CultureInfo.InvariantCulture), out aaLosses);
                     if (losses == null)
                         losses = aaLosses;
                     else if (!ListEquals(losses, aaLosses))
@@ -229,9 +326,9 @@ namespace UniModCompiler
                 }              
                 // Also check to make sure the dictionary mod contains the terminal, if any.
                 foundAllAAs = foundAllAAs &&
-                    (mod.Terminal == null || !mod.Terminal.Equals(Terminal.C) || ContainsSite(dictMod, "C-term", out aaLosses));
+                    (mod.Terminus == null || !mod.Terminus.Equals(Terminal.C) || ContainsSite(dictMod, "C-term", out aaLosses));
                 foundAllAAs = foundAllAAs && 
-                    (mod.Terminal == null || !mod.Terminal.Equals(Terminal.N) || ContainsSite(dictMod, "N-term", out aaLosses));
+                    (mod.Terminus == null || !mod.Terminus.Equals(Terminal.N) || ContainsSite(dictMod, "N-term", out aaLosses));
                 if (losses == null)
                     losses = aaLosses;
                 else if (!ListEquals(losses, aaLosses))
@@ -258,7 +355,7 @@ namespace UniModCompiler
                     continue;
                 bool hasLabelAtoms = isotopic && mod.AAs.Length > 0;
                 string labelAtoms = "LabelAtoms.None";
-                if (hasLabelAtoms && !CheckLabelAtoms(dictMod.delta.element, mod.AAs, out labelAtoms))
+                if (hasLabelAtoms && !CheckLabelAtoms(dictMod, mod.AAs, out labelAtoms))
                 {
                     _impossibleMods.Add(mod.Name);
                     if (hidden)
@@ -273,16 +370,16 @@ namespace UniModCompiler
                 writer.Write("                 ");
                 if (mod.AAs.Length > 0)
                     writer.Write(string.Format(@"AAs = ""{0}"", ", BuildAAString(mod.AAs)));
-                if (mod.Terminal != null)
-                    writer.Write(string.Format(@"Terminus = {0}, ", "ModTerminus." + mod.Terminal));
+                if (mod.Terminus != null)
+                    writer.Write(string.Format(@"Terminus = {0}, ", "ModTerminus." + mod.Terminus));
                 writer.Write(string.Format("LabelAtoms = {0}, ", labelAtoms));
                 if (Equals(labelAtoms, "LabelAtoms.None"))
                     writer.Write(string.Format(@"Formula = ""{0}"", ", BuildFormula(dictMod.delta.element)));
                 if(!Equals(lossesStr, "null"))
                     writer.Write(string.Format("Losses = {0}, ", lossesStr));
                 writer.WriteLine(string.Format("ID = {0}, ", dictMod.record_id));
-                writer.Write(string.Format("                 Structural = {0}, ", (!isotopic).ToString().ToLower()));
-                writer.WriteLine(string.Format("Hidden = {0}, ", hidden.ToString().ToLower()));
+                writer.Write(string.Format("                 Structural = {0}, ", (!isotopic).ToString(CultureInfo.InvariantCulture).ToLower()));
+                writer.WriteLine(string.Format("Hidden = {0}, ", hidden.ToString(CultureInfo.InvariantCulture).ToLower()));
                 writer.WriteLine("            },");
 
                 
@@ -328,7 +425,9 @@ namespace UniModCompiler
                     {   
                         foreach(NeutralLoss_t loss in specificty.NeutralLoss)
                         {
+// ReSharper disable CompareOfFloatsByEqualityOperator
                             if(loss.avge_mass == 0)
+// ReSharper restore CompareOfFloatsByEqualityOperator
                                 continue;
                             losses.Add(BuildFormula(loss.element));
                         }
@@ -343,40 +442,46 @@ namespace UniModCompiler
         /// <summary>
         /// Check for label atoms in the given sequence matching the given aa, and create a corresponding string if found.
         /// </summary>
-        private static bool CheckLabelAtoms(IEnumerable<elem_ref_t> elements, char[] aas, out string labelAtomsFormula)
+        private static bool CheckLabelAtoms(mod_t mod, char[] aas, out string labelAtomsFormula)
         {
             labelAtomsFormula = "";
             bool hasLabelAtoms = true;
-            foreach (var element in elements)
+            if (mod.title.StartsWith("Label"))
             {
-                char elementMatch;
-                if (hasLabelAtoms && DICT_HEAVY_LABELS.TryGetValue(element.symbol, out elementMatch))
+                foreach (var element in mod.delta.element)
                 {
-                    foreach (char aa in aas)
+                    char elementMatch;
+                    if (hasLabelAtoms && DICT_HEAVY_LABELS.TryGetValue(element.symbol, out elementMatch))
                     {
-                        int numInFormula = ParseSeqMassCalcFormula(aa, elementMatch);
-                        if (!Equals(element.number, numInFormula.ToString()))
+                        foreach (char aa in aas)
                         {
-                            hasLabelAtoms = false;
-                            break;
+                            int numInFormula = ParseSeqMassCalcFormula(aa, elementMatch);
+                            if (!Equals(element.number, numInFormula.ToString(CultureInfo.InvariantCulture)))
+                            {
+                                hasLabelAtoms = false;
+                                break;
+                            }
                         }
+                        if (!string.IsNullOrEmpty(labelAtomsFormula))
+                            labelAtomsFormula += '|';
+
+                        var symbol = element.symbol;
+                        var elementIndex = symbol.IndexOfAny(new[] { 'N', 'C', 'O', 'H' });
+                        labelAtomsFormula += "LabelAtoms." + symbol[elementIndex] + symbol.Remove(elementIndex);
                     }
-                    var symbol = element.symbol;
-                    var elementIndex = symbol.IndexOfAny(new[] { 'N', 'C', 'O', 'H' });
-                    labelAtomsFormula += "|LabelAtoms." +
-                                  symbol[elementIndex] + symbol.Remove(elementIndex);
-                }
-                else if(element.symbol.Length == 1 && DICT_HEAVY_LABELS.ContainsValue(element.symbol[0]))
-                {
-                    foreach (char aa in aas)
+                    else if (element.symbol.Length == 1 && DICT_HEAVY_LABELS.ContainsValue(element.symbol[0]))
                     {
-                        int numInFormula = ParseSeqMassCalcFormula(aa, element.symbol[0]);
-                        if ((Int32.Parse(element.number)*-1) > numInFormula)
-                            return false;
+                        foreach (char aa in aas)
+                        {
+                            int numInFormula = ParseSeqMassCalcFormula(aa, element.symbol[0]);
+                            if ((Int32.Parse(element.number) * -1) > numInFormula)
+                                return false;
+                        }
                     }
                 }
             }
-            labelAtomsFormula = hasLabelAtoms && labelAtomsFormula.Length > 0 ? labelAtomsFormula.Substring(1) : "LabelAtoms.None";
+            if (!hasLabelAtoms || string.IsNullOrEmpty(labelAtomsFormula))
+                labelAtomsFormula = "LabelAtoms.None";
             return true;
         }
 
@@ -408,11 +513,11 @@ namespace UniModCompiler
                 int num = Int32.Parse(element.number);
                 string symbol = element.symbol;
                 char aa;
-                symbol = DICT_HEAVY_LABELS.TryGetValue(symbol, out aa) ? aa.ToString() + '\'' : symbol;
+                symbol = DICT_HEAVY_LABELS.TryGetValue(symbol, out aa) ? aa.ToString(CultureInfo.InvariantCulture) + '\'' : symbol;
                 if (num < 0)
-                    negative += symbol + (num == -1 ? "" : (num * -1).ToString());
+                    negative += symbol + (num == -1 ? "" : (num * -1).ToString(CultureInfo.InvariantCulture));
                 else
-                    positive += symbol + (num == 1 ? "" : num.ToString());
+                    positive += symbol + (num == 1 ? "" : num.ToString(CultureInfo.InvariantCulture));
             }
             string formula = positive + (negative.Length > 3 ? negative : "");
             return positive.Length > 0 ? formula : formula.Replace(" ", "");
@@ -423,12 +528,14 @@ namespace UniModCompiler
             public string Name { get; set; }
             public string Title { get; set; }
             public char[] AAs { get; set; }           
-            public Terminal? Terminal { get; set; }
+            public Terminal? Terminus { get; set; }
         }
 
         private enum Terminal
         {
+// ReSharper disable InconsistentNaming
             C, N
+// ReSharper restore InconsistentNaming
         }
 
         private static readonly Dictionary<string, char> DICT_HEAVY_LABELS 
