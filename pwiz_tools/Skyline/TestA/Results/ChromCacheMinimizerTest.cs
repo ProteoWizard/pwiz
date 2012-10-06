@@ -67,10 +67,10 @@ namespace pwiz.SkylineTestA.Results
                 docResults.Settings.MeasuredResults.GetChromCacheMinimizer(docResults);
             ChromCacheMinimizer.Settings settings =
                 new ChromCacheMinimizer.Settings().SetDiscardUnmatchedChromatograms(true);
-            ChromCacheMinimizer.Statistics statistics = null;
-            chromCacheMinimizer.Minimize(settings, s => statistics = s, null);
-            Assert.AreEqual(100, statistics.PercentComplete);
-            Assert.AreEqual(1.0, statistics.MinimizedRatio);
+            ChromCacheMinimizer.MinStatistics minStatistics = null;
+            chromCacheMinimizer.Minimize(settings, s => minStatistics = s, null);
+            Assert.AreEqual(100, minStatistics.PercentComplete);
+            Assert.AreEqual(1.0, minStatistics.MinimizedRatio);
 
             var docMissingFirstPeptide =
                 (SrmDocument)
@@ -81,8 +81,8 @@ namespace pwiz.SkylineTestA.Results
                 docResults.ReplaceChild(
                     docResults.PeptideGroups.First().ChangeChildren(new[] {docResults.PeptideGroups.First().Children[0]}));
 
-            ChromCacheMinimizer.Statistics statsMissingFirstProtein = null;
-            ChromCacheMinimizer.Statistics statsWithOnlyFirstProtein = null;
+            ChromCacheMinimizer.MinStatistics statsMissingFirstProtein = null;
+            ChromCacheMinimizer.MinStatistics statsWithOnlyFirstProtein = null;
 
             settings = settings.SetDiscardUnmatchedChromatograms(true);
             ChromCacheMinimizer minimizerMissingFirstProtein =
@@ -96,8 +96,8 @@ namespace pwiz.SkylineTestA.Results
             Assert.AreEqual(1.0, statsMissingFirstProtein.MinimizedRatio + statsWithOnlyFirstProtein.MinimizedRatio,
                             .00001);
             settings = settings.SetDiscardUnmatchedChromatograms(false);
-            ChromCacheMinimizer.Statistics statsMissingFirstProteinKeepAll = null;
-            ChromCacheMinimizer.Statistics statsWithOnlyFirstProteinKeepAll = null;
+            ChromCacheMinimizer.MinStatistics statsMissingFirstProteinKeepAll = null;
+            ChromCacheMinimizer.MinStatistics statsWithOnlyFirstProteinKeepAll = null;
             minimizerMissingFirstProtein.Minimize(settings, s => statsMissingFirstProteinKeepAll = s, null);
             minimizerWithOnlyFirstProtein.Minimize(settings, s => statsWithOnlyFirstProteinKeepAll = s, null);
             Assert.AreEqual(100, statsMissingFirstProteinKeepAll.PercentComplete);

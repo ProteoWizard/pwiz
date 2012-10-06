@@ -18,9 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
@@ -48,7 +48,7 @@ namespace pwiz.Skyline.Model.Results
         /// If the task needs to be cancelled, the callback should throw an exception
         /// (recommended <see cref="ObjectDisposedException"/>)
         /// </summary>
-        public delegate void ProgressCallback(Statistics statistics);
+        public delegate void ProgressCallback(MinStatistics minStatistics);
 
         private int CompareLocation(ChromGroupHeaderInfo chromGroupHeaderInfo1, ChromGroupHeaderInfo chromGroupHeaderInfo2)
         {
@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Model.Results
         public ChromatogramCache ChromatogramCache { get; private set; }
         public IList<ChromGroupHeaderInfo> ChromGroupHeaderInfos
         {
-            get;private set;
+            get; private set;
         }
 
         /// <summary>
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.Results
         public void Minimize(Settings settings, ProgressCallback progressCallback, Stream outStream)
         {
             var writer = outStream == null ? null : new Writer(ChromatogramCache, outStream);
-            var statisticsCollector = new StatisticsCollector(this);
+            var statisticsCollector = new MinStatisticsCollector(this);
             bool readChromatograms = settings.NoiseTimeRange.HasValue || writer != null;
 
             var chromGroupHeaderToIndex =
@@ -152,7 +152,7 @@ namespace pwiz.Skyline.Model.Results
                 }
             }
             var chromatograms = chromatogramGroupInfo.TransitionPointSets.ToArray();
-            Debug.Assert(Equals(chromatogramGroupInfo.NumTransitions, chromatograms.Length));
+            Helpers.Assume(Equals(chromatogramGroupInfo.NumTransitions, chromatograms.Length));
             var keptTransitionIndexes = new List<int>();
             double minRetentionTime = Double.MaxValue;
             double maxRetentionTime = -Double.MaxValue;
@@ -270,9 +270,10 @@ namespace pwiz.Skyline.Model.Results
                 return new Settings(this) { DiscardUnmatchedChromatograms = value };
             }
         }
-        public class Statistics
+
+        public class MinStatistics
         {
-            public Statistics(IEnumerable<Replicate> replicates)
+            public MinStatistics(IEnumerable<Replicate> replicates)
             {
                 Replicates = replicates.ToArray();
                 OriginalFileSize = Replicates.Select(r => r.OriginalFileSize).Sum();
@@ -311,19 +312,20 @@ namespace pwiz.Skyline.Model.Results
 
         }
 
-        class StatisticsCollector
+        class MinStatisticsCollector
         {
             private static readonly int CHROM_GROUP_HEADER_INFO_SIZE;
             private static readonly int PEAK_SIZE;
             private static readonly int TRANSITION_SIZE;
-            static unsafe StatisticsCollector()
+
+            static unsafe MinStatisticsCollector()
             {
                 CHROM_GROUP_HEADER_INFO_SIZE = sizeof(ChromGroupHeaderInfo);
                 PEAK_SIZE = sizeof(ChromPeak);
                 TRANSITION_SIZE = sizeof(ChromTransition);
             }
 
-            private readonly Statistics.Replicate[] _replicates;
+            private readonly MinStatistics.Replicate[] _replicates;
             private readonly int[] _fileIndexToReplicateIndex;
             private int _processedGroupCount;
 
@@ -334,7 +336,7 @@ namespace pwiz.Skyline.Model.Results
                        + chromGroupHeaderInfo.NumTransitions * TRANSITION_SIZE;
             }
 
-            public StatisticsCollector(ChromCacheMinimizer chromCacheMinimizer)
+            public MinStatisticsCollector(ChromCacheMinimizer chromCacheMinimizer)
             {
                 ChromCacheMinimizer = chromCacheMinimizer;
                 var filePathToReplicateIndex = new Dictionary<string, int>();
@@ -363,7 +365,7 @@ namespace pwiz.Skyline.Model.Results
                         hasOrphanFiles = true;
                     }
                 }
-                _replicates = new Statistics.Replicate[results.Chromatograms.Count + (hasOrphanFiles ? 1 : 0)];
+                _replicates = new MinStatistics.Replicate[results.Chromatograms.Count + (hasOrphanFiles ? 1 : 0)];
                 for (int i = 0; i < results.Chromatograms.Count; i++ )
                 {
                     _replicates[i].Name = results.Chromatograms[i].Name;
@@ -384,7 +386,7 @@ namespace pwiz.Skyline.Model.Results
 
             internal void ProcessChromGroup(MinimizedChromGroup minimizedChromGroup)
             {
-                Debug.Assert(Equals(minimizedChromGroup.ChromGroupHeaderInfo, ChromCacheMinimizer.ChromGroupHeaderInfos[_processedGroupCount]));
+                Helpers.Assume(Equals(minimizedChromGroup.ChromGroupHeaderInfo, ChromCacheMinimizer.ChromGroupHeaderInfos[_processedGroupCount]));
                 var headerInfo = minimizedChromGroup.ChromGroupHeaderInfo;
                 int replicateIndex = _fileIndexToReplicateIndex[headerInfo.FileIndex];
                 long originalFileSize = GetFileSize(headerInfo);
@@ -406,11 +408,13 @@ namespace pwiz.Skyline.Model.Results
                 _replicates[replicateIndex].ProcessedFileSize += originalFileSize;
                 _processedGroupCount++;
             }
-            public Statistics GetStatistics()
+
+            public MinStatistics GetStatistics()
             {
-                return new Statistics(_replicates);
+                return new MinStatistics(_replicates);
             }
         }
+
         /// <summary>
         /// Writes out a minimized cache file.
         /// </summary>
@@ -424,6 +428,7 @@ namespace pwiz.Skyline.Model.Results
             private readonly List<ChromPeak> _peaks = new List<ChromPeak>();
             private readonly List<ChromCachedFile> _files = new List<ChromCachedFile>();
             private readonly int[] _fileIndexMap;
+
             public Writer(ChromatogramCache chromatogramCache, Stream outputStream)
             {
                 _originalCache = chromatogramCache;
@@ -525,6 +530,7 @@ namespace pwiz.Skyline.Model.Results
                                                       location);
                 _chromGroupHeaderInfos.Add(header);
             }
+
             public void WriteEndOfFile()
             {
                 ChromatogramCache.WriteStructs(_outputStream, _files, _chromGroupHeaderInfos, _transitions, _peaks);

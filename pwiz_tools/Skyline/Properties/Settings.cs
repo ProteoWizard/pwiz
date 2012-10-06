@@ -654,7 +654,7 @@ namespace pwiz.Skyline.Properties
                     new Enzyme("Trypsin/P", "KR", ""),
                     new Enzyme("TrypsinK", "K", "P"), 
                     new Enzyme("TrypsinR", "R", "P"), 
-                    new Enzyme("Chymotrypsin", "FWYM", "P"),
+                    new Enzyme("Chymotrypsin", "FWYL", "P"),
                     new Enzyme("ArgC", "R", "P"),
                     new Enzyme("AspN", "D", "", SequenceTerminus.N),
                     new Enzyme("Clostripain", "R", ""),

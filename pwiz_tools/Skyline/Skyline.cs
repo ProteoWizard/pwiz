@@ -401,7 +401,8 @@ namespace pwiz.Skyline
                 }
             }
             // Update results combo UI and sequence tree
-            var e = new DocumentChangedEventArgs(documentPrevious);
+            var e = new DocumentChangedEventArgs(documentPrevious,
+                _sequenceTreeForm != null && _sequenceTreeForm.IsInUpdateDoc);
             if (_sequenceTreeForm != null)
             {
                 // This has to be done before the graph UI updates, since it updates
@@ -3249,12 +3250,9 @@ namespace pwiz.Skyline
                 deleteMenuItem.Enabled = false;
                 return;
             }
-            int countSelected = SequenceTree.SelectedNodes.Count;
-            SrmTreeNode nodeTree = (countSelected > 0 ? SequenceTree.SelectedNode as SrmTreeNode : null);
 
-            // Allow deletion, copy/paste for a single selection that is not the insert node,
-            // or any multiple selection.
-            bool enabled = (nodeTree != null || SequenceTree.SelectedNodes.Count > 1);
+            // Allow deletion, copy/paste for any selection that contains a tree node.
+            bool enabled = SequenceTree != null && SequenceTree.SelectedNodes.Any(n => n is SrmTreeNode);
             cutToolBarButton.Enabled = cutMenuItem.Enabled = enabled;
             copyToolBarButton.Enabled = copyMenuItem.Enabled = enabled;
             pasteToolBarButton.Enabled = pasteMenuItem.Enabled = true;

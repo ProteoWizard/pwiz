@@ -1835,7 +1835,10 @@ namespace pwiz.Skyline.Controls
 
         private void DocumentChanged(object sender, DocumentChangedEventArgs args)
         {
-            UpdateGrid();
+            // Do not update, if selection update is locked, since it may not be
+            // consisten with the current document, which may cause exceptions
+            if (!args.IsInSelUpdateLock)
+                UpdateGrid();
         }
 
         public void HighlightFindResult(FindResult findResult)

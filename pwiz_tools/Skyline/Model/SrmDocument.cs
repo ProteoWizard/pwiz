@@ -123,12 +123,19 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public class DocumentChangedEventArgs : EventArgs
     {
-        public DocumentChangedEventArgs(SrmDocument documentPrevious)
+        public DocumentChangedEventArgs(SrmDocument documentPrevious, bool inSelUpdateLock = false)
         {
             DocumentPrevious = documentPrevious;
+            IsInSelUpdateLock = inSelUpdateLock;
         }
 
         public SrmDocument DocumentPrevious { get; private set; }
+
+        /// <summary>
+        /// True when SequenceTree.IsInUpdateLock is set, which means the selection
+        /// cannot be trusted as reflecting the current document.
+        /// </summary>
+        public bool IsInSelUpdateLock { get; private set; }
     }
 
     /// <summary>

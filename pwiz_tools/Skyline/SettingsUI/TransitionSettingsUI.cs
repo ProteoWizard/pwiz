@@ -705,7 +705,14 @@ namespace pwiz.Skyline.SettingsUI
                 else
                 {
                     if (!comboProductAnalyzerType.Enabled)
-                        comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.qit);
+                    {
+                        string tofAnalyzer = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.tof);
+                        comboProductAnalyzerType.SelectedItem =
+                            comboPrecursorAnalyzerType.SelectedItem != null &&
+                                Equals(comboPrecursorAnalyzerType.SelectedItem.ToString(), tofAnalyzer)
+                            ? tofAnalyzer
+                            : TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.qit);
+                    }
                 }
                 comboProductAnalyzerType.Enabled = true;
             }            

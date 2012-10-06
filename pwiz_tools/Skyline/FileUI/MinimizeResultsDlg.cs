@@ -357,7 +357,7 @@ namespace pwiz.Skyline.FileUI
         {
             private readonly MinimizeResultsDlg _dlg;
             private readonly ILongWaitBroker _longWaitBroker;
-            private ChromCacheMinimizer.Statistics _statistics;
+            private ChromCacheMinimizer.MinStatistics _minStatistics;
             private bool _updatePending;
 
             public BackgroundWorker(MinimizeResultsDlg dlg, ILongWaitBroker longWaitBroker)
@@ -367,13 +367,13 @@ namespace pwiz.Skyline.FileUI
             }
 
 
-            void OnProgress(ChromCacheMinimizer.Statistics statistics)
+            void OnProgress(ChromCacheMinimizer.MinStatistics minStatistics)
             {
                 lock(this)
                 {
                     CheckDisposed();
-                    bool updateUi = _statistics == null || _statistics.PercentComplete != statistics.PercentComplete;
-                    _statistics = statistics;
+                    bool updateUi = _minStatistics == null || _minStatistics.PercentComplete != minStatistics.PercentComplete;
+                    _minStatistics = minStatistics;
                     if (ReferenceEquals(_dlg.StatisticsCollector, this))
                     {
                         if (updateUi && !_updatePending)
@@ -392,7 +392,7 @@ namespace pwiz.Skyline.FileUI
                 }
                 if (_longWaitBroker != null)
                 {
-                    _longWaitBroker.ProgressValue = statistics.PercentComplete;
+                    _longWaitBroker.ProgressValue = minStatistics.PercentComplete;
                     if (_longWaitBroker.IsCanceled)
                     {
                         throw new ObjectDisposedException(GetType().FullName);
@@ -419,7 +419,7 @@ namespace pwiz.Skyline.FileUI
 
             private void UpdateStatistics()
             {
-                ChromCacheMinimizer.Statistics statistics;
+                ChromCacheMinimizer.MinStatistics minStatistics;
                 lock(this)
                 {
                     _updatePending = false;
@@ -428,21 +428,21 @@ namespace pwiz.Skyline.FileUI
                         return;
                     }
                     Debug.Assert(!_dlg.InvokeRequired);
-                    statistics = _statistics;
+                    minStatistics = _minStatistics;
                 }
                 _dlg.lblCurrentCacheFileSize.Text = string.Format(FileSize.FormatProvider,
-                    Resources.BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs, statistics.OriginalFileSize);
-                if (statistics.PercentComplete == 100)
+                    Resources.BackgroundWorker_UpdateStatistics_The_current_size_of_the_cache_file_is__0__fs, minStatistics.OriginalFileSize);
+                if (minStatistics.PercentComplete == 100)
                 {
                     _dlg.lblSpaceSavings.Text = string.Format(Resources.BackgroundWorker_UpdateStatistics_After_minimizing_the_cache_file_will_be_reduced_to__0__its_current_size,
-                                                              statistics.MinimizedRatio);
+                                                              minStatistics.MinimizedRatio);
                 }
                 else
                 {
                     _dlg.lblSpaceSavings.Text = string.Format(Resources.BackgroundWorker_UpdateStatistics_Computing_space_savings__0__complete, 
-                                                              statistics.PercentComplete);
+                                                              minStatistics.PercentComplete);
                 }
-                var newGridRowItems = statistics.Replicates.Select(r => new GridRowItem(r)).ToArray();
+                var newGridRowItems = minStatistics.Replicates.Select(r => new GridRowItem(r)).ToArray();
                 if (_dlg._rowItems.Count != newGridRowItems.Length)
                 {
                     _dlg._rowItems.Clear();
@@ -469,7 +469,7 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public struct GridRowItem
         {
-            public GridRowItem(ChromCacheMinimizer.Statistics.Replicate replicateStats)
+            public GridRowItem(ChromCacheMinimizer.MinStatistics.Replicate replicateStats)
                 : this()
             {
                 Name = replicateStats.Name;
