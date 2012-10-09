@@ -98,7 +98,7 @@ rule vendor-api-usage-requirements ( properties * )
         }
         else if ! $(.hasDLLs)
         {
-            echo "[$(READER_PATH)] Missing DLL: $(READER_NAME) can only identify files, not read them." ;
+            echo "[$(READER_PATH)] Missing DLL (did you download and install MSFileReader?): $(READER_NAME) can only identify files, not read them." ;
         }
     }
     return $(result) ;
