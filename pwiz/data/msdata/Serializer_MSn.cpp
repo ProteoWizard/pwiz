@@ -159,7 +159,7 @@ namespace
         os << mz << "\n";
         
         // Write the scan time, if available
-        if( s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() )
+        if( !(s->scanList.empty()) && s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() )
           os << "I\tRTime\t" << s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds()/60 << "\n";
 
         // Collect charge and mass info
@@ -266,7 +266,12 @@ namespace
         double mz = precur.isolationWindow.cvParam(MS_isolation_window_target_m_z).valueAs<double>();
         os.write(reinterpret_cast<char *>(&mz), sizeDoubleMSn);
 
-        float rt = (float) s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds()/60;
+        float rt = 0.0;
+        if( !(s->scanList.empty()) && s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() )
+        {
+            rt = (float) s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds()/60;
+        }
+
         os.write(reinterpret_cast<char *>(&rt), sizeFloatMSn);
         
         if (version >= 2)
