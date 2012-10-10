@@ -687,7 +687,7 @@ int main(int argc, char* argv[])
         //testThreadSafety(1); // does not test thread-safety of singleton initialization
         testThreadSafety(2);
         testThreadSafety(4);
-        testThreadSafety(8);
+        //testThreadSafety(8);
         //testThreadSafety(16); // high thread count fails non-deterministically on MSVC; I haven't been able to find the cause.
         return 0;
     }
