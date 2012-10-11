@@ -122,13 +122,14 @@ class bcp-generator : generator
     {
         #for local r in $(sources) { echo "Input source: " [ $(r).actualize [ type.get-scanner [ $(r).type ] : $(property-set) ] ] [ $(r).dependencies ] ; }
         local real-sources = [ sequence.filter is-source-file : [ collect-targets $(sources) ] ] ;
-        #for local r in $(real-sources) { echo "Real source: " $(r) ; }
+        #for local r in $(real-sources) { echo "Real source: " [ $(r).name ] ; }
 
         local pwd = [ path.make [ path.pwd ] ] ;
         local modules ;
         for local source in $(real-sources)
         {
             local source-path = [ $(source).name ] ;
+            source-path = [ path.make $(source-path) ] ;
 
             if ! [ path.is-rooted $(source-path) ]
             {
