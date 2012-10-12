@@ -363,7 +363,7 @@ namespace CustomDataSourceDialog
     	{
 			foreach (var source in duplicateSources)
 			{
-				var target = GetSpecificNodeByPath(currentNode, source);
+				var target = GetSpecificNode(currentNode, source);
 				if (target == null) continue;
 				target.Parent.Nodes.Remove(target);
 			}
@@ -421,14 +421,14 @@ namespace CustomDataSourceDialog
             return newNode.Nodes.Count > 0 ? newNode : null;
         }
 
-        private TreeNode GetSpecificNodeByPath(TreeNode parent, string target)
+        private TreeNode GetSpecificNode(TreeNode parent, string target)
         {
             foreach (TreeNode child in parent.Nodes)
             {
                 if (child.ToolTipText.ToLower() == target.ToLower())
                     return child;
                 if ((string)child.Tag == "File") continue;
-                var result = GetSpecificNodeByPath(child, target);
+                var result = GetSpecificNode(child, target);
                 if (result != null)
                     return result;
             }
@@ -1229,7 +1229,7 @@ namespace CustomDataSourceDialog
 
             foreach (var item in sourceList)
             {
-                var target = GetSpecificNodeByPath(rootNode, item);
+                var target = GetSpecificNode(rootNode, item);
                 var subNode = new TreeNode
                 {
                     Text = file.FullName,
@@ -1371,7 +1371,7 @@ namespace CustomDataSourceDialog
             else
             {
                 var path = FileTreeView.SelectedNode.ToolTipText;
-                var nodeToRemove = GetSpecificNodeByPath(_unfilteredNode, path);
+                var nodeToRemove = GetSpecificNode(_unfilteredNode, path);
                 nodeToRemove.Remove();
                 if (Directory.Exists(path))
                     NavigateToFolder(path, null);

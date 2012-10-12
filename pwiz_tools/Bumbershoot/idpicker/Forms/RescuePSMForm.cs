@@ -308,7 +308,7 @@ namespace IDPicker.Forms
                                           maxRank,
                                           minClusterSize,
                                           searchScore1Name, searchScore1Order, searchScore1Threshold,
-                                          searchScore2Name, searchScore2Order, searchScore2Threshold, 
+                                          searchScore2Name, searchScore2Order, searchScore2Threshold,
                                           searchScore3Name, searchScore3Order, searchScore3Threshold);
             reportStatus(config);
 
@@ -321,7 +321,7 @@ namespace IDPicker.Forms
             if (backupDB)
             {
                 string dbBackupFile = Path.ChangeExtension(database, ".backup.idpDB");
-                reportStatus(string.Format("Backing up idpDB to {0} ... ",dbBackupFile));
+                reportStatus(string.Format("Backing up idpDB to {0} ... ", dbBackupFile));
                 reportProgress(-1, "Backing up idpDB");
                 File.Copy(database, dbBackupFile, true);
                 reportStatus(reportSecondsElapsed((DateTime.Now - startTime).TotalSeconds));
@@ -336,19 +336,19 @@ namespace IDPicker.Forms
             IList<object[]> queryRows;
             lock (session)
                 //// SQL query to retrieve spectrum info for unfiltered psm, filter query results by rank1 search score
-//                queryRows = session.CreateSQLQuery(@"SELECT s.Id, source.Name, NativeID, PrecursorMZ
-//                                                        FROM Spectrum s
-//                                                        JOIN SpectrumSource source ON s.Source = source.Id
-//                                                        JOIN UnfilteredPeptideSpectrumMatch psm ON s.Id = psm.Spectrum AND psm.Rank = 1
-//                                                        JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
-//                                                        JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
-//                                                        WHERE (scoreName.Name = " + "'" + searchScore1Name + "'" + " AND psmScore.Value " + searchScore1Order + searchScore1Threshold.ToString() + ") OR (scoreName.Name = " + "'" + searchScore2Name + "'" + " AND psmScore.Value " + searchScore2Order + searchScore2Threshold.ToString() + ") OR (scoreName.Name = " + "'" + searchScore3Name + "'" + " AND psmScore.Value " + searchScore3Order + searchScore3Threshold.ToString() + ")" +
-//                                                        " GROUP BY s.Id"
-//                                                    ).List<object[]>();
+                //                queryRows = session.CreateSQLQuery(@"SELECT s.Id, source.Name, NativeID, PrecursorMZ
+                //                                                        FROM Spectrum s
+                //                                                        JOIN SpectrumSource source ON s.Source = source.Id
+                //                                                        JOIN UnfilteredPeptideSpectrumMatch psm ON s.Id = psm.Spectrum AND psm.Rank = 1
+                //                                                        JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
+                //                                                        JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
+                //                                                        WHERE (scoreName.Name = " + "'" + searchScore1Name + "'" + " AND psmScore.Value " + searchScore1Order + searchScore1Threshold.ToString() + ") OR (scoreName.Name = " + "'" + searchScore2Name + "'" + " AND psmScore.Value " + searchScore2Order + searchScore2Threshold.ToString() + ") OR (scoreName.Name = " + "'" + searchScore3Name + "'" + " AND psmScore.Value " + searchScore3Order + searchScore3Threshold.ToString() + ")" +
+                //                                                        " GROUP BY s.Id"
+                //                                                    ).List<object[]>();
 
                 //// SQL query to retrieve spectrum info for unfiltered psm that map to identified peptide, filter by search score 
                 queryRows = session.CreateSQLQuery(@"SELECT s.Id, source.Name, NativeID, PrecursorMZ
-                                                        FROM Spectrum s
+                                                        FROM UnfilteredSpectrum s
                                                         JOIN SpectrumSource source ON s.Source = source.Id
                                                         JOIN UnfilteredPeptideSpectrumMatch psm ON s.Id = psm.Spectrum
                                                         JOIN Peptide p ON p.Id = psm.Peptide
@@ -357,7 +357,15 @@ namespace IDPicker.Forms
                                                         WHERE (scoreName.Name = " + "'" + searchScore1Name + "'" + " AND psmScore.Value " + searchScore1Order + searchScore1Threshold.ToString() + ") OR (scoreName.Name = " + "'" + searchScore2Name + "'" + " AND psmScore.Value " + searchScore2Order + searchScore2Threshold.ToString() + ") OR (scoreName.Name = " + "'" + searchScore3Name + "'" + " AND psmScore.Value " + searchScore3Order + searchScore3Threshold.ToString() + ")" +
                                                                        " GROUP BY s.Id"
                                                                    ).List<object[]>();
-            
+            var foundSpectraList = session.CreateSQLQuery(@"SELECT distinct spectrum FROM PeptideSpectrumMatch").List<object>();
+            var foundSpectra = new HashSet<long>();
+            {
+                long tempLong;
+                foreach (var item in foundSpectraList)
+                    if (long.TryParse(item.ToString(), out tempLong))
+                        foundSpectra.Add(tempLong);
+            }
+
             var spectrumRows = queryRows.Select(o => new SpectrumRow(o)).OrderBy(o => o.SourceName).ToList();
             ////converted IOrderedEnumerable to List, the former one may end up with multiple enumeration, each invokes constructor, resulting a fresh set of object
 
@@ -383,17 +391,18 @@ namespace IDPicker.Forms
 
                     var row = spectrumRows.ElementAt(i);
 
-                    reportProgress((int)(((double)(i + 1) / (double)spectrumRowsCount) * 100), string.Format("Extracting peaks ({0}/{1}) from {2}",i + 1, spectrumRowsCount, row.SourceName));
+                    reportProgress((int)(((double)(i + 1) / (double)spectrumRowsCount) * 100), string.Format("Extracting peaks ({0}/{1}) from {2}", i + 1, spectrumRowsCount, row.SourceName));
 
                     //if (processedSpectrumIDs.Contains(row.SpectrumId))
                     //    break;
-
                     if (row.SourceName != currentSourceName)
                     {
                         currentSourceName = row.SourceName;
                         currentSourcePath = IDPickerForm.LocateSpectrumSource(currentSourceName, session.Connection.GetDataSource());
+                        if (msd != null)
+                            msd.Dispose();
                         msd = new pwiz.CLI.msdata.MSDataFile(currentSourcePath);
-                                                
+
                         SpectrumListFactory.wrap(msd, "threshold count 100 most-intense"); //only keep the top 100 peaks
                         //SpectrumListFactory.wrap(msd, "threshold bpi-relative .5 most-intense"); //keep all peaks that are at least 50% of the intensity of the base peak
                         //SpectrumListFactory.wrap(msd, "threshold tic-cutoff .95 most-intense"); //keep all peaks that count for 95% TIC
@@ -428,16 +437,16 @@ namespace IDPicker.Forms
                         _bgWorkerCancelled = true;
                         return;
                     }
-                   
+
                     var row = spectrumRowsOrderByPrecursorMZ.ElementAt(i);
 
-                    reportProgress((int)(((double)(i + 1) / (double)spectrumRowsCount) * 100), "Computing similarities");                                        
+                    reportProgress((int)(((double)(i + 1) / (double)spectrumRowsCount) * 100), "Computing similarities");
                     for (int j = i + 1; j < spectrumRowsCount; ++j)
                     {
                         var nextRow = spectrumRowsOrderByPrecursorMZ.ElementAt(j);
 
                         if (Math.Abs(row.PrecursorMZ - nextRow.PrecursorMZ) > precursorMzTolerance)
-                        {                            
+                        {
                             break;
                         }
                         else
@@ -455,7 +464,7 @@ namespace IDPicker.Forms
                                 linkMap[(long)row.SpectrumId].Add((long)nextRow.SpectrumId);
                                 linkMap[(long)nextRow.SpectrumId].Add((long)row.SpectrumId); //// if a -> b, then b -> a  
                             }
-                        }                        
+                        }
                     }
                 }
             reportStatus(reportSecondsElapsed((DateTime.Now - startTime).TotalSeconds));
@@ -486,7 +495,7 @@ namespace IDPicker.Forms
             spectrumRows = null;
             spectrumRowsOrderByPrecursorMZ.Clear();
             spectrumRowsOrderByPrecursorMZ = null;
-                    
+
             /* 
              * Go through each cluster, rescue PSMs if spectra in the same cluster were identified as the same peptide (id)
              */
@@ -494,7 +503,7 @@ namespace IDPicker.Forms
             int clusterSetListCount = clusterSetList.Count();
             var allSpectrumIDs = (from o in clusterSetList from j in o select j).ToList();
             reportStatus(string.Format("Number of clusters: {0} \r\n", clusterSetListCount));
-            reportStatus(string.Format("Number of spectra clustered: {0}/{1} ({2:0.0%}) \r\n", allSpectrumIDs.Count,spectrumRowsCount,(double)allSpectrumIDs.Count/spectrumRowsCount));
+            reportStatus(string.Format("Number of spectra clustered: {0}/{1} ({2:0.0%}) \r\n", allSpectrumIDs.Count, spectrumRowsCount, (double)allSpectrumIDs.Count / spectrumRowsCount));
 
             IList<object> identPSMQueryRows;
             lock (session)
@@ -545,7 +554,7 @@ namespace IDPicker.Forms
             }
 
             session.CreateSQLQuery(@"DROP TABLE IF EXISTS TempSpecIds").ExecuteUpdate();
-                        
+
             reportStatus("Querying PSMs...");
             reportProgress(-1, "Querying PSMs");
             IList<object[]> allClusterQueryRows;
@@ -571,82 +580,82 @@ namespace IDPicker.Forms
             }
 
             //// qurey string for revison 286, no DecoySequence in Peptide table
-//            string queryCmd = @"SELECT psm.Id as psmId, s.Id, source.Name, s.NativeID, psm.Rank, psm.Charge, psmScore.Value, IFNULL(GROUP_CONCAT(DISTINCT pm.Offset || ':' || mod.MonoMassDelta),''),
-//                                    (SELECT SUBSTR(pro.Sequence, pi.Offset+1, pi.Length)
-//				                                                FROM PeptideInstance pi
-//				                                                JOIN ProteinData pro ON pi.Protein=pro.Id
-//				                                                WHERE pi.Protein=pro.Id AND
-//				                                                  pi.Id=(SELECT MIN(pi2.Id)
-//						                                                 FROM PeptideInstance pi2
-//						                                                 WHERE psm.Peptide=pi2.Peptide))
-//                                    FROM TempIDs tempIDs
-//                                    JOIN Spectrum s ON s.Id = tempIDs.Id
-//                                    JOIN SpectrumSource source ON s.Source = source.Id
-//                                    JOIN PeptideSpectrumMatch psm ON s.Id = psm.Spectrum
-//                                    LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch
-//                                    LEFT JOIN Modification mod ON pm.Modification = mod.Id
-//                                    JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
-//                                    JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
-//                                    WHERE scoreName.Name = " + "'" + searchScoreName + "'" + " AND psm.Rank <= 5" +
-//                                " GROUP BY psm.Id";
+            //            string queryCmd = @"SELECT psm.Id as psmId, s.Id, source.Name, s.NativeID, psm.Rank, psm.Charge, psmScore.Value, IFNULL(GROUP_CONCAT(DISTINCT pm.Offset || ':' || mod.MonoMassDelta),''),
+            //                                    (SELECT SUBSTR(pro.Sequence, pi.Offset+1, pi.Length)
+            //                                                                FROM PeptideInstance pi
+            //                                                                JOIN ProteinData pro ON pi.Protein=pro.Id
+            //                                                                WHERE pi.Protein=pro.Id AND
+            //                                                                  pi.Id=(SELECT MIN(pi2.Id)
+            //                                                                         FROM PeptideInstance pi2
+            //                                                                         WHERE psm.Peptide=pi2.Peptide))
+            //                                    FROM TempIDs tempIDs
+            //                                    JOIN Spectrum s ON s.Id = tempIDs.Id
+            //                                    JOIN SpectrumSource source ON s.Source = source.Id
+            //                                    JOIN PeptideSpectrumMatch psm ON s.Id = psm.Spectrum
+            //                                    LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch
+            //                                    LEFT JOIN Modification mod ON pm.Modification = mod.Id
+            //                                    JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
+            //                                    JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
+            //                                    WHERE scoreName.Name = " + "'" + searchScoreName + "'" + " AND psm.Rank <= 5" +
+            //                                " GROUP BY psm.Id";
             //AND s.Id IN ( " + String.Join(",", allSpectrumIDs.Select(o => o.ToString()).ToArray()) + " ) " +
 
             //// query string for revison 288, added DecoySequence in Peptide table
-//            string queryCmd = @"SELECT psm.Id as psmId, s.Id, source.Name, s.NativeID, psm.Rank, psm.Charge, psmScore.Value, IFNULL(GROUP_CONCAT(DISTINCT pm.Offset || ':' || mod.MonoMassDelta),''),
-//                                    (SELECT IFNULL(SUBSTR(pro.Sequence, pi.Offset+1, pi.Length), (SELECT DecoySequence FROM Peptide p WHERE p.Id = pi.Peptide))
-//							                FROM PeptideInstance pi
-//							                LEFT JOIN ProteinData pro ON pi.Protein=pro.Id
-//							                WHERE pi.Id=(SELECT pi2.Id FROM PeptideInstance pi2 WHERE pi2.Peptide=psm.Peptide LIMIT 1))
-//                                    FROM TempIDs tempIDs
-//                                    JOIN Spectrum s ON s.Id = tempIDs.Id
-//                                    JOIN SpectrumSource source ON s.Source = source.Id
-//                                    JOIN PeptideSpectrumMatch psm ON s.Id = psm.Spectrum
-//                                    LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch
-//                                    LEFT JOIN Modification mod ON pm.Modification = mod.Id
-//                                    JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
-//                                    JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
-//                                    WHERE scoreName.Name = " + "'" + searchScoreName + "'" + " AND psm.Rank <= 5" +
-//                                " GROUP BY psm.Id";
+            //            string queryCmd = @"SELECT psm.Id as psmId, s.Id, source.Name, s.NativeID, psm.Rank, psm.Charge, psmScore.Value, IFNULL(GROUP_CONCAT(DISTINCT pm.Offset || ':' || mod.MonoMassDelta),''),
+            //                                    (SELECT IFNULL(SUBSTR(pro.Sequence, pi.Offset+1, pi.Length), (SELECT DecoySequence FROM Peptide p WHERE p.Id = pi.Peptide))
+            //                                            FROM PeptideInstance pi
+            //                                            LEFT JOIN ProteinData pro ON pi.Protein=pro.Id
+            //                                            WHERE pi.Id=(SELECT pi2.Id FROM PeptideInstance pi2 WHERE pi2.Peptide=psm.Peptide LIMIT 1))
+            //                                    FROM TempIDs tempIDs
+            //                                    JOIN Spectrum s ON s.Id = tempIDs.Id
+            //                                    JOIN SpectrumSource source ON s.Source = source.Id
+            //                                    JOIN PeptideSpectrumMatch psm ON s.Id = psm.Spectrum
+            //                                    LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch
+            //                                    LEFT JOIN Modification mod ON pm.Modification = mod.Id
+            //                                    JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
+            //                                    JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
+            //                                    WHERE scoreName.Name = " + "'" + searchScoreName + "'" + " AND psm.Rank <= 5" +
+            //                                " GROUP BY psm.Id";
 
             ////query string for revision 291, retrive by PSM Ids
-//            string queryCmd = @"SELECT psm.Id as psmId, psm.Peptide,s.Id, source.Name, s.NativeID, psm.Charge, IFNULL(GROUP_CONCAT(DISTINCT pm.Offset || ':' || mod.MonoMassDelta),''),
-//                                    (SELECT IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), (SELECT DecoySequence FROM UnfilteredPeptide p WHERE p.Id = pi.Peptide))),
-//                                    GROUP_CONCAT(pro.Accession),psm.QValue, psm.Rank, psmScore.Value, analysis.Id
-//                                    FROM TempPsmIds tempPsmIds
-//                                    JOIN UnfilteredPeptideSpectrumMatch psm ON psm.Id = tempPsmIds.Id 
-//                                    JOIN Analysis analysis ON psm.Analysis = analysis.Id
-//                                    JOIN Spectrum s ON s.Id = psm.Spectrum
-//                                    JOIN SpectrumSource source ON s.Source = source.Id
-//                                    JOIN UnfilteredPeptideInstance pi ON psm.Peptide = pi.Peptide
-//                                    JOIN UnfilteredProtein pro ON pi.Protein = pro.Id
-//                                    LEFT JOIN ProteinData pd ON pi.Protein=pd.Id
-//                                    LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch
-//                                    LEFT JOIN Modification mod ON pm.Modification = mod.Id
-//                                    LEFT JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
-//                                    LEFT JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
-//                                    WHERE scoreName.Name = " + "'" + searchScore1Name + "'" +
-//                                    " GROUP BY psm.Id";
+            //            string queryCmd = @"SELECT psm.Id as psmId, psm.Peptide,s.Id, source.Name, s.NativeID, psm.Charge, IFNULL(GROUP_CONCAT(DISTINCT pm.Offset || ':' || mod.MonoMassDelta),''),
+            //                                    (SELECT IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length), (SELECT DecoySequence FROM UnfilteredPeptide p WHERE p.Id = pi.Peptide))),
+            //                                    GROUP_CONCAT(pro.Accession),psm.QValue, psm.Rank, psmScore.Value, analysis.Id
+            //                                    FROM TempPsmIds tempPsmIds
+            //                                    JOIN UnfilteredPeptideSpectrumMatch psm ON psm.Id = tempPsmIds.Id 
+            //                                    JOIN Analysis analysis ON psm.Analysis = analysis.Id
+            //                                    JOIN Spectrum s ON s.Id = psm.Spectrum
+            //                                    JOIN SpectrumSource source ON s.Source = source.Id
+            //                                    JOIN UnfilteredPeptideInstance pi ON psm.Peptide = pi.Peptide
+            //                                    JOIN UnfilteredProtein pro ON pi.Protein = pro.Id
+            //                                    LEFT JOIN ProteinData pd ON pi.Protein=pd.Id
+            //                                    LEFT JOIN PeptideModification pm ON psm.Id = pm.PeptideSpectrumMatch
+            //                                    LEFT JOIN Modification mod ON pm.Modification = mod.Id
+            //                                    LEFT JOIN PeptideSpectrumMatchScore psmScore ON psm.Id = psmScore.PsmId
+            //                                    LEFT JOIN PeptideSpectrumMatchScoreName scoreName ON psmScore.ScoreNameId=scoreName.Id
+            //                                    WHERE scoreName.Name = " + "'" + searchScore1Name + "'" +
+            //                                    " GROUP BY psm.Id";
 
             // query for r291, fix no seq for some peptides shared by target and decoy proteins, query seq for target and decoy proteins separately then union
             string queryCmd = @"SELECT psm.Id as psmId, psm.Peptide,s.Id, source.Name, s.NativeID, psm.Charge, 
                                         IFNULL(GROUP_CONCAT(DISTINCT pm.Offset || ':' || mod.MonoMassDelta),''),
                                         IFNULL(IFNULL(SUBSTR(pd.Sequence, pi.Offset+1, pi.Length),(SELECT DecoySequence FROM UnfilteredPeptide p WHERE p.Id = pi.Peptide)),
-	                                            (SELECT SUBSTR(pd.Sequence, pi.Offset+1, pi.Length)
-	                                            FROM UnfilteredPeptideInstance pi 
-	                                            JOIN UnfilteredProtein pro ON pi.Protein = pro.Id AND pro.IsDecoy = 0
-	                                            LEFT JOIN ProteinData pd ON pi.Protein=pd.Id
-	                                            WHERE psm.Peptide = pi.Peptide
-	                                            UNION
-	                                            SELECT p.DecoySequence
-	                                            FROM UnfilteredPeptide p
-	                                            JOIN UnfilteredPeptideInstance pi ON p.Id = pi.Peptide
-	                                            JOIN UnfilteredProtein pro ON pi.Protein = pro.Id AND pro.IsDecoy = 1
-	                                            WHERE psm.Peptide = pi.Peptide AND p.DecoySequence is not null)),
+                                                (SELECT SUBSTR(pd.Sequence, pi.Offset+1, pi.Length)
+                                                FROM UnfilteredPeptideInstance pi 
+                                                JOIN UnfilteredProtein pro ON pi.Protein = pro.Id AND pro.IsDecoy = 0
+                                                LEFT JOIN ProteinData pd ON pi.Protein=pd.Id
+                                                WHERE psm.Peptide = pi.Peptide
+                                                UNION
+                                                SELECT p.DecoySequence
+                                                FROM UnfilteredPeptide p
+                                                JOIN UnfilteredPeptideInstance pi ON p.Id = pi.Peptide
+                                                JOIN UnfilteredProtein pro ON pi.Protein = pro.Id AND pro.IsDecoy = 1
+                                                WHERE psm.Peptide = pi.Peptide AND p.DecoySequence is not null)),
                                         GROUP_CONCAT(pro.Accession),
                                         psm.QValue, psm.Rank, psmScore.Value, psm.Analysis
                                         FROM TempPsmIds tempPsmIds
                                         JOIN UnfilteredPeptideSpectrumMatch psm ON psm.Id = tempPsmIds.Id 
-                                        JOIN Spectrum s ON s.Id = psm.Spectrum
+                                        JOIN UnfilteredSpectrum s ON s.Id = psm.Spectrum
                                         JOIN SpectrumSource source ON s.Source = source.Id
                                         JOIN UnfilteredPeptideInstance pi ON psm.Peptide = pi.Peptide
                                         JOIN UnfilteredProtein pro ON pi.Protein = pro.Id
@@ -669,7 +678,7 @@ namespace IDPicker.Forms
             reportStatus("Rescuing PSMs... ");
             if (writeLog)
             {
-                string logHeader = string.Join("\t", new string[] { "SourceName", "NativeID", "Charge", "RescuedSequence", "Protein", "ScoreName", "SearchScore", "BAScore", "QValue", "Rank", "Rank1Sequence", "Rank1Protein", "Rank1SearchScore", "Rank1BAScore", "Rank1Qvalue","\r\n" });
+                string logHeader = string.Join("\t", new string[] { "SourceName", "NativeID", "Charge", "RescuedSequence", "Protein", "ScoreName", "SearchScore", "BAScore", "QValue", "Rank", "Rank1Sequence", "Rank1Protein", "Rank1SearchScore", "Rank1BAScore", "Rank1Qvalue", "\r\n" });
                 File.WriteAllText(logFile, logHeader);
             }
 
@@ -690,10 +699,10 @@ namespace IDPicker.Forms
             }
 
             ////walk through each cluster to rescue PSMs
-            for (int i = 0; i < clusterSetListCount; ++i) 
+            for (int i = 0; i < clusterSetListCount; ++i)
             {
                 var clusterSet = clusterSetList.ElementAt(i);
-            
+
                 if (_bgWorkerClustering.CancellationPending)
                 {
                     _bgWorkerCancelled = true;
@@ -706,7 +715,7 @@ namespace IDPicker.Forms
                 //Map<long, Set<long>> peptideIdDict = new Map<long, Set<long>>(); //key: peptide id, value: psm ids
                 //Set<long> unprocessedPSMIds = new Set<long>();
                 Set<string> unprocessedSpecChargeAnalysisSet = new Set<string>();  //spectrumId.charge.analysis
-                
+
                 var pepSeqDict = new PepDictionary();  //key: modified peptide sequence, value: spectrumId.charge.analysis, score
                 //var peptideIdDict = new PepDictionary(); //key: peptide ID, value: PSM Ids and scores
 
@@ -722,7 +731,7 @@ namespace IDPicker.Forms
 
 
                 pepSeqDict.ComputeBayesianAverage(analysisScoreOrder); //replace score from sum of search scores to Bayesian Average
-                
+
                 var sortedPepSeqDictKeys = from k in pepSeqDict.Keys orderby pepSeqDict[k].FinalScore descending, pepSeqDict[k].PsmIdSpecDict.Count() descending select k; // sort by score, if tied, second sort by # of linked psms
 
                 foreach (var pepSeq in sortedPepSeqDictKeys)
@@ -738,7 +747,7 @@ namespace IDPicker.Forms
                             string spec = row.SpectrumId.ToString() + "." + row.Charge.ToString() + "." + row.Analysis.ToString();
                             if (unprocessedSpecChargeAnalysisSet.Contains(spec))
                             {
-                                if (identPSMIdSet.Contains(psmId))
+                                if (identPSMIdSet.Contains(psmId) || foundSpectra.Contains(row.SpectrumId))
                                 {
                                     //// not process ident PSMs
                                     unprocessedSpecChargeAnalysisSet.Remove(spec);
@@ -778,19 +787,19 @@ namespace IDPicker.Forms
                                     }
                                 }
                             }
-                          }
                         }
+                    }
                 } //// end of foreach (var pepSeq in sortedPepSeqDictKeys)
 
             } //// end of for (int i = 0; i < clusterSetListCount; ++i)
-            reportStatus(string.Format("{0} seconds elapsed\r\n",(DateTime.Now - startTime).TotalSeconds));
+            reportStatus(string.Format("{0} seconds elapsed\r\n", (DateTime.Now - startTime).TotalSeconds));
 
             /*
              *update unfiltered psm table in idpDB
             */
             if (rescuedPSMsCount == 0)
                 return;
-            
+
             reportStatus("Updating idpDB... ");
 
             session.Transaction.Begin();
@@ -806,7 +815,7 @@ namespace IDPicker.Forms
             updateCmd.Prepare();
             int updateCount = 0;
             int allUpdateCount = updateDict.Count;
-            foreach (KeyValuePair<long,UpdateValues> pair in updateDict)
+            foreach (KeyValuePair<long, UpdateValues> pair in updateDict)
             {
                 updateParameters[0].Value = pair.Value.ReassignedQvalue;   //// Qvalue
                 updateParameters[1].Value = pair.Value.ReassignedRank;   //// Rank
@@ -816,7 +825,7 @@ namespace IDPicker.Forms
                 ++updateCount;
             }
             session.Transaction.Commit();
-            
+
             //basicDataFilter.ApplyBasicFilters(session);
             reportStatus(reportSecondsElapsed((DateTime.Now - startTime).TotalSeconds));
             reportStatus(string.Format("Rescued {0} PSMs for {1} distinct spectra\r\n", rescuedPSMsCount, rescuedDistinctSpectraIds.Count));
@@ -863,6 +872,7 @@ namespace IDPicker.Forms
                 {
                     tbStatus.AppendText("Reloading idpDB...\r\n");
                     owner.ReloadSession(session);  //true if recompute Qvalue
+                    owner.ApplyBasicFilter();
                 }
 
                 tbStatus.AppendText("Completed\r\n");
