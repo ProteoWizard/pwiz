@@ -43,6 +43,8 @@ class MyWrapper : public SpectrumListWrapper
         // verify that we can see inner_ 
         unit_assert(size == inner_->size());
     }
+
+    virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const {return inner_->spectrum(index, getBinaryData);}
 };
 
 

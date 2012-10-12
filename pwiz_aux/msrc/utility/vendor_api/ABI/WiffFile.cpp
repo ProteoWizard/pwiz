@@ -72,7 +72,7 @@ class WiffFileImpl : public WiffFile
     virtual InstrumentModel getInstrumentModel() const;
     virtual InstrumentType getInstrumentType() const;
     virtual IonSourceType getIonSourceType() const;
-    virtual blt::local_date_time getSampleAcquisitionTime() const;
+    virtual blt::local_date_time getSampleAcquisitionTime(int sample) const;
 
     virtual ExperimentPtr getExperiment(int sample, int period, int experiment) const;
     virtual SpectrumPtr getSpectrum(int sample, int period, int experiment, int cycle) const;
@@ -302,11 +302,12 @@ IonSourceType WiffFileImpl::getIonSourceType() const
     try {return (IonSourceType) 0;} CATCH_AND_FORWARD
 }
 
-blt::local_date_time WiffFileImpl::getSampleAcquisitionTime() const
+blt::local_date_time WiffFileImpl::getSampleAcquisitionTime(int sample) const
 {
     try
     {
-        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(sample->Details->AcquisitionDateTime.ToOADate()));
+        setSample(sample);
+        bpt::ptime pt(bdt::time_from_OADATE<bpt::ptime>(this->sample->Details->AcquisitionDateTime.ToOADate()));
         return blt::local_date_time(pt, blt::time_zone_ptr()); // keep time as UTC
     }
     CATCH_AND_FORWARD

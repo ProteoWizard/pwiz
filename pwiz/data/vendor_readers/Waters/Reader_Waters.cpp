@@ -130,8 +130,7 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
     dpPwiz->id = "pwiz_Reader_Waters_conversion";
     dpPwiz->processingMethods.push_back(ProcessingMethod());
     dpPwiz->processingMethods.back().softwarePtr = softwarePwiz;
-    dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
-    msd.dataProcessingPtrs.push_back(dpPwiz);
+    dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
     SpectrumList_Waters* sl = dynamic_cast<SpectrumList_Waters*>(msd.run.spectrumListPtr.get());

@@ -54,8 +54,8 @@ PWIZ_API_DECL size_t SpectrumList_Waters::size() const
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size_t index) const
 {
     if (index>size_)
-        throw runtime_error(("[SpectrumList_Waters::spectrumIdentity()] Bad index: "
-                            + lexical_cast<string>(index)).c_str());
+        throw runtime_error("[SpectrumList_Waters::spectrumIdentity()] Bad index: "
+                            + lexical_cast<string>(index));
     return index_[index];
 }
 
@@ -70,9 +70,14 @@ PWIZ_API_DECL size_t SpectrumList_Waters::find(const string& id) const
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const
 {
+    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const
+{
     if (index >= size_)
-        throw runtime_error(("[SpectrumList_Waters::spectrum()] Bad index: "
-                            + lexical_cast<string>(index)).c_str());
+        throw runtime_error("[SpectrumList_Waters::spectrum()] Bad index: "
+                            + lexical_cast<string>(index));
 
     // allocate a new Spectrum
     SpectrumPtr result(new Spectrum);
@@ -112,9 +117,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
 
     scan.set(MS_preset_scan_configuration, ie.function+1);
 
+    if (detailLevel == DetailLevel_InstantMetadata)
+        return result;
+
     using Waters::Lib::MassLynxRaw::MSScanStats;
     const MSScanStats& scanStats = rawdata_->GetScanStats(ie.function, ie.scan);
-    const RawData::ExtendedScanStatsByName& extendedScanStatsByName = rawdata_->GetExtendedScanStats(ie.function);
 
     scan.set(MS_scan_start_time, scanStats.rt, UO_minute);
 
@@ -137,9 +144,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
 
     //sd.set(MS_lowest_observed_m_z, minObservedMz);
     //sd.set(MS_highest_observed_m_z, maxObservedMz);
+    
+    result->defaultArrayLength = scanStats.peaksInScan;
+
+    if (detailLevel < DetailLevel_FullMetadata)
+        return result;
 
     if (msLevel > 1)
     {
+        const RawData::ExtendedScanStatsByName& extendedScanStatsByName = rawdata_->GetExtendedScanStats(ie.function);
+
         RawData::ExtendedScanStatsByName::const_iterator setMassItr = extendedScanStatsByName.find("Set Mass");
         if (setMassItr != extendedScanStatsByName.end())
         {
@@ -163,9 +177,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
         }
     }
 
-    result->defaultArrayLength = scanStats.peaksInScan;
-
-    if (getBinaryData)
+    if (detailLevel == DetailLevel_FullData)
     {
         vector<float> masses, intensities;
         rawdata_->ScanReader.readSpectrum(ie.function, ie.scan, masses, intensities);

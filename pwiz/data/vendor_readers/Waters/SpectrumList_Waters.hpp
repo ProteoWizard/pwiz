@@ -47,6 +47,7 @@ class PWIZ_API_DECL SpectrumList_Waters : public SpectrumListBase
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
 
 #ifdef PWIZ_READER_WATERS
     SpectrumList_Waters(MSData& msd, RawDataPtr rawdata);

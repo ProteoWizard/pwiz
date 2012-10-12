@@ -132,8 +132,14 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Filter::spectrumIdentity(size
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Filter::spectrum(size_t index, bool getBinaryData) const
 {
+    return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata);
+}
+
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_Filter::spectrum(size_t index, DetailLevel detailLevel) const
+{
     size_t originalIndex = impl_->indexMap.at(index);
-    SpectrumPtr originalSpectrum = impl_->original->spectrum(originalIndex, getBinaryData);  
+    SpectrumPtr originalSpectrum = impl_->original->spectrum(originalIndex, detailLevel);  
 
     SpectrumPtr newSpectrum(new Spectrum(*originalSpectrum));
     newSpectrum->index = index;

@@ -50,7 +50,7 @@
 #define DEFINE_INTERNAL_LIST_WRAPPER_CODE(CLIType, NativeType) \
 INTERNAL: virtual ~CLIType() {/* base class destructor will delete the shared pointer */} \
           NativeType* base_; \
-          NativeType& base() {return *base_;}
+          NativeType& base() new {return *base_;}
 
 
 using boost::shared_ptr;

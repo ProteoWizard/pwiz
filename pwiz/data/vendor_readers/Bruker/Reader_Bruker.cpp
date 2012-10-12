@@ -102,8 +102,7 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
     dpPwiz->id = "pwiz_Reader_Bruker_conversion";
     dpPwiz->processingMethods.push_back(ProcessingMethod());
     dpPwiz->processingMethods.back().softwarePtr = softwarePwiz;
-    dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
-    msd.dataProcessingPtrs.push_back(dpPwiz);
+    dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
     SpectrumList_Bruker* sl = dynamic_cast<SpectrumList_Bruker*>(msd.run.spectrumListPtr.get());

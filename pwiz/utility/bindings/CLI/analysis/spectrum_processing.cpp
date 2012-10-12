@@ -39,10 +39,19 @@ namespace CLI {
 namespace msdata {
 
 
+// provides a concrete implementation of spectrum(size_t, bool)
+class SpectrumListWrapperDefault : public pwiz::msdata::SpectrumListWrapper
+{
+    public:
+    SpectrumListWrapperDefault(const pwiz::msdata::SpectrumListPtr& inner) : pwiz::msdata::SpectrumListWrapper(inner) {}
+    virtual pwiz::msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const {return inner_->spectrum(index, getBinaryData);}
+};
+
+
 SpectrumListWrapper::SpectrumListWrapper(SpectrumList^ inner)
 : SpectrumList(0)
 {
-    base_ = new pwiz::msdata::SpectrumListWrapper(*inner->base_);
+    base_ = new SpectrumListWrapperDefault(*inner->base_);
     SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
 }
 

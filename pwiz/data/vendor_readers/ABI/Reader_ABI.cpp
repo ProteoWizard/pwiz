@@ -28,6 +28,8 @@
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/msdata/Version.hpp"
+#include <boost/foreach_field.hpp>
+#include <boost/tuple/tuple.hpp>
 
 
 PWIZ_API_DECL std::string pwiz::msdata::Reader_ABI::identify(const std::string& filename, const std::string& head) const
@@ -63,25 +65,18 @@ using namespace pwiz::msdata::detail;
 namespace {
 
 void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
-                    ExperimentsMap& experimentsMap, int sample)
+                    const ExperimentsMap& experimentsMap, int sample)
 {
     msd.cvs = defaultCVList();
 
     string sampleName = wifffile->getSampleNames()[sample-1];
 
-    int periodCount = wifffile->getPeriodCount(sample);
-    for (int ii=1; ii <= periodCount; ++ii)
+    BOOST_FOREACH_FIELD((boost::tuples::ignore)(const ExperimentPtr& msExperiment), experimentsMap)
     {
-        int experimentCount = wifffile->getExperimentCount(sample, ii);
-        for (int iii=1; iii <= experimentCount; ++iii)
-        {
-            ExperimentPtr msExperiment = wifffile->getExperiment(sample, ii, iii);
-            experimentsMap[pair<int, int>(ii, iii)] = msExperiment;
-            if (msExperiment->getExperimentType() != MRM)
-                msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getExperimentType()));
-            else
-                msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
-        }
+        if (msExperiment->getExperimentType() != MRM)
+            msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getExperimentType()));
+        else
+            msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
     }
 
     SourceFilePtr sourceFile(new SourceFile);
@@ -139,8 +134,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     dpPwiz->id = "pwiz_Reader_ABI_conversion";
     dpPwiz->processingMethods.push_back(ProcessingMethod());
     dpPwiz->processingMethods.back().softwarePtr = softwarePwiz;
-    dpPwiz->processingMethods.back().cvParams.push_back(MS_Conversion_to_mzML);
-    msd.dataProcessingPtrs.push_back(dpPwiz);
+    dpPwiz->processingMethods.back().set(MS_Conversion_to_mzML);
 
     // give ownership of dpPwiz to the SpectrumList (and ChromatogramList)
     SpectrumList_ABI* sl = dynamic_cast<SpectrumList_ABI*>(msd.run.spectrumListPtr.get());
@@ -154,104 +148,17 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
     msd.run.defaultInstrumentConfigurationPtr = ic;
 
     msd.run.id = msd.id;
-    msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime());
+    msd.run.startTimeStamp = encode_xml_datetime(wifffile->getSampleAcquisitionTime(sample));
 }
 
-void search_path(bfs::path basepath, string filename, vector<bfs::path>& matchingPaths)
+void cacheExperiments(WiffFilePtr wifffile, ExperimentsMap& experimentsMap, int sample)
 {
-    const static bfs::directory_iterator endItr;
-    bfs::directory_iterator itr(basepath);
-    for (; itr != endItr; ++itr)
+    int periodCount = wifffile->getPeriodCount(sample);
+    for (int ii=1; ii <= periodCount; ++ii)
     {
-        if (bfs::is_directory(itr->status()))
-        {
-            try
-            {
-                search_path(itr->path(), filename, matchingPaths);
-            }
-            catch (bfs::filesystem_error& e)
-            {
-                // ignore permission errors
-                if (e.code() != boost::system::errc::permission_denied)
-                    throw e;
-            }
-        }
-        else if (bfs::is_regular_file(itr->status()) && itr->path().filename() == filename)
-            matchingPaths.push_back(itr->path());
-    }
-}
-
-void copyProteinPilotDLLs()
-{
-    // get the filepath of the calling .exe using WinAPI
-    TCHAR tmpFilepath[1024];
-    // check for pwiz_bindings_cli.dll first, so that unit tests run from
-    // vstesthost.exe run correctly.  if pwiz_bindings_cli.dll is not running,
-    // GetModuleHandle will return NULL, and the exe path will be returned.
-    DWORD tmpFilepathLength = ::GetModuleFileName(::GetModuleHandle("pwiz_bindings_cli.dll"), (LPCH) tmpFilepath, 1024);
-    bfs::path callingExecutablePath = bfs::path(string(tmpFilepath, tmpFilepath + tmpFilepathLength)).parent_path();
-
-    // make sure the necessary DLLs are available side-by-side or copy them if ProteinPilot is installed
-    if (!bfs::exists(callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
-    {
-        // copy the ProteinPilot DLLs if it is installed, else throw an exception informing the user to download it
-        char* programFilesPath = ::getenv("ProgramFiles");
-        bfs::path proteinPilotPath;
-        if (!programFilesPath)
-        {
-            if (bfs::exists("C:/Program Files(x86)"))
-                proteinPilotPath = "C:/Program Files(x86)/Applied Biosystems MDS Analytical Technologies/ProteinPilot";
-            else if (bfs::exists("C:/Program Files"))
-                proteinPilotPath = "C:/Program Files/Applied Biosystems MDS Analytical Technologies/ProteinPilot";
-            else
-                throw runtime_error("[Reader_ABI::ctor] When trying to find Protein Pilot, the Program Files directory could not be found!");
-        }
-        else
-            proteinPilotPath = bfs::path(programFilesPath) / "Applied Biosystems MDS Analytical Technologies/ProteinPilot";
-
-        if (bfs::exists(proteinPilotPath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
-        {
-            bfs::copy_file(proteinPilotPath / "ABSciex.DataAccess.WiffFileDataReader.dll", callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll");
-            if (!bfs::exists(callingExecutablePath / "Clearcore.dll"))
-                bfs::copy_file(proteinPilotPath / "Clearcore.dll", callingExecutablePath / "Clearcore.dll");
-            if (!bfs::exists(callingExecutablePath / "ClearCore.Storage.dll"))
-                bfs::copy_file(proteinPilotPath / "ClearCore.Storage.dll", callingExecutablePath / "ClearCore.Storage.dll");
-            if (!bfs::exists(callingExecutablePath / "rscoree.dll"))
-                bfs::copy_file(proteinPilotPath / "rscoree.dll", callingExecutablePath / "rscoree.dll");
-        }
-        else // couldn't find Protein Pilot 3; try finding a Skyline installation
-        {
-            // Windows Vista/7 have %LOCALAPPDATA%
-            string localAppDataPath = ::getenv("LOCALAPPDATA");
-
-            // Windows 2000/XP have %APPDATA%\Local Settings
-            if (localAppDataPath.empty()) localAppDataPath = string(::getenv("USERPROFILE")) + "\\Local Settings";
-
-            if (localAppDataPath.empty())
-                throw runtime_error("[Reader_ABI::ctor] When trying to find Skyline, the Local Settings directory could not be found!");
-
-            vector<bfs::path> matchingPaths;
-            search_path(localAppDataPath, "rscoree.dll", matchingPaths);
-
-            if (matchingPaths.empty())
-                throw std::runtime_error("[Reader_ABI::ctor] Reading ABI WIFF files requires Protein Pilot 3.0 or Skyline to be installed. Skyline is freely available at:\nhttps://brendanx-uw1.gs.washington.edu/labkey/project/home/software/Skyline/begin.view");
-
-            // there could be multiple copies of Skyline installed, so we pick the first one
-            bfs::path skylinePath = matchingPaths[0].parent_path();
-            
-            if (bfs::exists(skylinePath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
-            {
-                bfs::copy_file(skylinePath / "ABSciex.DataAccess.WiffFileDataReader.dll", callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll");
-                if (!bfs::exists(callingExecutablePath / "Clearcore.dll"))
-                    bfs::copy_file(skylinePath / "Clearcore.dll", callingExecutablePath / "Clearcore.dll");
-                if (!bfs::exists(callingExecutablePath / "ClearCore.Storage.dll"))
-                    bfs::copy_file(skylinePath / "ClearCore.Storage.dll", callingExecutablePath / "ClearCore.Storage.dll");
-                if (!bfs::exists(callingExecutablePath / "rscoree.dll"))
-                    bfs::copy_file(skylinePath / "rscoree.dll", callingExecutablePath / "rscoree.dll");
-            }
-            else
-                throw runtime_error("[Reader_ABI::ctor] Reading ABI WIFF files requires Protein Pilot 3.0 or Skyline to be installed. Skyline is freely available at:\nhttps://brendanx-uw1.gs.washington.edu/labkey/project/home/software/Skyline/begin.view");
-        }
+        int experimentCount = wifffile->getExperimentCount(sample, ii);
+        for (int iii=1; iii <= experimentCount; ++iii)
+            experimentsMap[make_pair(ii, iii)] = wifffile->getExperiment(sample, ii, iii);
     }
 }
 
@@ -265,22 +172,21 @@ void Reader_ABI::read(const string& filename,
                       int runIndex,
                       const Config& config) const
 {
-//    copyProteinPilotDLLs();
-
     try
     {
         runIndex++; // one-based index
         WiffFilePtr wifffile = WiffFile::create(filename);
-        // Loading the experiments are one of the more expensive operations,
-        // so make sure it only happens once.
-        ExperimentsMap experimentsMap;
 
-        fillInMetadata(filename, result, wifffile, experimentsMap, runIndex);
+        // Loading the experiments is an expensive operation, so cache them.
+        ExperimentsMap experimentsMap;
+        cacheExperiments(wifffile, experimentsMap, runIndex);
 
         SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, experimentsMap, runIndex);
         ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, experimentsMap, runIndex);
         result.run.spectrumListPtr = SpectrumListPtr(sl);
         result.run.chromatogramListPtr = ChromatogramListPtr(cl);
+
+        fillInMetadata(filename, result, wifffile, experimentsMap, runIndex);
     }
     catch (std::exception& e)
     {
@@ -298,8 +204,6 @@ void Reader_ABI::read(const string& filename,
                       vector<MSDataPtr>& results,
                       const Config& config) const
 {
-//    copyProteinPilotDLLs();
-
     try
     {
         WiffFilePtr wifffile = WiffFile::create(filename);
@@ -311,16 +215,17 @@ void Reader_ABI::read(const string& filename,
             {
                 MSDataPtr msDataPtr = MSDataPtr(new MSData);
                 MSData& result = *msDataPtr;
-                // Loading the experiments are one of the more expensive operations,
-                // so make sure it only happens once.
-                ExperimentsMap experimentsMap;
 
-                fillInMetadata(filename, result, wifffile, experimentsMap, i);
+                // Loading the experiments is an expensive operation, so cache them.
+                ExperimentsMap experimentsMap;
+                cacheExperiments(wifffile, experimentsMap, i);
 
                 SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, experimentsMap, i);
                 ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, experimentsMap, i);
                 result.run.spectrumListPtr = SpectrumListPtr(sl);
                 result.run.chromatogramListPtr = ChromatogramListPtr(cl);
+
+                fillInMetadata(filename, result, wifffile, experimentsMap, i);
 
                 results.push_back(msDataPtr);
             }
@@ -347,8 +252,6 @@ void Reader_ABI::readIds(const string& filename,
                       vector<string>& results,
                       const Config& config) const
 {
-//    copyProteinPilotDLLs();
-
     try
     {
         WiffFilePtr wifffile = WiffFile::create(filename);

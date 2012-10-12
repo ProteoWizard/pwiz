@@ -71,6 +71,7 @@ class PWIZ_API_DECL SpectrumList_Filter : public msdata::SpectrumListWrapper
     virtual size_t size() const;
     virtual const msdata::SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual msdata::SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const;
+    virtual msdata::SpectrumPtr spectrum(size_t index, msdata::DetailLevel detailLevel) const;
     //@}
 
     private:
