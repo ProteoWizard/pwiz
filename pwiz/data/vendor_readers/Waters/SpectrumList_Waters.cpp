@@ -248,6 +248,7 @@ size_t SpectrumList_Waters::size() const {return 0;}
 const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size_t index) const {return emptyIdentity;}
 size_t SpectrumList_Waters::find(const std::string& id) const {return 0;}
 SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
+SpectrumPtr SpectrumList_Waters::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
 
 } // detail
 } // msdata
