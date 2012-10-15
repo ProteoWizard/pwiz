@@ -141,7 +141,7 @@ namespace BuildAnalystFullScanMethod
 
                         try
                         {
-                            RTWindow = (int)Math.Round(double.Parse(arg, CultureInfo.InvariantCulture));
+                            RTWindowInSeconds = (int)Math.Round(double.Parse(arg, CultureInfo.InvariantCulture) * 60);
                         }
                         catch (Exception)
                         {
@@ -390,7 +390,7 @@ namespace BuildAnalystFullScanMethod
                 ((IDDEMethodObj)idaServer).putExceedCountSwitch(2000000);
                 ((IDDEMethodObj)idaServer).putIntensityThreshold(0);
 
-                int windowInSec = RTWindow.HasValue ? RTWindow.Value * 60 : 60;
+                int windowInSec = RTWindowInSeconds.HasValue ? RTWindowInSeconds.Value : 60;
                 ((IDDEMethodObj3)idaServer).putIncludeForSecs(windowInSec);
                 int maxConcurrentCount = MaxConcurrentCount(assignedCandidateMassToRT, windowInSec);
                 ((IDDEMethodObj)idaServer).putSpectraSwitch(maxConcurrentCount);

@@ -94,7 +94,7 @@ namespace BuildAnalystMethod
 
     public abstract class BuildAnalystMethod
     {
-        protected int? RTWindow { get; set; }
+        protected int? RTWindowInSeconds { get; set; }
 
         protected string TemplateMethod { get; set; }
 

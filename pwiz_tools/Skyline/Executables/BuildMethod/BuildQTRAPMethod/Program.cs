@@ -68,7 +68,7 @@ namespace BuildQTRAPMethod
                     "   Takes template QTRAP method file and a Skyline generated QTRAP\n" +
                     "   transition list as inputs, to generate a new QTRAP method file\n" +
                     "   as output.\n" +
-                    "   -w <RT window>   Retention time window in seconds for schedule [unscheduled otherwise]\n" +
+                    "   -w <RT window>   Retention time window in minutes for schedule [unscheduled otherwise]\n" +
                     "   -o <output file> New method is written to the specified output file\n" +
                     "   -s               Transition list is read from stdin.\n" +
                     "                    e.g. cat TranList.csv | BuildWatersMethod -s -o new.ext temp.ext\n" +
@@ -115,7 +115,7 @@ namespace BuildQTRAPMethod
 
                         try
                         {
-                            RTWindow = (int)Math.Round(double.Parse(arg, CultureInfo.InvariantCulture));
+                            RTWindowInSeconds = (int)Math.Round(double.Parse(arg, CultureInfo.InvariantCulture) * 60);
                         }
                         catch (Exception)
                         {
@@ -243,9 +243,9 @@ namespace BuildQTRAPMethod
             }
 
             var msExperiment7 = (IExperiment7)msExperiment;
-            if (RTWindow.HasValue)
+            if (RTWindowInSeconds.HasValue)
             {
-                msExperiment7.LCPeakWidth = RTWindow.Value * 60;
+                msExperiment7.LCPeakWidth = RTWindowInSeconds.Value;
                 msExperiment7.KnownRetentionTimes = 1;
             }
             else
