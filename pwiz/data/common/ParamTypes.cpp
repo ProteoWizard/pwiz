@@ -67,6 +67,33 @@ PWIZ_API_DECL double CVParam::timeInSeconds() const
     return 0; 
 }
 
+template <typename T>
+struct nosci_policy : boost::spirit::karma::real_policies<T>   
+{
+    //  we want to generate up to 12 fractional digits
+    static unsigned int precision(T) { return 12; }
+    //  we want the numbers always to be in fixed format
+    static int floatfield(T) { return boost::spirit::karma::real_policies<T>::fmtflags::fixed; }
+};
+
+/// convenience function to return value without scientific notation (throws if not a double)
+PWIZ_API_DECL std::string CVParam::valueFixedNotation() const
+{
+    std::string result = value;
+    if (std::string::npos != result.find_first_of("eE"))
+    {
+        using namespace boost::spirit::karma;
+        typedef real_generator<double, nosci_policy<double> > nosci_type;
+        static const nosci_type nosci = nosci_type();
+        char buffer[256];
+        char* p = buffer;
+        double d = valueAs<double>();
+        generate(p, nosci, d);
+        *p = 0;
+        result = buffer;
+    }
+    return result;
+}
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const CVParam& param)
 {

@@ -124,6 +124,9 @@ struct PWIZ_API_DECL CVParam
     /// convenience function to return time in seconds (throws if units not a time unit)
     double timeInSeconds() const;
 
+    /// convenience function to return value without scientific notation (throws if not a double)
+    std::string valueFixedNotation() const;
+
     /// equality operator
     bool operator==(const CVParam& that) const
     {

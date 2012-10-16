@@ -26,6 +26,7 @@
 #include "SpectrumList_MGF.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include <boost/spirit/include/karma.hpp>
 
 
 namespace pwiz {
@@ -47,6 +48,15 @@ class Serializer_MGF::Impl
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const;
 
     void read(shared_ptr<istream> is, MSData& msd) const;
+};
+
+template <typename T>
+struct nosci10_policy : boost::spirit::karma::real_policies<T>   
+{
+    //  we want to generate up to 10 fractional digits
+    static unsigned int precision(T) { return 10; }
+    //  we want the numbers always to be in fixed format
+    static int floatfield(T) { return boost::spirit::karma::real_policies<T>::fmtflags::fixed; }
 };
 
 
@@ -90,13 +100,14 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
             if (!scanTimeParam.empty())
                 os << "RTINSECONDS=" << scanTimeParam.timeInSeconds() << '\n';
 
-            os << "PEPMASS=" << si.cvParam(MS_selected_ion_m_z).value;
+            // many MGF parsers can't handle scientific notation (!) so explicitly use fixed
+            os << "PEPMASS=" << si.cvParam(MS_selected_ion_m_z).valueFixedNotation();
             
             bool negativePolarity = s->hasCVParam(MS_negative_scan) ? true : false;
 
             CVParam intensityParam = si.cvParam(MS_peak_intensity);
             if (!intensityParam.empty())
-                os << " " << intensityParam.value;
+                os << " " << intensityParam.valueFixedNotation();
             os << '\n';
 
             if (chargeParam.empty())
@@ -115,8 +126,17 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
 
             const BinaryDataArray& mzArray = *s->getMZArray();
             const BinaryDataArray& intensityArray = *s->getIntensityArray();
+            using namespace boost::spirit::karma;
+            typedef real_generator<double, nosci10_policy<double> > nosci10_type;
+            static const nosci10_type nosci10 = nosci10_type();
+            char buffer[256];
             for (size_t p=0; p < s->defaultArrayLength; ++p)
-                os << mzArray.data[p] << ' ' << intensityArray.data[p] << '\n';
+            {
+                char* b = buffer;
+                generate(b, nosci10, intensityArray.data[p]);
+                *b = 0;
+                os << mzArray.data[p] << ' ' << buffer << '\n';
+            }
 
             os << "END IONS\n";
         }
