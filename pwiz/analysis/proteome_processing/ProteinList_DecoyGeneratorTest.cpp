@@ -62,7 +62,7 @@ void testShuffledList(ProteinListPtr pl)
     ProteinList_DecoyGenerator decoyList(pl, ProteinList_DecoyGenerator::PredicatePtr(new ProteinList_DecoyGeneratorPredicate_Shuffled("shuffled_")));
     unit_assert(decoyList.size() == 6);
 
-    boost::mt19937 engine;
+    boost::mt19937 engine(0);
     boost::uniform_int<> distribution;
     boost::variate_generator<boost::mt19937, boost::uniform_int<> > rng(engine, distribution);
 
