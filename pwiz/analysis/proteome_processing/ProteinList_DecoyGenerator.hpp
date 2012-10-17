@@ -20,8 +20,8 @@
 //
 
 
-#ifndef _PROTEINLIST_FILTER_HPP_
-#define _PROTEINLIST_FILTER_HPP_
+#ifndef _PROTEINLIST_DECOYGENERATOR_HPP_
+#define _PROTEINLIST_DECOYGENERATOR_HPP_
 
 
 #include "pwiz/utility/misc/Export.hpp"
@@ -104,4 +104,4 @@ class PWIZ_API_DECL ProteinList_DecoyGeneratorPredicate_Shuffled : public Protei
 } // namespace pwiz
 
 
-#endif // _PROTEINLIST_FILTER_HPP_
+#endif // _PROTEINLIST_DECOYGENERATOR_HPP_

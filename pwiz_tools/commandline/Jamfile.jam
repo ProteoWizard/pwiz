@@ -101,6 +101,8 @@ exe msistats
 exe chainsaw
     : chainsaw.cpp
       ../../pwiz/data/proteome//pwiz_data_proteome
+      ../../pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+      ../../pwiz/analysis//pwiz_analysis_version
       ../../pwiz//pwiz_version
       /ext/boost//program_options
       /ext/boost//filesystem

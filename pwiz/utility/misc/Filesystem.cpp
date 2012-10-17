@@ -52,23 +52,27 @@ using std::runtime_error;
 namespace pwiz {
 namespace util {
 
-PWIZ_API_DECL void expand_pathmask(const bfs::path& pathmask,
-                                   vector<bfs::path>& matchingPaths)
+PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
+                                  vector<bfs::path>& matchingPaths)
 {
     using bfs::path;
+    int matchingPathCount = 0;
 
 #ifdef WIN32
     path maskParentPath = pathmask.branch_path();
 	WIN32_FIND_DATA fdata;
 	HANDLE srcFile = FindFirstFileEx(pathmask.string().c_str(), FindExInfoStandard, &fdata, FindExSearchNameMatch, NULL, 0);
 	if (srcFile == INVALID_HANDLE_VALUE)
-		return; // no matches
+		return 0; // no matches
 
     do
     {
         if (strcmp(fdata.cFileName, ".") != 0 &&
             strcmp(fdata.cFileName, "..") != 0)
+        {
 	        matchingPaths.push_back( maskParentPath / fdata.cFileName );
+            ++matchingPathCount;
+        }
     }
     while (FindNextFile(srcFile, &fdata));
 
@@ -90,13 +94,18 @@ PWIZ_API_DECL void expand_pathmask(const bfs::path& pathmask,
 		if (S_ISDIR(curEntryData.st_mode) ||
             S_ISREG(curEntryData.st_mode) ||
             S_ISLNK(curEntryData.st_mode))
+        {
 			matchingPaths.push_back(globbuf.gl_pathv[i]);
+            ++matchingPathCount;
+        }
 	}
 	closedir(curDir);
 
 	globfree(&globbuf);
 
 #endif
+
+    return matchingPathCount;
 }
 
 

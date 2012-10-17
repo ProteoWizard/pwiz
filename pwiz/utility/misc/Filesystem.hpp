@@ -64,12 +64,12 @@ namespace pwiz {
 namespace util {
 
 
-/// expands (aka globs) a pathmask to zero or more matching paths
+/// expands (aka globs) a pathmask to zero or more matching paths and returns the number of matching paths
 /// - matching paths can be either files or directories
 /// - matching paths will be absolute if input pathmask was absolute
 /// - matching paths will be relative if input pathmask was relative
-PWIZ_API_DECL void expand_pathmask(const bfs::path& pathmask,
-                                   vector<bfs::path>& matchingPaths);
+PWIZ_API_DECL int expand_pathmask(const bfs::path& pathmask,
+                                  vector<bfs::path>& matchingPaths);
 
 
 PWIZ_API_DECL enum ByteSizeAbbreviation

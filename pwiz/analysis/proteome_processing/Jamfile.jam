@@ -27,8 +27,11 @@ project
 
 
 lib pwiz_analysis_proteome_processing
-    : # sources  
+    : # sources
+        ProteinList_Filter.cpp
         ProteinList_DecoyGenerator.cpp
+        ProteinListFactory.cpp
+        #Weller_Peptide_pI_Calculator.cpp
     : # requirements
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome
     : # default-build
@@ -42,4 +45,7 @@ lib pwiz_analysis_proteome_processing
 #
 
 
+unit-test-if-exists ProteinList_FilterTest : ProteinList_FilterTest.cpp pwiz_analysis_proteome_processing ;
 unit-test-if-exists ProteinList_DecoyGeneratorTest : ProteinList_DecoyGeneratorTest.cpp pwiz_analysis_proteome_processing $(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples ;
+unit-test-if-exists ProteinListFactoryTest : ProteinListFactoryTest.cpp pwiz_analysis_proteome_processing $(PWIZ_ROOT_PATH)/pwiz/data/proteome//pwiz_data_proteome_examples ;
+#unit-test-if-exists Weller_Peptide_pI_Calculator : Weller_Peptide_pI_CalculatorTest.cpp pwiz_analysis_proteome_processing ;

@@ -159,7 +159,7 @@ SpectrumListPtr filterCreator_ZeroSamples(const MSData& msd, const string& arg)
         action = action.substr(0,action.rfind('='));
     }
     if (!bRemover && ("addMissing"!=action))
-        throw runtime_error("[SpectrumListFactory::filterCreator_ZeroSamples()] unknown mode \"" + action + "\"");
+        throw user_error("[SpectrumListFactory::filterCreator_ZeroSamples()] unknown mode \"" + action + "\"");
     string msLevelSets;
     getline(parser, msLevelSets);
     if (""==msLevelSets) msLevelSets="1-"; // default is all msLevels
@@ -461,7 +461,7 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
     else if (activationType == "SID") cvIDs.insert(MS_SID);
     else if (activationType == "SORI") cvIDs.insert(MS_SORI);
     else
-        throw runtime_error("[SpectrumListFactory::filterCreator_ActivationType()] invalid activation type \"" + activationType + "\"");
+        throw user_error("[SpectrumListFactory::filterCreator_ActivationType()] invalid activation type \"" + activationType + "\"");
 
     return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, 
                                                    SpectrumList_FilterPredicate_ActivationType(cvIDs, hasNot)));
@@ -488,7 +488,7 @@ SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg)
     else if (bal::starts_with(analyzerType, "QUAD")) cvIDs.insert(MS_quadrupole);
     else if (analyzerType == "TOF") cvIDs.insert(MS_TOF);
     else
-        throw runtime_error("[SpectrumListFactory::filterCreator_AnalyzerType()] invalid filter argument.");
+        throw user_error("[SpectrumListFactory::filterCreator_AnalyzerType()] invalid filter argument.");
 
     return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr,
                                                    SpectrumList_FilterPredicate_AnalyzerType(cvIDs)));
@@ -562,7 +562,7 @@ SpectrumListPtr filterCreator_polarityFilter(const MSData& msd, const string& ar
     }
 
     if (polarity == CVID_Unknown)
-        throw runtime_error("[SpectrumListFactory::filterCreator_polarityFilter()] invalid polarity (expected \"positive\" or \"negative\")");
+        throw user_error("[SpectrumListFactory::filterCreator_polarityFilter()] invalid polarity (expected \"positive\" or \"negative\")");
 
     return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, SpectrumList_FilterPredicate_Polarity(polarity)));
 }

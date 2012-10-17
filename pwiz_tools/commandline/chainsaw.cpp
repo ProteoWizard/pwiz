@@ -11,6 +11,8 @@
 #include "pwiz/data/proteome/ProteomeDataFile.hpp"
 #include "pwiz/data/proteome/Digestion.hpp"
 #include "pwiz/data/proteome/Version.hpp"
+#include "pwiz/analysis/proteome_processing/ProteinListFactory.hpp"
+#include "pwiz/analysis/Version.hpp"
 #include "pwiz/Version.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
@@ -20,6 +22,7 @@
 
 using namespace pwiz::cv;
 using namespace pwiz::proteome;
+using namespace pwiz::analysis;
 using namespace pwiz::util;
 
 struct Config
@@ -28,10 +31,12 @@ struct Config
     string cleavageAgentRegex;
     Digestion::Config digestionConfig;
     vector<string> filenames;
+    vector<string> filters;
     size_t precision;
     bool benchmark;
     bool indexOnly;
     bool proteinSummary;
+    string subsetFilepath;
 
     Config()
         :   cleavageAgent(MS_Trypsin_P),
@@ -87,13 +92,17 @@ Config parseCommandLine(int argc, const char* argv[])
         ("massPrecison,p", po::value<size_t>(&config.precision)->default_value(config.precision), " : specify precision of calculated mass of digested peptides")
         ("benchmark", po::value<bool>(&config.benchmark)->zero_tokens(), " : do not write results")
         ("indexOnly", po::value<bool>(&config.indexOnly)->zero_tokens(), " : create database index (if necessary)")
-        ("proteinSummary", po::value<bool>(&config.proteinSummary)->zero_tokens(), " : print a table with index, id, length, MW, and description for each protein");
+        ("proteinSummary", po::value<bool>(&config.proteinSummary)->zero_tokens(), " : print a table with index, id, length, MW, and description for each protein")
+        ("subset", po::value<string>(&config.subsetFilepath), " : create a subset database (use filters to define the subset)")
+        ("filter", po::value< vector<string> >(&config.filters), ": add a protein list filter");
     
     
     // append options to usage string
     usage << od_config;
 
     // extra usage
+    
+    usage << ProteinListFactory::usage() << endl;
 
     usage << "Examples:\n"
           << endl
@@ -109,6 +118,9 @@ Config parseCommandLine(int argc, const char* argv[])
           << "# create a summary table for database.fasta\n"
           << "chainsaw --proteinSummary database.fasta\n"
           << endl
+          << "# create a subset database (database-subset.fasta) of database.fasta using only the ids from subset.txt.\n"
+          << "chainsaw database.fasta --subset database-subset.fasta --filter \"id subset.txt\"\n"
+          << endl
           << endl
 
           << "Questions, comments, and bug reports:\n"
@@ -118,6 +130,9 @@ Config parseCommandLine(int argc, const char* argv[])
           << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
           << "ProteoWizard Proteome: " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")" << endl
           << "Build date: " << __DATE__ << " " << __TIME__ << endl;
+
+    if (argc <= 1)
+        throw usage_exception(usage.str());
 
     // handle positional args
     const char* label_args = "args";
@@ -144,11 +159,8 @@ Config parseCommandLine(int argc, const char* argv[])
         // expand the filenames by globbing to handle wildcards
         vector<bfs::path> globbedFilenames;
         BOOST_FOREACH(const string& filename, config.filenames)
-        {
-            expand_pathmask(bfs::path(filename), globbedFilenames);
-            if (!globbedFilenames.size())
-                 cout << "[chainsaw] no files found matching \"" << filename << "\"" << endl;
-        }
+            if (expand_pathmask(bfs::path(filename), globbedFilenames) == 0)
+                cout <<  "[chainsaw] no files found matching \"" << filename << "\"" << endl;
 
         config.filenames.clear();
         BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
@@ -161,7 +173,7 @@ Config parseCommandLine(int argc, const char* argv[])
 
     // usage if incorrect
     if (config.filenames.empty())
-        throw runtime_error(usage.str());
+        throw user_error("[chainsaw] no files specified.");
 
     // assign local variables to config
     if (tempEnzyme.size() > 0) config.cleavageAgent = translateCleavageAgentName(tempEnzyme);
@@ -311,6 +323,13 @@ void writeDigestion(const Config& config, const ProteomeData& pd)
     cout << "Digestion finished. Time elapsed: " << bpt::to_simple_string(duration) << endl;
 }
 
+void writeSubset(const Config& config, const ProteomeData& pd)
+{
+    cout << "Creating subset database (" << pd.proteinListPtr->size() << " proteins): " << BFS_STRING(bfs::path(config.subsetFilepath).filename()) << endl;
+    ProteomeDataFile::write(pd, config.subsetFilepath);
+    cout << "Finished writing database." << endl;
+}
+
 void go(const Config& config)
 {
     vector<string>::const_iterator file_it = config.filenames.begin();
@@ -323,8 +342,17 @@ void go(const Config& config)
         if (config.indexOnly)
             continue;
 
+        if (!config.filters.empty())
+        {
+            cout << "Applying filters..." << endl;
+            ProteinListFactory::wrap(pd, config.filters);
+            cout << "Finished applying filters." << endl;
+        }
+
         if (config.proteinSummary)
             writeSummary(config, pd);
+        else if (!config.subsetFilepath.empty())
+            writeSubset(config, pd);
         else
             writeDigestion(config, pd);
     }
@@ -339,10 +367,37 @@ int main(int argc, const char* argv[])
 
         return 0;
     }
+    catch (usage_exception& e)
+    {
+        cerr << e.what() << endl;
+        return 0;
+    }
+    catch (user_error& e)
+    {
+        cerr << e.what() << endl;
+        return 1;
+    }
+    catch (boost::program_options::error& e)
+    {
+        cerr << "Invalid command-line: " << e.what() << endl;
+        return 1;
+    }
     catch (exception& e)
     {
-        cout << e.what() << endl;
+        cerr << e.what() << endl;
+    }
+    catch (...)
+    {
+        cerr << "[" << argv[0] << "] Caught unknown exception.\n";
     }
 
-    return 0;
+    cerr << "Please report this error to support@proteowizard.org.\n"
+         << "Attach the command output and this version information in your report:\n"
+         << "\n"
+         << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
+         << "ProteoWizard Proteome: " << pwiz::proteome::Version::str() << " (" << pwiz::proteome::Version::LastModified() << ")" << endl
+         << "ProteoWizard Analysis: " << pwiz::analysis::Version::str() << " (" << pwiz::analysis::Version::LastModified() << ")" << endl
+         << "Build date: " << __DATE__ << " " << __TIME__ << endl;
+
+    return 1;
 }

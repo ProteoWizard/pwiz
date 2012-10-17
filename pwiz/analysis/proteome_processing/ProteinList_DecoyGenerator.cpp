@@ -125,9 +125,8 @@ PWIZ_API_DECL ProteinPtr ProteinList_DecoyGeneratorPredicate_Reversed::generate(
 struct ProteinList_DecoyGeneratorPredicate_Shuffled::Impl
 {
     Impl(boost::uint32_t randomSeed)
-    :   rng(engine, distribution)
+    :   engine(randomSeed), rng(engine, distribution)
     {
-        engine.seed(randomSeed);
     }
 
     boost::mt19937 engine;

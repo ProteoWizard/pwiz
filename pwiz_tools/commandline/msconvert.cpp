@@ -44,17 +44,6 @@ using namespace pwiz::util;
 ostream* os_ = &cout;
 
 
-class usage_exception : public std::runtime_error
-{
-    public: usage_exception(const string& usage) : runtime_error(usage) {}
-};
-
-class user_error : public std::runtime_error
-{
-    public: user_error(const string& what) : runtime_error(what) {}
-};
-
-
 /// Holds the results of the parseCommandLine function. 
 struct Config
 {
@@ -403,13 +392,8 @@ Config parseCommandLine(int argc, const char* argv[])
         // expand the filenames by globbing to handle wildcards
         vector<bfs::path> globbedFilenames;
         BOOST_FOREACH(const string& filename, config.filenames)
-        {
-            expand_pathmask(bfs::path(filename), globbedFilenames);
-            if (!globbedFilenames.size())
-            {
-                *os_ <<  "[msconvert] no files found matching \"" << filename << "\"" << endl;
-            }
-        }
+            if (expand_pathmask(bfs::path(filename), globbedFilenames) == 0)
+                cout <<  "[msconvert] no files found matching \"" << filename << "\"" << endl;
 
         config.filenames.clear();
         BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
@@ -756,6 +740,11 @@ int main(int argc, const char* argv[])
     catch (user_error& e)
     {
         cerr << e.what() << endl;
+        return 1;
+    }
+    catch (boost::program_options::error& e)
+    {
+        cerr << "Invalid command-line: " << e.what() << endl;
         return 1;
     }
     catch (exception& e)

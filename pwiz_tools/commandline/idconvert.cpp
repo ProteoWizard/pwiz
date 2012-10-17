@@ -35,17 +35,6 @@ using namespace pwiz::identdata;
 using namespace pwiz::util;
 
 
-class usage_exception : public std::runtime_error
-{
-    public: usage_exception(const string& usage) : runtime_error(usage) {}
-};
-
-class user_error : public std::runtime_error
-{
-    public: user_error(const string& what) : runtime_error(what) {}
-};
-
-
 struct Config
 {
     vector<string> filenames;
@@ -247,13 +236,8 @@ Config parseCommandLine(int argc, const char* argv[])
         // expand the filenames by globbing to handle wildcards
         vector<bfs::path> globbedFilenames;
         BOOST_FOREACH(const string& filename, config.filenames)
-        {
-            expand_pathmask(bfs::path(filename), globbedFilenames);
-            if (!globbedFilenames.size())
-            {
+            if (expand_pathmask(bfs::path(filename), globbedFilenames) == 0)
                 cout <<  "[idconvert] no files found matching \"" << filename << "\"" << endl;
-            }
-        }
 
         config.filenames.clear();
         BOOST_FOREACH(const bfs::path& filename, globbedFilenames)
@@ -428,8 +412,8 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     IterationListenerRegistry iterationListenerRegistry;
     // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
-    const size_t iterationPeriod = 100;
-    iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
+    const double iterationPeriod = 0.5;
+    iterationListenerRegistry.addListenerWithTimer(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
     IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
 
     // read in data file
@@ -518,6 +502,11 @@ int main(int argc, const char* argv[])
     catch (user_error& e)
     {
         cerr << e.what() << endl;
+        return 1;
+    }
+    catch (boost::program_options::error& e)
+    {
+        cerr << "Invalid command-line: " << e.what() << endl;
         return 1;
     }
     catch (exception& e)

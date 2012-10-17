@@ -26,6 +26,25 @@
 
 
 #include <stdexcept>
+#include <string>
+
+
+namespace pwiz {
+namespace util {
+
+class usage_exception : public std::runtime_error
+{
+    public: usage_exception(const std::string& usage) : std::runtime_error(usage) {}
+};
+
+class user_error : public std::runtime_error
+{
+    public: user_error(const std::string& what) : std::runtime_error(what) {}
+};
+
+} // namespace util
+} // namespace pwiz
+
 
 // make debug assertions throw exceptions in MSVC
 #ifdef _DEBUG
@@ -92,6 +111,13 @@ namespace boost
     {
         std::ostringstream oss;
         oss << "[" << file << ":" << line << "] Assertion failed: " << expr;
+        throw std::runtime_error(oss.str());
+    }
+
+    inline void assertion_failed_msg(char const * expr, char const * msg, char const * function, char const * file, long line) // user defined
+    {
+        std::ostringstream oss;
+        oss << "[" << file << ":" << line << "] Assertion failed: " << expr << " (" << msg << ")";
         throw std::runtime_error(oss.str());
     }
 } // namespace boost
