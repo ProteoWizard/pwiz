@@ -178,6 +178,18 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
             serializer.write(os, msd, iterationListenerRegistry);
             break;
         }
+        case MSDataFile::Format_MS1:
+        {
+            Serializer_MSn serializer(MSn_Type_MS1);
+            serializer.write(os, msd, iterationListenerRegistry);
+            break;
+        }
+        case MSDataFile::Format_CMS1:
+        {
+            Serializer_MSn serializer(MSn_Type_CMS1);
+            serializer.write(os, msd, iterationListenerRegistry);
+            break;
+        }
         case MSDataFile::Format_MS2:
         {
             Serializer_MSn serializer(MSn_Type_MS2);
@@ -292,6 +304,12 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, MSDataFile::Format format)
             return os;
         case MSDataFile::Format_MGF:
             os << "MGF";
+            return os;
+        case MSDataFile::Format_MS1:
+            os << "MS1";
+            return os;
+        case MSDataFile::Format_CMS1:
+            os << "CMS1";
             return os;
         case MSDataFile::Format_MS2:
             os << "MS2";

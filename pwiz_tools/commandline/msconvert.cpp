@@ -96,6 +96,8 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
             extension == ".mzxml" ||
             extension == ".xml" ||
             extension == ".mgf" ||
+            extension == ".ms1" ||
+            extension == ".cms1" ||
             extension == ".ms2" ||
             extension == ".cms2" ||
             extension == ".mz5")
@@ -161,6 +163,8 @@ Config parseCommandLine(int argc, const char* argv[])
     bool format_mzML = false;
     bool format_mzXML = false;
     bool format_MGF = false;
+    bool format_MS1 = false;
+    bool format_CMS1 = false;
     bool format_MS2 = false;
     bool format_CMS2 = false;
     bool format_mz5 = false;
@@ -212,6 +216,12 @@ Config parseCommandLine(int argc, const char* argv[])
         ("text",
             po::value<bool>(&format_text)->zero_tokens(),
             ": write ProteoWizard internal text format")
+        ("ms1",
+            po::value<bool>(&format_MS1)->zero_tokens(),
+            ": write MS1 format")
+        ("cms1",
+            po::value<bool>(&format_CMS1)->zero_tokens(),
+            ": write CMS1 format")
         ("ms2",
             po::value<bool>(&format_MS2)->zero_tokens(),
             ": write MS2 format")
@@ -430,6 +440,8 @@ Config parseCommandLine(int argc, const char* argv[])
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
     if (format_mzXML) config.writeConfig.format = MSDataFile::Format_mzXML;
     if (format_MGF) config.writeConfig.format = MSDataFile::Format_MGF;
+    if (format_MS1) config.writeConfig.format = MSDataFile::Format_MS1;
+    if (format_CMS1) config.writeConfig.format = MSDataFile::Format_CMS1;
     if (format_MS2) config.writeConfig.format = MSDataFile::Format_MS2;
     if (format_CMS2) config.writeConfig.format = MSDataFile::Format_CMS2;
     if (format_mz5) config.writeConfig.format = MSDataFile::Format_MZ5;
@@ -451,6 +463,12 @@ Config parseCommandLine(int argc, const char* argv[])
                 break;
             case MSDataFile::Format_MGF:
                 config.extension = ".mgf";
+                break;
+            case MSDataFile::Format_MS1:
+                config.extension = ".ms1";
+                break;
+            case MSDataFile::Format_CMS1:
+                config.extension = ".cms1";
                 break;
             case MSDataFile::Format_MS2:
                 config.extension = ".ms2";

@@ -41,7 +41,6 @@ struct TestSpectrumInfo
 {
     size_t	index;
     int		scanNumber;
-    int		msLevel;
     double	precursor_mz;
     size_t	num_peaks;
     double	first_peak_mz;
@@ -52,12 +51,12 @@ struct TestSpectrumInfo
 
 const TestSpectrumInfo testSpectrum[] = 
 {
-    {4, 122, 2, 576.82, 139, 176.381, 0.9, "", "2 3"},
-    {6, 125, 2, 785.72, 76,  333.224, 0.8, "", "2 3"}, 
-    {2, 120, 2, 508.95, 82,  261.342, 0.7, "", "2 3"}
+    {4, 122, 576.82, 139, 176.381, 0.9, "", "2 3"},
+    {6, 125, 785.72, 76,  333.224, 0.8, "", "2 3"}, 
+    {2, 120, 508.95, 82,  261.342, 0.7, "", "2 3"}
 };
 
-void checkSpectrumInfo(SpectrumPtr s, size_t idx)
+void checkSpectrumInfo(SpectrumPtr s, size_t idx, int msLevel)
 {
     // Get the current spectrum info
     SpectrumInfo* spec_info = new SpectrumInfo();
@@ -67,8 +66,10 @@ void checkSpectrumInfo(SpectrumPtr s, size_t idx)
     // Validate spectrum info matches what we expect
     unit_assert(spec_info->index == testSpectrum[idx].index);
     unit_assert(spec_info->scanNumber == testSpectrum[idx].scanNumber);
-    unit_assert(spec_info->msLevel == testSpectrum[idx].msLevel);
-    unit_assert_equal(spec_info->precursors[0].mz, testSpectrum[idx].precursor_mz, 5e-2);
+    unit_assert(spec_info->msLevel == msLevel);
+    if (msLevel > 1) {
+        unit_assert_equal(spec_info->precursors[0].mz, testSpectrum[idx].precursor_mz, 5e-2);
+    }
     unit_assert(spec_info->data.size() == testSpectrum[idx].num_peaks);
     unit_assert_equal(spec_info->data.at(0).mz, testSpectrum[idx].first_peak_mz, 5e-1);
     unit_assert_equal(spec_info->data.at(0).intensity, testSpectrum[idx].intensity, 5e-1);
@@ -79,37 +80,42 @@ void checkSpectrumInfo(SpectrumPtr s, size_t idx)
         *os_ << "spectrum index: " << spec_info->index << "\t"
              << "scan number: " << spec_info->scanNumber << "\t"
              << "level: " << spec_info->msLevel << "\t";
-        *os_ << "precursor mz: " << spec_info->precursors[0].mz << "\t";
+        if (msLevel > 1) {
+            *os_ << "precursor mz: " << spec_info->precursors[0].mz << "\t";
+        }
         *os_ << "num peaks: " << spec_info->data.size() << "\t"
              << "first peak mz: " << spec_info->data.at(0).mz << "\t"
              << "intenisity: " << spec_info->data.at(0).intensity << "\t"
              << "possible charges: ";
     }
 
-    Precursor& precur = s->precursors[0];
-    SelectedIon& si = precur.selectedIons[0];
-
-    // Since we are expecting "possible charge states", there shouldn't be a
-    // MS_charge_state!
-    unit_assert(si.cvParam(MS_charge_state).value.empty());
-
-    // Check the possible charge states (expecting 2, values = 2,3)
-    size_t numChargeStates = 0;
-    BOOST_FOREACH(CVParam& param, si.cvParams)
+    if (msLevel > 1)
     {
-        if (param.cvid == MS_possible_charge_state)
-        {
-            // Assume charge is single digit
-            unit_assert(string::npos != testSpectrum[idx].possible_charges.find(param.value));
-            numChargeStates++;
+        Precursor& precur = s->precursors[0];
+        SelectedIon& si = precur.selectedIons[0];
 
-            if (os_)
+        // Since we are expecting "possible charge states", there shouldn't be a
+        // MS_charge_state!
+        unit_assert(si.cvParam(MS_charge_state).value.empty());
+
+        // Check the possible charge states (expecting 2, values = 2,3)
+        size_t numChargeStates = 0;
+        BOOST_FOREACH(CVParam& param, si.cvParams)
+        {
+            if (param.cvid == MS_possible_charge_state)
             {
-                *os_ << param.value << " ";
+                // Assume charge is single digit
+                unit_assert(string::npos != testSpectrum[idx].possible_charges.find(param.value));
+                numChargeStates++;
+
+                if (os_)
+                {
+                    *os_ << param.value << " ";
+                }
             }
         }
+        unit_assert(numChargeStates == 2);
     }
-    unit_assert(numChargeStates == 2);
 
     if (os_)
     {
@@ -117,15 +123,24 @@ void checkSpectrumInfo(SpectrumPtr s, size_t idx)
     }
 }
 
-void test(const bfs::path& datadir)
+void test(const bfs::path& datadir, int msLevel)
 {
     if (os_) *os_ << "test()\n";
 
     vector<string> filenames;
-    filenames.push_back("10-spec.ms2");
-    filenames.push_back("10-spec.bms2");
-    filenames.push_back("10-spec.bms2.gz");
-    filenames.push_back("10-spec.cms2");
+    if (msLevel == 1) {
+        filenames.push_back("10-spec.ms1");
+        filenames.push_back("10-spec.bms1");
+        filenames.push_back("10-spec.cms1");
+    } else if (msLevel == 2) {
+        filenames.push_back("10-spec.ms2");
+        filenames.push_back("10-spec.bms2");
+        filenames.push_back("10-spec.bms2.gz");
+        filenames.push_back("10-spec.cms2");
+    } else {
+        cerr << "Invalid MS level." << endl;
+        return;
+    }
 
     // look up these spectrum indexes
     size_t indexes[] = {4, 6, 2};
@@ -152,7 +167,7 @@ void test(const bfs::path& datadir)
         for (size_t i=0; i<num_spec; i++)
         {
             SpectrumPtr cur_spec = all_spectra->spectrum(indexes[i], true);
-            checkSpectrumInfo(cur_spec, i);
+            checkSpectrumInfo(cur_spec, i, msLevel);
         }
 
         // do the same thing for a list of scan numbers
@@ -188,7 +203,7 @@ void test(const bfs::path& datadir)
             else
             {
                 SpectrumPtr cur_spec = all_spectra->spectrum(found_index, true);
-                checkSpectrumInfo(cur_spec, i);
+                checkSpectrumInfo(cur_spec, i, msLevel);
             }
         }
     }
@@ -210,7 +225,8 @@ int main(int argc, char* argv[])
         }
         buildparent.resize(pos);
         bfs::path example_data_dir = buildparent + "example_data/";
-        test(example_data_dir);
+        test(example_data_dir, 1);
+        test(example_data_dir, 2);
 
         return 0;
     }

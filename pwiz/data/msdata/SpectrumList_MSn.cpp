@@ -41,7 +41,7 @@ using namespace pwiz::chemistry;
 
 namespace {
 
-// these are the fixed sizes used to write .bms2 and .cms2 files
+// these are the fixed sizes used to write .bms1, .cms1, .bms2, and .cms2 files
 // use these to read from files rather than sizeof(<type>)
 const int sizeIntMSn       = 4;
 const int sizeFloatMSn     = 4;   
@@ -116,13 +116,14 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     :   is_(is), msd_(msd), version_(0), filetype_(filetype)
   {
     switch( filetype_){
+    case MSn_Type_MS1:
     case MSn_Type_MS2:
       createIndexText();
       break;
-    case MSn_Type_CMS2:
-      createIndexBinary();
-      break;
+    case MSn_Type_BMS1:
+    case MSn_Type_CMS1:
     case MSn_Type_BMS2:
+    case MSn_Type_CMS2:
       createIndexBinary();
       break;
     case MSn_Type_UNKNOWN:
@@ -180,7 +181,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
       throw runtime_error("[SpectrumList_MSn::spectrum] Error seeking to spectrum index " + 
                           lexical_cast<string>(index));
     
-    if( filetype_ == MSn_Type_MS2 ){
+    if( filetype_ == MSn_Type_MS1 || filetype_ == MSn_Type_MS2 ){
       parseSpectrumText(*result, getBinaryData);
     }else{
       parseSpectrumBinary(*result, getBinaryData);
@@ -196,24 +197,29 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
   const MSData& msd_;
   vector<SpectrumIdentity> index_;
   map<string, size_t> idToIndex_;
-  int version_; // read from fileheader for bms2 and cms2 filetypes
+  int version_; // read from fileheader for bms1, cms1, bms2, and cms2 filetypes
   MSn_Type filetype_;
 
   void parseSpectrumText(Spectrum& spectrum, bool getBinaryData) const
   {
-    // Every MS2 spectrum is assumed to be:
+    // Every MS1/MS2 spectrum is assumed to be:
     // * MSn spectrum
-    // * MS level 2
+    // * MS level <n>
     // * a peak list (centroided)
     // * not deisotoped (even though it may actually be, there's no way to tell)
+
+    bool ms1File = MSn_Type_MS1 == filetype_ || MSn_Type_BMS1 == filetype_ || MSn_Type_CMS1 == filetype_;
     
     spectrum.set(MS_MSn_spectrum);
-    spectrum.set(MS_ms_level, 2);
+    spectrum.set(MS_ms_level, (ms1File ? 1 : 2));
     spectrum.set(MS_centroid_spectrum);
-    
-    spectrum.precursors.push_back(Precursor());
-    Precursor& precursor = spectrum.precursors.back();
-    precursor.selectedIons.push_back(SelectedIon());
+
+    if (!ms1File)
+    {
+        spectrum.precursors.push_back(Precursor());
+        Precursor& precursor = spectrum.precursors.back();
+        precursor.selectedIons.push_back(SelectedIon());
+    }
 
     string lineStr;
     bool inPeakList = false;
@@ -246,11 +252,15 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         spectrum.id = "scan=" + lexical_cast<string>(scanNum);
 
         // read in the precursor mz
-        size_t last_num_pos = lineStr.find_last_of("0123456789");
-        size_t last_space_pos = lineStr.find_last_of(" \t", last_num_pos);
-        precursor_mz = lexical_cast<double>(lineStr.substr(last_space_pos, last_num_pos-last_space_pos+1));
-        // store precursor in the first selected ion if we do not have accurate mass data (below)
-        precursor.isolationWindow.set(MS_isolation_window_target_m_z, precursor_mz, MS_m_z);
+        if (!ms1File)
+        {
+            size_t last_num_pos = lineStr.find_last_of("0123456789");
+            size_t last_space_pos = lineStr.find_last_of(" \t", last_num_pos);
+            precursor_mz = lexical_cast<double>(lineStr.substr(last_space_pos, last_num_pos-last_space_pos+1));
+            // store precursor in the first selected ion if we do not have accurate mass data (below)
+            Precursor& precursor = spectrum.precursors.back();
+            precursor.isolationWindow.set(MS_isolation_window_target_m_z, precursor_mz, MS_m_z);
+        }
     }
     else // eof, exit
     {
@@ -273,6 +283,12 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         }
         else if (lineStr.find("Z") == 0)
         {
+            if (ms1File)
+            {
+                throw runtime_error(("[SpectrumList_MSn::parseSpectrum] Z line found in MS1 file at offset " +
+                               lexical_cast<string>(size_t(is_->tellg())-lineStr.length()-1) + "\n"));
+            }
+
             if (inPeakList)
             {
                 throw runtime_error(("[SpectrumList_MSn::parseSpectrum] Z line found without S line at offset " +
@@ -381,34 +397,36 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
        is_->clear();
        is_->seekg(0);
     }
-    
-    // if no accurate masses, set charge as possible
-    if (chargeMassPairs.empty())
+    if (!ms1File)
     {
-      size_t numCharges = charges.size();
-      for (size_t i = 0; i < numCharges; i++)
-      {
-        precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges[i]));
-      }
-      precursor.selectedIons.back().set(MS_selected_ion_m_z, precursor_mz, MS_m_z);
+        Precursor& precursor = spectrum.precursors.back();
+        // if no accurate masses, set charge as possible
+        if (chargeMassPairs.empty())
+        {
+          size_t numCharges = charges.size();
+          for (size_t i = 0; i < numCharges; i++)
+          {
+            precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges[i]));
+          }
+          precursor.selectedIons.back().set(MS_selected_ion_m_z, precursor_mz, MS_m_z);
+        }
+        else // create a new selected ion for each charge,mass pair
+        {
+          for(size_t i=0; i < chargeMassPairs.size(); i++)
+          {
+            const pair<int, double>& chargeMass = chargeMassPairs.at(i);
+            precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, chargeMass.first));
+            precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, chargeMass.second));
+            precursor.selectedIons.back().set(MS_selected_ion_m_z, 
+                                              calculateMassOverCharge(chargeMass.second, chargeMass.first,
+                                                                      1), // this is a singly charged mass
+                                              MS_m_z);
+            precursor.selectedIons.push_back(SelectedIon());
+          }
+          // last ion added has no data
+          precursor.selectedIons.pop_back();
+        }
     }
-    else // create a new selected ion for each charge,mass pair
-    {
-      for(size_t i=0; i < chargeMassPairs.size(); i++)
-      {
-        const pair<int, double>& chargeMass = chargeMassPairs.at(i);
-        precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, chargeMass.first));
-        precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, chargeMass.second));
-        precursor.selectedIons.back().set(MS_selected_ion_m_z, 
-                                          calculateMassOverCharge(chargeMass.second, chargeMass.first,
-                                                                  1), // this is a singly charged mass
-                                          MS_m_z);
-        precursor.selectedIons.push_back(SelectedIon());
-      }
-      // last ion added has no data
-      precursor.selectedIons.pop_back();
-    }
-
     spectrum.set(MS_lowest_observed_m_z, lowMZ);
     spectrum.set(MS_highest_observed_m_z, highMZ);
     spectrum.set(MS_total_ion_current, tic);
@@ -429,21 +447,25 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
   {
     // Every MSn spectrum is assumed to be:
     // * MSn spectrum
-    // * MS level 2
+    // * MS level <n>
     // * a peak list (centroided)
     // * not deisotoped (even though it may actually be, there's no way to tell)
+
+    bool ms1File = MSn_Type_MS1 == filetype_ || MSn_Type_BMS1 == filetype_ || MSn_Type_CMS1 == filetype_;
     
     spectrum.set(MS_MSn_spectrum);
-    spectrum.set(MS_ms_level, 2);
+    spectrum.set(MS_ms_level, (ms1File ? 1 : 2));
     spectrum.set(MS_centroid_spectrum);
 
-    spectrum.precursors.push_back(Precursor());
-    Precursor& precursor = spectrum.precursors.back();
-    precursor.selectedIons.push_back(SelectedIon());
-    
     MSnScanInfo scanInfo;
     scanInfo.readSpectrumHeader(is_, version_);
-    precursor.isolationWindow.set(MS_isolation_window_target_m_z, scanInfo.mz, MS_m_z);
+    if (!ms1File)
+    {
+        spectrum.precursors.push_back(Precursor());
+        Precursor& precursor = spectrum.precursors.back();
+        precursor.selectedIons.push_back(SelectedIon());
+        precursor.isolationWindow.set(MS_isolation_window_target_m_z, scanInfo.mz, MS_m_z);
+    }
 
     spectrum.id = "scan=" + lexical_cast<string>(scanInfo.scanNumber);
 
@@ -453,42 +475,46 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     vector<int> charges;
     double mass = 0;
 
-    for(int i=0; i<scanInfo.numChargeStates; i++)
+    if (!ms1File)
     {
-        (*is_).read(reinterpret_cast<char *>(&charge), sizeIntMSn);
-        charges.push_back(charge);
-        (*is_).read(reinterpret_cast<char *>(&mass), sizeDoubleMSn);
-    }
-
-    // if there is no extended charge information, add the (possible) charges
-    if( scanInfo.numEzStates == 0 )
-    {
-      for(int i=0; i<scanInfo.numChargeStates; i++)
-      {
-        precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges.at(i)));
-      }
-      precursor.selectedIons.back().set(MS_selected_ion_m_z, scanInfo.mz, MS_m_z);
-    }
-    else  // get extended charge informationfrom equivalent of EZ lines
-    {
-        for(int i=0; i<scanInfo.numEzStates; i++){
-          int eCharge;
-          double eMass;
-          float pRTime;  // rTime of chromatogram peak from MS1 scans
-          float pArea;   // area under chromatogram peak from MS1 scans
-          (*is_).read(reinterpret_cast<char *>(&eCharge), sizeIntMSn);
-          (*is_).read(reinterpret_cast<char *>(&eMass), sizeDoubleMSn);
-          (*is_).read(reinterpret_cast<char *>(&pRTime), sizeFloatMSn);
-          (*is_).read(reinterpret_cast<char *>(&pArea), sizeFloatMSn);
-          
-          // store each charge and accurate mass as a separate selected ion
-          precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, eCharge));
-          precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, eMass));
-          precursor.selectedIons.back().set(MS_selected_ion_m_z, calculateMassOverCharge(eMass, eCharge, 1), MS_m_z);
-          precursor.selectedIons.push_back(SelectedIon());
+        Precursor& precursor = spectrum.precursors.back();
+        for(int i=0; i<scanInfo.numChargeStates; i++)
+        {
+            (*is_).read(reinterpret_cast<char *>(&charge), sizeIntMSn);
+            charges.push_back(charge);
+            (*is_).read(reinterpret_cast<char *>(&mass), sizeDoubleMSn);
         }
-        // last ion added was not populated
-        precursor.selectedIons.pop_back();
+
+        // if there is no extended charge information, add the (possible) charges
+        if( scanInfo.numEzStates == 0 )
+        {
+          for(int i=0; i<scanInfo.numChargeStates; i++)
+          {
+            precursor.selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, charges.at(i)));
+          }
+          precursor.selectedIons.back().set(MS_selected_ion_m_z, scanInfo.mz, MS_m_z);
+        }
+        else  // get extended charge informationfrom equivalent of EZ lines
+        {
+            for(int i=0; i<scanInfo.numEzStates; i++){
+              int eCharge;
+              double eMass;
+              float pRTime;  // rTime of chromatogram peak from MS1 scans
+              float pArea;   // area under chromatogram peak from MS1 scans
+              (*is_).read(reinterpret_cast<char *>(&eCharge), sizeIntMSn);
+              (*is_).read(reinterpret_cast<char *>(&eMass), sizeDoubleMSn);
+              (*is_).read(reinterpret_cast<char *>(&pRTime), sizeFloatMSn);
+              (*is_).read(reinterpret_cast<char *>(&pArea), sizeFloatMSn);
+          
+              // store each charge and accurate mass as a separate selected ion
+              precursor.selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, eCharge));
+              precursor.selectedIons.back().cvParams.push_back(CVParam(MS_accurate_mass, eMass));
+              precursor.selectedIons.back().set(MS_selected_ion_m_z, calculateMassOverCharge(eMass, eCharge, 1), MS_m_z);
+              precursor.selectedIons.push_back(SelectedIon());
+            }
+            // last ion added was not populated
+            precursor.selectedIons.pop_back();
+        }
     }
 
     // get retention time
@@ -497,7 +523,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
 
     double* mzs = NULL;
     float* intensities = NULL;
-    if( filetype_ == MSn_Type_CMS2 )// get compression info
+    if( filetype_ == MSn_Type_CMS1 || filetype_ == MSn_Type_CMS2 )// get compression info
     {
       int iTemp;
       
@@ -552,11 +578,11 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
     float intensity = 0;
 
     for(int i=0; i<scanInfo.numPeaks; i++){
-      if( filetype_ == MSn_Type_CMS2 )
+      if( filetype_ == MSn_Type_CMS1 || filetype_ == MSn_Type_CMS2 )
       {
         intensity = intensities[i];
         mz = mzs[i];
-      }else //MSn_Type_BMS2
+      }else //MSn_Type_BMS1, MSn_Type_BMS2
       {
         (*is_).read(reinterpret_cast<char *>(&mz), sizeDoubleMSn);
         (*is_).read(reinterpret_cast<char *>(&intensity), sizeFloatMSn);
@@ -672,7 +698,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
       curIdToIndexItr = idToIndex_.insert(pair<string, size_t>(curIdentity.id, index_.size()-1)).first;  
       
       // skip to next spec
-      if( filetype_ == MSn_Type_CMS2 ){
+      if( filetype_ == MSn_Type_CMS1 || filetype_ == MSn_Type_CMS2 ){
         // skip the charge states
         (*is_).seekg(scanInfo.numChargeStates * sizeChargeMSn, std::ios_base::cur); 
         // skip the EZ states
@@ -687,7 +713,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
         intensityLen = (unsigned long)iTemp;
         
         (*is_).seekg(mzLen + intensityLen, std::ios_base::cur); 
-      }else if( filetype_ == MSn_Type_BMS2 ){
+      }else if( filetype_ == MSn_Type_BMS1 || filetype_ == MSn_Type_BMS2 ){
         // skip the charge states
         (*is_).seekg(scanInfo.numChargeStates * sizeChargeMSn, std::ios_base::cur); 
         // skip the peaks

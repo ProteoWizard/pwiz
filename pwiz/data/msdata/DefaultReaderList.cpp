@@ -302,7 +302,10 @@ PWIZ_API_DECL void Reader_MGF::read(const std::string& filename,
 
 PWIZ_API_DECL std::string Reader_MSn::identify(const string& filename, const string& head) const
 {
-    bool isOK = has_extension(filename, ".ms2") ||
+    bool isOK = has_extension(filename, ".ms1") ||
+                has_extension(filename, ".cms1") ||
+                has_extension(filename, ".bms1") ||
+                has_extension(filename, ".ms2") ||
                 has_extension(filename, ".cms2") ||
                 has_extension(filename, ".bms2");
 
@@ -319,7 +322,13 @@ PWIZ_API_DECL void Reader_MSn::read(const string& filename,
         throw ReaderFail("[Reader_MSn::read] multiple runs not supported");
 
     MSn_Type filetype = MSn_Type_UNKNOWN;
-    if (has_extension(filename, ".ms2"))
+    if (has_extension(filename, ".ms1"))
+        filetype = MSn_Type_MS1;
+    else if (has_extension(filename, ".cms1"))
+        filetype = MSn_Type_CMS1;
+    else if (has_extension(filename, ".bms1"))
+        filetype = MSn_Type_BMS1;
+    else if (has_extension(filename, ".ms2"))
         filetype = MSn_Type_MS2;
     else if (has_extension(filename, ".cms2"))
         filetype = MSn_Type_CMS2;
