@@ -430,7 +430,7 @@ void Serializer_MSn::Impl::write(ostream& os, const MSData& msd,
         SpectrumPtr s = sl.spectrum(i, true);
         int msLevel = s->cvParam(MS_ms_level).valueAs<int>();
         if ((ms1File && msLevel == 1) ||
-            (!ms1File && msLevel > 1 && !s->precursors.empty() && !s->precursors[0].selectedIons.empty()))
+            (!ms1File && msLevel == 2 && !s->precursors.empty() && !s->precursors[0].selectedIons.empty()))
         {
             switch (_filetype)
             {
