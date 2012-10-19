@@ -452,6 +452,24 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} CV.
+        /// </summary>
+        public static string AggregateOp_AxisTitleCv {
+            get {
+                return ResourceManager.GetString("AggregateOp_AxisTitleCv", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} CV (%).
+        /// </summary>
+        public static string AggregateOp_AxisTitleCvPercent {
+            get {
+                return ResourceManager.GetString("AggregateOp_AxisTitleCvPercent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}:{1}.
         /// </summary>
         public static string AlignedFile_AlignLibraryRetentionTimes__0__1__ {
@@ -665,15 +683,6 @@ namespace pwiz.Skyline.Properties {
         public static string AreaReplicateGraphPane_InitFromData_Library {
             get {
                 return ResourceManager.GetString("AreaReplicateGraphPane_InitFromData_Library", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Log Peak Area.
-        /// </summary>
-        public static string AreaReplicateGraphPane_UpdateGraph_Log_Peak_Area {
-            get {
-                return ResourceManager.GetString("AreaReplicateGraphPane_UpdateGraph_Log_Peak_Area", resourceCulture);
             }
         }
         
@@ -5179,6 +5188,15 @@ namespace pwiz.Skyline.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Log {0}.
+        /// </summary>
+        public static string GraphValues_Log_AxisTitle {
+            get {
+                return ResourceManager.GetString("GraphValues_Log_AxisTitle", resourceCulture);
+            }
+        }
+        
         public static System.Drawing.Bitmap GreenCheck {
             get {
                 object obj = ResourceManager.GetObject("GreenCheck", resourceCulture);
@@ -9107,6 +9125,15 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Replicate.
+        /// </summary>
+        public static string ReplicateGroupOp_ReplicateAxisTitle {
+            get {
+                return ResourceManager.GetString("ReplicateGroupOp_ReplicateAxisTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to An error report will be posted..
         /// </summary>
         public static string ReportErrorDlg_ReportErrorDlg_An_error_report_will_be_posted {
@@ -9652,11 +9679,47 @@ namespace pwiz.Skyline.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to {0} aligned to {1}.
+        /// </summary>
+        public static string RtAlignment_AxisTitleAlignedTo {
+            get {
+                return ResourceManager.GetString("RtAlignment_AxisTitleAlignedTo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Failed setting data to clipboard..
         /// </summary>
         public static string RTDetails_gridStatistics_KeyDown_Failed_setting_data_to_clipboard {
             get {
                 return ResourceManager.GetString("RTDetails_gridStatistics_KeyDown_Failed_setting_data_to_clipboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FWB Time.
+        /// </summary>
+        public static string RtGraphValue_FWB_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_FWB_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to FWHM Time.
+        /// </summary>
+        public static string RtGraphValue_FWHM_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_FWHM_Time", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Retention Time.
+        /// </summary>
+        public static string RtGraphValue_Retention_Time {
+            get {
+                return ResourceManager.GetString("RtGraphValue_Retention_Time", resourceCulture);
             }
         }
         

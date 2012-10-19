@@ -1593,6 +1593,18 @@ namespace pwiz.Skyline.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string GroupByReplicateAnnotation {
+            get {
+                return ((string)(this["GroupByReplicateAnnotation"]));
+            }
+            set {
+                this["GroupByReplicateAnnotation"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("2")]
         public int PrimaryTransitionCount {
             get {

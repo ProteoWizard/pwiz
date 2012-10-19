@@ -20,7 +20,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
+using pwiz.Common.Collections;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -46,8 +48,14 @@ namespace pwiz.Skyline.Controls.Graphs
             set { Settings.Default.ReplicateOrderEnum = value.ToString(); }
         }
 
+        public static string GroupByReplicateAnnotation
+        {
+            get { return Settings.Default.GroupByReplicateAnnotation; }
+            set { Settings.Default.GroupByReplicateAnnotation = value; }
+        }
+
         protected DocNode _parentNode;
-        protected IList<int> _replicateIndices;
+        protected IList<ReplicateGroup> _replicateGroups;
 
         protected SummaryReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
@@ -58,18 +66,26 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected virtual void InitFromData(GraphData graphData)
         {
-            string[] resultNamesOrdered = graphData.GetReplicateNames().ToArray();
+            string[] resultNamesOrdered = graphData.GetReplicateLabels().ToArray();
+            XAxis.Title.Text = graphData.ReplicateGroupOp.ReplicateAxisTitle;
             if (!ArrayUtil.EqualsDeep(resultNamesOrdered, XAxis.Scale.TextLabels))
             {
                 XAxis.Scale.TextLabels = resultNamesOrdered;
                 ScaleAxisLabels();
             }
-            _replicateIndices = graphData.ReplicateIndices;
+            _replicateGroups = graphData.ReplicateGroups;
         }
 
         protected override int SelectedIndex
         {
-            get { return (_replicateIndices != null ? _replicateIndices.IndexOf(GraphSummary.ResultsIndex) : -1); }
+            get
+            {
+                if (_replicateGroups == null)
+                {
+                    return -1;
+                }
+                return _replicateGroups.IndexOf(group => group.ReplicateIndexes.Contains(GraphSummary.ResultsIndex));
+            }
         }
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
@@ -79,23 +95,34 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
         {
-            // Just change the active replicate, if the user clicks on a
-            // different replicate.  Change the selection, if the replicate
-            // is already selected.  This keeps the UI from drilling in too
-            // deep when the user just wants to see a different replicate
-            // at the same level currently being view (e.g. peptide)
-            if (0 > selectedIndex || selectedIndex >= _replicateIndices.Count)
+            if (0 > selectedIndex || selectedIndex >= _replicateGroups.Count)
                 return;
 
-            int iResult = IndexOfReplicate(selectedIndex);
-            if (GraphSummary.ResultsIndex != iResult || GraphChromatogram.IsSingleTransitionDisplay)
+            // When the user clicks on the graph, they either intend to change
+            // the currently selected replicate, or the currently selected IdentityPath.
+            // We want to prevent the UI from drilling in too deep when the user
+            // just wants to see a different replicate at the same level currently 
+            // being viewed (e.g. peptide).
+            // Therefore, only change the currently selected IdentityPath if the currently 
+            // selected Replicate is the last replicate in the ReplicateGroup that they
+            // have clicked on.
+            var resultIndicesArray = IndexOfReplicate(selectedIndex).ToArray();
+            int iSelection = Array.IndexOf(resultIndicesArray, GraphSummary.ResultsIndex);
+            if (iSelection == resultIndicesArray.Length - 1 && !GraphChromatogram.IsSingleTransitionDisplay)
             {
-                ChangeSelectedIndex(iResult);                
+                if (!Equals(GraphSummary.StateProvider.SelectedPath, identityPath))
+                {
+                    GraphSummary.StateProvider.SelectedPath = identityPath;
+                    return;
+                }
             }
-            else if (identityPath != null)
-            {
-                GraphSummary.StateProvider.SelectedPath = identityPath;
-            }
+            // If there is more than one replicate in the group that they
+            // have clicked on, then select the next replicate in that group.
+            // The user has clicked on a group which does not contain the 
+            // currently selected replicate, then iSelection will be -1, and 
+            // the first replicate in that group will be selected.
+            int newReplicateIndex = resultIndicesArray[((iSelection + 1) % resultIndicesArray.Length)];
+            ChangeSelectedIndex(newReplicateIndex);                
         }
 
         protected void ChangeSelectedIndex(int iResult)
@@ -109,9 +136,9 @@ namespace pwiz.Skyline.Controls.Graphs
             GraphSummary.Focus();
         }
 
-        public int IndexOfReplicate(int index)
+        public ReplicateIndexSet IndexOfReplicate(int index)
         {
-            return (_replicateIndices != null ? _replicateIndices[index] : -1);
+            return (_replicateGroups != null ? _replicateGroups[index].ReplicateIndexes : ReplicateIndexSet.EMPTY);
         }
 
 
@@ -129,13 +156,14 @@ namespace pwiz.Skyline.Controls.Graphs
             private ReadOnlyCollection<DocNode> _docNodes;
             private ReadOnlyCollection<String> _docNodeLabels;
             private ReadOnlyCollection<List<PointPairList>> _pointPairLists;
-            private ReadOnlyCollection<int> _replicateIndices;
+            private ReadOnlyCollection<ReplicateGroup> _replicateGroups;
 
-            protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType)
+            protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType, GraphValues.ReplicateGroupOp replicateGroupOp)
             {
                 _document = document;
                 _docNode = docNode;
                 _displayType = displayType;
+                ReplicateGroupOp = replicateGroupOp;
             }
 
             protected DisplayTypeChrom DisplayType { get { return _displayType; } }
@@ -158,7 +186,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (_docNode is TransitionDocNode)
                 {
                     var nodeTran = (TransitionDocNode)_docNode;
-                    ReplicateIndices = GetReplicateIndices(nodeTran).ToArray();
+                    ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeTran)).ToArray();
                     docNodes.Add(nodeTran);
                     pointPairLists.Add(GetPointPairLists(null, nodeTran, _displayType));
                     docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
@@ -166,7 +194,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else if (_docNode is TransitionGroupDocNode)
                 {
                     var nodeGroup = (TransitionGroupDocNode)_docNode;
-                    ReplicateIndices = GetReplicateIndices(nodeGroup).ToArray();
+                    ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodeGroup)).ToArray();
                     if (_displayType == DisplayTypeChrom.single || _displayType == DisplayTypeChrom.total)
                     {
                         docNodes.Add(nodeGroup);
@@ -186,7 +214,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else if (_docNode is PeptideDocNode)
                 {
                     var nodePep = (PeptideDocNode) _docNode;
-                    ReplicateIndices = GetReplicateIndices(nodePep).ToArray();
+                    ReplicateGroups = GetReplicateGroups(GetReplicateIndices(nodePep)).ToArray();
                     foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
                         docNodes.Add(nodeGroup);
@@ -199,23 +227,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 DocNodeLabels = docNodeLabels;
             }
 
-            public IList<int> ReplicateIndices
+            public IList<ReplicateGroup> ReplicateGroups
             {
-                get { return _replicateIndices; }
-                private set { _replicateIndices = MakeReadOnly(value); }
+                get { return _replicateGroups; }
+                private set { _replicateGroups = MakeReadOnly(value); }
             }
 
-            public IEnumerable<string> GetReplicateNames()
+            public IEnumerable<string> GetReplicateLabels()
             {
                 EnsureData();
-                if (ReplicateIndices == null || !_document.Settings.HasResults)
-                    return GetReplicateNames(_document);
+                if (ReplicateGroups == null || !_document.Settings.HasResults)
+                    return GetReplicateLabels(_document);
 
-                return from iResult in ReplicateIndices
-                       select _document.Settings.MeasuredResults.Chromatograms[iResult].Name;
+                return ReplicateGroups.Select(replicateGroup => replicateGroup.GroupName);
             }
 
-            public static IEnumerable<string> GetReplicateNames(SrmDocument document)
+            public static IEnumerable<string> GetReplicateLabels(SrmDocument document)
             {
                 if (!document.Settings.HasResults)
                     return new string[0];
@@ -263,86 +290,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
+            public GraphValues.ReplicateGroupOp ReplicateGroupOp { get; private set; }
+
             public abstract PointPair PointPairMissing(int xValue);
 
-            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
-                                                          TransitionDocNode nodeTran,
-                                                          DisplayTypeChrom displayType)
+            private List<PointPairList> MakePointPairLists<TChromInfoData>(
+                DisplayTypeChrom displayType, 
+                IList<ICollection<TChromInfoData>> chromInfoResults,
+                Func<TChromInfoData, bool> isMissingValue, 
+                Func<int, ICollection<TChromInfoData>, PointPair> createPointPair) where TChromInfoData : ChromInfoData
             {
                 var pointPairLists = new List<PointPairList>();
-                if (!nodeTran.HasResults)
-                {
-                    pointPairLists.Add(new PointPairList());
-                    return pointPairLists;                    
-                }
-                int maxSteps = 1;
-                bool allowSteps = (displayType == DisplayTypeChrom.single);
-                if (allowSteps)
-                {
-                    foreach (var result in nodeTran.Results)
-                        maxSteps = Math.Max(maxSteps, GetCountSteps(result));                    
-                }
-                for (int i = 0; i < maxSteps; i++)
-                    pointPairLists.Add(new PointPairList());
-
-                int numSteps = maxSteps/2;
-                foreach (int iResult in nodeGroup != null
-                                            ? GetReplicateIndices(nodeGroup)
-                                            : GetReplicateIndices(nodeTran))
-                {
-                    // Fill everything with missing data until filled for real
-                    foreach (PointPairList pairList in pointPairLists)
-                        pairList.Add(PointPairMissing(iResult));
-
-                    if (0 > iResult || iResult >= nodeTran.Results.Count)
-                        continue;
-                    var result = nodeTran.Results[iResult];
-                    if (result == null || result.Count == 0)
-                        continue;
-
-                    // Add areas by result index to point pair lists for every step
-                    // to be shown.
-                    foreach (var chromInfo in result)
-                    {
-                        int step = chromInfo.OptimizationStep;
-                        int iStep = step + numSteps;
-                        if (0 > iStep || iStep >= pointPairLists.Count || IsMissingValue(chromInfo))
-                            continue;
-
-                        // Replace the added missing point with the real value
-                        var pointPairList = pointPairLists[iStep];
-                        pointPairList[pointPairList.Count - 1] = CreatePointPair(iResult, chromInfo);
-                    }
-                }
-                return pointPairLists;
-            }
-
-            protected abstract bool IsMissingValue(TransitionChromInfo chromInfo);
-
-            protected abstract PointPair CreatePointPair(int iResult, TransitionChromInfo chromInfo);
-
-            private static int GetCountSteps(IList<TransitionChromInfo> result)
-            {
-                // Only for the first file
-                if (result == null)
-                    return 0;
-
-                int fileIndex = result[0].FileIndex;
-                int maxStep = 0;
-                foreach (var chromInfo in result)
-                {
-                    if (chromInfo.FileIndex != fileIndex)
-                        continue;
-                    maxStep = Math.Max(maxStep, chromInfo.OptimizationStep);
-                }
-                return maxStep*2 + 1;
-            }
-
-            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
-                                                         DisplayTypeChrom displayType)
-            {
-                var pointPairLists = new List<PointPairList>();
-                if (!nodeGroup.HasResults)
+                if (null == chromInfoResults)
                 {
                     pointPairLists.Add(new PointPairList());
                     return pointPairLists;
@@ -351,59 +310,136 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool allowSteps = (displayType == DisplayTypeChrom.single);
                 if (allowSteps)
                 {
-                    foreach (var result in nodeGroup.Results)
+                    foreach (var result in chromInfoResults)
                         maxSteps = Math.Max(maxSteps, GetCountSteps(result));
                 }
                 for (int i = 0; i < maxSteps; i++)
                     pointPairLists.Add(new PointPairList());
 
                 int numSteps = maxSteps / 2;
-                foreach (int iResult in GetReplicateIndices(nodeGroup))
+                IList<ReplicateGroup> replicateGroups = _replicateGroups;
+                for (int iGroup = 0; iGroup < replicateGroups.Count; iGroup++)
                 {
                     // Fill everything with missing data until filled for real
-                    for (int i = 0; i < maxSteps; i++)
-                        pointPairLists[i].Add(PointPairMissing(iResult));
-
-                    var result = nodeGroup.Results[iResult];
-                    if (result == null || result.Count == 0)
-                        continue;
-
-                    // Add areas by result index to point pair lists for every step
-                    // to be shown.
-                    foreach (var chromInfo in result)
+                    foreach (PointPairList pairList in pointPairLists)
+                        pairList.Add(PointPairMissing(iGroup));
+                    var replicateGroup = replicateGroups[iGroup];
+                    var chromInfoLists = new List<ICollection<TChromInfoData>>();
+                    foreach (var replicateIndex in replicateGroup.ReplicateIndexes)
                     {
-                        int step = chromInfo.OptimizationStep;
-                        int iStep = step + numSteps;
-                        if (0 > iStep || iStep >= pointPairLists.Count || IsMissingValue(chromInfo))
+                        if (replicateIndex < 0 || replicateIndex >= chromInfoResults.Count)
+                        {
                             continue;
-
-                        // Replace the added missing point with the real value
+                        }
+                        chromInfoLists.Add(chromInfoResults[replicateIndex]);
+                    }
+                    if (0 == chromInfoLists.Count)
+                    {
+                        continue;
+                    }
+                    var optimizationSteps = chromInfoLists
+                        .SelectMany(chromInfoList => chromInfoList.Select(chromInfoData=>chromInfoData.OptimizationStep))
+                        .Distinct()
+                        .ToArray();
+                    foreach (int step in optimizationSteps)
+                    {
+                        int iStep = step + numSteps;
+                        if (0 > iStep || iStep >= pointPairLists.Count)
+                            continue;
+                        var chromInfoDatasForStep = new List<TChromInfoData>();
+                        foreach (var chromInfoDatas in chromInfoLists)
+                        {
+                            var chromInfoForStep = chromInfoDatas.FirstOrDefault(chromInfoData => step == chromInfoData.OptimizationStep);
+                            if (null == chromInfoForStep || isMissingValue(chromInfoForStep))
+                            {
+                                continue;
+                            }
+                            chromInfoDatasForStep.Add(chromInfoForStep);
+                        }
                         var pointPairList = pointPairLists[iStep];
-                        pointPairList[pointPairList.Count - 1] = CreatePointPair(iResult, chromInfo);
+                        pointPairList[pointPairList.Count - 1] = createPointPair(iGroup, chromInfoDatasForStep);
                     }
                 }
                 return pointPairLists;
+
             }
 
-            protected abstract bool IsMissingValue(TransitionGroupChromInfo chromInfo);
+            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
+                                                          TransitionDocNode nodeTran,
+                                                          DisplayTypeChrom displayType)
+            {
+                var transitionChromInfoDatas = TransitionChromInfoData.GetTransitionChromInfoDatas(
+                    _document.Settings.MeasuredResults, nodeTran.Results);
 
-            protected abstract PointPair CreatePointPair(int iResult, TransitionGroupChromInfo chromInfo);
+                return MakePointPairLists(displayType, transitionChromInfoDatas, IsMissingValue, CreatePointPair);
+            }
 
-            private static int GetCountSteps(IList<TransitionGroupChromInfo> result)
+            protected abstract bool IsMissingValue(TransitionChromInfoData chromInfo);
+
+            protected abstract PointPair CreatePointPair(int iResult, ICollection<TransitionChromInfoData> chromInfos);
+
+            private static int GetCountSteps(IEnumerable<ChromInfoData> result)
             {
                 // Only for the first file
                 if (result == null)
                     return 0;
 
-                int fileIndex = result[0].FileIndex;
+                int? fileIndex = null;
                 int maxStep = 0;
-                foreach (var chromInfo in result)
+                foreach (var chromInfoData in result)
                 {
-                    if (chromInfo.FileIndex != fileIndex)
-                        continue;
-                    maxStep = Math.Max(maxStep, chromInfo.OptimizationStep);
+                    if (fileIndex.HasValue)
+                    {
+                        if (fileIndex != chromInfoData.ChromInfo.FileIndex)
+                        {
+                            continue;
+                        }  
+                    } 
+                    else
+                    {
+                        fileIndex = chromInfoData.ChromInfo.FileIndex;
+                    }
+                    maxStep = Math.Max(maxStep, chromInfoData.OptimizationStep);
                 }
-                return maxStep * 2 + 1;
+                return maxStep*2 + 1;
+            }
+
+            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
+                                                         DisplayTypeChrom displayType)
+            {
+                var transitionGroupChromInfoDatas = TransitionGroupChromInfoData.GetTransitionGroupChromInfoDatas(
+                    _document.Settings.MeasuredResults, nodeGroup.Results);
+                return MakePointPairLists(displayType, transitionGroupChromInfoDatas, IsMissingValue, CreatePointPair);
+            }
+
+            protected abstract bool IsMissingValue(TransitionGroupChromInfoData chromInfoData);
+
+            protected abstract PointPair CreatePointPair(int iResult, ICollection<TransitionGroupChromInfoData> chromInfo);
+
+            private IEnumerable<ReplicateGroup> GetReplicateGroups(IEnumerable<int> replicateIndexes)
+            {
+                var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
+                if (ReplicateGroupOp.GroupByAnnotation == null)
+                {
+                    return
+                        replicateIndexes.Select(replicateIndex 
+                            => new ReplicateGroup(chromatograms[replicateIndex].Name,
+                                                  ReplicateIndexSet.Singleton(replicateIndex)));
+                }
+                var lookup = replicateIndexes.ToLookup(replicateIndex => chromatograms[replicateIndex].Annotations.GetAnnotation(ReplicateGroupOp.GroupByAnnotation) ?? "");
+                var keys = lookup.Select(grouping => grouping.Key).ToList();
+                if (keys.Count > 2)
+                {
+                    // If there are more than 2 groups then exclude replicates with blank annotation values.
+                    keys.Remove("");
+                }
+                keys.Sort(CompareAnnotationValues);
+                return keys.Select(key => new ReplicateGroup(key.ToString(), ReplicateIndexSet.OfValues(lookup[key])));
+            }
+
+            private int CompareAnnotationValues(object value1, object value2)
+            {
+                return String.Compare(value1.ToString(), value2.ToString(), CultureInfo.CurrentCulture, CompareOptions.IgnoreCase);
             }
 
             private IEnumerable<int> GetReplicateIndices(PeptideDocNode nodePep)
@@ -476,5 +512,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
         }
+    }
+
+    public class ReplicateIndexSet : ValueSet<ReplicateIndexSet, int>
+    {
+    }
+
+    public class ReplicateGroup
+    {
+        public ReplicateGroup(string groupName, ReplicateIndexSet replicateIndexes)
+        {
+            GroupName = groupName;
+            ReplicateIndexes = replicateIndexes;
+        }
+        public string GroupName { get; private set; }
+        public ReplicateIndexSet ReplicateIndexes { get; private set; }
     }
 }

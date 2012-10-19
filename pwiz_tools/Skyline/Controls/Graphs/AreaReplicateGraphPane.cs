@@ -26,7 +26,6 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
@@ -253,10 +252,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
             var expectedValue = IsExpectedVisible ? ExpectedVisible : AreaExpectedValue.none;
-
-            GraphData graphData = new AreaGraphData(document, parentNode, displayType,
+            var replicateGroupOp = GraphValues.ReplicateGroupOp.FromCurrentSettings(document.Settings);
+            GraphData graphData = new AreaGraphData(document, parentNode, displayType, replicateGroupOp,
                 ratioIndex, normalizeData, expectedValue);
-
+            var aggregateOp = replicateGroupOp.AggregateOp;
             int countNodes = graphData.DocNodes.Count;
             if (countNodes == 0)
                 ExpectedVisible = AreaExpectedValue.none;
@@ -279,7 +278,7 @@ namespace pwiz.Skyline.Controls.Graphs
      
             // An array to keep track of height of all bars to determine 
             // where each dot product annotation (if showing) should be placed
-            var sumAreas = new double[results.Chromatograms.Count];
+            var sumAreas = new double[graphData.ReplicateGroups.Count];
 
             int iColor = 0, iCharge = -1, charge = -1;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
@@ -325,7 +324,19 @@ namespace pwiz.Skyline.Controls.Graphs
                     string label = graphData.DocNodeLabels[i];
                     if (step != 0)
                         label = string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Step__0_, step);
-                    var curveItem = new BarItem(label, pointPairList, color);
+                    BarItem curveItem;
+                    // Only use a MeanErrorBarItem if bars are not going to be stacked.
+                    // TODO(nicksh): If there is only one PointPairList, then we should be able to use MeanErrorBarItem.
+                    // TODO(nicksh): AreaGraphData.NormalizeTo does not know about MeanErrorBarItem 
+                    if (BarSettings.Type != BarType.Stack && BarSettings.Type != BarType.PercentStack && normalizeData == AreaNormalizeToData.none)
+                    {
+                        curveItem = new MeanErrorBarItem(label, pointPairList, color, Color.Black);
+                    }
+                    else 
+                    {
+                        curveItem = new BarItem(label, pointPairList, color);
+                    }
+                    
 
                     if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
                     {
@@ -388,7 +399,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 YAxis.Scale.Max = 100;
                 YAxis.Scale.MaxAuto = false;
-                YAxis.Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage;
+                YAxis.Title.Text = aggregateOp.AnnotateTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Percentage);
                 YAxis.Type = AxisType.Linear;
                 YAxis.Scale.MinAuto = false;
                 FixedYMin = YAxis.Scale.Min = 0;
@@ -401,7 +412,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (YAxis.Type == AxisType.Log || YAxis.Scale.Max == 1)
                         YAxis.Scale.MaxAuto = true;
 
-                    YAxis.Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Percent_of_Regression_Peak_Area;
+                    YAxis.Title.Text = aggregateOp.AnnotateTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Percent_of_Regression_Peak_Area);
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -413,7 +424,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Make YAxis Scale Max a little higher to accommodate for the dot products
                         YAxis.Scale.Max = 1.1;
                     YAxis.Scale.MaxAuto = false;
-                    YAxis.Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Normalized;
+                    YAxis.Title.Text = aggregateOp.AnnotateTitle(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Normalized);
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -429,8 +440,9 @@ namespace pwiz.Skyline.Controls.Graphs
                         YAxis.Scale.Max = Settings.Default.PeakAreaMaxArea;
                     }
 
-                    YAxis.Title.Text = Resources.AreaReplicateGraphPane_UpdateGraph_Log_Peak_Area;
                     YAxis.Type = AxisType.Log;
+                    YAxis.Title.Text = GraphValues.AnnotateLogAxisTitle(aggregateOp.AnnotateTitle(
+                        Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area));
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 1;
                 }
@@ -448,9 +460,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         YAxis.Scale.MaxAuto = true;
                     }
-                    YAxis.Title.Text = AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view
+                    YAxis.Title.Text = aggregateOp.AnnotateTitle(AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view
                           ? string.Format(Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_, standardType.Title)
-                          : Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area;
+                          : Resources.AreaReplicateGraphPane_UpdateGraph_Peak_Area);
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -557,15 +569,42 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private string GetDotProductResultsText(TransitionGroupDocNode nodeGroup, int indexResult)
         {
+            var replicateIndices = IndexOfReplicate(indexResult);
+            IEnumerable<float?> values;
             switch (ExpectedVisible)
             {
                 case AreaExpectedValue.library:
-                    return GetDotProductText(nodeGroup.GetLibraryDotProduct(IndexOfReplicate(indexResult)));
+                    if (replicateIndices.IsEmpty)
+                    {
+                        values = new[] {nodeGroup.GetLibraryDotProduct(-1)};
+                    }
+                    else
+                    {
+                        values = replicateIndices.Select(nodeGroup.GetLibraryDotProduct);
+                    }
+                    break;
                 case AreaExpectedValue.isotope_dist:
-                    return GetDotProductText(nodeGroup.GetIsotopeDotProduct(IndexOfReplicate(indexResult)));
+                    if (replicateIndices.IsEmpty)
+                    {
+                        values = new[] {nodeGroup.GetIsotopeDotProduct(-1)};
+                    }
+                    else
+                    {
+                        values = replicateIndices.Select(nodeGroup.GetIsotopeDotProduct);
+                    }
+                    break;
                 default:
                     return null;
             }
+            var statistics = new Statistics(values
+                .Select(value => value.HasValue ? (double?) value : null)
+                .Where(value=>value.HasValue)
+                .Cast<double>());
+            if (statistics.Length == 0)
+            {
+                return null;
+            }
+            return GetDotProductText((float) statistics.Mean());
         }
 
         private string DotpLabelText
@@ -591,7 +630,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void EmptyGraph(SrmDocument document)
         {
-            string[] resultNames = GraphData.GetReplicateNames(document).ToArray();
+            string[] resultNames = GraphData.GetReplicateLabels(document).ToArray();
 
             XAxis.Scale.TextLabels = resultNames;
             _originalTextLabels = new string[XAxis.Scale.TextLabels.Length];
@@ -669,10 +708,11 @@ namespace pwiz.Skyline.Controls.Graphs
             public AreaGraphData(SrmDocument document,
                                  DocNode docNode,
                                  DisplayTypeChrom displayType,
+                                 GraphValues.ReplicateGroupOp replicateGroupOp,
                                  int ratioIndex,
                                  AreaNormalizeToData normalize,
                                  AreaExpectedValue expectedVisible)
-                : base(document, docNode, displayType)
+                : base(document, docNode, displayType, replicateGroupOp)
             {
                 _docNode = docNode;
                 _ratioIndex = ratioIndex;
@@ -899,27 +939,27 @@ namespace pwiz.Skyline.Controls.Graphs
                 return AreaPointPairMissing(xValue);
             }
 
-            protected override bool IsMissingValue(TransitionChromInfo chromInfo)
+            protected override bool IsMissingValue(TransitionChromInfoData chromInfo)
             {
                 // TODO: Understand why chromInfo.IsEmpty breaks the area graphs
                 return false; // chromInfo.IsEmpty;
             }
 
-            protected override PointPair CreatePointPair(int iResult, TransitionChromInfo chromInfo)
+            protected override PointPair CreatePointPair(int iResult, ICollection<TransitionChromInfoData> chromInfoDatas)
             {
-                float? pointY = GetValue(chromInfo);
-                return new PointPair(iResult, pointY.HasValue ? pointY.Value : 0);
+                return ReplicateGroupOp.AggregateOp.MakeBarValue(iResult, 
+                    chromInfoDatas.Select(chromInfoData => (double) (GetValue(chromInfoData.ChromInfo) ?? 0)));
             }
 
-            protected override bool IsMissingValue(TransitionGroupChromInfo chromInfo)
+            protected override bool IsMissingValue(TransitionGroupChromInfoData chromInfoData)
             {
-                return !GetValue(chromInfo).HasValue;
+                return !GetValue(chromInfoData.ChromInfo).HasValue;
             }
 
-            protected override PointPair CreatePointPair(int iResult, TransitionGroupChromInfo chromInfo)
+            protected override PointPair CreatePointPair(int iResult, ICollection<TransitionGroupChromInfoData> chromInfoDatas)
             {
-                float? value = GetValue(chromInfo);
-                return value.HasValue ? new PointPair(iResult, value.Value) : PointPairMissing(iResult);
+                return ReplicateGroupOp.AggregateOp.MakeBarValue(iResult, 
+                    chromInfoDatas.Select(chromInfoData => (double) (GetValue(chromInfoData.ChromInfo) ?? 0)));
             }
 
             private float? GetValue(TransitionGroupChromInfo chromInfo)

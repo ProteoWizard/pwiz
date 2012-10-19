@@ -1009,9 +1009,6 @@ Are you sure you want to continue?</value>
   <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Normalized" xml:space="preserve">
     <value>Peak Area Normalized</value>
   </data>
-  <data name="AreaReplicateGraphPane_UpdateGraph_Log_Peak_Area" xml:space="preserve">
-    <value>Log Peak Area</value>
-  </data>
   <data name="AreaReplicateGraphPane_UpdateGraph_Peak_Area_Ratio_To__0_" xml:space="preserve">
     <value>Peak Area Ratio To {0}</value>
   </data>
@@ -4846,6 +4843,30 @@ Are you sure you want to continue?</value>
   </data>
   <data name="BuildPeptideSearchLibraryControl_BuildPeptideSearchLibrary_Add_document_spectral_library">
     <value xml:space="preserve">Add document spectral library</value>
+  </data>
+  <data name="RtGraphValue_Retention_Time">
+    <value xml:space="preserve">Retention Time</value>
+  </data>
+  <data name="RtGraphValue_FWB_Time">
+    <value xml:space="preserve">FWB Time</value>
+  </data>
+  <data name="RtGraphValue_FWHM_Time">
+    <value xml:space="preserve">FWHM Time</value>
+  </data>
+  <data name="AggregateOp_AxisTitleCv">
+    <value xml:space="preserve">{0} CV</value>
+  </data>
+  <data name="AggregateOp_AxisTitleCvPercent">
+    <value xml:space="preserve">{0} CV (%)</value>
+  </data>
+  <data name="RtAlignment_AxisTitleAlignedTo">
+    <value xml:space="preserve">{0} aligned to {1}</value>
+  </data>
+  <data name="GraphValues_Log_AxisTitle">
+    <value xml:space="preserve">Log {0}</value>
+  </data>
+  <data name="ReplicateGroupOp_ReplicateAxisTitle">
+    <value xml:space="preserve">Replicate</value>
   </data>
   <data name="ExportMethodTypeExtension_LOCALIZED_VALUES_Triggered">
     <value xml:space="preserve">Triggered</value>

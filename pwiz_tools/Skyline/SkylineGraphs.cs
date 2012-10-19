@@ -2158,19 +2158,16 @@ namespace pwiz.Skyline
             else
             {
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator16);
-                if (graphType == GraphTypeRT.peptide)
+                menuStrip.Items.Insert(iInsert++, rtValueMenuItem);
+                if (rtValueMenuItem.DropDownItems.Count == 0)
                 {
-                    menuStrip.Items.Insert(iInsert++, peptideRTValueMenuItem);
-                    if (peptideRTValueMenuItem.DropDownItems.Count == 0)
+                    rtValueMenuItem.DropDownItems.AddRange(new ToolStripItem[]
                     {
-                        peptideRTValueMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            allRTValueContextMenuItem,
-                            timeRTValueContextMenuItem,
-                            fwhmRTValueContextMenuItem,
-                            fwbRTValueContextMenuItem
-                        });
-                    }
+                        allRTValueContextMenuItem,
+                        timeRTValueContextMenuItem,
+                        fwhmRTValueContextMenuItem,
+                        fwbRTValueContextMenuItem
+                    });
                 }
                 menuStrip.Items.Insert(iInsert++, transitionsContextMenuItem);
                 // Sometimes child menuitems are stripped from the parent
@@ -2187,15 +2184,7 @@ namespace pwiz.Skyline
                 }
                 if (graphType == GraphTypeRT.replicate)
                 {
-                    menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-                    if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
-                    {
-                        replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            replicateOrderDocumentContextMenuItem,
-                            replicateOrderAcqTimeContextMenuItem
-                        });
-                    }
+                    iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
                     var rtReplicateGraphPane = _graphRetentionTime.GraphPane as RTReplicateGraphPane;
                     if (rtReplicateGraphPane != null && rtReplicateGraphPane.CanShowRTLegend)
                     {
@@ -2243,8 +2232,11 @@ namespace pwiz.Skyline
                             proteinScopeContextMenuItem
                         });
                     }
+                }
+                if (graphType == GraphTypeRT.peptide || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
+                {
                     menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
-                    peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;                    
+                    peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
                 }
                 selectionContextMenuItem.Checked = set.ShowReplicateSelection;
                 menuStrip.Items.Insert(iInsert++, selectionContextMenuItem);
@@ -2792,15 +2784,7 @@ namespace pwiz.Skyline
 
             if (graphType == GraphTypeArea.replicate)
             {
-                menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
-                if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
-                {
-                    replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
-                        {
-                            replicateOrderDocumentContextMenuItem,
-                            replicateOrderAcqTimeContextMenuItem
-                        });
-                }
+                iInsert = AddReplicateOrderAndGroupByMenuItems(menuStrip, iInsert);
                 areaNormalizeTotalContextMenuItem.Checked = 
                     (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view);
                 menuStrip.Items.Insert(iInsert++, areaNormalizeContextMenuItem);
@@ -2882,6 +2866,9 @@ namespace pwiz.Skyline
                             proteinScopeContextMenuItem
                         });
                 }
+            }
+            if (graphType == GraphTypeArea.peptide || null != Settings.Default.GroupByReplicateAnnotation)
+            {
                 menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                 peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
             }
@@ -2901,6 +2888,47 @@ namespace pwiz.Skyline
                 if (tag == "set_default" || tag == "show_val") // Not L10N
                     menuStrip.Items.Remove(item);
             }
+        }
+
+        private int AddReplicateOrderAndGroupByMenuItems(ToolStrip menuStrip, int iInsert)
+        {
+            if (null == SummaryReplicateGraphPane.GroupByReplicateAnnotation)
+            {
+                menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
+                if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
+                {
+                    replicateOrderContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                        {
+                            replicateOrderDocumentContextMenuItem,
+                            replicateOrderAcqTimeContextMenuItem
+                        });
+                }
+            }
+            var replicateAnnotations = DocumentUI.Settings.DataSettings.AnnotationDefs
+                .Where(annotationDef => annotationDef.AnnotationTargets.Contains(AnnotationDef.AnnotationTarget.replicate))
+                .ToArray();
+            if (replicateAnnotations.Length > 0 || null != SummaryReplicateGraphPane.GroupByReplicateAnnotation)
+            {
+                menuStrip.Items.Insert(iInsert++, groupReplicatesByContextMenuItem);
+                groupReplicatesByContextMenuItem.DropDownItems.Clear();
+                groupReplicatesByContextMenuItem.DropDownItems.Add(groupByReplicateContextMenuItem);
+                groupByReplicateContextMenuItem.Checked =
+                    null == SummaryReplicateGraphPane.GroupByReplicateAnnotation;
+                foreach (var annotationDef in replicateAnnotations)
+                {
+                    groupReplicatesByContextMenuItem.DropDownItems
+                        .Add(GroupByReplicateAnnotationMenuItem(annotationDef));
+                }
+            }
+            return iInsert;
+        }
+
+        private ToolStripMenuItem GroupByReplicateAnnotationMenuItem(AnnotationDef annotationDef)
+        {
+            return new ToolStripMenuItem(annotationDef.Name, null, (sender, eventArgs)=>GroupByReplicateAnnotation(annotationDef.Name))
+                       {
+                           Checked = annotationDef.Name == SummaryReplicateGraphPane.GroupByReplicateAnnotation,
+                       };
         }
 
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -2951,6 +2979,18 @@ namespace pwiz.Skyline
             SummaryReplicateGraphPane.ReplicateOrder = order;
             UpdateSummaryGraphs();
         }
+
+        private void groupByReplicateContextMenuItem_Click(object sender, EventArgs e)
+        {
+            GroupByReplicateAnnotation(null);
+        }
+
+        public void GroupByReplicateAnnotation(string annotationName)
+        {
+            SummaryReplicateGraphPane.GroupByReplicateAnnotation = annotationName;
+            UpdateSummaryGraphs();
+        }
+
 
         private void scopeContextMenuItem_DropDownOpening(object sender, EventArgs e)
         {

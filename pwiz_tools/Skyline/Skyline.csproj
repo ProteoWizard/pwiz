@@ -259,6 +259,7 @@
     <Compile Include="Controls\Graphs\RTGraphController.cs" />
     <Compile Include="Controls\Graphs\RTPeptideGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryBarGraphPaneBase.cs" />
+    <Compile Include="Controls\Graphs\GraphValues.cs" />
     <Compile Include="Controls\Graphs\SummaryPeptideGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryReplicateGraphPane.cs" />
     <Compile Include="Controls\Graphs\SummaryGraphPane.cs" />
@@ -694,6 +695,7 @@
     <Compile Include="Model\Results\ChromDataProvider.cs" />
     <Compile Include="Model\Results\ChromDataSet.cs" />
     <Compile Include="Model\Results\ChromHeaderInfo.cs" />
+    <Compile Include="Model\Results\ChromInfoData.cs" />
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
     <Compile Include="Model\Results\Exception.cs" />
     <Compile Include="Model\Results\IsotopeDistInfo.cs" />
@@ -1064,7 +1066,9 @@
     <EmbeddedResource Include="ToolsUI\ToolOptionsUI.resx">
       <DependentUpon>ToolOptionsUI.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="app.config" />
+    <None Include="app.config">
+      <SubType>Designer</SubType>
+    </None>
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

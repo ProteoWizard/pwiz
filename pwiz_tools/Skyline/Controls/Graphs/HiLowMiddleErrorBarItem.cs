@@ -53,18 +53,6 @@ namespace pwiz.Skyline.Controls.Graphs
             return pointPairList;
         }
 
-        public static PointPair StretchPointPair(PointPair pointPair, IRegressionFunction regressionLine)
-        {
-            var tag = pointPair.Tag as MiddleErrorTag;
-            if (tag == null)
-            {
-                return pointPair;
-            }
-            return MakePointPair(pointPair.X, regressionLine.GetY(pointPair.Y),
-                                 regressionLine.GetY(pointPair.Z), regressionLine.GetY(tag.Middle),
-                                 regressionLine.GetY(tag.Error) - regressionLine.GetY(0));
-        }
-
         public HiLowMiddleErrorBarItem(String label, 
                                        double[] xValues, double[] highValues, double[] lowValues,
                                        double[] middleValues, double[] errorValues,

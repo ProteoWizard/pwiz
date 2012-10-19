@@ -165,11 +165,10 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.Max = _graphData.MaxY * 1.05;
                 }
             }
-            if (!_graphData.MinY.HasValue && Settings.Default.ShowPeptideCV)
+            var aggregateOp = GraphValues.AggregateOp.FromCurrentSettings();
+            if (!_graphData.MinY.HasValue && aggregateOp.Cv)
             {
-                YAxis.Title.Text += " CV"; //TODO: Not L10N?
-                if (!Settings.Default.PeakDecimalCv)
-                    YAxis.Title.Text += " (%)"; // Not L10N
+                YAxis.Title.Text = aggregateOp.AnnotateTitle(YAxis.Title.Text);
                 if (_graphData.MaxCVSetting != 0)
                 {
                     YAxis.Scale.MaxAuto = false;

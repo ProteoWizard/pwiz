@@ -395,6 +395,9 @@
     <Setting Name="ShowPeptides" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="GroupByReplicateAnnotation" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
     <Setting Name="PrimaryTransitionCount" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">2</Value>
     </Setting>
