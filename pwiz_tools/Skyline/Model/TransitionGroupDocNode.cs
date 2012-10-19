@@ -136,6 +136,10 @@ namespace pwiz.Skyline.Model
             {
                 // CONSIDER: Can manually picked transitions end up in this
                 //           calculation, and if so how big a problem is that?
+                // They can, and it is a real problem, because it means this
+                // ranking is not stable, like the others.  At least one fix
+                // has been made in PeptideDocNode.ChangeSettings() to deal
+                // with this.
                 float intensity = 0;
                 foreach (TransitionDocNode nodeTran in Children)
                 {

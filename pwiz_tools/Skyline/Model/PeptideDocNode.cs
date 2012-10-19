@@ -528,6 +528,11 @@ namespace pwiz.Skyline.Model
             {
                 IList<DocNode> childrenNew = new List<DocNode>();
 
+                PeptideRankId rankId = settingsNew.PeptideSettings.Libraries.RankId;
+                bool useHighestRank = (rankId != null && settingsNew.PeptideSettings.Libraries.PeptideCount.HasValue);
+                bool isPickedIntensityRank = useHighestRank &&
+                                             ReferenceEquals(rankId, LibrarySpec.PEP_RANK_PICKED_INTENSITY);
+
                 Dictionary<Identity, DocNode> mapIdToChild = CreateIdContentToChildMap();
                 foreach (TransitionGroup tranGroup in Peptide.GetTransitionGroups(settingsNew, explicitMods, true))
                 {
@@ -535,14 +540,16 @@ namespace pwiz.Skyline.Model
                     SrmSettingsDiff diffNode = diff;
 
                     DocNode existing;
-                    // Add values that existed before the change.
-                    if (mapIdToChild.TryGetValue(tranGroup, out existing))
+                    // Add values that existed before the change, unless using picked intensity ranking,
+                    // since this could bias the ranking, otherwise.
+                    if (!isPickedIntensityRank && mapIdToChild.TryGetValue(tranGroup, out existing))
                         nodeGroup = (TransitionGroupDocNode)existing;
-                        // Add new node
+                    // Add new node
                     else
                     {
-                        TransitionDocNode[] transitions = GetMatchingTransitions(
-                            tranGroup, settingsNew, explicitMods);
+                        TransitionDocNode[] transitions = !isPickedIntensityRank
+                            ? GetMatchingTransitions(tranGroup, settingsNew, explicitMods)
+                            : null;
 
                         nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
                         // If not recursing, then ChangeSettings will not be called on nodeGroup.  So, make
@@ -554,7 +561,9 @@ namespace pwiz.Skyline.Model
 
                     if (nodeGroup != null)
                     {
-                        TransitionGroupDocNode nodeChanged = recurse ? nodeGroup.ChangeSettings(settingsNew, explicitMods, diffNode) : nodeGroup;
+                        TransitionGroupDocNode nodeChanged = recurse
+                            ? nodeGroup.ChangeSettings(settingsNew, explicitMods, diffNode)
+                            : nodeGroup;
                         if (instrument.IsMeasurable(nodeChanged.PrecursorMz))
                             childrenNew.Add(nodeChanged);
                     }
@@ -562,9 +571,22 @@ namespace pwiz.Skyline.Model
 
                 // If only using rank limited peptides, then choose only the single
                 // highest ranked precursor charge.
-                PeptideRankId rankId = settingsNew.PeptideSettings.Libraries.RankId;
-                if (rankId != null && settingsNew.PeptideSettings.Libraries.PeptideCount.HasValue)
+                if (useHighestRank)
+                {
                     childrenNew = FilterHighestRank(childrenNew, rankId);
+
+                    // If using picked intensity, make sure original nodes are replaced
+                    if (isPickedIntensityRank)
+                    {
+                        for (int i = 0; i < childrenNew.Count; i++)
+                        {
+                            var nodeNew = (TransitionGroupDocNode) childrenNew[i];
+                            DocNode existing;
+                            if (mapIdToChild.TryGetValue(nodeNew.TransitionGroup, out existing))
+                                childrenNew[i] = existing;
+                        }
+                    }
+                }
 
                 nodeResult = (PeptideDocNode) ChangeChildrenChecked(childrenNew);                
             }
